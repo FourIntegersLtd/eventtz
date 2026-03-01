@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import {
   PartyPopper,
-  Music2,
   Camera,
   UtensilsCrossed,
   Palette,
@@ -22,7 +21,7 @@ const VENDOR_STEPS = [
     step: 1,
     title: "Create Your Profile",
     description:
-      "Set up your Eventtz profile with your services, pricing, portfolio, and availability.",
+      "Set up your Eventtz profile with your services, pricing, portfolio, and availability",
   },
   {
     step: 2,
