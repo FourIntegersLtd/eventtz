@@ -16,6 +16,10 @@ export const metadata: Metadata = {
   title: "Eventtz — Find & Book Event Vendors in the UK",
   description:
     "Eventtz connects you to photographers, caterers, decorators, makeup artists and more — all in one seamless marketplace.",
+  icons: {
+    icon: "/images/eventtz-logo.png",
+    apple: "/images/eventtz-logo.png",
+  },
 };
 
 export default function RootLayout({
