@@ -14,7 +14,13 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { SiInstagram, SiTiktok, SiFacebook, SiLinkedin, SiX } from "react-icons/si";
+import {
+  SiInstagram,
+  SiTiktok,
+  SiFacebook,
+  SiLinkedin,
+  SiX,
+} from "react-icons/si";
 
 const VENDOR_STEPS = [
   {
@@ -64,42 +70,48 @@ const CATEGORIES = [
   {
     name: "Photography",
     Icon: Camera,
-    description: "Capture every moment",
+    description:
+      "Professional photographers for weddings, parties and events. Compare portfolios and packages.",
     iconBg: "bg-amber-500",
     iconColor: "text-white",
   },
   {
     name: "Catering",
     Icon: UtensilsCrossed,
-    description: "Food & drink for your event",
+    description:
+      "Food and drink for your event — from canapés and buffets to full sit-down menus.",
     iconBg: "bg-rose-500",
     iconColor: "text-white",
   },
   {
     name: "Decor & styling",
     Icon: Palette,
-    description: "Transform your venue",
+    description:
+      "Transform your venue with florals, backdrops, table settings and full styling packages.",
     iconBg: "bg-violet-500",
     iconColor: "text-white",
   },
   {
     name: "Makeup & hair",
     Icon: Sparkles,
-    description: "Look your best",
+    description:
+      "Artists for bridal, party and special-occasion looks. On-the-day or trial sessions.",
     iconBg: "bg-fuchsia-500",
     iconColor: "text-white",
   },
   {
     name: "Venues",
     Icon: Building2,
-    description: "Find the perfect space",
+    description:
+      "Halls, gardens, hotels and unique spaces. Filter by capacity, style and location.",
     iconBg: "bg-emerald-600",
     iconColor: "text-white",
   },
   {
     name: "Entertainment",
     Icon: Mic2,
-    description: "DJs, bands & more",
+    description:
+      "DJs, bands, musicians and performers to keep your guests entertained.",
     iconBg: "bg-sky-500",
     iconColor: "text-white",
   },
@@ -107,9 +119,21 @@ const CATEGORIES = [
 
 // Add more images to public/images (e.g. wedding.jpg, celebration.jpg, venue.jpg) and add to this array
 const GALLERY_IMAGES = [
-  { src: "/images/birthday1.jpg", alt: "Birthday celebration", eventName: "Birthdays" },
-  { src: "/images/naming.jpg", alt: "Event moment", eventName: "Gender Reveals" },
-  { src: "/images/office.jpg", alt: "Celebration", eventName: "Office Parties" },
+  {
+    src: "/images/birthday1.jpg",
+    alt: "Birthday celebration",
+    eventName: "Birthdays",
+  },
+  {
+    src: "/images/naming.jpg",
+    alt: "Event moment",
+    eventName: "Gender Reveals",
+  },
+  {
+    src: "/images/office.jpg",
+    alt: "Celebration",
+    eventName: "Office Parties",
+  },
   { src: "/images/wedding.jpg", alt: "Party", eventName: "Weddings" },
 ];
 
@@ -186,7 +210,7 @@ export default function Landing() {
     <div className="min-h-screen bg-page-bg text-slate-800">
       {/* Top Nav — minimal, glass, mobile responsive */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-slate-200/40 bg-[#f5f2f8]/90 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2 sm:px-6 sm:py-2.5 lg:px-16">
+        <div className="mx-auto flex max-w-8xl items-center justify-between px-4 py-2 sm:px-6 sm:py-2.5 lg:px-16">
           <a href="#" className="flex items-center shrink-0">
             <Image
               src="/images/eventtz-logo.png"
@@ -209,9 +233,9 @@ export default function Landing() {
 
       {/* Hero — full viewport height */}
       <div className="flex min-h-screen flex-col">
-        <section className="relative mx-auto flex w-full max-w-7xl flex-1 flex-col items-center justify-center px-4 pt-[72px] pb-6 sm:px-6 sm:pt-[76px] sm:pb-8 md:flex-row md:items-center md:justify-between md:gap-12 md:px-12 md:pt-[80px] lg:gap-16 lg:px-16">
-          <div className="flex min-w-0 flex-1 flex-col justify-center text-left md:max-w-[70%] md:flex-[2]">
-            <div className="mb-4 flex w-fit items-center gap-2 sm:mb-5 sm:gap-2.5">
+        <section className="gap-12 lg:gap-0 relative mx-auto flex w-full max-w-8xl flex-1 flex-col items-center justify-center gap-0 px-4 pt-16 pb-4 sm:px-6 sm:pt-[76px] sm:pb-8 md:flex-row md:items-center md:justify-between md:gap-16 md:px-12 md:pt-[80px] md:pb-6 lg:gap-24 lg:px-16">
+          <div className="flex min-w-0 flex-col justify-center text-left md:max-w-[70%] md:flex-1 md:flex-[2]">
+            <div className="mb-3 flex w-fit items-center gap-2 sm:mb-5 sm:gap-2.5">
               <span
                 className="inline-flex rounded-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-amber-400 p-1.5"
                 aria-hidden
@@ -221,17 +245,18 @@ export default function Landing() {
                   strokeWidth={2}
                 />
               </span>
-              <span className="text-sm font-medium text-slate-600 sm:text-base">
+              <span className="text-sm font-medium leading-relaxed text-slate-600 sm:text-base sm:leading-normal">
                 Launching soon
               </span>
             </div>
-            <h1 className="font-heading text-3xl font-semibold leading-[1.12] tracking-tight text-slate-900 sm:text-4xl sm:leading-[1.08] lg:text-5xl xl:text-6xl">
+            <h1 className="font-heading text-3xl font-semibold leading-snug tracking-tight text-slate-900 sm:text-4xl sm:leading-[1.08] lg:text-5xl xl:text-6xl">
               Find and Book Trusted Event Vendors in the UK
             </h1>
-            <p className="mt-3 text-base leading-snug text-slate-600 sm:mt-4 sm:text-lg lg:text-xl">
-              Eventtz connects you to photographers, caterers, decorators, makeup artists and more — all in one seamless marketplace.
+            <p className="mt-2 text-base leading-relaxed text-slate-600 sm:mt-4 sm:text-lg sm:leading-snug lg:text-xl">
+              Eventtz connects you to photographers, caterers, decorators,
+              makeup artists and more — all in one seamless marketplace.
             </p>
-            <div className="mt-5 flex flex-col gap-4 sm:mt-6 md:flex-row md:justify-start">
+            <div className="mt-4 flex flex-col gap-4 sm:mt-6 md:flex-row md:justify-start">
               <a
                 href={WAITLIST_URL}
                 target="_blank"
@@ -243,7 +268,7 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className="relative mt-6 w-full max-w-[340px] flex-shrink-0 overflow-hidden rounded-2xl sm:mt-8 sm:max-w-[400px] md:mt-0 md:max-w-[480px] lg:max-w-[540px] xl:max-w-[600px]">
+          <div className="relative w-full max-w-[340px] flex-shrink-0 overflow-hidden rounded-2xl sm:max-w-[400px] md:max-w-[480px] lg:max-w-[540px] xl:max-w-[600px]">
             <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl shadow-2xl shadow-slate-300/30 ring-1 ring-slate-200/60">
               <Image
                 src="/images/birthday.jpg"
@@ -259,15 +284,16 @@ export default function Landing() {
       </div>
 
       {/* Image gallery — auto-moving carousel, viewport section */}
-      <section className="relative flex min-h-screen flex-col justify-center border-t border-slate-200/60 bg-white/30 px-4 py-12 pb-20 sm:px-6 sm:py-16 sm:pb-24">
+      <section className="relative flex min-h-0 flex-col justify-center border-t border-slate-200/60 bg-white/30 px-4  sm:px-6 py-36">
         <div className="mx-auto w-full max-w-6xl flex-1 flex flex-col justify-center">
-          <h2 className="font-heading text-center text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+          <h2 className="font-heading text-center text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl sm:text-3xl">
             Event Types
+            <span className="mx-auto mt-2 block h-1 w-12 rounded-full bg-gradient-to-r from-violet-400 to-fuchsia-400 sm:mt-2.5" />
           </h2>
-          <p className="mx-auto mt-2 max-w-xl text-center text-slate-600 sm:text-lg">
+          <p className="mx-auto mt-1.5 max-w-xl text-center text-sm text-slate-600 sm:mt-2 sm:text-lg">
             Real events, real vendors — see what’s possible.
           </p>
-          <div className="mx-auto mt-6 w-full max-h-[58vh] aspect-[4/3] sm:mt-8">
+          <div className="mx-auto mt-4 w-full max-h-[50vh] aspect-[4/3] sm:mt-8 sm:max-h-[58vh]">
             <div className="h-full overflow-hidden rounded-2xl">
               <div
                 className="flex h-full transition-transform duration-500 ease-out"
@@ -315,7 +341,7 @@ export default function Landing() {
                 })}
               </div>
             </div>
-            <div className="mt-6 flex items-center justify-center gap-5 pb-2 sm:mt-8 sm:gap-8 sm:pb-4">
+            <div className="mt-4 flex items-center justify-center gap-4 pb-2 sm:mt-8 sm:gap-8 sm:pb-4">
               <button
                 type="button"
                 onClick={() =>
@@ -363,15 +389,16 @@ export default function Landing() {
       {/* How it works — premium card and segmented control */}
       <section
         id="how-it-works"
-        className="relative py-16 sm:py-20 md:py-24 lg:py-32"
+        className="relative py-14 sm:py-16 md:py-24 lg:py-32"
       >
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-16">
-          <h2 className="font-heading text-center text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl">
+          <h2 className=" font-heading text-center text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl sm:text-3xl md:text-4xl">
             How it works
+            <span className="mx-auto mt-2 block h-1 w-12 rounded-full bg-gradient-to-r from-amber-400 to-rose-400 sm:mt-2.5" />
           </h2>
 
           {/* Segmented control*/}
-          <div className="mt-8 flex rounded-full border border-slate-200/60 bg-page-bgs sm:mt-12">
+          <div className="mt-5 mb-12 flex rounded-full border border-slate-200/60 bg-page-bg sm:mt-12 lg:mx-16">
             <button
               type="button"
               onClick={() => setHowItWorksTab("vendor")}
@@ -396,23 +423,22 @@ export default function Landing() {
             </button>
           </div>
 
-          <p className="mt-4 text-center text-sm text-slate-600 sm:mt-6 sm:text-base">
-            {howItWorksTab === "vendor"
-              ? "How Eventtz Works for Vendors"
-              : "How Eventtz Works for Clients"}
-          </p>
+        
 
           {/* Premium step cards */}
-          <div className="mt-6 space-y-3 sm:mt-8 sm:space-y-4">
+          <div className="mt-4 space-y-5 sm:mt-8 sm:space-y-6">
             {(howItWorksTab === "vendor" ? VENDOR_STEPS : CLIENT_STEPS).map(
-              (item) => (
+              (item) => {
+                const stepColors = ["bg-amber-500", "bg-violet-500", "bg-emerald-500"];
+                const stepBg = stepColors[(item.step - 1) % stepColors.length];
+                return (
                 <div
                   key={`${howItWorksTab}-${item.step}`}
-                  className="rounded-2xl bg-white p-4 shadow-sm sm:p-6 md:p-8"
+                  className="rounded-2xl bg-white p-3.5 shadow-sm sm:p-6 md:p-8"
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:gap-5 md:gap-6">
                     <div className="flex min-w-0 items-center gap-3 sm:flex-col sm:items-start sm:gap-0">
-                      <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-primary text-sm font-semibold text-white sm:h-12 sm:w-12 sm:text-base">
+                      <span className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${stepBg} text-sm font-semibold text-white sm:h-12 sm:w-12 sm:text-base`}>
                         {item.step}
                       </span>
                       <h3 className="font-heading text-base font-semibold text-slate-900 sm:hidden sm:text-lg md:text-xl">
@@ -429,55 +455,57 @@ export default function Landing() {
                     </div>
                   </div>
                 </div>
-              ),
+              );
+              },
             )}
           </div>
         </div>
       </section>
 
       {/* Categories — find vendors for every occasion */}
-      <section className="relative border-t border-slate-200/60 bg-white/40 py-10 sm:py-16 sm:px-4 md:py-20 md:px-6 lg:py-24 lg:px-16">
-        <div className="mx-auto max-w-6xl px-3 xs:px-4">
-          <h2 className="font-heading text-center text-xl font-semibold tracking-tight text-slate-900 xs:text-2xl sm:text-3xl md:text-4xl">
+      <section className="relative border-t border-slate-200/60 bg-white/40 py-14 sm:py-16 sm:px-4 md:py-20 md:px-6 lg:py-24 lg:px-16">
+        <div className="mx-auto max-w-6xl px-4">
+          <h2 className="font-heading text-center text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl sm:text-3xl md:text-4xl ">
             Find vendors for every occasion
+            <span className="mx-auto mt-2 block h-1 w-12 rounded-full bg-gradient-to-r from-emerald-400 to-sky-400 sm:mt-2.5" />
           </h2>
-          <p className="mx-auto mt-2 max-w-2xl text-center text-sm text-slate-600 xs:mt-3 xs:text-base sm:mt-4 sm:text-lg">
+          <p className="mx-auto mt-1.5 max-w-2xl text-center text-sm text-slate-600 sm:mt-3 sm:text-base md:mt-4 md:text-lg mb-12 mt-4">
             From weddings and birthdays to corporate events — browse by category
             and discover the right fit.
           </p>
-          <div className="mt-6 grid grid-cols-1 gap-3 xs:grid-cols-2 xs:gap-4 sm:mt-10 sm:gap-5 md:grid-cols-3 md:gap-6">
-            {CATEGORIES.map(({ name, Icon, description, iconBg, iconColor }) => (
-              <div
-                key={name}
-                className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition hover:shadow-md active:scale-[0.99] xs:p-5 sm:p-6"
-              >
+          <div className="mt-4 grid grid-cols-2 gap-5 sm:mt-10 sm:gap-6 md:grid-cols-3 md:gap-8">
+            {CATEGORIES.map(
+              ({ name, Icon, description, iconBg, iconColor }) => (
                 <div
-                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12 ${iconBg} ${iconColor}`}
+                  key={name}
+                  className="flex flex-col items-center rounded-2xl border border-slate-200/80 bg-white p-3 text-center shadow-sm transition hover:shadow-md active:scale-[0.99] sm:items-start sm:text-left sm:p-5 md:p-6"
                 >
-                  <Icon
-                    className="h-5 w-5 sm:h-6 sm:w-6"
-                    strokeWidth={1.5}
-                  />
+                  <div
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12 ${iconBg} ${iconColor}`}
+                  >
+                    <Icon className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={1.5} />
+                  </div>
+                  <h3 className="font-heading mt-2 text-base font-semibold text-slate-900 sm:mt-3 sm:text-lg">
+                    {name}
+                  </h3>
+                  <p className="mt-1 hidden text-sm leading-snug text-slate-600 sm:block">
+                    {description}
+                  </p>
                 </div>
-                <h3 className="font-heading mt-3 text-base font-semibold text-slate-900 xs:mt-4 sm:text-lg">
-                  {name}
-                </h3>
-                <p className="mt-1 text-sm leading-snug text-slate-600 xs:mt-1.5">
-                  {description}
-                </p>
-              </div>
-            ))}
+              ),
+            )}
           </div>
         </div>
       </section>
 
       {/* FAQ */}
-      <section className="relative border-t border-slate-200/60 bg-white/40 py-16 sm:py-20 md:py-24">
+      <section className="relative border-t border-slate-200/60 bg-white/40 py-14 sm:py-20 md:py-24">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-16">
-          <h2 className="font-heading text-center text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl">
+          <h2 className="font-heading text-center text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl sm:text-3xl md:text-4xl">
             Frequently asked questions
+            <span className="mx-auto mt-2 block h-1 w-12 rounded-full bg-gradient-to-r from-violet-400 to-amber-400 sm:mt-2.5" />
           </h2>
-          <div className="mt-10 space-y-2 sm:mt-12">
+          <div className="mt-5 space-y-2 sm:mt-12">
             {FAQ_ITEMS.map((item, index) => (
               <div
                 key={index}
@@ -488,16 +516,16 @@ export default function Landing() {
                   onClick={() =>
                     setOpenFaqIndex(openFaqIndex === index ? null : index)
                   }
-                  className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left text-sm font-medium text-slate-900 transition hover:bg-slate-50/80 sm:px-6 sm:py-4 sm:text-base"
+                  className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left text-sm font-medium text-slate-900 transition hover:bg-slate-50/80 sm:px-6 sm:py-4 sm:text-base"
                 >
                   {item.q}
                   <ChevronDown
-                    className={`h-5 w-5 shrink-0 text-slate-500 transition ${openFaqIndex === index ? "rotate-180" : ""}`}
+                    className={`h-5 w-5 shrink-0 transition ${openFaqIndex === index ? "rotate-180 text-violet-500" : "text-slate-500"}`}
                     strokeWidth={1.5}
                   />
                 </button>
                 {openFaqIndex === index && (
-                  <div className="border-t border-slate-100 px-5 py-4 sm:px-6 sm:py-4">
+                  <div className="border-t border-slate-100 px-4 py-3 sm:px-6 sm:py-4">
                     <p className="text-sm text-slate-600 leading-relaxed sm:text-base">
                       {item.a}
                     </p>
@@ -512,20 +540,21 @@ export default function Landing() {
       {/* Contact — calm, premium CTA */}
       <section
         id="contact"
-        className="border-t border-slate-200/60 bg-white/50 py-16 sm:py-20 md:py-24 lg:py-32"
+        className="border-t border-slate-200/60 bg-white/50 py-14 sm:py-20 md:py-24 lg:py-32"
       >
         <div className="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-16">
-          <h2 className="font-heading text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl">
+          <h2 className="font-heading text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl sm:text-3xl md:text-4xl">
             Coming Soon
+            <span className="mx-auto mt-2 block h-1 w-12 rounded-full bg-gradient-to-r from-fuchsia-400 to-sky-400 sm:mt-2.5" />
           </h2>
-          <p className="mt-3 text-slate-600 leading-relaxed sm:mt-4 sm:text-lg">
+          <p className="mt-2 text-slate-600 leading-relaxed sm:mt-4 sm:text-lg">
             Built with real vendors. Designed for better bookings.
           </p>
           <a
             href={WAITLIST_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-primary px-6 py-3.5 text-base font-medium text-white transition hover:opacity-90 active:scale-[0.98] sm:mt-8 sm:w-auto sm:px-8 sm:py-4"
+            className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-primary px-6 py-3.5 text-base font-medium text-white transition hover:opacity-90 active:scale-[0.98] sm:mt-8 sm:w-auto sm:px-8 sm:py-4"
           >
             Join the waitlist
           </a>
@@ -533,12 +562,13 @@ export default function Landing() {
       </section>
 
       {/* Footer — social links */}
-      <footer className="border-t border-slate-200/60 bg-white/30 py-8 sm:py-10">
+      <footer className="border-t border-slate-200/60 bg-white/30 py-14 sm:py-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-16">
-          <p className="text-center text-xs text-slate-500 sm:text-sm">
+          <p className="text-center text-xs font-medium text-slate-600 sm:text-sm">
             Follow us
+            <span className="mx-auto mt-1.5 block h-0.5 w-8 rounded-full bg-gradient-to-r from-violet-300 via-fuchsia-300 to-amber-300 sm:mt-2" />
           </p>
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-5 sm:gap-6">
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-4 sm:mt-4 sm:gap-6">
             {SOCIAL_LINKS.map(({ name, href, aria, Icon, color }) => (
               <a
                 key={name}
