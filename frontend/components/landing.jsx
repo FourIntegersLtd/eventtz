@@ -61,20 +61,48 @@ const CLIENT_STEPS = [
 const WAITLIST_URL = "https://forms.gle/6c4Ezw5MNuQaYr238";
 
 const CATEGORIES = [
-  { name: "Photography", Icon: Camera, description: "Capture every moment" },
+  {
+    name: "Photography",
+    Icon: Camera,
+    description: "Capture every moment",
+    iconBg: "bg-amber-500",
+    iconColor: "text-white",
+  },
   {
     name: "Catering",
     Icon: UtensilsCrossed,
     description: "Food & drink for your event",
+    iconBg: "bg-rose-500",
+    iconColor: "text-white",
   },
   {
     name: "Decor & styling",
     Icon: Palette,
     description: "Transform your venue",
+    iconBg: "bg-violet-500",
+    iconColor: "text-white",
   },
-  { name: "Makeup & hair", Icon: Sparkles, description: "Look your best" },
-  { name: "Venues", Icon: Building2, description: "Find the perfect space" },
-  { name: "Entertainment", Icon: Mic2, description: "DJs, bands & more" },
+  {
+    name: "Makeup & hair",
+    Icon: Sparkles,
+    description: "Look your best",
+    iconBg: "bg-fuchsia-500",
+    iconColor: "text-white",
+  },
+  {
+    name: "Venues",
+    Icon: Building2,
+    description: "Find the perfect space",
+    iconBg: "bg-emerald-600",
+    iconColor: "text-white",
+  },
+  {
+    name: "Entertainment",
+    Icon: Mic2,
+    description: "DJs, bands & more",
+    iconBg: "bg-sky-500",
+    iconColor: "text-white",
+  },
 ];
 
 // Add more images to public/images (e.g. wedding.jpg, celebration.jpg, venue.jpg) and add to this array
@@ -183,6 +211,20 @@ export default function Landing() {
       <div className="flex min-h-screen flex-col">
         <section className="relative mx-auto flex w-full max-w-7xl flex-1 flex-col items-center justify-center px-4 pt-[72px] pb-6 sm:px-6 sm:pt-[76px] sm:pb-8 md:flex-row md:items-center md:justify-between md:gap-12 md:px-12 md:pt-[80px] lg:gap-16 lg:px-16">
           <div className="flex min-w-0 flex-1 flex-col justify-center text-left md:max-w-[70%] md:flex-[2]">
+            <div className="mb-4 flex w-fit items-center gap-2 sm:mb-5 sm:gap-2.5">
+              <span
+                className="inline-flex rounded-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-amber-400 p-1.5"
+                aria-hidden
+              >
+                <PartyPopper
+                  className="h-4 w-4 sm:h-5 sm:w-5 text-white"
+                  strokeWidth={2}
+                />
+              </span>
+              <span className="text-sm font-medium text-slate-600 sm:text-base">
+                Launching soon
+              </span>
+            </div>
             <h1 className="font-heading text-3xl font-semibold leading-[1.12] tracking-tight text-slate-900 sm:text-4xl sm:leading-[1.08] lg:text-5xl xl:text-6xl">
               Find and Book Trusted Event Vendors in the UK
             </h1>
@@ -214,14 +256,6 @@ export default function Landing() {
             </div>
           </div>
         </section>
-
-        <p className="flex items-center justify-center gap-2 pb-6 text-lg font-medium text-slate-500 sm:gap-3 sm:pb-8 sm:text-xl md:text-2xl">
-          <PartyPopper
-            className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 text-slate-500"
-            aria-hidden
-          />
-          Launching soon
-        </p>
       </div>
 
       {/* Image gallery — auto-moving carousel, viewport section */}
@@ -376,12 +410,17 @@ export default function Landing() {
                   key={`${howItWorksTab}-${item.step}`}
                   className="rounded-2xl bg-white p-4 shadow-sm sm:p-6 md:p-8"
                 >
-                  <div className="flex gap-3 sm:gap-5 md:gap-6">
-                    <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-primary text-sm font-semibold text-white sm:h-12 sm:w-12 sm:text-base">
-                      {item.step}
-                    </span>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:gap-5 md:gap-6">
+                    <div className="flex min-w-0 items-center gap-3 sm:flex-col sm:items-start sm:gap-0">
+                      <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-primary text-sm font-semibold text-white sm:h-12 sm:w-12 sm:text-base">
+                        {item.step}
+                      </span>
+                      <h3 className="font-heading text-base font-semibold text-slate-900 sm:hidden sm:text-lg md:text-xl">
+                        {item.title}
+                      </h3>
+                    </div>
                     <div className="min-w-0">
-                      <h3 className="font-heading text-base font-semibold text-slate-900 sm:text-lg md:text-xl">
+                      <h3 className="font-heading hidden text-base font-semibold text-slate-900 sm:block sm:text-lg md:text-xl">
                         {item.title}
                       </h3>
                       <p className="mt-1.5 text-sm text-slate-600 leading-relaxed sm:mt-2 sm:text-base">
@@ -397,31 +436,35 @@ export default function Landing() {
       </section>
 
       {/* Categories — find vendors for every occasion */}
-      <section className="relative border-t border-slate-200/60 bg-white/40 py-16 sm:py-20 md:py-24">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-16">
-          <h2 className="font-heading text-center text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl">
+      <section className="relative border-t border-slate-200/60 bg-white/40 py-10 sm:py-16 sm:px-4 md:py-20 md:px-6 lg:py-24 lg:px-16">
+        <div className="mx-auto max-w-6xl px-3 xs:px-4">
+          <h2 className="font-heading text-center text-xl font-semibold tracking-tight text-slate-900 xs:text-2xl sm:text-3xl md:text-4xl">
             Find vendors for every occasion
           </h2>
-          <p className="mx-auto mt-3 max-w-2xl text-center text-slate-600 sm:mt-4 sm:text-lg">
+          <p className="mx-auto mt-2 max-w-2xl text-center text-sm text-slate-600 xs:mt-3 xs:text-base sm:mt-4 sm:text-lg">
             From weddings and birthdays to corporate events — browse by category
             and discover the right fit.
           </p>
-          <div className="mt-10 grid grid-cols-2 gap-4 sm:mt-12 sm:gap-5 md:grid-cols-3 md:gap-6">
-            {CATEGORIES.map(({ name, Icon, description }) => (
+          <div className="mt-6 grid grid-cols-1 gap-3 xs:grid-cols-2 xs:gap-4 sm:mt-10 sm:gap-5 md:grid-cols-3 md:gap-6">
+            {CATEGORIES.map(({ name, Icon, description, iconBg, iconColor }) => (
               <div
                 key={name}
-                className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition hover:shadow-md sm:p-6"
+                className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition hover:shadow-md active:scale-[0.99] xs:p-5 sm:p-6"
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white sm:h-12 sm:w-12">
+                <div
+                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12 ${iconBg} ${iconColor}`}
+                >
                   <Icon
-                    className="h-5 w-5 sm:h-6 sm:w-6 text-white"
+                    className="h-5 w-5 sm:h-6 sm:w-6"
                     strokeWidth={1.5}
                   />
                 </div>
-                <h3 className="font-heading mt-4 text-base font-semibold text-slate-900 sm:text-lg">
+                <h3 className="font-heading mt-3 text-base font-semibold text-slate-900 xs:mt-4 sm:text-lg">
                   {name}
                 </h3>
-                <p className="mt-1 text-sm text-slate-600">{description}</p>
+                <p className="mt-1 text-sm leading-snug text-slate-600 xs:mt-1.5">
+                  {description}
+                </p>
               </div>
             ))}
           </div>
