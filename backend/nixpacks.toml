@@ -1,0 +1,4 @@
+# Railway/Nixpacks: Python 3.13 matches pyproject.toml (requires-python >= 3.13).
+# Do not override [phases.install] — Nixpacks auto-runs pip from requirements.txt.
+[variables]
+NIXPACKS_PYTHON_VERSION = "3.13"
