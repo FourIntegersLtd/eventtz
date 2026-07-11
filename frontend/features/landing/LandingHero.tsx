@@ -39,14 +39,17 @@ export function LandingHero() {
     const video = heroVideoRef.current;
     if (!video) return;
 
-    const onCanPlay = () => {
+    const onReady = () => {
       void syncPlayback();
     };
 
+    const events = ["canplay", "loadeddata", "loadedmetadata", "playing"] as const;
+    for (const event of events) {
+      video.addEventListener(event, onReady);
+    }
+
     if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
       void syncPlayback();
-    } else {
-      video.addEventListener("canplay", onCanPlay);
     }
 
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -55,9 +58,17 @@ export function LandingHero() {
     };
     motionQuery.addEventListener("change", onMotionChange);
 
+    const onPageShow = () => {
+      void syncPlayback();
+    };
+    window.addEventListener("pageshow", onPageShow);
+
     return () => {
-      video.removeEventListener("canplay", onCanPlay);
+      for (const event of events) {
+        video.removeEventListener(event, onReady);
+      }
       motionQuery.removeEventListener("change", onMotionChange);
+      window.removeEventListener("pageshow", onPageShow);
     };
   }, [syncPlayback]);
 

@@ -30,11 +30,47 @@ export const LandingVideo = forwardRef<HTMLVideoElement, LandingVideoProps>(
     useImperativeHandle(ref, () => innerRef.current as HTMLVideoElement);
 
     useEffect(() => {
-      setIsReady(false);
-    }, [src]);
+      if (!fadeIn || !src) {
+        setIsReady(true);
+        return;
+      }
 
-    const markReady = () => {
+      setIsReady(false);
+      const el = innerRef.current;
+      if (!el) return;
+
+      const markReady = () => {
+        if (el.readyState >= HTMLMediaElement.HAVE_METADATA) {
+          setIsReady(true);
+        }
+      };
+
+      markReady();
+
+      const events = ["loadedmetadata", "loadeddata", "canplay", "playing"] as const;
+      for (const event of events) {
+        el.addEventListener(event, markReady);
+      }
+
+      // Mobile Safari can miss the first readiness event on cold load.
+      const fallback = window.setTimeout(markReady, 1500);
+
+      return () => {
+        window.clearTimeout(fallback);
+        for (const event of events) {
+          el.removeEventListener(event, markReady);
+        }
+      };
+    }, [fadeIn, src]);
+
+    const handleLoadedData = (event: React.SyntheticEvent<HTMLVideoElement>) => {
       setIsReady(true);
+      onLoadedData?.(event);
+    };
+
+    const handleCanPlay = (event: React.SyntheticEvent<HTMLVideoElement>) => {
+      setIsReady(true);
+      onCanPlay?.(event);
     };
 
     const opacityClass =
@@ -45,15 +81,9 @@ export const LandingVideo = forwardRef<HTMLVideoElement, LandingVideoProps>(
         ref={innerRef}
         src={src}
         className={`transition-opacity duration-700 ease-out ${opacityClass} ${className}`.trim()}
-        onLoadedData={(event) => {
-          markReady();
-          onLoadedData?.(event);
-        }}
-        onCanPlay={(event) => {
-          markReady();
-          onCanPlay?.(event);
-        }}
         {...rest}
+        onLoadedData={handleLoadedData}
+        onCanPlay={handleCanPlay}
       />
     );
   },
