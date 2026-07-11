@@ -90,7 +90,7 @@ export function AdminBookingsView() {
         </label>
         <AdminFilterDateRange>
           <AdminFilterDateField
-            label="Created from"
+            label="From"
             value={dateFrom}
             onChange={(value) => {
               setOffset(0);
@@ -98,7 +98,7 @@ export function AdminBookingsView() {
             }}
           />
           <AdminFilterDateField
-            label="Created to"
+            label="To"
             value={dateTo}
             onChange={(value) => {
               setOffset(0);

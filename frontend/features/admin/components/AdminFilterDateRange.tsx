@@ -2,10 +2,10 @@
 
 import type { ReactNode } from "react";
 
-/** Keeps a from/to date pair stacked on mobile; two columns on md; inline on lg+ filter bars. */
+/** From/to pair: two columns on mobile (fits iOS date inputs); inline on lg+ filter bars. */
 export function AdminFilterDateRange({ children }: { children: ReactNode }) {
   return (
-    <div className="grid w-full min-w-0 max-w-full grid-cols-1 gap-3 md:grid-cols-2 lg:contents">
+    <div className="grid w-full min-w-0 max-w-full grid-cols-2 gap-2 overflow-hidden sm:gap-3 md:gap-3 lg:contents">
       {children}
     </div>
   );

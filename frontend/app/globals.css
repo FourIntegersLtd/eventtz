@@ -317,6 +317,7 @@ body {
   min-height: 0;
   min-width: 0;
   flex: 1 1 0%;
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: none;
@@ -327,6 +328,29 @@ body {
   display: none;
   width: 0;
   height: 0;
+}
+
+/* Safari iOS: native date inputs ignore width unless min logical width is reset */
+.date-input-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.date-input-shell input[type="date"] {
+  grid-column: 1;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  -webkit-min-logical-width: 0;
+}
+
+.date-input-shell input[type="date"]::-webkit-date-and-time-value {
+  min-width: 0;
+  text-align: left;
 }
 
 /* Portal master-detail pages lock to viewport; cards scroll inside .scroll-pane */
