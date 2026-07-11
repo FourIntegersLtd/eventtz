@@ -14,7 +14,7 @@ export function VendorBookingsCalendarCard({ bookingsByDate, agendaRows, onSelec
   const agenda: CalendarAgendaItem[] = agendaRows.map((b) => ({
     id: b.id,
     title: b.event_name,
-    subtitle: b.client_email,
+    subtitle: b.client_email ?? undefined,
     date_key: b.event_date.slice(0, 10),
     href: `/vendor/bookings/${encodeURIComponent(b.id)}`,
   }));

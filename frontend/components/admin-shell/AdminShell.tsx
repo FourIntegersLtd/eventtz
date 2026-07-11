@@ -8,6 +8,7 @@ import {
   Receipt,
   ScrollText,
   Shield,
+  UserCog,
   Users,
   X,
   type LucideIcon,
@@ -28,6 +29,7 @@ const ADMIN_NAV: readonly { href: string; label: string; icon: LucideIcon }[] = 
   { href: "/admin/commerce?tab=bookings", label: "Commerce", icon: Receipt },
   { href: "/admin/directory?tab=vendors", label: "Directory", icon: Users },
   { href: "/admin/trust?tab=disputes", label: "Trust & safety", icon: Shield },
+  { href: "/admin/team", label: "Team", icon: UserCog },
   { href: "/admin/audit", label: "Activity log", icon: ScrollText },
 ];
 
@@ -52,6 +54,9 @@ function navItemActive(pathname: string, itemHref: string): boolean {
   if (itemHref.startsWith("/admin/audit")) {
     return pathname === "/admin/audit" || pathname.startsWith("/admin/audit/");
   }
+  if (itemHref.startsWith("/admin/team")) {
+    return pathname === "/admin/team" || pathname.startsWith("/admin/team/");
+  }
   return pathname === itemHref || pathname.startsWith(`${itemHref}/`);
 }
 
@@ -68,13 +73,15 @@ type AdminShellProps = {
 function NavLinks({
   pathname,
   onNavigate,
+  items,
 }: {
   pathname: string;
   onNavigate?: () => void;
+  items: readonly { href: string; label: string; icon: LucideIcon }[];
 }) {
   return (
     <>
-      {ADMIN_NAV.map((item) => {
+      {items.map((item) => {
         const active = navItemActive(pathname, item.href);
         const Icon = item.icon;
         return (
@@ -127,6 +134,8 @@ export function AdminShell({ title, children }: AdminShellProps) {
   const { user, signOut } = useAuth();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
+  const closeMobile = () => setMobileNavOpen(false);
+
   useEffect(() => {
     if (typeof document === "undefined") return;
     document.body.style.overflow = mobileNavOpen ? "hidden" : "";
@@ -135,16 +144,14 @@ export function AdminShell({ title, children }: AdminShellProps) {
     };
   }, [mobileNavOpen]);
 
-  const closeMobile = () => setMobileNavOpen(false);
-
   const signOutAdmin = async () => {
     await signOut();
     router.replace("/admin/login");
   };
 
   return (
-    <div className={`min-h-dvh w-full min-w-0 overflow-x-hidden ${adminPageBg} text-neutral-900`}>
-      <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-neutral-200/80 bg-neutral-50/95 px-3 py-3 backdrop-blur-md md:hidden">
+    <div className={`app-viewport-shell w-full min-w-0 overflow-x-hidden ${adminPageBg} text-neutral-900`}>
+      <header className="app-viewport-shell__mobile-nav z-30 flex items-center justify-between gap-3 border-b border-neutral-200/80 bg-neutral-50/95 px-3 backdrop-blur-md md:hidden">
         <EventtzLogo variant="sidebar" priority href="/admin/dashboard" className="min-w-0 shrink" />
         <button
           type="button"
@@ -180,7 +187,7 @@ export function AdminShell({ title, children }: AdminShellProps) {
               </button>
             </div>
             <nav className="mt-4 flex min-h-0 flex-1 flex-col space-y-0.5 overflow-y-auto">
-              <NavLinks pathname={pathname} onNavigate={closeMobile} />
+              <NavLinks pathname={pathname} onNavigate={closeMobile} items={ADMIN_NAV} />
             </nav>
             <AdminUserFooter
               email={user?.email}
@@ -193,23 +200,23 @@ export function AdminShell({ title, children }: AdminShellProps) {
         </div>
       ) : null}
 
-      <div className="grid w-full min-w-0 grid-cols-1 md:grid-cols-[240px_minmax(0,1fr)]">
-        <aside className="sticky top-0 hidden h-dvh max-h-dvh flex-col border-r border-neutral-200/80 bg-white p-5 md:flex">
+      <div className="app-viewport-shell__body w-full min-w-0 md:grid-cols-[240px_minmax(0,1fr)]">
+        <aside className={`app-viewport-shell__sidebar border-r border-neutral-200/80 bg-white p-5 ${adminPageBg}`}>
           <div className="shrink-0">
             <EventtzLogo variant="sidebar" priority href="/admin/dashboard" />
             <p className="mt-1 text-xs font-medium text-neutral-500">Admin console</p>
           </div>
-          <nav className="mt-6 flex min-h-0 flex-1 flex-col space-y-0.5 overflow-y-auto">
-            <NavLinks pathname={pathname} />
+          <nav className="scroll-pane mt-6 flex min-h-0 flex-1 flex-col space-y-0.5">
+            <NavLinks pathname={pathname} items={ADMIN_NAV} />
           </nav>
           <AdminUserFooter email={user?.email} onSignOut={() => void signOutAdmin()} />
         </aside>
 
-        <main className="h-full w-full min-w-0 overflow-x-hidden px-3 py-4 sm:px-6 sm:py-6">
-          <h1 className="break-words font-heading text-xl font-semibold text-neutral-900 sm:text-2xl">
+        <main className="app-viewport-shell__main overflow-x-hidden px-3 py-4 sm:px-6 sm:py-6">
+          <h1 className="shrink-0 break-words font-heading text-xl font-semibold text-neutral-900 sm:text-2xl">
             {title}
           </h1>
-          <div className="mt-4 min-w-0 sm:mt-5">{children}</div>
+          <div className="app-viewport-shell__main-scroll scroll-pane mt-4 min-w-0 sm:mt-5">{children}</div>
         </main>
       </div>
     </div>

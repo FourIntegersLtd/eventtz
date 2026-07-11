@@ -18,11 +18,15 @@ export type MasterDetailLayoutProps = {
  */
 export function MasterDetailLayout({ list, detail, hasSelection }: MasterDetailLayoutProps) {
   return (
-    <div className="flex h-full min-h-0 flex-col gap-6 lg:flex-row lg:gap-8">
-      <div className={`flex min-w-0 flex-1 flex-col lg:max-w-md ${hasSelection ? "hidden lg:flex" : ""}`}>
+    <div className="flex h-full max-h-full min-h-0 flex-col gap-4 md:gap-6 lg:flex-row lg:gap-8">
+      <div
+        className={`flex h-full max-h-full min-h-0 min-w-0 flex-1 flex-col lg:max-w-md ${hasSelection ? "hidden lg:flex" : ""}`}
+      >
         {list}
       </div>
-      <div className={`flex min-h-0 min-w-0 flex-1 flex-col ${hasSelection ? "" : "hidden lg:flex"}`}>
+      <div
+        className={`flex h-full max-h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden ${hasSelection ? "" : "hidden lg:flex"}`}
+      >
         {detail}
       </div>
     </div>

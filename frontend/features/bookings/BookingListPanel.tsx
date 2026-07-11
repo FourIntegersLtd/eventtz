@@ -47,7 +47,7 @@ export function BookingListPanel({
   emptyTitle,
 }: BookingListPanelProps) {
   return (
-    <>
+    <div className="flex h-full min-h-0 flex-col">
       <SegmentedControl
         aria-label="Booking status filter"
         options={TAB_OPTIONS}
@@ -56,12 +56,12 @@ export function BookingListPanel({
       />
 
       {error ? (
-        <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <p className="mt-4 shrink-0 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
         </p>
       ) : null}
 
-      <div className="mt-4 min-h-0 flex-1 overflow-y-auto rounded-2xl bg-white shadow-sm ring-1 ring-neutral-200/50">
+      <div className="scroll-pane mt-4 min-h-0 flex-1 rounded-2xl bg-white shadow-sm ring-1 ring-neutral-200/50">
         {loading ? (
           <div className="p-5">
             <SkeletonListRows rows={4} />
@@ -147,6 +147,6 @@ export function BookingListPanel({
           </ul>
         )}
       </div>
-    </>
+    </div>
   );
 }

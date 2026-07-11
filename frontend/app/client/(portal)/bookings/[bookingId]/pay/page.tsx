@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import { LoadingState } from "@/components/ui/LoadingState";
 import {
   AddressFinderInput,
   type AddressFinderValue,
@@ -77,12 +78,7 @@ export default function ClientBookingPayPage() {
   };
 
   if (loading) {
-    return (
-      <div className="mx-auto flex min-h-[50vh] w-full max-w-md flex-col items-center justify-center gap-4 px-4 text-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
-        <p className="text-sm text-neutral-600">Preparing secure checkout…</p>
-      </div>
-    );
+    return <LoadingState label="Preparing secure checkout…" variant="page" />;
   }
 
   if (needsVenue) {
@@ -136,10 +132,7 @@ export default function ClientBookingPayPage() {
           </button>
         </>
       ) : (
-        <>
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
-          <p className="text-sm text-neutral-600">Redirecting you to secure checkout…</p>
-        </>
+        <LoadingState label="Redirecting you to secure checkout…" variant="page" />
       )}
     </div>
   );

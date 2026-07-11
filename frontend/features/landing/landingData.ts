@@ -160,7 +160,7 @@ export const INSPIRATION_SECTION = {
  */
 export const GALLERY_VIDEOS: GalleryVideo[] = [
   {
-    src: "/videos/hero.mp4",
+    src: "/videos/hero1.mp4",
     alt: "Wedding celebration",
     eventName: "Weddings",
   },

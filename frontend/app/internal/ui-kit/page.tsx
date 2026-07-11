@@ -3,9 +3,17 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { ParticipantDisputeStatusBadge } from "@/components/ui/ParticipantDisputeStatusBadge";
+import { PaymentStatusBadge } from "@/components/ui/PaymentStatusBadge";
+import { VendorApprovalStatusBadge } from "@/components/ui/VendorApprovalStatusBadge";
+import { VendorProfileStatusBadge } from "@/components/ui/VendorProfileStatusBadge";
+import { AccountStatusBadge } from "@/components/ui/AccountStatusBadge";
+import { ReviewVisibilityBadge } from "@/components/ui/ReviewVisibilityBadge";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Drawer } from "@/components/ui/Drawer";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { LoadingState } from "@/components/ui/LoadingState";
 import { Skeleton, SkeletonListRows, SkeletonDetailHeader } from "@/components/ui/Skeleton";
 import { TextField } from "@/components/ui/TextField";
 import { TextArea } from "@/components/ui/TextArea";
@@ -60,14 +68,59 @@ export default function UiKitPage() {
         </div>
       </Section>
 
-      <Section title="StatusBadge">
-        <div className="flex flex-wrap items-center gap-2">
-          <StatusBadge status="pending" />
-          <StatusBadge status="accepted" />
-          <StatusBadge status="completed" />
-          <StatusBadge status="declined" />
-          <StatusBadge status="cancelled" />
-          <StatusBadge status="disputed" />
+      <Section title="SegmentedControl">
+        <div className="space-y-4">
+          <div>
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-500">Booking</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <StatusBadge status="pending" />
+              <StatusBadge status="accepted" />
+              <StatusBadge status="completed" />
+              <StatusBadge status="declined" />
+              <StatusBadge status="cancelled" />
+              <StatusBadge status="disputed" />
+            </div>
+          </div>
+          <div>
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-500">Payment</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <PaymentStatusBadge status="unpaid" />
+              <PaymentStatusBadge status="pending" />
+              <PaymentStatusBadge status="paid" />
+              <PaymentStatusBadge status="payout_released" />
+              <PaymentStatusBadge status="refunded" />
+              <PaymentStatusBadge status="partially_refunded" />
+            </div>
+          </div>
+          <div>
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-500">Dispute</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <ParticipantDisputeStatusBadge status="open" />
+              <ParticipantDisputeStatusBadge status="under_review" />
+              <ParticipantDisputeStatusBadge status="resolved" />
+              <ParticipantDisputeStatusBadge status="closed" />
+            </div>
+          </div>
+          <div>
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-500">Vendor</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <VendorApprovalStatusBadge status="pending" />
+              <VendorApprovalStatusBadge status="approved" />
+              <VendorApprovalStatusBadge status="banned" />
+              <VendorProfileStatusBadge status="draft" />
+              <VendorProfileStatusBadge status="submitted" />
+              <VendorProfileStatusBadge status="complete" />
+            </div>
+          </div>
+          <div>
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-500">Admin</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <AccountStatusBadge suspended={false} />
+              <AccountStatusBadge suspended={true} />
+              <ReviewVisibilityBadge hidden={false} />
+              <ReviewVisibilityBadge hidden={true} />
+            </div>
+          </div>
         </div>
       </Section>
 
@@ -103,6 +156,14 @@ export default function UiKitPage() {
         <Drawer isOpen={drawerOpen} onClose={() => setDrawerOpen(false)} title="Preview drawer" subtitle="Focus-trapped, Escape to close">
           <p className="text-sm text-neutral-600">Drawer content goes here.</p>
         </Drawer>
+      </Section>
+
+      <Section title="Loading">
+        <div className="space-y-6">
+          <LoadingState label="Loading…" variant="inline" />
+          <LoadingState label="Loading dashboard…" variant="centered" />
+          <LoadingSpinner size="lg" />
+        </div>
       </Section>
 
       <Section title="Skeleton">

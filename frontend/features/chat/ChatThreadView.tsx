@@ -5,7 +5,9 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight, FileText, Receipt, Send } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/Button";
+import { LoadingState } from "@/components/ui/LoadingState";
 import { VendorQuoteFormModal } from "@/features/vendor/quotes/VendorQuoteFormModal";
+import { formatDateTime } from "@/lib/dateFormat";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import {
   CHAT_UNREAD_CLEARED_EVENT,
@@ -33,22 +35,7 @@ type ChatThreadViewProps = {
 
 function formatBubbleTime(iso: string | null | undefined): string {
   if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  const now = new Date();
-  const sameDay =
-    d.getFullYear() === now.getFullYear() &&
-    d.getMonth() === now.getMonth() &&
-    d.getDate() === now.getDate();
-  if (sameDay) {
-    return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
-  }
-  return d.toLocaleString("en-GB", {
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatDateTime(iso);
 }
 
 function asQuoteMetadata(m: ChatMessage): ChatQuoteMetadata | null {
@@ -206,8 +193,8 @@ export function ChatThreadView({
 
   if (loading) {
     return (
-      <div className="rounded-2xl bg-white px-5 py-8 text-sm text-neutral-500 shadow-sm ring-1 ring-neutral-200/50">
-        Loading conversation…
+      <div className="rounded-2xl bg-white px-5 py-8 shadow-sm ring-1 ring-neutral-200/50">
+        <LoadingState label="Loading conversation…" variant="centered" className="py-4" />
       </div>
     );
   }
@@ -235,8 +222,8 @@ export function ChatThreadView({
 
   return (
     <div
-      className={`flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-neutral-200/50 ${
-        isDrawer ? "min-h-[50dvh]" : "min-h-[min(70dvh,680px)]"
+      className={`flex max-h-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-neutral-200/50 ${
+        isDrawer ? "min-h-[50dvh]" : "h-full min-h-0 flex-1"
       }`}
     >
       {/* Header — matches inbox card header */}
@@ -300,8 +287,8 @@ export function ChatThreadView({
 
       {/* Messages */}
       <div
-        className={`flex min-h-0 flex-1 flex-col overflow-y-auto px-5 py-5 ${
-          isDrawer ? "min-h-[36dvh]" : "min-h-[42dvh]"
+        className={`scroll-pane flex min-h-0 flex-1 flex-col px-5 py-5 ${
+          isDrawer ? "min-h-[36dvh]" : ""
         }`}
       >
         {messages.length === 0 ? (

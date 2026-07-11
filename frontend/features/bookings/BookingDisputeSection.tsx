@@ -1,8 +1,11 @@
 "use client";
 
 import { AlertTriangle, ChevronRight } from "lucide-react";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Drawer } from "@/components/ui/Drawer";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { LoadingState } from "@/components/ui/LoadingState";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import {
   fetchClientBookingDisputes,
@@ -13,14 +16,16 @@ import {
 } from "@/lib/bookingDisputesApi";
 import {
   canOpenDisputeForBookingStatus,
-  participantDisputeStatusLabel,
 } from "@/lib/bookingDisputeHelpers";
+import { ParticipantDisputeStatusBadge } from "@/components/ui/ParticipantDisputeStatusBadge";
+import type { PortalRole } from "@/components/portal-shell/portalNav";
+import { portalRoute } from "@/components/portal-shell/portalNav";
 
 const POLL_MS = 50_000;
 
 type Props = {
   bookingId: string;
-  role: "client" | "vendor";
+  role: PortalRole;
   /** Current booking row status — gates “open new dispute” to match backend rules. */
   bookingStatus: string;
   /** Inline card (default) or compact row + slide-over drawer (booking detail panels). */
@@ -85,7 +90,7 @@ export function BookingDisputeSection({
   const body = (
     <>
       {loading ? (
-        <p className="mt-3 text-xs text-neutral-500">Loading…</p>
+        <LoadingState label="Loading…" variant="inline" className="mt-3" />
       ) : (
         <>
           {error ? (
@@ -96,15 +101,15 @@ export function BookingDisputeSection({
 
           {disputes.length > 0 ? (
             <ul className="mt-3 space-y-2">
-              {disputes.map((d) => (
+              {disputes.map((d) => {
+                const detailHref = `${portalRoute(role, "disputes")}/${encodeURIComponent(d.id)}`;
+                return (
                 <li
                   key={d.id}
                   className="rounded-xl border border-neutral-200 bg-white/80 px-3 py-2.5 text-sm"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-medium text-neutral-900">
-                      {participantDisputeStatusLabel(d.status)}
-                    </span>
+                    <ParticipantDisputeStatusBadge status={d.status} />
                     <span className="text-xs text-neutral-500">
                       {d.created_at ? new Date(d.created_at).toLocaleString("en-GB") : ""}
                     </span>
@@ -118,8 +123,15 @@ export function BookingDisputeSection({
                       {d.resolution_note}
                     </p>
                   ) : null}
+                  <Link
+                    href={detailHref}
+                    className="mt-2 inline-flex text-xs font-semibold text-primary hover:underline"
+                  >
+                    View dispute details
+                  </Link>
                 </li>
-              ))}
+              );
+              })}
             </ul>
           ) : null}
 
@@ -184,13 +196,18 @@ export function BookingDisputeSection({
                 Help &amp; disputes
               </p>
               <p className="mt-0.5 text-xs text-neutral-600">
-                {loading
-                  ? "Loading…"
-                  : hasActive
-                    ? "A case is open — tap for status"
-                    : disputes.length > 0
-                      ? "View past cases"
-                      : "Report an issue with this booking"}
+                {loading ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <LoadingSpinner size="sm" className="text-neutral-400" />
+                    Loading…
+                  </span>
+                ) : hasActive ? (
+                  "A case is open — tap for status"
+                ) : disputes.length > 0 ? (
+                  "View past cases"
+                ) : (
+                  "Report an issue with this booking"
+                )}
               </p>
             </div>
           </div>

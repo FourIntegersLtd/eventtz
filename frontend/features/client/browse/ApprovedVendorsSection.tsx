@@ -4,6 +4,7 @@ import type React from "react";
 import Link from "next/link";
 import { useMemo } from "react";
 import type { ExploreVendor } from "@/lib/clientExploreApi";
+import { LoadingState } from "@/components/ui/LoadingState";
 import { VendorPortfolioCover } from "@/components/vendor/VendorPortfolioCover";
 import { displayEventTypes, displayServicesOffered } from "@/features/client/browse/browseLabels";
 
@@ -40,7 +41,7 @@ export function ApprovedVendorsSection({
       </h3>
       {subtitle ? <p className="mt-1 text-sm text-neutral-600">{subtitle}</p> : null}
       {loading ? (
-        <p className="mt-4 text-sm text-neutral-600">Loading approved vendors…</p>
+        <LoadingState label="Loading approved vendors…" variant="centered" className="mt-4 py-8" />
       ) : error ? (
         <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}

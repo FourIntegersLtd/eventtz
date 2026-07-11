@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ImagePlus, Trash2, Video, X } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { portfolioFileKey } from "@/lib/portfolioFileKey";
 import { SOCIAL_PLATFORM_OPTIONS } from "../constants";
 import type { PortfolioImageQualityRow } from "../useVendorOnboardingController";
@@ -188,7 +189,10 @@ export function StepPortfolio({
               const accepted = portfolioQualityAccepted[key];
               const src = objectUrls[key];
               const status = q?.loading ? (
-                "Checking quality…"
+                <span className="inline-flex items-center gap-1.5">
+                  <LoadingSpinner size="sm" className="text-neutral-500" />
+                  Checking quality…
+                </span>
               ) : q && !q.loading ? (
                 q.skipped ? (
                   "Check skipped"
@@ -263,8 +267,15 @@ export function StepPortfolio({
               }`}
             >
               <Video className="h-7 w-7" strokeWidth={1.5} />
-              <span className="text-sm font-medium hover:underline">
-                {uploadingVideo ? "Uploading…" : "Click to upload a short video"}
+              <span className="inline-flex items-center gap-2 text-sm font-medium hover:underline">
+                {uploadingVideo ? (
+                  <>
+                    <LoadingSpinner size="sm" />
+                    Uploading…
+                  </>
+                ) : (
+                  "Click to upload a short video"
+                )}
               </span>
             </label>
           </div>

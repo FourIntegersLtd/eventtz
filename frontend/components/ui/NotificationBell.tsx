@@ -118,7 +118,7 @@ export function NotificationBell({ portal, unreadCount, onMarkedRead }: Notifica
               View all
             </Link>
           </div>
-          <div className="max-h-96 overflow-y-auto p-2">
+          <div className="scroll-pane max-h-96 p-2">
             {loading ? (
               <div className="p-2">
                 <SkeletonListRows rows={3} />

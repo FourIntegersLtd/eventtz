@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Calendar, ExternalLink, MapPin, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { paymentStatusLabel, paymentStatusToneClasses } from "@/lib/bookingStatusStyles";
+import { PaymentStatusBadge } from "@/components/ui/PaymentStatusBadge";
 import { SkeletonDetailHeader } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { BookingPricingBreakdown } from "@/features/bookings/BookingPricingBreakdown";
@@ -56,7 +56,7 @@ export function BookingDetailPanel({
 }: BookingDetailPanelProps) {
   if (loading) {
     return (
-      <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50">
+      <div className="flex h-full max-h-full min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50">
         <SkeletonDetailHeader />
       </div>
     );
@@ -64,7 +64,7 @@ export function BookingDetailPanel({
 
   if (error) {
     return (
-      <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50">
+      <div className="flex h-full max-h-full min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50">
         <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
         </p>
@@ -74,26 +74,22 @@ export function BookingDetailPanel({
 
   if (!booking) {
     return (
-      <div className="flex min-h-0 flex-1 items-center justify-center rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50">
+      <div className="flex h-full max-h-full min-h-0 flex-1 items-center justify-center overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50">
         <EmptyState title={emptyTitle} className="border-0" />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50 sm:p-8">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+    <div className="flex h-full max-h-full min-h-0 flex-1 flex-col gap-6 overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50 sm:p-8">
+      <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         <div className="min-w-0 flex-1">
           <h2 className="font-heading text-xl font-semibold text-neutral-900">{booking.eventName}</h2>
           <p className="mt-1 text-xs text-neutral-500">{booking.timelineLabel}</p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <StatusBadge status={booking.status} />
             {booking.paymentStatus ? (
-              <span
-                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${paymentStatusToneClasses(booking.paymentStatus)}`}
-              >
-                {paymentStatusLabel(booking.paymentStatus)}
-              </span>
+              <PaymentStatusBadge status={booking.paymentStatus} />
             ) : null}
           </div>
         </div>
@@ -107,14 +103,13 @@ export function BookingDetailPanel({
       </div>
 
       {actionError ? (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+        <p className="shrink-0 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
           {actionError}
         </p>
       ) : null}
 
-      {slots.beforeSections}
-
-      <div className="min-h-0 flex-1 space-y-8 overflow-y-auto pr-1">
+      <div className="scroll-pane min-h-0 flex-1 space-y-8 pr-1">
+        {slots.beforeSections}
         <section>
           <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-neutral-500">Event &amp; contact</h3>
           <div className="mt-3 grid gap-px overflow-hidden rounded-2xl bg-neutral-200/50 ring-1 ring-neutral-200/50 sm:grid-cols-2">
@@ -217,7 +212,7 @@ export function BookingDetailPanel({
       </div>
 
       {footerActions.length > 0 ? (
-        <div className="mt-auto border-t border-neutral-100 pt-6">
+        <div className="mt-auto shrink-0 border-t border-neutral-100 pt-6">
           <div className="flex flex-wrap justify-end gap-2">
             {footerActions.map((a) => (
               <ActionButton key={a.key} action={a} />

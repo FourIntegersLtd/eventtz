@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { AccountStatusBadge } from "@/components/ui/AccountStatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { fetchAdminClients, patchClientSuspended, type AdminClientRow } from "@/lib/adminPlatformApi";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
@@ -86,15 +87,7 @@ export function AdminClientsView() {
                     {r.created_at ? String(r.created_at).slice(0, 10) : "—"}
                   </AdminTableCell>
                   <AdminTableCell>
-                    {r.account_suspended ? (
-                      <span className="inline-flex rounded-full bg-neutral-200 px-2.5 py-0.5 text-xs font-semibold text-neutral-700">
-                        Suspended
-                      </span>
-                    ) : (
-                      <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-900">
-                        Active
-                      </span>
-                    )}
+                    <AccountStatusBadge suspended={r.account_suspended} />
                   </AdminTableCell>
                   <AdminTableCell className="text-right">
                     <button

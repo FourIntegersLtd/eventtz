@@ -6,6 +6,7 @@ import { fetchVendorPublicReviews, type PublicReviewItem } from "@/lib/reviewsAp
 import { StarRating } from "@/components/ui/StarRating";
 import { LandingSectionHeading } from "@/features/landing/LandingSectionHeading";
 import { LandingSection } from "@/features/landing/LandingSection";
+import { LoadingState } from "@/components/ui/LoadingState";
 
 const MAX_REVIEWS = 3;
 const PREVIEW_LEN = 180;
@@ -83,15 +84,7 @@ export function LandingReviewsSection() {
       <LandingSectionHeading eyebrow="Reviews" title="What clients are saying" />
 
       {loading ? (
-        <div className="mt-10 grid gap-5 sm:mt-12 sm:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-44 animate-pulse rounded-2xl bg-primary-muted"
-              aria-hidden
-            />
-          ))}
-        </div>
+        <LoadingState label="Loading reviews…" variant="centered" className="mt-10 py-12" />
       ) : (
         <div className="mt-10 grid gap-5 sm:mt-12 sm:grid-cols-3">
           {reviews.map((review) => (

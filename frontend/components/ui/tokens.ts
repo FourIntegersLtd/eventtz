@@ -45,6 +45,5 @@ export const TOUCH_TARGET = "min-h-11 min-w-11";
 /** Full-page shells — dvh accounts for mobile browser chrome. */
 export const VIEWPORT_MIN = "min-h-dvh";
 
-/** Modal panel width on narrow viewports. */
-export const MODAL_PANEL =
-  "w-full max-w-[calc(100vw-2rem)] sm:max-w-none";
+/** Modal panel base width — max width comes from Modal's `maxWidthClassName`. */
+export const MODAL_PANEL = "w-full";

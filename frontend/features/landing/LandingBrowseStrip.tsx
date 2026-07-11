@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { CATEGORIES } from "@/features/landing/landingData";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { LandingSection } from "@/features/landing/LandingSection";
 import { useCategoryVendorCounts } from "@/features/marketplace/useCategoryVendorCounts";
 
@@ -47,7 +48,9 @@ export function LandingBrowseStrip() {
                 {counts[value] ?? 0} vendor{counts[value] === 1 ? "" : "s"}
               </span>
             ) : (
-              <span className="h-3 w-12 animate-pulse rounded bg-neutral-200" aria-hidden />
+              <span className="inline-flex items-center justify-center" aria-label="Loading vendor counts">
+                <LoadingSpinner size="sm" className="text-neutral-400" />
+              </span>
             )}
           </Link>
         ))}

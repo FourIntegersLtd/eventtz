@@ -4,6 +4,67 @@ export type VendorApprovalStatus = "pending" | "approved" | "banned";
 
 export type VendorProfileStatus = "draft" | "submitted" | "complete";
 
+export type VendorApprovalStatusMeta = {
+  status: VendorApprovalStatus;
+  label: string;
+  badgeClassName: string;
+};
+
+export type VendorProfileStatusMeta = {
+  status: VendorProfileStatus;
+  label: string;
+  badgeClassName: string;
+};
+
+export const VENDOR_APPROVAL_STATUS_META: Record<VendorApprovalStatus, VendorApprovalStatusMeta> = {
+  pending: {
+    status: "pending",
+    label: "Pending",
+    badgeClassName: "bg-amber-100 text-amber-900",
+  },
+  approved: {
+    status: "approved",
+    label: "Approved",
+    badgeClassName: "bg-emerald-100 text-emerald-900",
+  },
+  banned: {
+    status: "banned",
+    label: "Banned",
+    badgeClassName: "bg-red-100 text-red-900",
+  },
+};
+
+export const VENDOR_PROFILE_STATUS_META: Record<VendorProfileStatus, VendorProfileStatusMeta> = {
+  draft: {
+    status: "draft",
+    label: "Draft",
+    badgeClassName: "bg-neutral-100 text-neutral-700",
+  },
+  submitted: {
+    status: "submitted",
+    label: "Submitted",
+    badgeClassName: "bg-sky-100 text-sky-900",
+  },
+  complete: {
+    status: "complete",
+    label: "Complete",
+    badgeClassName: "bg-emerald-100 text-emerald-900",
+  },
+};
+
+const KNOWN_VENDOR_APPROVAL = new Set<string>(Object.keys(VENDOR_APPROVAL_STATUS_META));
+const KNOWN_VENDOR_PROFILE = new Set<string>(Object.keys(VENDOR_PROFILE_STATUS_META));
+
+export function getVendorApprovalStatusMeta(raw: string): VendorApprovalStatusMeta {
+  const status = KNOWN_VENDOR_APPROVAL.has(raw) ? (raw as VendorApprovalStatus) : "pending";
+  return VENDOR_APPROVAL_STATUS_META[status];
+}
+
+export function getVendorProfileStatusMeta(raw: string): VendorProfileStatusMeta {
+  const status = KNOWN_VENDOR_PROFILE.has(raw) ? (raw as VendorProfileStatus) : "draft";
+  return VENDOR_PROFILE_STATUS_META[status];
+}
+
 // ---------------------------------------------------------------------------
 // Booking domain — shared between client and vendor portals so status colors,
 // labels, and cross-role shapes are defined exactly once. See cursor.md /
@@ -124,3 +185,24 @@ export function toBookingStatus(raw: string): BookingStatus {
 export function getBookingStatusMeta(raw: string): BookingStatusMeta {
   return BOOKING_STATUS_META[toBookingStatus(raw)];
 }
+
+/** Shared booking line item shape for client and vendor detail responses. */
+export type BookingLineItem = {
+  id: string;
+  heading: string;
+  unit_price_gbp: number | null;
+  description?: string | null;
+  feature_lines?: string[];
+  timeline_line?: string | null;
+};
+
+/** List filter: active = pending+accepted, closed = declined+cancelled (+ completed for some APIs). */
+export type ParticipantBookingsListGroup = "active" | "closed" | "completed";
+
+export type ConfirmCompletionResponse = {
+  success: boolean;
+  id: string;
+  status: string;
+  payment_status: string;
+  awaiting_other_party: boolean;
+};

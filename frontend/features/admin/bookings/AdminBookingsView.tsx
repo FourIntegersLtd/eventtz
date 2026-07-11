@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { PaymentStatusBadge } from "@/components/ui/PaymentStatusBadge";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminFilterBar } from "@/features/admin/components/AdminFilterBar";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
@@ -20,7 +21,6 @@ import {
   AdminTableRow,
 } from "@/features/admin/components/AdminTable";
 import { useAdminBookings } from "@/features/admin/bookings/useAdminBookings";
-import { paymentStatusLabel, paymentStatusToneClasses } from "@/lib/bookingStatusStyles";
 
 const STATUSES = ["", "pending", "accepted", "completed", "declined", "cancelled"];
 
@@ -148,11 +148,7 @@ export function AdminBookingsView() {
                     </AdminTableCell>
                     <AdminTableCell className="text-neutral-700">{r.client_total_label ?? "—"}</AdminTableCell>
                     <AdminTableCell>
-                      <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${paymentStatusToneClasses(r.payment_status)}`}
-                      >
-                        {paymentStatusLabel(r.payment_status)}
-                      </span>
+                      <PaymentStatusBadge status={r.payment_status} />
                     </AdminTableCell>
                     <AdminTableCell className="text-right">
                       <Link

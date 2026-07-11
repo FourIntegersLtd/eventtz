@@ -61,6 +61,14 @@ export type AdminBookingsListResponse = {
   limit: number;
 };
 
+export type AdminFinancialsDailyBucket = {
+  date: string;
+  count: number;
+  gmv_gbp: number;
+  platform_fee_gbp: number;
+  vendor_portion_gbp: number;
+};
+
 export type AdminFinancialsSummary = {
   success: boolean;
   period_from: string | null;
@@ -74,6 +82,8 @@ export type AdminFinancialsSummary = {
   payout_released_gbp: number;
   /** Vendor portion collected but still sitting in Eventtz's Stripe balance. */
   held_in_platform_balance_gbp: number;
+  /** Present once backend exposes time-series buckets; empty when unavailable. */
+  daily?: AdminFinancialsDailyBucket[];
   disclaimer: string;
 };
 
@@ -94,6 +104,7 @@ export type AdminDisputeCase = {
   internal_notes?: string | null;
   resolution_note?: string | null;
   assigned_admin_id?: string | null;
+  assigned_admin_email?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
   resolved_at?: string | null;
@@ -122,6 +133,11 @@ export type AdminReviewRow = {
   body: string;
   hidden_at?: string | null;
   created_at?: string | null;
+  vendor_display_name?: string | null;
+  client_email?: string | null;
+  booking_event_name?: string | null;
+  booking_event_date?: string | null;
+  booking_status?: string | null;
 };
 
 export type AdminChatMessageItem = {
@@ -134,6 +150,7 @@ export type AdminChatMessageItem = {
 export type AdminAuditLogItem = {
   id: string;
   admin_user_id?: string | null;
+  admin_email?: string | null;
   action: string;
   entity_type: string;
   entity_id?: string | null;
@@ -185,7 +202,7 @@ export async function fetchAdminFinancials(
   const { data } = await api.get<AdminFinancialsSummary>("/api/v1/admin/financials/summary", {
     params: { date_from, date_to },
   });
-  return data;
+  return { ...data, daily: data.daily ?? [] };
 }
 
 export async function downloadAdminFinancialsCsv(date_from?: string, date_to?: string): Promise<void> {
@@ -236,18 +253,35 @@ export async function patchAdminDispute(
   return data;
 }
 
-export async function fetchAdminReviews(offset = 0, limit = 100): Promise<{
+export async function fetchAdminReviews(
+  offset = 0,
+  limit = 100,
+  vendorUserId?: string | null,
+): Promise<{
   reviews: AdminReviewRow[];
   total: number;
 }> {
+  const params: Record<string, string | number> = { offset, limit };
+  const vendorId = vendorUserId?.trim();
+  if (vendorId) params.vendor_user_id = vendorId;
   const { data } = await api.get<{
     success: boolean;
     reviews: AdminReviewRow[];
     total: number;
     offset: number;
     limit: number;
-  }>("/api/v1/admin/reviews", { params: { offset, limit } });
+  }>("/api/v1/admin/reviews", { params });
   return { reviews: data.reviews ?? [], total: data.total ?? 0 };
+}
+
+export async function fetchAdminReview(reviewId: string): Promise<AdminReviewRow> {
+  const { data } = await api.get<{ success: boolean; review: AdminReviewRow }>(
+    `/api/v1/admin/reviews/${reviewId}`,
+  );
+  if (!data.review) {
+    throw new Error("Review not found");
+  }
+  return data.review;
 }
 
 export async function patchReviewVisibility(reviewId: string, hidden: boolean): Promise<void> {
@@ -289,6 +323,13 @@ export async function fetchAdminAuditLog(offset = 0, limit = 100): Promise<{
     total: number;
   }>("/api/v1/admin/audit-log", { params: { offset, limit } });
   return { entries: data.entries ?? [], total: data.total ?? 0 };
+}
+
+export async function fetchAdminAuditLogEntry(entryId: string): Promise<AdminAuditLogItem> {
+  const { data } = await api.get<{ success: boolean; entry: AdminAuditLogItem }>(
+    `/api/v1/admin/audit-log/${entryId}`,
+  );
+  return data.entry;
 }
 
 export async function patchBookingPaymentFields(

@@ -27,3 +27,31 @@ export function participantDisputeStatusLabel(status: string): string {
       return status;
   }
 }
+
+export function participantDisputeStatusBadgeClass(status: string): string {
+  switch (status) {
+    case "open":
+      return "bg-amber-100 text-amber-900";
+    case "under_review":
+      return "bg-sky-100 text-sky-900";
+    case "resolved":
+      return "bg-emerald-100 text-emerald-900";
+    case "closed":
+      return "bg-neutral-200 text-neutral-700";
+    default:
+      return "bg-neutral-100 text-neutral-700";
+  }
+}
+
+export function participantDisputeBookingLabel(dispute: {
+  event_name?: string | null;
+  event_date?: string | null;
+}): string {
+  if (dispute.event_name) {
+    const date = dispute.event_date
+      ? ` · ${new Date(dispute.event_date).toLocaleDateString("en-GB", { dateStyle: "medium" })}`
+      : "";
+    return `${dispute.event_name}${date}`;
+  }
+  return "Booking";
+}

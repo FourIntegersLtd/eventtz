@@ -12,7 +12,7 @@ type ClientBookingReviewFormProps = {
   vendorName: string;
   /** Pre-selects a star rating (e.g. arriving from the dashboard nudge) and auto-focuses the write-up. */
   initialRating?: number;
-  onSubmitted: (review: { id: string; rating: number; created_at: string | null }) => void;
+  onSubmitted: (review: { id: string; rating: number; body: string; created_at: string | null }) => void;
 };
 
 /**

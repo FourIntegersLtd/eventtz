@@ -16,12 +16,11 @@ import {
   postCancelClientBooking,
   postClientConfirmCompletion,
   type ClientBookingDetail,
-  type ClientBookingListItem,
 } from "@/lib/clientBookingsApi";
 import { ClientBookingReviewForm } from "@/features/client/bookings/ClientBookingReviewForm";
 import { BookingDisputeSection } from "@/features/bookings/BookingDisputeSection";
 import { BookingDetailPanel } from "@/features/bookings/BookingDetailPanel";
-import { BookingListPanel, type BookingListTab } from "@/features/bookings/BookingListPanel";
+import { BookingListPanel } from "@/features/bookings/BookingListPanel";
 import { MasterDetailLayout } from "@/features/bookings/MasterDetailLayout";
 import type { BookingDetailAction } from "@/features/bookings/bookingViewModel";
 import { ChatDrawer } from "@/features/chat/ChatDrawer";
@@ -33,17 +32,9 @@ import {
   BOOKING_NOTIFICATIONS_CLEARED_EVENT,
   markAllClientBookingNotificationsRead,
 } from "@/lib/clientNotificationsApi";
-import { useRealtimeRefresh } from "@/lib/realtimeHooks";
-
-function groupForStatus(status: string): BookingListTab {
-  if (status === "pending" || status === "accepted") return "active";
-  return "closed";
-}
-
-const EMPTY_LIST_TITLE: Record<BookingListTab, string> = {
-  active: "No active bookings",
-  closed: "No closed bookings",
-};
+import { BOOKING_EMPTY_LIST_TITLE } from "@/features/bookings/bookingListConstants";
+import { useParticipantBookingsScaffold } from "@/features/bookings/useParticipantBookingsScaffold";
+import { BookingReviewPanel } from "@/features/reviews/BookingReviewPanel";
 
 type ClientBookingsViewProps = {
   /** Present on `/client/bookings/[bookingId]` — absent on the `/client/bookings` index. */
@@ -56,18 +47,34 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
   const rateParam = Number(searchParams.get("rate") ?? "");
   const deepLinkRating = rateParam >= 1 && rateParam <= 5 ? rateParam : undefined;
 
-  const [tab, setTab] = useState<BookingListTab>("active");
-  const [list, setList] = useState<ClientBookingListItem[]>([]);
-  const [listLoading, setListLoading] = useState(true);
-  const [listError, setListError] = useState<string | null>(null);
-  const [detail, setDetail] = useState<ClientBookingDetail | null>(null);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [detailError, setDetailError] = useState<string | null>(null);
-  const [detailTick, setDetailTick] = useState(0);
+  const fetchList = useCallback((t: "active" | "closed") => fetchClientBookings(t), []);
+  const fetchDetail = useCallback((id: string) => fetchClientBookingDetail(id), []);
+  const getDetailStatus = useCallback((b: ClientBookingDetail) => b.status, []);
+
+  const {
+    tab,
+    setTab,
+    list,
+    listLoading,
+    listError,
+    detail,
+    setDetail,
+    detailLoading,
+    detailError,
+    bumpDetail,
+    actionError,
+    setActionError,
+    chatOpen,
+    setChatOpen,
+  } = useParticipantBookingsScaffold({
+    selectedBookingId,
+    fetchList,
+    fetchDetail,
+    getDetailStatus,
+  });
+
   const [actionBusy, setActionBusy] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
   const [cancelOpen, setCancelOpen] = useState(false);
-  const [chatOpen, setChatOpen] = useState(false);
   const [pendingQuoteAction, setPendingQuoteAction] = useState<null | "accept" | "decline">(null);
   const [quoteAcceptVenue, setQuoteAcceptVenue] = useState<AddressFinderValue>({
     postcode: "",
@@ -98,66 +105,6 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
       });
   }, []);
 
-  const loadList = useCallback(async () => {
-    setListLoading(true);
-    setListError(null);
-    try {
-      const rows = await fetchClientBookings(tab);
-      setList(rows);
-    } catch {
-      setListError("Could not load bookings.");
-      setList([]);
-    } finally {
-      setListLoading(false);
-    }
-  }, [tab]);
-
-  useEffect(() => {
-    void loadList();
-  }, [loadList]);
-
-  useRealtimeRefresh(
-    "bookings:refresh",
-    () => {
-      void loadList();
-      setDetailTick((n) => n + 1);
-    },
-    [tab, loadList],
-  );
-
-  useEffect(() => {
-    setActionError(null);
-    setChatOpen(false);
-  }, [selectedBookingId]);
-
-  useEffect(() => {
-    if (!selectedBookingId) {
-      setDetail(null);
-      return;
-    }
-    let cancelled = false;
-    setDetailLoading(true);
-    setDetailError(null);
-    void fetchClientBookingDetail(selectedBookingId)
-      .then((b) => {
-        if (cancelled) return;
-        setDetail(b);
-        setTab((prev) => (groupForStatus(b.status) === prev ? prev : groupForStatus(b.status)));
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setDetailError("Could not load this booking.");
-          setDetail(null);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setDetailLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedBookingId, detailTick]);
-
   const confirmCancelBooking = async () => {
     if (!detail?.id) return;
     setActionError(null);
@@ -165,7 +112,7 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
     try {
       await postCancelClientBooking(detail.id);
       setCancelOpen(false);
-      setDetailTick((n) => n + 1);
+      bumpDetail();
     } catch (e: unknown) {
       setActionError(getApiErrorDetail(e) ?? "Could not cancel this booking.");
     } finally {
@@ -194,7 +141,7 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
       } else {
         await patchClientBookingStatus(bookingId, next);
       }
-      setDetailTick((n) => n + 1);
+      bumpDetail();
     } catch (e: unknown) {
       setActionError(getApiErrorDetail(e) ?? "Could not update this quote.");
     } finally {
@@ -212,7 +159,7 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
     try {
       await postClientConfirmCompletion(detail.id);
       setConfirmCompleteOpen(false);
-      setDetailTick((n) => n + 1);
+      bumpDetail();
     } catch (e: unknown) {
       setActionError(getApiErrorDetail(e) ?? "Could not confirm completion.");
     } finally {
@@ -332,16 +279,16 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
             error={listError}
             selectedId={selectedBookingId ?? null}
             onSelect={(id) => router.push(`/client/bookings/${id}`)}
-            emptyTitle={EMPTY_LIST_TITLE[tab]}
+            emptyTitle={BOOKING_EMPTY_LIST_TITLE[tab]}
           />
         }
         detail={
-          <>
+          <div className="flex h-full min-h-0 flex-col overflow-hidden">
             {selectedBookingId ? (
               <button
                 type="button"
                 onClick={() => router.push("/client/bookings")}
-                className="mb-3 inline-flex w-fit items-center gap-1 text-sm font-medium text-neutral-600 hover:text-neutral-900 lg:hidden"
+                className="mb-3 inline-flex w-fit shrink-0 items-center gap-1 text-sm font-medium text-neutral-600 hover:text-neutral-900 lg:hidden"
               >
                 ← Back to bookings
               </button>
@@ -414,14 +361,12 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
                 afterSections:
                   detail && detail.status === "completed" ? (
                     detail.review ? (
-                      <section className="rounded-xl border border-amber-200/80 bg-gradient-to-b from-amber-50/80 to-white px-4 py-3">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-amber-950/80">
-                          Your review
-                        </p>
-                        <p className="mt-2 text-sm text-neutral-700">
-                          {detail.review.rating} out of 5 stars. Thanks for helping the community.
-                        </p>
-                      </section>
+                      <BookingReviewPanel
+                        title="Your review"
+                        review={detail.review}
+                        variant="amber"
+                        emptyLabel="No review yet."
+                      />
                     ) : (
                       <ClientBookingReviewForm
                         bookingId={detail.id}
@@ -445,7 +390,7 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
                 ),
               }}
             />
-          </>
+          </div>
         }
       />
     </>

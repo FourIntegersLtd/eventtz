@@ -7,6 +7,9 @@ export type AuthUser = {
   email: string | null;
   /** From public.users when synced; defaults to client in local mode. */
   user_type?: UserType;
+  /** Present for admin accounts: super_admin can manage the team. */
+  admin_role?: "super_admin" | "admin" | null;
+  account_suspended?: boolean;
   user_metadata: Record<string, unknown>;
   app_metadata: Record<string, unknown>;
 };

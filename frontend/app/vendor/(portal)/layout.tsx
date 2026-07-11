@@ -6,17 +6,7 @@ import { RequireAuth } from "@/components/auth/RequireAuth";
 import { RequireVendor } from "@/components/auth/RequireVendor";
 import { RequireVendorApproved } from "@/components/auth/RequireVendorApproved";
 import { PortalShell } from "@/components/portal-shell/PortalShell";
-
-function titleForPathname(pathname: string): string {
-  if (pathname.startsWith("/vendor/messages")) return "Messages";
-  if (pathname.startsWith("/vendor/bookings")) return "Bookings";
-  if (pathname.startsWith("/vendor/payments")) return "Payments";
-  if (pathname.startsWith("/vendor/settings")) return "Settings";
-  if (pathname.startsWith("/vendor/profile")) return "Vendor profile";
-  if (pathname.startsWith("/vendor/notifications")) return "Notifications";
-  if (pathname.startsWith("/vendor/dashboard")) return "Dashboard";
-  return "";
-}
+import { portalPageTitle } from "@/components/portal-shell/portalNav";
 
 /**
  * Every authenticated vendor route shares this shell — new routes under
@@ -26,16 +16,18 @@ function titleForPathname(pathname: string): string {
 export default function VendorPortalLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isProfileRoute = pathname.startsWith("/vendor/profile");
+  const title = portalPageTitle(pathname, "vendor");
+
   return (
     <RequireAuth redirectTo={`/login?next=${encodeURIComponent(pathname)}`}>
       <RequireVendor>
         {isProfileRoute ? (
-          <PortalShell portal="vendor" title={titleForPathname(pathname)}>
+          <PortalShell portal="vendor" title={title}>
             {children}
           </PortalShell>
         ) : (
           <RequireVendorApproved>
-            <PortalShell portal="vendor" title={titleForPathname(pathname)}>
+            <PortalShell portal="vendor" title={title}>
               {children}
             </PortalShell>
           </RequireVendorApproved>

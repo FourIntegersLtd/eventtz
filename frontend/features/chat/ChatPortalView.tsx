@@ -7,6 +7,7 @@ import { type ChatConversation, fetchConversations } from "@/lib/chatApi";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SkeletonListRows } from "@/components/ui/Skeleton";
+import { formatDateTime } from "@/lib/dateFormat";
 import { MasterDetailLayout } from "@/features/bookings/MasterDetailLayout";
 import { ChatThreadView } from "@/features/chat/ChatThreadView";
 
@@ -25,19 +26,7 @@ function peerInitials(name: string): string {
 
 function formatActivity(iso: string | null | undefined): string {
   if (!iso) return "No messages yet";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-
-  const now = new Date();
-  const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startMsg = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const dayDiff = Math.round((startToday.getTime() - startMsg.getTime()) / 86_400_000);
-  const time = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
-
-  if (dayDiff === 0) return time;
-  if (dayDiff === 1) return "Yesterday";
-  if (dayDiff > 1 && dayDiff < 7) return d.toLocaleDateString("en-GB", { weekday: "short" });
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  return formatDateTime(iso);
 }
 
 /**
@@ -78,14 +67,15 @@ export function ChatPortalView({ portal, selectedConversationId }: ChatPortalVie
     <MasterDetailLayout
       hasSelection={!!selectedConversationId}
       list={
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-neutral-200/50">
+        <div className="flex h-full max-h-full min-h-0 flex-col overflow-hidden">
+        <div className="flex h-full max-h-full min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-neutral-200/50">
           <div className="border-b border-neutral-100 px-5 py-4">
             <p className="text-sm font-semibold text-neutral-900">
               {rows.length} conversation{rows.length === 1 ? "" : "s"}
             </p>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="scroll-pane min-h-0 flex-1">
             {loading ? (
               <div className="p-5">
                 <SkeletonListRows rows={5} />
@@ -135,7 +125,7 @@ export function ChatPortalView({ portal, selectedConversationId }: ChatPortalVie
                             >
                               {c.peer_display_name}
                             </p>
-                            <p className="shrink-0 text-xs tabular-nums text-neutral-400">
+                            <p className="shrink-0 text-right text-xs tabular-nums text-neutral-400">
                               {formatActivity(c.last_message_at ?? c.created_at)}
                             </p>
                           </div>
@@ -158,21 +148,22 @@ export function ChatPortalView({ portal, selectedConversationId }: ChatPortalVie
             )}
           </div>
         </div>
+        </div>
       }
       detail={
         selectedConversationId ? (
-          <>
+          <div className="flex h-full min-h-0 flex-col overflow-hidden">
             <button
               type="button"
               onClick={() => router.push(base)}
-              className="mb-3 inline-flex w-fit items-center gap-1 text-sm font-medium text-neutral-600 hover:text-neutral-900 lg:hidden"
+              className="mb-3 inline-flex w-fit shrink-0 items-center gap-1 text-sm font-medium text-neutral-600 hover:text-neutral-900 lg:hidden"
             >
               ← Back to messages
             </button>
             <ChatThreadView portal={portal} conversationId={selectedConversationId} />
-          </>
+          </div>
         ) : (
-          <div className="flex min-h-0 flex-1 items-center justify-center rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50">
+          <div className="flex h-full min-h-0 flex-1 items-center justify-center overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50">
             <EmptyState
               className="border-0"
               icon={<MessageSquare className="h-9 w-9" strokeWidth={1.5} />}

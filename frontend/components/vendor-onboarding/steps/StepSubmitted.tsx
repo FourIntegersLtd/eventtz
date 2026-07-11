@@ -1,4 +1,5 @@
 import type { VendorApprovalStatus } from "@/lib/domain-types";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 type StepSubmittedProps = {
   approvalStatus: VendorApprovalStatus;
@@ -52,9 +53,16 @@ export function StepSubmitted({
             type="button"
             disabled={refreshing}
             onClick={onRefreshStatus}
-            className="font-medium text-primary underline hover:no-underline disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-2 font-medium text-primary underline hover:no-underline disabled:opacity-50"
           >
-            {refreshing ? "Checking…" : "Check approval status"}
+            {refreshing ? (
+              <>
+                <LoadingSpinner size="sm" />
+                Checking…
+              </>
+            ) : (
+              "Check approval status"
+            )}
           </button>
         </p>
       )}

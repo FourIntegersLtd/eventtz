@@ -1,3 +1,5 @@
+import { getVendorApprovalStatusMeta } from "@/lib/domain-types";
+
 export function payloadStr(p: Record<string, unknown>, key: string): string {
   const v = p[key];
   return typeof v === "string" ? v : v != null ? String(v) : "";
@@ -16,18 +18,27 @@ export function displayValue(v: unknown): string {
   return String(v);
 }
 
-export function approvalBadgeClasses(status: string): string {
-  if (status === "approved") {
-    return "rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary";
-  }
-  if (status === "banned") {
-    return "rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-900";
-  }
-  return "rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900";
+export function approvalLabel(status: string): string {
+  return getVendorApprovalStatusMeta(status).label;
 }
 
-export function approvalLabel(status: string): string {
-  if (status === "approved") return "Approved";
-  if (status === "banned") return "Banned";
-  return "Pending";
+/** Turn snake_case API values into readable labels. */
+export function formatPayloadLabel(value: string): string {
+  if (!value.trim()) return "—";
+  return value
+    .trim()
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+export function formatPayloadLabels(values: string[]): string[] {
+  return values.map((v) => formatPayloadLabel(v)).filter((v) => v !== "—");
+}
+
+export function formatMoneyLabel(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed === "—") return "—";
+  if (/^£/.test(trimmed)) return trimmed;
+  if (/^\d/.test(trimmed)) return `£${trimmed}`;
+  return trimmed;
 }

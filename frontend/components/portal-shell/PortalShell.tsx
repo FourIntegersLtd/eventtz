@@ -2,16 +2,8 @@
 
 import Link from "next/link";
 import {
-  CalendarDays,
-  Compass,
-  Heart,
-  LayoutDashboard,
   LogOut,
   Menu,
-  MessageSquare,
-  Settings,
-  UserCircle2,
-  Wallet,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -30,12 +22,18 @@ import { fetchVendorBookings } from "@/lib/vendorBookingsApi";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 import { NotificationBell } from "@/components/ui/NotificationBell";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import {
+  isPortalNavActive,
+  portalDashboardHref,
+  portalNavItems,
+  type PortalRole,
+} from "@/components/portal-shell/portalNav";
 
 export type PortalShellProps = {
   title: string;
   children: ReactNode;
   /** Client accounts use client routes only — no vendor onboarding/profile in the sidebar. */
-  portal?: "vendor" | "client";
+  portal?: PortalRole;
 };
 
 type NavItem = {
@@ -43,40 +41,6 @@ type NavItem = {
   label: string;
   icon: LucideIcon;
 };
-
-const VENDOR_NAV: readonly NavItem[] = [
-  { href: "/vendor/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/vendor/bookings", label: "Bookings", icon: CalendarDays },
-  { href: "/vendor/messages", label: "Messages", icon: MessageSquare },
-  { href: "/vendor/profile", label: "Profile", icon: UserCircle2 },
-  { href: "/vendor/payments", label: "Payments", icon: Wallet },
-  { href: "/vendor/settings", label: "Settings", icon: Settings },
-];
-
-const CLIENT_NAV: readonly NavItem[] = [
-  { href: "/client/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/client/browse", label: "Browse", icon: Compass },
-  { href: "/client/favorites", label: "Favorites", icon: Heart },
-  { href: "/client/bookings", label: "Bookings", icon: CalendarDays },
-  { href: "/client/messages", label: "Messages", icon: MessageSquare },
-  { href: "/client/settings", label: "Settings", icon: Settings },
-];
-
-function isNavActive(pathname: string, href: string): boolean {
-  if (href === "/vendor/bookings") return pathname.startsWith("/vendor/bookings");
-  if (href === "/client/bookings") {
-    return pathname === "/client/bookings" || pathname.startsWith("/client/bookings/");
-  }
-  if (href === "/client/messages") return pathname.startsWith("/client/messages");
-  if (href === "/vendor/messages") return pathname.startsWith("/vendor/messages");
-  if (href === "/client/browse") return pathname.startsWith("/client/browse");
-  if (href === "/client/favorites") return pathname.startsWith("/client/favorites");
-  if (href === "/vendor/profile") return pathname.startsWith("/vendor/profile");
-  if (href === "/vendor/payments") return pathname.startsWith("/vendor/payments");
-  if (href === "/vendor/settings") return pathname.startsWith("/vendor/settings");
-  if (href === "/client/settings") return pathname.startsWith("/client/settings");
-  return pathname === href;
-}
 
 function ShellNavLinks({
   navItems,
@@ -90,7 +54,7 @@ function ShellNavLinks({
 }: {
   navItems: readonly NavItem[];
   pathname: string;
-  portal: "vendor" | "client";
+  portal: PortalRole;
   user: AuthUser | null;
   bookingUnread: number | null;
   chatUnread: number | null;
@@ -100,7 +64,7 @@ function ShellNavLinks({
   return (
     <>
       {navItems.map((item) => {
-        const active = isNavActive(pathname, item.href);
+        const active = isPortalNavActive(pathname, item.href);
         const Icon = item.icon;
         const showBookingBadge =
           portal === "client" &&
@@ -300,10 +264,8 @@ export function PortalShell({
     };
   }, [mobileNavOpen]);
 
-  const logoHref = pathname.startsWith("/client")
-    ? "/client/dashboard"
-    : "/vendor/dashboard";
-  const navItems = portal === "client" ? CLIENT_NAV : VENDOR_NAV;
+  const logoHref = portalDashboardHref(portal);
+  const navItems = portalNavItems(portal);
   const roleFallback = portal === "client" ? "Client" : "Vendor";
 
   const closeMobile = () => setMobileNavOpen(false);
@@ -339,7 +301,7 @@ export function PortalShell({
   } as const;
 
   return (
-    <div className="min-h-dvh w-full min-w-0 overflow-x-hidden bg-page-bg text-neutral-900">
+    <div className="app-viewport-shell w-full min-w-0 overflow-x-hidden bg-page-bg text-neutral-900">
       <ConfirmDialog
         isOpen={signOutOpen}
         title="Sign out?"
@@ -352,8 +314,8 @@ export function PortalShell({
         onConfirm={() => void handleSignOut()}
       />
 
-      {/* Mobile top bar */}
-      <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-neutral-200/60 bg-white/80 px-4 py-3 backdrop-blur-xl md:hidden">
+      {/* Mobile top bar — fixed height; page scroll is in main only */}
+      <header className="app-viewport-shell__mobile-nav z-30 flex items-center justify-between gap-3 border-b border-neutral-200/60 bg-white/80 px-4 backdrop-blur-xl md:hidden">
         <EventtzLogo variant="sidebar" priority href={logoHref} className="min-w-0 shrink" />
         <div className="flex shrink-0 items-center gap-1.5">
           {notificationBell}
@@ -392,7 +354,7 @@ export function PortalShell({
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <nav className="mt-8 flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
+            <nav className="scroll-pane mt-8 flex min-h-0 flex-1 flex-col gap-1">
               <ShellNavLinks {...navProps} onNavigate={closeMobile} />
             </nav>
             <UserFooter
@@ -407,14 +369,14 @@ export function PortalShell({
         </div>
       ) : null}
 
-      <div className="grid w-full min-w-0 grid-cols-1 md:grid-cols-[248px_minmax(0,1fr)]">
-        {/* Desktop sidebar */}
-        <aside className="sticky top-0 hidden h-dvh max-h-dvh flex-col border-r border-neutral-200/60 bg-white/70 px-4 py-5 backdrop-blur-xl md:flex md:px-5">
+      <div className="app-viewport-shell__body w-full min-w-0 md:grid-cols-[248px_minmax(0,1fr)]">
+        {/* Desktop sidebar — fixed column height; nav scrolls inside */}
+        <aside className="app-viewport-shell__sidebar border-r border-neutral-200/60 bg-white/70 px-4 py-5 backdrop-blur-xl md:px-5">
           <div className="shrink-0 px-1">
             <EventtzLogo variant="sidebar" priority href={logoHref} />
           </div>
 
-          <nav className="mt-8 flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
+          <nav className="scroll-pane mt-8 flex min-h-0 flex-1 flex-col gap-1">
             <ShellNavLinks {...navProps} />
           </nav>
 
@@ -425,9 +387,9 @@ export function PortalShell({
           />
         </aside>
 
-        <main className="h-full w-full min-w-0 overflow-x-hidden px-4 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
-          <div className="mx-auto flex h-full w-full min-w-0 max-w-6xl flex-col">
-            <div className="flex items-center justify-between gap-3">
+        <main className="app-viewport-shell__main overflow-x-hidden px-4 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
+          <div className="flex h-full min-h-0 w-full min-w-0 flex-col">
+            <div className="flex shrink-0 items-center justify-between gap-3">
               {title ? (
                 <h1 className="min-w-0 break-words font-heading text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl">
                   {title}
@@ -437,7 +399,11 @@ export function PortalShell({
               )}
               <div className="hidden shrink-0 md:block">{notificationBell}</div>
             </div>
-            <div className={`min-w-0 flex-1 ${title ? "mt-5 sm:mt-6" : "mt-3"}`}>{children}</div>
+            <div
+              className={`portal-content app-viewport-shell__main-scroll scroll-pane min-w-0 ${title ? "mt-5 sm:mt-6" : "mt-3"}`}
+            >
+              {children}
+            </div>
           </div>
         </main>
       </div>

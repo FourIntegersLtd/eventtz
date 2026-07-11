@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { MapPin, Loader2, X } from "lucide-react";
+import { MapPin, X } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import {
   fetchAddressAutocomplete,
   fetchAddressFindByPostcode,
@@ -315,9 +316,9 @@ export function AddressFinderInput({
           className="w-full rounded-lg border border-neutral-200 py-2 pl-9 pr-10 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:bg-neutral-50 disabled:text-neutral-500"
         />
         {busy || resolving ? (
-          <Loader2
-            className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-neutral-400"
-            aria-hidden
+          <LoadingSpinner
+            size="sm"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400"
           />
         ) : showClear ? (
           <button

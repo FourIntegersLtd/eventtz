@@ -1,28 +1,24 @@
 "use client";
 
 import Link from "next/link";
+import { MessageSquare } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Drawer } from "@/components/ui/Drawer";
+import { adminCard } from "@/features/admin/adminTheme";
 import { patchAdminDispute, type AdminDisputeCase } from "@/lib/adminPlatformApi";
+import { fetchAdminTeam, type AdminTeamMember } from "@/lib/adminTeamApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { DisputePanelSection, DisputePartiesPanel } from "./DisputePartiesSummary";
 import {
-  DisputeOpenedByCallout,
-  DisputePartiesSummary,
-} from "./DisputePartiesSummary";
-import {
-  assignmentLabel,
-  bookingStatusLabel,
   DISPUTE_STATUSES,
   disputeBookingLabel,
-  disputeStatusBadgeClass,
-  formatEventDate,
-  formatWhen,
   resolutionActionLabel,
-  statusLabel,
 } from "./disputeFormatters";
+import { participantDisputeStatusLabel } from "@/lib/bookingDisputeHelpers";
+import { AdminChatThread } from "@/features/admin/chat/AdminChatThread";
 
 type DisputeActionPanelProps = {
   dispute: AdminDisputeCase;
@@ -46,16 +42,20 @@ export function DisputeActionPanel({
   const [error, setError] = useState<string | null>(null);
   const [confirmClose, setConfirmClose] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<AdminDisputeCase["status"] | null>(null);
-  const [showTechnical, setShowTechnical] = useState(false);
+  const [team, setTeam] = useState<AdminTeamMember[]>([]);
+  const [chatOpen, setChatOpen] = useState(false);
+
+  useEffect(() => {
+    void fetchAdminTeam()
+      .then(setTeam)
+      .catch(() => setTeam([]));
+  }, []);
 
   useEffect(() => {
     setSharedNote(dispute.resolution_note ?? "");
     setStatus(dispute.status);
+    setChatOpen(false);
   }, [dispute.id, dispute.resolution_note, dispute.status]);
-
-  const chatHref = dispute.conversation_id
-    ? `/admin/trust?tab=chat&conversation=${encodeURIComponent(dispute.conversation_id)}`
-    : null;
 
   const canResolve = dispute.status === "open" || dispute.status === "under_review";
 
@@ -89,12 +89,11 @@ export function DisputeActionPanel({
     }
   };
 
-  const assignToMe = async () => {
-    if (!user?.id) return;
+  const assignAdmin = async (adminId: string | null) => {
     setError(null);
     setAssignBusy(true);
     try {
-      await patchAdminDispute(dispute.id, { assigned_admin_id: user.id });
+      await patchAdminDispute(dispute.id, { assigned_admin_id: adminId });
       await onUpdated();
     } catch (e: unknown) {
       setError(getApiErrorDetail(e) ?? "Could not assign dispute.");
@@ -132,186 +131,143 @@ export function DisputeActionPanel({
           </div>
         }
       >
-        <div className="space-y-5 text-sm">
+        <div className="space-y-8 text-sm">
           {error ? (
             <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-red-800">{error}</p>
           ) : null}
 
-          <div className="flex flex-wrap items-center gap-2">
-            <span
-              className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${disputeStatusBadgeClass(dispute.status)}`}
-            >
-              {statusLabel(dispute.status)}
-            </span>
+          <DisputePanelSection label="Report">
             {dispute.resolution_action ? (
-              <span className="text-xs text-neutral-500">
-                {resolutionActionLabel(dispute.resolution_action)}
-              </span>
+              <p className="text-xs text-neutral-500">{resolutionActionLabel(dispute.resolution_action)}</p>
             ) : null}
-          </div>
-
-          <DisputeOpenedByCallout dispute={dispute} />
-
-          <section className="space-y-3 rounded-xl border border-neutral-100 bg-neutral-50/50 p-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Booking parties</h3>
-            <DisputePartiesSummary dispute={dispute} />
-            <dl className="space-y-2 border-t border-neutral-100 pt-3">
-              <div>
-                <dt className="text-xs text-neutral-500">Event</dt>
-                <dd className="mt-0.5 font-medium text-neutral-900">
-                  {dispute.event_name ?? "—"}
-                  {dispute.event_date ? (
-                    <span className="font-normal text-neutral-600"> · {formatEventDate(dispute.event_date)}</span>
-                  ) : null}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs text-neutral-500">Booking status</dt>
-                <dd className="mt-0.5 capitalize text-neutral-800">
-                  {bookingStatusLabel(dispute.booking_status)}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs text-neutral-500">View booking</dt>
-                <dd className="mt-0.5">
-                  <Link
-                    href={`/admin/bookings/${dispute.booking_request_id}`}
-                    className="text-sm font-medium text-primary hover:underline"
-                  >
-                    Open booking details
-                  </Link>
-                </dd>
-              </div>
-              {chatHref ? (
-                <div>
-                  <dt className="text-xs text-neutral-500">Messages</dt>
-                  <dd className="mt-0.5">
-                    <Link href={chatHref} className="text-sm font-medium text-primary hover:underline">
-                      View conversation
-                    </Link>
-                  </dd>
-                </div>
-              ) : null}
-            </dl>
-          </section>
-
-          <section>
-            <h3 className="text-sm font-medium text-neutral-800">What they reported</h3>
-            <p className="mt-2 whitespace-pre-wrap rounded-xl border border-neutral-100 bg-white p-3 text-neutral-900">
+            <p className="whitespace-pre-wrap rounded-xl border border-neutral-200 bg-neutral-50/70 px-4 py-3.5 leading-relaxed text-neutral-900">
               {dispute.summary}
             </p>
-          </section>
+          </DisputePanelSection>
 
-          <div>
-            <label htmlFor="dispute-shared-note" className="text-sm font-medium text-neutral-800">
-              Message for client and vendor
-            </label>
-            <textarea
-              id="dispute-shared-note"
-              value={sharedNote}
-              onChange={(e) => setSharedNote(e.target.value)}
-              rows={5}
-              className="mt-2 w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm"
-              placeholder="Your message…"
-            />
-            <Button
-              variant="secondary"
-              size="sm"
-              className="mt-2"
-              loading={noteBusy}
-              onClick={() => void saveSharedNote()}
-            >
-              Save message
-            </Button>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label htmlFor="dispute-status" className="text-sm font-medium text-neutral-800">
-                Status
-              </label>
-              <select
-                id="dispute-status"
-                value={status}
-                disabled={statusBusy}
-                onChange={(e) => {
-                  const next = e.target.value as AdminDisputeCase["status"];
-                  if (next === "resolved") {
-                    onResolve(dispute);
-                    return;
-                  }
-                  setStatus(next);
-                  onStatusSelect(next);
-                }}
-                className="mt-2 w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm capitalize"
-              >
-                {DISPUTE_STATUSES.map((s) => (
-                  <option key={s} value={s}>
-                    {statusLabel(s)}
-                  </option>
-                ))}
-              </select>
+          <DisputePanelSection label="Booking">
+            <div className={`${adminCard} p-4`}>
+              <DisputePartiesPanel
+                dispute={dispute}
+                actions={
+                  <>
+                    <Link
+                      href={`/admin/bookings/${dispute.booking_request_id}`}
+                      className="text-sm font-medium text-primary hover:underline"
+                    >
+                      Open booking
+                    </Link>
+                    {dispute.conversation_id ? (
+                      <Button
+                        variant={chatOpen ? "primary" : "secondary"}
+                        size="sm"
+                        icon={<MessageSquare className="h-4 w-4" aria-hidden />}
+                        onClick={() => setChatOpen((open) => !open)}
+                      >
+                        {chatOpen ? "Hide messages" : "Review messages"}
+                      </Button>
+                    ) : null}
+                  </>
+                }
+              />
+              {chatOpen && dispute.conversation_id ? (
+                <div className="mt-5 border-t border-neutral-100 pt-5">
+                  <AdminChatThread conversationId={dispute.conversation_id} compact />
+                </div>
+              ) : null}
             </div>
+          </DisputePanelSection>
+
+          <DisputePanelSection label="Case">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="dispute-status" className="mb-1.5 block text-sm text-neutral-700">
+                  Status
+                </label>
+                <select
+                  id="dispute-status"
+                  value={status}
+                  disabled={statusBusy}
+                  onChange={(e) => {
+                    const next = e.target.value as AdminDisputeCase["status"];
+                    if (next === "resolved") {
+                      onResolve(dispute);
+                      return;
+                    }
+                    setStatus(next);
+                    onStatusSelect(next);
+                  }}
+                  className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2.5 text-sm"
+                >
+                  {DISPUTE_STATUSES.map((s) => (
+                    <option key={s} value={s}>
+                      {participantDisputeStatusLabel(s)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="dispute-assignee" className="mb-1.5 block text-sm text-neutral-700">
+                  Assigned to
+                </label>
+                <select
+                  id="dispute-assignee"
+                  value={dispute.assigned_admin_id ?? ""}
+                  disabled={assignBusy}
+                  onChange={(e) => {
+                    const next = e.target.value || null;
+                    void assignAdmin(next);
+                  }}
+                  className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2.5 text-sm"
+                >
+                  <option value="">Unassigned</option>
+                  {team
+                    .filter((m) => !m.account_suspended)
+                    .map((m) => (
+                      <option key={m.user_id} value={m.user_id}>
+                        {m.email ?? m.user_id}
+                        {m.user_id === user?.id ? " (you)" : ""}
+                      </option>
+                    ))}
+                </select>
+                {user?.id && dispute.assigned_admin_id !== user.id ? (
+                  <button
+                    type="button"
+                    disabled={assignBusy}
+                    onClick={() => void assignAdmin(user.id)}
+                    className="mt-2 text-xs font-medium text-primary hover:underline disabled:opacity-50"
+                  >
+                    Assign to me
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          </DisputePanelSection>
+
+          <DisputePanelSection label="Message">
             <div>
-              <p className="text-sm font-medium text-neutral-800">Assignment</p>
-              <p className="mt-2 text-sm text-neutral-700">
-                {assignmentLabel(dispute.assigned_admin_id, user?.id)}
-              </p>
+              <label htmlFor="dispute-shared-note" className="mb-1.5 block text-sm text-neutral-700">
+                For client and vendor
+              </label>
+              <textarea
+                id="dispute-shared-note"
+                value={sharedNote}
+                onChange={(e) => setSharedNote(e.target.value)}
+                rows={4}
+                className="w-full rounded-lg border border-neutral-200 px-3 py-2.5 text-sm"
+                placeholder="Your message…"
+              />
               <Button
                 variant="secondary"
                 size="sm"
-                className="mt-2"
-                loading={assignBusy}
-                disabled={!user?.id || dispute.assigned_admin_id === user?.id}
-                onClick={() => void assignToMe()}
+                className="mt-3"
+                loading={noteBusy}
+                onClick={() => void saveSharedNote()}
               >
-                Assign to me
+                Save message
               </Button>
             </div>
-          </div>
-
-          <dl className="grid gap-2 rounded-xl border border-neutral-100 bg-neutral-50/30 p-3 text-xs text-neutral-500 sm:grid-cols-3">
-            <div>
-              <dt>Created</dt>
-              <dd className="mt-0.5 text-neutral-700">{formatWhen(dispute.created_at)}</dd>
-            </div>
-            <div>
-              <dt>Updated</dt>
-              <dd className="mt-0.5 text-neutral-700">{formatWhen(dispute.updated_at)}</dd>
-            </div>
-            <div>
-              <dt>Resolved</dt>
-              <dd className="mt-0.5 text-neutral-700">{formatWhen(dispute.resolved_at)}</dd>
-            </div>
-          </dl>
-
-          <div>
-            <button
-              type="button"
-              onClick={() => setShowTechnical((v) => !v)}
-              className="text-xs font-medium text-neutral-500 hover:text-neutral-700"
-            >
-              {showTechnical ? "Hide" : "Show"} technical references
-            </button>
-            {showTechnical ? (
-              <dl className="mt-2 space-y-1 rounded-lg border border-neutral-100 bg-neutral-50 p-3 font-mono text-[11px] text-neutral-600">
-                <div>
-                  <dt className="inline text-neutral-400">Dispute </dt>
-                  <dd className="inline break-all">{dispute.id}</dd>
-                </div>
-                <div>
-                  <dt className="inline text-neutral-400">Booking </dt>
-                  <dd className="inline break-all">{dispute.booking_request_id}</dd>
-                </div>
-                {dispute.conversation_id ? (
-                  <div>
-                    <dt className="inline text-neutral-400">Chat </dt>
-                    <dd className="inline break-all">{dispute.conversation_id}</dd>
-                  </div>
-                ) : null}
-              </dl>
-            ) : null}
-          </div>
+          </DisputePanelSection>
         </div>
       </Drawer>
 

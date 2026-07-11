@@ -64,7 +64,7 @@ export function NotificationsPageView({ portal }: NotificationsPageViewProps) {
   );
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="w-full min-w-0 max-w-3xl">
       {error ? (
         <p className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
           {error}

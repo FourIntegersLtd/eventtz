@@ -1,4 +1,5 @@
 import type { AdminDisputeCase } from "@/lib/adminPlatformApi";
+import { participantDisputeBookingLabel, participantDisputeStatusBadgeClass } from "@/lib/bookingDisputeHelpers";
 
 export function formatWhen(iso: string | null | undefined): string {
   if (!iso) return "—";
@@ -12,18 +13,7 @@ export function statusLabel(s: AdminDisputeCase["status"]): string {
 }
 
 export function disputeStatusBadgeClass(status: AdminDisputeCase["status"]): string {
-  switch (status) {
-    case "open":
-      return "bg-amber-100 text-amber-900";
-    case "under_review":
-      return "bg-sky-100 text-sky-900";
-    case "resolved":
-      return "bg-emerald-100 text-emerald-900";
-    case "closed":
-      return "bg-neutral-200 text-neutral-700";
-    default:
-      return "bg-neutral-100 text-neutral-700";
-  }
+  return participantDisputeStatusBadgeClass(status);
 }
 
 export function resolutionActionLabel(a: AdminDisputeCase["resolution_action"]): string {
@@ -74,18 +64,16 @@ export function bookingStatusLabel(status: string | null | undefined): string {
 }
 
 export function disputeBookingLabel(dispute: AdminDisputeCase): string {
-  if (dispute.event_name) {
-    const date = dispute.event_date ? ` · ${formatEventDate(dispute.event_date)}` : "";
-    return `${dispute.event_name}${date}`;
-  }
-  return "Booking";
+  return participantDisputeBookingLabel(dispute);
 }
 
 export function assignmentLabel(
   assignedAdminId: string | null | undefined,
   currentUserId: string | null | undefined,
+  assignedAdminEmail?: string | null,
 ): string {
   if (!assignedAdminId) return "Unassigned";
   if (currentUserId && assignedAdminId === currentUserId) return "Assigned to you";
-  return "Assigned to another admin";
+  if (assignedAdminEmail) return assignedAdminEmail;
+  return "Assigned to colleague";
 }

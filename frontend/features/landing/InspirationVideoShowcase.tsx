@@ -6,7 +6,7 @@ import { InspirationVideoTile } from "@/features/landing/InspirationVideoTile";
 import type { GalleryVideo } from "@/features/landing/landingData";
 import { prefetchLandingVideo } from "@/lib/landingVideo";
 
-const AUTO_MS = 4000;
+const AUTO_MS = 3500;
 
 type InspirationVideoShowcaseProps = {
   videos: GalleryVideo[];

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { LoadingState } from "@/components/ui/LoadingState";
 import { dashboardPathForUserType } from "@/features/auth/authRouting";
 import type { UserType } from "@/lib/domain-types";
 
@@ -33,7 +34,7 @@ export function RequireRole({
   if (loading || !user || !user.user_type || !roles.includes(user.user_type)) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-10">
-        <p className="text-sm text-neutral-600">{loadingLabel}</p>
+        <LoadingState label={loadingLabel} variant="centered" />
       </div>
     );
   }

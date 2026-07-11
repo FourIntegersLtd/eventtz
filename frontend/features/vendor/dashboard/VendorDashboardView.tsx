@@ -45,7 +45,7 @@ export function VendorDashboardView() {
         priority: 0,
         tone: "urgent",
         title: b.event_name,
-        subtitle: b.client_email ? `Waiting for your reply · ${b.client_email}` : "Waiting for your reply",
+        subtitle: "Waiting for your reply",
         timestamp: shortDateLabel(b.event_date),
         href: `/vendor/bookings/${b.id}`,
       });

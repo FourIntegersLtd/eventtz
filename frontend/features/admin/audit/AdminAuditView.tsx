@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { fetchAdminAuditLog, type AdminAuditLogItem } from "@/lib/adminPlatformApi";
@@ -25,9 +26,10 @@ import {
   formatAuditSummary,
   formatAuditWhen,
   getAuditCategory,
-  hasTechnicalPayload,
+  getAuditCategoryMeta,
   type AuditCategory,
 } from "./auditFormatters";
+import { AuditBadge, AuditEntityBadge } from "./AuditBadges";
 
 export function AdminAuditView() {
   const [entries, setEntries] = useState<AdminAuditLogItem[]>([]);
@@ -92,49 +94,55 @@ export function AdminAuditView() {
             <AdminTableHead>
               <AdminTableHeaderCell>When</AdminTableHeaderCell>
               <AdminTableHeaderCell>What happened</AdminTableHeaderCell>
-              <AdminTableHeaderCell>Details</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Admin</AdminTableHeaderCell>
               <AdminTableHeaderCell>Related to</AdminTableHeaderCell>
+              <AdminTableHeaderCell className="text-right"> </AdminTableHeaderCell>
             </AdminTableHead>
             <AdminTableBody>
               {filtered.map((e) => {
                 const href = auditEntityHref(e);
                 const entityLabel = formatAuditEntityLabel(e.entity_type);
+                const summary = formatAuditSummary(e);
+                const categoryMeta = getAuditCategoryMeta(e.action);
                 return (
                   <AdminTableRow key={e.id}>
                     <AdminTableCell className="whitespace-nowrap text-sm text-neutral-600">
                       {formatAuditWhen(e.created_at)}
                     </AdminTableCell>
                     <AdminTableCell>
-                      <p className="text-sm font-medium text-neutral-900">
-                        {formatAuditActionLabel(e.action)}
-                      </p>
-                    </AdminTableCell>
-                    <AdminTableCell className="max-w-md text-sm text-neutral-700">
-                      <p>{formatAuditSummary(e)}</p>
-                      {hasTechnicalPayload(e) ? (
-                        <details className="mt-2">
-                          <summary className="cursor-pointer text-xs text-neutral-500 hover:text-neutral-700">
-                            Technical record
-                          </summary>
-                          <pre className="mt-1 max-h-32 overflow-auto rounded-lg border border-neutral-100 bg-neutral-50 p-2 font-mono text-[10px] text-neutral-600">
-                            {JSON.stringify(e.payload, null, 2)}
-                          </pre>
-                        </details>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <AuditBadge
+                          label={categoryMeta.label}
+                          badgeClassName={categoryMeta.badgeClassName}
+                        />
+                        <p className="text-sm font-medium text-neutral-900">
+                          {formatAuditActionLabel(e.action)}
+                        </p>
+                      </div>
+                      {summary ? (
+                        <p className="mt-1.5 line-clamp-2 text-xs text-neutral-500">{summary}</p>
                       ) : null}
+                    </AdminTableCell>
+                    <AdminTableCell className="text-sm text-neutral-700">
+                      {e.admin_email ?? "—"}
                     </AdminTableCell>
                     <AdminTableCell className="text-sm">
                       {href && e.entity_id ? (
-                        <Link href={href} className="font-medium text-primary hover:underline">
-                          {entityLabel}
+                        <Link href={href} className="hover:opacity-90">
+                          <AuditEntityBadge label={entityLabel} entityType={e.entity_type} />
                         </Link>
                       ) : (
-                        <span className="text-neutral-700">{entityLabel}</span>
+                        <AuditEntityBadge label={entityLabel} entityType={e.entity_type} />
                       )}
-                      {e.entity_id && !href ? (
-                        <span className="mt-0.5 block text-xs text-neutral-500">
-                          Ref {e.entity_id.slice(0, 8)}…
-                        </span>
-                      ) : null}
+                    </AdminTableCell>
+                    <AdminTableCell className="text-right">
+                      <Link
+                        href={`/admin/audit/${e.id}`}
+                        className="inline-flex items-center gap-0.5 text-xs font-medium text-primary hover:underline"
+                      >
+                        View
+                        <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+                      </Link>
                     </AdminTableCell>
                   </AdminTableRow>
                 );

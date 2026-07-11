@@ -1,14 +1,24 @@
 import api from "@/lib/axios";
 import type {
   BookingInitiator,
+  BookingLineItem,
   BookingPricingBreakdown,
+  ConfirmCompletionResponse,
+  ParticipantBookingsListGroup,
   VendorAdjustmentItem,
 } from "@/lib/domain-types";
 
-export type { BookingInitiator, BookingPricingBreakdown, VendorAdjustmentItem };
+export type {
+  BookingInitiator,
+  BookingLineItem as VendorBookingLineItem,
+  BookingPricingBreakdown,
+  ConfirmCompletionResponse,
+  ParticipantBookingsListGroup,
+  VendorAdjustmentItem,
+};
 
 /** List filter: active = pending+accepted, closed = declined+cancelled */
-export type VendorBookingsListGroup = "active" | "completed" | "closed";
+export type VendorBookingsListGroup = ParticipantBookingsListGroup;
 
 /** Client-authored review (shown to vendor after the booking is completed). */
 export type VendorReviewSummary = {
@@ -41,15 +51,6 @@ export type VendorBookingsListResponse = {
   bookings: VendorBookingListItem[];
 };
 
-export type VendorBookingLineItem = {
-  id: string;
-  heading: string;
-  unit_price_gbp: number | null;
-  description?: string | null;
-  feature_lines?: string[];
-  timeline_line?: string | null;
-};
-
 export type VendorBookingDetail = {
   id: string;
   status: string;
@@ -61,7 +62,7 @@ export type VendorBookingDetail = {
   notes: string | null;
   total_label: string;
   selected_option_ids: string[];
-  line_items: VendorBookingLineItem[];
+  line_items: BookingLineItem[];
   vendor_adjustments: VendorAdjustmentItem[];
   pricing: BookingPricingBreakdown | null;
   client_user_id: string | null;
@@ -110,15 +111,6 @@ export async function patchVendorBookingStatus(
   );
   return data;
 }
-
-export type ConfirmCompletionResponse = {
-  success: boolean;
-  id: string;
-  status: string;
-  payment_status: string;
-  awaiting_other_party: boolean;
-};
-
 /** Mutual-confirmation completion: once both parties confirm, payout releases automatically. */
 export async function postVendorConfirmCompletion(
   bookingId: string,

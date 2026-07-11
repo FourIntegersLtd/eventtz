@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Download } from "lucide-react";
+import { Banknote, Download, Receipt, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import {
   downloadAdminFinancialsCsv,
@@ -13,6 +13,7 @@ import { AdminFilterBar } from "@/features/admin/components/AdminFilterBar";
 import { AdminKpiCard } from "@/features/admin/components/AdminKpiCard";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import { AdminPageHeader } from "@/features/admin/components/AdminPageHeader";
+import { AdminFinancialsCharts } from "@/features/admin/financials/AdminFinancialsCharts";
 
 function presetRange(preset: "30d" | "month"): { from: string; to: string } {
   const to = new Date();
@@ -26,9 +27,14 @@ function presetRange(preset: "30d" | "month"): { from: string; to: string } {
   return { from: fmt(from), to: fmt(to) };
 }
 
+function formatGbp(value: number): string {
+  return `£${value.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
 export function AdminFinancialsView() {
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const defaultRange = presetRange("30d");
+  const [from, setFrom] = useState(defaultRange.from);
+  const [to, setTo] = useState(defaultRange.to);
   const [summary, setSummary] = useState<AdminFinancialsSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -125,24 +131,50 @@ export function AdminFinancialsView() {
         <AdminLoadingState />
       ) : summary ? (
         <>
-          <p className="text-xs text-amber-800">{summary.disclaimer}</p>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <AdminKpiCard label="Paid bookings" value={summary.paid_booking_count} />
-            <AdminKpiCard label="GMV (GBP)" value={summary.gmv_gbp.toFixed(2)} />
-            <AdminKpiCard label="Platform fee (GBP)" value={summary.platform_fee_gbp.toFixed(2)} />
-            <AdminKpiCard label="Vendor portion (GBP)" value={summary.vendor_portion_gbp.toFixed(2)} />
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-3">
             <AdminKpiCard
-              label="Paid out to vendors (GBP)"
-              value={summary.payout_released_gbp.toFixed(2)}
+              label="GMV"
+              value={formatGbp(summary.gmv_gbp)}
+              icon={Banknote}
+              tone="primary"
             />
             <AdminKpiCard
-              label="Held in platform balance (GBP)"
-              value={summary.held_in_platform_balance_gbp.toFixed(2)}
-              tone="warning"
+              label="Platform fee"
+              value={formatGbp(summary.platform_fee_gbp)}
+              hint={`${summary.service_fee_percent}% service fee`}
+              icon={Receipt}
+              tone="success"
+            />
+            <AdminKpiCard
+              label="Paid bookings"
+              value={summary.paid_booking_count}
+              icon={ShoppingBag}
+              tone="info"
             />
           </div>
+
+          <p className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-neutral-600">
+            <span>
+              Vendor portion{" "}
+              <span className="font-medium tabular-nums text-neutral-900">
+                {formatGbp(summary.vendor_portion_gbp)}
+              </span>
+            </span>
+            <span>
+              Paid out{" "}
+              <span className="font-medium tabular-nums text-neutral-900">
+                {formatGbp(summary.payout_released_gbp)}
+              </span>
+            </span>
+            <span>
+              Held in balance{" "}
+              <span className="font-medium tabular-nums text-neutral-900">
+                {formatGbp(summary.held_in_platform_balance_gbp)}
+              </span>
+            </span>
+          </p>
+
+          <AdminFinancialsCharts summary={summary} />
         </>
       ) : null}
     </div>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { AdminAreaChart } from "@/features/admin/components/AdminAreaChart";
 import { AdminBarChart } from "@/features/admin/components/AdminBarChart";
@@ -22,7 +23,14 @@ type AdminDashboardChartsProps = {
 };
 
 function ChartSkeleton() {
-  return <Skeleton className="h-[220px] w-full rounded-lg" />;
+  return (
+    <div className="relative h-[220px] w-full">
+      <Skeleton className="h-full w-full rounded-lg" />
+      <div className="absolute inset-0 flex items-center justify-center" role="status" aria-label="Loading chart">
+        <LoadingSpinner size="md" />
+      </div>
+    </div>
+  );
 }
 
 export function AdminDashboardCharts({ summary }: AdminDashboardChartsProps) {

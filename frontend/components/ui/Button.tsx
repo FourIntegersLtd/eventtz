@@ -1,7 +1,7 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
 import { forwardRef, type ButtonHTMLAttributes } from "react";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { FOCUS_RING, RADIUS } from "@/components/ui/tokens";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "destructive";
@@ -48,7 +48,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       {...rest}
     >
       {loading ? (
-        <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+        <LoadingSpinner size="sm" />
       ) : icon ? (
         <span className="shrink-0">{icon}</span>
       ) : null}

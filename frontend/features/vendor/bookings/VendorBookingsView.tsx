@@ -2,18 +2,18 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { StarRating } from "@/components/ui/StarRating";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { BookingDisputeSection } from "@/features/bookings/BookingDisputeSection";
 import { BookingDetailPanel } from "@/features/bookings/BookingDetailPanel";
-import { BookingListPanel, type BookingListTab } from "@/features/bookings/BookingListPanel";
+import { BookingListPanel } from "@/features/bookings/BookingListPanel";
 import { MasterDetailLayout } from "@/features/bookings/MasterDetailLayout";
 import type { BookingDetailAction } from "@/features/bookings/bookingViewModel";
+import { BOOKING_EMPTY_LIST_TITLE } from "@/features/bookings/bookingListConstants";
+import { useParticipantBookingsScaffold } from "@/features/bookings/useParticipantBookingsScaffold";
 import { ChatDrawer } from "@/features/chat/ChatDrawer";
 import { getBookingServiceFeePercent } from "@/lib/bookingServiceFee";
-import { useRealtimeRefresh } from "@/lib/realtimeHooks";
-import { formatDateTime } from "@/lib/dateFormat";
+import { BookingReviewPanel } from "@/features/reviews/BookingReviewPanel";
 import {
   fetchVendorBookingDetail,
   fetchVendorBookings,
@@ -21,22 +21,11 @@ import {
   postVendorConfirmCompletion,
   putVendorBookingAdjustments,
   type VendorBookingDetail,
-  type VendorBookingListItem,
 } from "@/lib/vendorBookingsApi";
 import {
   toVendorBookingDetailViewModel,
   toVendorBookingRowViewModel,
 } from "@/features/vendor/bookings/vendorBookingViewModel";
-
-function groupForStatus(status: string): BookingListTab {
-  if (status === "pending" || status === "accepted") return "active";
-  return "closed";
-}
-
-const EMPTY_LIST_TITLE: Record<BookingListTab, string> = {
-  active: "No active bookings",
-  closed: "No closed bookings",
-};
 
 const ADJUSTMENT_TAGS = [
   { value: "delivery", label: "Delivery" },
@@ -62,57 +51,41 @@ type VendorBookingsViewProps = {
 export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProps) {
   const router = useRouter();
 
-  const [tab, setTab] = useState<BookingListTab>("active");
-  const [list, setList] = useState<VendorBookingListItem[]>([]);
-  const [listLoading, setListLoading] = useState(true);
-  const [listError, setListError] = useState<string | null>(null);
-  const [detail, setDetail] = useState<VendorBookingDetail | null>(null);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [detailError, setDetailError] = useState<string | null>(null);
-  const [detailTick, setDetailTick] = useState(0);
+  const fetchList = useCallback((t: "active" | "closed") => fetchVendorBookings(t), []);
+  const fetchDetail = useCallback((id: string) => fetchVendorBookingDetail(id), []);
+  const getDetailStatus = useCallback((b: VendorBookingDetail) => b.status, []);
+
+  const {
+    tab,
+    setTab,
+    list,
+    listLoading,
+    listError,
+    detail,
+    setDetail,
+    detailLoading,
+    detailError,
+    bumpDetail,
+    actionError,
+    setActionError,
+    chatOpen,
+    setChatOpen,
+  } = useParticipantBookingsScaffold({
+    selectedBookingId,
+    fetchList,
+    fetchDetail,
+    getDetailStatus,
+  });
+
   const [actionBusy, setActionBusy] = useState(false);
   const [pendingAction, setPendingAction] = useState<
     null | "accept" | "reject" | "complete" | "vendor_cancel" | "withdraw"
   >(null);
-  const [actionError, setActionError] = useState<string | null>(null);
   const [adjDrafts, setAdjDrafts] = useState<AdjDraftRow[]>([]);
   const [adjSaving, setAdjSaving] = useState(false);
-  const [chatOpen, setChatOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<null | "withdraw" | "vendor_cancel" | "complete">(
     null,
   );
-
-  const loadList = useCallback(async () => {
-    setListLoading(true);
-    setListError(null);
-    try {
-      const rows = await fetchVendorBookings(tab);
-      setList(rows);
-    } catch {
-      setListError("Could not load bookings.");
-      setList([]);
-    } finally {
-      setListLoading(false);
-    }
-  }, [tab]);
-
-  useEffect(() => {
-    void loadList();
-  }, [loadList]);
-
-  useRealtimeRefresh(
-    "bookings:refresh",
-    () => {
-      void loadList();
-      setDetailTick((n) => n + 1);
-    },
-    [tab, loadList],
-  );
-
-  useEffect(() => {
-    setActionError(null);
-    setChatOpen(false);
-  }, [selectedBookingId]);
 
   useEffect(() => {
     if (!detail?.vendor_adjustments) {
@@ -129,34 +102,6 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
     );
   }, [detail?.id, detail?.vendor_adjustments]);
 
-  useEffect(() => {
-    if (!selectedBookingId) {
-      setDetail(null);
-      return;
-    }
-    let cancelled = false;
-    setDetailLoading(true);
-    setDetailError(null);
-    void fetchVendorBookingDetail(selectedBookingId)
-      .then((b) => {
-        if (cancelled) return;
-        setDetail(b);
-        setTab((prev) => (groupForStatus(b.status) === prev ? prev : groupForStatus(b.status)));
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setDetailError("Could not load this booking.");
-          setDetail(null);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setDetailLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedBookingId, detailTick]);
-
   const applyBookingStatus = async (next: "accepted" | "declined") => {
     if (!detail?.id) return;
     if (detail.initiator === "vendor") return;
@@ -167,7 +112,7 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
     setPendingAction(next === "accepted" ? "accept" : "reject");
     try {
       await patchVendorBookingStatus(detail.id, next);
-      setDetailTick((n) => n + 1);
+      bumpDetail();
     } catch (e: unknown) {
       setActionError(getApiErrorDetail(e) ?? "Could not update this booking.");
     } finally {
@@ -183,7 +128,7 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
     setPendingAction("withdraw");
     try {
       await patchVendorBookingStatus(detail.id, "cancelled");
-      setDetailTick((n) => n + 1);
+      bumpDetail();
     } catch (e: unknown) {
       setActionError(getApiErrorDetail(e) ?? "Could not withdraw this quote.");
     } finally {
@@ -199,7 +144,7 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
     setPendingAction("vendor_cancel");
     try {
       await patchVendorBookingStatus(detail.id, "cancelled");
-      setDetailTick((n) => n + 1);
+      bumpDetail();
     } catch (e: unknown) {
       setActionError(getApiErrorDetail(e) ?? "Could not cancel this booking.");
     } finally {
@@ -215,7 +160,7 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
     setPendingAction("complete");
     try {
       await postVendorConfirmCompletion(detail.id);
-      setDetailTick((n) => n + 1);
+      bumpDetail();
     } catch (e: unknown) {
       setActionError(getApiErrorDetail(e) ?? "Could not confirm completion.");
     } finally {
@@ -394,16 +339,16 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
           error={listError}
           selectedId={selectedBookingId ?? null}
           onSelect={(id) => router.push(`/vendor/bookings/${id}`)}
-          emptyTitle={EMPTY_LIST_TITLE[tab]}
+            emptyTitle={BOOKING_EMPTY_LIST_TITLE[tab]}
         />
       }
       detail={
-        <>
+        <div className="flex h-full min-h-0 flex-col overflow-hidden">
           {selectedBookingId ? (
             <button
               type="button"
               onClick={() => router.push("/vendor/bookings")}
-              className="mb-3 inline-flex w-fit items-center gap-1 text-sm font-medium text-neutral-600 hover:text-neutral-900 lg:hidden"
+              className="mb-3 inline-flex w-fit shrink-0 items-center gap-1 text-sm font-medium text-neutral-600 hover:text-neutral-900 lg:hidden"
             >
               ← Back to bookings
             </button>
@@ -567,37 +512,12 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
                 ) : undefined,
               afterSections:
                 detail && detail.status === "completed" ? (
-                  <section className="rounded-xl border border-neutral-200 bg-white px-4 py-3">
-                    <h3 className="font-heading text-sm font-semibold text-neutral-900">
-                      Client review
-                    </h3>
-                    {detail.review ? (
-                      <div className="mt-2">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <StarRating rating={detail.review.rating} size="md" />
-                          <span className="text-sm font-semibold text-neutral-900">
-                            {detail.review.rating}/5
-                          </span>
-                          <span className="text-xs text-neutral-500">
-                            {detail.review.reviewer_display}
-                            {detail.review.created_at ? (
-                              <>
-                                <span className="text-neutral-300"> · </span>
-                                {formatDateTime(detail.review.created_at)}
-                              </>
-                            ) : null}
-                          </span>
-                        </div>
-                        <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-neutral-800">
-                          {detail.review.body}
-                        </p>
-                      </div>
-                    ) : (
-                      <p className="mt-2 text-xs text-neutral-500">
-                        The client has not left a review for this booking yet.
-                      </p>
-                    )}
-                  </section>
+                  <BookingReviewPanel
+                    title="Client review"
+                    review={detail.review}
+                    showReviewer
+                    emptyLabel="The client has not left a review for this booking yet."
+                  />
                 ) : undefined,
               disputeSection: detail ? (
                 <BookingDisputeSection
@@ -611,7 +531,7 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
               ),
             }}
           />
-        </>
+        </div>
       }
     />
     </>

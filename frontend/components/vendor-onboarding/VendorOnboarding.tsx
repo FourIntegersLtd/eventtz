@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import {
@@ -9,9 +9,11 @@ import {
 } from "./constants";
 import { OnboardingStepContent } from "./OnboardingStepContent";
 import { useVendorOnboardingController } from "./useVendorOnboardingController";
+import { LoadingState } from "@/components/ui/LoadingState";
 
 export function VendorOnboarding() {
   const router = useRouter();
+  const pathname = usePathname();
   const { signOut } = useAuth();
   const {
     step,
@@ -59,8 +61,8 @@ export function VendorOnboarding() {
 
   if (authLoading || loadStatus === "loading") {
     return (
-      <div className="mx-auto w-full max-w-3xl py-16 text-center text-sm text-neutral-600">
-        Loading your vendor profile…
+      <div className="mx-auto w-full max-w-3xl py-16">
+        <LoadingState label="Loading your vendor profile…" variant="centered" />
       </div>
     );
   }
@@ -152,6 +154,17 @@ export function VendorOnboarding() {
                   </button>
                 );
               })}
+              <div className="my-1 hidden border-t border-neutral-100 md:block" />
+              <Link
+                href="/vendor/profile/reviews"
+                className={`block whitespace-nowrap rounded-xl px-4 py-2.5 text-left text-sm font-medium outline-none transition focus-visible:ring-2 focus-visible:ring-primary/50 ${
+                  pathname.startsWith("/vendor/profile/reviews")
+                    ? "bg-primary/10 text-primary"
+                    : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
+                }`}
+              >
+                Client reviews
+              </Link>
               <div className="my-1 hidden border-t border-neutral-100 md:block" />
               <button
                 type="button"

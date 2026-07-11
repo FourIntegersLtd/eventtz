@@ -2,12 +2,14 @@
 
 import { useMemo } from "react";
 import {
-  CalendarClock,
-  CheckCircle2,
+  CalendarDays,
   MessageCircle,
+  Store,
+  Wallet,
   RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { LoadingState } from "@/components/ui/LoadingState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { AdminAttentionList, type AdminAttentionItem } from "@/features/admin/components/AdminAttentionList";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
@@ -20,6 +22,7 @@ import { useAdminDashboardMetrics } from "@/features/admin/dashboard/useAdminDas
 function DashboardSkeleton() {
   return (
     <div className="space-y-6">
+      <LoadingState label="Loading dashboard…" variant="centered" className="py-2" />
       <div className="flex justify-end">
         <Skeleton className="h-9 w-24 rounded-lg" />
       </div>
@@ -107,22 +110,25 @@ export function AdminDashboardView() {
         <AdminKpiCard
           label="Pending vendor approvals"
           value={summary.vendors_pending}
-          icon={CalendarClock}
-          tone={summary.vendors_pending > 0 ? "warning" : "default"}
+          icon={Store}
+          tone="warning"
+          highlight={summary.vendors_pending > 0}
           href={summary.vendors_pending > 0 ? "/admin/directory?tab=vendors" : undefined}
           linkLabel={summary.vendors_pending > 0 ? "Review in Directory" : undefined}
         />
         <AdminKpiCard
           label="Active bookings"
           value={activeBookings}
-          icon={CheckCircle2}
+          icon={CalendarDays}
+          tone="info"
           href="/admin/commerce?tab=bookings"
           linkLabel="View bookings"
         />
         <AdminKpiCard
           label="Paid bookings"
           value={summary.bookings_paid_count}
-          icon={CheckCircle2}
+          icon={Wallet}
+          tone="success"
           href="/admin/commerce?tab=financials"
           linkLabel="Financials"
         />
@@ -130,6 +136,7 @@ export function AdminDashboardView() {
           label="Engagement"
           value={engagement}
           icon={MessageCircle}
+          tone="primary"
         />
       </div>
 

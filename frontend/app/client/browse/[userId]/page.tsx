@@ -7,6 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { EventtzLogo } from "@/components/branding/EventtzLogo";
 import { PortalShell } from "@/components/portal-shell/PortalShell";
+import { LoadingState } from "@/components/ui/LoadingState";
 import { useToast } from "@/components/ui/Toast";
 import {
   VendorBookingModal,
@@ -117,7 +118,7 @@ function ClientVendorDetailPageContent() {
 
   const mainContent = (() => {
     if (loading || authLoading) {
-      return <p className="text-sm text-neutral-600">Loading vendor…</p>;
+      return <LoadingState label="Loading vendor…" variant="centered" className="py-12" />;
     }
     if (error) {
       return (
@@ -272,7 +273,7 @@ export default function ClientVendorDetailPage() {
     <Suspense
       fallback={
         <main className="min-h-screen bg-[#f5f2f8] px-4 py-10">
-          <p className="text-center text-sm text-neutral-600">Loading…</p>
+          <LoadingState label="Loading vendor…" variant="page" />
         </main>
       }
     >

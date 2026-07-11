@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { Building2, Loader2, X, type LucideIcon } from "lucide-react";
+import { Building2, X, type LucideIcon } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { fetchUkLocationSuggestions } from "@/lib/photonLocationAutocomplete";
 
 type Suggestion = { label: string; value: string };
@@ -138,9 +139,9 @@ export function LocationAutocompleteInput({
           className={inputClassName ?? DEFAULT_INPUT_CLASS}
         />
         {busy ? (
-          <Loader2
-            className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-neutral-400"
-            aria-hidden
+          <LoadingSpinner
+            size="sm"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400"
           />
         ) : showClearButton ? (
           <button

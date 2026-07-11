@@ -1,32 +1,55 @@
 "use client";
 
 import { ChevronRight } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { useAuth } from "@/components/auth/AuthProvider";
 import {
   fetchClientDisputes,
   fetchVendorDisputes,
   type ParticipantDispute,
 } from "@/lib/bookingDisputesApi";
-import { participantDisputeStatusLabel } from "@/lib/bookingDisputeHelpers";
+import { LoadingState } from "@/components/ui/LoadingState";
+import { ParticipantDisputeStatusBadge } from "@/components/ui/ParticipantDisputeStatusBadge";
+import {
+  participantDisputeBookingLabel,
+} from "@/lib/bookingDisputeHelpers";
+import {
+  enrichParticipantDisputes,
+  loadParticipantBookingLookup,
+  participantDisputeNeedsHydration,
+} from "@/lib/participantDisputeEnrichment";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 
+import type { PortalRole } from "@/components/portal-shell/portalNav";
+
 type Props = {
-  role: "client" | "vendor";
+  role: PortalRole;
+  selectedId?: string | null;
+  onSelect: (disputeId: string) => void;
 };
 
-export function ParticipantDisputesListView({ role }: Props) {
-  const router = useRouter();
+export function ParticipantDisputesListView({ role, selectedId = null, onSelect }: Props) {
+  const { user } = useAuth();
   const [rows, setRows] = useState<ParticipantDispute[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const base = role === "client" ? "/client/bookings" : "/vendor/bookings";
-
   const load = useCallback(async () => {
     setError(null);
     try {
-      const list = role === "client" ? await fetchClientDisputes() : await fetchVendorDisputes();
+      let list = role === "client" ? await fetchClientDisputes() : await fetchVendorDisputes();
+      if (user?.id && list.some(participantDisputeNeedsHydration)) {
+        try {
+          const bookings = await loadParticipantBookingLookup(role);
+          list = enrichParticipantDisputes(list, bookings, {
+            role,
+            userId: user.id,
+            email: user.email,
+          });
+        } catch {
+          // Keep API list when booking lookup fails.
+        }
+      }
       setRows(list);
     } catch {
       setError("Could not load disputes.");
@@ -34,7 +57,7 @@ export function ParticipantDisputesListView({ role }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [role]);
+  }, [role, user?.email, user?.id]);
 
   useEffect(() => {
     void load();
@@ -43,7 +66,7 @@ export function ParticipantDisputesListView({ role }: Props) {
   useRealtimeRefresh("disputes:refresh", () => void load(), [role, load]);
 
   if (loading) {
-    return <p className="text-sm text-neutral-600">Loading disputes…</p>;
+    return <LoadingState label="Loading disputes…" variant="inline" />;
   }
 
   return (
@@ -63,6 +86,8 @@ export function ParticipantDisputesListView({ role }: Props) {
             <thead className="bg-neutral-50/50 text-left text-xs font-medium uppercase tracking-wide text-neutral-500">
               <tr>
                 <th className="px-5 py-3">Updated</th>
+                <th className="px-5 py-3">Booking</th>
+                <th className="px-5 py-3">Opened by</th>
                 <th className="px-5 py-3">Summary</th>
                 <th className="px-5 py-3">Status</th>
                 <th className="px-5 py-3" />
@@ -70,20 +95,20 @@ export function ParticipantDisputesListView({ role }: Props) {
             </thead>
             <tbody className="divide-y divide-neutral-100">
               {rows.map((d) => {
-                const href = `${base}/${encodeURIComponent(d.booking_request_id)}`;
+                const isSelected = selectedId === d.id;
                 return (
                   <tr
                     key={d.id}
-                    role="link"
+                    role="button"
                     tabIndex={0}
-                    onClick={() => router.push(href)}
+                    onClick={() => onSelect(d.id)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
-                        router.push(href);
+                        onSelect(d.id);
                       }
                     }}
-                    className="cursor-pointer transition hover:bg-neutral-50"
+                    className={`cursor-pointer transition hover:bg-neutral-50 ${isSelected ? "bg-primary/5" : ""}`}
                   >
                     <td className="whitespace-nowrap px-5 py-4 text-xs text-neutral-600">
                       {d.updated_at
@@ -92,17 +117,24 @@ export function ParticipantDisputesListView({ role }: Props) {
                           ? new Date(d.created_at).toLocaleString("en-GB")
                           : "—"}
                     </td>
+                    <td className="max-w-[12rem] px-5 py-4 text-xs text-neutral-700">
+                      <span className="line-clamp-2">{participantDisputeBookingLabel(d)}</span>
+                    </td>
+                    <td className="whitespace-nowrap px-5 py-4 text-xs text-neutral-700">
+                      {d.opened_by_you
+                        ? "You"
+                        : d.opened_by_display_name ??
+                          (d.opened_by_role === "client"
+                            ? "Client"
+                            : d.opened_by_role === "vendor"
+                              ? d.vendor_display_name ?? "Vendor"
+                              : "—")}
+                    </td>
                     <td className="max-w-md px-5 py-4 text-neutral-800">
                       <span className="line-clamp-2">{d.summary}</span>
-                      {d.resolution_note ? (
-                        <span className="mt-1 block text-xs text-neutral-500">
-                          {d.status === "resolved" || d.status === "closed" ? "Outcome" : "Update"}:{" "}
-                          {d.resolution_note}
-                        </span>
-                      ) : null}
                     </td>
-                    <td className="whitespace-nowrap px-5 py-4 font-medium text-neutral-900">
-                      {participantDisputeStatusLabel(d.status)}
+                    <td className="whitespace-nowrap px-5 py-4">
+                      <ParticipantDisputeStatusBadge status={d.status} />
                     </td>
                     <td className="px-5 py-4 text-right">
                       <ChevronRight className="ml-auto h-4 w-4 text-neutral-400" aria-hidden />

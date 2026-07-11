@@ -1,6 +1,7 @@
 "use client";
 
 import { FileText, Trash2, Upload } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import type { VendorOnboardingData, VendorOnboardingUpdate } from "../types";
 import { inputClass, labelClass } from "./form-primitives";
 
@@ -72,8 +73,15 @@ function DocUploadRow({
             }`}
           >
             <Upload className="h-5 w-5" strokeWidth={1.5} />
-            <span className="text-sm font-medium hover:underline">
-              {uploading ? "Uploading…" : "Upload document"}
+            <span className="inline-flex items-center gap-2 text-sm font-medium hover:underline">
+              {uploading ? (
+                <>
+                  <LoadingSpinner size="sm" />
+                  Uploading…
+                </>
+              ) : (
+                "Upload document"
+              )}
             </span>
           </label>
         </div>
@@ -147,8 +155,15 @@ export function StepAdditionalInfo({
             }`}
           >
             <Upload className="h-5 w-5" strokeWidth={1.5} />
-            <span className="text-sm font-medium hover:underline">
-              {uploadingDoc.other ? "Uploading…" : "Upload another document"}
+            <span className="inline-flex items-center gap-2 text-sm font-medium hover:underline">
+              {uploadingDoc.other ? (
+                <>
+                  <LoadingSpinner size="sm" />
+                  Uploading…
+                </>
+              ) : (
+                "Upload another document"
+              )}
             </span>
           </label>
         </div>

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { LoadingState } from "@/components/ui/LoadingState";
 
 type RequireAuthProps = {
   children: React.ReactNode;
@@ -26,7 +27,11 @@ export function RequireAuth({
     return (
       <main className="min-h-screen bg-[var(--page-bg)] px-4 py-10">
         <div className="mx-auto max-w-3xl rounded-2xl border border-neutral-200 bg-white p-6">
-          <p className="text-sm text-neutral-600">Just a moment — checking you&apos;re signed in…</p>
+          <LoadingState
+            label="Just a moment — checking you're signed in…"
+            variant="centered"
+            className="py-4"
+          />
         </div>
       </main>
     );

@@ -1,11 +1,12 @@
 "use client";
 
 import { Suspense } from "react";
+import { LoadingState } from "@/components/ui/LoadingState";
 import { VendorBookingsView } from "@/features/vendor/bookings/VendorBookingsView";
 
 export function VendorBookingsPortal() {
   return (
-    <Suspense fallback={<p className="text-sm text-neutral-600">Loading…</p>}>
+    <Suspense fallback={<LoadingState label="Loading bookings…" variant="centered" />}>
       <VendorBookingsView />
     </Suspense>
   );

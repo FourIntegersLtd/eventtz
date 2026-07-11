@@ -6,11 +6,19 @@ const COLORS = ["#f59e0b", "#10b981", "#0ea5e9", "#ef4444", "#94a3b8"];
 
 type AdminDonutChartProps = {
   data: { name: string; value: number }[];
+  /** Override the center label (defaults to sum of values). */
+  centerLabel?: string;
+  valueFormatter?: (value: number) => string;
 };
 
-export function AdminDonutChart({ data }: AdminDonutChartProps) {
+export function AdminDonutChart({
+  data,
+  centerLabel,
+  valueFormatter,
+}: AdminDonutChartProps) {
   const filtered = data.filter((d) => d.value > 0);
   const total = filtered.reduce((s, d) => s + d.value, 0);
+  const center = centerLabel ?? (valueFormatter ? valueFormatter(total) : String(total));
 
   return (
     <ResponsiveContainer width="100%" height={220}>
@@ -34,16 +42,19 @@ export function AdminDonutChart({ data }: AdminDonutChartProps) {
         </Pie>
         <Tooltip
           contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e5e5e5" }}
-          formatter={(value, name) => [value ?? 0, name]}
+          formatter={(value, name) => [
+            valueFormatter ? valueFormatter(Number(value ?? 0)) : (value ?? 0),
+            name,
+          ]}
         />
         <text
           x="50%"
           y="50%"
           textAnchor="middle"
           dominantBaseline="middle"
-          className="fill-neutral-900 text-lg font-semibold"
+          className="fill-neutral-900 text-sm font-semibold"
         >
-          {total}
+          {center}
         </text>
       </PieChart>
     </ResponsiveContainer>

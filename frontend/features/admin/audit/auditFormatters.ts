@@ -8,7 +8,8 @@ export type AuditCategory =
   | "disputes"
   | "reviews"
   | "chat"
-  | "financials";
+  | "financials"
+  | "team";
 
 const ACTION_LABELS: Record<string, string> = {
   "booking.view": "Viewed booking",
@@ -21,6 +22,7 @@ const ACTION_LABELS: Record<string, string> = {
   "review.unhide": "Restored review to public profile",
   "chat.view": "Viewed conversation",
   "vendor.approval": "Changed vendor approval",
+  "admin.team_patch": "Updated admin team member",
 };
 
 const CATEGORY_BY_ACTION: Record<string, AuditCategory> = {
@@ -34,6 +36,21 @@ const CATEGORY_BY_ACTION: Record<string, AuditCategory> = {
   "review.unhide": "reviews",
   "chat.view": "chat",
   "vendor.approval": "vendors",
+  "admin.team_patch": "team",
+};
+
+const CATEGORY_META: Record<
+  Exclude<AuditCategory, "all">,
+  { label: string; badgeClassName: string }
+> = {
+  bookings: { label: "Bookings", badgeClassName: "bg-sky-100 text-sky-800" },
+  clients: { label: "Clients", badgeClassName: "bg-emerald-100 text-emerald-800" },
+  vendors: { label: "Vendors", badgeClassName: "bg-violet-100 text-violet-800" },
+  disputes: { label: "Disputes", badgeClassName: "bg-amber-100 text-amber-900" },
+  reviews: { label: "Reviews", badgeClassName: "bg-rose-100 text-rose-800" },
+  chat: { label: "Chat", badgeClassName: "bg-cyan-100 text-cyan-900" },
+  financials: { label: "Financials", badgeClassName: "bg-lime-100 text-lime-900" },
+  team: { label: "Team", badgeClassName: "bg-indigo-100 text-indigo-800" },
 };
 
 export const AUDIT_CATEGORIES: { id: AuditCategory; label: string }[] = [
@@ -45,6 +62,7 @@ export const AUDIT_CATEGORIES: { id: AuditCategory; label: string }[] = [
   { id: "reviews", label: "Reviews" },
   { id: "chat", label: "Chat" },
   { id: "financials", label: "Financials" },
+  { id: "team", label: "Team" },
 ];
 
 function capitalize(s: string): string {
@@ -128,6 +146,14 @@ function formatPayloadDetails(action: string, payload: Record<string, unknown> |
       if (payload.assigned_admin_id != null) parts.push("Case assigned to an admin");
       return parts.join(" · ") || "Dispute details were updated.";
     }
+    case "admin.team_patch": {
+      const parts: string[] = [];
+      if (payload.admin_role != null) parts.push(`Role → ${String(payload.admin_role).replace(/_/g, " ")}`);
+      if (payload.account_suspended != null) {
+        parts.push(payload.account_suspended ? "Account suspended" : "Account reactivated");
+      }
+      return parts.join(" · ") || "Admin team member updated.";
+    }
     default:
       return "";
   }
@@ -139,6 +165,14 @@ export function formatAuditActionLabel(action: string): string {
 
 export function getAuditCategory(action: string): AuditCategory {
   return CATEGORY_BY_ACTION[action] ?? "all";
+}
+
+export function getAuditCategoryMeta(action: string): { label: string; badgeClassName: string } {
+  const category = getAuditCategory(action);
+  if (category === "all") {
+    return { label: "Other", badgeClassName: "bg-neutral-100 text-neutral-700" };
+  }
+  return CATEGORY_META[category];
 }
 
 export function formatAuditWhen(iso: string | null | undefined): string {
@@ -177,13 +211,13 @@ export function auditEntityHref(entry: AdminAuditLogItem): string | null {
     case "dispute_case":
       return `/admin/trust?tab=disputes`;
     case "conversation":
-      return `/admin/trust?tab=chat&conversation=${encodeURIComponent(entry.entity_id)}`;
+      return null;
     case "user":
       return `/admin/directory?tab=clients`;
     case "vendor":
       return `/admin/directory?tab=vendors`;
     case "booking_review":
-      return `/admin/trust?tab=reviews`;
+      return `/admin/trust/reviews/${entry.entity_id}`;
     default:
       return null;
   }

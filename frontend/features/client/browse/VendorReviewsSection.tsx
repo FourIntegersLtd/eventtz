@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
+import { LoadingState } from "@/components/ui/LoadingState";
 import {
   fetchVendorPublicReviews,
   type PublicReviewItem,
@@ -160,7 +161,7 @@ export function VendorReviewsSection({ vendorUserId }: VendorReviewsSectionProps
       </div>
 
       {loading ? (
-        <p className="mt-3 text-xs text-neutral-500">Loading reviews…</p>
+        <LoadingState label="Loading reviews…" variant="inline" className="mt-3" />
       ) : loadError ? (
         <p className="mt-3 text-xs text-red-700">{loadError}</p>
       ) : count === 0 ? (

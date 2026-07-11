@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadingState } from "@/components/ui/LoadingState";
 import { SkeletonListRows } from "@/components/ui/Skeleton";
 
 type AdminLoadingStateProps = {
@@ -10,8 +11,8 @@ type AdminLoadingStateProps = {
 export function AdminLoadingState({ label = "Loading…", rows = 4 }: AdminLoadingStateProps) {
   return (
     <div className="space-y-3" aria-busy="true" aria-live="polite">
-      <p className="text-sm text-neutral-500">{label}</p>
-      <SkeletonListRows rows={rows} />
+      <LoadingState label={label} variant="centered" className="py-2" />
+      <SkeletonListRows rows={rows} showSpinner={false} />
     </div>
   );
 }

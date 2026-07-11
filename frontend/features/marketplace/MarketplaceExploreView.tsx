@@ -19,6 +19,8 @@ import {
 import { HeroMarketplaceSearch } from "@/features/marketplace/HeroMarketplaceSearch";
 import { MarketplaceFiltersBar } from "@/features/marketplace/MarketplaceFiltersBar";
 import { MarketplaceCategoryChips } from "@/features/marketplace/MarketplaceCategoryChips";
+import { LoadingState } from "@/components/ui/LoadingState";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { MarketplaceVendorCard } from "@/features/marketplace/MarketplaceVendorCard";
 import {
   buildMarketplaceResultsHeadline,
@@ -124,7 +126,14 @@ export function MarketplaceExploreView({
       <div className="mt-6 flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-neutral-900">
-            {loading ? "…" : `${displayCount} result${displayCount === 1 ? "" : "s"}`}
+            {loading ? (
+              <span className="inline-flex items-center gap-1.5">
+                <LoadingSpinner size="sm" className="text-neutral-400" />
+                Loading…
+              </span>
+            ) : (
+              `${displayCount} result${displayCount === 1 ? "" : "s"}`
+            )}
           </p>
           {!savedOnly && headline ? (
             <p className="mt-1 text-sm text-neutral-600">{headline}</p>
@@ -134,7 +143,7 @@ export function MarketplaceExploreView({
       </div>
 
       {loading ? (
-        <p className="mt-6 text-sm text-neutral-600">Loading vendors…</p>
+        <LoadingState label="Loading vendors…" variant="centered" className="mt-6 py-12" />
       ) : error ? (
         <p className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}

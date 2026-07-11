@@ -2,13 +2,23 @@ import api from "@/lib/axios";
 import type {
   BookingInitiator,
   BookingPricingBreakdown,
+  ConfirmCompletionResponse,
+  ParticipantBookingsListGroup,
   VendorAdjustmentItem,
+  BookingLineItem,
 } from "@/lib/domain-types";
 
-export type { BookingInitiator, BookingPricingBreakdown, VendorAdjustmentItem };
+export type {
+  BookingInitiator,
+  BookingPricingBreakdown,
+  ConfirmCompletionResponse,
+  ParticipantBookingsListGroup,
+  VendorAdjustmentItem,
+  BookingLineItem as ClientBookingLineItem,
+};
 
 /** List filter: active = pending+accepted, closed = declined+cancelled */
-export type ClientBookingsListGroup = "active" | "completed" | "closed";
+export type ClientBookingsListGroup = ParticipantBookingsListGroup;
 
 export type ClientBookingListItem = {
   id: string;
@@ -33,15 +43,6 @@ export type ClientBookingsListResponse = {
   bookings: ClientBookingListItem[];
 };
 
-export type ClientBookingLineItem = {
-  id: string;
-  heading: string;
-  unit_price_gbp: number | null;
-  description?: string | null;
-  feature_lines?: string[];
-  timeline_line?: string | null;
-};
-
 export type ClientBookingDetail = {
   id: string;
   status: string;
@@ -55,7 +56,7 @@ export type ClientBookingDetail = {
   notes: string | null;
   total_label: string;
   selected_option_ids: string[];
-  line_items: ClientBookingLineItem[];
+  line_items: BookingLineItem[];
   vendor_adjustments: VendorAdjustmentItem[];
   pricing: BookingPricingBreakdown | null;
   created_at: string | null;
@@ -66,7 +67,7 @@ export type ClientBookingDetail = {
   client_completion_confirmed_at: string | null;
   vendor_completion_confirmed_at: string | null;
   /** Present when the client has submitted a review for this booking. */
-  review?: { id: string; rating: number; created_at: string | null } | null;
+  review?: { id: string; rating: number; body: string; created_at: string | null } | null;
   initiator?: BookingInitiator;
   conversation_id: string | null;
   counterparty_phone?: string | null;
@@ -149,16 +150,6 @@ export async function patchClientBookingVenue(
   );
   return data.booking;
 }
-
-export type ConfirmCompletionResponse = {
-  success: boolean;
-  id: string;
-  status: string;
-  payment_status: string;
-  awaiting_other_party: boolean;
-};
-
-/** Mutual-confirmation completion: once both parties confirm, payout releases automatically. */
 export async function postClientConfirmCompletion(
   bookingId: string,
 ): Promise<ConfirmCompletionResponse> {

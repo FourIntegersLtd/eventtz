@@ -10,6 +10,7 @@ import { MarketplaceVendorCard } from "@/features/marketplace/MarketplaceVendorC
 import { expandVendorsForSearchResults } from "@/features/marketplace/marketplaceSearchModel";
 import { LandingSectionHeading } from "@/features/landing/LandingSectionHeading";
 import { LandingSection } from "@/features/landing/LandingSection";
+import { LoadingState } from "@/components/ui/LoadingState";
 
 const MAX_ITEMS = 6;
 
@@ -53,15 +54,7 @@ export function LandingFeaturedVendors() {
       </div>
 
       {loading ? (
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-64 animate-pulse rounded-2xl bg-primary-muted"
-              aria-hidden
-            />
-          ))}
-        </div>
+        <LoadingState label="Loading featured vendors…" variant="centered" className="mt-8 py-12" />
       ) : error ? (
         <p className="mt-8 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}

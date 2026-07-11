@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { LoadingState } from "@/components/ui/LoadingState";
 import {
   fetchStripePaymentsStatus,
   postConnectStripeAccount,
@@ -79,7 +80,7 @@ export function VendorPaymentsView() {
         </div>
 
         {loading ? (
-          <p className="mt-5 text-sm text-neutral-500">Loading payout status…</p>
+          <LoadingState label="Loading payout status…" variant="inline" className="mt-5" />
         ) : payoutsReady ? (
           <div className="mt-5">
             <p className="flex items-center gap-2 text-sm font-medium text-primary">
