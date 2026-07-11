@@ -20,7 +20,7 @@ function formatGbp(value: number): string {
   return `£${value.toLocaleString("en-GB", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
-export function AdminAreaChart({ data, valueLabel = "GMV" }: AdminAreaChartProps) {
+export function AdminAreaChart({ data, valueLabel = "Value" }: AdminAreaChartProps) {
   const chartData = data.map((d) => ({
     ...d,
     label: formatAxisDate(d.date),

@@ -1,45 +1,41 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Banknote, Download, Receipt, ShoppingBag } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { Receipt, ShoppingBag } from "lucide-react";
 import {
   downloadAdminFinancialsCsv,
   fetchAdminFinancials,
   type AdminFinancialsSummary,
 } from "@/lib/adminPlatformApi";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
-import { AdminFilterBar } from "@/features/admin/components/AdminFilterBar";
-import { AdminFilterDateField } from "@/features/admin/components/AdminFilterDateField";
 import { AdminKpiCard } from "@/features/admin/components/AdminKpiCard";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
-import { AdminPageHeader } from "@/features/admin/components/AdminPageHeader";
 import { AdminFinancialsCharts } from "@/features/admin/financials/AdminFinancialsCharts";
-
-function presetRange(preset: "30d" | "month"): { from: string; to: string } {
-  const to = new Date();
-  const from = new Date(to);
-  if (preset === "30d") {
-    from.setDate(from.getDate() - 30);
-  } else {
-    from.setDate(1);
-  }
-  const fmt = (d: Date) => d.toISOString().slice(0, 10);
-  return { from: fmt(from), to: fmt(to) };
-}
+import {
+  AdminFinancialsPeriodControl,
+  financialsPeriodRange,
+  type FinancialsPeriod,
+} from "@/features/admin/financials/AdminFinancialsToolbar";
 
 function formatGbp(value: number): string {
   return `£${value.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 export function AdminFinancialsView() {
-  const defaultRange = presetRange("30d");
-  const [from, setFrom] = useState(defaultRange.from);
-  const [to, setTo] = useState(defaultRange.to);
+  const [period, setPeriod] = useState<FinancialsPeriod>("30d");
+  const [from, setFrom] = useState(() => financialsPeriodRange("30d").from);
+  const [to, setTo] = useState(() => financialsPeriodRange("30d").to);
   const [summary, setSummary] = useState<AdminFinancialsSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [csvBusy, setCsvBusy] = useState(false);
+
+  const handlePeriodChange = useCallback((next: FinancialsPeriod) => {
+    setPeriod(next);
+    const range = financialsPeriodRange(next);
+    setFrom(range.from);
+    setTo(range.to);
+  }, []);
 
   const load = useCallback(async () => {
     setError(null);
@@ -59,79 +55,32 @@ export function AdminFinancialsView() {
   }, [load]);
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 max-w-full space-y-6">
       {error ? <AdminErrorBanner message={error} /> : null}
 
-      <AdminPageHeader />
-
-      <AdminFilterBar>
-        <div className="flex w-full flex-wrap gap-2 sm:w-auto">
-          <Button
-            variant="secondary"
-            size="sm"
-            className="flex-1 sm:flex-none"
-            onClick={() => {
-              const { from: f, to: t } = presetRange("30d");
-              setFrom(f);
-              setTo(t);
-            }}
-          >
-            Last 30 days
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            className="flex-1 sm:flex-none"
-            onClick={() => {
-              const { from: f, to: t } = presetRange("month");
-              setFrom(f);
-              setTo(t);
-            }}
-          >
-            This month
-          </Button>
-        </div>
-        <AdminFilterDateField label="Paid from" value={from} onChange={setFrom} />
-        <AdminFilterDateField label="Paid to" value={to} onChange={setTo} />
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-end">
-          <Button variant="secondary" size="sm" className="w-full sm:w-auto" onClick={() => void load()}>
-            Apply
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            className="w-full sm:w-auto"
-            icon={<Download className="h-4 w-4" aria-hidden />}
-            loading={csvBusy}
-            onClick={async () => {
-              setCsvBusy(true);
-              try {
-                await downloadAdminFinancialsCsv(from || undefined, to || undefined);
-              } finally {
-                setCsvBusy(false);
-              }
-            }}
-          >
-            Export CSV
-          </Button>
-        </div>
-      </AdminFilterBar>
+      <div className="flex justify-end">
+        <AdminFinancialsPeriodControl
+          period={period}
+          csvBusy={csvBusy}
+          onPeriodChange={handlePeriodChange}
+          onExportCsv={() => {
+            setCsvBusy(true);
+            void downloadAdminFinancialsCsv(from || undefined, to || undefined).finally(() => {
+              setCsvBusy(false);
+            });
+          }}
+        />
+      </div>
 
       {loading ? (
         <AdminLoadingState />
       ) : summary ? (
         <>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <AdminKpiCard
-              label="GMV"
-              value={formatGbp(summary.gmv_gbp)}
-              icon={Banknote}
-              tone="primary"
-            />
+          <div className="grid gap-3 sm:grid-cols-2">
             <AdminKpiCard
               label="Platform fee"
               value={formatGbp(summary.platform_fee_gbp)}
-              hint={`${summary.service_fee_percent}% service fee`}
+              hint={`${summary.service_fee_percent}% service fee on paid bookings`}
               icon={Receipt}
               tone="success"
             />
@@ -142,27 +91,6 @@ export function AdminFinancialsView() {
               tone="info"
             />
           </div>
-
-          <p className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-neutral-600">
-            <span>
-              Vendor portion{" "}
-              <span className="font-medium tabular-nums text-neutral-900">
-                {formatGbp(summary.vendor_portion_gbp)}
-              </span>
-            </span>
-            <span>
-              Paid out{" "}
-              <span className="font-medium tabular-nums text-neutral-900">
-                {formatGbp(summary.payout_released_gbp)}
-              </span>
-            </span>
-            <span>
-              Held in balance{" "}
-              <span className="font-medium tabular-nums text-neutral-900">
-                {formatGbp(summary.held_in_platform_balance_gbp)}
-              </span>
-            </span>
-          </p>
 
           <AdminFinancialsCharts summary={summary} />
         </>

@@ -13,16 +13,16 @@ type AdminFinancialsChartsProps = {
 
 export function AdminFinancialsCharts({ summary }: AdminFinancialsChartsProps) {
   const daily = summary.daily ?? [];
-  const gmvData = daily.map((d) => ({ date: d.date, value: d.gmv_gbp }));
+  const feeData = daily.map((d) => ({ date: d.date, value: d.platform_fee_gbp }));
   const countData = daily.map((d) => ({ date: d.date, value: d.count }));
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <AdminChartCard title="GMV over time">
-        {chartHasData(gmvData.map((d) => d.value)) ? (
-          <AdminAreaChart data={gmvData} valueLabel="GMV (GBP)" />
+      <AdminChartCard title="Platform fee over time">
+        {chartHasData(feeData.map((d) => d.value)) ? (
+          <AdminAreaChart data={feeData} valueLabel="Platform fee (GBP)" />
         ) : (
-          <EmptyState className="border-0 py-8" title="No paid GMV in this period" />
+          <EmptyState className="border-0 py-8" title="No platform fees in this period" />
         )}
       </AdminChartCard>
 

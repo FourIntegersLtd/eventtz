@@ -47,7 +47,7 @@ export function AdminDashboardCharts({ summary }: AdminDashboardChartsProps) {
 
   const createdData =
     metrics?.bookings_created.map((b) => ({ date: b.date, value: b.count })) ?? [];
-  const gmvData =
+  const paidSpendData =
     metrics?.bookings_paid.map((b) => ({ date: b.date, value: b.gmv_gbp })) ?? [];
   const signupData = metrics?.signups ?? [];
 
@@ -72,14 +72,14 @@ export function AdminDashboardCharts({ summary }: AdminDashboardChartsProps) {
         </AdminChartCard>
 
         <AdminChartCard
-          title="Paid GMV"
+          title="Client spend (paid)"
           footerHref="/admin/commerce?tab=financials"
           footerLabel="View Financials →"
         >
           {loading ? (
             <ChartSkeleton />
-          ) : chartHasData(gmvData.map((d) => d.value)) ? (
-            <AdminAreaChart data={gmvData} valueLabel="GMV (GBP)" />
+          ) : chartHasData(paidSpendData.map((d) => d.value)) ? (
+            <AdminAreaChart data={paidSpendData} valueLabel="Client spend (GBP)" />
           ) : (
             <EmptyState className="border-0 py-8" title="No paid bookings in this period" />
           )}
