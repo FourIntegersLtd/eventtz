@@ -6,7 +6,8 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.db import get_db as get_client
+from app.core.db import apply_recent_first_order, get_db as get_client
+from app.features.bookings.list_order import sort_booking_rows_recent_first
 from app.features.bookings.pricing import build_pricing_breakdown
 from app.features.bookings.reviews import (
     get_client_review_for_booking,
@@ -14,7 +15,10 @@ from app.features.bookings.reviews import (
     get_vendor_review_for_booking,
     get_vendor_reviews_for_bookings,
 )
-from app.features.settings.contact import apply_counterparty_contact_visibility
+from app.features.settings.contact import (
+    apply_counterparty_contact_visibility,
+    mask_booking_list_client_email,
+)
 
 logger = get_logger(__name__)
 
@@ -90,7 +94,7 @@ def list_booking_requests_for_vendor(
         get_client()
         .table("booking_requests")
         .select(
-            "id,status,event_name,event_date,event_end_date,total_label,client_user_id,created_at,line_items,vendor_adjustments,initiator,conversation_id,payment_status",
+            "id,status,event_name,event_date,event_end_date,total_label,client_user_id,created_at,updated_at,line_items,vendor_adjustments,initiator,conversation_id,payment_status",
         )
         .eq("vendor_user_id", vendor_user_id)
     )
@@ -101,8 +105,10 @@ def list_booking_requests_for_vendor(
     else:
         q = q.in_("status", ["completed", "declined", "cancelled"])
 
-    res = q.order("created_at", desc=True).execute()
-    rows = [r for r in (getattr(res, "data", None) or []) if isinstance(r, dict)]
+    res = apply_recent_first_order(q).execute()
+    rows = sort_booking_rows_recent_first(
+        [r for r in (getattr(res, "data", None) or []) if isinstance(r, dict)],
+    )
     cids = [str(r["client_user_id"]) for r in rows if r.get("client_user_id")]
     emails = _client_emails_by_id(cids)
 
@@ -135,9 +141,11 @@ def list_booking_requests_for_vendor(
             },
         )
     rev_map = get_vendor_reviews_for_bookings(vendor_user_id, [o["id"] for o in out])
+    masked: list[dict[str, Any]] = []
     for o in out:
         o["review"] = rev_map.get(o["id"])
-    return out
+        masked.append(mask_booking_list_client_email(o))
+    return masked
 
 
 def get_booking_request_for_vendor(vendor_user_id: str, booking_id: str) -> dict[str, Any] | None:
@@ -204,6 +212,7 @@ def get_booking_request_for_vendor(vendor_user_id: str, booking_id: str) -> dict
     return apply_counterparty_contact_visibility(
         viewer_role="vendor",
         booking_status=str(out.get("status") or ""),
+        payment_status=str(out.get("payment_status") or "unpaid"),
         detail=out,
     )
 
@@ -227,7 +236,7 @@ def list_booking_requests_for_client(
         get_client()
         .table("booking_requests")
         .select(
-            "id,status,event_name,event_date,event_end_date,total_label,vendor_user_id,created_at,line_items,vendor_adjustments,initiator,conversation_id,payment_status",
+            "id,status,event_name,event_date,event_end_date,total_label,vendor_user_id,created_at,updated_at,line_items,vendor_adjustments,initiator,conversation_id,payment_status",
         )
         .eq("client_user_id", client_user_id)
     )
@@ -238,8 +247,10 @@ def list_booking_requests_for_client(
     else:
         q = q.in_("status", ["completed", "declined", "cancelled"])
 
-    res = q.order("created_at", desc=True).execute()
-    rows = [r for r in (getattr(res, "data", None) or []) if isinstance(r, dict)]
+    res = apply_recent_first_order(q).execute()
+    rows = sort_booking_rows_recent_first(
+        [r for r in (getattr(res, "data", None) or []) if isinstance(r, dict)],
+    )
     vids = [str(r["vendor_user_id"]) for r in rows if r.get("vendor_user_id")]
     names = _vendor_display_names_by_id(vids)
     completed_ids = [str(r["id"]) for r in rows if r.get("id") and r.get("status") == "completed"]
@@ -346,5 +357,6 @@ def get_booking_request_for_client(client_user_id: str, booking_id: str) -> dict
     return apply_counterparty_contact_visibility(
         viewer_role="client",
         booking_status=str(out.get("status") or ""),
+        payment_status=str(out.get("payment_status") or "unpaid"),
         detail=out,
     )

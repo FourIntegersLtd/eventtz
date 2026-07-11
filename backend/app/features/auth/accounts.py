@@ -14,6 +14,31 @@ logger = get_logger(__name__)
 _VALID_USER_TYPES = frozenset({"client", "vendor", "admin"})
 
 
+def resolve_admin_role(profile: dict[str, Any] | None, email: str | None = None) -> str | None:
+    """Effective admin_role for an admin user."""
+    if profile and profile.get("user_type") != "admin":
+        return None
+    if profile:
+        role = profile.get("admin_role")
+        if role in ("super_admin", "admin"):
+            return str(role)
+    em = (email or (profile or {}).get("email") or "").strip().lower()
+    if em and em in get_settings().super_admin_emails_list:
+        return "super_admin"
+    if profile and profile.get("user_type") == "admin":
+        return "admin"
+    return None
+
+
+def is_super_admin_user(user: dict[str, Any]) -> bool:
+    if user.get("user_type") != "admin":
+        return False
+    if user.get("admin_role") == "super_admin":
+        return True
+    email = str(user.get("email") or "").strip().lower()
+    return bool(email and email in get_settings().super_admin_emails_list)
+
+
 def user_type_from_auth_metadatas(user: dict[str, Any]) -> str | None:
     """Role from Supabase Auth JWT metadata.
 
@@ -55,7 +80,7 @@ def fetch_user_profile(user_id: str) -> dict[str, Any] | None:
     res = (
         get_client()
         .table("users")
-        .select("id,email,user_type,created_at,updated_at,account_suspended")
+        .select("id,email,user_type,admin_role,created_at,updated_at,account_suspended")
         .eq("id", user_id)
         .limit(1)
         .execute()
@@ -75,7 +100,7 @@ def fetch_user_profile_by_email(email: str) -> dict[str, Any] | None:
     res = (
         get_client()
         .table("users")
-        .select("id,email,user_type,created_at,updated_at,account_suspended")
+        .select("id,email,user_type,admin_role,created_at,updated_at,account_suspended")
         .eq("email", em)
         .limit(1)
         .execute()
@@ -89,11 +114,11 @@ def fetch_user_profile_by_email(email: str) -> dict[str, Any] | None:
 def hydrate_user_from_db(auth_user: dict[str, Any]) -> dict[str, Any]:
     """
     Build the API-facing user dict: start from Supabase Auth (JWT/session), then overlay
-    user_type from JWT metadata and account_suspended from public.users when available.
+    fields from public.users when available.
 
-    - auth_user: what get_current_user_or_raise returns (id, email, metadata from token).
-    - user_type: from app_metadata / user_metadata on that dict (not from a DB column for role).
-    - account_suspended: from public.users row for the same id (admin-controlled flag).
+    - user_type: JWT metadata by default; public.users wins when set to admin (staff promotion
+      may update the DB before Supabase app_metadata is synced).
+    - account_suspended, admin_role: from public.users for admin accounts.
     """
     uid = auth_user.get("id")
     if not uid:
@@ -108,9 +133,19 @@ def hydrate_user_from_db(auth_user: dict[str, Any]) -> dict[str, Any]:
     merged_user["user_type"] = user_type_from_auth_metadatas(merged_user) or "client"
     db_profile = fetch_user_profile(str(uid))
     if db_profile and isinstance(db_profile, dict):
+        db_type = db_profile.get("user_type")
+        if db_type == "admin":
+            merged_user["user_type"] = "admin"
         merged_user["account_suspended"] = bool(db_profile.get("account_suspended", False))
     else:
         merged_user.setdefault("account_suspended", False)
+
+    if merged_user.get("user_type") == "admin":
+        merged_user["admin_role"] = resolve_admin_role(
+            db_profile if isinstance(db_profile, dict) else None,
+            str(merged_user.get("email") or (db_profile or {}).get("email") or ""),
+        )
+
     return merged_user
 
 

@@ -7,7 +7,7 @@ from typing import Any, Literal
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.db import get_db as get_client
+from app.core.db import apply_recent_first_order, get_db as get_client
 from app.features.realtime.sse import notify_user
 
 logger = get_logger(__name__)
@@ -184,11 +184,13 @@ def list_booking_notifications(
     lim = max(1, min(limit, 100))
     try:
         res = (
-            get_client()
-            .table("booking_notifications")
-            .select("id,booking_id,kind,body,read_at,created_at")
-            .eq("user_id", user_id)
-            .order("created_at", desc=True)
+            apply_recent_first_order(
+                get_client()
+                .table("booking_notifications")
+                .select("id,booking_id,kind,body,read_at,created_at")
+                .eq("user_id", user_id),
+                column="created_at",
+            )
             .limit(lim)
             .execute()
         )

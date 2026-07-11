@@ -36,8 +36,10 @@ def put_user_contact_settings(
 ) -> ContactSharingSettingsResponse:
     user = require_user(request, response)
     uid = str(user.get("id") or "")
+    user_type = str(user.get("user_type") or "client")
     raw = update_contact_settings(
         uid,
+        user_type=user_type,
         contact_phone=body.contact_phone,
         share_email=body.share_email,
         share_phone=body.share_phone,

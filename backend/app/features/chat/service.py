@@ -8,7 +8,7 @@ from typing import Any
 from app.core.config import get_settings
 from app.core.logging import get_logger
 from app.core.errors import ForbiddenError, NotFoundError, ServiceUnavailableError
-from app.core.db import get_db as get_client
+from app.core.db import apply_recent_first_order, get_db as get_client
 from app.features.realtime.sse import notify_user
 from app.features.auth.lookup import user_emails_by_id, vendor_display_names_by_id
 
@@ -194,12 +194,14 @@ def list_conversations_for_user(user_id: str, *, role: str) -> list[dict[str, An
         return []
     try:
         res = (
-            get_client()
-            .table("conversations")
-            .select("*")
-            .or_(f"client_user_id.eq.{user_id},vendor_user_id.eq.{user_id}")
-            .order("last_message_at", desc=True)
-            .order("created_at", desc=True)
+            apply_recent_first_order(
+                get_client()
+                .table("conversations")
+                .select("*")
+                .or_(f"client_user_id.eq.{user_id},vendor_user_id.eq.{user_id}"),
+                column="last_message_at",
+                tie_breaker="created_at",
+            )
             .execute()
         )
     except Exception:

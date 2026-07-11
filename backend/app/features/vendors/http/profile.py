@@ -2,10 +2,12 @@
 
 from fastapi import APIRouter, Request, Response
 
-from app.features.auth.http.guards import require_user
+from app.features.auth.http.guards import require_user, require_vendor
 from app.core.logging import get_logger
 from app.contracts.vendor import VendorProfilePutBody, VendorProfileState
+from app.contracts.reviews import VendorOwnerReviewItem, VendorOwnerReviewsResponse
 from app.features.vendors.profile import get_vendor_profile, upsert_vendor_profile
+from app.features.bookings.reviews import list_reviews_for_vendor_owner
 
 router = APIRouter(prefix="/vendor", tags=["vendor"])
 logger = get_logger(__name__)
@@ -79,4 +81,18 @@ def put_vendor_profile_state(
         approval_status=row.get("approval_status", "pending"),
         payload=row.get("payload") or {},
         updated_at=row.get("updated_at"),
+    )
+
+
+@router.get("/reviews", response_model=VendorOwnerReviewsResponse)
+def get_vendor_own_reviews(request: Request, response: Response) -> VendorOwnerReviewsResponse:
+    user = require_vendor(request, response)
+    uid = str(user.get("id") or "")
+    rows, summary = list_reviews_for_vendor_owner(uid, limit=100)
+    items = [VendorOwnerReviewItem.model_validate(r) for r in rows]
+    return VendorOwnerReviewsResponse(
+        success=True,
+        reviews=items,
+        average_rating=summary.get("average_rating"),
+        review_count=int(summary.get("review_count") or 0),
     )

@@ -73,6 +73,14 @@ class AdminBookingDetailResponse(BaseModel):
     booking: dict[str, Any]
 
 
+class AdminFinancialsDailyBucket(BaseModel):
+    date: str
+    count: int = 0
+    gmv_gbp: float = 0.0
+    platform_fee_gbp: float = 0.0
+    vendor_portion_gbp: float = 0.0
+
+
 class AdminFinancialsSummary(BaseModel):
     success: bool = True
     period_from: str | None = None
@@ -86,6 +94,7 @@ class AdminFinancialsSummary(BaseModel):
     payout_released_gbp: float = 0.0
     #: Vendor portion collected but still sitting in Eventtz's Stripe balance (payment_status = paid).
     held_in_platform_balance_gbp: float = 0.0
+    daily: list[AdminFinancialsDailyBucket] = Field(default_factory=list)
     disclaimer: str = (
         "Figures derive from stored line items and adjustments plus the configured service fee. "
         "Stripe settlement may differ until payment webhooks persist amounts."
@@ -118,6 +127,7 @@ class AdminDisputeCase(BaseModel):
     internal_notes: str | None = None
     resolution_note: str | None = None
     assigned_admin_id: str | None = None
+    assigned_admin_email: str | None = None
     created_at: str | None = None
     updated_at: str | None = None
     resolved_at: str | None = None
@@ -176,6 +186,7 @@ class AdminConversationMessagesResponse(BaseModel):
 class AdminAuditLogItem(BaseModel):
     id: str
     admin_user_id: str | None = None
+    admin_email: str | None = None
     action: str
     entity_type: str
     entity_id: str | None = None
@@ -189,6 +200,11 @@ class AdminAuditLogResponse(BaseModel):
     total: int = 0
 
 
+class AdminAuditLogDetailResponse(BaseModel):
+    success: bool = True
+    entry: AdminAuditLogItem
+
+
 class AdminReviewRow(BaseModel):
     id: str
     booking_request_id: str
@@ -198,6 +214,11 @@ class AdminReviewRow(BaseModel):
     body: str = ""
     hidden_at: str | None = None
     created_at: str | None = None
+    vendor_display_name: str | None = None
+    client_email: str | None = None
+    booking_event_name: str | None = None
+    booking_event_date: str | None = None
+    booking_status: str | None = None
 
 
 class AdminReviewsListResponse(BaseModel):
@@ -206,6 +227,43 @@ class AdminReviewsListResponse(BaseModel):
     total: int = 0
     offset: int = 0
     limit: int = 100
+
+
+class AdminReviewDetailResponse(BaseModel):
+    success: bool = True
+    review: AdminReviewRow
+
+
+class AdminTeamMember(BaseModel):
+    user_id: str
+    email: str | None = None
+    admin_role: Literal["super_admin", "admin"] = "admin"
+    created_at: str | None = None
+    account_suspended: bool = False
+
+
+class AdminTeamListResponse(BaseModel):
+    success: bool = True
+    members: list[AdminTeamMember]
+
+
+class AdminTeamInviteBody(BaseModel):
+    email: str = Field(min_length=3, max_length=320)
+    password: str = Field(min_length=6, max_length=128)
+
+
+class AdminTeamInviteResponse(BaseModel):
+    success: bool = True
+    user_id: str
+    email: str
+    admin_role: Literal["super_admin", "admin"] = "admin"
+    created: bool = False
+    message: str
+
+
+class AdminTeamPatchBody(BaseModel):
+    admin_role: Literal["super_admin", "admin"] | None = None
+    account_suspended: bool | None = None
 
 
 class AdminBookingPaymentPatchBody(BaseModel):

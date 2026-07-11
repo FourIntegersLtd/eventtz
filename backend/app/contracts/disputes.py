@@ -25,6 +25,18 @@ class ParticipantDisputePublic(BaseModel):
     resolution_note: str | None = None
     #: True when an in-app Messages thread was linked for staff review at case open.
     chat_included_for_review: bool = False
+    #: Booking context (detail + list).
+    event_name: str | None = None
+    event_date: str | None = None
+    booking_status: str | None = None
+    conversation_id: str | None = None
+    opened_by_role: Literal["client", "vendor"] | None = None
+    opened_by_you: bool = False
+    opened_by_display_name: str | None = None
+    client_label: str | None = None
+    vendor_display_name: str | None = None
+    counterparty_label: str | None = None
+    payment_status: str | None = None
 
 
 class ParticipantDisputesListResponse(BaseModel):

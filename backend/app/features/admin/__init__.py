@@ -22,7 +22,7 @@ from app.features.admin.dispute_ops import (
     list_disputes_for_admin,
     patch_dispute_case,
 )
-from app.features.admin.review_ops import list_reviews_for_admin, set_review_hidden
+from app.features.admin.review_ops import get_review_for_admin, list_reviews_for_admin, set_review_hidden
 
 __all__ = [
     "create_dispute_case",
@@ -33,6 +33,7 @@ __all__ = [
     "get_conversation_admin_meta",
     "get_conversation_messages_admin",
     "get_financials_summary",
+    "get_review_for_admin",
     "list_bookings_for_admin",
     "list_clients_for_admin",
     "list_disputes_for_admin",

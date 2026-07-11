@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import io
+from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
 from app.core.config import get_settings
@@ -97,6 +98,60 @@ def get_admin_dashboard_summary() -> dict[str, Any]:
     }
 
 
+def _parse_financials_day(iso: str | None) -> str | None:
+    if not iso:
+        return None
+    s = str(iso).strip()
+    return s[:10] if len(s) >= 10 else None
+
+
+def _financials_chart_range(
+    date_from: str | None,
+    date_to: str | None,
+) -> tuple[date, date]:
+    today = datetime.now(timezone.utc).date()
+    if date_from and len(date_from) >= 10:
+        start = date.fromisoformat(date_from[:10])
+    else:
+        start = today - timedelta(days=29)
+    if date_to and len(date_to) >= 10:
+        end = date.fromisoformat(date_to[:10])
+    else:
+        end = today
+    if start > end:
+        start, end = end, start
+    if (end - start).days > 366:
+        start = end - timedelta(days=366)
+    return start, end
+
+
+def _iter_financials_days(start: date, end: date) -> list[str]:
+    out: list[str] = []
+    d = start
+    while d <= end:
+        out.append(d.isoformat())
+        d += timedelta(days=1)
+    return out
+
+
+def _booking_gmv_gbp(row: dict[str, Any]) -> float:
+    pamt = row.get("payment_amount_gbp")
+    if pamt is not None:
+        try:
+            return float(pamt)
+        except (TypeError, ValueError):
+            pass
+    li = row.get("line_items")
+    if not isinstance(li, list):
+        li = []
+    va = row.get("vendor_adjustments")
+    pb = build_pricing_breakdown(line_items=li, vendor_adjustments=va)
+    try:
+        return float(pb.get("client_total_gbp") or 0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
 def _iter_paid_bookings_for_financials(
     date_from: str | None,
     date_to: str | None,
@@ -121,6 +176,12 @@ def get_financials_summary(
 ) -> dict[str, Any]:
     settings = get_settings()
     fee_pct = float(settings.booking_service_fee_percent or 5)
+    chart_start, chart_end = _financials_chart_range(date_from, date_to)
+    daily_buckets: dict[str, dict[str, float | int]] = {
+        d: {"count": 0, "gmv_gbp": 0.0, "platform_fee_gbp": 0.0, "vendor_portion_gbp": 0.0}
+        for d in _iter_financials_days(chart_start, chart_end)
+    }
+
     if settings.local_auth_mode:
         return {
             "period_from": date_from,
@@ -132,6 +193,16 @@ def get_financials_summary(
             "service_fee_percent": fee_pct,
             "payout_released_gbp": 0.0,
             "held_in_platform_balance_gbp": 0.0,
+            "daily": [
+                {
+                    "date": d,
+                    "count": 0,
+                    "gmv_gbp": 0.0,
+                    "platform_fee_gbp": 0.0,
+                    "vendor_portion_gbp": 0.0,
+                }
+                for d in sorted(daily_buckets.keys())
+            ],
         }
 
     rows = _iter_paid_bookings_for_financials(date_from, date_to)
@@ -146,26 +217,18 @@ def get_financials_summary(
             li = []
         va = row.get("vendor_adjustments")
         pb = build_pricing_breakdown(line_items=li, vendor_adjustments=va)
-        pamt = row.get("payment_amount_gbp")
-        if pamt is not None:
-            try:
-                gmv += float(pamt)
-            except (TypeError, ValueError):
-                try:
-                    gmv += float(pb.get("client_total_gbp") or 0)
-                except (TypeError, ValueError):
-                    pass
-        else:
-            try:
-                gmv += float(pb.get("client_total_gbp") or 0)
-            except (TypeError, ValueError):
-                pass
+        row_gmv = _booking_gmv_gbp(row)
+        gmv += row_gmv
+        row_vportion = 0.0
+        row_pfee = 0.0
         try:
-            vportion += float(pb.get("vendor_portion_gbp") or 0)
+            row_vportion = float(pb.get("vendor_portion_gbp") or 0)
+            vportion += row_vportion
         except (TypeError, ValueError):
             pass
         try:
-            pfee += float(pb.get("service_fee_gbp") or 0)
+            row_pfee = float(pb.get("service_fee_gbp") or 0)
+            pfee += row_pfee
         except (TypeError, ValueError):
             pass
         # Prefer the snapshot captured at payment time; fall back to the live pricing recompute
@@ -184,6 +247,17 @@ def get_financials_summary(
         elif str(row.get("payment_status") or "") == "paid":
             held_in_balance += row_vendor_amount
 
+        day = _parse_financials_day(_paid_at_iso(row))
+        if day and day in daily_buckets:
+            daily_buckets[day]["count"] = int(daily_buckets[day]["count"]) + 1
+            daily_buckets[day]["gmv_gbp"] = float(daily_buckets[day]["gmv_gbp"]) + row_gmv
+            daily_buckets[day]["platform_fee_gbp"] = (
+                float(daily_buckets[day]["platform_fee_gbp"]) + row_pfee
+            )
+            daily_buckets[day]["vendor_portion_gbp"] = (
+                float(daily_buckets[day]["vendor_portion_gbp"]) + row_vportion
+            )
+
     n = len(rows)
     return {
         "period_from": date_from,
@@ -195,6 +269,16 @@ def get_financials_summary(
         "service_fee_percent": fee_pct,
         "payout_released_gbp": round(payout_released, 2),
         "held_in_platform_balance_gbp": round(held_in_balance, 2),
+        "daily": [
+            {
+                "date": d,
+                "count": int(daily_buckets[d]["count"]),
+                "gmv_gbp": round(float(daily_buckets[d]["gmv_gbp"]), 2),
+                "platform_fee_gbp": round(float(daily_buckets[d]["platform_fee_gbp"]), 2),
+                "vendor_portion_gbp": round(float(daily_buckets[d]["vendor_portion_gbp"]), 2),
+            }
+            for d in sorted(daily_buckets.keys())
+        ],
     }
 
 

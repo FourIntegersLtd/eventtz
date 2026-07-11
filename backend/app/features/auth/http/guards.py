@@ -50,7 +50,7 @@ def require_role(
 
 
 def require_admin(request: Request, response: Response) -> dict[str, Any]:
-    return require_role(
+    user = require_role(
         request,
         response,
         role="admin",
@@ -59,6 +59,24 @@ def require_admin(request: Request, response: Response) -> dict[str, Any]:
             "If you're a vendor or client, use the matching sign-in page."
         ),
     )
+    if user.get("account_suspended"):
+        raise HTTPException(
+            status_code=403,
+            detail="Your admin account is suspended. Contact a super admin.",
+        )
+    return user
+
+
+def require_super_admin(request: Request, response: Response) -> dict[str, Any]:
+    user = require_admin(request, response)
+    from app.features.auth.accounts import is_super_admin_user
+
+    if not is_super_admin_user(user):
+        raise HTTPException(
+            status_code=403,
+            detail="Only super admins can manage the admin team.",
+        )
+    return user
 
 
 def require_vendor(request: Request, response: Response) -> dict[str, Any]:

@@ -7,7 +7,8 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.db import get_db as get_client
+from app.core.db import apply_recent_first_order, get_db as get_client
+from app.features.auth.lookup import vendor_display_names_by_id
 
 logger = get_logger(__name__)
 
@@ -76,6 +77,137 @@ def get_review_stats_for_vendors(vendor_ids: list[str]) -> dict[str, dict[str, A
     return out
 
 
+_REVIEW_BASE_SELECT = "id, rating, body, created_at, client_user_id, booking_request_id"
+
+
+def _fetch_vendor_review_rows(
+    vendor_user_id: str,
+    *,
+    limit: int,
+    public_only: bool = True,
+) -> list[dict[str, Any]]:
+    if get_settings().local_auth_mode:
+        return []
+    client = get_client()
+    cap = min(max(limit, 1), 200 if not public_only else 100)
+    try:
+        q = (
+            apply_recent_first_order(
+                client.table("booking_reviews")
+                .select(_REVIEW_BASE_SELECT)
+                .eq("vendor_user_id", vendor_user_id),
+                column="created_at",
+            )
+            .limit(cap)
+        )
+        if public_only:
+            try:
+                res = q.is_("hidden_at", "null").execute()
+            except Exception:
+                res = q.execute()
+        else:
+            res = q.execute()
+    except Exception as e:
+        logger.warning("_fetch_vendor_review_rows failed: %s", e, exc_info=True)
+        return []
+    return [r for r in (getattr(res, "data", None) or []) if isinstance(r, dict)]
+
+
+def _enrich_reviews_with_booking_context(
+    rows: list[dict[str, Any]],
+    *,
+    include_total_label: bool = False,
+) -> dict[str, dict[str, str]]:
+    booking_ids = [
+        str(r.get("booking_request_id") or "")
+        for r in rows
+        if isinstance(r, dict) and r.get("booking_request_id")
+    ]
+    event_by_booking: dict[str, dict[str, str]] = {}
+    if not booking_ids:
+        return event_by_booking
+    sel = "id, event_name, event_date"
+    if include_total_label:
+        sel += ", total_label"
+    try:
+        br = (
+            get_client()
+            .table("booking_requests")
+            .select(sel)
+            .in_("id", booking_ids[:200])
+            .execute()
+        )
+        for x in getattr(br, "data", None) or []:
+            if isinstance(x, dict):
+                bid = str(x.get("id") or "")
+                if bid:
+                    ctx: dict[str, str] = {
+                        "event_name": str(x.get("event_name") or "Event"),
+                        "event_date": str(x.get("event_date") or "")[:10],
+                    }
+                    if include_total_label:
+                        ctx["total_label"] = str(x.get("total_label") or "")
+                    event_by_booking[bid] = ctx
+    except Exception as e:
+        logger.warning("booking_requests join for reviews failed: %s", e, exc_info=True)
+    return event_by_booking
+
+
+def _client_emails_for_review_rows(rows: list[dict[str, Any]]) -> dict[str, str]:
+    client_ids = list(
+        {str(r.get("client_user_id") or "") for r in rows if isinstance(r, dict) and r.get("client_user_id")}
+    )
+    emails: dict[str, str] = {}
+    if not client_ids:
+        return emails
+    try:
+        ur = (
+            get_client()
+            .table("users")
+            .select("id, email")
+            .in_("id", client_ids[:200])
+            .execute()
+        )
+        for x in getattr(ur, "data", None) or []:
+            if isinstance(x, dict):
+                uid = str(x.get("id") or "")
+                if uid:
+                    emails[uid] = str(x.get("email") or "")
+    except Exception as e:
+        logger.warning("users fetch for review labels failed: %s", e, exc_info=True)
+    return emails
+
+
+def _vendor_review_items_from_rows(
+    rows: list[dict[str, Any]],
+    event_by_booking: dict[str, dict[str, str]],
+    emails: dict[str, str],
+    *,
+    include_booking_id: bool = False,
+) -> list[dict[str, Any]]:
+    out_list: list[dict[str, Any]] = []
+    for r in rows:
+        if not isinstance(r, dict):
+            continue
+        bid = str(r.get("booking_request_id") or "")
+        cid = str(r.get("client_user_id") or "")
+        ev = event_by_booking.get(bid, {})
+        item: dict[str, Any] = {
+            "id": str(r.get("id", "")),
+            "rating": int(r.get("rating") or 0),
+            "body": str(r.get("body") or ""),
+            "created_at": r.get("created_at"),
+            "reviewer_display": _reviewer_display_from_email(emails.get(cid)),
+            "event_name": ev.get("event_name", "Event"),
+            "event_date": ev.get("event_date", ""),
+            "booking_total_label": ev.get("total_label", ""),
+        }
+        if include_booking_id:
+            item["booking_request_id"] = bid
+        out_list.append(item)
+    return out_list
+
+
 def list_public_reviews_for_vendor(
     vendor_user_id: str,
     *,
@@ -95,72 +227,78 @@ def list_public_reviews_for_vendor(
         "review_count": int(sm.get("review_count") or 0),
     }
 
+    rows = _fetch_vendor_review_rows(vendor_user_id, limit=limit, public_only=True)
+    event_by_booking = _enrich_reviews_with_booking_context(rows, include_total_label=True)
+    emails = _client_emails_for_review_rows(rows)
+    return _vendor_review_items_from_rows(rows, event_by_booking, emails), summary
+
+
+def list_reviews_for_vendor_owner(
+    vendor_user_id: str,
+    *,
+    limit: int = 100,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Visible client reviews for the authenticated vendor (matches public profile)."""
+    if get_settings().local_auth_mode:
+        return [], {
+            "average_rating": None,
+            "review_count": 0,
+        }
+
+    client = get_client()
+    stats = get_review_stats_for_vendors([vendor_user_id])
+    sm = stats.get(vendor_user_id) or {"review_count": 0, "average_rating": None}
+    summary = {
+        "average_rating": sm.get("average_rating"),
+        "review_count": int(sm.get("review_count") or 0),
+    }
+
+    rows = _fetch_vendor_review_rows(vendor_user_id, limit=limit, public_only=True)
+    event_by_booking = _enrich_reviews_with_booking_context(rows, include_total_label=True)
+    emails = _client_emails_for_review_rows(rows)
+    return _vendor_review_items_from_rows(
+        rows, event_by_booking, emails, include_booking_id=True
+    ), summary
+
+
+def list_reviews_for_client(
+    client_user_id: str,
+    *,
+    limit: int = 100,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Reviews this client has submitted."""
+    if get_settings().local_auth_mode:
+        return [], {"review_count": 0}
+
+    client = get_client()
+    sel = "id, rating, body, created_at, vendor_user_id, booking_request_id"
+
     try:
-        q = (
-            client.table("booking_reviews")
-            .select(
-                "id, rating, body, created_at, client_user_id, booking_request_id",
+        res = (
+            apply_recent_first_order(
+                client.table("booking_reviews")
+                .select(sel)
+                .eq("client_user_id", client_user_id),
+                column="created_at",
             )
-            .eq("vendor_user_id", vendor_user_id)
-            .order("created_at", desc=True)
-            .limit(min(max(limit, 1), 100))
+            .limit(min(max(limit, 1), 200))
+            .execute()
         )
-        try:
-            res = q.is_("hidden_at", "null").execute()
-        except Exception:
-            res = q.execute()
     except Exception as e:
-        logger.warning("list_public_reviews_for_vendor failed: %s", e, exc_info=True)
-        return [], summary
+        logger.warning("list_reviews_for_client failed: %s", e, exc_info=True)
+        return [], {"review_count": 0}
 
-    rows = getattr(res, "data", None) or []
-    booking_ids = [str(r.get("booking_request_id") or "") for r in rows if isinstance(r, dict)]
-    client_ids = list({str(r.get("client_user_id") or "") for r in rows if isinstance(r, dict)})
+    rows = [r for r in (getattr(res, "data", None) or []) if isinstance(r, dict)]
+    summary = {"review_count": len(rows)}
 
-    event_by_booking: dict[str, dict[str, str]] = {}
-    if booking_ids:
-        try:
-            br = (
-                client.table("booking_requests")
-                .select("id, event_name, event_date, total_label")
-                .in_("id", booking_ids[:100])
-                .execute()
-            )
-            for x in getattr(br, "data", None) or []:
-                if isinstance(x, dict):
-                    bid = str(x.get("id") or "")
-                    if bid:
-                        event_by_booking[bid] = {
-                            "event_name": str(x.get("event_name") or "Event"),
-                            "event_date": str(x.get("event_date") or "")[:10],
-                            "total_label": str(x.get("total_label") or ""),
-                        }
-        except Exception as e:
-            logger.warning("booking_requests join for reviews failed: %s", e, exc_info=True)
-
-    emails: dict[str, str] = {}
-    if client_ids:
-        try:
-            ur = (
-                client.table("users")
-                .select("id, email")
-                .in_("id", client_ids[:200])
-                .execute()
-            )
-            for x in getattr(ur, "data", None) or []:
-                if isinstance(x, dict):
-                    uid = str(x.get("id") or "")
-                    if uid:
-                        emails[uid] = str(x.get("email") or "")
-        except Exception as e:
-            logger.warning("users fetch for review labels failed: %s", e, exc_info=True)
+    vendor_ids = list({str(r.get("vendor_user_id") or "") for r in rows if r.get("vendor_user_id")})
+    vendor_names = vendor_display_names_by_id(vendor_ids) if vendor_ids else {}
+    event_by_booking = _enrich_reviews_with_booking_context(rows, include_total_label=False)
 
     out_list: list[dict[str, Any]] = []
     for r in rows:
-        if not isinstance(r, dict):
-            continue
         bid = str(r.get("booking_request_id") or "")
-        cid = str(r.get("client_user_id") or "")
+        vid = str(r.get("vendor_user_id") or "")
         ev = event_by_booking.get(bid, {})
         out_list.append(
             {
@@ -168,10 +306,11 @@ def list_public_reviews_for_vendor(
                 "rating": int(r.get("rating") or 0),
                 "body": str(r.get("body") or ""),
                 "created_at": r.get("created_at"),
-                "reviewer_display": _reviewer_display_from_email(emails.get(cid)),
+                "booking_request_id": bid,
+                "vendor_user_id": vid,
+                "vendor_display_name": vendor_names.get(vid, "Vendor"),
                 "event_name": ev.get("event_name", "Event"),
                 "event_date": ev.get("event_date", ""),
-                "booking_total_label": ev.get("total_label", ""),
             },
         )
 
@@ -213,22 +352,7 @@ def get_vendor_reviews_for_bookings(
         return {}
 
     cids = list({str(r.get("client_user_id") or "") for r in rows if r.get("client_user_id")})
-    emails: dict[str, str] = {}
-    if cids:
-        try:
-            ur = (
-                client.table("users")
-                .select("id, email")
-                .in_("id", cids[:300])
-                .execute()
-            )
-            for x in getattr(ur, "data", None) or []:
-                if isinstance(x, dict):
-                    uid = str(x.get("id") or "")
-                    if uid:
-                        emails[uid] = str(x.get("email") or "")
-        except Exception as e:
-            logger.warning("users fetch for vendor review labels failed: %s", e, exc_info=True)
+    emails = _client_emails_for_review_rows(rows) if cids else {}
 
     out: dict[str, dict[str, Any]] = {}
     for r in rows:
@@ -290,7 +414,7 @@ def get_client_review_for_booking(booking_id: str, client_user_id: str) -> dict[
     try:
         res = (
             client.table("booking_reviews")
-            .select("id, rating, created_at")
+            .select("id, rating, body, created_at")
             .eq("booking_request_id", booking_id)
             .eq("client_user_id", client_user_id)
             .limit(1)
@@ -306,6 +430,7 @@ def get_client_review_for_booking(booking_id: str, client_user_id: str) -> dict[
     return {
         "id": str(row.get("id", "")),
         "rating": int(row.get("rating") or 0),
+        "body": str(row.get("body") or ""),
         "created_at": row.get("created_at"),
     }
 
@@ -368,7 +493,7 @@ def create_booking_review(
 
     fetch = (
         client.table("booking_reviews")
-        .select("id, rating, created_at")
+        .select("id, rating, body, created_at")
         .eq("booking_request_id", booking_id)
         .limit(1)
         .execute()
@@ -381,5 +506,6 @@ def create_booking_review(
     return {
         "id": str(created.get("id", "")),
         "rating": int(created.get("rating") or rating),
+        "body": text,
         "created_at": created.get("created_at"),
     }

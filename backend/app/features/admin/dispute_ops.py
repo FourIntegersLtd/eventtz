@@ -7,13 +7,16 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.db import get_db as get_client
+from app.core.db import apply_recent_first_order, get_db as get_client
 from app.features.bookings import (
     _client_emails_by_id,
     _vendor_display_names_by_id,
 )
 from app.features.bookings.dispute_commands import create_dispute_case
 from app.features.realtime.sse import notify_user
+
+from app.features.bookings.disputes import _resolve_conversation_id_for_dispute
+from app.features.admin.team_ops import assert_active_admin_assignee
 
 logger = get_logger(__name__)
 
@@ -34,7 +37,7 @@ def _enrich_dispute_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         try:
             res = (
                 client.table("booking_requests")
-                .select("id,event_name,event_date,client_user_id,vendor_user_id,status")
+                .select("id,event_name,event_date,client_user_id,vendor_user_id,status,conversation_id")
                 .in_("id", booking_ids)
                 .execute()
             )
@@ -49,6 +52,9 @@ def _enrich_dispute_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         oid = str(r.get("opened_by_user_id") or "")
         if oid:
             user_ids.add(oid)
+        aid = str(r.get("assigned_admin_id") or "")
+        if aid:
+            user_ids.add(aid)
     for b in bookings_by_id.values():
         cid = str(b.get("client_user_id") or "")
         vid = str(b.get("vendor_user_id") or "")
@@ -71,6 +77,7 @@ def _enrich_dispute_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         cid = str(booking.get("client_user_id") or "")
         vid = str(booking.get("vendor_user_id") or "")
         oid = str(row.get("opened_by_user_id") or "")
+        aid = str(row.get("assigned_admin_id") or "")
         opened_role: str | None = None
         if _same_user_id(oid, cid):
             opened_role = "client"
@@ -96,6 +103,11 @@ def _enrich_dispute_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         row["opened_by_role"] = opened_role
         row["opened_by_email"] = opened_by_email
         row["opened_by_display_name"] = opened_by_display or None
+        row["assigned_admin_email"] = emails.get(aid) if aid else None
+        dispute_conv = row.get("conversation_id")
+        if not dispute_conv and booking:
+            dispute_conv = _resolve_conversation_id_for_dispute(booking)
+        row["conversation_id"] = str(dispute_conv).strip() if dispute_conv and str(dispute_conv).strip() else None
         out.append(row)
     return out
 
@@ -111,10 +123,11 @@ def list_disputes_for_admin() -> list[dict[str, Any]]:
         return []
     try:
         res = (
-            get_client()
-            .table("dispute_cases")
-            .select("*")
-            .order("created_at", desc=True)
+            apply_recent_first_order(
+                get_client()
+                .table("dispute_cases")
+                .select("*"),
+            )
             .limit(500)
             .execute()
         )
@@ -172,6 +185,8 @@ def patch_dispute_case(
     if resolution_note is not None:
         patch["resolution_note"] = resolution_note
     if assigned_admin_id is not None:
+        if assigned_admin_id:
+            assert_active_admin_assignee(assigned_admin_id)
         patch["assigned_admin_id"] = assigned_admin_id or None
     if resolution_action is not None:
         patch["resolution_action"] = resolution_action

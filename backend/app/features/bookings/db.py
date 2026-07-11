@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.core.db import one_row, rows
-from app.core.db import get_db
+from app.core.db import apply_recent_first_order, get_db, one_row, rows
+from app.features.bookings.list_order import sort_booking_rows_recent_first
 
 
 def get_by_id(booking_id: str, *, columns: str = "*") -> dict[str, Any] | None:
@@ -22,8 +22,8 @@ def list_for_vendor(
     q = get_db().table("booking_requests").select(columns).eq("vendor_user_id", vendor_user_id)
     if status_filter:
         q = q.in_("status", status_filter)
-    res = q.order("created_at", desc=True).execute()
-    return rows(res)
+    res = apply_recent_first_order(q).execute()
+    return sort_booking_rows_recent_first(rows(res))
 
 
 def list_for_client(
@@ -35,5 +35,5 @@ def list_for_client(
     q = get_db().table("booking_requests").select(columns).eq("client_user_id", client_user_id)
     if status_filter:
         q = q.in_("status", status_filter)
-    res = q.order("created_at", desc=True).execute()
-    return rows(res)
+    res = apply_recent_first_order(q).execute()
+    return sort_booking_rows_recent_first(rows(res))

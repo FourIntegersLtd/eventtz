@@ -27,7 +27,12 @@ from app.contracts.disputes import (
     ParticipantDisputesListResponse,
 )
 from app.contracts.payments import BookingCheckoutResponse, ConfirmCompletionResponse
-from app.contracts.reviews import PostBookingReviewBody, PostBookingReviewResponse
+from app.contracts.reviews import (
+    ClientOwnerReviewItem,
+    ClientOwnerReviewsResponse,
+    PostBookingReviewBody,
+    PostBookingReviewResponse,
+)
 from app.features.bookings.payments import (
     confirm_completion_for_client,
     create_checkout_session_for_booking,
@@ -40,7 +45,7 @@ from app.features.bookings import (
     update_booking_request_status_for_client,
     update_booking_venue_for_client,
 )
-from app.features.bookings.reviews import create_booking_review
+from app.features.bookings.reviews import create_booking_review, list_reviews_for_client
 
 router = APIRouter(prefix="/client", tags=["client"])
 logger = get_logger(__name__)
@@ -145,6 +150,19 @@ def get_client_dispute(
     user = require_client(request, response)
     uid = str(user.get("id") or "")
     return dh.get_dispute(dispute_id, uid)
+
+
+@router.get("/reviews", response_model=ClientOwnerReviewsResponse)
+def get_client_own_reviews(request: Request, response: Response) -> ClientOwnerReviewsResponse:
+    user = require_client(request, response)
+    uid = str(user.get("id") or "")
+    rows, summary = list_reviews_for_client(uid, limit=100)
+    items = [ClientOwnerReviewItem.model_validate(r) for r in rows]
+    return ClientOwnerReviewsResponse(
+        success=True,
+        reviews=items,
+        review_count=int(summary.get("review_count") or 0),
+    )
 
 
 @router.post("/booking-requests/{booking_id}/review", response_model=PostBookingReviewResponse)

@@ -25,6 +25,35 @@ class VendorPublicReviewsResponse(BaseModel):
     reviews: list[PublicReviewItem] = Field(default_factory=list)
 
 
+class VendorOwnerReviewItem(PublicReviewItem):
+    booking_request_id: str
+
+
+class VendorOwnerReviewsResponse(BaseModel):
+    success: bool = True
+    average_rating: float | None = None
+    review_count: int = 0
+    reviews: list[VendorOwnerReviewItem] = Field(default_factory=list)
+
+
+class ClientOwnerReviewItem(BaseModel):
+    id: str
+    rating: int = Field(ge=1, le=5)
+    body: str
+    created_at: str | None = None
+    booking_request_id: str
+    vendor_user_id: str
+    vendor_display_name: str = "Vendor"
+    event_name: str = "Event"
+    event_date: str = ""
+
+
+class ClientOwnerReviewsResponse(BaseModel):
+    success: bool = True
+    review_count: int = 0
+    reviews: list[ClientOwnerReviewItem] = Field(default_factory=list)
+
+
 class PostBookingReviewBody(BaseModel):
     rating: int = Field(ge=1, le=5)
     body: str = Field(min_length=10, max_length=4000)
@@ -33,6 +62,7 @@ class PostBookingReviewBody(BaseModel):
 class ClientReviewSummary(BaseModel):
     id: str
     rating: int
+    body: str = ""
     created_at: str | None = None
 
 

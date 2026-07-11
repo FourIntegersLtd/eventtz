@@ -7,7 +7,8 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.db import get_db as get_client
+from app.core.db import apply_recent_first_order, get_db as get_client
+from app.features.bookings import _client_emails_by_id, _vendor_display_names_by_id
 from app.features.bookings.dispute_commands import create_dispute_case
 from app.features.realtime.sse import notify_user
 
@@ -64,7 +65,7 @@ def _get_booking_row(booking_id: str) -> dict[str, Any] | None:
         res = (
             get_client()
             .table("booking_requests")
-            .select("id,client_user_id,vendor_user_id,status,conversation_id")
+            .select(_BOOKING_PARTY_SELECT)
             .eq("id", booking_id)
             .limit(1)
             .execute()
@@ -78,10 +79,23 @@ def _get_booking_row(booking_id: str) -> dict[str, Any] | None:
     return rows[0]
 
 
+def _norm_uid(value: Any) -> str:
+    if value is None:
+        return ""
+    s = str(value).strip()
+    if not s:
+        return ""
+    try:
+        return str(uuid.UUID(s)).lower()
+    except ValueError:
+        return s.lower()
+
+
 def user_is_booking_party(user_id: str, booking: dict[str, Any]) -> bool:
-    cid = str(booking.get("client_user_id") or "")
-    vid = str(booking.get("vendor_user_id") or "")
-    return user_id == cid or user_id == vid
+    cid = _norm_uid(booking.get("client_user_id"))
+    vid = _norm_uid(booking.get("vendor_user_id"))
+    uid = _norm_uid(user_id)
+    return uid == cid or uid == vid
 
 
 def _ts(v: Any) -> str | None:
@@ -108,6 +122,163 @@ def _serialize_public(row: dict[str, Any]) -> dict[str, Any]:
         "resolution_note": str(rn) if rn else None,
         "chat_included_for_review": bool(conv and str(conv).strip()),
     }
+
+
+def _same_user_id(a: str, b: str) -> bool:
+    na = _norm_uid(a)
+    nb = _norm_uid(b)
+    return bool(na and nb and na == nb)
+
+
+_BOOKING_PARTY_SELECT = (
+    "id,client_user_id,vendor_user_id,status,conversation_id,event_name,event_date,payment_status"
+)
+
+
+def _index_booking_rows(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Index bookings by raw and normalized id so lookups survive UUID formatting differences."""
+    out: dict[str, dict[str, Any]] = {}
+    for b in rows:
+        if not isinstance(b, dict) or not b.get("id"):
+            continue
+        raw = str(b["id"])
+        norm = _norm_uid(raw) or raw
+        out[raw] = b
+        out[norm] = b
+    return out
+
+
+def _lookup_booking(
+    bookings: dict[str, dict[str, Any]],
+    booking_id: str,
+) -> dict[str, Any]:
+    if not booking_id:
+        return {}
+    norm = _norm_uid(booking_id) or booking_id
+    found = bookings.get(norm) or bookings.get(booking_id)
+    if found:
+        return found
+    row = _get_booking_row(booking_id)
+    return row if row else {}
+
+
+def _lookup_user_label(labels: dict[str, Any], user_id: str, *, fallback: str) -> str | None:
+    if not user_id:
+        return None
+    norm = _norm_uid(user_id) or user_id
+    val = labels.get(user_id) if labels.get(user_id) is not None else labels.get(norm)
+    if val is None or (isinstance(val, str) and not val.strip()):
+        return fallback
+    return str(val).strip() if val else fallback
+
+
+def _bookings_by_id(booking_ids: list[str]) -> dict[str, dict[str, Any]]:
+    if not booking_ids or get_settings().local_auth_mode:
+        return {}
+    try:
+        res = (
+            get_client()
+            .table("booking_requests")
+            .select(_BOOKING_PARTY_SELECT)
+            .in_("id", booking_ids)
+            .execute()
+        )
+    except Exception as e:
+        logger.warning("_bookings_by_id failed: %s", e, exc_info=True)
+        return {}
+    return _index_booking_rows([b for b in getattr(res, "data", None) or [] if isinstance(b, dict)])
+
+
+def _enrich_participant_disputes(
+    rows: list[dict[str, Any]],
+    viewer_user_id: str,
+    *,
+    preloaded_bookings: dict[str, dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
+    if not rows:
+        return rows
+    booking_ids = list({str(r.get("booking_request_id") or "") for r in rows if r.get("booking_request_id")})
+    bookings = dict(preloaded_bookings or {})
+    fetched = _bookings_by_id(booking_ids)
+    for key, row in fetched.items():
+        bookings.setdefault(key, row)
+
+    seen_bookings: set[int] = set()
+    party_bookings: list[dict[str, Any]] = []
+    for b in bookings.values():
+        key = id(b)
+        if key in seen_bookings:
+            continue
+        seen_bookings.add(key)
+        party_bookings.append(b)
+
+    vendor_ids = list(
+        {str(b.get("vendor_user_id") or "") for b in party_bookings if b.get("vendor_user_id")},
+    )
+    user_ids: set[str] = set()
+    for b in party_bookings:
+        cid = str(b.get("client_user_id") or "")
+        vid = str(b.get("vendor_user_id") or "")
+        if cid:
+            user_ids.add(cid)
+        if vid:
+            user_ids.add(vid)
+    for row in rows:
+        oid = str(row.get("opened_by_user_id") or "")
+        if oid:
+            user_ids.add(oid)
+
+    vnames = _vendor_display_names_by_id(vendor_ids) if vendor_ids else {}
+    emails = _client_emails_by_id(list(user_ids)) if user_ids else {}
+
+    out: list[dict[str, Any]] = []
+    for row in rows:
+        base = _serialize_public(row) if "summary" in row else dict(row)
+        bid = str(base.get("booking_request_id") or row.get("booking_request_id") or "")
+        booking = _lookup_booking(bookings, bid)
+        cid = str(booking.get("client_user_id") or "")
+        vid = str(booking.get("vendor_user_id") or "")
+        oid = str(base.get("opened_by_user_id") or row.get("opened_by_user_id") or "")
+
+        opened_role: str | None = None
+        if _same_user_id(oid, cid):
+            opened_role = "client"
+        elif _same_user_id(oid, vid):
+            opened_role = "vendor"
+
+        client_label = _lookup_user_label(emails, cid, fallback="Client") if cid else None
+        vendor_label = _lookup_user_label(vnames, vid, fallback="Vendor") if vid else None
+
+        opened_by_display: str | None = None
+        if _same_user_id(oid, viewer_user_id):
+            opened_by_display = "You"
+        elif opened_role == "client":
+            opened_by_display = client_label
+        elif opened_role == "vendor":
+            opened_by_display = vendor_label
+        elif oid:
+            opened_by_display = _lookup_user_label(emails, oid, fallback="A party on this booking")
+
+        viewer_uid = _norm_uid(viewer_user_id)
+        counterparty_label = vendor_label if viewer_uid == _norm_uid(cid) else client_label
+
+        conv = booking.get("conversation_id") or row.get("conversation_id")
+        enriched = {
+            **base,
+            "event_name": str(booking.get("event_name") or "") or None,
+            "event_date": str(booking.get("event_date") or "") or None,
+            "booking_status": str(booking.get("status") or "") or None,
+            "payment_status": str(booking.get("payment_status") or "") or None,
+            "conversation_id": str(conv).strip() if conv and str(conv).strip() else None,
+            "opened_by_role": opened_role,
+            "opened_by_you": _same_user_id(oid, viewer_user_id),
+            "opened_by_display_name": opened_by_display,
+            "client_label": client_label,
+            "vendor_display_name": vendor_label,
+            "counterparty_label": counterparty_label,
+        }
+        out.append(enriched)
+    return out
 
 
 def _booking_ids_for_participant(user_id: str) -> list[str]:
@@ -193,7 +364,8 @@ def create_dispute_for_participant(
             notify_user(vid, "dispute_changed")
     except Exception:
         logger.warning("dispute_changed notify failed booking=%s", booking_id, exc_info=True)
-    return _serialize_public(row), None
+    enriched = _enrich_participant_disputes([row], user_id)
+    return (enriched[0] if enriched else None), None
 
 
 def list_disputes_for_participant_user(user_id: str) -> list[dict[str, Any]]:
@@ -204,11 +376,12 @@ def list_disputes_for_participant_user(user_id: str) -> list[dict[str, Any]]:
         return []
     try:
         res = (
-            get_client()
-            .table("dispute_cases")
-            .select("*")
-            .in_("booking_request_id", bids[:500])
-            .order("created_at", desc=True)
+            apply_recent_first_order(
+                get_client()
+                .table("dispute_cases")
+                .select("*")
+                .in_("booking_request_id", bids[:500]),
+            )
             .limit(200)
             .execute()
         )
@@ -218,8 +391,8 @@ def list_disputes_for_participant_user(user_id: str) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     for r in getattr(res, "data", None) or []:
         if isinstance(r, dict):
-            out.append(_serialize_public(r))
-    return out
+            out.append(r)
+    return _enrich_participant_disputes(out, user_id)
 
 
 def list_disputes_on_booking_for_participant(user_id: str, booking_id: str) -> list[dict[str, Any]]:
@@ -230,11 +403,12 @@ def list_disputes_on_booking_for_participant(user_id: str, booking_id: str) -> l
         return []
     try:
         res = (
-            get_client()
-            .table("dispute_cases")
-            .select("*")
-            .eq("booking_request_id", booking_id)
-            .order("created_at", desc=True)
+            apply_recent_first_order(
+                get_client()
+                .table("dispute_cases")
+                .select("*")
+                .eq("booking_request_id", booking_id),
+            )
             .limit(50)
             .execute()
         )
@@ -244,8 +418,9 @@ def list_disputes_on_booking_for_participant(user_id: str, booking_id: str) -> l
     out: list[dict[str, Any]] = []
     for r in getattr(res, "data", None) or []:
         if isinstance(r, dict):
-            out.append(_serialize_public(r))
-    return out
+            out.append(r)
+    preloaded = _index_booking_rows([booking])
+    return _enrich_participant_disputes(out, user_id, preloaded_bookings=preloaded)
 
 
 def get_dispute_for_participant(dispute_id: str, user_id: str) -> dict[str, Any] | None:
@@ -275,4 +450,6 @@ def get_dispute_for_participant(dispute_id: str, user_id: str) -> dict[str, Any]
     booking = _get_booking_row(bid)
     if not booking or not user_is_booking_party(user_id, booking):
         return None
-    return _serialize_public(row)
+    preloaded = _index_booking_rows([booking])
+    enriched = _enrich_participant_disputes([row], user_id, preloaded_bookings=preloaded)
+    return enriched[0] if enriched else None

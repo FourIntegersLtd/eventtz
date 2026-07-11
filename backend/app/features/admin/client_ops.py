@@ -6,7 +6,7 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.db import get_db as get_client
+from app.core.db import apply_recent_first_order, get_db as get_client
 
 logger = get_logger(__name__)
 
@@ -16,22 +16,26 @@ def list_clients_for_admin() -> list[dict[str, Any]]:
         return []
     try:
         res = (
-            get_client()
-            .table("users")
-            .select("id,email,created_at,account_suspended")
-            .eq("user_type", "client")
-            .order("created_at", desc=True)
+            apply_recent_first_order(
+                get_client()
+                .table("users")
+                .select("id,email,created_at,account_suspended")
+                .eq("user_type", "client"),
+                column="created_at",
+            )
             .limit(2000)
             .execute()
         )
     except Exception as e:
         if "account_suspended" in str(e).lower() or "42703" in str(e):
             res = (
-                get_client()
-                .table("users")
-                .select("id,email,created_at")
-                .eq("user_type", "client")
-                .order("created_at", desc=True)
+                apply_recent_first_order(
+                    get_client()
+                    .table("users")
+                    .select("id,email,created_at")
+                    .eq("user_type", "client"),
+                    column="created_at",
+                )
                 .limit(2000)
                 .execute()
             )

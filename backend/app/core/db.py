@@ -74,6 +74,22 @@ def get_client() -> Client:
     return get_db()
 
 
+def apply_recent_first_order(
+    q: Any,
+    *,
+    column: str = "updated_at",
+    tie_breaker: str = "created_at",
+    final_tie_breaker: str = "id",
+) -> Any:
+    """Apply descending order for list endpoints (most recent first)."""
+    q = q.order(column, desc=True)
+    if tie_breaker and tie_breaker != column:
+        q = q.order(tie_breaker, desc=True)
+    if final_tie_breaker and final_tie_breaker not in {column, tie_breaker}:
+        q = q.order(final_tie_breaker, desc=True)
+    return q
+
+
 def rows(res: Any) -> list[dict[str, Any]]:
     """Return ``data`` from a PostgREST execute result, or an empty list."""
     raw = getattr(res, "data", None)

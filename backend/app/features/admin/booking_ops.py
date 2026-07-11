@@ -7,7 +7,8 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.db import get_db as get_client
+from app.core.db import apply_recent_first_order, get_db as get_client
+from app.features.bookings.list_order import sort_booking_rows_recent_first
 from app.features.admin._helpers import opt_admin_ts
 from app.features.bookings.pricing import build_pricing_breakdown
 from app.features.bookings import (
@@ -42,7 +43,7 @@ def list_bookings_for_admin(
     client = get_client()
     try:
         q = client.table("booking_requests").select(
-            "id,status,event_name,event_date,client_user_id,vendor_user_id,created_at,"
+            "id,status,event_name,event_date,client_user_id,vendor_user_id,created_at,updated_at,"
             "line_items,vendor_adjustments,paid_at,payment_status",
             count="exact",
         )
@@ -54,13 +55,15 @@ def list_bookings_for_admin(
             q = q.lte("created_at", date_to)
         if search and search.strip():
             q = q.ilike("event_name", f"%{search.strip()}%")
-        q = q.order("created_at", desc=True)
+        q = apply_recent_first_order(q)
         res = q.range(offset, offset + limit - 1).execute()
     except Exception as e:
         logger.warning("list_bookings_for_admin failed: %s", e, exc_info=True)
         return [], 0
 
-    rows = [r for r in (getattr(res, "data", None) or []) if isinstance(r, dict)]
+    rows = sort_booking_rows_recent_first(
+        [r for r in (getattr(res, "data", None) or []) if isinstance(r, dict)],
+    )
     total = int(getattr(res, "count", None) or len(rows))
 
     cids = list({str(r.get("client_user_id") or "") for r in rows if r.get("client_user_id")})

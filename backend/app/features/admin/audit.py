@@ -7,9 +7,46 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.db import get_db as get_client
+from app.core.db import apply_recent_first_order, get_db as get_client
 
 logger = get_logger(__name__)
+
+
+def _normalize_audit_row(row: dict[str, Any]) -> dict[str, Any]:
+    pl = row.get("payload")
+    if isinstance(pl, str):
+        try:
+            pl = json.loads(pl)
+        except json.JSONDecodeError:
+            pl = {}
+    return {
+        "id": str(row.get("id", "")),
+        "admin_user_id": str(row.get("admin_user_id") or "") or None,
+        "action": str(row.get("action", "")),
+        "entity_type": str(row.get("entity_type", "")),
+        "entity_id": str(row.get("entity_id") or "") if row.get("entity_id") else None,
+        "payload": pl if isinstance(pl, dict) else {},
+        "created_at": row.get("created_at"),
+    }
+
+
+def _attach_admin_emails(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    if not rows:
+        return rows
+    from app.features.auth.accounts import fetch_user_profile
+
+    admin_ids = {str(r["admin_user_id"]) for r in rows if r.get("admin_user_id")}
+    emails: dict[str, str | None] = {}
+    for uid in admin_ids:
+        prof = fetch_user_profile(uid)
+        emails[uid] = str(prof.get("email") or "") if prof else None
+    out: list[dict[str, Any]] = []
+    for r in rows:
+        item = dict(r)
+        aid = item.get("admin_user_id")
+        item["admin_email"] = emails.get(str(aid)) if aid else None
+        out.append(item)
+    return out
 
 
 def insert_admin_audit_log(
@@ -46,10 +83,12 @@ def list_admin_audit_log(*, limit: int = 100, offset: int = 0) -> tuple[list[dic
         return [], 0
     try:
         res = (
-            get_client()
-            .table("admin_audit_log")
-            .select("*", count="exact")
-            .order("created_at", desc=True)
+            apply_recent_first_order(
+                get_client()
+                .table("admin_audit_log")
+                .select("*", count="exact"),
+                column="created_at",
+            )
             .range(offset, offset + max(limit, 1) - 1)
             .execute()
         )
@@ -58,23 +97,27 @@ def list_admin_audit_log(*, limit: int = 100, offset: int = 0) -> tuple[list[dic
         return [], 0
     rows = [r for r in (getattr(res, "data", None) or []) if isinstance(r, dict)]
     total = int(getattr(res, "count", None) or len(rows))
-    out: list[dict[str, Any]] = []
-    for r in rows:
-        pl = r.get("payload")
-        if isinstance(pl, str):
-            try:
-                pl = json.loads(pl)
-            except json.JSONDecodeError:
-                pl = {}
-        out.append(
-            {
-                "id": str(r.get("id", "")),
-                "admin_user_id": str(r.get("admin_user_id") or ""),
-                "action": str(r.get("action", "")),
-                "entity_type": str(r.get("entity_type", "")),
-                "entity_id": str(r.get("entity_id") or "") if r.get("entity_id") else None,
-                "payload": pl if isinstance(pl, dict) else {},
-                "created_at": r.get("created_at"),
-            },
-        )
+    out = _attach_admin_emails([_normalize_audit_row(r) for r in rows])
     return out, total
+
+
+def get_admin_audit_log_entry(entry_id: str) -> dict[str, Any] | None:
+    if get_settings().local_auth_mode:
+        return None
+    try:
+        res = (
+            get_client()
+            .table("admin_audit_log")
+            .select("*")
+            .eq("id", entry_id)
+            .limit(1)
+            .execute()
+        )
+    except Exception as e:
+        logger.warning("get_admin_audit_log_entry failed: %s", e, exc_info=True)
+        return None
+    rows = [r for r in (getattr(res, "data", None) or []) if isinstance(r, dict)]
+    if not rows:
+        return None
+    enriched = _attach_admin_emails([_normalize_audit_row(rows[0])])
+    return enriched[0] if enriched else None

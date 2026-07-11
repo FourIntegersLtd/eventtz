@@ -6,8 +6,9 @@ from typing import Any, Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request, Response
 
-from app.features.auth.http.guards import require_admin
+from app.features.auth.http.guards import require_admin, require_super_admin
 from app.contracts.admin import (
+    AdminAuditLogDetailResponse,
     AdminAuditLogItem,
     AdminAuditLogResponse,
     AdminBookingDetailResponse,
@@ -25,11 +26,17 @@ from app.contracts.admin import (
     AdminDisputePatchBody,
     AdminDisputesListResponse,
     AdminFinancialsSummary,
+    AdminReviewDetailResponse,
     AdminReviewRow,
     AdminReviewsListResponse,
+    AdminTeamInviteBody,
+    AdminTeamInviteResponse,
+    AdminTeamListResponse,
+    AdminTeamMember,
+    AdminTeamPatchBody,
     AdminReviewVisibilityBody,
 )
-from app.features.admin.audit import insert_admin_audit_log, list_admin_audit_log
+from app.features.admin.audit import get_admin_audit_log_entry, insert_admin_audit_log, list_admin_audit_log
 from app.features.admin import (
     financials_export_csv_bytes,
     get_admin_dashboard_metrics,
@@ -42,12 +49,14 @@ from app.features.admin import (
     list_clients_for_admin,
     list_disputes_for_admin,
     list_reviews_for_admin,
+    get_review_for_admin,
     patch_booking_payment_fields,
     patch_dispute_case,
     enrich_dispute_row,
     set_client_suspended,
     set_review_hidden,
 )
+from app.features.admin.team_ops import invite_admin_colleague, list_admin_team, patch_admin_team_member
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -79,6 +88,7 @@ def _dispute_row_to_model(row: dict[str, Any]) -> AdminDisputeCase:
         assigned_admin_id=str(row["assigned_admin_id"])
         if row.get("assigned_admin_id")
         else None,
+        assigned_admin_email=row.get("assigned_admin_email"),
         created_at=_opt_ts(row.get("created_at")),
         updated_at=_opt_ts(row.get("updated_at")),
         resolved_at=_opt_ts(row.get("resolved_at")),
@@ -309,9 +319,14 @@ def admin_list_reviews(
     response: Response,
     offset: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=200),
+    vendor_user_id: str | None = Query(None),
 ) -> AdminReviewsListResponse:
     require_admin(request, response)
-    rows, total = list_reviews_for_admin(offset=offset, limit=limit)
+    rows, total = list_reviews_for_admin(
+        offset=offset,
+        limit=limit,
+        vendor_user_id=vendor_user_id,
+    )
     items = [AdminReviewRow.model_validate(r) for r in rows]
     return AdminReviewsListResponse(
         success=True,
@@ -319,6 +334,22 @@ def admin_list_reviews(
         total=total,
         offset=offset,
         limit=limit,
+    )
+
+
+@router.get("/reviews/{review_id}", response_model=AdminReviewDetailResponse)
+def admin_get_review(
+    review_id: str,
+    request: Request,
+    response: Response,
+) -> AdminReviewDetailResponse:
+    require_admin(request, response)
+    row = get_review_for_admin(review_id)
+    if not row:
+        raise HTTPException(status_code=404, detail="Review not found")
+    return AdminReviewDetailResponse(
+        success=True,
+        review=AdminReviewRow.model_validate(row),
     )
 
 
@@ -374,6 +405,65 @@ def admin_chat_messages(
     )
 
 
+@router.get("/team", response_model=AdminTeamListResponse)
+def admin_list_team(request: Request, response: Response) -> AdminTeamListResponse:
+    require_admin(request, response)
+    members = [AdminTeamMember.model_validate(m) for m in list_admin_team()]
+    return AdminTeamListResponse(success=True, members=members)
+
+
+@router.post("/team/invite", response_model=AdminTeamInviteResponse)
+def admin_invite_team_member(
+    body: AdminTeamInviteBody,
+    request: Request,
+    response: Response,
+) -> AdminTeamInviteResponse:
+    actor = require_super_admin(request, response)
+    try:
+        result = invite_admin_colleague(body.email, password=body.password)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    insert_admin_audit_log(
+        admin_user_id=str(actor.get("id") or ""),
+        action="admin.invite",
+        entity_type="user",
+        entity_id=result.get("user_id"),
+        payload={"email": result.get("email"), "created": result.get("created")},
+    )
+    return AdminTeamInviteResponse(**result)
+
+
+@router.patch("/team/{user_id}", response_model=AdminTeamMember)
+def admin_patch_team_member(
+    user_id: str,
+    body: AdminTeamPatchBody,
+    request: Request,
+    response: Response,
+) -> AdminTeamMember:
+    actor = require_super_admin(request, response)
+    if not body.model_dump(exclude_unset=True):
+        raise HTTPException(status_code=400, detail="No fields to update")
+    try:
+        row = patch_admin_team_member(
+            user_id,
+            admin_role=body.admin_role,
+            account_suspended=body.account_suspended,
+            actor_user_id=str(actor.get("id") or ""),
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    if not row:
+        raise HTTPException(status_code=404, detail="Admin not found")
+    insert_admin_audit_log(
+        admin_user_id=str(actor.get("id") or ""),
+        action="admin.team_patch",
+        entity_type="user",
+        entity_id=user_id,
+        payload=body.model_dump(exclude_unset=True),
+    )
+    return AdminTeamMember.model_validate(row)
+
+
 @router.get("/audit-log", response_model=AdminAuditLogResponse)
 def admin_audit_log(
     request: Request,
@@ -385,3 +475,16 @@ def admin_audit_log(
     entries, total = list_admin_audit_log(offset=offset, limit=limit)
     items = [AdminAuditLogItem.model_validate(e) for e in entries]
     return AdminAuditLogResponse(success=True, entries=items, total=total)
+
+
+@router.get("/audit-log/{entry_id}", response_model=AdminAuditLogDetailResponse)
+def admin_audit_log_detail(
+    entry_id: str,
+    request: Request,
+    response: Response,
+) -> AdminAuditLogDetailResponse:
+    require_admin(request, response)
+    row = get_admin_audit_log_entry(entry_id)
+    if not row:
+        raise HTTPException(status_code=404, detail="Audit entry not found")
+    return AdminAuditLogDetailResponse(success=True, entry=AdminAuditLogItem.model_validate(row))

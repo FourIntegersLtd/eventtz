@@ -109,6 +109,16 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("STRIPE_WEBHOOK_SECRET"),
     )
 
+    #: Comma-separated emails treated as super_admin when DB admin_role is not set yet.
+    super_admin_emails: str = Field(
+        default="hello@fourintegers.com",
+        validation_alias=AliasChoices("SUPER_ADMIN_EMAILS"),
+    )
+
+    @property
+    def super_admin_emails_list(self) -> list[str]:
+        return [e.strip().lower() for e in self.super_admin_emails.split(",") if e.strip()]
+
     @property
     def cors_origins_list(self) -> list[str]:
         origins: list[str] = [

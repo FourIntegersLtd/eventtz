@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 from app.core.config import get_settings
 from app.core.logging import get_logger
 from app.core.db import (
+    apply_recent_first_order,
     get_db as get_client,
     is_approval_status_check_violation,
     is_missing_approval_status_column,
@@ -298,11 +299,12 @@ def list_approved_vendors_for_explore() -> list[dict[str, Any]]:
 
     try:
         res = (
-            get_client()
-            .table("vendors")
-            .select("user_id,status,approval_status,payload,updated_at")
-            .eq("approval_status", "approved")
-            .order("updated_at", desc=True)
+            apply_recent_first_order(
+                get_client()
+                .table("vendors")
+                .select("user_id,status,approval_status,payload,updated_at")
+                .eq("approval_status", "approved"),
+            )
             .execute()
         )
     except Exception as e:
