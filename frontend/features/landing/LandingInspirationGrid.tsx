@@ -25,7 +25,7 @@ export function LandingInspirationGrid() {
               fill
               className="object-cover transition duration-500 hover:scale-[1.02]"
               sizes="(max-width: 768px) 100vw, 50vw"
-              unoptimized
+              quality={80}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
             <p className="absolute bottom-4 left-4 font-heading text-lg font-semibold text-accent-gold sm:text-xl">
@@ -37,7 +37,7 @@ export function LandingInspirationGrid() {
         {rest.map((img) => (
           <article
             key={img.src}
-            className="relative min-h-[140px] overflow-hidden rounded-2xl sm:min-h-[160px] md:min-h-0"
+            className="relative min-h-[140px] overflow-hidden rounded-2xl sm:min-h-[160px] md:min-h-[172px]"
           >
             <Image
               src={img.src}
@@ -45,7 +45,7 @@ export function LandingInspirationGrid() {
               fill
               className="object-cover transition duration-500 hover:scale-[1.02]"
               sizes="(max-width: 768px) 50vw, 25vw"
-              unoptimized
+              quality={80}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
             <p className="absolute bottom-3 left-3 text-sm font-semibold text-violet-200">{img.eventName}</p>

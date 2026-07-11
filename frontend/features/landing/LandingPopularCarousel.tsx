@@ -19,7 +19,7 @@ export function LandingPopularCarousel() {
   return (
     <section
       id="popular"
-      className="relative flex min-h-0 flex-col justify-center border-t border-neutral-200 bg-neutral-50 px-4 py-16 sm:px-6 sm:py-24"
+      className="relative flex min-h-0 flex-col justify-center border-t border-primary-border/50 bg-neutral-50 px-4 py-16 sm:px-6 sm:py-24"
     >
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center">
         <LandingSectionHeading eyebrow="Real events" title="Popular on Eventtz" />

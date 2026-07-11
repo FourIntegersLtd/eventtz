@@ -6,7 +6,7 @@ const TRUST_ITEMS = [
   { icon: BadgeCheck, label: "Approved vendors" },
   { icon: CreditCard, label: "Secure payments" },
   { icon: MapPin, label: "UK-wide" },
-  { icon: Tags, label: "5 categories" },
+  { icon: Tags, label: "Curated categories" },
 ] as const;
 
 export function LandingTrustStrip() {

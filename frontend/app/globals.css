@@ -169,3 +169,108 @@ body {
     animation: none;
   }
 }
+
+/* Compliance / legal pages (components/compliances) */
+.compliance-prose {
+  color: rgb(64 64 64);
+  line-height: 1.7;
+}
+
+.compliance-prose h1 {
+  font-family: var(--font-fraunces), ui-serif, serif;
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 2rem;
+}
+
+.compliance-prose h2 {
+  font-family: var(--font-fraunces), ui-serif, serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-top: 3rem;
+  margin-bottom: 1rem;
+}
+
+.compliance-prose h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: rgb(38 38 38);
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.compliance-prose p,
+.compliance-prose li {
+  margin-bottom: 0.75rem;
+}
+
+.compliance-prose ul,
+.compliance-prose ol {
+  margin-left: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.compliance-prose ul {
+  list-style-type: disc;
+}
+
+.compliance-prose ol {
+  list-style-type: decimal;
+}
+
+.compliance-prose a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.compliance-prose a:hover {
+  opacity: 0.85;
+}
+
+.compliance-prose strong {
+  color: rgb(38 38 38);
+  font-weight: 600;
+}
+
+.compliance-prose .compliance-meta {
+  font-size: 0.875rem;
+  color: rgb(115 115 115);
+  margin-bottom: 2rem;
+}
+
+.compliance-prose section + section {
+  margin-top: 2.5rem;
+}
+
+.compliance-table-wrap {
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  border: 1px solid var(--primary-border);
+  border-radius: 0.75rem;
+}
+
+.compliance-table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.compliance-table-wrap th,
+.compliance-table-wrap td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--primary-border);
+}
+
+.compliance-table-wrap th {
+  background: var(--primary-soft);
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.compliance-table-wrap tr:last-child td {
+  border-bottom: none;
+}

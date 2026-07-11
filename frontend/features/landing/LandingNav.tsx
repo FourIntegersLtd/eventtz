@@ -8,7 +8,7 @@ import { EventtzLogo } from "@/components/branding/EventtzLogo";
 import {
   BROWSE_LINK,
   EXPLORE_NAV_LINKS,
-  LIST_BUSINESS_LINK,
+  REGISTER_LINK,
   MOBILE_NAV_LINKS,
   NAV_DROPDOWN_LINK_CLASS,
   SIGN_IN_LINK,
@@ -81,10 +81,35 @@ function NavDropdown({ label, align = "right", items, darkNav = false }: NavDrop
   );
 }
 
-export function LandingNav() {
-  const navSolid = useLandingNavScroll();
+function withSectionPrefix(href: string, sectionLinkPrefix: "" | "/") {
+  return href.startsWith("#") ? `${sectionLinkPrefix}${href}` : href;
+}
+
+type LandingNavProps = {
+  /** Transparent over hero on home; always solid on inner pages (e.g. compliance). */
+  variant?: "hero" | "solid";
+  /** Prefix landing section anchors when not on `/` — e.g. `"/"` → `/#faq`. */
+  sectionLinkPrefix?: "" | "/";
+};
+
+export function LandingNav({
+  variant = "hero",
+  sectionLinkPrefix = "",
+}: LandingNavProps) {
+  const scrollSolid = useLandingNavScroll();
+  const navSolid = variant === "solid" || scrollSolid;
   const [mobileOpen, setMobileOpen] = useState(false);
-  const darkNav = !navSolid;
+  const darkNav = variant === "hero" && !navSolid;
+
+  const exploreLinks = EXPLORE_NAV_LINKS.map((item) => ({
+    ...item,
+    href: withSectionPrefix(item.href, sectionLinkPrefix),
+  }));
+
+  const mobileLinks = MOBILE_NAV_LINKS.map((item) => ({
+    ...item,
+    href: withSectionPrefix(item.href, sectionLinkPrefix),
+  }));
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
@@ -127,7 +152,7 @@ export function LandingNav() {
         </div>
 
         <nav className="hidden items-center gap-0.5 lg:flex lg:justify-end lg:overflow-visible">
-          <NavDropdown darkNav={darkNav} label="Explore" align="left" items={EXPLORE_NAV_LINKS} />
+          <NavDropdown darkNav={darkNav} label="Explore" align="left" items={exploreLinks} />
 
           <NavLinkItem
             href={SIGN_IN_LINK.href}
@@ -140,8 +165,8 @@ export function LandingNav() {
             {SIGN_IN_LINK.label}
           </NavLinkItem>
 
-          <NavLinkItem href={LIST_BUSINESS_LINK.href} className={outlineCtaClass}>
-            {LIST_BUSINESS_LINK.label}
+          <NavLinkItem href={REGISTER_LINK.href} className={outlineCtaClass}>
+            {REGISTER_LINK.label}
           </NavLinkItem>
 
           <NavLinkItem href={BROWSE_LINK.href} className={primaryCtaClass}>
@@ -182,7 +207,7 @@ export function LandingNav() {
           }`}
         >
           <div className="flex flex-col gap-1">
-            {MOBILE_NAV_LINKS.map((item) => (
+            {mobileLinks.map((item) => (
               <NavLinkItem
                 key={`${item.href}-${item.label}`}
                 href={item.href}

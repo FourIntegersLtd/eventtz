@@ -6,6 +6,7 @@ import { Pause, Play } from "lucide-react";
 import { HeroMarketplaceSearch } from "@/features/marketplace/HeroMarketplaceSearch";
 import {
   HERO_QUICK_LINKS,
+  HERO_SUBHEADLINE,
   HERO_VIDEO_POSTER,
   HERO_VIDEO_SRC,
 } from "@/features/landing/landingData";
@@ -92,11 +93,12 @@ export function LandingHero() {
       <div className="relative z-10 mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-10">
         <div className="max-w-3xl text-left">
           <h1 className="font-heading text-4xl font-semibold leading-[1.08] tracking-tight text-white drop-shadow-[0_2px_24px_rgba(0,0,0,0.45)] sm:text-5xl md:text-6xl lg:text-7xl">
-            Book <span className="text-accent-gold">African</span> event vendors in the UK.
+            Book <span className="text-accent-gold">African</span> event vendors in the UK
           </h1>
-          <p className="mt-4 max-w-lg text-base font-medium text-white/90 sm:text-lg">
-            Search by service and city.{" "}
-            <span className="text-violet-200">Message and book</span> in one place.
+          <p className="mt-4 max-w-xl text-base font-medium leading-relaxed text-white/90 sm:text-lg md:text-xl">
+            {HERO_SUBHEADLINE.lead}{" "}
+            <span className="text-violet-200">{HERO_SUBHEADLINE.accent}</span>{" "}
+            {HERO_SUBHEADLINE.tail}
           </p>
         </div>
 

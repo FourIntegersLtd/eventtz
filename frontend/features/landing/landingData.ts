@@ -1,8 +1,15 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  BadgeCheck,
+  Banknote,
+  Calendar,
   Camera,
   Cake,
+  CreditCard,
+  MapPin,
+  MessageCircle,
   Package,
+  ShieldCheck,
   Sparkles,
   UtensilsCrossed,
 } from "lucide-react";
@@ -14,8 +21,12 @@ import {
   SiTiktok,
   SiX,
 } from "react-icons/si";
+import { getBookingServiceFeePercent } from "@/lib/bookingServiceFee";
 
 export const WAITLIST_URL = "https://forms.gle/6c4Ezw5MNuQaYr238";
+
+/** Matches checkout UI and backend `BOOKING_SERVICE_FEE_PERCENT` (default 5). */
+const SERVICE_FEE_PERCENT_LABEL = `${getBookingServiceFeePercent()}%`;
 
 export type LandingStep = {
   step: number;
@@ -159,66 +170,117 @@ export const GALLERY_IMAGES: GalleryImage[] = [
 export type FaqItem = { q: string; a: string };
 
 export type FaqSection = {
+  id: "client" | "vendor";
   heading: string;
   items: FaqItem[];
 };
 
 export const FAQ_SECTIONS: FaqSection[] = [
   {
+    id: "client",
     heading: "For clients",
     items: [
       {
         q: "What is Eventtz?",
-        a: "Eventtz is a UK marketplace focused on African vendors, for anyone planning weddings, parties, and corporate events in Britain. We help you discover and compare trusted vendors across baking, catering, photography, makeup, and rentals, with more tools for search, messaging, and secure booking as we roll out.",
+        a: "Eventtz helps you plan African celebrations in the UK. It is a marketplace where you can find trusted event vendors, message them directly, and book in one place. No more chasing quotes across WhatsApp and email.",
       },
       {
-        q: "What types of vendors can I find?",
-        a: "We focus on five core categories: baking, catering, photography, makeup, and rentals (for example furniture, décor, or equipment hire). You can browse by category to shortlist vendors that fit your event.",
+        q: "Which vendors can I find?",
+        a: "You can find vendors for baking, catering, photography, makeup, and rentals. Search by category, city, and event date to shortlist people near you who fit your event.",
       },
       {
         q: "Do I need an account to browse?",
-        a: "Create a free client account to search vendors, save favourites, message, and request bookings.",
+        a: "No. You can look through vendor profiles without signing up. When you want to message someone or send a booking request, you will need a free client account.",
       },
       {
-        q: "How will booking and payment work?",
-        a: "Request a booking from a vendor profile, agree on a quote in chat, then pay securely in-app via Stripe.",
+        q: "How does booking work?",
+        a: "Start on a vendor profile and choose the services you want. Send a request with your event date and venue, then chat with the vendor to confirm the details. When they accept, you pay in the app to secure your date.",
       },
       {
-        q: "Is Eventtz only for weddings?",
-        a: "No. Weddings are huge for us, but Eventtz is for birthdays, traditional and religious celebrations, naming ceremonies, corporate events, and every kind of party, anywhere in the UK.",
+        q: "When do I pay?",
+        a: "You pay after the vendor accepts your request, not before. Checkout happens in the app through Stripe. You will always see the full price breakdown before you confirm payment.",
       },
       {
-        q: "What if I need a vendor type you don’t list yet?",
-        a: "We’re starting with our core categories so quality stays high. For anything outside that scope, we may expand over time. Join the waitlist and tell us what you’re looking for.",
+        q: "Is there a service fee?",
+        a: `Yes. Eventtz adds a ${SERVICE_FEE_PERCENT_LABEL} service fee on top of the vendor quote at checkout. The full total is shown before you pay, so there are no surprises.`,
+      },
+      {
+        q: "Are vendors vetted?",
+        a: "Every vendor completes onboarding before they can list on Eventtz. Our team reviews profiles before they go live in search, so you are browsing approved businesses.",
+      },
+      {
+        q: "Can I message a vendor before booking?",
+        a: "Yes. Once you are signed in, you can open a chat from any vendor profile. It is a good way to ask questions and check availability before you send a formal booking request.",
+      },
+      {
+        q: "What kind of events is Eventtz for?",
+        a: "Eventtz is for all kinds of celebrations across the UK. That includes weddings, birthdays, traditional and religious events, naming ceremonies, corporate events, and private parties.",
+      },
+      {
+        q: "Can I cancel a booking?",
+        a: "You can cancel from your dashboard while a booking is still pending or accepted. If you have already paid and need help with a refund, open a dispute from the booking or get in touch with support.",
+      },
+      {
+        q: "What if something goes wrong?",
+        a: "If there is a problem with a booking, you can open a dispute from your bookings page. Our team will review what happened, including your chat history, and help work toward a fair outcome.",
+      },
+      {
+        q: "Can I leave a review?",
+        a: "After your event, the vendor marks the booking as complete. You can then leave one honest review on their profile to help other clients choose with confidence.",
       },
     ],
   },
   {
+    id: "vendor",
     heading: "For vendors",
     items: [
       {
-        q: "How do I join Eventtz as a vendor?",
-        a: "Create a vendor account, then complete onboarding: business details and services, your UK base and how you travel or deliver, availability, portfolio and links, and Stripe Connect for verification and payouts. You’ll review everything before submission.",
+        q: "How do I join Eventtz?",
+        a: "Create a vendor account and work through onboarding step by step. You will add your business details, services, portfolio photos, availability, and connect Stripe so you can get paid.",
       },
       {
-        q: "Which services can I offer?",
-        a: "You can list baking, catering, photography, makeup, or rentals. If your business doesn’t fit those categories, choose Other during onboarding. We’ll open a short waitlist form so we can follow up when we’re ready to support more vendor types.",
+        q: "Which services can I list?",
+        a: "Right now you can list baking, catering, photography, makeup, or rentals. If your business does not fit those categories yet, choose Other during onboarding and we will add you to our waitlist.",
       },
       {
-        q: "Can I set hourly rates and fixed packages?",
-        a: "Yes. You can add hourly and daily rates, and create multiple named packages with price, duration, and details. You can also indicate whether each package follows your default travel and delivery rules from your location settings.",
+        q: "When will my profile go live?",
+        a: "Your profile goes live after you finish onboarding, complete Stripe verification, and our team approves your listing. We will let you know when you start appearing in client search.",
       },
       {
-        q: "How do I handle travel and delivery fees?",
-        a: "You set your base city, how far you travel, and a default policy (for example fee included, free within your base city, or fees confirmed after a booking request). You can align each package with that default or treat it differently.",
+        q: "Can I set my own prices?",
+        a: "Yes. You are in control of your pricing. You can set hourly and daily rates, create packages, and send custom quotes with line items when a client asks for something specific.",
       },
       {
         q: "How do I get paid?",
-        a: "Onboarding includes Stripe Connect so identity checks and payouts can run securely. You’ll complete Connect as part of the flow before your profile is fully live for bookings.",
+        a: "Payments go through Stripe Connect, which you set up during onboarding. Once a client has paid and you have marked the booking complete, the money is paid out to your connected account.",
       },
       {
-        q: "When will Eventtz launch?",
-        a: "We’re in the final stages of building. Join the waitlist to get updates and early access when we open more widely to clients and vendors.",
+        q: "Does Eventtz take a cut from my earnings?",
+        a: `Clients pay a ${SERVICE_FEE_PERCENT_LABEL} Eventtz service fee on top of your quote at checkout. You receive the vendor amount you agreed with the client. The fee is not deducted from your side of the booking.`,
+      },
+      {
+        q: "Can I send quotes to clients?",
+        a: "Yes. You can accept incoming requests or send a quote yourself from chat. You can add extras like delivery or travel, or apply a discount, before the client accepts and pays.",
+      },
+      {
+        q: "How do travel and delivery fees work?",
+        a: "In your profile, you set where you are based and how far you travel. When you quote a job, you can add delivery or travel as separate line items so the client sees exactly what they are paying for.",
+      },
+      {
+        q: "How do I manage my availability?",
+        a: "Use the calendar in your profile to block dates when you are unavailable. When a client sends a request, we check it against your calendar so you are not double-booked.",
+      },
+      {
+        q: "Can I turn down or cancel a booking?",
+        a: "Yes. You can decline requests that do not work for you. If plans change after you have accepted, you can cancel from your dashboard and the client will be notified.",
+      },
+      {
+        q: "Will clients leave reviews on my profile?",
+        a: "After you mark a booking complete, the client can leave one review on your public profile. Reviews come from real bookings, which helps build trust with new clients.",
+      },
+      {
+        q: "What happens if there is a dispute?",
+        a: "Either you or the client can open a dispute from the booking if something goes wrong. Our team reviews the details and may hold the payout until the case is resolved.",
       },
     ],
   },
@@ -279,9 +341,97 @@ export const HERO_VIDEO_SRC =
 export const HERO_VIDEO_POSTER =
   "https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=1920&q=80";
 
+/** Outcome-first hero line (below H1). `accent` is highlighted in the hero. */
+export const HERO_SUBHEADLINE = {
+  lead: "Eventtz helps you plan your celebrations with",
+  accent: "confidence",
+  tail: "by helping you find trusted vendors and booking securely in one single platform.",
+} as const;
+
+export type LandingValuePillar = {
+  title: string;
+  description: string;
+  Icon: LucideIcon;
+};
+
+export const WHY_EVENTTZ_PILLARS: LandingValuePillar[] = [
+  {
+    title: "Trusted vendors",
+    description:
+      "Every vendor completes onboarding and is reviewed by our team before they appear in search.",
+    Icon: BadgeCheck,
+  },
+  {
+    title: "One place to plan",
+    description:
+      "Browse profiles, message vendors, agree quotes, and book without jumping between apps.",
+    Icon: MessageCircle,
+  },
+  {
+    title: "Secure payments",
+    description:
+      "Pay through Stripe after a vendor accepts. You always see the full price breakdown first.",
+    Icon: CreditCard,
+  },
+];
+
+export type LandingVendorBenefit = {
+  title: string;
+  description: string;
+  Icon: LucideIcon;
+};
+
+export const VENDOR_SPOTLIGHT_BENEFITS: LandingVendorBenefit[] = [
+  {
+    title: "Get discovered",
+    description: "Show up when clients search by category, city, and event date across the UK.",
+    Icon: MapPin,
+  },
+  {
+    title: "Set your own prices",
+    description: "Offer packages, hourly rates, and custom quotes with delivery or travel extras.",
+    Icon: Banknote,
+  },
+  {
+    title: "Manage bookings",
+    description: "Accept requests, chat in-app, block dates on your calendar, and mark jobs complete.",
+    Icon: Calendar,
+  },
+  {
+    title: "Get paid securely",
+    description: "Connect Stripe during onboarding and receive payouts after completed bookings.",
+    Icon: ShieldCheck,
+  },
+];
+
+export const TRUST_SAFETY_ITEMS: LandingValuePillar[] = [
+  {
+    title: "Approved listings",
+    description: "We review vendor profiles before they go live so clients browse with confidence.",
+    Icon: BadgeCheck,
+  },
+  {
+    title: "Clear pricing",
+    description: `Vendor quotes plus a ${SERVICE_FEE_PERCENT_LABEL} Eventtz service fee shown in full before checkout.`,
+    Icon: CreditCard,
+  },
+  {
+    title: "Booking history",
+    description: "Messages, quotes, and payment status stay tied to each booking in your dashboard.",
+    Icon: MessageCircle,
+  },
+  {
+    title: "Dispute support",
+    description: "If something goes wrong, either party can open a dispute and our team will review it.",
+    Icon: ShieldCheck,
+  },
+];
+
 export const EXPLORE_NAV_LINKS = [
   { href: "#browse", label: "Categories" },
+  { href: "#why-eventtz", label: "Why Eventtz" },
   { href: "#featured", label: "Featured vendors" },
+  { href: "#reviews", label: "Reviews" },
   { href: "#inspiration", label: "Event inspiration" },
   { href: "#how-it-works", label: "How it works" },
   { href: "#faq", label: "FAQ" },
@@ -290,7 +440,7 @@ export const EXPLORE_NAV_LINKS = [
 /** One login, one register — the account-type dropdown on `/register` replaces separate client/vendor forms. */
 export const SIGN_IN_LINK = { href: "/login", label: "Sign in" } as const;
 export const BROWSE_LINK = { href: "/client/browse", label: "Browse" } as const;
-export const LIST_BUSINESS_LINK = { href: "/vendor/register", label: "List your business" } as const;
+export const REGISTER_LINK = { href: "/register", label: "Register" } as const;
 export const CREATE_ACCOUNT_LINK = { href: "/register", label: "Create account" } as const;
 
 export type MobileNavLink = {
@@ -303,5 +453,5 @@ export const MOBILE_NAV_LINKS: MobileNavLink[] = [
   ...EXPLORE_NAV_LINKS,
   SIGN_IN_LINK,
   BROWSE_LINK,
-  { ...LIST_BUSINESS_LINK, primary: true },
+  { ...REGISTER_LINK, primary: true },
 ];
