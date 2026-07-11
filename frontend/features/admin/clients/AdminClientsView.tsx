@@ -67,9 +67,9 @@ export function AdminClientsView() {
         <EmptyState title="No clients yet" />
       ) : (
         <AdminTable>
-          <AdminTableElement>
+          <AdminTableElement className="min-w-[36rem]">
             <AdminTableHead>
-              <AdminTableHeaderCell>Email</AdminTableHeaderCell>
+              <AdminTableHeaderCell className="min-w-[11rem]">Email</AdminTableHeaderCell>
               <AdminTableHeaderCell>Bookings</AdminTableHeaderCell>
               <AdminTableHeaderCell>Created</AdminTableHeaderCell>
               <AdminTableHeaderCell>Status</AdminTableHeaderCell>
@@ -81,7 +81,11 @@ export function AdminClientsView() {
                   key={r.user_id}
                   className={r.account_suspended ? "opacity-70" : undefined}
                 >
-                  <AdminTableCell>{r.email ?? "—"}</AdminTableCell>
+                  <AdminTableCell className="min-w-[11rem] max-w-[14rem]">
+                    <span className="block truncate" title={r.email ?? undefined}>
+                      {r.email ?? "—"}
+                    </span>
+                  </AdminTableCell>
                   <AdminTableCell className="tabular-nums">{r.booking_count}</AdminTableCell>
                   <AdminTableCell className="text-neutral-600">
                     {r.created_at ? String(r.created_at).slice(0, 10) : "—"}

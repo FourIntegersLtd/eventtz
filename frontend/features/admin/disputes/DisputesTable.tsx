@@ -43,7 +43,7 @@ export function DisputesTable({
   return (
     <>
       <AdminFilterBar>
-        <label className="text-sm">
+        <label className="block w-full text-sm sm:w-auto">
           <span className="text-neutral-600">Status</span>
           <select
             value={statusFilter}

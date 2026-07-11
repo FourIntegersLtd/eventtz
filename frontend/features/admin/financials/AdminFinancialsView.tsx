@@ -10,6 +10,7 @@ import {
 } from "@/lib/adminPlatformApi";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminFilterBar } from "@/features/admin/components/AdminFilterBar";
+import { AdminFilterDateField } from "@/features/admin/components/AdminFilterDateField";
 import { AdminKpiCard } from "@/features/admin/components/AdminKpiCard";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import { AdminPageHeader } from "@/features/admin/components/AdminPageHeader";
@@ -64,10 +65,11 @@ export function AdminFinancialsView() {
       <AdminPageHeader />
 
       <AdminFilterBar>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex w-full flex-wrap gap-2 sm:w-auto">
           <Button
             variant="secondary"
             size="sm"
+            className="flex-1 sm:flex-none"
             onClick={() => {
               const { from: f, to: t } = presetRange("30d");
               setFrom(f);
@@ -79,6 +81,7 @@ export function AdminFinancialsView() {
           <Button
             variant="secondary"
             size="sm"
+            className="flex-1 sm:flex-none"
             onClick={() => {
               const { from: f, to: t } = presetRange("month");
               setFrom(f);
@@ -88,43 +91,30 @@ export function AdminFinancialsView() {
             This month
           </Button>
         </div>
-        <label className="text-sm">
-          <span className="text-neutral-600">Paid from</span>
-          <input
-            type="date"
-            value={from}
-            onChange={(e) => setFrom(e.target.value)}
-            className="mt-1 block rounded-lg border border-neutral-200 px-3 py-2 text-sm"
-          />
-        </label>
-        <label className="text-sm">
-          <span className="text-neutral-600">Paid to</span>
-          <input
-            type="date"
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
-            className="mt-1 block rounded-lg border border-neutral-200 px-3 py-2 text-sm"
-          />
-        </label>
-        <Button variant="secondary" size="sm" onClick={() => void load()}>
-          Apply
-        </Button>
-        <Button
-          variant="secondary"
-          size="sm"
-          icon={<Download className="h-4 w-4" aria-hidden />}
-          loading={csvBusy}
-          onClick={async () => {
-            setCsvBusy(true);
-            try {
-              await downloadAdminFinancialsCsv(from || undefined, to || undefined);
-            } finally {
-              setCsvBusy(false);
-            }
-          }}
-        >
-          Export CSV
-        </Button>
+        <AdminFilterDateField label="Paid from" value={from} onChange={setFrom} />
+        <AdminFilterDateField label="Paid to" value={to} onChange={setTo} />
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-end">
+          <Button variant="secondary" size="sm" className="w-full sm:w-auto" onClick={() => void load()}>
+            Apply
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="w-full sm:w-auto"
+            icon={<Download className="h-4 w-4" aria-hidden />}
+            loading={csvBusy}
+            onClick={async () => {
+              setCsvBusy(true);
+              try {
+                await downloadAdminFinancialsCsv(from || undefined, to || undefined);
+              } finally {
+                setCsvBusy(false);
+              }
+            }}
+          >
+            Export CSV
+          </Button>
+        </div>
       </AdminFilterBar>
 
       {loading ? (

@@ -9,6 +9,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PaymentStatusBadge } from "@/components/ui/PaymentStatusBadge";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminFilterBar } from "@/features/admin/components/AdminFilterBar";
+import { AdminFilterDateField } from "@/features/admin/components/AdminFilterDateField";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import { AdminPageHeader } from "@/features/admin/components/AdminPageHeader";
 import {
@@ -57,7 +58,7 @@ export function AdminBookingsView() {
       <AdminPageHeader />
 
       <AdminFilterBar>
-        <label className="block text-sm">
+        <label className="block w-full text-sm sm:w-auto">
           <span className="text-neutral-600">Status</span>
           <select
             value={status}
@@ -74,7 +75,7 @@ export function AdminBookingsView() {
             ))}
           </select>
         </label>
-        <label className="block min-w-[12rem] flex-1 text-sm">
+        <label className="block w-full min-w-0 flex-1 text-sm sm:min-w-[12rem]">
           <span className="text-neutral-600">Search event name</span>
           <input
             value={search}
@@ -86,30 +87,22 @@ export function AdminBookingsView() {
             placeholder="Contains…"
           />
         </label>
-        <label className="block text-sm">
-          <span className="text-neutral-600">Created from</span>
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => {
-              setOffset(0);
-              setDateFrom(e.target.value);
-            }}
-            className="mt-1 block w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm"
-          />
-        </label>
-        <label className="block text-sm">
-          <span className="text-neutral-600">Created to</span>
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => {
-              setOffset(0);
-              setDateTo(e.target.value);
-            }}
-            className="mt-1 block w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm"
-          />
-        </label>
+        <AdminFilterDateField
+          label="Created from"
+          value={dateFrom}
+          onChange={(value) => {
+            setOffset(0);
+            setDateFrom(value);
+          }}
+        />
+        <AdminFilterDateField
+          label="Created to"
+          value={dateTo}
+          onChange={(value) => {
+            setOffset(0);
+            setDateTo(value);
+          }}
+        />
       </AdminFilterBar>
 
       {loading ? (

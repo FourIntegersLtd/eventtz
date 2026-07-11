@@ -29,10 +29,10 @@ export function AdminVendorsTable({ rows, onSelect }: AdminVendorsTableProps) {
 
   return (
     <AdminTable>
-      <AdminTableElement>
+      <AdminTableElement className="min-w-[42rem]">
         <AdminTableHead>
-          <AdminTableHeaderCell>Email</AdminTableHeaderCell>
-          <AdminTableHeaderCell>Business</AdminTableHeaderCell>
+          <AdminTableHeaderCell className="min-w-[11rem]">Email</AdminTableHeaderCell>
+          <AdminTableHeaderCell className="min-w-[8rem]">Business</AdminTableHeaderCell>
           <AdminTableHeaderCell>Form</AdminTableHeaderCell>
           <AdminTableHeaderCell>Approval</AdminTableHeaderCell>
           <AdminTableHeaderCell>Updated</AdminTableHeaderCell>
@@ -50,8 +50,16 @@ export function AdminVendorsTable({ rows, onSelect }: AdminVendorsTableProps) {
                 key={r.user_id}
                 className={pending ? "bg-amber-50/40" : undefined}
               >
-                <AdminTableCell className="max-w-[200px] break-all">{email}</AdminTableCell>
-                <AdminTableCell className="max-w-[160px]">{biz}</AdminTableCell>
+                <AdminTableCell className="min-w-[11rem] max-w-[14rem]">
+                  <span className="block truncate" title={email}>
+                    {email}
+                  </span>
+                </AdminTableCell>
+                <AdminTableCell className="min-w-[8rem] max-w-[12rem]">
+                  <span className="block truncate" title={biz}>
+                    {biz}
+                  </span>
+                </AdminTableCell>
                 <AdminTableCell className="whitespace-nowrap">
                   <VendorProfileStatusBadge status={r.status} />
                 </AdminTableCell>

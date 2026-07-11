@@ -70,12 +70,12 @@ export function AdminAuditView() {
       <AdminPageHeader />
 
       <AdminFilterBar>
-        <label className="text-sm">
+        <label className="block w-full text-sm sm:w-auto">
           <span className="text-neutral-600">Show</span>
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value as AuditCategory)}
-            className="mt-1 block rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm"
+            className="mt-1 block w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm sm:w-48"
           >
             {AUDIT_CATEGORIES.map((c) => (
               <option key={c.id} value={c.id}>
