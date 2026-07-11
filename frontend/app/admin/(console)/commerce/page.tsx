@@ -1,0 +1,39 @@
+"use client";
+
+import { Suspense, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
+import { AdminConsolePage } from "@/features/admin/layout/AdminConsolePage";
+import { AdminSectionTabs } from "@/features/admin/layout/AdminSectionTabs";
+import { AdminBookingsView } from "@/features/admin/bookings/AdminBookingsView";
+import { AdminFinancialsView } from "@/features/admin/financials/AdminFinancialsView";
+import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
+
+const TABS = [
+  { id: "bookings", label: "Bookings" },
+  { id: "financials", label: "Financials" },
+] as const;
+
+function CommerceTabs() {
+  const searchParams = useSearchParams();
+  const tab = useMemo((): "bookings" | "financials" => {
+    const t = searchParams.get("tab");
+    return t === "financials" ? "financials" : "bookings";
+  }, [searchParams]);
+
+  return (
+    <>
+      <AdminSectionTabs tabs={TABS} activeId={tab} basePath="/admin/commerce" />
+      {tab === "financials" ? <AdminFinancialsView /> : <AdminBookingsView />}
+    </>
+  );
+}
+
+export default function AdminCommercePage() {
+  return (
+    <AdminConsolePage title="Commerce">
+      <Suspense fallback={<AdminLoadingState />}>
+        <CommerceTabs />
+      </Suspense>
+    </AdminConsolePage>
+  );
+}

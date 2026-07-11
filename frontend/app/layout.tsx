@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/components/auth/AuthProvider";
+import { ToastProvider } from "@/components/ui/Toast";
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
@@ -13,12 +15,18 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Eventtz — Find & Book Event Vendors in the UK",
+  title: "Eventtz — African event vendors in the UK",
   description:
-    "Eventtz connects you to photographers, caterers, decorators, makeup artists and more — all in one seamless marketplace.",
+    "Find and book UK-based African vendors for weddings, parties, and corporate events — baking, catering, photography, makeup, and rentals. Prices in GBP.",
   // app/favicon.ico is used automatically for the tab icon. Optional: add apple for home screen.
   icons: {
-    apple: [{ url: "/images/eventtz-favicon.png", sizes: "180x180", type: "image/png" }],
+    apple: [
+      {
+        url: "/images/eventtz-favicon.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
   },
 };
 
@@ -30,9 +38,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${fraunces.variable} ${jakarta.variable} antialiased`}
+        className={`${fraunces.variable} ${jakarta.variable} overflow-x-hidden antialiased`}
       >
-        {children}
+        <AuthProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </AuthProvider>
       </body>
     </html>
   );

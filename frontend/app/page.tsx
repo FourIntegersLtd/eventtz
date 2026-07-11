@@ -1,5 +1,5 @@
-import Landing from "@/components/landing";
+import LandingMarketplace from "@/features/landing/LandingMarketplace";
 
 export default function Home() {
-  return <Landing />;
+  return <LandingMarketplace />;
 }

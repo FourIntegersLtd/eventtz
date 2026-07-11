@@ -1,0 +1,396 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { AlertCircle, CalendarRange, Pencil, X } from "lucide-react";
+import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
+import {
+  AddressFinderInput,
+  type AddressFinderValue,
+} from "@/components/ui/AddressFinderInput";
+import {
+  getBookingRequestErrorMessage,
+  postBookingRequest,
+} from "@/lib/clientBookingApi";
+import {
+  isoDatesInEventRange,
+  vendorPayloadAllowsEventDates,
+} from "@/lib/vendorAvailability";
+import {
+  type BrowsePricingOption,
+  bookingLineItemPayloadFromOption,
+  buildBookingLineItems,
+  formatBookingTotalGbp,
+} from "./vendorBrowseDetailModel";
+
+export type VendorBookingSearchPrefill = {
+  /** YYYY-MM-DD from marketplace search (first selected day). */
+  eventDate?: string;
+  eventEndDate?: string;
+  datesFlexible: boolean;
+};
+
+type VendorBookingModalProps = {
+  onClose: () => void;
+  /** Called once the request is created — the caller owns navigation to the new booking's detail page. */
+  onSuccess?: (bookingId: string) => void;
+  vendorDisplayName: string;
+  vendorUserId: string;
+  pricingOptions: BrowsePricingOption[];
+  /** Package / rate ids selected on the profile sidebar — fixed for this modal; change selection by closing and re-picking there. */
+  initialSelectedIds: string[];
+  /** Vendor onboarding payload — used to warn if chosen dates conflict with calendar. */
+  vendorPayload?: Record<string, unknown>;
+  /** Dates/types from marketplace URL on `/client/browse/[id]?…`. */
+  searchPrefill?: VendorBookingSearchPrefill;
+};
+
+export function VendorBookingModal({
+  onClose,
+  onSuccess,
+  vendorDisplayName,
+  vendorUserId,
+  pricingOptions,
+  initialSelectedIds,
+  vendorPayload,
+  searchPrefill,
+}: VendorBookingModalProps) {
+  // Selection happens once, on the profile sidebar — this modal only confirms dates/venue/notes.
+  const selectedIds = useMemo(() => new Set(initialSelectedIds), [initialSelectedIds]);
+  const [eventName, setEventName] = useState("");
+  const [eventDate, setEventDate] = useState(searchPrefill?.eventDate ?? "");
+  const [eventEndDate, setEventEndDate] = useState(searchPrefill?.eventEndDate ?? "");
+  const [venue, setVenue] = useState<AddressFinderValue>({
+    postcode: "",
+    formattedAddress: null,
+  });
+  const [notes, setNotes] = useState("");
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitResult, setSubmitResult] = useState<null | { type: "error"; message: string }>(
+    null,
+  );
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  useEffect(() => {
+    if (searchPrefill?.eventDate) setEventDate(searchPrefill.eventDate);
+    if (searchPrefill?.eventEndDate !== undefined) {
+      setEventEndDate(searchPrefill.eventEndDate ?? "");
+    }
+  }, [searchPrefill?.eventDate, searchPrefill?.eventEndDate]);
+
+  const calendarConflict = useMemo(() => {
+    if (!vendorPayload || !eventDate.trim()) return false;
+    const end = eventEndDate.trim() || null;
+    const range = isoDatesInEventRange(eventDate.trim(), end);
+    if (range.length === 0) return false;
+    return !vendorPayloadAllowsEventDates(vendorPayload, range);
+  }, [vendorPayload, eventDate, eventEndDate]);
+
+  const dismissResultModal = () => setSubmitResult(null);
+
+  const lineItems = useMemo(
+    () => buildBookingLineItems(pricingOptions, [...selectedIds]),
+    [pricingOptions, selectedIds],
+  );
+
+  const total = useMemo(() => formatBookingTotalGbp(lineItems), [lineItems]);
+
+  const submit = () => {
+    if (!eventName.trim()) {
+      setValidationError("Please enter an event name.");
+      return;
+    }
+    if (!eventDate) {
+      setValidationError("Please choose an event date.");
+      return;
+    }
+    if (selectedIds.size === 0) {
+      setValidationError("Close this and select at least one package or rate first.");
+      return;
+    }
+    const postcode = venue.postcode.trim().replace(/\s+/g, " ");
+    if (postcode.length < 2) {
+      setValidationError("Please enter the venue postcode or pick an address.");
+      return;
+    }
+    if (eventEndDate.trim() && eventDate && eventEndDate.trim() < eventDate) {
+      setValidationError("End date must be on or after the event date.");
+      return;
+    }
+    if (calendarConflict) {
+      setValidationError(
+        "These dates don’t match this vendor’s availability. Adjust the dates or message them to confirm.",
+      );
+      return;
+    }
+    setValidationError(null);
+    setSubmitting(true);
+    void postBookingRequest({
+      vendor_user_id: vendorUserId,
+      event_name: eventName.trim(),
+      event_date: eventDate,
+      event_end_date: eventEndDate || null,
+      event_postcode: postcode,
+      event_address: venue.formattedAddress?.trim() || null,
+      notes: notes.trim() || null,
+      selected_option_ids: [...selectedIds],
+      line_items: lineItems.map((li) => {
+        const opt = pricingOptions.find((o) => o.id === li.id);
+        return opt
+          ? bookingLineItemPayloadFromOption(opt)
+          : {
+              id: li.id,
+              heading: li.heading,
+              unit_price_gbp: li.unitPriceGbp,
+            };
+      }),
+      total_label: total.label,
+    })
+      .then((created) => {
+        onSuccess?.(created.id);
+      })
+      .catch((err: unknown) => {
+        setSubmitResult({ type: "error", message: getBookingRequestErrorMessage(err) });
+        setSubmitting(false);
+      });
+  };
+
+  return (
+    <>
+    <Modal
+      isOpen={submitResult !== null}
+      onClose={dismissResultModal}
+      zIndexClassName="z-[60]"
+      maxWidthClassName="max-w-md"
+      title="Couldn’t send request"
+      footer={
+        <Button variant="primary" onClick={dismissResultModal} className="w-full">
+          Back to form
+        </Button>
+      }
+    >
+      {submitResult ? (
+        <div className="flex gap-3">
+          <span className="shrink-0 text-red-600" aria-hidden>
+            <AlertCircle className="h-6 w-6" strokeWidth={2} />
+          </span>
+          <p className="text-sm leading-relaxed text-red-900">{submitResult.message}</p>
+        </div>
+      ) : null}
+    </Modal>
+    <div className="fixed inset-0 z-50">
+      <button
+        type="button"
+        aria-label="Close"
+        className="absolute inset-0 bg-black/45"
+        onClick={() => {
+          if (submitResult) return;
+          onClose();
+        }}
+      />
+      <div className="absolute inset-0 flex items-start justify-center overflow-y-auto p-4 pt-6 sm:pt-10">
+        <div
+          className="relative my-auto w-full max-w-lg rounded-2xl border border-neutral-200 bg-white shadow-2xl"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="booking-modal-title"
+        >
+          <button
+            type="button"
+            onClick={() => {
+              if (submitResult) return;
+              onClose();
+            }}
+            className="absolute right-3 top-3 z-10 rounded-lg p-2 text-neutral-500 hover:bg-neutral-100"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
+
+          <div className="border-b border-neutral-100 px-5 pb-4 pt-5 sm:px-6">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <CalendarRange className="h-5 w-5" strokeWidth={1.75} aria-hidden />
+            </div>
+            <h2
+              id="booking-modal-title"
+              className="mt-3 font-heading text-lg font-semibold text-neutral-900"
+            >
+              Request a booking
+            </h2>
+            <p className="mt-1 text-sm text-neutral-600">
+              With{" "}
+              <span className="font-medium text-neutral-800">{vendorDisplayName}</span>
+            </p>
+            {searchPrefill?.datesFlexible ? (
+              <p className="mt-2 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs text-neutral-600">
+                You searched with flexible dates. Confirm the event dates before sending.
+              </p>
+            ) : null}
+            {searchPrefill?.eventDate && !searchPrefill.datesFlexible ? (
+              <p className="mt-2 rounded-lg border border-primary/20 bg-primary/[0.06] px-3 py-2 text-xs text-neutral-700">
+                Dates prefilled from your search.
+              </p>
+            ) : null}
+          </div>
+
+          <div className="max-h-[min(70vh,560px)] space-y-4 overflow-y-auto px-5 py-4 sm:px-6">
+            {calendarConflict ? (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
+                These dates fall on days this vendor marked unavailable (blocked days or
+                non-working weekdays). Choose other dates or contact them via Messages.
+              </div>
+            ) : null}
+            <div>
+              <label
+                htmlFor="booking-event-name"
+                className="block text-xs font-semibold uppercase tracking-wide text-neutral-500"
+              >
+                Event name
+              </label>
+              <input
+                id="booking-event-name"
+                type="text"
+                value={eventName}
+                onChange={(e) => {
+                  setEventName(e.target.value);
+                  setValidationError(null);
+                }}
+                placeholder="e.g. Ade and Kemi — wedding reception"
+                className="mt-1.5 w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label
+                  htmlFor="booking-event-date"
+                  className="block text-xs font-semibold uppercase tracking-wide text-neutral-500"
+                >
+                  Event date
+                </label>
+                <input
+                  id="booking-event-date"
+                  type="date"
+                  value={eventDate}
+                  onChange={(e) => {
+                    setEventDate(e.target.value);
+                    setValidationError(null);
+                  }}
+                  className="mt-1.5 w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="booking-event-end"
+                  className="block text-xs font-semibold uppercase tracking-wide text-neutral-500"
+                >
+                  End date <span className="font-normal normal-case text-neutral-400">(optional)</span>
+                </label>
+                <input
+                  id="booking-event-end"
+                  type="date"
+                  value={eventEndDate}
+                  onChange={(e) => {
+                    setEventEndDate(e.target.value);
+                    setValidationError(null);
+                  }}
+                  className="mt-1.5 w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+            </div>
+
+            <div>
+              <AddressFinderInput
+                label="Venue location"
+                inputId="booking-event-postcode"
+                value={venue}
+                onChange={(next) => {
+                  setVenue(next);
+                  setValidationError(null);
+                }}
+                placeholder="Postcode or address"
+              />
+            </div>
+
+            <div>
+              <div className="flex items-baseline justify-between gap-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                  Packages &amp; rates
+                </p>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                >
+                  <Pencil className="h-3 w-3" strokeWidth={2.5} aria-hidden />
+                  Change
+                </button>
+              </div>
+              <ul className="mt-2 divide-y divide-neutral-100 rounded-lg border border-neutral-200">
+                {pricingOptions
+                  .filter((opt) => selectedIds.has(opt.id))
+                  .map((opt) => (
+                    <li key={opt.id} className="flex flex-wrap items-baseline justify-between gap-2 px-3 py-2.5">
+                      <span className="text-sm font-medium text-neutral-900">{opt.heading}</span>
+                      <span className="shrink-0 text-sm font-semibold text-neutral-900">
+                        {opt.priceDisplay != null ? `GBP ${opt.priceDisplay}` : "TBC"}
+                      </span>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+
+            <div>
+              <label
+                htmlFor="booking-notes"
+                className="block text-xs font-semibold uppercase tracking-wide text-neutral-500"
+              >
+                Details for the vendor
+              </label>
+              <textarea
+                id="booking-notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={4}
+                maxLength={2000}
+                placeholder="Guest count, venue, dietary needs, timeline, or questions…"
+                className="mt-1.5 w-full resize-y rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+              <p className="mt-1 text-right text-xs text-neutral-400">{notes.length}/2000</p>
+            </div>
+
+            <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-neutral-600">Estimated vendor total</span>
+                <span className="font-heading text-lg font-semibold text-neutral-900">
+                  {total.label}
+                </span>
+              </div>
+            </div>
+
+            {validationError ? (
+              <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+                {validationError}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="border-t border-neutral-100 px-5 py-4 sm:px-6">
+            <Button variant="primary" size="md" onClick={submit} loading={submitting} className="w-full py-3">
+              Send booking request
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+    </>
+  );
+}
