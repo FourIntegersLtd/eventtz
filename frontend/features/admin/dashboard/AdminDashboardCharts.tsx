@@ -52,7 +52,7 @@ export function AdminDashboardCharts({ summary }: AdminDashboardChartsProps) {
 
       {error ? <AdminErrorBanner message={error} /> : null}
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 overflow-x-auto lg:grid-cols-2">
         <AdminChartCard title="Booking volume">
           {loading ? (
             <ChartSkeleton />

@@ -29,7 +29,7 @@ export function StarRating({ rating, max = 5, size = "sm", onRate }: StarRatingP
               aria-checked={value === n}
               aria-label={`${value} star${value === 1 ? "" : "s"}`}
               onClick={() => onRate(value)}
-              className="rounded transition duration-150 ease-out hover:scale-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded transition duration-150 ease-out hover:scale-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             >
               {value <= n ? "★" : "☆"}
             </button>

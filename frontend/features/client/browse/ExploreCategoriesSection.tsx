@@ -56,7 +56,7 @@ export function ExploreCategoriesSection({
 
         <div className="mt-6 w-full max-w-full min-w-0 overflow-hidden">
           <div
-            className="-mx-1 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            className="-mx-1 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
             role="region"
             aria-label="Explore categories"
           >

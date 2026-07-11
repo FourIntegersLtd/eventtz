@@ -191,7 +191,7 @@ export function ClientDashboardView() {
       ) : null}
 
       {loadStatus === "ready" ? (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 sm:gap-5">
           <Link
             href="/client/bookings?tab=active&status=pending"
             className="flex flex-col justify-between rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50 transition hover:shadow-md hover:-translate-y-0.5"
@@ -199,7 +199,7 @@ export function ClientDashboardView() {
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 text-amber-700">
               <Calendar className="h-4 w-4" aria-hidden />
             </span>
-            <span className="mt-3 text-2xl font-semibold tracking-tight text-neutral-900">
+            <span className="mt-3 text-xl font-semibold tracking-tight text-neutral-900 sm:text-2xl">
               {awaitingVendorCount}
             </span>
             <span className="text-sm font-medium text-neutral-500">Awaiting vendor response</span>
@@ -212,7 +212,7 @@ export function ClientDashboardView() {
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
               <MessageSquare className="h-4 w-4" aria-hidden />
             </span>
-            <span className="mt-3 text-2xl font-semibold tracking-tight text-neutral-900">
+            <span className="mt-3 text-xl font-semibold tracking-tight text-neutral-900 sm:text-2xl">
               {chatUnread}
             </span>
             <span className="text-sm font-medium text-neutral-500">Unread messages</span>
@@ -225,7 +225,7 @@ export function ClientDashboardView() {
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-rose-100 text-rose-600">
               <Heart className="h-4 w-4" aria-hidden />
             </span>
-            <span className="mt-3 text-2xl font-semibold tracking-tight text-neutral-900">
+            <span className="mt-3 text-xl font-semibold tracking-tight text-neutral-900 sm:text-2xl">
               {savedCount}
             </span>
             <span className="text-sm font-medium text-neutral-500">Saved vendors</span>

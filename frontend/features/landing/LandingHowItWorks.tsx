@@ -44,7 +44,7 @@ export function LandingHowItWorks() {
             key={`${howItWorksTab}-${item.step}`}
             className={`relative ${index > 0 ? "sm:border-l sm:border-primary-border sm:pl-6" : ""}`}
           >
-            <span className="font-heading text-4xl font-semibold tabular-nums text-accent-gold/50">
+            <span className="font-heading text-3xl font-semibold tabular-nums text-accent-gold/50 sm:text-4xl">
               {String(item.step).padStart(2, "0")}
             </span>
             <h3 className="font-heading mt-3 text-lg font-semibold text-primary">{item.title}</h3>

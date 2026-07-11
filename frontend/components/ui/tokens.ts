@@ -38,3 +38,13 @@ export const RADIUS = {
 /** One focus ring, reused by every interactive primitive instead of the browser default. */
 export const FOCUS_RING =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white";
+
+/** Mobile: 44px minimum touch target (Apple HIG / WCAG 2.5.5). */
+export const TOUCH_TARGET = "min-h-11 min-w-11";
+
+/** Full-page shells — dvh accounts for mobile browser chrome. */
+export const VIEWPORT_MIN = "min-h-dvh";
+
+/** Modal panel width on narrow viewports. */
+export const MODAL_PANEL =
+  "w-full max-w-[calc(100vw-2rem)] sm:max-w-none";

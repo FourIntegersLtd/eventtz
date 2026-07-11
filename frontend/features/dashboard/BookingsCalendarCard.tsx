@@ -103,7 +103,7 @@ export function BookingsCalendarCard<TItem extends { id: string }>({
           <button
             type="button"
             onClick={() => setMonthCursor((d) => addMonths(d, -1))}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
             aria-label="Previous month"
           >
             <ChevronLeft className="h-4 w-4" aria-hidden />
@@ -111,7 +111,7 @@ export function BookingsCalendarCard<TItem extends { id: string }>({
           <button
             type="button"
             onClick={() => setMonthCursor((d) => addMonths(d, 1))}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
             aria-label="Next month"
           >
             <ChevronRight className="h-4 w-4" aria-hidden />
@@ -119,7 +119,7 @@ export function BookingsCalendarCard<TItem extends { id: string }>({
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-7 gap-1.5">
+      <div className="hidden sm:mt-4 sm:grid sm:grid-cols-7 sm:gap-1.5">
         {weekday.map((w) => (
           <div
             key={w}

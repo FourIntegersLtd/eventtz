@@ -120,7 +120,7 @@ export function BookingDetailPanel({
           <div className="mt-3 grid gap-px overflow-hidden rounded-2xl bg-neutral-200/50 ring-1 ring-neutral-200/50 sm:grid-cols-2">
             <div className="flex gap-4 bg-white px-5 py-4 transition hover:bg-neutral-50">
               <Calendar className="mt-0.5 h-5 w-5 shrink-0 text-neutral-400" aria-hidden />
-              <div>
+              <div className="min-w-0">
                 <p className="text-xs font-medium text-neutral-500">Event date</p>
                 <p className="mt-0.5 text-sm font-medium text-neutral-900">{booking.eventDateLabel}</p>
                 {booking.eventEndDateLabel ? (
@@ -159,8 +159,8 @@ export function BookingDetailPanel({
                 ) : null}
               </div>
             </div>
-            <div className="flex items-center justify-between gap-4 bg-white px-5 py-4 transition hover:bg-neutral-50 sm:col-span-2">
-              <div className="flex items-start gap-4 min-w-0 flex-1">
+            <div className="flex flex-col gap-3 bg-white px-5 py-4 transition hover:bg-neutral-50 sm:flex-row sm:items-center sm:justify-between sm:col-span-2">
+              <div className="flex min-w-0 flex-1 items-start gap-4">
                 <MessageCircle className="mt-0.5 h-5 w-5 shrink-0 text-neutral-400" aria-hidden />
                 <div>
                   <p className="text-xs font-medium text-neutral-500">Messages</p>

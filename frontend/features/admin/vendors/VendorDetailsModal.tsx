@@ -147,7 +147,7 @@ export function VendorDetailsModal({
       isOpen={Boolean(vendor)}
       onClose={onClose}
       title={businessName}
-      maxWidthClassName="max-w-4xl"
+      maxWidthClassName="max-w-[calc(100vw-2rem)] lg:max-w-4xl"
       footer={
         vendor && tab === "actions" ? (
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -216,7 +216,7 @@ export function VendorDetailsModal({
             </Link>
           </div>
 
-          <div className="inline-flex gap-1 rounded-xl border border-neutral-200/80 bg-neutral-100/60 p-1" role="tablist">
+          <div className="inline-flex max-w-full gap-1 overflow-x-auto rounded-xl border border-neutral-200/80 bg-neutral-100/60 p-1 [-webkit-overflow-scrolling:touch]" role="tablist">
             <TabButton active={tab === "profile"} onClick={() => setTab("profile")}>
               Profile
             </TabButton>

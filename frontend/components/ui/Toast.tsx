@@ -10,7 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { RADIUS, SHADOW } from "@/components/ui/tokens";
+import { RADIUS, SHADOW, TOUCH_TARGET, FOCUS_RING } from "@/components/ui/tokens";
 
 export type ToastTone = "success" | "error" | "neutral";
 
@@ -86,7 +86,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               type="button"
               aria-label="Dismiss"
               onClick={() => dismiss(toast.id)}
-              className="shrink-0 rounded-lg p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
+              className={`inline-flex shrink-0 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 ${TOUCH_TARGET} ${FOCUS_RING}`}
             >
               <X className="h-4 w-4" />
             </button>

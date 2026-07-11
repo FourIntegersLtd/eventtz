@@ -50,7 +50,7 @@ export function SegmentedControl<T extends string>({
       role="tablist"
       aria-label={aria["aria-label"]}
       onKeyDown={onKeyDown}
-      className={`inline-flex flex-wrap items-center gap-1 border border-neutral-200 bg-neutral-100 p-1 ${RADIUS.md} ${className}`.trim()}
+      className={`inline-flex max-w-full flex-wrap items-center gap-1 overflow-x-auto border border-neutral-200 bg-neutral-100 p-1 ${RADIUS.md} ${className}`.trim()}
     >
       {options.map((option) => {
         const active = option.value === value;
@@ -62,7 +62,7 @@ export function SegmentedControl<T extends string>({
             aria-selected={active}
             tabIndex={active ? 0 : -1}
             onClick={() => onChange(option.value)}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition duration-150 ease-out ${FOCUS_RING} ${
+            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-medium transition duration-150 ease-out min-h-11 ${FOCUS_RING} ${
               active
                 ? "bg-white text-neutral-900 shadow-sm"
                 : "text-neutral-600 hover:text-neutral-900"

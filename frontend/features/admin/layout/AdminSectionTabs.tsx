@@ -19,7 +19,7 @@ export function AdminSectionTabs({ tabs, activeId, basePath }: AdminSectionTabsP
 
   return (
     <div
-      className="mb-6 inline-flex flex-wrap gap-1 rounded-xl border border-neutral-200/80 bg-neutral-100/60 p-1"
+      className="mb-6 flex max-w-full gap-1 overflow-x-auto rounded-xl border border-neutral-200/80 bg-neutral-100/60 p-1 [-webkit-overflow-scrolling:touch]"
       role="tablist"
       aria-label="Section"
     >
@@ -32,7 +32,7 @@ export function AdminSectionTabs({ tabs, activeId, basePath }: AdminSectionTabsP
             scroll={false}
             role="tab"
             aria-selected={selected}
-            className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
+            className={`inline-flex min-h-11 shrink-0 items-center rounded-lg px-4 py-2.5 text-sm font-medium transition ${
               selected
                 ? "bg-white text-neutral-900 shadow-sm ring-1 ring-neutral-200/80"
                 : "text-neutral-600 hover:text-neutral-900"

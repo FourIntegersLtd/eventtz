@@ -65,13 +65,13 @@ function BudgetSortControls({ state, onCommit }: MarketplaceFiltersBarProps) {
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <div className="relative" ref={panelRef}>
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
-          className={`inline-flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium transition ${
+          className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium transition ${
             hasBudget
               ? "border-primary/30 bg-primary/10 text-primary"
               : "border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
@@ -85,7 +85,7 @@ function BudgetSortControls({ state, onCommit }: MarketplaceFiltersBarProps) {
             : "Budget"}
         </button>
         {open && (
-          <div className="absolute left-0 top-full z-[60] mt-2 w-64 rounded-2xl border border-neutral-200 bg-white p-4 shadow-lg shadow-neutral-900/5 sm:left-auto sm:right-0">
+          <div className="absolute right-0 top-full z-[60] mt-2 w-[min(16rem,calc(100vw-2rem))] rounded-2xl border border-neutral-200 bg-white p-4 shadow-lg shadow-neutral-900/5">
             <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
               Budget (GBP)
             </p>

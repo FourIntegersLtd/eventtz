@@ -240,7 +240,7 @@ export function ChatThreadView({
       }`}
     >
       {/* Header — matches inbox card header */}
-      <div className="flex items-center gap-3 border-b border-neutral-100 px-5 py-4">
+      <div className="flex flex-col gap-3 border-b border-neutral-100 px-4 py-4 sm:flex-row sm:items-center sm:gap-3 sm:px-5">
         {backHref && !isDrawer ? (
           <Link
             href={backHref}
@@ -275,6 +275,7 @@ export function ChatThreadView({
             size="sm"
             icon={<FileText className="h-4 w-4" aria-hidden />}
             onClick={() => setQuoteOpen(true)}
+            className="w-full shrink-0 sm:w-auto"
           >
             Send quote
           </Button>

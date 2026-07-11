@@ -183,7 +183,7 @@ export function MarketplaceExploreView({
   }
 
   return (
-    <div className="min-h-screen bg-page-bg text-slate-800">
+    <div className="min-h-dvh bg-page-bg text-slate-800">
       <header className="bg-violet-50/95 backdrop-blur-xl">
         <div className="mx-auto flex min-w-0 max-w-8xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-12">
           <EventtzLogo

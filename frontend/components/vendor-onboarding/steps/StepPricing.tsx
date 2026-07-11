@@ -299,9 +299,9 @@ export function StepPricing({ data, update }: StepPricingProps) {
               <label className={labelClass()}>
                 Bulk booking (e.g. 10% off over £500)
               </label>
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <input
-                  className={inputClass()}
+                  className={`${inputClass()} min-w-0 flex-1`}
                   placeholder="Threshold £"
                   value={data.bulkDiscountThreshold}
                   onChange={(e) =>
@@ -309,7 +309,7 @@ export function StepPricing({ data, update }: StepPricingProps) {
                   }
                 />
                 <input
-                  className={inputClass()}
+                  className={`${inputClass()} min-w-0 flex-1`}
                   placeholder="% off"
                   value={data.bulkDiscountPercent}
                   onChange={(e) =>

@@ -2,7 +2,7 @@
 
 import { X } from "lucide-react";
 import { useEffect, useRef, type ReactNode } from "react";
-import { SHADOW } from "@/components/ui/tokens";
+import { FOCUS_RING, SHADOW, TOUCH_TARGET } from "@/components/ui/tokens";
 
 export type DrawerProps = {
   isOpen: boolean;
@@ -87,7 +87,7 @@ export function Drawer({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`absolute inset-y-0 right-0 flex h-full w-full flex-col border-l border-neutral-200 bg-white animate-ui-slide-in-right ${widthClassName} ${SHADOW.overlay}`}
+        className={`absolute inset-y-0 right-0 flex h-full w-full max-w-[100vw] flex-col border-l border-neutral-200 bg-white animate-ui-slide-in-right sm:max-w-none ${widthClassName} ${SHADOW.overlay}`}
       >
         <div className="flex items-start justify-between gap-3 border-b border-neutral-200 px-5 py-4">
           <div className="min-w-0">
@@ -98,7 +98,7 @@ export function Drawer({
             type="button"
             onClick={onClose}
             aria-label="Close panel"
-            className="shrink-0 rounded-lg p-2 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700"
+            className={`inline-flex shrink-0 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 ${TOUCH_TARGET} ${FOCUS_RING}`}
           >
             <X className="h-5 w-5" />
           </button>

@@ -114,7 +114,7 @@ export function NotificationsPageView({ portal }: NotificationsPageViewProps) {
                   {item.href ? (
                     <Link
                       href={item.href}
-                      className="block px-4 py-3 transition duration-150 ease-out hover:bg-neutral-50"
+                      className="block min-h-11 px-4 py-3.5 transition duration-150 ease-out hover:bg-neutral-50 active:bg-neutral-100"
                     >
                       {content}
                     </Link>

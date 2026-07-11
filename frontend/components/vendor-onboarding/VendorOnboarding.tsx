@@ -205,7 +205,7 @@ export function VendorOnboarding() {
                 type="button"
                 onClick={() => void goNext()}
                 disabled={saving}
-                className="min-w-[140px] rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:opacity-90 disabled:opacity-60"
+                className="min-h-11 w-full rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:opacity-90 disabled:opacity-60 sm:w-auto"
               >
                 {saving ? "Saving…" : "Save changes"}
               </button>
@@ -279,30 +279,27 @@ export function VendorOnboarding() {
             />
 
             {step <= 9 && (
-              <div className="mt-10 flex items-center justify-between gap-3 border-t border-neutral-100 pt-8">
-                <div className="flex w-1/3 justify-start">
+              <div className="mt-10 flex flex-col-reverse gap-3 border-t border-neutral-100 pt-8 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex sm:justify-start">
                   {step > 1 && step < 10 && (
                     <button
                       type="button"
                       onClick={goBack}
-                      className="flex items-center gap-1 rounded-xl bg-neutral-50 px-5 py-3 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100"
+                      className="flex min-h-11 w-full items-center justify-center gap-1 rounded-xl bg-neutral-50 px-5 py-3 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 sm:w-auto"
                     >
                       <ChevronLeft className="h-4 w-4" />
                       Back
                     </button>
                   )}
                 </div>
-                <div className="flex w-1/3 justify-center"></div>
-                <div className="flex w-1/3 justify-end">
-                  <button
-                    type="button"
-                    onClick={() => void goNext()}
-                    disabled={saving}
-                    className="min-w-[140px] rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:opacity-90 disabled:opacity-60"
-                  >
-                    {saving ? "Saving…" : primaryLabel}
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => void goNext()}
+                  disabled={saving}
+                  className="min-h-11 w-full rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:opacity-90 disabled:opacity-60 sm:w-auto"
+                >
+                  {saving ? "Saving…" : primaryLabel}
+                </button>
               </div>
             )}
 
@@ -310,7 +307,7 @@ export function VendorOnboarding() {
               <div className="mt-10 flex justify-center border-t border-neutral-100 pt-8">
                 <Link
                   href="/vendor/dashboard"
-                  className="inline-flex min-w-[140px] items-center justify-center rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:opacity-90"
+                  className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:opacity-90 sm:w-auto sm:min-w-[12rem]"
                 >
                   OK — back to dashboard
                 </Link>

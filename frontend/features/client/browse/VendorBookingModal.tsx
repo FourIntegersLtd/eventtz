@@ -209,13 +209,13 @@ export function VendorBookingModal({
               if (submitResult) return;
               onClose();
             }}
-            className="absolute right-3 top-3 z-10 rounded-lg p-2 text-neutral-500 hover:bg-neutral-100"
+            className="absolute right-3 top-3 z-10 inline-flex h-11 w-11 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
           </button>
 
-          <div className="border-b border-neutral-100 px-5 pb-4 pt-5 sm:px-6">
+          <div className="border-b border-neutral-100 px-5 pb-4 pt-5 pr-14 sm:px-6 sm:pr-16">
             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary">
               <CalendarRange className="h-5 w-5" strokeWidth={1.75} aria-hidden />
             </div>

@@ -150,7 +150,7 @@ export function LocationAutocompleteInput({
               setFetchedSuggestions([]);
               setOpen(false);
             }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
+            className="absolute right-2 top-1/2 inline-flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-md text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
             aria-label="Clear"
           >
             <X className="h-4 w-4" />

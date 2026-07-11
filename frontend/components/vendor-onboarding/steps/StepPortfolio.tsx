@@ -46,7 +46,7 @@ function ImageChip({
         type="button"
         onClick={onRemove}
         aria-label={`Remove ${label}`}
-        className="absolute right-1.5 top-1.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-neutral-900/70 text-white shadow-sm transition hover:bg-neutral-900"
+        className="absolute right-1.5 top-1.5 inline-flex h-11 w-11 items-center justify-center rounded-full bg-neutral-900/70 text-white shadow-sm transition hover:bg-neutral-900"
       >
         <X className="h-3.5 w-3.5" strokeWidth={2.5} />
       </button>
@@ -298,7 +298,7 @@ export function StepPortfolio({
               return (
                 <div key={link.id} className="flex gap-2">
                   <select
-                    className={`${inputClass()} w-36 shrink-0`}
+                    className={`${inputClass()} w-full shrink-0 sm:w-36`}
                     value={link.platform}
                     onChange={(e) =>
                       updateSocialLink(link.id, {

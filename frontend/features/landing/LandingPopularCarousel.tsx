@@ -82,17 +82,24 @@ export function LandingPopularCarousel() {
             >
               <ChevronLeft className="h-6 w-6" strokeWidth={2.5} />
             </button>
-            <div className="flex gap-2">
+            <div className="flex items-center justify-center gap-2">
               {GALLERY_IMAGES.map((_, i) => (
                 <button
                   key={i}
                   type="button"
                   onClick={() => setCarouselIndex(i)}
                   aria-label={`Go to slide ${i + 1}`}
-                  className={`h-2.5 rounded-full transition-all ${
-                    i === carouselIndex ? "w-7 bg-primary" : "w-2.5 bg-neutral-300 hover:bg-neutral-400"
-                  }`}
-                />
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full"
+                >
+                  <span
+                    className={`block rounded-full transition-all ${
+                      i === carouselIndex
+                        ? "h-2.5 w-7 bg-primary"
+                        : "h-2.5 w-2.5 bg-neutral-300 hover:bg-neutral-400"
+                    }`}
+                    aria-hidden
+                  />
+                </button>
               ))}
             </div>
             <button

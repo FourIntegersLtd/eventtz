@@ -143,7 +143,7 @@ export function AdminShell({ title, children }: AdminShellProps) {
   };
 
   return (
-    <div className={`min-h-screen ${adminPageBg} text-neutral-900`}>
+    <div className={`min-h-dvh ${adminPageBg} text-neutral-900`}>
       <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-neutral-200/80 bg-neutral-50/95 px-3 py-3 backdrop-blur-md md:hidden">
         <EventtzLogo variant="sidebar" priority href="/admin/dashboard" className="min-w-0 shrink" />
         <button
@@ -151,7 +151,7 @@ export function AdminShell({ title, children }: AdminShellProps) {
           aria-expanded={mobileNavOpen}
           aria-label={mobileNavOpen ? "Close menu" : "Open menu"}
           onClick={() => setMobileNavOpen((o) => !o)}
-          className="shrink-0 rounded-lg border border-neutral-200 bg-white p-2 text-neutral-800 shadow-sm"
+          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-800 shadow-sm"
         >
           {mobileNavOpen ? <X className="h-5 w-5" aria-hidden /> : <Menu className="h-5 w-5" aria-hidden />}
         </button>
@@ -172,7 +172,7 @@ export function AdminShell({ title, children }: AdminShellProps) {
               <p className="text-sm font-semibold text-neutral-800">Admin</p>
               <button
                 type="button"
-                className="shrink-0 rounded-lg p-2 text-neutral-600 hover:bg-neutral-100"
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100"
                 aria-label="Close menu"
                 onClick={closeMobile}
               >
@@ -193,7 +193,7 @@ export function AdminShell({ title, children }: AdminShellProps) {
         </div>
       ) : null}
 
-      <div className="grid min-h-screen grid-cols-1 md:grid-cols-[240px_1fr]">
+      <div className="grid min-h-dvh grid-cols-1 md:grid-cols-[240px_1fr]">
         <aside className="sticky top-0 hidden h-dvh max-h-dvh flex-col border-r border-neutral-200/80 bg-white p-5 md:flex">
           <div className="shrink-0">
             <EventtzLogo variant="sidebar" priority href="/admin/dashboard" />

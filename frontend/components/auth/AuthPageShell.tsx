@@ -8,7 +8,7 @@ type AuthPageShellProps = {
 
 export function AuthPageShell({ children, logoHref }: AuthPageShellProps) {
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#f5f2f8]">
+    <main className="relative min-h-dvh overflow-x-hidden bg-[#f5f2f8]">
       {/* Soft branded gradient + blurred blobs so the auth pages don't read as a bare form on a flat tint. */}
       <div
         className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#f5f2f8] via-[#efe7f6] to-[#e4d9f2]"

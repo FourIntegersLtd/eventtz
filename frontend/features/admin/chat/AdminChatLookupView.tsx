@@ -141,7 +141,7 @@ export function AdminChatLookupView() {
                 setMessages([]);
                 setError(null);
               }}
-              className="absolute right-2 top-[2.125rem] rounded p-1 text-neutral-400 hover:text-neutral-700"
+              className="absolute right-2 top-[2.125rem] inline-flex min-h-11 min-w-11 items-center justify-center rounded text-neutral-400 hover:text-neutral-700"
             >
               <X className="h-4 w-4" />
             </button>

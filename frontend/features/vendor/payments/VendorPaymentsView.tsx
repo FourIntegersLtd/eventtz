@@ -97,7 +97,7 @@ export function VendorPaymentsView() {
           </div>
         ) : (
           <div className="mt-5">
-            <Button variant="primary" loading={connecting} onClick={() => void onConnect()}>
+            <Button variant="primary" loading={connecting} onClick={() => void onConnect()} className="w-full sm:w-auto">
               {started ? "Continue payout setup" : "Set up payouts"}
             </Button>
 

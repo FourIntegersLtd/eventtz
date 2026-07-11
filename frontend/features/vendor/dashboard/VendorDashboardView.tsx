@@ -103,7 +103,7 @@ export function VendorDashboardView() {
       <div className="grid gap-6 lg:grid-cols-3 lg:items-start">
         <div className="space-y-6 lg:col-span-2">
           {loadStatus === "ready" ? (
-            <div className="grid grid-cols-2 gap-4 sm:gap-5">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
               <Link
                 href="/vendor/bookings?tab=active"
                 className="flex flex-col justify-between rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50 transition hover:shadow-md hover:-translate-y-0.5 sm:p-6"

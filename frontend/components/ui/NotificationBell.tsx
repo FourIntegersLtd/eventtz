@@ -10,7 +10,7 @@ import {
 } from "@/lib/notificationsFeedApi";
 import { markAllClientBookingNotificationsRead } from "@/lib/clientNotificationsApi";
 import { markAllVendorBookingNotificationsRead } from "@/lib/vendorNotificationsApi";
-import { SHADOW, RADIUS, FOCUS_RING } from "@/components/ui/tokens";
+import { SHADOW, RADIUS, FOCUS_RING, TOUCH_TARGET } from "@/components/ui/tokens";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SkeletonListRows } from "@/components/ui/Skeleton";
 
@@ -91,7 +91,7 @@ export function NotificationBell({ portal, unreadCount, onMarkedRead }: Notifica
         aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : "Notifications"}
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className={`relative rounded-lg p-2 text-neutral-600 transition duration-150 ease-out hover:bg-neutral-100 active:scale-95 ${FOCUS_RING}`}
+        className={`relative inline-flex items-center justify-center rounded-lg text-neutral-600 transition duration-150 ease-out hover:bg-neutral-100 active:scale-95 ${TOUCH_TARGET} ${FOCUS_RING}`}
       >
         <Bell className="h-5 w-5" aria-hidden />
         {unreadCount > 0 ? (

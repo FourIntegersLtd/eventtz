@@ -75,7 +75,7 @@ export function MarketplaceVendorCard({
             e.stopPropagation();
             onToggleBookmark?.();
           }}
-          className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 bg-white/95 text-neutral-600 shadow-sm transition hover:border-primary hover:text-primary"
+          className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-neutral-200 bg-white/95 text-neutral-600 shadow-sm transition hover:border-primary hover:text-primary"
           aria-label={bookmarked ? "Remove saved vendor" : "Save vendor"}
         >
           <Heart

@@ -154,8 +154,8 @@ export function LandingNav() {
             href={BROWSE_LINK.href}
             className={
               darkNav
-                ? "rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-neutral-900"
-                : "rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-white"
+                ? "inline-flex min-h-11 items-center rounded-full bg-white px-4 py-2.5 text-xs font-semibold text-neutral-900"
+                : "inline-flex min-h-11 items-center rounded-full bg-primary px-4 py-2.5 text-xs font-semibold text-white"
             }
           >
             Browse

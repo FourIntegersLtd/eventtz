@@ -186,7 +186,7 @@ function UserFooter({
     <div className="shrink-0 border-t border-neutral-200/70 pt-4 pb-[env(safe-area-inset-bottom,0px)]">
       <div className="flex items-center gap-3 px-1">
         <div
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary"
           aria-hidden
         >
           {initial}
@@ -198,7 +198,7 @@ function UserFooter({
         <button
           type="button"
           onClick={onSignOut}
-          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900"
+          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900"
           aria-label="Sign out"
           title="Sign out"
         >
@@ -339,7 +339,7 @@ export function PortalShell({
   } as const;
 
   return (
-    <div className="min-h-screen bg-page-bg text-neutral-900">
+    <div className="min-h-dvh bg-page-bg text-neutral-900">
       <ConfirmDialog
         isOpen={signOutOpen}
         title="Sign out?"
@@ -362,7 +362,7 @@ export function PortalShell({
             aria-expanded={mobileNavOpen}
             aria-label={mobileNavOpen ? "Close menu" : "Open menu"}
             onClick={() => setMobileNavOpen((o) => !o)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 text-neutral-800 transition hover:bg-neutral-200/80"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-neutral-100 text-neutral-800 transition hover:bg-neutral-200/80"
           >
             {mobileNavOpen ? <X className="h-5 w-5" aria-hidden /> : <Menu className="h-5 w-5" aria-hidden />}
           </button>
@@ -385,7 +385,7 @@ export function PortalShell({
               </div>
               <button
                 type="button"
-                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-neutral-500 transition hover:bg-neutral-100"
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-neutral-500 transition hover:bg-neutral-100"
                 aria-label="Close menu"
                 onClick={closeMobile}
               >
@@ -407,7 +407,7 @@ export function PortalShell({
         </div>
       ) : null}
 
-      <div className="grid min-h-screen grid-cols-1 md:grid-cols-[248px_1fr]">
+      <div className="grid min-h-dvh grid-cols-1 md:grid-cols-[248px_1fr]">
         {/* Desktop sidebar */}
         <aside className="sticky top-0 hidden h-dvh max-h-dvh flex-col border-r border-neutral-200/60 bg-white/70 px-4 py-5 backdrop-blur-xl md:flex md:px-5">
           <div className="shrink-0 px-1">

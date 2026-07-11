@@ -223,7 +223,7 @@ function ClientVendorDetailPageContent() {
   }
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#f5f2f8]">
+    <main className="min-h-dvh bg-[#f5f2f8]">
       <header className="border-b border-slate-200/60 bg-[#f5f2f8]/90 px-4 py-3 backdrop-blur sm:px-6 lg:px-12">
         <div className="mx-auto flex min-w-0 max-w-6xl flex-wrap items-center justify-between gap-3">
           <EventtzLogo priority href={logoHref} />
