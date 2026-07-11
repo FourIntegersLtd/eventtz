@@ -143,7 +143,7 @@ export function AdminShell({ title, children }: AdminShellProps) {
   };
 
   return (
-    <div className={`min-h-dvh ${adminPageBg} text-neutral-900`}>
+    <div className={`min-h-dvh w-full min-w-0 overflow-x-hidden ${adminPageBg} text-neutral-900`}>
       <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-neutral-200/80 bg-neutral-50/95 px-3 py-3 backdrop-blur-md md:hidden">
         <EventtzLogo variant="sidebar" priority href="/admin/dashboard" className="min-w-0 shrink" />
         <button
@@ -193,7 +193,7 @@ export function AdminShell({ title, children }: AdminShellProps) {
         </div>
       ) : null}
 
-      <div className="grid min-h-dvh grid-cols-1 md:grid-cols-[240px_1fr]">
+      <div className="grid w-full min-w-0 grid-cols-1 md:grid-cols-[240px_minmax(0,1fr)]">
         <aside className="sticky top-0 hidden h-dvh max-h-dvh flex-col border-r border-neutral-200/80 bg-white p-5 md:flex">
           <div className="shrink-0">
             <EventtzLogo variant="sidebar" priority href="/admin/dashboard" />
@@ -205,7 +205,7 @@ export function AdminShell({ title, children }: AdminShellProps) {
           <AdminUserFooter email={user?.email} onSignOut={() => void signOutAdmin()} />
         </aside>
 
-        <main className="h-full min-w-0 px-3 py-4 sm:px-6 sm:py-6">
+        <main className="h-full w-full min-w-0 overflow-x-hidden px-3 py-4 sm:px-6 sm:py-6">
           <h1 className="break-words font-heading text-xl font-semibold text-neutral-900 sm:text-2xl">
             {title}
           </h1>

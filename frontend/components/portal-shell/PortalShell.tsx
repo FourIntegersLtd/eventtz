@@ -339,7 +339,7 @@ export function PortalShell({
   } as const;
 
   return (
-    <div className="min-h-dvh bg-page-bg text-neutral-900">
+    <div className="min-h-dvh w-full min-w-0 overflow-x-hidden bg-page-bg text-neutral-900">
       <ConfirmDialog
         isOpen={signOutOpen}
         title="Sign out?"
@@ -407,7 +407,7 @@ export function PortalShell({
         </div>
       ) : null}
 
-      <div className="grid min-h-dvh grid-cols-1 md:grid-cols-[248px_1fr]">
+      <div className="grid w-full min-w-0 grid-cols-1 md:grid-cols-[248px_minmax(0,1fr)]">
         {/* Desktop sidebar */}
         <aside className="sticky top-0 hidden h-dvh max-h-dvh flex-col border-r border-neutral-200/60 bg-white/70 px-4 py-5 backdrop-blur-xl md:flex md:px-5">
           <div className="shrink-0 px-1">
@@ -425,8 +425,8 @@ export function PortalShell({
           />
         </aside>
 
-        <main className="h-full min-w-0 px-4 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
-          <div className="mx-auto flex h-full max-w-6xl flex-col">
+        <main className="h-full w-full min-w-0 overflow-x-hidden px-4 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
+          <div className="mx-auto flex h-full w-full min-w-0 max-w-6xl flex-col">
             <div className="flex items-center justify-between gap-3">
               {title ? (
                 <h1 className="min-w-0 break-words font-heading text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl">

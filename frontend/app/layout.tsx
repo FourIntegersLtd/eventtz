@@ -38,7 +38,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${fraunces.variable} ${jakarta.variable} overflow-x-hidden antialiased`}
+        className={`${fraunces.variable} ${jakarta.variable} min-h-dvh overflow-x-hidden bg-page-bg antialiased`}
       >
         <AuthProvider>
           <ToastProvider>{children}</ToastProvider>

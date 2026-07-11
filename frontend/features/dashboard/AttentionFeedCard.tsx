@@ -35,8 +35,8 @@ export function AttentionFeedCard({ items, loading }: AttentionFeedCardProps) {
   const sorted = sortAttentionItems(items);
 
   return (
-    <div className={`bg-white shadow-sm ring-1 ring-neutral-200/50 ${RADIUS.lg}`}>
-      <div className="border-b border-neutral-100 px-5 py-4">
+    <div className={`w-full min-w-0 overflow-hidden bg-white shadow-sm ring-1 ring-neutral-200/50 ${RADIUS.lg}`}>
+      <div className="border-b border-neutral-100 px-4 py-4 sm:px-5">
         <p className="text-sm font-semibold uppercase tracking-wide text-neutral-500">To do</p>
       </div>
       {loading ? (
@@ -56,19 +56,19 @@ export function AttentionFeedCard({ items, loading }: AttentionFeedCardProps) {
             const iconAndText = (
               <>
                 {item.timestamp ? (
-                  <span className="w-14 shrink-0 text-xs font-medium text-neutral-400">
+                  <span className="hidden w-14 shrink-0 text-xs font-medium text-neutral-400 sm:inline">
                     {item.timestamp}
                   </span>
                 ) : null}
                 <span
-                  className={`flex h-9 w-9 flex-none items-center justify-center rounded-full ${TONE_ICON_CLASS[item.tone]}`}
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${TONE_ICON_CLASS[item.tone]}`}
                 >
                   <Icon className="h-4 w-4" strokeWidth={2} aria-hidden />
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-neutral-900">{item.title}</p>
                   {item.subtitle ? (
-                    <p className="truncate text-xs text-neutral-500">{item.subtitle}</p>
+                    <p className="line-clamp-2 text-xs text-neutral-500 sm:truncate">{item.subtitle}</p>
                   ) : null}
                 </div>
               </>
@@ -76,24 +76,27 @@ export function AttentionFeedCard({ items, loading }: AttentionFeedCardProps) {
             return (
               <li
                 key={item.id}
-                className={`rounded-xl shadow-sm ring-1 ring-neutral-100 transition duration-150 ease-out hover:shadow-md hover:-translate-y-0.5 ${
-                  item.trailing ? "flex items-center gap-3 px-4 py-3" : ""
+                className={`min-w-0 overflow-hidden rounded-xl shadow-sm ring-1 ring-neutral-100 transition duration-150 ease-out hover:shadow-md ${
+                  item.trailing ? "flex items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4" : ""
                 }`}
               >
                 {item.trailing ? (
                   <>
                     <Link
                       href={item.href}
-                      className="flex min-w-0 flex-1 items-center gap-3 hover:opacity-80"
+                      className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3"
                     >
                       {iconAndText}
                     </Link>
-                    {item.trailing}
+                    <div className="shrink-0">{item.trailing}</div>
                   </>
                 ) : (
-                  <Link href={item.href} className="flex items-center gap-3 px-4 py-3">
+                  <Link
+                    href={item.href}
+                    className="flex w-full min-w-0 items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4"
+                  >
                     {iconAndText}
-                    <ChevronRight className="h-4 w-4 flex-none text-neutral-400" aria-hidden />
+                    <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" aria-hidden />
                   </Link>
                 )}
               </li>

@@ -90,7 +90,7 @@ export function BookingsCalendarCard<TItem extends { id: string }>({
   const weekday = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
   return (
-    <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50">
+    <div className="w-full min-w-0 overflow-hidden rounded-2xl bg-white p-4 shadow-sm ring-1 ring-neutral-200/50 sm:p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{title}</p>

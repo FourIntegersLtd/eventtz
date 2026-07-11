@@ -118,7 +118,7 @@ export function ClientDashboardView() {
   }, [loadStatus, activeBookings, chatUnread, updates, needsReview, router]);
 
   return (
-    <div className="space-y-6 pt-2">
+    <div className="w-full min-w-0 max-w-full space-y-6 pt-2">
       {loadStatus === "error" && errorMessage && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {errorMessage}
@@ -191,10 +191,10 @@ export function ClientDashboardView() {
       ) : null}
 
       {loadStatus === "ready" ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 sm:gap-5">
+        <div className="grid w-full min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 sm:gap-5">
           <Link
             href="/client/bookings?tab=active&status=pending"
-            className="flex flex-col justify-between rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50 transition hover:shadow-md hover:-translate-y-0.5"
+            className="flex min-w-0 w-full flex-col justify-between overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50 transition hover:shadow-md"
           >
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 text-amber-700">
               <Calendar className="h-4 w-4" aria-hidden />
@@ -207,7 +207,7 @@ export function ClientDashboardView() {
 
           <Link
             href="/client/messages"
-            className="flex flex-col justify-between rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50 transition hover:shadow-md hover:-translate-y-0.5"
+            className="flex min-w-0 w-full flex-col justify-between overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50 transition hover:shadow-md"
           >
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
               <MessageSquare className="h-4 w-4" aria-hidden />
@@ -233,15 +233,15 @@ export function ClientDashboardView() {
         </div>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-3 lg:items-start">
-        <div className="space-y-6 lg:col-span-2">
+      <div className="grid w-full min-w-0 grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
+        <div className="min-w-0 space-y-6 lg:col-span-2">
           <AttentionFeedCard
             items={attentionItems}
             loading={loadStatus === "loading"}
           />
         </div>
 
-        <div className="space-y-5 lg:col-span-1">
+        <div className="min-w-0 space-y-5 lg:col-span-1">
           {loadStatus === "ready" ? (
             <ClientBookingsCalendarCard
               bookingsByDate={bookingsByDate}

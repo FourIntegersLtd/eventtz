@@ -93,33 +93,33 @@ export function VendorDashboardView() {
   }, [loadStatus, needsResponse, chatUnread, updates, upcomingAgenda]);
 
   return (
-    <div className="space-y-6 pt-2">
+    <div className="w-full min-w-0 max-w-full space-y-6 pt-2">
       {loadStatus === "error" && errorMessage && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {errorMessage}
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-3 lg:items-start">
-        <div className="space-y-6 lg:col-span-2">
+      <div className="grid w-full min-w-0 grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
+        <div className="min-w-0 space-y-6 lg:col-span-2">
           {loadStatus === "ready" ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
+            <div className="grid w-full min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
               <Link
                 href="/vendor/bookings?tab=active"
-                className="flex flex-col justify-between rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50 transition hover:shadow-md hover:-translate-y-0.5 sm:p-6"
+                className="flex min-w-0 w-full flex-col justify-between overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50 transition hover:shadow-md sm:p-6"
               >
                 <p className="text-base font-medium text-neutral-500">Active bookings</p>
-                <p className="mt-4 text-4xl font-semibold tracking-tight text-neutral-900 sm:text-5xl">
+                <p className="mt-4 text-3xl font-semibold tracking-tight text-neutral-900 sm:text-4xl">
                   {activeBookingsCount}
                 </p>
               </Link>
               <Link
                 href="/vendor/bookings?tab=active&status=pending"
-                className="flex flex-col justify-between rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50 transition hover:shadow-md hover:-translate-y-0.5 sm:p-6"
+                className="flex min-w-0 w-full flex-col justify-between overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50 transition hover:shadow-md sm:p-6"
               >
                 <p className="text-base font-medium text-neutral-500">Pending response</p>
                 <p
-                  className={`mt-4 text-4xl font-semibold tracking-tight sm:text-5xl ${
+                  className={`mt-4 text-3xl font-semibold tracking-tight sm:text-4xl ${
                     pendingBookingsCount > 0 ? "text-amber-600" : "text-neutral-900"
                   }`}
                 >
@@ -135,7 +135,7 @@ export function VendorDashboardView() {
           />
         </div>
 
-        <div className="lg:col-span-1">
+        <div className="min-w-0 lg:col-span-1">
           {loadStatus === "ready" ? (
             <VendorBookingsCalendarCard
               bookingsByDate={bookingsByDate}

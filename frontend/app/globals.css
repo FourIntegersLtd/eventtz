@@ -35,7 +35,7 @@
 }
 
 body {
-  background: var(--background);
+  background: var(--page-bg);
   color: var(--foreground);
   font-family: var(--font-jakarta), sans-serif;
 }
