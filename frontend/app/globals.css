@@ -252,6 +252,27 @@ body {
   border-radius: 0.75rem;
 }
 
+/* Mobile — hide horizontal scrollbar tracks app-wide; swipe scroll still works */
+@media (max-width: 767px) {
+  *::-webkit-scrollbar:horizontal {
+    display: none;
+    height: 0;
+  }
+
+  .overflow-x-auto,
+  .overflow-x-scroll,
+  .compliance-table-wrap {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .overflow-x-auto::-webkit-scrollbar,
+  .overflow-x-scroll::-webkit-scrollbar,
+  .compliance-table-wrap::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 .compliance-table-wrap table {
   width: 100%;
   border-collapse: collapse;
@@ -273,4 +294,39 @@ body {
 
 .compliance-table-wrap tr:last-child td {
   border-bottom: none;
+}
+
+@keyframes inspiration-title {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 0.75rem, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes inspiration-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.animate-inspiration-title {
+  animation: inspiration-title 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-inspiration-progress {
+  animation: inspiration-progress linear both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-inspiration-title,
+  .animate-inspiration-progress {
+    animation: none;
+  }
 }

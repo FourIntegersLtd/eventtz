@@ -1,13 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pause, Play } from "lucide-react";
+import Link from "next/link";
+import { LandingVideo } from "@/components/media/LandingVideo";
 import { HeroMarketplaceSearch } from "@/features/marketplace/HeroMarketplaceSearch";
 import {
   HERO_QUICK_LINKS,
   HERO_SUBHEADLINE,
-  HERO_VIDEO_POSTER,
   HERO_VIDEO_SRC,
 } from "@/features/landing/landingData";
 
@@ -75,7 +75,7 @@ export function LandingHero() {
   return (
     <section className="relative z-0 isolate flex min-h-[92vh] flex-col justify-end pb-16 pt-28 sm:min-h-[min(100vh,900px)] sm:justify-center sm:pb-20 sm:pt-24">
       <div className="absolute inset-0 z-0 bg-neutral-950">
-        <video
+        <LandingVideo
           ref={heroVideoRef}
           className="absolute inset-0 h-full w-full object-cover"
           autoPlay
@@ -83,7 +83,6 @@ export function LandingHero() {
           loop
           playsInline
           preload="auto"
-          poster={HERO_VIDEO_POSTER}
           src={HERO_VIDEO_SRC}
           onPlay={() => setHeroVideoPaused(false)}
           onPause={() => setHeroVideoPaused(true)}
@@ -130,7 +129,7 @@ export function LandingHero() {
         </div>
 
         <div className="mt-6">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-gold/75">
+          <p className="text-[11px] font-semibold tracking-[0.2em] text-accent-gold/75">
             Popular
           </p>
           <div className="mt-2.5 flex flex-wrap gap-2">

@@ -4,7 +4,9 @@ import Link from "next/link";
 import {
   CREATE_ACCOUNT_LINK,
   REGISTER_LINK,
+  SIGN_IN_LINK,
   SOCIAL_LINKS,
+  WAITLIST_LINK_LABEL,
   WAITLIST_URL,
 } from "@/features/landing/landingData";
 import {
@@ -117,7 +119,7 @@ export function LandingFooter({
               <ul className="space-y-3 text-sm">
                 <li>
                   <Link href="/login" className={FOOTER_LINK_CLASS}>
-                    Log in
+                    {SIGN_IN_LINK.label}
                   </Link>
                 </li>
                 <li>
@@ -150,7 +152,7 @@ export function LandingFooter({
                 </li>
                 <li>
                   <Link href={faqHref} className={FOOTER_LINK_CLASS}>
-                    FAQs
+                    FAQ
                   </Link>
                 </li>
                 <li>
@@ -168,7 +170,7 @@ export function LandingFooter({
                     rel="noopener noreferrer"
                     className={FOOTER_LINK_CLASS}
                   >
-                    Join waitlist
+                    {WAITLIST_LINK_LABEL}
                   </a>
                 </li>
               </ul>

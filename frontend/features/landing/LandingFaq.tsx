@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { FAQ_SECTIONS, WAITLIST_URL } from "@/features/landing/landingData";
+import { FAQ_SECTIONS, WAITLIST_LINK_LABEL, WAITLIST_URL } from "@/features/landing/landingData";
 import { LandingSectionHeading } from "@/features/landing/LandingSectionHeading";
 import { LandingSection } from "@/features/landing/LandingSection";
 
@@ -37,7 +37,7 @@ export function LandingFaq() {
                 : "text-primary/70 hover:text-primary"
             }`}
           >
-            {heading.replace("For ", "")}
+            {heading}
           </button>
         ))}
       </div>
@@ -82,7 +82,7 @@ export function LandingFaq() {
           rel="noopener noreferrer"
           className="font-semibold text-primary underline-offset-2 hover:underline"
         >
-          Join the waitlist
+          {WAITLIST_LINK_LABEL}
         </a>
       </p>
     </LandingSection>

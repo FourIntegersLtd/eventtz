@@ -48,7 +48,7 @@ export function LandingFeaturedVendors() {
           href="/client/browse"
           className="text-sm font-semibold text-primary transition hover:opacity-80"
         >
-          View all →
+          View all vendors
         </Link>
       </div>
 

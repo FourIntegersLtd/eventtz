@@ -142,29 +142,53 @@ export const HERO_QUICK_LINKS = CATEGORIES.map(({ name, value }) => ({
   href: `/client/browse?types=${value}`,
 }));
 
-export type GalleryImage = {
+export type GalleryVideo = {
   src: string;
   alt: string;
   eventName: string;
 };
 
-export const GALLERY_IMAGES: GalleryImage[] = [
+export const INSPIRATION_SECTION = {
+  eyebrow: "Celebrations",
+  title: "What people book on Eventtz",
+} as const;
+
+/**
+ * Celebrations carousel — one entry per clip in `public/videos/`.
+ * Hero background uses `HERO_VIDEO_SRC` (hero.mp4 is shared with Weddings below).
+ * After adding a new file here, run: npm run optimize-videos
+ */
+export const GALLERY_VIDEOS: GalleryVideo[] = [
   {
-    src: "/images/birthday1.jpg",
-    alt: "Birthday celebration",
+    src: "/videos/hero.mp4",
+    alt: "Wedding celebration",
+    eventName: "Weddings",
+  },
+  {
+    src: "/videos/hero2.mp4",
+    alt: "Birthday party",
     eventName: "Birthdays",
   },
   {
-    src: "/images/naming.jpg",
-    alt: "Event moment",
-    eventName: "Gender Reveals",
+    src: "/videos/hero6.mp4",
+    alt: "Gender reveal celebration",
+    eventName: "Gender reveals",
   },
   {
-    src: "/images/office.jpg",
-    alt: "Celebration",
-    eventName: "Office Parties",
+    src: "/videos/hero3.mp4",
+    alt: "Office party",
+    eventName: "Office parties",
   },
-  { src: "/images/wedding.jpg", alt: "Party", eventName: "Weddings" },
+  {
+    src: "/videos/hero7.mp4",
+    alt: "Catering and food at an event",
+    eventName: "Catering",
+  },
+  {
+    src: "/videos/hero5.mp4",
+    alt: "Celebration with guests",
+    eventName: "Celebrations",
+  },
 ];
 
 export type FaqItem = { q: string; a: string };
@@ -341,14 +365,12 @@ export const NAV_DROPDOWN_LINK_CLASS =
  * Hosted locally because direct hotlinks intermittently return 403.
  */
 export const HERO_VIDEO_SRC = "/videos/hero.mp4";
-export const HERO_VIDEO_POSTER =
-  "https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=1920&q=80";
 
 /** Outcome-first hero line (below H1). `accent` is highlighted in the hero. */
 export const HERO_SUBHEADLINE = {
   lead: "Eventtz helps you plan your celebrations with",
   accent: "confidence",
-  tail: "by helping you find trusted vendors and booking securely in one single platform.",
+  tail: "so you can find trusted vendors and book securely on one platform.",
 } as const;
 
 export type LandingValuePillar = {
@@ -435,7 +457,7 @@ export const EXPLORE_NAV_LINKS = [
   { href: "#why-eventtz", label: "Why Eventtz" },
   { href: "#featured", label: "Featured vendors" },
   { href: "#reviews", label: "Reviews" },
-  { href: "#inspiration", label: "Event inspiration" },
+  { href: "#inspiration", label: "Celebrations" },
   { href: "#how-it-works", label: "How it works" },
   { href: "#faq", label: "FAQ" },
 ] as const;
@@ -445,6 +467,8 @@ export const SIGN_IN_LINK = { href: "/login", label: "Sign in" } as const;
 export const BROWSE_LINK = { href: "/client/browse", label: "Browse" } as const;
 export const REGISTER_LINK = { href: "/register", label: "Register" } as const;
 export const CREATE_ACCOUNT_LINK = { href: "/register", label: "Create account" } as const;
+export const FAQ_LINK = { href: "#faq", label: "FAQ" } as const;
+export const WAITLIST_LINK_LABEL = "Join the waitlist" as const;
 
 export type MobileNavLink = {
   href: string;
