@@ -8,6 +8,8 @@ import {
   WEEKDAY_LABELS,
 } from "../constants";
 import { bioWordCount } from "../onboardingLogic";
+import { VendorPortfolioThumbGrid } from "@/components/vendor/VendorPortfolioThumbGrid";
+import { portfolioImageUrlsFromPayload } from "@/lib/vendorPortfolioImages";
 import type {
   TravelDeliveryPolicy,
   VendorOnboardingData,
@@ -130,6 +132,11 @@ export function StepReview({
           .join(" · ");
   const wordCount = bioWordCount(data.aiBioDraft);
   const overLimit = wordCount > BIO_MAX_WORDS;
+  const persistedPortfolioUrls = portfolioImageUrlsFromPayload({
+    portfolioFileNames: data.portfolioFileNamesPersisted,
+  });
+  const portfolioImageCount =
+    persistedPortfolioUrls.length + data.portfolioFiles.length;
 
   return (
     <div className="space-y-7">
@@ -325,13 +332,11 @@ export function StepReview({
         <div className="grid gap-3 sm:grid-cols-2">
           <Field
             label="Portfolio images"
-            value={(() => {
-              const n = new Set([
-                ...data.portfolioFileNamesPersisted,
-                ...data.portfolioFiles.map((f) => f.name),
-              ]).size;
-              return n ? `${n} image(s) on file` : "No images yet";
-            })()}
+            value={
+              portfolioImageCount
+                ? `${portfolioImageCount} image(s) on file`
+                : "No images yet"
+            }
           />
           <Field
             label="Video"
@@ -353,6 +358,9 @@ export function StepReview({
             }
           />
         </div>
+        {persistedPortfolioUrls.length > 0 ? (
+          <VendorPortfolioThumbGrid urls={persistedPortfolioUrls} />
+        ) : null}
         {data.socialLinks.length === 0 && (
           <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-amber-800">
             Add a social link to increase trust.

@@ -97,8 +97,10 @@ export function vendorDataToPayload(
   data: VendorOnboardingData,
 ): Record<string, unknown> {
   const names = new Set<string>();
-  for (const n of data.portfolioFileNamesPersisted) names.add(n);
-  for (const f of data.portfolioFiles) names.add(f.name);
+  for (const n of data.portfolioFileNamesPersisted) {
+    const u = n.trim();
+    if (/^https?:\/\//i.test(u)) names.add(u);
+  }
 
   return {
     firstName: data.firstName,

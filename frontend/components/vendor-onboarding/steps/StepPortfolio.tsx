@@ -41,7 +41,7 @@ function ImageChip({
   return (
     <div className="group relative overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt={label} className="h-28 w-full object-cover" />
+      <img src={src} alt={label} className="h-28 w-full bg-neutral-50 object-contain object-center" />
       <button
         type="button"
         onClick={onRemove}

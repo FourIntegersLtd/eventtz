@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, CalendarCheck, Check, Clock, Info, MessageCircle } from "lucide-react";
 import type { ExploreVendor } from "@/lib/clientExploreApi";
 import { displayEventTypes, displayServicesOffered } from "./browseLabels";
@@ -9,6 +9,7 @@ import {
   buildBookingLineItems,
   buildBrowsePricingOptions,
   formatBookingTotalGbp,
+  portfolioImageUrlsFromPayload,
 } from "./vendorBrowseDetailModel";
 import { VendorReviewsSection } from "./VendorReviewsSection";
 
@@ -72,6 +73,21 @@ export function VendorBrowseDetailBody({
     ? TRAVEL_DELIVERY_LABELS[travelRaw] ?? travelRaw
     : "";
 
+  const portfolioUrls = useMemo(
+    () => portfolioImageUrlsFromPayload(p),
+    [p],
+  );
+  const [activePhotoIndex, setActivePhotoIndex] = useState(0);
+
+  useEffect(() => {
+    setActivePhotoIndex(0);
+  }, [vendor.user_id, portfolioUrls.length]);
+
+  const activePhotoUrl =
+    portfolioUrls.length > 0
+      ? portfolioUrls[Math.min(activePhotoIndex, portfolioUrls.length - 1)]
+      : null;
+
   const pricingOptions = useMemo(
     () => buildBrowsePricingOptions(vendor),
     [vendor],
@@ -116,26 +132,66 @@ export function VendorBrowseDetailBody({
     <div className="grid gap-8 lg:grid-cols-[1fr_minmax(280px,360px)] lg:items-start lg:gap-10">
       <div className="min-w-0 space-y-6">
         <div className="overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100 shadow-sm">
-          <div className="relative aspect-[16/10] bg-gradient-to-br from-neutral-100 via-white to-[#e8e4ef]">
-            <div className="absolute left-4 top-4">
+          <div className="relative flex min-h-[12rem] max-h-[min(28rem,70vh)] items-center justify-center bg-neutral-100">
+            <div className="absolute left-4 top-4 z-10">
               <span className="inline-flex rounded-full border border-neutral-200 bg-white/95 px-3 py-1 text-xs font-semibold text-neutral-800 shadow-sm">
                 {city}
               </span>
             </div>
-            <div className="flex h-full items-center justify-center">
-              <span className="font-heading text-4xl font-semibold tracking-tight text-neutral-300 sm:text-5xl">
-                {businessName.slice(0, 1).toUpperCase()}
-              </span>
-            </div>
-          </div>
-          <div className="flex gap-2 border-t border-neutral-200 bg-white px-3 py-3">
-            {[0, 1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-14 flex-1 rounded-lg bg-gradient-to-br from-neutral-100 to-neutral-200/80 ring-1 ring-inset ring-neutral-200/80"
+            {activePhotoUrl ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={activePhotoUrl}
+                alt={`${businessName} portfolio`}
+                className="max-h-[min(28rem,70vh)] w-full object-contain object-center"
+                decoding="async"
               />
-            ))}
+            ) : (
+              <div className="flex aspect-[4/3] w-full items-center justify-center bg-gradient-to-br from-neutral-100 via-white to-[#e8e4ef]">
+                <span className="font-heading text-4xl font-semibold tracking-tight text-neutral-300 sm:text-5xl">
+                  {businessName.slice(0, 1).toUpperCase()}
+                </span>
+              </div>
+            )}
           </div>
+          {portfolioUrls.length > 0 ? (
+            <div className="flex gap-2 overflow-x-auto border-t border-neutral-200 bg-white px-3 py-3">
+              {portfolioUrls.map((url, index) => {
+                const selected = index === activePhotoIndex;
+                return (
+                  <button
+                    key={url}
+                    type="button"
+                    onClick={() => setActivePhotoIndex(index)}
+                    className={`h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-neutral-50 ring-2 transition ${
+                      selected
+                        ? "ring-primary"
+                        : "ring-transparent hover:ring-neutral-300"
+                    }`}
+                    aria-label={`View portfolio photo ${index + 1}`}
+                    aria-pressed={selected}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={url}
+                      alt=""
+                      className="h-full w-full object-contain object-center"
+                      decoding="async"
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="flex gap-2 border-t border-neutral-200 bg-white px-3 py-3">
+              {[0, 1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="h-14 flex-1 rounded-lg bg-gradient-to-br from-neutral-100 to-neutral-200/80 ring-1 ring-inset ring-neutral-200/80"
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         <section>

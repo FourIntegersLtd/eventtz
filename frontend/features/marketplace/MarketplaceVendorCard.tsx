@@ -4,6 +4,7 @@ import { Heart } from "lucide-react";
 import Link from "next/link";
 import { displayServicesOffered } from "@/features/client/browse/browseLabels";
 import { StarRating } from "@/components/ui/StarRating";
+import { VendorPortfolioCover } from "@/components/vendor/VendorPortfolioCover";
 import { buildBrowsePricingOptions } from "@/features/client/browse/vendorBrowseDetailModel";
 import type { ExpandedSearchCard } from "@/features/marketplace/marketplaceSearchModel";
 import { SERVICE_OPTIONS } from "@/components/vendor-onboarding/constants";
@@ -84,19 +85,23 @@ export function MarketplaceVendorCard({
           />
         </button>
       ) : null}
-      <Link href={detailHref} className="block p-4 text-left">
-        <div className="h-28 rounded-xl bg-gradient-to-br from-[#f4f0fa] via-white to-[#e9def9] p-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="inline-flex rounded-full border border-primary/20 bg-white px-2.5 py-1 text-xs font-medium text-primary">
-              {city}
-            </p>
-            {highlight && (
-              <p className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-900">
-                {highlight}
+      <Link href={detailHref} className="block p-3 text-left">
+        <VendorPortfolioCover
+          payload={p}
+          businessName={biz}
+          overlay={
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="inline-flex rounded-full border border-primary/20 bg-white/95 px-2.5 py-1 text-xs font-medium text-primary shadow-sm">
+                {city}
               </p>
-            )}
-          </div>
-        </div>
+              {highlight ? (
+                <p className="inline-flex rounded-full border border-amber-200 bg-amber-50/95 px-2.5 py-1 text-xs font-medium text-amber-900 shadow-sm">
+                  {highlight}
+                </p>
+              ) : null}
+            </div>
+          }
+        />
         <h4 className="font-heading mt-3 text-base font-semibold text-neutral-900 group-hover:text-primary">
           {biz}
         </h4>

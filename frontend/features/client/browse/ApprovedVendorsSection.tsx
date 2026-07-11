@@ -4,6 +4,7 @@ import type React from "react";
 import Link from "next/link";
 import { useMemo } from "react";
 import type { ExploreVendor } from "@/lib/clientExploreApi";
+import { VendorPortfolioCover } from "@/components/vendor/VendorPortfolioCover";
 import { displayEventTypes, displayServicesOffered } from "@/features/client/browse/browseLabels";
 
 type ApprovedVendorsSectionProps = {
@@ -74,13 +75,17 @@ export function ApprovedVendorsSection({
                 <Link
                   key={v.user_id}
                   href={`/client/browse/${v.user_id}`}
-                  className="group block rounded-2xl border border-neutral-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  className="group block rounded-2xl border border-neutral-200 bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                 >
-                  <div className="h-28 rounded-xl bg-gradient-to-br from-[#f4f0fa] via-white to-[#e9def9] p-3">
-                    <p className="inline-flex rounded-full border border-primary/20 bg-white px-2.5 py-1 text-xs font-medium text-primary">
-                      {city}
-                    </p>
-                  </div>
+                  <VendorPortfolioCover
+                    payload={p}
+                    businessName={biz}
+                    overlay={
+                      <p className="inline-flex rounded-full border border-primary/20 bg-white/95 px-2.5 py-1 text-xs font-medium text-primary shadow-sm">
+                        {city}
+                      </p>
+                    }
+                  />
                   <h4 className="font-heading mt-3 text-base font-semibold text-neutral-900 group-hover:text-primary">
                     {biz}
                   </h4>

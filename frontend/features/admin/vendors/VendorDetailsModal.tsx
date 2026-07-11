@@ -12,12 +12,14 @@ import {
 } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { StarRating } from "@/components/ui/StarRating";
+import { VendorPortfolioThumbGrid } from "@/components/vendor/VendorPortfolioThumbGrid";
 import {
   fetchAdminVendorInsights,
   type AdminVendorInsights,
   type AdminVendorRow,
 } from "@/lib/adminVendorsApi";
 import type { VendorApprovalStatus } from "@/lib/domain-types";
+import { portfolioImageUrlsFromPayload } from "@/lib/vendorPortfolioImages";
 import { approvalLabel, payloadStr, payloadStrArr } from "./vendorFormatters";
 
 type VendorDetailsModalProps = {
@@ -91,6 +93,8 @@ export function VendorDetailsModal({
   const packages = Array.isArray(p.packages) ? p.packages : [];
   const prettyPayload = JSON.stringify(p, null, 2);
   const businessName = payloadStr(vendor?.payload ?? {}, "businessName") || "Vendor details";
+  const portfolioUrls = portfolioImageUrlsFromPayload(p);
+  const coverUrl = portfolioUrls[0] ?? null;
 
   const [insights, setInsights] = useState<AdminVendorInsights | null>(null);
   const [insightsLoading, setInsightsLoading] = useState(false);
@@ -184,9 +188,18 @@ export function VendorDetailsModal({
         <div className="space-y-5 text-sm">
           <div className="flex flex-col gap-4 rounded-xl border border-neutral-200/80 bg-neutral-50/40 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-neutral-200 text-base font-bold text-neutral-700">
-                {initials}
-              </div>
+              {coverUrl ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={coverUrl}
+                  alt=""
+                  className="h-12 w-12 shrink-0 rounded-xl bg-neutral-50 object-contain object-center ring-1 ring-neutral-200/80"
+                />
+              ) : (
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-neutral-200 text-base font-bold text-neutral-700">
+                  {initials}
+                </div>
+              )}
               <div>
                 <p className="font-heading font-semibold text-neutral-900">{businessName}</p>
                 <p className="text-sm text-neutral-600">{vendor.email ?? "—"}</p>
@@ -287,6 +300,14 @@ export function VendorDetailsModal({
                   </ul>
                 )}
               </section>
+              {portfolioUrls.length > 0 ? (
+                <section className="rounded-xl border border-neutral-200/80 p-4">
+                  <h3 className="text-sm font-semibold text-neutral-900">
+                    Portfolio ({portfolioUrls.length})
+                  </h3>
+                  <VendorPortfolioThumbGrid urls={portfolioUrls} />
+                </section>
+              ) : null}
               <details className="rounded-xl border border-neutral-200">
                 <summary className="cursor-pointer px-4 py-3 text-xs font-medium text-neutral-600">
                   Raw profile payload
