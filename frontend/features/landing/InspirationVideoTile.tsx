@@ -29,14 +29,25 @@ export function InspirationVideoTile({
     if (!el || !shouldLoad) return;
 
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (!isActive || motionQuery.matches) {
-      el.pause();
-      return;
-    }
 
-    el.muted = true;
-    void el.play().catch(() => {});
-  }, [isActive, shouldLoad]);
+    const syncPlayback = () => {
+      if (!isActive || motionQuery.matches) {
+        el.pause();
+        return;
+      }
+      el.muted = true;
+      void el.play().catch(() => {});
+    };
+
+    syncPlayback();
+    el.addEventListener("canplay", syncPlayback);
+    el.addEventListener("loadeddata", syncPlayback);
+
+    return () => {
+      el.removeEventListener("canplay", syncPlayback);
+      el.removeEventListener("loadeddata", syncPlayback);
+    };
+  }, [isActive, shouldLoad, video.src]);
 
   const content = (
     <>

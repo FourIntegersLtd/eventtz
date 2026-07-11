@@ -6,7 +6,7 @@ import { InspirationVideoTile } from "@/features/landing/InspirationVideoTile";
 import type { GalleryVideo } from "@/features/landing/landingData";
 import { prefetchLandingVideo } from "@/lib/landingVideo";
 
-const AUTO_MS = 5500;
+const AUTO_MS = 4000;
 
 type InspirationVideoShowcaseProps = {
   videos: GalleryVideo[];
@@ -37,6 +37,8 @@ export function InspirationVideoShowcase({ videos }: InspirationVideoShowcasePro
     mq.addEventListener("change", sync);
     return () => mq.removeEventListener("change", sync);
   }, []);
+
+  const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -69,6 +71,24 @@ export function InspirationVideoShowcase({ videos }: InspirationVideoShowcasePro
 
   const goNext = useCallback(() => goTo(activeIndex + 1), [activeIndex, goTo]);
   const goPrev = useCallback(() => goTo(activeIndex - 1), [activeIndex, goTo]);
+
+  const handleTouchStart = useCallback((event: React.TouchEvent) => {
+    touchStartX.current = event.touches[0]?.clientX ?? null;
+  }, []);
+
+  const handleTouchEnd = useCallback(
+    (event: React.TouchEvent) => {
+      const startX = touchStartX.current;
+      touchStartX.current = null;
+      if (startX == null) return;
+
+      const deltaX = (event.changedTouches[0]?.clientX ?? startX) - startX;
+      if (Math.abs(deltaX) < 40) return;
+      if (deltaX < 0) goNext();
+      else goPrev();
+    },
+    [goNext, goPrev],
+  );
 
   useEffect(() => {
     if (reduceMotion || total <= 1 || !inView) return;
@@ -108,16 +128,18 @@ export function InspirationVideoShowcase({ videos }: InspirationVideoShowcasePro
         <div
           className={`relative mx-auto max-w-6xl ${
             isMobile
-              ? "aspect-[16/10] w-full"
+              ? "aspect-[16/10] w-full touch-pan-y"
               : "h-[min(52vw,580px)] [perspective:1600px]"
           }`}
           style={isMobile ? undefined : { transformStyle: "preserve-3d" }}
+          onTouchStart={isMobile ? handleTouchStart : undefined}
+          onTouchEnd={isMobile ? handleTouchEnd : undefined}
         >
           {videos.map((video, index) => {
             const offset = relativeOffset(index, activeIndex, total);
-            if (isMobile ? offset !== 0 : Math.abs(offset) > 1) return null;
+            if (!isMobile && Math.abs(offset) > 1) return null;
 
-            const isActive = offset === 0;
+            const isActive = index === activeIndex;
             const shouldLoad = inView && (isMobile || Math.abs(offset) <= 1);
             const absOffset = Math.abs(offset);
 
@@ -129,7 +151,11 @@ export function InspirationVideoShowcase({ videos }: InspirationVideoShowcasePro
                 }`}
                 style={
                   isMobile
-                    ? { zIndex: 20 }
+                    ? {
+                        opacity: isActive ? 1 : 0,
+                        zIndex: isActive ? 20 : 10,
+                        pointerEvents: isActive ? "auto" : "none",
+                      }
                     : {
                         transform: `
                     translateY(-50%)
