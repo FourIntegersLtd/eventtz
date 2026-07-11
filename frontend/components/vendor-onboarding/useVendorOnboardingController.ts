@@ -577,8 +577,11 @@ export function useVendorOnboardingController() {
       } else {
         setStep(nextStep);
       }
-    } catch {
-      setFormError("We couldn't save your changes. Check your connection and try again.");
+    } catch (e) {
+      setFormError(
+        getApiErrorDetail(e) ??
+          "We couldn't save your changes. Check your connection and try again.",
+      );
     } finally {
       setSaving(false);
     }

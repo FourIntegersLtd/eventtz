@@ -1,3 +1,4 @@
+import { clampBioWords } from "./onboardingLogic";
 import type {
   DeliveryMode,
   SocialPlatform,
@@ -147,7 +148,7 @@ export function vendorDataToPayload(
     otherDocsNamesPersisted: data.otherDocsNamesPersisted,
     isHalal: data.isHalal,
     allergenInfo: data.allergenInfo,
-    aiBioDraft: data.aiBioDraft,
+    aiBioDraft: clampBioWords(data.aiBioDraft),
     confirmTruthful: data.confirmTruthful,
     confirmTerms: data.confirmTerms,
   };
