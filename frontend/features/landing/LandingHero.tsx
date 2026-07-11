@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Pause, Play } from "lucide-react";
 import { HeroMarketplaceSearch } from "@/features/marketplace/HeroMarketplaceSearch";
 import {
@@ -13,31 +13,61 @@ import {
 
 export function LandingHero() {
   const heroVideoRef = useRef<HTMLVideoElement>(null);
-  const [heroVideoPaused, setHeroVideoPaused] = useState(false);
+  const [heroVideoPaused, setHeroVideoPaused] = useState(true);
 
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => {
-      const v = heroVideoRef.current;
-      if (!v) return;
-      if (mq.matches) {
-        v.pause();
-        setHeroVideoPaused(true);
-      }
-    };
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
+  const syncPlayback = useCallback(async () => {
+    const video = heroVideoRef.current;
+    if (!video) return;
+
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion) {
+      video.pause();
+      setHeroVideoPaused(true);
+      return;
+    }
+
+    video.muted = true;
+    try {
+      await video.play();
+      setHeroVideoPaused(false);
+    } catch {
+      setHeroVideoPaused(true);
+    }
   }, []);
 
-  const toggleHeroVideo = () => {
-    const v = heroVideoRef.current;
-    if (!v) return;
-    if (v.paused) {
-      void v.play();
-      setHeroVideoPaused(false);
+  useEffect(() => {
+    const video = heroVideoRef.current;
+    if (!video) return;
+
+    const onCanPlay = () => {
+      void syncPlayback();
+    };
+
+    if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+      void syncPlayback();
     } else {
-      v.pause();
+      video.addEventListener("canplay", onCanPlay);
+    }
+
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const onMotionChange = () => {
+      void syncPlayback();
+    };
+    motionQuery.addEventListener("change", onMotionChange);
+
+    return () => {
+      video.removeEventListener("canplay", onCanPlay);
+      motionQuery.removeEventListener("change", onMotionChange);
+    };
+  }, [syncPlayback]);
+
+  const toggleHeroVideo = () => {
+    const video = heroVideoRef.current;
+    if (!video) return;
+    if (video.paused) {
+      void video.play().then(() => setHeroVideoPaused(false)).catch(() => setHeroVideoPaused(true));
+    } else {
+      video.pause();
       setHeroVideoPaused(true);
     }
   };
@@ -52,19 +82,12 @@ export function LandingHero() {
           muted
           loop
           playsInline
+          preload="auto"
           poster={HERO_VIDEO_POSTER}
-          onLoadedData={(e) => {
-            const v = e.currentTarget;
-            if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-              v.pause();
-              setHeroVideoPaused(true);
-            }
-          }}
+          src={HERO_VIDEO_SRC}
           onPlay={() => setHeroVideoPaused(false)}
           onPause={() => setHeroVideoPaused(true)}
-        >
-          <source src={HERO_VIDEO_SRC} type="video/mp4" />
-        </video>
+        />
         <div className="absolute inset-0 bg-neutral-950/25" aria-hidden />
         <div className="absolute inset-0 bg-primary/20" aria-hidden />
         <div

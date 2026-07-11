@@ -29,12 +29,12 @@ export function LandingBrowseStrip() {
         </Link>
       </div>
 
-      <div className="-mx-4 mt-8 flex gap-5 overflow-x-auto px-4 pb-2 sm:mx-0 sm:mt-10 sm:justify-between sm:gap-4 sm:overflow-visible sm:px-0">
+      <div className="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-8 sm:mt-10 sm:flex-nowrap sm:justify-between sm:gap-4">
         {CATEGORIES.map(({ name, value, Icon, iconBg, iconColor }) => (
           <Link
             key={value}
             href={`/client/browse?types=${value}`}
-            className="group flex w-[5.5rem] shrink-0 flex-col items-center gap-2.5 sm:w-auto sm:flex-1"
+            className="group flex w-[5.5rem] flex-col items-center gap-2.5 sm:w-auto sm:flex-1"
           >
             <span
               className={`flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full shadow-md ring-4 ring-white transition group-hover:scale-105 group-active:scale-95 sm:h-20 sm:w-20 ${iconBg}`}

@@ -80,11 +80,7 @@ export function LandingReviewsSection() {
       className="border-t border-primary-border/50 bg-white py-16 sm:py-20 md:py-24"
       width="6xl"
     >
-      <LandingSectionHeading
-        eyebrow="Reviews"
-        title="What clients are saying"
-        description="A few words from people who booked through Eventtz."
-      />
+      <LandingSectionHeading eyebrow="Reviews" title="What clients are saying" />
 
       {loading ? (
         <div className="mt-10 grid gap-5 sm:mt-12 sm:grid-cols-3">

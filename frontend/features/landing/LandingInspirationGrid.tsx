@@ -11,7 +11,7 @@ export function LandingInspirationGrid() {
   return (
     <LandingSection
       id="inspiration"
-      className="border-t border-primary-border/50 bg-primary-soft py-16 sm:py-20 md:py-24"
+      className="hidden border-t border-primary-border/50 bg-primary-soft py-16 sm:py-20 md:block md:py-24"
       width="6xl"
     >
       <LandingSectionHeading eyebrow="Inspiration" title="Every kind of event" />

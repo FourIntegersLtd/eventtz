@@ -13,7 +13,7 @@ import { LandingReviewsSection } from "@/features/landing/LandingReviewsSection"
 import { LandingTrustSafety } from "@/features/landing/LandingTrustSafety";
 import { LandingTrustStrip } from "@/features/landing/LandingTrustStrip";
 import { LandingVendorSpotlight } from "@/features/landing/LandingVendorSpotlight";
-import { LandingWaitlistCta } from "@/features/landing/LandingWaitlistCta";
+// import { LandingWaitlistCta } from "@/features/landing/LandingWaitlistCta";
 import { LandingWhyEventtz } from "@/features/landing/LandingWhyEventtz";
 import { ScrollToTopButton } from "@/components/ui/ScrollToTopButton";
 
@@ -33,7 +33,7 @@ export default function LandingMarketplace() {
       <LandingTrustSafety />
       <LandingAudienceCta />
       <LandingFaq />
-      <LandingWaitlistCta />
+      {/* <LandingWaitlistCta /> */}
       <LandingFooter />
       <ScrollToTopButton />
     </div>

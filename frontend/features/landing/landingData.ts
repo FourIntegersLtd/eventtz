@@ -335,9 +335,12 @@ export const SOCIAL_LINKS: SocialLink[] = [
 export const NAV_DROPDOWN_LINK_CLASS =
   "block rounded-lg px-3 py-2.5 text-sm text-neutral-700 transition hover:bg-neutral-100 hover:text-primary";
 
-/** Moody catering / event prep — free stock (Pexels). Replace with your own `public/videos/hero.mp4` if desired. */
-export const HERO_VIDEO_SRC =
-  "https://videos.pexels.com/video-files/3045163/3045163-hd_1920_1080_30fps.mp4";
+/**
+ * Hero background — Pexels #3045163 (food/catering prep, free licence).
+ * https://www.pexels.com/video/a-person-preparing-food-3045163/
+ * Hosted locally because direct hotlinks intermittently return 403.
+ */
+export const HERO_VIDEO_SRC = "/videos/hero.mp4";
 export const HERO_VIDEO_POSTER =
   "https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=1920&q=80";
 

@@ -10,7 +10,7 @@ export function LandingVendorSpotlight() {
   return (
     <LandingSection
       id="for-vendors"
-      className="border-t border-primary-border/50 bg-primary-soft py-16 sm:py-20 md:py-24"
+      className="hidden border-t border-primary-border/50 bg-primary-soft py-16 sm:py-20 md:block md:py-24"
       width="6xl"
     >
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-center lg:gap-14">

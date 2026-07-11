@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { FAQ_SECTIONS } from "@/features/landing/landingData";
+import { FAQ_SECTIONS, WAITLIST_URL } from "@/features/landing/landingData";
 import { LandingSectionHeading } from "@/features/landing/LandingSectionHeading";
 import { LandingSection } from "@/features/landing/LandingSection";
 
@@ -73,6 +73,18 @@ export function LandingFaq() {
           );
         })}
       </div>
+
+      <p className="mt-10 text-center text-sm text-neutral-600 sm:mt-12">
+        New categories coming soon.{" "}
+        <a
+          href={WAITLIST_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold text-primary underline-offset-2 hover:underline"
+        >
+          Join the waitlist
+        </a>
+      </p>
     </LandingSection>
   );
 }
