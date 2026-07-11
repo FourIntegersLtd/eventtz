@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CLIENT_STEPS, VENDOR_STEPS } from "@/features/landing/landingData";
+import { CLIENT_STEPS, HOW_IT_WORKS_SECTION, VENDOR_STEPS } from "@/features/landing/landingData";
 import { LandingSectionHeading } from "@/features/landing/LandingSectionHeading";
 import { LandingSection } from "@/features/landing/LandingSection";
 
@@ -11,7 +11,10 @@ export function LandingHowItWorks() {
 
   return (
     <LandingSection id="how-it-works" className="border-t border-primary-border/50 bg-white py-16 sm:py-20 md:py-24">
-      <LandingSectionHeading eyebrow="The process" title="How it works" />
+      <LandingSectionHeading
+        eyebrow={HOW_IT_WORKS_SECTION.eyebrow}
+        title={HOW_IT_WORKS_SECTION.title}
+      />
 
       <div className="mx-auto mt-8 flex max-w-md rounded-full border border-primary-border bg-primary-soft p-1 sm:mt-10">
         <button

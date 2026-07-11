@@ -3,10 +3,10 @@
 import { BadgeCheck, CreditCard, MapPin, Tags } from "lucide-react";
 
 const TRUST_ITEMS = [
-  { icon: BadgeCheck, label: "Approved vendors" },
-  { icon: CreditCard, label: "Secure payments" },
+  { icon: BadgeCheck, label: "Vetted vendors" },
+  { icon: CreditCard, label: "Secure checkout" },
   { icon: MapPin, label: "UK-wide" },
-  { icon: Tags, label: "Curated categories" },
+  { icon: Tags, label: "Real bookings" },
 ] as const;
 
 export function LandingTrustStrip() {

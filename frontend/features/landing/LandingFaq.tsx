@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { FAQ_SECTIONS, WAITLIST_LINK_LABEL, WAITLIST_URL } from "@/features/landing/landingData";
+import { FAQ_SECTION, FAQ_SECTIONS, WAITLIST_LINK_LABEL, WAITLIST_URL } from "@/features/landing/landingData";
 import { LandingSectionHeading } from "@/features/landing/LandingSectionHeading";
 import { LandingSection } from "@/features/landing/LandingSection";
 
@@ -20,7 +20,7 @@ export function LandingFaq() {
       className="border-t border-primary-border/50 bg-white py-16 sm:py-20 md:py-24"
       width="3xl"
     >
-      <LandingSectionHeading eyebrow="FAQ" title="Common questions" />
+      <LandingSectionHeading eyebrow={FAQ_SECTION.eyebrow} title={FAQ_SECTION.title} />
 
       <div className="mx-auto mt-8 flex max-w-xs rounded-full border border-primary-border bg-primary-soft p-1 sm:mt-10">
         {FAQ_SECTIONS.map(({ id, heading }) => (
@@ -75,7 +75,7 @@ export function LandingFaq() {
       </div>
 
       <p className="mt-10 text-center text-sm text-neutral-600 sm:mt-12">
-        New categories coming soon.{" "}
+        {FAQ_SECTION.footnote}
         <a
           href={WAITLIST_URL}
           target="_blank"

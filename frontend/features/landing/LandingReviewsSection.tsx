@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { fetchExploreVendorsSearch } from "@/lib/clientExploreApi";
 import { fetchVendorPublicReviews, type PublicReviewItem } from "@/lib/reviewsApi";
 import { StarRating } from "@/components/ui/StarRating";
+import { REVIEWS_SECTION } from "@/features/landing/landingData";
 import { LandingSectionHeading } from "@/features/landing/LandingSectionHeading";
 import { LandingSection } from "@/features/landing/LandingSection";
 import { LoadingState } from "@/components/ui/LoadingState";
@@ -81,7 +82,10 @@ export function LandingReviewsSection() {
       className="border-t border-primary-border/50 bg-white py-16 sm:py-20 md:py-24"
       width="6xl"
     >
-      <LandingSectionHeading eyebrow="Reviews" title="What clients are saying" />
+      <LandingSectionHeading
+        eyebrow={REVIEWS_SECTION.eyebrow}
+        title={REVIEWS_SECTION.title}
+      />
 
       {loading ? (
         <LoadingState label="Loading reviews…" variant="centered" className="mt-10 py-12" />

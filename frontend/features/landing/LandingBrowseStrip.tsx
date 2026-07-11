@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { CATEGORIES } from "@/features/landing/landingData";
+import { BROWSE_SECTION, CATEGORIES } from "@/features/landing/landingData";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { LandingSection } from "@/features/landing/LandingSection";
 import { useCategoryVendorCounts } from "@/features/marketplace/useCategoryVendorCounts";
@@ -15,10 +15,10 @@ export function LandingBrowseStrip() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary/80">
-            Discover
+            {BROWSE_SECTION.eyebrow}
           </p>
           <h2 className="font-heading mt-2 text-2xl font-semibold tracking-tight text-primary sm:text-3xl">
-            Shop by category
+            {BROWSE_SECTION.title}
           </h2>
         </div>
         <Link

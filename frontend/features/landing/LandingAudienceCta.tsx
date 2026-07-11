@@ -12,8 +12,11 @@ export function LandingAudienceCta() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-200/90">Clients</p>
             <h2 className="font-heading mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">
-              Planning an event?
+              Stop starting in the group chat.
             </h2>
+            <p className="mt-2 text-sm text-violet-100/90">
+              Find vetted vendors. Book with a paper trail.
+            </p>
           </div>
           <Link
             href="/client/browse"
@@ -28,8 +31,11 @@ export function LandingAudienceCta() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Vendors</p>
             <h2 className="font-heading mt-3 text-2xl font-semibold tracking-tight text-primary sm:text-3xl">
-              Are you a vendor?
+              Stop waiting for the referral.
             </h2>
+            <p className="mt-2 text-sm text-neutral-600">
+              Get found by clients who are ready to book.
+            </p>
           </div>
           <Link
             href="/register?type=vendor"

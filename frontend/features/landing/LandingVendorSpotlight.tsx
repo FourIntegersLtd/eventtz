@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { VENDOR_SPOTLIGHT_BENEFITS } from "@/features/landing/landingData";
+import {
+  VENDOR_SPOTLIGHT_BENEFITS,
+  VENDOR_SPOTLIGHT_SECTION,
+} from "@/features/landing/landingData";
 import { LandingSectionHeading } from "@/features/landing/LandingSectionHeading";
 import { LandingSection } from "@/features/landing/LandingSection";
 
@@ -16,9 +19,9 @@ export function LandingVendorSpotlight() {
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-center lg:gap-14">
         <div>
           <LandingSectionHeading
-            eyebrow="For vendors"
-            title="Grow your event business on Eventtz"
-            description="List your services, get found by clients planning celebrations across the UK, and manage bookings and payouts in one place."
+            eyebrow={VENDOR_SPOTLIGHT_SECTION.eyebrow}
+            title={VENDOR_SPOTLIGHT_SECTION.title}
+            description={VENDOR_SPOTLIGHT_SECTION.description}
             align="left"
           />
           <Link

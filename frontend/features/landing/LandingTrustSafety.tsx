@@ -1,6 +1,6 @@
 "use client";
 
-import { TRUST_SAFETY_ITEMS } from "@/features/landing/landingData";
+import { TRUST_SAFETY_ITEMS, TRUST_SAFETY_SECTION } from "@/features/landing/landingData";
 import { LandingSectionHeading } from "@/features/landing/LandingSectionHeading";
 import { LandingSection } from "@/features/landing/LandingSection";
 
@@ -12,9 +12,9 @@ export function LandingTrustSafety() {
       width="4xl"
     >
       <LandingSectionHeading
-        eyebrow="Trust & safety"
-        title="Book with confidence"
-        description="Eventtz is built for real bookings, with clear pricing, secure payments, and support when you need it."
+        eyebrow={TRUST_SAFETY_SECTION.eyebrow}
+        title={TRUST_SAFETY_SECTION.title}
+        description={TRUST_SAFETY_SECTION.description}
       />
 
       <dl className="mt-10 divide-y divide-primary-border/60 sm:mt-12">

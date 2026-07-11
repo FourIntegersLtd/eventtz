@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { WHY_EVENTTZ_PILLARS } from "@/features/landing/landingData";
+import { WHY_EVENTTZ_PILLARS, WHY_EVENTTZ_SECTION } from "@/features/landing/landingData";
 import { LandingSection } from "@/features/landing/LandingSection";
 
 export function LandingWhyEventtz() {
@@ -13,14 +13,26 @@ export function LandingWhyEventtz() {
       width="6xl"
     >
       <div className="mx-auto max-w-2xl text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Why Eventtz</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+          {WHY_EVENTTZ_SECTION.eyebrow}
+        </p>
         <h2 className="font-heading mt-2.5 text-2xl font-semibold tracking-tight text-primary sm:text-3xl md:text-4xl">
-          Everything you need to plan in one place
+          {WHY_EVENTTZ_SECTION.title}
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-neutral-600 sm:text-base">
-          Find trusted vendors, message directly, and book securely without chasing quotes across
-          WhatsApp and Instagram.
+          {WHY_EVENTTZ_SECTION.description}
         </p>
+      </div>
+
+      <div className="mx-auto mt-10 grid max-w-4xl gap-3 sm:grid-cols-3 sm:mt-12">
+        {WHY_EVENTTZ_SECTION.pains.map((pain) => (
+          <p
+            key={pain}
+            className="rounded-2xl border border-primary-border/60 bg-neutral-50 px-4 py-3.5 text-sm italic leading-relaxed text-neutral-600"
+          >
+            &ldquo;{pain}&rdquo;
+          </p>
+        ))}
       </div>
 
       <div className="mt-12 grid gap-10 sm:mt-14 md:grid-cols-3 md:gap-8">
@@ -45,7 +57,7 @@ export function LandingWhyEventtz() {
           href="/client/browse"
           className="inline-flex items-center gap-2 text-sm font-semibold text-primary transition hover:opacity-80"
         >
-          Explore vendors
+          Browse vendors
           <ArrowRight className="h-4 w-4" aria-hidden />
         </Link>
       </div>

@@ -8,6 +8,7 @@ import {
 } from "@/lib/clientExploreApi";
 import { MarketplaceVendorCard } from "@/features/marketplace/MarketplaceVendorCard";
 import { expandVendorsForSearchResults } from "@/features/marketplace/marketplaceSearchModel";
+import { FEATURED_VENDORS_SECTION } from "@/features/landing/landingData";
 import { LandingSectionHeading } from "@/features/landing/LandingSectionHeading";
 import { LandingSection } from "@/features/landing/LandingSection";
 import { LoadingState } from "@/components/ui/LoadingState";
@@ -44,7 +45,11 @@ export function LandingFeaturedVendors() {
   return (
     <LandingSection id="featured" className="py-16 sm:py-20 md:py-24" width="7xl">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <LandingSectionHeading eyebrow="Marketplace" title="Featured vendors" align="left" />
+        <LandingSectionHeading
+          eyebrow={FEATURED_VENDORS_SECTION.eyebrow}
+          title={FEATURED_VENDORS_SECTION.title}
+          align="left"
+        />
         <Link
           href="/client/browse"
           className="text-sm font-semibold text-primary transition hover:opacity-80"
