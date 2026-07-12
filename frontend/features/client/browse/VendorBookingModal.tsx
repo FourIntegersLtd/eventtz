@@ -5,10 +5,6 @@ import { AlertCircle, CalendarRange, Pencil, X } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import {
-  AddressFinderInput,
-  type AddressFinderValue,
-} from "@/components/ui/AddressFinderInput";
-import {
   getBookingRequestErrorMessage,
   postBookingRequest,
 } from "@/lib/clientBookingApi";
@@ -60,10 +56,7 @@ export function VendorBookingModal({
   const [eventName, setEventName] = useState("");
   const [eventDate, setEventDate] = useState(searchPrefill?.eventDate ?? "");
   const [eventEndDate, setEventEndDate] = useState(searchPrefill?.eventEndDate ?? "");
-  const [venue, setVenue] = useState<AddressFinderValue>({
-    postcode: "",
-    formattedAddress: null,
-  });
+  const [venueAddress, setVenueAddress] = useState("");
   const [notes, setNotes] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -116,11 +109,6 @@ export function VendorBookingModal({
       setValidationError("Close this and select at least one package or rate first.");
       return;
     }
-    const postcode = venue.postcode.trim().replace(/\s+/g, " ");
-    if (postcode.length < 2) {
-      setValidationError("Please enter the venue postcode or pick an address.");
-      return;
-    }
     if (eventEndDate.trim() && eventDate && eventEndDate.trim() < eventDate) {
       setValidationError("End date must be on or after the event date.");
       return;
@@ -138,8 +126,8 @@ export function VendorBookingModal({
       event_name: eventName.trim(),
       event_date: eventDate,
       event_end_date: eventEndDate || null,
-      event_postcode: postcode,
-      event_address: venue.formattedAddress?.trim() || null,
+      event_postcode: null,
+      event_address: venueAddress.trim() || null,
       notes: notes.trim() || null,
       selected_option_ids: [...selectedIds],
       line_items: lineItems.map((li) => {
@@ -308,16 +296,27 @@ export function VendorBookingModal({
             </div>
 
             <div>
-              <AddressFinderInput
-                label="Venue location"
-                inputId="booking-event-postcode"
-                value={venue}
-                onChange={(next) => {
-                  setVenue(next);
+              <label
+                htmlFor="booking-venue-address"
+                className="block text-xs font-semibold uppercase tracking-wide text-neutral-500"
+              >
+                Venue location{" "}
+                <span className="font-normal normal-case text-neutral-400">(optional)</span>
+              </label>
+              <textarea
+                id="booking-venue-address"
+                rows={3}
+                value={venueAddress}
+                onChange={(e) => {
+                  setVenueAddress(e.target.value);
                   setValidationError(null);
                 }}
-                placeholder="Postcode or address"
+                placeholder="e.g. The Grand Hall, 12 Park Lane, London"
+                className="mt-1.5 w-full resize-y rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
+              <p className="mt-1 text-xs text-neutral-500">
+                Add this now or before you pay. Your vendor needs it to deliver or set up.
+              </p>
             </div>
 
             <div>

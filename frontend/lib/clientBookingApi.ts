@@ -17,9 +17,9 @@ export type CreateBookingRequestPayload = {
   event_name: string;
   event_date: string;
   event_end_date: string | null;
-  /** Venue / event location postcode (required). */
-  event_postcode: string;
-  /** Full line from address lookup when the client picks a resolved UK address. */
+  /** Venue / event location postcode (optional at request; required before pay). */
+  event_postcode?: string | null;
+  /** Free-text venue address line(s). */
   event_address?: string | null;
   notes: string | null;
   selected_option_ids: string[];

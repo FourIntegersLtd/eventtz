@@ -4,10 +4,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import {
-  AddressFinderInput,
-  type AddressFinderValue,
-} from "@/components/ui/AddressFinderInput";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import {
   fetchClientBookingDetail,
@@ -76,10 +72,6 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
   const [actionBusy, setActionBusy] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [pendingQuoteAction, setPendingQuoteAction] = useState<null | "accept" | "decline">(null);
-  const [quoteAcceptVenue, setQuoteAcceptVenue] = useState<AddressFinderValue>({
-    postcode: "",
-    formattedAddress: null,
-  });
   const paymentBannerRef = useRef<HTMLDivElement>(null);
   const paymentDue = detail?.status === "accepted" && detail?.payment_status === "unpaid";
 
@@ -88,11 +80,6 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
       paymentBannerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [paymentDue, detail?.id]);
-
-  useEffect(() => {
-    setQuoteAcceptVenue({ postcode: "", formattedAddress: null });
-  }, [selectedBookingId]);
-
   useEffect(() => {
     void markAllClientBookingNotificationsRead()
       .then(() => {
@@ -129,15 +116,7 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
     setPendingQuoteAction(next === "accepted" ? "accept" : "decline");
     try {
       if (next === "accepted") {
-        const pc = quoteAcceptVenue.postcode.trim().replace(/\s+/g, " ");
-        if (pc.length < 2) {
-          setActionError("Enter the event postcode or pick an address before accepting this quote.");
-          return;
-        }
-        await patchClientBookingStatus(bookingId, next, {
-          event_postcode: pc,
-          event_address: quoteAcceptVenue.formattedAddress,
-        });
+        await patchClientBookingStatus(bookingId, next);
       } else {
         await patchClientBookingStatus(bookingId, next);
       }
@@ -342,18 +321,6 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
                           >
                             Pay now
                           </Button>
-                        </div>
-                      ) : null}
-
-                      {detail.initiator === "vendor" && detail.status === "pending" ? (
-                        <div className="flex flex-col gap-2 rounded-lg border border-neutral-200 bg-white p-3">
-                          <AddressFinderInput
-                            label="Venue location *"
-                            value={quoteAcceptVenue}
-                            disabled={actionBusy}
-                            onChange={setQuoteAcceptVenue}
-                            placeholder="Postcode or address"
-                          />
                         </div>
                       ) : null}
                     </>

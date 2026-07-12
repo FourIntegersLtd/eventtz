@@ -142,7 +142,7 @@ export async function patchClientBookingStatus(
 
 export async function patchClientBookingVenue(
   bookingId: string,
-  venue: { event_postcode: string; event_address: string },
+  venue: { event_address: string; event_postcode?: string | null },
 ): Promise<ClientBookingDetail> {
   const { data } = await api.patch<ClientBookingDetailResponse>(
     `/api/v1/client/booking-requests/${bookingId}/venue`,

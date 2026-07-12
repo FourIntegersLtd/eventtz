@@ -1,13 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { LoadingState } from "@/components/ui/LoadingState";
-import {
-  AddressFinderInput,
-  type AddressFinderValue,
-} from "@/components/ui/AddressFinderInput";
 import { getApiErrorDetail, postBookingCheckout } from "@/lib/bookingCheckoutApi";
 import {
   fetchClientBookingDetail,
@@ -21,7 +18,7 @@ export default function ClientBookingPayPage() {
   const bookingId = params.bookingId;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [venue, setVenue] = useState<AddressFinderValue>({ postcode: "", formattedAddress: null });
+  const [venueAddress, setVenueAddress] = useState("");
   const [needsVenue, setNeedsVenue] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -32,18 +29,13 @@ export default function ClientBookingPayPage() {
       try {
         const booking = await fetchClientBookingDetail(bookingId);
         if (cancelled) return;
-        const hasAddress =
-          Boolean(booking.event_postcode?.trim()) && Boolean(booking.event_address?.trim());
-        if (hasAddress) {
+        if (Boolean(booking.event_address?.trim())) {
           const checkoutUrl = await postBookingCheckout(bookingId);
           if (!cancelled) window.location.href = checkoutUrl;
           return;
         }
         setNeedsVenue(true);
-        setVenue({
-          postcode: booking.event_postcode ?? "",
-          formattedAddress: booking.event_address,
-        });
+        setVenueAddress(booking.event_address ?? "");
       } catch (e: unknown) {
         if (!cancelled) {
           setError(getApiErrorDetail(e) ?? "Could not load this booking.");
@@ -59,16 +51,15 @@ export default function ClientBookingPayPage() {
 
   const continueToCheckout = async () => {
     if (!bookingId) return;
-    const pc = venue.postcode.trim().replace(/\s+/g, " ");
-    const addr = venue.formattedAddress?.trim();
-    if (pc.length < 2 || !addr) {
-      setError("Enter your full event postcode and pick a street address before paying.");
+    const addr = venueAddress.trim();
+    if (addr.length < 3) {
+      setError("Enter the venue address so your vendor knows where to go.");
       return;
     }
     setBusy(true);
     setError(null);
     try {
-      await patchClientBookingVenue(bookingId, { event_postcode: pc, event_address: addr });
+      await patchClientBookingVenue(bookingId, { event_address: addr });
       const checkoutUrl = await postBookingCheckout(bookingId);
       window.location.href = checkoutUrl;
     } catch (e: unknown) {
@@ -78,31 +69,47 @@ export default function ClientBookingPayPage() {
   };
 
   if (loading) {
-    return <LoadingState label="Preparing secure checkout…" variant="page" />;
+    return <LoadingState label="Preparing secure checkout…" variant="centered" className="py-16" />;
   }
 
   if (needsVenue) {
     return (
-      <div className="mx-auto w-full max-w-lg px-4 py-8">
-        <h1 className="font-heading text-xl font-semibold text-neutral-900">Event address</h1>
-        <p className="mt-2 text-sm text-neutral-600">
-          Before you pay, add the full venue address so your vendor knows where to deliver or set up.
-        </p>
+      <div className="w-full max-w-3xl space-y-6">
+        <Link
+          href={`/client/bookings/${encodeURIComponent(bookingId)}`}
+          className="inline-flex text-sm font-medium text-primary hover:underline"
+        >
+          ← Back to booking
+        </Link>
+        <header>
+          <h1 className="font-heading text-xl font-semibold text-neutral-900">Event location</h1>
+          <p className="mt-2 text-sm text-neutral-600">
+            Tell your vendor where the event is. Type the venue name and address.
+          </p>
+        </header>
         {error ? (
-          <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
             {error}
           </p>
         ) : null}
-        <div className="mt-6">
-          <AddressFinderInput
-            label="Venue location *"
-            value={venue}
+        <div>
+          <label
+            htmlFor="pay-venue-address"
+            className="block text-xs font-semibold uppercase tracking-wide text-neutral-500"
+          >
+            Venue address *
+          </label>
+          <textarea
+            id="pay-venue-address"
+            rows={3}
+            value={venueAddress}
             disabled={busy}
-            onChange={setVenue}
-            placeholder="Postcode or address"
+            onChange={(e) => setVenueAddress(e.target.value)}
+            placeholder="e.g. The Grand Hall, 12 Park Lane, London"
+            className="mt-1.5 w-full resize-y rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:bg-neutral-50 disabled:text-neutral-500"
           />
         </div>
-        <div className="mt-6 flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3">
           <Button variant="primary" loading={busy} onClick={() => void continueToCheckout()}>
             Continue to payment
           </Button>
@@ -119,20 +126,19 @@ export default function ClientBookingPayPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-[50vh] w-full max-w-md flex-col items-center justify-center gap-4 px-4 text-center">
+    <div className="w-full max-w-3xl space-y-6">
       {error ? (
         <>
           <p className="text-sm text-red-700">{error}</p>
-          <button
-            type="button"
+          <Button
+            variant="secondary"
             onClick={() => router.push(`/client/bookings/${encodeURIComponent(bookingId)}`)}
-            className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:opacity-90"
           >
             Back to booking
-          </button>
+          </Button>
         </>
       ) : (
-        <LoadingState label="Redirecting you to secure checkout…" variant="page" />
+        <LoadingState label="Redirecting you to secure checkout…" variant="centered" className="py-16" />
       )}
     </div>
   );
