@@ -18,7 +18,6 @@ export function LandingTrustSafety() {
       <LandingSectionHeading
         eyebrow={TRUST_SAFETY_SECTION.eyebrow}
         title={TRUST_SAFETY_SECTION.title}
-        description={TRUST_SAFETY_SECTION.description}
       />
 
       <dl className={`divide-y divide-primary-border/60 ${LANDING_SECTION_CONTENT_MT}`}>

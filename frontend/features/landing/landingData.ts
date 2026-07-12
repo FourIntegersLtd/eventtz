@@ -62,17 +62,17 @@ export const CLIENT_STEPS: LandingStep[] = [
   {
     step: 2,
     title: "Agree the details",
-    description: "Message, confirm the quote, and check availability.",
+    description: "Message, confirm the quote, check availability.",
   },
   {
     step: 3,
     title: "Lock in your date",
-    description: "Pay securely once they accept.",
+    description: "Pay once they accept.",
   },
   {
     step: 4,
-    title: "Complete & review",
-    description: "Confirm the event went well and leave a review.",
+    title: "Complete and review",
+    description: "Mark it done. Leave a review.",
   },
 ];
 
@@ -326,9 +326,9 @@ export type LandingValuePillar = {
 
 export const WHY_EVENTTZ_SECTION = {
   eyebrow: "Why Eventtz",
-  title: "Great vendors exist. Finding the right one shouldn't take weeks.",
+  title: "The vendors exist. The booking lives in the group chat.",
   description:
-    "Right now planning your celebration lives across Instagram, WhatsApp, and word of mouth. Eventtz helps you find, book, and secure vendors for your big day.",
+    "Right now your plan lives across Instagram, WhatsApp, and word of mouth. Eventtz helps you find, book, and pay in one place.",
   pains: [
     "I've been chasing the caterer on WhatsApp for weeks.",
     "I keep having to send a DM just to get prices.",
@@ -338,8 +338,8 @@ export const WHY_EVENTTZ_SECTION = {
 
 export const WHY_EVENTTZ_PILLARS: LandingValuePillar[] = [
   {
-    title: "Vetted before they go live",
-    description: "Browse vendors we've checked. Every listing is approved.",
+    title: "Checked before you book",
+    description: "Every vendor completes onboarding. We review profiles before they go live.",
     Icon: BadgeCheck,
   },
   {
@@ -363,8 +363,6 @@ export type LandingVendorBenefit = {
 export const VENDOR_SPOTLIGHT_SECTION = {
   eyebrow: "For vendors",
   title: "Your next booking shouldn't come from a DM",
-  description:
-    "List once. Get found by clients planning events across the UK. Run requests, quotes, and payouts without jumping between apps.",
 } as const;
 
 export const VENDOR_SPOTLIGHT_BENEFITS: LandingVendorBenefit[] = [
@@ -393,7 +391,6 @@ export const VENDOR_SPOTLIGHT_BENEFITS: LandingVendorBenefit[] = [
 export const TRUST_SAFETY_SECTION = {
   eyebrow: "Trust & safety",
   title: "Built for real bookings, not just browsing",
-  description: "Clear prices. Secure checkout. A record of every message and payment.",
 } as const;
 
 export const TRUST_SAFETY_ITEMS: LandingValuePillar[] = [
@@ -420,6 +417,7 @@ export const TRUST_SAFETY_ITEMS: LandingValuePillar[] = [
 ];
 
 export type LandingScreenshotSection = {
+  eyebrow?: string;
   title: string;
   description: string;
   /** Optional path under public/, e.g. /images/landing-images/pricing.png */
@@ -429,35 +427,40 @@ export type LandingScreenshotSection = {
 };
 
 export const PRICING_TRUST_SECTION: LandingScreenshotSection = {
+  eyebrow: "Browse",
   title: "See the price before the DM",
   description:
-    "Full packages and sale prices on every listing. Compare before you message.",
+    "Packages and sale prices on every listing. Compare before you message.",
   screenshotSrc: "/images/landing-images/pricing.png",
   ctaHref: "/client/browse",
   ctaLabel: "Browse vendors",
 };
 
 export const BOOK_SECTION: LandingScreenshotSection = {
-  title: "Send a booking request",
-  description: "Pick a package, add your date and venue, and send the vendor a request.",
+  eyebrow: "Request",
+  title: "One request. On the record.",
+  description:
+    "Pick your package, add your date and venue, and send the vendor a request.",
   screenshotSrc: "/images/landing-images/book.png",
   ctaHref: "/client/browse",
   ctaLabel: "Browse vendors",
 };
 
 export const QUOTE_SECTION: LandingScreenshotSection = {
-  title: "The vendor confirms your booking",
+  eyebrow: "Confirm",
+  title: "They confirm. You pay.",
   description:
-    "They review your date, venue, and package. If anything needs adjusting, they update the quote before you pay.",
+    "The vendor reviews your details, adjusts the quote if needed, and locks your date before checkout.",
   screenshotSrc: "/images/landing-images/quote.png",
   ctaHref: "/client/browse",
   ctaLabel: "Browse vendors",
 };
 
 export const VENDOR_TOOLS_SECTION: LandingScreenshotSection = {
+  eyebrow: "For vendors",
   title: "Your prices, your calendar, one profile",
   description:
-    "Set packages, discounts, and availability in onboarding. Take requests, send quotes from chat, and get paid through Stripe when the job is done.",
+    "Set packages, discounts, and availability once. Take requests, send quotes, and get paid through Stripe when the job is done.",
   screenshotSrc: undefined,
   ctaHref: "/register?type=vendor",
   ctaLabel: "Join as a vendor",
@@ -525,7 +528,7 @@ export const BOOKING_RECORD_JOURNEY: LandingJourneyStep[] = [
 
 export const HOW_IT_WORKS_SECTION = {
   eyebrow: "How it works",
-  title: "From search to booked in four steps",
+  title: "From search to booked",
 } as const;
 
 export const FAQ_SECTION = {
@@ -536,7 +539,7 @@ export const FAQ_SECTION = {
 
 export const FEATURED_VENDORS_SECTION = {
   eyebrow: "Marketplace",
-  title: "Vendors clients book first",
+  title: "Vendors people actually book",
 } as const;
 
 export const REVIEWS_SECTION = {
@@ -546,7 +549,7 @@ export const REVIEWS_SECTION = {
 
 export const BROWSE_SECTION = {
   eyebrow: "Discover",
-  title: "Start with the service you need",
+  title: "Start with what you need",
 } as const;
 
 export const EXPLORE_NAV_LINKS = [

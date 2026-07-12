@@ -17,6 +17,7 @@ export const LANDING_SCREENSHOT_FRAME_CLASS = "overflow-hidden";
 
 type LandingFeatureSplitProps = {
   id?: string;
+  eyebrow?: string;
   title: string;
   description: string;
   imageSrc?: string;
@@ -96,6 +97,7 @@ function LandingScreenshot({
 /** Bold feature block: split (Cursor-style) or stacked (copy above full-width shot). */
 export function LandingFeatureSplit({
   id,
+  eyebrow,
   title,
   description,
   imageSrc,
@@ -117,7 +119,10 @@ export function LandingFeatureSplit({
 
   const copyBlock = (
     <div className={`flex flex-col ${isStacked ? "max-w-2xl" : "min-w-0 justify-center"}`}>
-      <h2 className={LANDING_FEATURE_HEADLINE_CLASS}>{title}</h2>
+      {eyebrow ? (
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{eyebrow}</p>
+      ) : null}
+      <h2 className={`${LANDING_FEATURE_HEADLINE_CLASS} ${eyebrow ? "mt-2.5" : ""}`}>{title}</h2>
       <p className={LANDING_FEATURE_BODY_CLASS}>{description}</p>
       {ctaHref && ctaLabel ? (
         <Link

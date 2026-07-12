@@ -22,7 +22,6 @@ export function LandingVendorSpotlight() {
           <LandingSectionHeading
             eyebrow={VENDOR_SPOTLIGHT_SECTION.eyebrow}
             title={VENDOR_SPOTLIGHT_SECTION.title}
-            description={VENDOR_SPOTLIGHT_SECTION.description}
             align="left"
           />
           <Link

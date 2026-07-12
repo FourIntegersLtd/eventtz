@@ -7,6 +7,7 @@ export function LandingQuoteAccept() {
   return (
     <LandingFeatureSplit
       id="quote-accept"
+      eyebrow={QUOTE_SECTION.eyebrow}
       title={QUOTE_SECTION.title}
       description={QUOTE_SECTION.description}
       imageSrc={QUOTE_SECTION.screenshotSrc}

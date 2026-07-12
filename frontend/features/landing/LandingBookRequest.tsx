@@ -8,6 +8,7 @@ export function LandingBookRequest() {
     <LandingFeatureSplit
       id="book-request"
       variant="stacked"
+      eyebrow={BOOK_SECTION.eyebrow}
       title={BOOK_SECTION.title}
       description={BOOK_SECTION.description}
       imageSrc={BOOK_SECTION.screenshotSrc}

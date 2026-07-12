@@ -8,6 +8,7 @@ export function LandingPricingTrust() {
     <LandingFeatureSplit
       id="pricing-trust"
       variant="stacked"
+      eyebrow={PRICING_TRUST_SECTION.eyebrow}
       title={PRICING_TRUST_SECTION.title}
       description={PRICING_TRUST_SECTION.description}
       imageSrc={PRICING_TRUST_SECTION.screenshotSrc}

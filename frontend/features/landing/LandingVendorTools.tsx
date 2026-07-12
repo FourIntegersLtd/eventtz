@@ -8,6 +8,7 @@ export function LandingVendorTools() {
   return (
     <LandingFeatureSplit
       id="vendor-tools"
+      eyebrow={VENDOR_TOOLS_SECTION.eyebrow}
       title={VENDOR_TOOLS_SECTION.title}
       description={VENDOR_TOOLS_SECTION.description}
       imageAlt="Vendor onboarding with packages and discounts on Eventtz"
