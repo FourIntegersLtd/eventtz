@@ -89,15 +89,32 @@ Vendor onboarding, client Checkout, held funds, and payouts are implemented in `
 
 **Setup:**
 
-1. Create a Stripe account and grab a **test-mode** secret key (`sk_test_...`) for `STRIPE_SECRET_KEY`.
-2. Run migration `sql/026_stripe_connect_payments.sql` in the Supabase SQL Editor.
-3. Set `FRONTEND_URL` to your local frontend origin (e.g. `http://localhost:3000`).
+1. Create a **dedicated Stripe account for Eventtz** (test + live). Do not reuse the same `sk_test_` / `sk_live_` as another product unless you accept shared webhook delivery (see below).
+2. Grab a **test-mode** secret key (`sk_test_...`) for `STRIPE_SECRET_KEY`.
+3. Run migration `sql/026_stripe_connect_payments.sql` in the Supabase SQL Editor.
+4. Set `FRONTEND_URL` to your local frontend origin (e.g. `http://localhost:3000`).
+
+**After switching Stripe accounts (new sandbox / new `sk_test_`):** vendor rows may still reference Connect account ids (`acct_...`) from the old platform. The API clears stale ids automatically when Stripe rejects them; vendors must open **Payments** (or onboarding) and complete Connect again on the new account. To reset everyone at once in Supabase SQL:
+
+```sql
+UPDATE public.vendors
+SET stripe_account_id = NULL,
+    stripe_charges_enabled = false,
+    stripe_payouts_enabled = false
+WHERE stripe_account_id IS NOT NULL;
+```
+
+**Same Stripe account as another app (e.g. OSCE Guide)?** Stripe delivers each event to **every** webhook endpoint on that account. Eventtz checkouts will still hit the other app’s URL, which causes signature errors or bogus processing if that app does not ignore unknown sessions. Fix options:
+
+- **Best:** separate Stripe account for Eventtz.
+- **Or:** add a second webhook endpoint for Eventtz (`https://<eventtz-api>/api/v1/webhooks/stripe`) and put **only** that endpoint’s `whsec_` in Eventtz `STRIPE_WEBHOOK_SECRET`. Update the other app to return 200 and skip `checkout.session.completed` events whose metadata is not theirs (Eventtz sessions include `booking_id` in metadata).
 
 **Testing webhooks locally** with the [Stripe CLI](https://stripe.com/docs/stripe-cli):
 
 ```bash
 stripe login
-stripe listen --forward-to localhost:8000/api/v1/webhooks/stripe
+make stripe-webhooks
+# or: stripe listen --forward-to localhost:8000/api/v1/webhooks/stripe
 ```
 
 The CLI prints a `whsec_...` signing secret — set it as `STRIPE_WEBHOOK_SECRET` in `.env` and restart `uvicorn`. Trigger test events with:
@@ -106,6 +123,8 @@ The CLI prints a `whsec_...` signing secret — set it as `STRIPE_WEBHOOK_SECRET
 stripe trigger checkout.session.completed
 stripe trigger account.updated
 ```
+
+**Without webhooks (local dev):** after Stripe Checkout, the client is redirected with `?payment=success&session_id=...`. The frontend calls `POST /api/v1/client/booking-requests/{id}/checkout/sync` to verify the session with Stripe and mark the booking paid. Webhooks remain the primary path in production; sync is a safe fallback when `stripe listen` is not running.
 
 In production, configure the webhook endpoint (`https://<your-api-domain>/api/v1/webhooks/stripe`) in the Stripe Dashboard and use its signing secret for `STRIPE_WEBHOOK_SECRET`.
 

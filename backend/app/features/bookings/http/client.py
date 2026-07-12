@@ -26,7 +26,12 @@ from app.contracts.disputes import (
     ParticipantDisputeDetailResponse,
     ParticipantDisputesListResponse,
 )
-from app.contracts.payments import BookingCheckoutResponse, ConfirmCompletionResponse
+from app.contracts.payments import (
+    BookingCheckoutResponse,
+    BookingCheckoutSyncBody,
+    BookingCheckoutSyncResponse,
+    ConfirmCompletionResponse,
+)
 from app.contracts.reviews import (
     ClientOwnerReviewItem,
     ClientOwnerReviewsResponse,
@@ -36,6 +41,7 @@ from app.contracts.reviews import (
 from app.features.bookings.payments import (
     confirm_completion_for_client,
     create_checkout_session_for_booking,
+    sync_checkout_payment_for_client,
 )
 from app.features.bookings import (
     cancel_booking_request_for_client,
@@ -314,6 +320,43 @@ def post_booking_checkout(
         ) from None
 
     return BookingCheckoutResponse(checkout_url=checkout_url)
+
+
+@router.post(
+    "/booking-requests/{booking_id}/checkout/sync",
+    response_model=BookingCheckoutSyncResponse,
+)
+def post_booking_checkout_sync(
+    request: Request,
+    response: Response,
+    booking_id: str,
+    body: BookingCheckoutSyncBody,
+) -> BookingCheckoutSyncResponse:
+    """Confirm payment after Stripe redirect when the webhook has not run yet (common in local dev)."""
+    user = require_client(request, response)
+    client_id = str(user.get("id") or "")
+    try:
+        uuid.UUID(booking_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail="Invalid booking id.") from e
+
+    try:
+        row = sync_checkout_payment_for_client(client_id, booking_id, body.session_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception:
+        logger.exception(
+            "checkout sync failed booking=%s client=%s session=%s",
+            booking_id,
+            client_id,
+            body.session_id,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Could not confirm payment. Try refreshing in a moment.",
+        ) from None
+
+    return BookingCheckoutSyncResponse(payment_status=str(row.get("payment_status") or "paid"))
 
 
 @router.post(

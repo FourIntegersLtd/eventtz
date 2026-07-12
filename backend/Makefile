@@ -5,7 +5,7 @@
 ##   make stop  # stop the running uvicorn
 ##   make help  # list targets
 
-.PHONY: help start dev stop restart requirements deploy deploy-logs railway-link
+.PHONY: help start dev stop restart requirements deploy deploy-logs railway-link stripe-webhooks
 
 requirements:
 	@if command -v poetry >/dev/null 2>&1; then \
@@ -28,6 +28,7 @@ help:
 	@echo "  make deploy       Deploy to Railway (railway up --detach)"
 	@echo "  make deploy-logs    Tail Railway deployment logs"
 	@echo "  make railway-link   Link this folder to a Railway project (railway link)"
+	@echo "  make stripe-webhooks  Forward Stripe webhooks to localhost:8000 (run in a second terminal)"
 
 start:
 	@if command -v poetry >/dev/null 2>&1; then \
@@ -99,4 +100,14 @@ railway-link:
 
 railway-vars:
 	@./scripts/sync-railway-env.sh
+
+stripe-webhooks:
+	@if command -v stripe >/dev/null 2>&1; then \
+	  echo "Forwarding Stripe webhooks to http://localhost:8000/api/v1/webhooks/stripe"; \
+	  echo "Copy the whsec_... secret into STRIPE_WEBHOOK_SECRET in .env, then restart the API."; \
+	  stripe listen --forward-to localhost:8000/api/v1/webhooks/stripe; \
+	else \
+	  echo "ERROR: Stripe CLI not found. Install: brew install stripe/stripe-cli/stripe"; \
+	  exit 1; \
+	fi
 

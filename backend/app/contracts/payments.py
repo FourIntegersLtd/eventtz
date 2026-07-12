@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class VendorPaymentsConnectResponse(BaseModel):
@@ -20,6 +20,15 @@ class VendorPaymentsStatusResponse(BaseModel):
 class BookingCheckoutResponse(BaseModel):
     success: bool = True
     checkout_url: str
+
+
+class BookingCheckoutSyncBody(BaseModel):
+    session_id: str | None = Field(default=None, max_length=256)
+
+
+class BookingCheckoutSyncResponse(BaseModel):
+    success: bool = True
+    payment_status: str
 
 
 class ConfirmCompletionResponse(BaseModel):

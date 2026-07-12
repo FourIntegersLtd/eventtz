@@ -78,6 +78,57 @@ def get_connect_status(vendor_user_id: str) -> dict[str, Any]:
     }
 
 
+def _clear_vendor_stripe_connect(vendor_user_id: str) -> None:
+    """Drop a Connect account id that no longer exists on the current Stripe platform/key."""
+    get_client().table("vendors").update(
+        {
+            "stripe_account_id": None,
+            "stripe_charges_enabled": False,
+            "stripe_payouts_enabled": False,
+        },
+    ).eq("user_id", vendor_user_id).execute()
+
+
+def _is_orphan_connect_account_error(exc: BaseException) -> bool:
+    """True when the stored acct_... belongs to another Stripe account or was deleted."""
+    if isinstance(exc, stripe.PermissionError):
+        return True
+    if isinstance(exc, stripe.InvalidRequestError):
+        msg = str(getattr(exc, "user_message", None) or exc).lower()
+        return (
+            "not connected to your platform" in msg
+            or "does not exist" in msg
+            or "does not have access to account" in msg
+        )
+    return False
+
+
+def _create_connect_express_account(vendor_user_id: str, row: dict[str, Any] | None) -> str:
+    email = _get_user_email(vendor_user_id)
+    business_name = None
+    if row and isinstance(row.get("payload"), dict):
+        bn = row["payload"].get("businessName")
+        business_name = bn.strip() if isinstance(bn, str) and bn.strip() else None
+    account = _stripe().Account.create(
+        type="express",
+        country="GB",
+        email=email or None,
+        capabilities={
+            "card_payments": {"requested": True},
+            "transfers": {"requested": True},
+        },
+        business_type="individual",
+        business_profile={"name": business_name} if business_name else None,
+    )
+    account_id = str(account["id"])
+    get_client().table("vendors").update({"stripe_account_id": account_id}).eq(
+        "user_id",
+        vendor_user_id,
+    ).execute()
+    logger.info("Created Stripe Connect account vendor=%s account=%s", vendor_user_id, account_id)
+    return account_id
+
+
 def create_connect_onboarding_link(vendor_user_id: str, return_path: str = "/vendor/onboarding") -> str:
     """Ensure a Stripe Express account exists for this vendor, then return a hosted onboarding URL.
 
@@ -87,38 +138,50 @@ def create_connect_onboarding_link(vendor_user_id: str, return_path: str = "/ven
     row = _get_vendor_row(vendor_user_id)
     account_id = row.get("stripe_account_id") if row else None
 
+    if account_id:
+        try:
+            _stripe().Account.retrieve(account_id)
+        except Exception as e:
+            if _is_orphan_connect_account_error(e):
+                logger.warning(
+                    "Stale Stripe Connect account vendor=%s account=%s — recreating",
+                    vendor_user_id,
+                    account_id,
+                )
+                _clear_vendor_stripe_connect(vendor_user_id)
+                account_id = None
+            else:
+                raise
+
     if not account_id:
-        email = _get_user_email(vendor_user_id)
-        business_name = None
-        if row and isinstance(row.get("payload"), dict):
-            bn = row["payload"].get("businessName")
-            business_name = bn.strip() if isinstance(bn, str) and bn.strip() else None
-        account = _stripe().Account.create(
-            type="express",
-            country="GB",
-            email=email or None,
-            capabilities={
-                "card_payments": {"requested": True},
-                "transfers": {"requested": True},
-            },
-            business_type="individual",
-            business_profile={"name": business_name} if business_name else None,
-        )
-        account_id = account["id"]
-        get_client().table("vendors").update({"stripe_account_id": account_id}).eq(
-            "user_id",
-            vendor_user_id,
-        ).execute()
-        logger.info("Created Stripe Connect account vendor=%s account=%s", vendor_user_id, account_id)
+        account_id = _create_connect_express_account(vendor_user_id, row)
 
     settings = get_settings()
     safe_path = return_path if return_path in {"/vendor/onboarding", "/vendor/payments"} else "/vendor/onboarding"
-    link = _stripe().AccountLink.create(
-        account=account_id,
-        refresh_url=f"{settings.frontend_url}{safe_path}?stripe=refresh",
-        return_url=f"{settings.frontend_url}{safe_path}?stripe=return",
-        type="account_onboarding",
-    )
+    try:
+        link = _stripe().AccountLink.create(
+            account=account_id,
+            refresh_url=f"{settings.frontend_url}{safe_path}?stripe=refresh",
+            return_url=f"{settings.frontend_url}{safe_path}?stripe=return",
+            type="account_onboarding",
+        )
+    except Exception as e:
+        if _is_orphan_connect_account_error(e):
+            logger.warning(
+                "Stripe rejected account link vendor=%s account=%s — recreating",
+                vendor_user_id,
+                account_id,
+            )
+            _clear_vendor_stripe_connect(vendor_user_id)
+            account_id = _create_connect_express_account(vendor_user_id, row)
+            link = _stripe().AccountLink.create(
+                account=account_id,
+                refresh_url=f"{settings.frontend_url}{safe_path}?stripe=refresh",
+                return_url=f"{settings.frontend_url}{safe_path}?stripe=return",
+                type="account_onboarding",
+            )
+        else:
+            raise
     return str(link["url"])
 
 
@@ -129,7 +192,19 @@ def sync_connect_account_status(vendor_user_id: str) -> dict[str, Any]:
     if not account_id:
         return {"stripe_account_id": None, "charges_enabled": False, "payouts_enabled": False}
 
-    account = stripe_object_to_dict(_stripe().Account.retrieve(account_id))
+    try:
+        account = stripe_object_to_dict(_stripe().Account.retrieve(account_id))
+    except Exception as e:
+        if _is_orphan_connect_account_error(e):
+            logger.warning(
+                "Stale Stripe Connect account vendor=%s account=%s — clearing",
+                vendor_user_id,
+                account_id,
+            )
+            _clear_vendor_stripe_connect(vendor_user_id)
+            return {"stripe_account_id": None, "charges_enabled": False, "payouts_enabled": False}
+        raise
+
     charges_enabled = bool(account.get("charges_enabled"))
     payouts_enabled = bool(account.get("payouts_enabled"))
     get_client().table("vendors").update(
@@ -198,13 +273,20 @@ def create_checkout_session(
         metadata=metadata,
         payment_intent_data={"metadata": metadata},
         billing_address_collection="required",
-        success_url=f"{settings.frontend_url}/client/bookings/{booking_id}?payment=success",
+        success_url=(
+            f"{settings.frontend_url}/client/bookings/{booking_id}"
+            "?payment=success&session_id={CHECKOUT_SESSION_ID}"
+        ),
         cancel_url=f"{settings.frontend_url}/client/bookings/{booking_id}?payment=cancelled",
         # No idempotency_key here: creating a Session never moves money, and a deterministic key
         # would return a stale/expired session on retry. Money movement (Transfer/Refund below)
         # does use deterministic keys since those calls are irreversible.
     )
     return {"id": str(session["id"]), "url": str(session["url"])}
+
+
+def retrieve_checkout_session(session_id: str) -> Any:
+    return _stripe().checkout.Session.retrieve(session_id, expand=["payment_intent"])
 
 
 def construct_webhook_event(payload: bytes, sig_header: str) -> Any:

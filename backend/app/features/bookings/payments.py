@@ -15,6 +15,7 @@ from app.core.logging import get_logger
 from app.features.payments import stripe as stripe_service
 from app.core.db import get_db as get_client
 from app.features.bookings.pricing import build_pricing_breakdown
+from app.features.bookings.queries import get_booking_request_for_client
 from app.features.notifications.service import (
     insert_booking_notification_if_absent,
     upsert_booking_notification,
@@ -128,15 +129,16 @@ def _mark_webhook_event_processed(event_id: str, event_type: str) -> bool:
         return False
 
 
-def handle_checkout_session_completed(event_id: str, session: dict[str, Any]) -> None:
-    if not _mark_webhook_event_processed(event_id, "checkout.session.completed"):
-        return
-
+def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> bool:
+    """Mark booking paid from a completed Checkout Session. Returns True if newly paid."""
     metadata = session.get("metadata") or {}
     booking_id = str(metadata.get("booking_id") or "").strip()
     if not booking_id:
-        logger.warning("checkout.session.completed missing booking_id metadata session=%s", session.get("id"))
-        return
+        logger.warning(
+            "checkout session missing booking_id metadata session=%s",
+            session.get("id"),
+        )
+        return False
 
     payment_intent_id = session.get("payment_intent")
     charge_id: str | None = None
@@ -182,8 +184,8 @@ def handle_checkout_session_completed(event_id: str, session: dict[str, Any]) ->
     )
     updated = getattr(upd, "data", None) or []
     if not updated:
-        logger.info("checkout.session.completed: booking %s already paid; skipping", booking_id)
-        return
+        logger.info("checkout session: booking %s already paid; skipping", booking_id)
+        return False
     row = updated[0] if isinstance(updated[0], dict) else {}
     client_id = str(row.get("client_user_id") or "")
     vendor_id = str(row.get("vendor_user_id") or "")
@@ -202,6 +204,71 @@ def handle_checkout_session_completed(event_id: str, session: dict[str, Any]) ->
             body="The client has paid for this booking. Funds will be released once the event is confirmed complete.",
         )
     _notify_pair(client_id, vendor_id)
+    return True
+
+
+def handle_checkout_session_completed(event_id: str, session: dict[str, Any]) -> None:
+    if not _mark_webhook_event_processed(event_id, "checkout.session.completed"):
+        return
+    _finalize_booking_payment_from_checkout_session(session)
+
+
+def sync_checkout_payment_for_client(
+    client_user_id: str,
+    booking_id: str,
+    session_id: str | None = None,
+) -> dict[str, Any]:
+    """Verify a Stripe Checkout Session after redirect; marks booking paid if the webhook missed."""
+    if get_settings().local_auth_mode:
+        raise ValueError("Payments are not available in local auth mode.")
+
+    row = get_booking_request_for_client(client_user_id, booking_id)
+    if row is None:
+        raise ValueError("Booking not found.")
+
+    payment_status = str(row.get("payment_status") or "unpaid")
+    if payment_status in ("paid", "payout_released", "refunded", "partially_refunded"):
+        return row
+
+    resolved_session_id = (session_id or "").strip()
+    if not resolved_session_id:
+        session_res = (
+            get_client()
+            .table("booking_requests")
+            .select("stripe_checkout_session_id")
+            .eq("id", booking_id)
+            .eq("client_user_id", client_user_id)
+            .limit(1)
+            .execute()
+        )
+        session_rows = getattr(session_res, "data", None) or []
+        if session_rows and isinstance(session_rows[0], dict):
+            resolved_session_id = str(session_rows[0].get("stripe_checkout_session_id") or "").strip()
+    if not resolved_session_id:
+        raise ValueError("No checkout session found for this booking.")
+
+    session_raw = stripe_service.retrieve_checkout_session(resolved_session_id)
+    session = stripe_service.stripe_object_to_dict(session_raw)
+
+    metadata = session.get("metadata") or {}
+    if str(metadata.get("booking_id") or "").strip() != booking_id:
+        raise ValueError("This checkout session does not match this booking.")
+    if str(metadata.get("client_user_id") or "").strip() != client_user_id:
+        raise ValueError("This checkout session does not match your account.")
+
+    if str(session.get("payment_status") or "") != "paid":
+        raise ValueError("Payment has not finished processing yet. Wait a moment and refresh.")
+
+    sync_event_id = f"sync:{resolved_session_id}"
+    if _mark_webhook_event_processed(sync_event_id, "checkout.session.sync"):
+        _finalize_booking_payment_from_checkout_session(session)
+
+    refreshed = get_booking_request_for_client(client_user_id, booking_id)
+    if refreshed is None:
+        raise ValueError("Booking not found.")
+    if str(refreshed.get("payment_status") or "") not in ("paid", "payout_released"):
+        raise ValueError("Payment has not finished processing yet. Wait a moment and refresh.")
+    return refreshed
 
 
 def handle_account_updated(event_id: str, account: dict[str, Any]) -> None:
