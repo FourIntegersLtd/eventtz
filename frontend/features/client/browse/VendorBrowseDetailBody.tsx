@@ -302,12 +302,21 @@ export function VendorBrowseDetailBody({
                         </p>
                         {opt.priceDisplay != null ? (
                           <div className="text-right">
-                            <p className="font-heading text-lg font-bold text-neutral-900">
-                              GBP {opt.priceDisplay}
-                            </p>
                             {opt.compareAtDisplay ? (
                               <p className="text-xs text-neutral-500 line-through">
                                 GBP {opt.compareAtDisplay}
+                              </p>
+                            ) : null}
+                            <p
+                              className={`font-heading text-lg font-bold ${
+                                opt.compareAtDisplay ? "text-primary" : "text-neutral-900"
+                              }`}
+                            >
+                              GBP {opt.priceDisplay}
+                            </p>
+                            {opt.discountBadge ? (
+                              <p className="mt-0.5 text-xs font-medium text-green-700">
+                                {opt.discountBadge}
                               </p>
                             ) : null}
                           </div>
@@ -331,6 +340,18 @@ export function VendorBrowseDetailBody({
                           />
                           <span>{opt.timelineLine}</span>
                         </div>
+                      ) : null}
+                      {opt.promoLines.length > 0 ? (
+                        <ul className="mt-2 space-y-1">
+                          {opt.promoLines.map((line) => (
+                            <li
+                              key={line}
+                              className="text-xs font-medium text-amber-800"
+                            >
+                              {line}
+                            </li>
+                          ))}
+                        </ul>
                       ) : null}
                       {(opt.description?.trim() || opt.featureLines.length > 0) ? (
                         <button

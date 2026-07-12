@@ -13,10 +13,12 @@ import {
   vendorPayloadAllowsEventDates,
 } from "@/lib/vendorAvailability";
 import {
+  computeBookingEstimateGbp,
+  formatBookingEstimateLabel,
+} from "@/lib/vendorDiscountDisplay";
+import {
   type BrowsePricingOption,
-  bookingLineItemPayloadFromOption,
   buildBookingLineItems,
-  formatBookingTotalGbp,
 } from "./vendorBrowseDetailModel";
 
 export type VendorBookingSearchPrefill = {
@@ -94,7 +96,30 @@ export function VendorBookingModal({
     [pricingOptions, selectedIds],
   );
 
-  const total = useMemo(() => formatBookingTotalGbp(lineItems), [lineItems]);
+  const estimate = useMemo(() => {
+    const positiveLines = lineItems.map((li) => ({
+      id: li.id,
+      heading: li.heading,
+      unitPriceGbp: li.unitPriceGbp,
+    }));
+    if (!vendorPayload) {
+      const hasTbc = positiveLines.some((l) => l.unitPriceGbp == null);
+      const sum = positiveLines.reduce((acc, l) => acc + (l.unitPriceGbp ?? 0), 0);
+      return {
+        label: formatBookingEstimateLabel(sum, hasTbc),
+        autoLines: [] as { id: string; heading: string; unitPriceGbp: number | null }[],
+      };
+    }
+    const result = computeBookingEstimateGbp(
+      positiveLines,
+      vendorPayload,
+      eventDate.trim() || null,
+    );
+    return {
+      label: formatBookingEstimateLabel(result.sumNumeric, result.hasTbc),
+      autoLines: result.autoLines,
+    };
+  }, [lineItems, vendorPayload, eventDate]);
 
   const submit = () => {
     if (!eventName.trim()) {
@@ -130,17 +155,6 @@ export function VendorBookingModal({
       event_address: venueAddress.trim() || null,
       notes: notes.trim() || null,
       selected_option_ids: [...selectedIds],
-      line_items: lineItems.map((li) => {
-        const opt = pricingOptions.find((o) => o.id === li.id);
-        return opt
-          ? bookingLineItemPayloadFromOption(opt)
-          : {
-              id: li.id,
-              heading: li.heading,
-              unit_price_gbp: li.unitPriceGbp,
-            };
-      }),
-      total_label: total.label,
     })
       .then((created) => {
         onSuccess?.(created.id);
@@ -339,11 +353,49 @@ export function VendorBookingModal({
                   .map((opt) => (
                     <li key={opt.id} className="flex flex-wrap items-baseline justify-between gap-2 px-3 py-2.5">
                       <span className="text-sm font-medium text-neutral-900">{opt.heading}</span>
-                      <span className="shrink-0 text-sm font-semibold text-neutral-900">
-                        {opt.priceDisplay != null ? `GBP ${opt.priceDisplay}` : "TBC"}
-                      </span>
+                      <div className="shrink-0 text-right">
+                        {opt.priceDisplay != null ? (
+                          <>
+                            {opt.compareAtDisplay ? (
+                              <p className="text-xs text-neutral-500 line-through">
+                                GBP {opt.compareAtDisplay}
+                              </p>
+                            ) : null}
+                            <p
+                              className={`text-sm font-semibold ${
+                                opt.compareAtDisplay ? "text-primary" : "text-neutral-900"
+                              }`}
+                            >
+                              GBP {opt.priceDisplay}
+                            </p>
+                            {opt.discountBadge ? (
+                              <p className="mt-0.5 text-xs font-medium text-green-700">
+                                {opt.discountBadge}
+                              </p>
+                            ) : null}
+                          </>
+                        ) : (
+                          <span className="text-sm font-semibold text-neutral-900">TBC</span>
+                        )}
+                      </div>
                     </li>
                   ))}
+                {estimate.autoLines.map((line) => (
+                  <li
+                    key={line.id}
+                    className="flex flex-wrap items-baseline justify-between gap-2 bg-emerald-50/60 px-3 py-2.5"
+                  >
+                    <span className="text-sm font-medium text-emerald-900">{line.heading}</span>
+                    <span className="shrink-0 text-sm font-semibold text-emerald-800">
+                      {line.unitPriceGbp != null
+                        ? `GBP ${Math.abs(line.unitPriceGbp).toLocaleString("en-GB", {
+                            minimumFractionDigits: line.unitPriceGbp % 1 === 0 ? 0 : 2,
+                            maximumFractionDigits: 2,
+                          })}`
+                        : "TBC"}
+                    </span>
+                  </li>
+                ))}
               </ul>
             </div>
 
@@ -370,7 +422,7 @@ export function VendorBookingModal({
               <div className="flex items-center justify-between text-sm">
                 <span className="text-neutral-600">Estimated vendor total</span>
                 <span className="font-heading text-lg font-semibold text-neutral-900">
-                  {total.label}
+                  {estimate.label}
                 </span>
               </div>
             </div>

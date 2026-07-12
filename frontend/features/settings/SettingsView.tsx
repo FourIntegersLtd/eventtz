@@ -4,6 +4,7 @@ import { ContactSharingSettingsSection } from "@/features/settings/ContactSharin
 import { SettingsAccountSection } from "@/features/settings/SettingsAccountSection";
 import { SettingsLegalSection } from "@/features/settings/SettingsLegalSection";
 import { SettingsNotificationsSection } from "@/features/settings/SettingsNotificationsSection";
+import { SettingsOnboardingPreviewSection } from "@/features/settings/SettingsOnboardingPreviewSection";
 import { SettingsShortcutsSection } from "@/features/settings/SettingsShortcutsSection";
 import { SettingsSignOutSection } from "@/features/settings/SettingsSignOutSection";
 import type { PortalRole } from "@/components/portal-shell/portalNav";
@@ -30,6 +31,7 @@ export function SettingsView({ role }: SettingsViewProps) {
       <SettingsAccountSection role={role} />
       <ContactSharingSettingsSection role={role} />
       <SettingsNotificationsSection role={role} />
+      {role === "vendor" ? <SettingsOnboardingPreviewSection /> : null}
       <SettingsShortcutsSection role={role} />
       <SettingsLegalSection />
       <SettingsSignOutSection />

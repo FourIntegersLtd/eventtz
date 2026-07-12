@@ -6,6 +6,10 @@
 import type { MarketplaceSearchState } from "@/lib/marketplaceSearchParams";
 import type { ExploreVendor } from "@/lib/clientExploreApi";
 import { vendorPayloadAllowsEventDates } from "@/lib/vendorAvailability";
+import {
+  listPriceDisplay,
+  parseVendorDiscountConfig,
+} from "@/lib/vendorDiscountDisplay";
 
 function parseMoneyGbp(raw: unknown): number | null {
   if (raw == null || typeof raw !== "string") return null;
@@ -16,20 +20,27 @@ function parseMoneyGbp(raw: unknown): number | null {
 }
 
 function minListingPriceGbp(payload: Record<string, unknown>): number | null {
+  const discountConfig = parseVendorDiscountConfig(payload);
   const candidates: number[] = [];
-  const h = parseMoneyGbp(payload.hourlyRate);
-  const d = parseMoneyGbp(payload.dailyRate);
-  if (h != null) candidates.push(h);
-  if (d != null) candidates.push(d);
+
+  const addListPrice = (raw: unknown) => {
+    const listPrice = parseMoneyGbp(raw);
+    if (listPrice == null) return;
+    const priced = listPriceDisplay(listPrice, discountConfig);
+    if (priced.unitPriceGbp != null) candidates.push(priced.unitPriceGbp);
+  };
+
+  addListPrice(payload.hourlyRate);
+  addListPrice(payload.dailyRate);
+
   const pkgs = payload.packages;
   if (Array.isArray(pkgs)) {
     for (const item of pkgs) {
       if (!item || typeof item !== "object") continue;
-      const pr = (item as { price?: unknown }).price;
-      const n = parseMoneyGbp(pr);
-      if (n != null) candidates.push(n);
+      addListPrice((item as { price?: unknown }).price);
     }
   }
+
   if (candidates.length === 0) return null;
   return Math.min(...candidates);
 }

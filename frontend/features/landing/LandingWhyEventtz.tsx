@@ -4,12 +4,13 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { WHY_EVENTTZ_PILLARS, WHY_EVENTTZ_SECTION } from "@/features/landing/landingData";
 import { LandingSection } from "@/features/landing/LandingSection";
+import { landingSectionClass, LANDING_SECTION_CONTENT_MT, LANDING_SECTION_STACK_MT } from "@/features/landing/landingSectionStyles";
 
 export function LandingWhyEventtz() {
   return (
     <LandingSection
       id="why-eventtz"
-      className="border-y border-primary-border/50 bg-white py-16 sm:py-20 md:py-24"
+      className={landingSectionClass("muted")}
       width="6xl"
     >
       <div className="mx-auto max-w-2xl text-center">
@@ -24,7 +25,7 @@ export function LandingWhyEventtz() {
         </p>
       </div>
 
-      <div className="mx-auto mt-10 grid max-w-4xl gap-3 sm:grid-cols-3 sm:mt-12">
+      <div className={`mx-auto grid max-w-4xl gap-3 sm:grid-cols-3 ${LANDING_SECTION_CONTENT_MT}`}>
         {WHY_EVENTTZ_SECTION.pains.map((pain) => (
           <p
             key={pain}
@@ -35,7 +36,7 @@ export function LandingWhyEventtz() {
         ))}
       </div>
 
-      <div className="mt-12 grid gap-10 sm:mt-14 md:grid-cols-3 md:gap-8">
+      <div className={`grid gap-10 md:grid-cols-3 md:gap-8 ${LANDING_SECTION_STACK_MT}`}>
         {WHY_EVENTTZ_PILLARS.map(({ title, description, Icon }) => (
           <div
             key={title}
@@ -52,7 +53,7 @@ export function LandingWhyEventtz() {
         ))}
       </div>
 
-      <div className="mt-12 flex justify-center sm:mt-14">
+      <div className={`flex justify-center ${LANDING_SECTION_STACK_MT}`}>
         <Link
           href="/client/browse"
           className="inline-flex items-center gap-2 text-sm font-semibold text-primary transition hover:opacity-80"

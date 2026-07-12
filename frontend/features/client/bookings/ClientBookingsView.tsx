@@ -74,7 +74,9 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
   const [pendingQuoteAction, setPendingQuoteAction] = useState<null | "accept" | "decline">(null);
   const paymentBannerRef = useRef<HTMLDivElement>(null);
   const pendingPaymentSyncRef = useRef<string | null>(null);
-  const paymentDue = detail?.status === "accepted" && detail?.payment_status === "unpaid";
+  const paymentDue =
+    detail?.status === "accepted" &&
+    (detail?.payment_status === "unpaid" || detail?.payment_status === "pending");
 
   useEffect(() => {
     if (paymentDue) {

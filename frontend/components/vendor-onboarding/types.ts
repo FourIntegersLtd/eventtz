@@ -96,6 +96,8 @@ export interface VendorOnboardingData {
   allowQuoteRequests: boolean;
   offerDiscounts: boolean;
   discountPercentage: string;
+  /** Shown to clients next to the discounted price (e.g. Easter sale). */
+  discountLabel: string;
   bulkDiscountThreshold: string;
   bulkDiscountPercent: string;
   offPeakDiscountPercent: string;
@@ -164,6 +166,7 @@ export const initialVendorOnboardingData: VendorOnboardingData = {
   allowQuoteRequests: true,
   offerDiscounts: false,
   discountPercentage: "",
+  discountLabel: "",
   bulkDiscountThreshold: "",
   bulkDiscountPercent: "",
   offPeakDiscountPercent: "",

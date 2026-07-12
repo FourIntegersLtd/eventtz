@@ -33,3 +33,13 @@ export async function saveVendorProfile(body: {
   );
   return data;
 }
+
+export async function checkBusinessNameAvailable(
+  businessName: string,
+): Promise<{ available: boolean }> {
+  const { data } = await api.get<{ success: boolean; available: boolean }>(
+    "/api/v1/vendor/profile/business-name-available",
+    { params: { business_name: businessName.trim() } },
+  );
+  return { available: data.available };
+}

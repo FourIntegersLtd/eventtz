@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { InspirationVideoTile } from "@/features/landing/InspirationVideoTile";
 import type { GalleryVideo } from "@/features/landing/landingData";
+import { LANDING_SECTION_CONTENT_MT } from "@/features/landing/landingSectionStyles";
 import { prefetchLandingVideo } from "@/lib/landingVideo";
 
 const AUTO_MS = 3500;
@@ -110,7 +111,7 @@ export function InspirationVideoShowcase({ videos }: InspirationVideoShowcasePro
   if (total === 0 || !active) return null;
 
   return (
-    <div ref={containerRef} className="relative mt-8 overflow-x-clip sm:mt-14">
+    <div ref={containerRef} className={`relative overflow-x-clip ${LANDING_SECTION_CONTENT_MT}`}>
       <div className="relative w-full md:left-1/2 md:w-screen md:max-w-[100vw] md:-translate-x-1/2 md:px-8">
         {!isMobile ? (
           <>

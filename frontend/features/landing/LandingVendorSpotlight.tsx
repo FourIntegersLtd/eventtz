@@ -8,12 +8,13 @@ import {
 } from "@/features/landing/landingData";
 import { LandingSectionHeading } from "@/features/landing/LandingSectionHeading";
 import { LandingSection } from "@/features/landing/LandingSection";
+import { landingSectionClass } from "@/features/landing/landingSectionStyles";
 
 export function LandingVendorSpotlight() {
   return (
     <LandingSection
       id="for-vendors"
-      className="hidden border-t border-primary-border/50 bg-primary-soft py-16 sm:py-20 md:block md:py-24"
+      className={`hidden md:block ${landingSectionClass("white")}`}
       width="6xl"
     >
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-center lg:gap-14">

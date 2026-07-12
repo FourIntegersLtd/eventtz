@@ -1,4 +1,10 @@
 import type { ExploreVendor } from "@/lib/clientExploreApi";
+import {
+  buildDiscountPromoLines,
+  listPriceDisplay,
+  parseMoneyNumber,
+  parseVendorDiscountConfig,
+} from "@/lib/vendorDiscountDisplay";
 
 /** One selectable pricing block — mirrors onboarding packages and/or fixed hourly & daily rates. */
 export type BrowsePricingOption = {
@@ -11,6 +17,10 @@ export type BrowsePricingOption = {
   compareAtDisplay: string | null;
   /** Parsed GBP amount for sums (null = custom quote / TBC). */
   unitPriceGbp: number | null;
+  /** e.g. "10% off — Easter discount" */
+  discountBadge: string | null;
+  /** Bulk / off-peak promos (informational). */
+  promoLines: string[];
   description: string;
   /** Shown with clock icon — package duration text or inferred line for fixed rates */
   timelineLine: string | null;
@@ -71,7 +81,10 @@ export function formatBookingTotalGbp(lines: BookingLineItem[]): {
   if (lines.length === 0) {
     return { label: "GBP 0.00", sumNumeric: 0, hasTbc: false };
   }
-  const formatted = formatGbp(sum);
+  const formatted = sum.toLocaleString("en-GB", {
+    minimumFractionDigits: sum % 1 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
+  });
   if (hasTbc) {
     return {
       label: sum > 0 ? `GBP ${formatted} + TBC` : "TBC",
@@ -88,20 +101,6 @@ function coerceStr(p: Record<string, unknown>, k: string): string {
   if (typeof v === "string") return v;
   if (typeof v === "number" || typeof v === "boolean") return String(v);
   return "";
-}
-
-function parseMoneyNumber(raw: string): number | null {
-  const s = raw.replace(/[^0-9.]/g, "");
-  if (!s) return null;
-  const n = Number.parseFloat(s);
-  return Number.isFinite(n) ? n : null;
-}
-
-function formatGbp(n: number): string {
-  return n.toLocaleString("en-GB", {
-    minimumFractionDigits: n % 1 === 0 ? 0 : 2,
-    maximumFractionDigits: 2,
-  });
 }
 
 type RawPkg = {
@@ -131,11 +130,6 @@ function normalizePackages(payload: Record<string, unknown>): RawPkg[] {
 /** Onboarding: name + price required for a package to count as complete. */
 function isCompletePackage(p: RawPkg): boolean {
   return Boolean(p.title && p.price);
-}
-
-function discountCompareAt(price: number, pct: number): number | null {
-  if (pct <= 0 || pct >= 100) return null;
-  return price / (1 - pct / 100);
 }
 
 function tabLabelFromTitle(title: string, fallback: string): string {
@@ -168,37 +162,17 @@ export function buildBrowsePricingOptions(vendor: ExploreVendor): BrowsePricingO
   const hourly = parseMoneyNumber(coerceStr(p, "hourlyRate"));
   const daily = parseMoneyNumber(coerceStr(p, "dailyRate"));
 
-  const offerDiscounts = p.offerDiscounts === true;
-  const discountPct = parseMoneyNumber(coerceStr(p, "discountPercentage")) ?? 0;
+  const discountConfig = parseVendorDiscountConfig(p);
+  const promoLines = buildDiscountPromoLines(discountConfig);
 
   const serviceLines = servicesFeatureLines(p);
-
-  const priceWithCompare = (amount: number | null): {
-    priceDisplay: string | null;
-    compareAtDisplay: string | null;
-  } => {
-    if (amount == null) {
-      return { priceDisplay: null, compareAtDisplay: null };
-    }
-    const compare =
-      offerDiscounts && discountPct > 0
-        ? discountCompareAt(amount, discountPct)
-        : null;
-    return {
-      priceDisplay: formatGbp(amount),
-      compareAtDisplay:
-        compare != null && Math.abs(compare - amount) > 0.01
-          ? formatGbp(compare)
-          : null,
-    };
-  };
 
   const completePkgs = normalizePackages(p).filter(isCompletePackage);
 
   if (completePkgs.length > 0) {
     return completePkgs.map((pkg, index) => {
-      const priceNum = parseMoneyNumber(pkg.price);
-      const { priceDisplay, compareAtDisplay } = priceWithCompare(priceNum);
+      const listPrice = parseMoneyNumber(pkg.price);
+      const priced = listPriceDisplay(listPrice, discountConfig);
 
       const timelineLine = pkg.duration.trim()
         ? pkg.duration.trim()
@@ -208,14 +182,15 @@ export function buildBrowsePricingOptions(vendor: ExploreVendor): BrowsePricingO
         id: pkg.id,
         tabLabel: tabLabelFromTitle(pkg.title, `Package ${index + 1}`),
         heading: pkg.title,
-        priceDisplay,
-        compareAtDisplay,
-        unitPriceGbp: priceNum,
+        priceDisplay: priced.priceDisplay,
+        compareAtDisplay: priced.compareAtDisplay,
+        unitPriceGbp: priced.unitPriceGbp,
+        discountBadge: priced.discountBadge,
+        promoLines,
         description:
           pkg.details.trim() ||
           "The vendor listed this package with a price — ask what’s included when you get in touch.",
         timelineLine,
-        // Match onboarding: checklist reflects services; package “Details” stays in the paragraph above.
         featureLines: serviceLines,
       };
     });
@@ -224,14 +199,16 @@ export function buildBrowsePricingOptions(vendor: ExploreVendor): BrowsePricingO
   const options: BrowsePricingOption[] = [];
 
   if (hourly != null) {
-    const { priceDisplay, compareAtDisplay } = priceWithCompare(hourly);
+    const priced = listPriceDisplay(hourly, discountConfig);
     options.push({
       id: "fixed-hourly",
       tabLabel: "Hourly",
       heading: "Hourly rate",
-      priceDisplay,
-      compareAtDisplay,
-      unitPriceGbp: hourly,
+      priceDisplay: priced.priceDisplay,
+      compareAtDisplay: priced.compareAtDisplay,
+      unitPriceGbp: priced.unitPriceGbp,
+      discountBadge: priced.discountBadge,
+      promoLines,
       description:
         "Per-hour rate from this vendor’s pricing step. Scope, hours, and travel are confirmed when you enquire.",
       timelineLine: null,
@@ -240,14 +217,16 @@ export function buildBrowsePricingOptions(vendor: ExploreVendor): BrowsePricingO
   }
 
   if (daily != null) {
-    const { priceDisplay, compareAtDisplay } = priceWithCompare(daily);
+    const priced = listPriceDisplay(daily, discountConfig);
     options.push({
       id: "fixed-daily",
       tabLabel: "Daily",
       heading: "Daily rate",
-      priceDisplay,
-      compareAtDisplay,
-      unitPriceGbp: daily,
+      priceDisplay: priced.priceDisplay,
+      compareAtDisplay: priced.compareAtDisplay,
+      unitPriceGbp: priced.unitPriceGbp,
+      discountBadge: priced.discountBadge,
+      promoLines,
       description:
         "Per-day rate from this vendor’s pricing step. Coverage and travel are confirmed when you enquire.",
       timelineLine: null,
@@ -267,6 +246,8 @@ export function buildBrowsePricingOptions(vendor: ExploreVendor): BrowsePricingO
       priceDisplay: null,
       compareAtDisplay: null,
       unitPriceGbp: null,
+      discountBadge: null,
+      promoLines: [],
       description:
         "This vendor has not published package prices or fixed hourly/daily rates yet. Send an enquiry to discuss your event.",
       timelineLine: null,

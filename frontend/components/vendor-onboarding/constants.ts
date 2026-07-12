@@ -43,6 +43,12 @@ export const EVENT_TYPE_OPTIONS: { value: string; label: string }[] = [
 export const VENDOR_WAITLIST_URL =
   "https://forms.gle/6c4Ezw5MNuQaYr238";
 
+/** Mirror backend `app/features/vendors/payload_validation.py`. */
+export const MAX_DISCOUNT_PCT = 100;
+export const MAX_MONEY_GBP = 1_000_000;
+export const MIN_MAX_BOOKINGS_PER_DAY = 1;
+export const MAX_MAX_BOOKINGS_PER_DAY = 20;
+
 export const RADIUS_OPTIONS: { value: string; label: string; context: string }[] = [
   { value: "under_50", label: "Under 50 miles", context: "About a 1-hour drive" },
   { value: "from_50_to_100", label: "50-100 miles", context: "Roughly 1-2 hours' drive" },

@@ -11,6 +11,7 @@ import {
   isVendorProfileForbiddenError,
   saveVendorProfile,
 } from "@/lib/vendorProfileApi";
+import { isHttpStatus } from "@/lib/api-errors";
 import { uploadFile, uploadImage } from "@/lib/mediaApi";
 import { portfolioFileKey } from "@/lib/portfolioFileKey";
 import {
@@ -41,7 +42,8 @@ export type PortfolioImageQualityRow = {
   skipped?: boolean;
 };
 
-export function useVendorOnboardingController() {
+export function useVendorOnboardingController(options?: { isWalkthrough?: boolean }) {
+  const isWalkthrough = options?.isWalkthrough ?? false;
   const router = useRouter();
   const { showToast } = useToast();
   const { user, loading: authLoading } = useAuth();
@@ -124,10 +126,10 @@ export function useVendorOnboardingController() {
           password: "",
         });
         if (res.status === "submitted") {
-          setStep(res.approval_status === "approved" ? 1 : 10);
+          setStep(isWalkthrough ? 1 : res.approval_status === "approved" ? 1 : 10);
         } else {
           const cs = res.current_step ?? 1;
-          setStep(Math.min(Math.max(cs, 1), 9));
+          setStep(isWalkthrough ? 1 : Math.min(Math.max(cs, 1), 9));
         }
         setLoadStatus("ready");
       } catch (e) {
@@ -144,7 +146,7 @@ export function useVendorOnboardingController() {
     return () => {
       cancelled = true;
     };
-  }, [authLoading, user?.id, user?.email, applyVendorProfileResponse]);
+  }, [authLoading, user?.id, user?.email, applyVendorProfileResponse, isWalkthrough]);
 
   useEffect(() => {
     if (loadStatus !== "ready") return;
@@ -482,13 +484,14 @@ export function useVendorOnboardingController() {
   }, [user?.email, applyVendorProfileResponse]);
 
   const primaryLabel = useMemo(() => {
+    if (isWalkthrough && step === 9) return "Finish walkthrough";
     if (profileStatus === "submitted" && approvalStatus === "approved") {
       return "Save changes";
     }
     if (step === 9) return "Confirm";
     if (step === 10) return "OK";
     return "Next";
-  }, [step, profileStatus, approvalStatus]);
+  }, [step, profileStatus, approvalStatus, isWalkthrough]);
 
   const goNext = useCallback(async () => {
     if (step === 10 || saving || loadStatus !== "ready" || authLoading) return;
@@ -536,7 +539,8 @@ export function useVendorOnboardingController() {
     }
 
     const isLive = profileStatus === "submitted" && approvalStatus === "approved";
-    const nextStep = step === 9 ? (isLive ? 9 : 10) : step + 1;
+    const walkthroughFinish = isWalkthrough && step === 9 && isLive;
+    const nextStep = step === 9 ? (isLive && !isWalkthrough ? 9 : 10) : step + 1;
     setSaving(true);
     setFormError(null);
     try {
@@ -567,21 +571,35 @@ export function useVendorOnboardingController() {
         setData(dataToSave);
       }
       const res = await saveVendorProfile({
-        current_step: nextStep,
+        current_step: walkthroughFinish ? 9 : nextStep,
         payload: vendorDataToPayload(dataToSave),
-        status: step === 9 ? "submitted" : undefined,
+        status: step === 9 && !walkthroughFinish ? "submitted" : undefined,
       });
       applyVendorProfileResponse(res);
-      if (isLive) {
+      if (walkthroughFinish) {
+        showToast({ title: "Walkthrough complete", tone: "success" });
+        router.push("/vendor/settings");
+        return;
+      }
+      if (isLive && !isWalkthrough) {
         showToast({ title: "Changes saved", tone: "success" });
       } else {
         setStep(nextStep);
       }
     } catch (e) {
-      setFormError(
+      const detail =
         getApiErrorDetail(e) ??
-          "We couldn't save your changes. Check your connection and try again.",
-      );
+        "We couldn't save your changes. Check your connection and try again.";
+      if (isHttpStatus(e, 409)) {
+        setBusinessNameError(detail);
+        if (step !== 2) {
+          setFormError(`${detail} Go back to Business to choose another name.`);
+        } else {
+          setFormError(detail);
+        }
+      } else {
+        setFormError(detail);
+      }
     } finally {
       setSaving(false);
     }
@@ -600,6 +618,8 @@ export function useVendorOnboardingController() {
     persistAdditionalInfoFiles,
     router,
     user?.id,
+    isWalkthrough,
+    showToast,
   ]);
 
   const goBack = useCallback(() => {
@@ -661,5 +681,6 @@ export function useVendorOnboardingController() {
     connectingStripe,
     stripeConnectError,
     onConnectStripe,
+    isWalkthrough,
   };
 }

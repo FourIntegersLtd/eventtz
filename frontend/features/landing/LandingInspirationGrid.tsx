@@ -4,12 +4,17 @@ import { GALLERY_VIDEOS, INSPIRATION_SECTION } from "@/features/landing/landingD
 import { InspirationVideoShowcase } from "@/features/landing/InspirationVideoShowcase";
 import { LandingSectionHeading } from "@/features/landing/LandingSectionHeading";
 import { LandingSection } from "@/features/landing/LandingSection";
+import {
+  LANDING_SECTION_CONTENT_MT,
+  LANDING_SECTION_STACK_MT,
+  landingSectionClass,
+} from "@/features/landing/landingSectionStyles";
 
 export function LandingInspirationGrid() {
   return (
     <LandingSection
       id="inspiration"
-      className="hidden overflow-x-clip border-t border-primary-border/50 bg-gradient-to-b from-white via-primary-soft/30 to-white py-14 sm:py-20 md:block md:py-24"
+      className={`hidden overflow-x-clip md:block ${landingSectionClass("soft")}`}
       width="7xl"
     >
       <LandingSectionHeading

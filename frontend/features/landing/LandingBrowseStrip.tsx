@@ -5,13 +5,14 @@ import { ArrowRight } from "lucide-react";
 import { BROWSE_SECTION, CATEGORIES } from "@/features/landing/landingData";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { LandingSection } from "@/features/landing/LandingSection";
+import { LANDING_SECTION_CONTENT_MT, LANDING_STRIP_PY } from "@/features/landing/landingSectionStyles";
 import { useCategoryVendorCounts } from "@/features/marketplace/useCategoryVendorCounts";
 
 export function LandingBrowseStrip() {
   const { counts, loading } = useCategoryVendorCounts();
 
   return (
-    <LandingSection id="browse" className="relative z-10 border-b border-primary-border/40 bg-white pb-14 pt-10 sm:pb-16 sm:pt-12">
+    <LandingSection id="browse" className={`relative z-10 border-b border-primary-border/40 bg-white ${LANDING_STRIP_PY}`}>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary/80">
@@ -30,7 +31,7 @@ export function LandingBrowseStrip() {
         </Link>
       </div>
 
-      <div className="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-8 sm:mt-10 sm:flex-nowrap sm:justify-between sm:gap-4">
+      <div className={`flex flex-wrap justify-center gap-x-6 gap-y-8 sm:flex-nowrap sm:justify-between sm:gap-4 ${LANDING_SECTION_CONTENT_MT}`}>
         {CATEGORIES.map(({ name, value, Icon, iconBg, iconColor }) => (
           <Link
             key={value}

@@ -1,5 +1,13 @@
-import { EVENT_TYPE_IDS_ALL, EVENT_TYPE_OPTIONS } from "./constants";
+import {
+  EVENT_TYPE_IDS_ALL,
+  EVENT_TYPE_OPTIONS,
+  MAX_DISCOUNT_PCT,
+  MAX_MAX_BOOKINGS_PER_DAY,
+  MAX_MONEY_GBP,
+  MIN_MAX_BOOKINGS_PER_DAY,
+} from "./constants";
 import type { VendorOnboardingData } from "./types";
+import { parseMoneyNumber } from "@/lib/vendorDiscountDisplay";
 
 const BIO_MAX_WORDS = 60;
 
@@ -40,6 +48,28 @@ export function buildDraftBio(d: VendorOnboardingData, variant: number): string 
   return clampBioWords(draft);
 }
 
+function moneyInRange(raw: string, label: string, required = false): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return required ? `${label} is required.` : null;
+  }
+  const n = parseMoneyNumber(trimmed);
+  if (n === null) return `${label} must be a valid amount.`;
+  if (n < 0 || n > MAX_MONEY_GBP) return `${label} is out of allowed range.`;
+  return null;
+}
+
+function pctInRange(raw: string, label: string): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const n = parseMoneyNumber(trimmed);
+  if (n === null) return `${label} must be a valid number.`;
+  if (n < 0 || n > MAX_DISCOUNT_PCT) {
+    return `${label} must be between 0 and ${MAX_DISCOUNT_PCT}%.`;
+  }
+  return null;
+}
+
 export function validateStep(step: number, d: VendorOnboardingData): string | null {
   switch (step) {
     case 1:
@@ -68,6 +98,11 @@ export function validateStep(step: number, d: VendorOnboardingData): string | nu
       }
       return null;
     case 4: {
+      const hourlyErr = moneyInRange(d.hourlyRate, "Hourly rate");
+      if (hourlyErr) return hourlyErr;
+      const dailyErr = moneyInRange(d.dailyRate, "Daily rate");
+      if (dailyErr) return dailyErr;
+
       const hasPackagePrice = d.packages.some((p) => p.price.trim());
       if (!d.hourlyRate.trim() && !d.dailyRate.trim() && !hasPackagePrice) {
         return "Add at least one rate or a package price.";
@@ -78,13 +113,40 @@ export function validateStep(step: number, d: VendorOnboardingData): string | nu
         if (hasAny && (!p.title.trim() || !p.price.trim())) {
           return "Each package needs a name and a price.";
         }
+        if (p.price.trim()) {
+          const pkgErr = moneyInRange(p.price, "Package price", true);
+          if (pkgErr) return pkgErr;
+        }
+      }
+      if (d.offerDiscounts) {
+        for (const [raw, label] of [
+          [d.discountPercentage, "List discount"],
+          [d.bulkDiscountPercent, "Bulk discount"],
+          [d.offPeakDiscountPercent, "Off-peak discount"],
+        ] as const) {
+          const err = pctInRange(raw, label);
+          if (err) return err;
+        }
+        const bulkErr = moneyInRange(d.bulkDiscountThreshold, "Bulk threshold");
+        if (bulkErr) return bulkErr;
       }
       return null;
     }
     case 5:
       if (d.availableWeekdays.length === 0) return "Pick at least one weekday.";
-      if (!d.maxBookingsPerDay || Number(d.maxBookingsPerDay) < 1) {
+      if (!d.maxBookingsPerDay) {
         return "Set max bookings per day (min 1).";
+      }
+      {
+        const n = parseMoneyNumber(String(d.maxBookingsPerDay).trim());
+        if (
+          n === null ||
+          n < MIN_MAX_BOOKINGS_PER_DAY ||
+          n > MAX_MAX_BOOKINGS_PER_DAY ||
+          !Number.isInteger(n)
+        ) {
+          return `Max bookings per day must be ${MIN_MAX_BOOKINGS_PER_DAY}–${MAX_MAX_BOOKINGS_PER_DAY}.`;
+        }
       }
       return null;
     case 6: {

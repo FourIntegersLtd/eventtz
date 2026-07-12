@@ -1,17 +1,5 @@
 import api from "@/lib/axios";
 
-export type BookingLineItemPayload = {
-  id: string;
-  heading: string;
-  unit_price_gbp: number | null;
-  /** Package details paragraph from the vendor profile (when applicable). */
-  description?: string | null;
-  /** Bullet lines (e.g. services included). */
-  feature_lines?: string[];
-  /** e.g. duration from the vendor profile. */
-  timeline_line?: string | null;
-};
-
 export type CreateBookingRequestPayload = {
   vendor_user_id: string;
   event_name: string;
@@ -23,8 +11,6 @@ export type CreateBookingRequestPayload = {
   event_address?: string | null;
   notes: string | null;
   selected_option_ids: string[];
-  line_items: BookingLineItemPayload[];
-  total_label: string;
 };
 
 export type BookingRequestCreated = {

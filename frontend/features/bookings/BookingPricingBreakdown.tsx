@@ -31,12 +31,20 @@ export type BookingLineItemRow = {
   timeline_line?: string | null;
 };
 
-function formatLineUnitPrice(unitPriceGbp: number | null): string {
+function formatLineUnitPrice(unitPriceGbp: number | null, lineId?: string): string {
   if (unitPriceGbp == null) return "TBC";
-  return `£${unitPriceGbp.toLocaleString("en-GB", {
+  const isAutoDiscount =
+    (lineId?.startsWith("auto-") ?? false) || unitPriceGbp < 0;
+  const abs = Math.abs(unitPriceGbp);
+  const formatted = abs.toLocaleString("en-GB", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
-  })}`;
+  });
+  return isAutoDiscount ? `-£${formatted}` : `£${formatted}`;
+}
+
+function isAutoDiscountLine(lineId: string, unitPriceGbp: number | null): boolean {
+  return lineId.startsWith("auto-") || (unitPriceGbp != null && unitPriceGbp < 0);
 }
 
 type BookingPricingBreakdownProps = {
@@ -86,14 +94,24 @@ export function BookingPricingBreakdown({
             </summary>
             <div className="mt-3 rounded-2xl bg-neutral-50/50 px-5 py-5 ring-1 ring-neutral-200/50">
               <ul className="space-y-5">
-                {lineItems.map((li, idx) => (
+                {lineItems.map((li, idx) => {
+                  const isDiscount = isAutoDiscountLine(li.id, li.unit_price_gbp);
+                  return (
                   <li key={li.id} className={idx > 0 ? "border-t border-neutral-200/50 pt-5" : ""}>
                     <div className="flex justify-between gap-3">
-                      <span className="min-w-0 font-medium text-neutral-900">
+                      <span
+                        className={`min-w-0 font-medium ${
+                          isDiscount ? "text-emerald-800" : "text-neutral-900"
+                        }`}
+                      >
                         {li.heading}
                       </span>
-                      <span className="shrink-0 font-semibold tabular-nums text-neutral-900">
-                        {formatLineUnitPrice(li.unit_price_gbp)}
+                      <span
+                        className={`shrink-0 font-semibold tabular-nums ${
+                          isDiscount ? "text-emerald-700" : "text-neutral-900"
+                        }`}
+                      >
+                        {formatLineUnitPrice(li.unit_price_gbp, li.id)}
                       </span>
                     </div>
                     {li.timeline_line ? (
@@ -115,7 +133,8 @@ export function BookingPricingBreakdown({
                       </ul>
                     ) : null}
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             </div>
           </details>

@@ -2,7 +2,12 @@
 
 import { FileText, Trash2, Upload } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { STEP_COPY } from "../onboardingCopy";
 import type { VendorOnboardingData, VendorOnboardingUpdate } from "../types";
+import {
+  OnboardingQuestionLayout,
+  OnboardingSubQuestion,
+} from "../ui/OnboardingQuestionLayout";
 import { inputClass, labelClass } from "./form-primitives";
 
 export type StepAdditionalInfoProps = {
@@ -36,7 +41,7 @@ function DocUploadRow({
 }) {
   return (
     <div>
-      <label className={labelClass()}>{label}</label>
+      {label ? <label className={labelClass()}>{label}</label> : null}
       <p className="mb-2 text-xs text-neutral-500">{helpText}</p>
       {persistedUrl ? (
         <div className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3">
@@ -98,43 +103,37 @@ export function StepAdditionalInfo({
   onRemoveAdditionalDoc,
   onRemoveOtherDoc,
 }: StepAdditionalInfoProps) {
+  const copy = STEP_COPY[8];
+
   return (
-    <div className="space-y-7">
-      <div>
-        <h2 className="font-heading text-2xl font-semibold text-neutral-900">
-          Additional info
-        </h2>
-        <p className="mt-1 text-sm text-neutral-500">
-          Optional — sharing certificates and dietary details builds trust and helps
-          clients with allergies or dietary requirements choose you with confidence.
-        </p>
-      </div>
+    <div className="space-y-8">
+      <OnboardingQuestionLayout headline={copy.headline} subtext={copy.subtext} />
 
-      <DocUploadRow
-        label="Food hygiene certificate"
-        helpText="If you handle or serve food, clients feel safer booking a certified vendor."
-        persistedUrl={data.foodHygieneCertNamePersisted}
-        uploading={uploadingDoc.foodHygiene}
-        inputId="doc-food-hygiene"
-        onUpload={(f) => void onUploadAdditionalDoc("foodHygiene", f)}
-        onRemove={() => onRemoveAdditionalDoc("foodHygiene")}
-      />
+      <OnboardingSubQuestion headline="Food hygiene certificate" indexOffset={3}>
+        <DocUploadRow
+          label=""
+          helpText="If you handle or serve food, clients feel safer booking a certified vendor."
+          persistedUrl={data.foodHygieneCertNamePersisted}
+          uploading={uploadingDoc.foodHygiene}
+          inputId="doc-food-hygiene"
+          onUpload={(f) => void onUploadAdditionalDoc("foodHygiene", f)}
+          onRemove={() => onRemoveAdditionalDoc("foodHygiene")}
+        />
+      </OnboardingSubQuestion>
 
-      <DocUploadRow
-        label="Indemnity / insurance certificate"
-        helpText="Public liability or indemnity insurance, if you have it."
-        persistedUrl={data.indemnityCertNamePersisted}
-        uploading={uploadingDoc.indemnity}
-        inputId="doc-indemnity"
-        onUpload={(f) => void onUploadAdditionalDoc("indemnity", f)}
-        onRemove={() => onRemoveAdditionalDoc("indemnity")}
-      />
+      <OnboardingSubQuestion headline="Indemnity / insurance certificate" indexOffset={6}>
+        <DocUploadRow
+          label=""
+          helpText="Public liability or indemnity insurance, if you have it."
+          persistedUrl={data.indemnityCertNamePersisted}
+          uploading={uploadingDoc.indemnity}
+          inputId="doc-indemnity"
+          onUpload={(f) => void onUploadAdditionalDoc("indemnity", f)}
+          onRemove={() => onRemoveAdditionalDoc("indemnity")}
+        />
+      </OnboardingSubQuestion>
 
-      <div>
-        <label className={labelClass()}>Other supporting documents</label>
-        <p className="mb-2 text-xs text-neutral-500">
-          Any other certificates or accreditations you&apos;d like clients to see.
-        </p>
+      <OnboardingSubQuestion headline="Other supporting documents" indexOffset={9}>
         <div className="rounded-xl border-2 border-dashed border-neutral-200 bg-neutral-50/80 p-5 text-center">
           <input
             type="file"
@@ -189,9 +188,9 @@ export function StepAdditionalInfo({
             ))}
           </ul>
         )}
-      </div>
+      </OnboardingSubQuestion>
 
-      <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50">
+      <OnboardingSubQuestion headline="Dietary details (optional)" indexOffset={12}>
         <label className="flex items-start gap-3 text-sm">
           <input
             type="checkbox"
@@ -215,7 +214,7 @@ export function StepAdditionalInfo({
             placeholder="e.g. Contains nuts and dairy; gluten-free options available on request"
           />
         </div>
-      </div>
+      </OnboardingSubQuestion>
     </div>
   );
 }

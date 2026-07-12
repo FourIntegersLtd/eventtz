@@ -8,6 +8,10 @@ import { REVIEWS_SECTION } from "@/features/landing/landingData";
 import { LandingSectionHeading } from "@/features/landing/LandingSectionHeading";
 import { LandingSection } from "@/features/landing/LandingSection";
 import { LoadingState } from "@/components/ui/LoadingState";
+import {
+  LANDING_SECTION_CONTENT_MT,
+  landingSectionClass,
+} from "@/features/landing/landingSectionStyles";
 
 const MAX_REVIEWS = 3;
 const PREVIEW_LEN = 180;
@@ -79,7 +83,7 @@ export function LandingReviewsSection() {
   return (
     <LandingSection
       id="reviews"
-      className="border-t border-primary-border/50 bg-white py-16 sm:py-20 md:py-24"
+      className={landingSectionClass("white")}
       width="6xl"
     >
       <LandingSectionHeading
@@ -88,9 +92,9 @@ export function LandingReviewsSection() {
       />
 
       {loading ? (
-        <LoadingState label="Loading reviews…" variant="centered" className="mt-10 py-12" />
+        <LoadingState label="Loading reviews…" variant="centered" className={`${LANDING_SECTION_CONTENT_MT} py-12`} />
       ) : (
-        <div className="mt-10 grid gap-5 sm:mt-12 sm:grid-cols-3">
+        <div className={`${LANDING_SECTION_CONTENT_MT} grid gap-5 sm:grid-cols-3`}>
           {reviews.map((review) => (
             <article
               key={review.id}

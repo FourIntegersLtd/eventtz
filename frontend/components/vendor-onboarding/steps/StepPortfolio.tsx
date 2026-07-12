@@ -5,6 +5,7 @@ import { ImagePlus, Trash2, Video, X } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { portfolioFileKey } from "@/lib/portfolioFileKey";
 import { SOCIAL_PLATFORM_OPTIONS } from "../constants";
+import { STEP_COPY } from "../onboardingCopy";
 import type { PortfolioImageQualityRow } from "../useVendorOnboardingController";
 import {
   createVendorSocialLink,
@@ -12,7 +13,11 @@ import {
   type VendorOnboardingData,
   type VendorOnboardingUpdate,
 } from "../types";
-import { inputClass, labelClass } from "./form-primitives";
+import {
+  OnboardingQuestionLayout,
+  OnboardingSubQuestion,
+} from "../ui/OnboardingQuestionLayout";
+import { inputClass } from "./form-primitives";
 
 export type StepPortfolioProps = {
   data: VendorOnboardingData;
@@ -122,18 +127,12 @@ export function StepPortfolio({
   };
 
   return (
-    <div className="space-y-7">
-      <div>
-        <h2 className="font-heading text-2xl font-semibold text-neutral-900">
-          Portfolio
-        </h2>
-        <p className="mt-1 text-sm text-neutral-500">
-          5–20 photos clients see on your profile — strong photos are the biggest
-          factor in whether a client messages you. We check each new photo for
-          quality before you continue.
-        </p>
-      </div>
-      <div>
+    <div className="space-y-8">
+      <OnboardingQuestionLayout
+        headline={STEP_COPY[6].headline}
+        subtext={`${STEP_COPY[6].subtext} We check each new photo for quality before you continue.`}
+      />
+      <OnboardingSubQuestion headline="Upload your portfolio photos" indexOffset={3}>
         <div className="rounded-xl border-2 border-dashed border-neutral-200 bg-neutral-50/80 p-8 text-center">
           <input
             type="file"
@@ -222,7 +221,7 @@ export function StepPortfolio({
             })}
           </div>
         )}
-      </div>
+      </OnboardingSubQuestion>
       {data.portfolioWarnings.length > 0 && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
           {data.portfolioWarnings.map((w, i) => (
@@ -230,8 +229,7 @@ export function StepPortfolio({
           ))}
         </div>
       )}
-      <div>
-        <label className={labelClass()}>Video (optional)</label>
+      <OnboardingSubQuestion headline="Add a video (optional)" indexOffset={6}>
         {data.portfolioVideoNamePersisted ? (
           <div className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3">
             <Video className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.5} />
@@ -283,10 +281,9 @@ export function StepPortfolio({
         {videoUploadError ? (
           <p className="mt-1 text-xs text-red-700">{videoUploadError}</p>
         ) : null}
-      </div>
-      <div>
-        <div className="flex items-center justify-between">
-          <span className={labelClass()}>Social media (optional)</span>
+      </OnboardingSubQuestion>
+      <OnboardingSubQuestion headline="Social media links (optional)" indexOffset={9}>
+        <div className="flex items-center justify-end">
           <button
             type="button"
             onClick={addSocialLink}
@@ -342,7 +339,7 @@ export function StepPortfolio({
             })}
           </div>
         )}
-      </div>
+      </OnboardingSubQuestion>
     </div>
   );
 }

@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { LandingSection } from "@/features/landing/LandingSection";
+import { landingSectionClass } from "@/features/landing/landingSectionStyles";
 
 export function LandingAudienceCta() {
   return (
-    <LandingSection className="py-16 sm:py-20 md:py-24" width="6xl">
+    <LandingSection className={landingSectionClass("muted")} width="6xl">
       <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
         <div className="flex flex-col justify-between rounded-3xl bg-gradient-to-br from-primary to-violet-900 p-8 text-white sm:p-10">
           <div>

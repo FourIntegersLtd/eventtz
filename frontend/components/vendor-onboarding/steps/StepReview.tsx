@@ -8,6 +8,7 @@ import {
   WEEKDAY_LABELS,
 } from "../constants";
 import { bioWordCount } from "../onboardingLogic";
+import { STEP_COPY } from "../onboardingCopy";
 import { VendorPortfolioThumbGrid } from "@/components/vendor/VendorPortfolioThumbGrid";
 import { portfolioImageUrlsFromPayload } from "@/lib/vendorPortfolioImages";
 import type {
@@ -16,6 +17,8 @@ import type {
   VendorOnboardingUpdate,
 } from "../types";
 import { inputClass, labelClass } from "./form-primitives";
+import { OnboardingQuestionLayout } from "../ui/OnboardingQuestionLayout";
+import { AnimatedStepItem } from "../ui/AnimatedStepItem";
 
 const BIO_MAX_WORDS = 60;
 
@@ -140,15 +143,12 @@ export function StepReview({
 
   return (
     <div className="space-y-7">
-      <div>
-        <h2 className="font-heading text-2xl font-semibold text-neutral-900">
-          Profile review
-        </h2>
-        <p className="mt-1 text-sm text-neutral-500">
-          Open a section to preview, or use Edit to jump back to that step.
-        </p>
-      </div>
-      <div className="flex justify-center">
+      <OnboardingQuestionLayout
+        headline={STEP_COPY[9].headline}
+        subtext={STEP_COPY[9].subtext}
+      />
+      <AnimatedStepItem index={4}>
+        <div className="flex justify-center">
         <div className="relative">
           <div className="flex h-24 w-24 items-center justify-center rounded-full bg-primary text-2xl font-semibold text-white">
             {(data.firstName[0] ?? "?") + (data.lastName[0] ?? "")}
@@ -161,8 +161,9 @@ export function StepReview({
             <Pencil className="h-4 w-4" />
           </button>
         </div>
-      </div>
-      <div>
+        </div>
+      </AnimatedStepItem>
+      <AnimatedStepItem index={5}>
         <label className={labelClass()}>Public bio</label>
         <p className="mb-2 text-xs text-neutral-500">
           A short, single-paragraph summary (3–4 lines) that appears on your public
@@ -204,8 +205,9 @@ export function StepReview({
             </p>
           </div>
         </div>
-      </div>
+      </AnimatedStepItem>
 
+      <AnimatedStepItem index={6}>
       <ReviewSection
         title="Account"
         step={1}
@@ -302,6 +304,28 @@ export function StepReview({
             <li className="text-neutral-500">No packages added</li>
           )}
         </ul>
+        {data.offerDiscounts ? (
+          <div className="mt-4 space-y-1 border-t border-neutral-100 pt-3 text-sm text-neutral-700">
+            <p className="font-medium text-neutral-900">Discounts</p>
+            {data.discountPercentage.trim() ? (
+              <p>
+                {data.discountPercentage.trim()}% off
+                {data.discountLabel.trim() ? ` — ${data.discountLabel.trim()}` : ""}
+                {" "}
+                on listed prices
+              </p>
+            ) : null}
+            {data.bulkDiscountThreshold.trim() && data.bulkDiscountPercent.trim() ? (
+              <p>
+                Extra {data.bulkDiscountPercent.trim()}% off over £
+                {data.bulkDiscountThreshold.trim()}
+              </p>
+            ) : null}
+            {data.offPeakDiscountPercent.trim() ? (
+              <p>{data.offPeakDiscountPercent.trim()}% off off-peak dates</p>
+            ) : null}
+          </div>
+        ) : null}
       </ReviewSection>
 
       <ReviewSection
@@ -401,7 +425,9 @@ export function StepReview({
           <Field label="Allergen info" value={data.allergenInfo || "—"} />
         </div>
       </ReviewSection>
+      </AnimatedStepItem>
 
+      <AnimatedStepItem index={7}>
       <label className="flex items-start gap-3 text-sm">
         <input
           type="checkbox"
@@ -423,6 +449,7 @@ export function StepReview({
           hygiene, allergen, and payment policies.
         </span>
       </label>
+      </AnimatedStepItem>
     </div>
   );
 }

@@ -12,6 +12,10 @@ import { FEATURED_VENDORS_SECTION } from "@/features/landing/landingData";
 import { LandingSectionHeading } from "@/features/landing/LandingSectionHeading";
 import { LandingSection } from "@/features/landing/LandingSection";
 import { LoadingState } from "@/components/ui/LoadingState";
+import {
+  LANDING_SECTION_CONTENT_MT,
+  landingSectionClass,
+} from "@/features/landing/landingSectionStyles";
 
 const MAX_ITEMS = 6;
 
@@ -43,7 +47,7 @@ export function LandingFeaturedVendors() {
   );
 
   return (
-    <LandingSection id="featured" className="py-16 sm:py-20 md:py-24" width="7xl">
+    <LandingSection id="featured" className={landingSectionClass("muted")} width="7xl">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <LandingSectionHeading
           eyebrow={FEATURED_VENDORS_SECTION.eyebrow}
@@ -59,17 +63,17 @@ export function LandingFeaturedVendors() {
       </div>
 
       {loading ? (
-        <LoadingState label="Loading featured vendors…" variant="centered" className="mt-8 py-12" />
+        <LoadingState label="Loading featured vendors…" variant="centered" className={`${LANDING_SECTION_CONTENT_MT} py-12`} />
       ) : error ? (
-        <p className="mt-8 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <p className={`${LANDING_SECTION_CONTENT_MT} rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800`}>
           {error}
         </p>
       ) : cards.length === 0 ? (
-        <p className="mt-8 rounded-2xl border border-primary-border bg-primary-soft px-4 py-6 text-center text-sm text-neutral-600">
+        <p className={`${LANDING_SECTION_CONTENT_MT} rounded-2xl border border-primary-border bg-primary-soft px-4 py-6 text-center text-sm text-neutral-600`}>
           No vendors yet.
         </p>
       ) : (
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className={`${LANDING_SECTION_CONTENT_MT} grid gap-5 sm:grid-cols-2 lg:grid-cols-3`}>
           {cards.map((card) => (
             <MarketplaceVendorCard key={card.cardKey} card={card} showBookmark={false} />
           ))}

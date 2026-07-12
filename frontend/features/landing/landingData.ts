@@ -11,6 +11,7 @@ import {
   Package,
   ShieldCheck,
   Sparkles,
+  Tag,
   UtensilsCrossed,
 } from "lucide-react";
 import type { IconType } from "react-icons";
@@ -67,6 +68,11 @@ export const CLIENT_STEPS: LandingStep[] = [
     step: 3,
     title: "Lock in your date",
     description: "Pay securely once they accept.",
+  },
+  {
+    step: 4,
+    title: "Complete & review",
+    description: "Confirm the event went well and leave a review.",
   },
 ];
 
@@ -200,18 +206,6 @@ export const FAQ_SECTIONS: FaqSection[] = [
     heading: "For clients",
     items: [
       {
-        q: "What is Eventtz?",
-        a: "A marketplace for event vendors in the UK. Find people, message them, agree a quote, and pay in one app.",
-      },
-      {
-        q: "Which vendors can I find?",
-        a: "Baking, catering, photography, makeup, and rentals. Filter by city and date.",
-      },
-      {
-        q: "Do I need an account to browse?",
-        a: "No. Browse first. Sign up free when you're ready to message or book.",
-      },
-      {
         q: "How does booking work?",
         a: "Pick services on a profile. Send your date and venue. Chat to confirm. Pay when they accept.",
       },
@@ -228,24 +222,8 @@ export const FAQ_SECTIONS: FaqSection[] = [
         a: "Every vendor completes onboarding. We review profiles before they appear in search.",
       },
       {
-        q: "Can I message a vendor before booking?",
-        a: "Yes. Open chat from any profile once you're signed in.",
-      },
-      {
-        q: "What kind of events is Eventtz for?",
-        a: "Weddings, birthdays, naming ceremonies, corporate events, and more. UK-wide.",
-      },
-      {
-        q: "Can I cancel a booking?",
-        a: "Yes, while it's pending or accepted. For refunds on paid bookings, contact support.",
-      },
-      {
         q: "What if something goes wrong?",
         a: "Open a dispute from your booking. We review the thread and help resolve it.",
-      },
-      {
-        q: "Can I leave a review?",
-        a: "Yes. Once the vendor marks your event complete.",
       },
     ],
   },
@@ -258,16 +236,8 @@ export const FAQ_SECTIONS: FaqSection[] = [
         a: "Create a vendor account. Add your business, services, and photos. Connect Stripe to get paid.",
       },
       {
-        q: "Which services can I list?",
-        a: "Baking, catering, photography, makeup, or rentals. Pick Other if you're not listed yet.",
-      },
-      {
         q: "When will my profile go live?",
         a: "After onboarding, Stripe verification, and our team approves your listing.",
-      },
-      {
-        q: "Can I set my own prices?",
-        a: "Always. Hourly, daily, packages, or custom quotes. You decide.",
       },
       {
         q: "How do I get paid?",
@@ -276,26 +246,6 @@ export const FAQ_SECTIONS: FaqSection[] = [
       {
         q: "Does Eventtz take a cut from my earnings?",
         a: `No. Clients pay a ${SERVICE_FEE_PERCENT_LABEL} service fee on top of your quote. You keep what you agreed.`,
-      },
-      {
-        q: "Can I send quotes to clients?",
-        a: "Yes. From chat. Add delivery, travel, or extras before they pay.",
-      },
-      {
-        q: "How do travel and delivery fees work?",
-        a: "Set your base and travel range in your profile. Add line items on each quote.",
-      },
-      {
-        q: "How do I manage my availability?",
-        a: "Block dates on your calendar. We flag conflicts when a request comes in.",
-      },
-      {
-        q: "Can I turn down or cancel a booking?",
-        a: "Yes. Decline what doesn't fit. Cancel from your dashboard if plans change.",
-      },
-      {
-        q: "Will clients leave reviews on my profile?",
-        a: "After you mark a booking complete, they can leave one review.",
       },
       {
         q: "What happens if there is a dispute?",
@@ -376,7 +326,7 @@ export type LandingValuePillar = {
 
 export const WHY_EVENTTZ_SECTION = {
   eyebrow: "Why Eventtz",
-  title: "Great vendors exist. Getting booked shouldn't take weeks.",
+  title: "Great vendors exist. Finding the right one shouldn't take weeks.",
   description:
     "Right now planning your celebration lives across Instagram, WhatsApp, and word of mouth. Eventtz helps you find, book, and secure vendors for your big day.",
   pains: [
@@ -469,9 +419,113 @@ export const TRUST_SAFETY_ITEMS: LandingValuePillar[] = [
   },
 ];
 
+export type LandingScreenshotSection = {
+  title: string;
+  description: string;
+  /** Optional path under public/, e.g. /images/landing-images/pricing.png */
+  screenshotSrc?: string;
+  ctaHref?: string;
+  ctaLabel?: string;
+};
+
+export const PRICING_TRUST_SECTION: LandingScreenshotSection = {
+  title: "See the price before the DM",
+  description:
+    "Full packages and sale prices on every listing. Compare before you message.",
+  screenshotSrc: "/images/landing-images/pricing.png",
+  ctaHref: "/client/browse",
+  ctaLabel: "Browse vendors",
+};
+
+export const BOOK_SECTION: LandingScreenshotSection = {
+  title: "Send a booking request",
+  description: "Pick a package, add your date and venue, and send the vendor a request.",
+  screenshotSrc: "/images/landing-images/book.png",
+  ctaHref: "/client/browse",
+  ctaLabel: "Browse vendors",
+};
+
+export const QUOTE_SECTION: LandingScreenshotSection = {
+  title: "The vendor confirms your booking",
+  description:
+    "They review your date, venue, and package. If anything needs adjusting, they update the quote before you pay.",
+  screenshotSrc: "/images/landing-images/quote.png",
+  ctaHref: "/client/browse",
+  ctaLabel: "Browse vendors",
+};
+
+export const VENDOR_TOOLS_SECTION: LandingScreenshotSection = {
+  title: "Your prices, your calendar, one profile",
+  description:
+    "Set packages, discounts, and availability in onboarding. Take requests, send quotes from chat, and get paid through Stripe when the job is done.",
+  screenshotSrc: undefined,
+  ctaHref: "/register?type=vendor",
+  ctaLabel: "Join as a vendor",
+};
+
+export const VENDOR_TOOLS_PILLARS: LandingValuePillar[] = [
+  {
+    title: "Packages or quotes",
+    description: "Fixed packages, rates, or custom quotes from chat.",
+    Icon: Package,
+  },
+  {
+    title: "Any discounts?",
+    description: "List, bulk, and off-peak rules on your profile.",
+    Icon: Tag,
+  },
+  {
+    title: "Your calendar",
+    description: "Weekdays, blocked dates, and a daily booking cap.",
+    Icon: Calendar,
+  },
+  {
+    title: "Paid through Stripe",
+    description: "Connect once. Payout after the job is complete.",
+    Icon: ShieldCheck,
+  },
+];
+
+export type LandingJourneyStage = "browse" | "chat" | "pay";
+
+export type LandingJourneyStep = {
+  title: string;
+  description: string;
+  mockStage: LandingJourneyStage;
+  screenshotAlt: string;
+  screenshotSrc?: string;
+};
+
+export const BOOKING_RECORD_SECTION = {
+  eyebrow: "One booking",
+  title: "One booking, one record",
+  description: "Browse, message, pay, and complete without losing the thread.",
+} as const;
+
+export const BOOKING_RECORD_JOURNEY: LandingJourneyStep[] = [
+  {
+    title: "Browse with clear prices",
+    description: "Compare packages before you message.",
+    mockStage: "browse",
+    screenshotAlt: "Vendor profile with package pricing on Eventtz",
+  },
+  {
+    title: "Agree in chat",
+    description: "Message the vendor and accept the quote.",
+    mockStage: "chat",
+    screenshotAlt: "Chat conversation with a vendor quote on Eventtz",
+  },
+  {
+    title: "Pay and complete",
+    description: "Pay after they accept. Leave a review when it's done.",
+    mockStage: "pay",
+    screenshotAlt: "Secure checkout for an accepted booking on Eventtz",
+  },
+];
+
 export const HOW_IT_WORKS_SECTION = {
   eyebrow: "How it works",
-  title: "From search to booked in three steps",
+  title: "From search to booked in four steps",
 } as const;
 
 export const FAQ_SECTION = {
@@ -497,11 +551,15 @@ export const BROWSE_SECTION = {
 
 export const EXPLORE_NAV_LINKS = [
   { href: "#browse", label: "Categories" },
-  { href: "#why-eventtz", label: "Why Eventtz" },
   { href: "#featured", label: "Featured vendors" },
   { href: "#reviews", label: "Reviews" },
-  { href: "#inspiration", label: "Celebrations" },
   { href: "#how-it-works", label: "How it works" },
+  { href: "#pricing-trust", label: "Pricing" },
+  { href: "#book-request", label: "Book" },
+  { href: "#quote-accept", label: "Confirm" },
+  { href: "#why-eventtz", label: "Why Eventtz" },
+  { href: "#inspiration", label: "Celebrations" },
+  { href: "#for-vendors", label: "For vendors" },
   { href: "#faq", label: "FAQ" },
 ] as const;
 

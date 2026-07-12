@@ -1,11 +1,17 @@
 import { LocationAutocompleteInput } from "@/components/ui/LocationAutocompleteInput";
 import { RADIUS_OPTIONS } from "../constants";
+import { STEP_COPY } from "../onboardingCopy";
 import type {
   DeliveryMode,
   TravelDeliveryPolicy,
   VendorOnboardingData,
   VendorOnboardingUpdate,
 } from "../types";
+import {
+  OnboardingQuestionLayout,
+  OnboardingSubQuestion,
+} from "../ui/OnboardingQuestionLayout";
+import { OnboardingOptionPill } from "../ui/OnboardingOptionPill";
 import { inputClass, labelClass, ToggleChip } from "./form-primitives";
 
 export type StepLocationProps = {
@@ -34,8 +40,7 @@ const TRAVEL_DELIVERY_POLICY_OPTIONS: {
   },
   {
     value: "fee_after_booking_request",
-    label:
-      "Travel/delivery fee will be provided after booking request",
+    label: "Travel/delivery fee will be provided after booking request",
   },
   {
     value: "not_applicable",
@@ -57,19 +62,12 @@ function toggleDeliveryMode(
 }
 
 export function StepLocation({ data, update }: StepLocationProps) {
-  const radiusContext = RADIUS_OPTIONS.find((o) => o.value === data.travelRadius)?.context;
+  const copy = STEP_COPY[3];
 
   return (
-    <div className="space-y-7">
-      <div>
-        <h2 className="font-heading text-2xl font-semibold text-neutral-900">
-          Location & travel
-        </h2>
-        <p className="mt-1 text-sm text-neutral-500">
-          How you reach clients shapes matching and fees. Select all that apply.
-        </p>
-      </div>
-      <div>
+    <div className="space-y-8">
+      <OnboardingQuestionLayout headline={copy.headline} subtext={copy.subtext} />
+      <OnboardingSubQuestion headline="Where is your base city?" indexOffset={3}>
         <LocationAutocompleteInput
           label="Base city"
           inputId="onboarding-base-city"
@@ -78,10 +76,13 @@ export function StepLocation({ data, update }: StepLocationProps) {
           placeholder="e.g. London, Manchester, Birmingham"
           helpText="Suggestions are UK places — pick one or keep typing your own area."
         />
-      </div>
-      <div>
-        <span className={labelClass()}>How is your service provided?</span>
-        <div className="mt-2 flex flex-wrap gap-2">
+      </OnboardingSubQuestion>
+      <OnboardingSubQuestion
+        headline={copy.deliveryHeadline}
+        subtext={copy.deliverySubtext}
+        indexOffset={6}
+      >
+        <div className="flex flex-wrap gap-2">
           {DELIVERY_OPTIONS.map(({ value, label }) => (
             <ToggleChip
               key={value}
@@ -96,61 +97,46 @@ export function StepLocation({ data, update }: StepLocationProps) {
             </ToggleChip>
           ))}
         </div>
-      </div>
-      <div>
-        <label className={labelClass()}>
-          How far can you travel or deliver? (miles)
-        </label>
-        <select
-          className={inputClass()}
-          value={data.travelRadius}
-          onChange={(e) =>
-            update({
-              travelRadius: e.target.value as VendorOnboardingData["travelRadius"],
-            })
-          }
-        >
-          <option value="">Select…</option>
+      </OnboardingSubQuestion>
+      <OnboardingSubQuestion headline={copy.radiusHeadline} indexOffset={9}>
+        <div className="space-y-2">
           {RADIUS_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
+            <OnboardingOptionPill
+              key={o.value}
+              active={data.travelRadius === o.value}
+              onClick={() =>
+                update({
+                  travelRadius: o.value as VendorOnboardingData["travelRadius"],
+                })
+              }
+              description={o.context}
+            >
               {o.label}
-            </option>
+            </OnboardingOptionPill>
           ))}
-        </select>
-        {radiusContext ? (
-          <p className="mt-1.5 text-xs text-neutral-500">{radiusContext}</p>
-        ) : null}
-      </div>
-      <div>
-        <span className={labelClass()}>Default travel / delivery</span>
-        <p className="mb-2 text-xs text-neutral-500">
-          We&apos;ve pre-selected the most common option — change it if it doesn&apos;t
-          match how you handle fees.
-        </p>
+        </div>
+      </OnboardingSubQuestion>
+      <OnboardingSubQuestion
+        headline={copy.policyHeadline}
+        subtext={copy.policySubtext}
+        indexOffset={12}
+      >
         <div className="space-y-2">
           {TRAVEL_DELIVERY_POLICY_OPTIONS.map(({ value, label }) => (
-            <label
+            <OnboardingOptionPill
               key={value}
-              className="flex cursor-pointer items-start gap-3 rounded-xl bg-white px-4 py-3 shadow-sm ring-1 ring-neutral-200/50 transition has-[:checked]:bg-primary/5 has-[:checked]:ring-primary/40 hover:bg-neutral-50"
+              active={data.travelDeliveryPolicy === value}
+              onClick={() => update({ travelDeliveryPolicy: value })}
             >
-              <input
-                type="radio"
-                name="travelDeliveryPolicy"
-                checked={data.travelDeliveryPolicy === value}
-                onChange={() => update({ travelDeliveryPolicy: value })}
-                className="mt-1 text-primary"
-              />
-              <span className="text-sm leading-snug text-neutral-800">
-                {label}
-              </span>
-            </label>
+              {label}
+            </OnboardingOptionPill>
           ))}
         </div>
         {data.travelDeliveryPolicy === "custom" ? (
-          <div className="mt-3">
+          <div className="mt-4">
             <label className={labelClass()}>Describe your travel / delivery rule</label>
             <textarea
-              className={`${inputClass()} min-h-[80px]`}
+              className={`${inputClass()} mt-1.5 min-h-[80px]`}
               value={data.travelDeliveryPolicyCustomText}
               onChange={(e) =>
                 update({ travelDeliveryPolicyCustomText: e.target.value })
@@ -159,7 +145,7 @@ export function StepLocation({ data, update }: StepLocationProps) {
             />
           </div>
         ) : null}
-      </div>
+      </OnboardingSubQuestion>
     </div>
   );
 }

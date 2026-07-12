@@ -1,10 +1,16 @@
 import { ChevronDown, Plus, Trash2 } from "lucide-react";
+import { STEP_COPY } from "../onboardingCopy";
 import {
   createVendorPackage,
   type VendorOnboardingData,
   type VendorOnboardingUpdate,
   type VendorPackageItem,
 } from "../types";
+import {
+  OnboardingQuestionLayout,
+  OnboardingSubQuestion,
+} from "../ui/OnboardingQuestionLayout";
+import { AnimatedStepItem } from "../ui/AnimatedStepItem";
 import { inputClass, labelClass } from "./form-primitives";
 
 export type StepPricingProps = {
@@ -21,6 +27,7 @@ function updatePackage(
 }
 
 export function StepPricing({ data, update }: StepPricingProps) {
+  const copy = STEP_COPY[4];
   const { packages } = data;
 
   const addPackage = () => {
@@ -34,17 +41,8 @@ export function StepPricing({ data, update }: StepPricingProps) {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="font-heading text-2xl font-semibold text-neutral-900">
-          Pricing structure
-        </h2>
-        <p className="mt-1 text-sm text-neutral-500">
-          Add packages with pricing and details so clients can compare offers and
-          request quotes directly.
-        </p>
-      </div>
-      <section className="space-y-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50 sm:p-6">
-        <h3 className="text-sm font-semibold text-neutral-800">Fixed rates</h3>
+      <OnboardingQuestionLayout headline={copy.headline} subtext={copy.subtext} />
+      <OnboardingSubQuestion headline={copy.fixedRatesHeadline} indexOffset={3}>
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <label className={labelClass()}>Hourly (£ / hr)</label>
@@ -67,30 +65,34 @@ export function StepPricing({ data, update }: StepPricingProps) {
             />
           </div>
         </div>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={data.useDefaultTravelHourly}
-            onChange={(e) =>
-              update({ useDefaultTravelHourly: e.target.checked })
-            }
-          />
-          Use default travel rule for hourly work
-        </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={data.useDefaultTravelDaily}
-            onChange={(e) =>
-              update({ useDefaultTravelDaily: e.target.checked })
-            }
-          />
-          Use default travel rule for daily work
-        </label>
-      </section>
-      <section className="space-y-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50 sm:p-6">
+        <div className="mt-3 space-y-2">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={data.useDefaultTravelHourly}
+              onChange={(e) =>
+                update({ useDefaultTravelHourly: e.target.checked })
+              }
+            />
+            Use default travel rule for hourly work
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={data.useDefaultTravelDaily}
+              onChange={(e) =>
+                update({ useDefaultTravelDaily: e.target.checked })
+              }
+            />
+            Use default travel rule for daily work
+          </label>
+        </div>
+      </OnboardingSubQuestion>
+      <OnboardingSubQuestion headline={copy.packagesHeadline} indexOffset={6}>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h3 className="text-sm font-semibold text-neutral-800">Packages</h3>
+          <p className="text-xs text-neutral-500">
+            Package name and price are required for any package you fill in.
+          </p>
           <button
             type="button"
             onClick={addPackage}
@@ -100,10 +102,7 @@ export function StepPricing({ data, update }: StepPricingProps) {
             Add package
           </button>
         </div>
-        <p className="text-xs text-neutral-500">
-          Package name and price are required for any package you fill in.
-        </p>
-        <div className="space-y-3">
+        <div className="mt-4 space-y-3">
           {packages.map((pkg, index) => {
             const hasPartial =
               !!(
@@ -126,9 +125,7 @@ export function StepPricing({ data, update }: StepPricingProps) {
                 open
                 className="group rounded-lg border border-neutral-100 bg-neutral-50/80"
               >
-                <summary
-                  className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden"
-                >
+                <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-neutral-900">
                       {displayTitle === null ? (
@@ -145,14 +142,10 @@ export function StepPricing({ data, update }: StepPricingProps) {
                           <span className="text-neutral-400">—</span>
                         ))}
                       {durationPart ? (
-                        <span className="text-neutral-500">
-                          {" "}
-                          · {durationPart}
-                        </span>
+                        <span className="text-neutral-500"> · {durationPart}</span>
                       ) : null}
                     </p>
                   </div>
-
                   <div className="flex shrink-0 items-center gap-1">
                     <ChevronDown
                       className="h-4 w-4 text-neutral-400 transition-transform duration-200 group-open:rotate-180"
@@ -174,7 +167,6 @@ export function StepPricing({ data, update }: StepPricingProps) {
                     )}
                   </div>
                 </summary>
-
                 <div className="border-t px-4 py-4">
                   <div className="space-y-4">
                     <div>
@@ -235,7 +227,7 @@ export function StepPricing({ data, update }: StepPricingProps) {
                             }),
                           })
                         }
-                        placeholder="What’s included"
+                        placeholder="What's included"
                       />
                     </div>
                     <label className="flex items-start gap-2 text-sm text-neutral-800">
@@ -264,73 +256,81 @@ export function StepPricing({ data, update }: StepPricingProps) {
             );
           })}
         </div>
-      </section>
-      <section className="space-y-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50 sm:p-6">
-        <h3 className="text-sm font-semibold text-neutral-800">Booking options</h3>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={data.allowQuoteRequests}
-            onChange={(e) => update({ allowQuoteRequests: e.target.checked })}
-          />
-          Allow clients to request a quote
-        </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={data.offerDiscounts}
-            onChange={(e) => update({ offerDiscounts: e.target.checked })}
-          />
-          Offer discounts
-        </label>
-        {data.offerDiscounts && (
-          <div className="space-y-3 border-t border-neutral-100 pt-3">
-            <div>
-              <label className={labelClass()}>Percentage off (e.g. 10%)</label>
+      </OnboardingSubQuestion>
+      <AnimatedStepItem index={9}>
+        <OnboardingSubQuestion headline={copy.bookingHeadline} indexOffset={0}>
+          <div className="space-y-3">
+            <label className="flex items-center gap-2 text-sm">
               <input
-                className={inputClass()}
-                value={data.discountPercentage}
-                onChange={(e) =>
-                  update({ discountPercentage: e.target.value })
-                }
+                type="checkbox"
+                checked={data.offerDiscounts}
+                onChange={(e) => update({ offerDiscounts: e.target.checked })}
               />
-            </div>
-            <div>
-              <label className={labelClass()}>
-                Bulk booking (e.g. 10% off over £500)
-              </label>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <input
-                  className={`${inputClass()} min-w-0 flex-1`}
-                  placeholder="Threshold £"
-                  value={data.bulkDiscountThreshold}
-                  onChange={(e) =>
-                    update({ bulkDiscountThreshold: e.target.value })
-                  }
-                />
-                <input
-                  className={`${inputClass()} min-w-0 flex-1`}
-                  placeholder="% off"
-                  value={data.bulkDiscountPercent}
-                  onChange={(e) =>
-                    update({ bulkDiscountPercent: e.target.value })
-                  }
-                />
+              Offer discounts
+            </label>
+            {data.offerDiscounts && (
+              <div className="space-y-3 border-t border-neutral-100 pt-3">
+                <div>
+                  <label className={labelClass()}>Percentage off (e.g. 10%)</label>
+                  <input
+                    className={inputClass()}
+                    value={data.discountPercentage}
+                    onChange={(e) =>
+                      update({ discountPercentage: e.target.value })
+                    }
+                    placeholder="10"
+                  />
+                  <p className="mt-1 text-xs text-neutral-500">
+                    Applied to your listed package and rate prices on your public profile.
+                  </p>
+                </div>
+                <div>
+                  <label className={labelClass()}>Discount name (shown to clients)</label>
+                  <input
+                    className={inputClass()}
+                    value={data.discountLabel}
+                    onChange={(e) => update({ discountLabel: e.target.value })}
+                    placeholder="e.g. Easter discount, Summer sale"
+                  />
+                </div>
+                <div>
+                  <label className={labelClass()}>
+                    Bulk booking (e.g. 10% off over £500)
+                  </label>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <input
+                      className={`${inputClass()} min-w-0 flex-1`}
+                      placeholder="Threshold £"
+                      value={data.bulkDiscountThreshold}
+                      onChange={(e) =>
+                        update({ bulkDiscountThreshold: e.target.value })
+                      }
+                    />
+                    <input
+                      className={`${inputClass()} min-w-0 flex-1`}
+                      placeholder="% off"
+                      value={data.bulkDiscountPercent}
+                      onChange={(e) =>
+                        update({ bulkDiscountPercent: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className={labelClass()}>Off-peak (e.g. winter %)</label>
+                  <input
+                    className={inputClass()}
+                    value={data.offPeakDiscountPercent}
+                    onChange={(e) =>
+                      update({ offPeakDiscountPercent: e.target.value })
+                    }
+                  />
+                </div>
               </div>
-            </div>
-            <div>
-              <label className={labelClass()}>Off-peak (e.g. winter %)</label>
-              <input
-                className={inputClass()}
-                value={data.offPeakDiscountPercent}
-                onChange={(e) =>
-                  update({ offPeakDiscountPercent: e.target.value })
-                }
-              />
-            </div>
+            )}
           </div>
-        )}
-      </section>
+        </OnboardingSubQuestion>
+      </AnimatedStepItem>
     </div>
   );
 }

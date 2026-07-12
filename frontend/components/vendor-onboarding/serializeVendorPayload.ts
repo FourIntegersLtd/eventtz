@@ -130,6 +130,7 @@ export function vendorDataToPayload(
     allowQuoteRequests: data.allowQuoteRequests,
     offerDiscounts: data.offerDiscounts,
     discountPercentage: data.discountPercentage,
+    discountLabel: data.discountLabel,
     bulkDiscountThreshold: data.bulkDiscountThreshold,
     bulkDiscountPercent: data.bulkDiscountPercent,
     offPeakDiscountPercent: data.offPeakDiscountPercent,
@@ -233,6 +234,7 @@ export function mergePayloadIntoVendorData(
     offerDiscounts:
       typeof p.offerDiscounts === "boolean" ? p.offerDiscounts : false,
     discountPercentage: coerceStr(p, "discountPercentage"),
+    discountLabel: coerceStr(p, "discountLabel"),
     bulkDiscountThreshold: coerceStr(p, "bulkDiscountThreshold"),
     bulkDiscountPercent: coerceStr(p, "bulkDiscountPercent"),
     offPeakDiscountPercent: coerceStr(p, "offPeakDiscountPercent"),

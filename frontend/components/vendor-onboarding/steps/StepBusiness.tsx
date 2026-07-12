@@ -1,11 +1,20 @@
+"use client";
+
+import { useState } from "react";
 import {
   EVENT_TYPE_IDS_ALL,
   EVENT_TYPE_OPTIONS,
   SERVICE_OPTIONS,
   VENDOR_WAITLIST_URL,
 } from "../constants";
+import { STEP_COPY } from "../onboardingCopy";
 import type { VendorOnboardingData, VendorOnboardingUpdate } from "../types";
-import { labelClass, inputClass, ToggleChip } from "./form-primitives";
+import {
+  OnboardingQuestionLayout,
+  OnboardingSubQuestion,
+} from "../ui/OnboardingQuestionLayout";
+import { checkBusinessNameAvailable } from "@/lib/vendorProfileApi";
+import { inputClass, labelClass, ToggleChip } from "./form-primitives";
 
 export type StepBusinessProps = {
   data: VendorOnboardingData;
@@ -54,42 +63,71 @@ export function StepBusiness({
   businessNameError,
   setBusinessNameError,
 }: StepBusinessProps) {
+  const copy = STEP_COPY[2];
+  const [checkingName, setCheckingName] = useState(false);
+  const [nameAvailable, setNameAvailable] = useState<boolean | null>(null);
+
+  const verifyBusinessName = async (name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setBusinessNameError(null);
+      setNameAvailable(null);
+      return;
+    }
+    setCheckingName(true);
+    setNameAvailable(null);
+    try {
+      const { available } = await checkBusinessNameAvailable(trimmed);
+      if (available) {
+        setBusinessNameError(null);
+        setNameAvailable(true);
+      } else {
+        setBusinessNameError("This business name is already registered.");
+        setNameAvailable(false);
+      }
+    } catch {
+      setNameAvailable(null);
+      // Save will enforce on the server if the check fails.
+    } finally {
+      setCheckingName(false);
+    }
+  };
+
   return (
-    <div className="space-y-7">
-      <div>
-        <h2 className="font-heading text-2xl font-semibold text-neutral-900">
-          Business details
-        </h2>
-        <p className="mt-1 text-sm text-neutral-500">
-          Tell us who you are and what you offer.
-        </p>
-      </div>
-      <div>
-        <label className={labelClass()}>Business name</label>
-        <input
-          className={inputClass()}
-          value={data.businessName}
-          onChange={(e) => {
-            update({ businessName: e.target.value });
-            setBusinessNameError(null);
-          }}
-          onBlur={() => {
-            const name = data.businessName.trim().toLowerCase();
-            if (name === "taken vendor" || name === "duplicate") {
-              setBusinessNameError("This business name is already registered.");
-            }
-          }}
-        />
-        {businessNameError && (
-          <p className="mt-1 text-sm text-red-600">{businessNameError}</p>
-        )}
-        <p className="mt-1 text-xs text-neutral-400">
-          Must be unique — we check when you leave this field (demo: try
-          &quot;taken vendor&quot;).
-        </p>
-      </div>
-      <div>
-        <span className={labelClass()}>Services offered</span>
+    <div className="space-y-8">
+      <OnboardingQuestionLayout headline={copy.headline} subtext={copy.subtext} />
+      <OnboardingSubQuestion headline="Your business name" indexOffset={3}>
+        <div>
+          <label className={labelClass()}>Business name</label>
+          <input
+            className={inputClass()}
+            value={data.businessName}
+            onChange={(e) => {
+              update({ businessName: e.target.value });
+              setBusinessNameError(null);
+              setNameAvailable(null);
+            }}
+            onBlur={() => void verifyBusinessName(data.businessName)}
+          />
+          {checkingName && (
+            <p className="mt-1 text-xs text-neutral-500">Checking availability…</p>
+          )}
+          {!checkingName && businessNameError && (
+            <p className="mt-1 text-sm text-red-600">{businessNameError}</p>
+          )}
+          {!checkingName && !businessNameError && nameAvailable && (
+            <p className="mt-1 text-sm text-green-600">This business name is available.</p>
+          )}
+          {!checkingName && !businessNameError && !nameAvailable && (
+            <p className="mt-1 text-xs text-neutral-400">{copy.businessNameSupporting}</p>
+          )}
+        </div>
+      </OnboardingSubQuestion>
+      <OnboardingSubQuestion
+        headline={copy.servicesHeadline}
+        subtext={copy.servicesSubtext}
+        indexOffset={6}
+      >
         <div className="flex flex-wrap gap-2">
           {SERVICE_OPTIONS.map((o) => (
             <ToggleChip
@@ -110,13 +148,8 @@ export function StepBusiness({
             </ToggleChip>
           ))}
         </div>
-        <p className="mt-2 text-xs text-neutral-500">
-          Choose Other if you don&apos;t fit these categories — we&apos;ll open our
-          waitlist form in a new page so we can follow up.
-        </p>
-      </div>
-      <div>
-        <span className={labelClass()}>Event types</span>
+      </OnboardingSubQuestion>
+      <OnboardingSubQuestion headline={copy.eventTypesHeadline} indexOffset={9}>
         <div className="flex flex-wrap gap-2">
           {EVENT_TYPE_OPTIONS.map((o) => (
             <ToggleChip
@@ -132,7 +165,7 @@ export function StepBusiness({
             </ToggleChip>
           ))}
         </div>
-      </div>
+      </OnboardingSubQuestion>
     </div>
   );
 }

@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Building2, X, type LucideIcon } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { fetchUkLocationSuggestions } from "@/lib/photonLocationAutocomplete";
 
 type Suggestion = { label: string; value: string };
+
+type MenuRect = { top: number; left: number; width: number };
 
 function useDebouncedValue<T>(value: T, delayMs: number): T {
   const [debounced, setDebounced] = useState(value);
@@ -68,12 +71,49 @@ export function LocationAutocompleteInput({
   const id = inputId ?? `location-ac-${reactId}`;
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [menuRect, setMenuRect] = useState<MenuRect | null>(null);
   const [fetchedSuggestions, setFetchedSuggestions] = useState<Suggestion[]>([]);
   const debouncedQuery = useDebouncedValue(value, 220);
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const anchorRef = useRef<HTMLDivElement | null>(null);
+  const listRef = useRef<HTMLDivElement | null>(null);
 
   const queryLongEnough = debouncedQuery.trim().length >= 2;
   const suggestions = open && queryLongEnough ? fetchedSuggestions : [];
+  const showMenu = suggestions.length > 0;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const updateMenuRect = () => {
+    const anchor = anchorRef.current;
+    if (!anchor) {
+      setMenuRect(null);
+      return;
+    }
+    const rect = anchor.getBoundingClientRect();
+    setMenuRect({
+      top: rect.bottom + 4,
+      left: rect.left,
+      width: rect.width,
+    });
+  };
+
+  useLayoutEffect(() => {
+    if (!showMenu) {
+      setMenuRect(null);
+      return;
+    }
+    updateMenuRect();
+    window.addEventListener("resize", updateMenuRect);
+    window.addEventListener("scroll", updateMenuRect, true);
+    return () => {
+      window.removeEventListener("resize", updateMenuRect);
+      window.removeEventListener("scroll", updateMenuRect, true);
+    };
+  }, [showMenu, suggestions.length, value]);
 
   useEffect(() => {
     if (!open || !queryLongEnough) return;
@@ -94,9 +134,10 @@ export function LocationAutocompleteInput({
 
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
-      const root = rootRef.current;
-      if (!root) return;
-      if (e.target instanceof Node && root.contains(e.target)) return;
+      const target = e.target;
+      if (!(target instanceof Node)) return;
+      if (rootRef.current?.contains(target)) return;
+      if (listRef.current?.contains(target)) return;
       setOpen(false);
     };
     document.addEventListener("mousedown", onDocClick);
@@ -108,6 +149,48 @@ export function LocationAutocompleteInput({
     [showClear, value],
   );
 
+  const suggestionsMenu =
+    mounted && showMenu && menuRect
+      ? createPortal(
+          <div
+            ref={listRef}
+            className="overflow-hidden rounded-xl border border-neutral-200 bg-white text-left shadow-2xl ring-1 ring-black/10"
+            style={{
+              position: "fixed",
+              top: menuRect.top,
+              left: menuRect.left,
+              width: menuRect.width,
+              zIndex: 9999,
+            }}
+          >
+            <ul
+              id={`${id}-listbox`}
+              className="max-h-60 overflow-y-auto bg-white py-1"
+              role="listbox"
+            >
+              {suggestions.map((s, i) => (
+                <li key={`${s.value}-${i}`} role="presentation" className="bg-white">
+                  <button
+                    type="button"
+                    role="option"
+                    className="flex w-full items-center justify-between gap-3 bg-white px-3 py-2.5 text-left text-sm text-neutral-900 hover:bg-neutral-50"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      setOpen(false);
+                      onChange(s.value);
+                    }}
+                  >
+                    <span className="min-w-0 truncate">{s.label}</span>
+                    <span className="shrink-0 text-xs text-neutral-400">Select</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>,
+          document.body,
+        )
+      : null;
+
   return (
     <div ref={rootRef} className={className ?? "relative"}>
       {label ? (
@@ -118,7 +201,7 @@ export function LocationAutocompleteInput({
           {label}
         </label>
       ) : null}
-      <div className={`relative ${label ? "mt-1.5" : ""}`}>
+      <div ref={anchorRef} className={`relative ${label ? "mt-1.5" : ""}`}>
         <Icon
           className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${iconClassName}`}
           aria-hidden
@@ -128,6 +211,8 @@ export function LocationAutocompleteInput({
           type="text"
           autoComplete={autoComplete ?? "off"}
           aria-label={label ? undefined : ariaLabel}
+          aria-expanded={showMenu}
+          aria-controls={showMenu ? `${id}-listbox` : undefined}
           value={value}
           disabled={disabled}
           onFocus={() => setOpen(true)}
@@ -159,28 +244,7 @@ export function LocationAutocompleteInput({
         ) : null}
       </div>
       {helpText ? <p className="mt-1 text-xs text-neutral-500">{helpText}</p> : null}
-
-      {open && suggestions.length > 0 ? (
-        <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-xl border border-neutral-200 bg-white text-left shadow-lg">
-          <ul className="max-h-60 overflow-y-auto py-1" role="listbox">
-            {suggestions.map((s, i) => (
-              <li key={`${s.value}-${i}`}>
-                <button
-                  type="button"
-                  className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm text-neutral-900 hover:bg-neutral-50"
-                  onClick={() => {
-                    setOpen(false);
-                    onChange(s.value);
-                  }}
-                >
-                  <span className="min-w-0 truncate">{s.label}</span>
-                  <span className="shrink-0 text-xs text-neutral-400">Select</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+      {suggestionsMenu}
     </div>
   );
 }

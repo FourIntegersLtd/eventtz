@@ -1,5 +1,10 @@
+import { STEP_COPY } from "../onboardingCopy";
 import type { VendorOnboardingData, VendorOnboardingUpdate } from "../types";
-import { inputClass, labelClass, ToggleChip } from "./form-primitives";
+import {
+  OnboardingQuestionLayout,
+  OnboardingSubQuestion,
+} from "../ui/OnboardingQuestionLayout";
+import { inputClass, ToggleChip } from "./form-primitives";
 
 export type StepAvailabilityProps = {
   data: VendorOnboardingData;
@@ -23,6 +28,8 @@ function toUkDate(iso: string): string {
 }
 
 export function StepAvailability({ data, update }: StepAvailabilityProps) {
+  const copy = STEP_COPY[5];
+
   const toggleDay = (d: number) => {
     const s = new Set(data.availableWeekdays);
     if (s.has(d)) s.delete(d);
@@ -42,18 +49,9 @@ export function StepAvailability({ data, update }: StepAvailabilityProps) {
   };
 
   return (
-    <div className="space-y-7">
-      <div>
-        <h2 className="font-heading text-2xl font-semibold text-neutral-900">
-          Availability
-        </h2>
-        <p className="mt-1 text-sm text-neutral-500">
-          Set the days you take bookings and how many events you can handle in a
-          day — this controls when clients can request you.
-        </p>
-      </div>
-      <div>
-        <span className={labelClass()}>Days you usually accept bookings</span>
+    <div className="space-y-8">
+      <OnboardingQuestionLayout headline={copy.headline} subtext={copy.subtext} />
+      <OnboardingSubQuestion headline={copy.daysHeadline} indexOffset={3}>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
@@ -66,7 +64,6 @@ export function StepAvailability({ data, update }: StepAvailabilityProps) {
           >
             Every day
           </button>
-
           {WEEKDAY_FULL_LABELS.map((label, i) => (
             <ToggleChip
               key={i}
@@ -77,11 +74,12 @@ export function StepAvailability({ data, update }: StepAvailabilityProps) {
             </ToggleChip>
           ))}
         </div>
-      </div>
-      <div>
-        <label className={labelClass()}>
-          Dates you&apos;re NOT available (optional)
-        </label>
+      </OnboardingSubQuestion>
+      <OnboardingSubQuestion
+        headline={copy.blockedHeadline}
+        subtext={copy.blockedSubtext}
+        indexOffset={6}
+      >
         <input
           type="date"
           className={inputClass()}
@@ -117,9 +115,8 @@ export function StepAvailability({ data, update }: StepAvailabilityProps) {
             ))}
           </ul>
         )}
-      </div>
-      <div>
-        <label className={labelClass()}>Max bookings per day</label>
+      </OnboardingSubQuestion>
+      <OnboardingSubQuestion headline={copy.maxBookingsHeadline} indexOffset={9}>
         <input
           type="number"
           min={1}
@@ -127,7 +124,7 @@ export function StepAvailability({ data, update }: StepAvailabilityProps) {
           value={data.maxBookingsPerDay}
           onChange={(e) => update({ maxBookingsPerDay: e.target.value })}
         />
-      </div>
+      </OnboardingSubQuestion>
     </div>
   );
 }
