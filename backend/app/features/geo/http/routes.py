@@ -1,4 +1,4 @@
-"""Client-only UK address helpers (OS Places and/or getAddress.io via backend)."""
+"""Client-only UK address helpers — DISABLED (lookup commented out in uk_address.py)."""
 
 from __future__ import annotations
 

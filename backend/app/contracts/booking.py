@@ -103,9 +103,9 @@ class CreateBookingRequestBody(BaseModel):
     event_name: str = Field(min_length=1, max_length=500)
     event_date: date
     event_end_date: date | None = None
-    #: Venue / event location postcode (required for client-initiated requests).
-    event_postcode: str = Field(min_length=2, max_length=16)
-    #: Full formatted address when using address lookup (optional).
+    #: Venue / event location postcode (optional at request; required before pay).
+    event_postcode: str | None = Field(default=None, max_length=16)
+    #: Free-text venue address (optional at request).
     event_address: str | None = Field(default=None, max_length=500)
     notes: str | None = Field(default=None, max_length=4000)
     selected_option_ids: list[str] = Field(min_length=1)
@@ -114,13 +114,13 @@ class CreateBookingRequestBody(BaseModel):
 
     @field_validator("event_postcode", mode="before")
     @classmethod
-    def normalize_event_postcode(cls, v: object) -> str:
-        if not isinstance(v, str):
-            raise ValueError("Event postcode is required.")
-        s = " ".join(v.strip().split())
-        if len(s) < 2:
-            raise ValueError("Enter a valid postcode.")
-        return s
+    def normalize_event_postcode(cls, v: object) -> str | None:
+        if v is None:
+            return None
+        if isinstance(v, str):
+            s = " ".join(v.strip().split())
+            return s if len(s) >= 2 else None
+        return None
 
     @field_validator("event_address", mode="before")
     @classmethod
@@ -308,17 +308,18 @@ class ClientBookingStatusBody(BaseModel):
 
 
 class UpdateBookingVenueBody(BaseModel):
-    event_postcode: str = Field(min_length=2, max_length=16)
+    event_postcode: str | None = Field(default=None, max_length=16)
     event_address: str = Field(min_length=3, max_length=500)
 
     @field_validator("event_postcode", mode="before")
     @classmethod
-    def normalize_postcode(cls, v: object) -> str:
+    def normalize_postcode(cls, v: object) -> str | None:
+        if v is None:
+            return None
         if isinstance(v, str):
             s = " ".join(v.strip().split())
-            if len(s) >= 2:
-                return s
-        raise ValueError("Enter a valid postcode.")
+            return s if len(s) >= 2 else None
+        return None
 
     @field_validator("event_address", mode="before")
     @classmethod

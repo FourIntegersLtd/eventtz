@@ -95,11 +95,10 @@ def create_checkout_session_for_booking(client_user_id: str, booking_id: str) ->
     if client_total <= 0:
         raise ValueError("Nothing to pay for this booking.")
 
-    ep = row.get("event_postcode")
     ea = row.get("event_address")
-    if not (isinstance(ep, str) and ep.strip()) or not (isinstance(ea, str) and ea.strip()):
+    if not (isinstance(ea, str) and ea.strip()):
         raise ValueError(
-            "Add your full event address on the booking before paying — the vendor needs it to prepare.",
+            "Add your event address on the booking before paying. Your vendor needs it to prepare.",
         )
 
     session = stripe_service.create_checkout_session(

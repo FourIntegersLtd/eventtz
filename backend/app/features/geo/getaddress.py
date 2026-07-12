@@ -1,4 +1,4 @@
-"""UK address lookup via getAddress.io (optional; use when OS Places API is not available)."""
+"""UK address lookup via getAddress.io — DISABLED (see uk_address.py; free-text venues on client)."""
 
 from __future__ import annotations
 

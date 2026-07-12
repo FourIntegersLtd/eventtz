@@ -104,6 +104,13 @@ class SupabaseAuthService:
                 "user": _user_info(user),
                 "session": _session_data(session),
             }
+        except AuthApiError as e:
+            err = str(e).lower()
+            if "invalid login credentials" in err or "invalid credentials" in err:
+                logger.info("sign_in rejected email=%s (invalid credentials)", email)
+                return {"success": False, "error": "Invalid credentials"}
+            logger.info("sign_in rejected email=%s error=%s", email, e)
+            return {"success": False, "error": str(e)}
         except Exception as e:
             logger.exception("sign_in failed email=%s", email)
             return {"success": False, "error": str(e)}

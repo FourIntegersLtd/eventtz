@@ -282,9 +282,6 @@ def update_booking_request_status_for_client(
         return {"id": booking_id, "status": "declined"}
 
     pc = normalize_event_postcode_accept(event_postcode)
-    if not pc:
-        raise ValueError("Event postcode is required to accept this quote.")
-
     addr = (event_address.strip() if event_address else None) or None
 
     upd = (
