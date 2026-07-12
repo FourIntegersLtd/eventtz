@@ -10,12 +10,16 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
+import stripe
+
 from app.core.config import get_settings
 from app.core.logging import get_logger
 from app.features.payments import stripe as stripe_service
 from app.core.db import get_db as get_client
 from app.features.bookings.pricing import build_pricing_breakdown
+from app.features.bookings.pricing_refresh import refresh_booking_pricing
 from app.features.bookings.queries import get_booking_request_for_client
+from app.features.vendors.moderation import get_approved_vendor_payload
 from app.features.notifications.service import (
     insert_booking_notification_if_absent,
     upsert_booking_notification,
@@ -87,9 +91,24 @@ def create_checkout_session_for_booking(client_user_id: str, booking_id: str) ->
     line_items = row.get("line_items")
     if not isinstance(line_items, list):
         line_items = []
-    pb = build_pricing_breakdown(line_items=line_items, vendor_adjustments=row.get("vendor_adjustments"))
-    if pb.get("has_pricing_tbc"):
-        raise ValueError("This booking still has prices to be confirmed before you can pay.")
+
+    vendor_payload = get_approved_vendor_payload(vendor_id)
+    if not vendor_payload:
+        raise ValueError(
+            "This vendor is not available for booking right now.",
+        )
+
+    refreshed = refresh_booking_pricing(row, vendor_payload)
+    line_items = refreshed["line_items"]
+    pb = refreshed["pricing_breakdown"]
+
+    db.table("booking_requests").update(
+        {
+            "line_items": line_items,
+            "total_label": refreshed["total_label"],
+        },
+    ).eq("id", booking_id).eq("client_user_id", client_user_id).execute()
+
     client_total = float(pb["client_total_gbp"])
     vendor_amount = float(pb["vendor_portion_gbp"])
     service_fee = float(pb["service_fee_gbp"])
@@ -129,6 +148,38 @@ def _mark_webhook_event_processed(event_id: str, event_type: str) -> bool:
         return False
 
 
+def _payment_fields_from_checkout_session(session: dict[str, Any]) -> tuple[str | None, str | None]:
+    """Extract payment_intent id and charge id from a Checkout Session (expanded or not)."""
+    pi_raw = session.get("payment_intent")
+    payment_intent_id: str | None = None
+    charge_id: str | None = None
+
+    if isinstance(pi_raw, str) and pi_raw.strip():
+        payment_intent_id = pi_raw.strip()
+    elif isinstance(pi_raw, dict):
+        pid = pi_raw.get("id")
+        payment_intent_id = str(pid).strip() if pid else None
+        latest_charge = pi_raw.get("latest_charge")
+        if isinstance(latest_charge, dict):
+            charge_id = latest_charge.get("id")
+        elif isinstance(latest_charge, str):
+            charge_id = latest_charge
+
+    if payment_intent_id and not charge_id:
+        try:
+            pi = stripe_service.retrieve_payment_intent(payment_intent_id)
+            pi_dict = pi if isinstance(pi, dict) else stripe_service.stripe_object_to_dict(pi)
+            latest_charge = pi_dict.get("latest_charge")
+            if isinstance(latest_charge, dict):
+                charge_id = latest_charge.get("id")
+            elif isinstance(latest_charge, str):
+                charge_id = latest_charge
+        except Exception:
+            logger.exception("Failed to retrieve PaymentIntent %s", payment_intent_id)
+
+    return payment_intent_id, charge_id
+
+
 def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> bool:
     """Mark booking paid from a completed Checkout Session. Returns True if newly paid."""
     metadata = session.get("metadata") or {}
@@ -140,21 +191,64 @@ def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> 
         )
         return False
 
-    payment_intent_id = session.get("payment_intent")
-    charge_id: str | None = None
-    if payment_intent_id:
-        try:
-            pi = stripe_service.retrieve_payment_intent(str(payment_intent_id))
-            latest_charge = pi.get("latest_charge") if isinstance(pi, dict) else pi["latest_charge"]
-            if isinstance(latest_charge, dict):
-                charge_id = latest_charge.get("id")
-            elif isinstance(latest_charge, str):
-                charge_id = latest_charge
-        except Exception:
-            logger.exception("Failed to retrieve PaymentIntent %s", payment_intent_id)
+    session_id = str(session.get("id") or "").strip()
+    db = get_client()
+    existing_res = (
+        db.table("booking_requests")
+        .select("stripe_checkout_session_id,payment_status")
+        .eq("id", booking_id)
+        .limit(1)
+        .execute()
+    )
+    existing_rows = getattr(existing_res, "data", None) or []
+    if not existing_rows or not isinstance(existing_rows[0], dict):
+        logger.warning("checkout session: booking %s not found", booking_id)
+        return False
+    booking_row = existing_rows[0]
+
+    stored_session = str(booking_row.get("stripe_checkout_session_id") or "").strip()
+    if stored_session and session_id and stored_session != session_id:
+        logger.warning(
+            "checkout session rejected as stale booking=%s session=%s current=%s",
+            booking_id,
+            session_id,
+            stored_session,
+        )
+        return False
 
     amount_total = session.get("amount_total")
-    payment_amount_gbp = (amount_total / 100.0) if isinstance(amount_total, (int, float)) else None
+    if not isinstance(amount_total, (int, float)):
+        logger.warning("checkout session missing amount_total booking=%s", booking_id)
+        return False
+
+    expected_pence: int | None = None
+    raw_client_total = metadata.get("client_total_gbp")
+    if raw_client_total is not None:
+        try:
+            expected_pence = stripe_service._to_pence(float(raw_client_total))
+        except (TypeError, ValueError):
+            expected_pence = None
+    if expected_pence is None:
+        try:
+            vendor_meta = float(metadata["vendor_amount_gbp"])
+            fee_meta = float(metadata["service_fee_gbp"])
+            expected_pence = stripe_service._to_pence(vendor_meta + fee_meta)
+        except (TypeError, ValueError, KeyError):
+            logger.warning("checkout session metadata missing pricing booking=%s", booking_id)
+            return False
+
+    if int(amount_total) != expected_pence:
+        logger.warning(
+            "checkout session amount mismatch booking=%s charged=%s expected=%s",
+            booking_id,
+            amount_total,
+            expected_pence,
+        )
+        return False
+
+    payment_intent_id, charge_id = _payment_fields_from_checkout_session(session)
+
+    payment_amount_gbp = float(amount_total) / 100.0
     try:
         vendor_amount_gbp = float(metadata["vendor_amount_gbp"]) if metadata.get("vendor_amount_gbp") else None
     except (TypeError, ValueError):
@@ -164,14 +258,13 @@ def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> 
     except (TypeError, ValueError):
         platform_fee_gbp = None
 
-    db = get_client()
     upd = (
         db.table("booking_requests")
         .update(
             {
                 "payment_status": "paid",
                 "paid_at": _now_iso(),
-                "stripe_payment_intent_id": str(payment_intent_id) if payment_intent_id else None,
+                "stripe_payment_intent_id": payment_intent_id,
                 "stripe_charge_id": charge_id,
                 "payment_amount_gbp": payment_amount_gbp,
                 "vendor_amount_gbp": vendor_amount_gbp,
@@ -213,6 +306,19 @@ def handle_checkout_session_completed(event_id: str, session: dict[str, Any]) ->
     _finalize_booking_payment_from_checkout_session(session)
 
 
+def _clear_stale_checkout_session(booking_id: str, client_user_id: str) -> None:
+    """Drop a checkout session id Stripe no longer knows (e.g. after switching Stripe accounts)."""
+    get_client().table("booking_requests").update(
+        {
+            "stripe_checkout_session_id": None,
+            "payment_status": "unpaid",
+        },
+    ).eq("id", booking_id).eq("client_user_id", client_user_id).in_(
+        "payment_status",
+        ["pending", "unpaid"],
+    ).execute()
+
+
 def sync_checkout_payment_for_client(
     client_user_id: str,
     booking_id: str,
@@ -247,7 +353,22 @@ def sync_checkout_payment_for_client(
     if not resolved_session_id:
         raise ValueError("No checkout session found for this booking.")
 
-    session_raw = stripe_service.retrieve_checkout_session(resolved_session_id)
+    try:
+        session_raw = stripe_service.retrieve_checkout_session(resolved_session_id)
+    except stripe.InvalidRequestError as e:
+        code = str(getattr(e, "code", "") or "")
+        if code == "resource_missing" or "checkout.session" in str(e).lower():
+            logger.warning(
+                "Stale checkout session booking=%s session=%s — clearing",
+                booking_id,
+                resolved_session_id,
+            )
+            _clear_stale_checkout_session(booking_id, client_user_id)
+            raise ValueError(
+                "That payment link has expired. Tap Pay now to start a fresh checkout.",
+            ) from e
+        raise
+
     session = stripe_service.stripe_object_to_dict(session_raw)
 
     metadata = session.get("metadata") or {}
@@ -259,9 +380,7 @@ def sync_checkout_payment_for_client(
     if str(session.get("payment_status") or "") != "paid":
         raise ValueError("Payment has not finished processing yet. Wait a moment and refresh.")
 
-    sync_event_id = f"sync:{resolved_session_id}"
-    if _mark_webhook_event_processed(sync_event_id, "checkout.session.sync"):
-        _finalize_booking_payment_from_checkout_session(session)
+    _finalize_booking_payment_from_checkout_session(session)
 
     refreshed = get_booking_request_for_client(client_user_id, booking_id)
     if refreshed is None:

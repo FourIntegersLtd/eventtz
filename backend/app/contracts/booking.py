@@ -64,6 +64,15 @@ class BookingLineItemIn(BaseModel):
             return s if s else None
         return None
 
+    @field_validator("unit_price_gbp")
+    @classmethod
+    def bound_unit_price(cls, v: float | None) -> float | None:
+        if v is None:
+            return None
+        if v < 0 or v > 1_000_000:
+            raise ValueError("unit_price_gbp out of allowed range")
+        return v
+
 
 class VendorAdjustmentItem(BaseModel):
     id: str
@@ -109,8 +118,6 @@ class CreateBookingRequestBody(BaseModel):
     event_address: str | None = Field(default=None, max_length=500)
     notes: str | None = Field(default=None, max_length=4000)
     selected_option_ids: list[str] = Field(min_length=1)
-    line_items: list[BookingLineItemIn] = Field(min_length=1)
-    total_label: str = Field(min_length=1, max_length=200)
 
     @field_validator("event_postcode", mode="before")
     @classmethod

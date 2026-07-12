@@ -10,6 +10,7 @@ from app.core.logging import get_logger
 from app.core.db import apply_recent_first_order, get_db as get_client
 from app.features.bookings.list_order import sort_booking_rows_recent_first
 from app.features.admin._helpers import opt_admin_ts
+from app.features.admin.booking_payment_patch import patch_booking_payment_fields
 from app.features.bookings.pricing import build_pricing_breakdown
 from app.features.bookings import (
     _attach_pricing_fields,
@@ -177,34 +178,3 @@ def get_booking_detail_for_admin(booking_id: str) -> dict[str, Any] | None:
         get_client_review_for_booking(booking_id, cid) if cid else None
     )
     return out
-
-
-def patch_booking_payment_fields(booking_id: str, fields: dict[str, Any]) -> bool:
-    """Update optional Stripe / payment snapshot columns (keys from AdminBookingPaymentPatchBody)."""
-    if get_settings().local_auth_mode:
-        return False
-    try:
-        uuid.UUID(booking_id)
-    except ValueError:
-        return False
-    allowed = {"stripe_payment_intent_id", "stripe_charge_id", "payment_amount_gbp"}
-    patch: dict[str, Any] = {}
-    for k in allowed:
-        if k not in fields:
-            continue
-        v = fields[k]
-        if k == "payment_amount_gbp":
-            patch[k] = v
-        else:
-            patch[k] = (v or None) if v is not None else None
-    if not patch:
-        return True
-    try:
-        get_client().table("booking_requests").update(patch).eq("id", booking_id).execute()
-        return True
-    except Exception as e:
-        if "stripe_payment_intent_id" in str(e).lower() or "42703" in str(e):
-            logger.warning("patch_booking_payment_fields: run migration 018 — %s", e)
-            return False
-        logger.warning("patch_booking_payment_fields failed: %s", e, exc_info=True)
-        return False

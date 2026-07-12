@@ -40,6 +40,14 @@ class Settings(BaseSettings):
         default=5.0,
         validation_alias=AliasChoices("BOOKING_SERVICE_FEE_PERCENT"),
     )
+    booking_max_adjustment_gbp: float = Field(
+        default=50_000.0,
+        validation_alias=AliasChoices("BOOKING_MAX_ADJUSTMENT_GBP"),
+    )
+    booking_max_adjustment_pct_of_subtotal: float = Field(
+        default=200.0,
+        validation_alias=AliasChoices("BOOKING_MAX_ADJUSTMENT_PCT_OF_SUBTOTAL"),
+    )
 
     # Media (Supabase Storage)
     media_images_bucket: str = Field(

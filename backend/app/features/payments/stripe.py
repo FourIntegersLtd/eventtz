@@ -255,6 +255,7 @@ def create_checkout_session(
         "booking_id": booking_id,
         "vendor_user_id": vendor_user_id,
         "client_user_id": client_user_id,
+        "client_total_gbp": f"{client_total_gbp:.2f}",
         "vendor_amount_gbp": f"{vendor_amount_gbp:.2f}",
         "service_fee_gbp": f"{service_fee_gbp:.2f}",
     }

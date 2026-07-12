@@ -1,12 +1,17 @@
 """Persist vendor profile (vendors table — JSON payload; files via Storage later)."""
 
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, Query, Request, Response
 
 from app.features.auth.http.guards import require_user, require_vendor
 from app.core.logging import get_logger
-from app.contracts.vendor import VendorProfilePutBody, VendorProfileState
+from app.contracts.vendor import (
+    VendorBusinessNameAvailabilityResponse,
+    VendorProfilePutBody,
+    VendorProfileState,
+)
 from app.contracts.reviews import VendorOwnerReviewItem, VendorOwnerReviewsResponse
 from app.features.vendors.profile import get_vendor_profile, upsert_vendor_profile
+from app.features.vendors.business_name import is_business_name_available
 from app.features.bookings.reviews import list_reviews_for_vendor_owner
 
 router = APIRouter(prefix="/vendor", tags=["vendor"])
@@ -43,6 +48,18 @@ def get_vendor_profile_state(request: Request, response: Response) -> VendorProf
         payload=row.get("payload") or {},
         updated_at=row.get("updated_at"),
     )
+
+
+@router.get("/profile/business-name-available", response_model=VendorBusinessNameAvailabilityResponse)
+def get_business_name_available(
+    request: Request,
+    response: Response,
+    business_name: str = Query(..., min_length=1, max_length=200),
+) -> VendorBusinessNameAvailabilityResponse:
+    user = require_vendor(request, response)
+    uid = str(user.get("id") or "")
+    available = is_business_name_available(business_name, exclude_user_id=uid)
+    return VendorBusinessNameAvailabilityResponse(success=True, available=available)
 
 
 @router.put("/profile", response_model=VendorProfileState)

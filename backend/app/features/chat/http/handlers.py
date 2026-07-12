@@ -62,7 +62,11 @@ def create_conversation(user: dict[str, Any], body: ConversationCreateBodyShared
             from app.core.errors import ForbiddenError
 
             raise ForbiddenError("You can only message clients you have bookings with.")
-        row = get_or_create_conversation(client_user_id=peer, vendor_user_id=uid)
+        row = get_or_create_conversation(
+            client_user_id=peer,
+            vendor_user_id=uid,
+            require_bookable_vendor=False,
+        )
         return ConversationCreateResponse(conversation=ConversationRow.model_validate(row))
     from app.core.errors import ForbiddenError
 

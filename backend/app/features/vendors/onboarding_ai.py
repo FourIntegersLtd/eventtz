@@ -34,6 +34,7 @@ _BIO_SAFE_KEYS = frozenset(
         "allowQuoteRequests",
         "offerDiscounts",
         "discountPercentage",
+        "discountLabel",
         "bulkDiscountThreshold",
         "bulkDiscountPercent",
         "offPeakDiscountPercent",

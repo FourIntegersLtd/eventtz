@@ -10,11 +10,22 @@ from app.core.logging import get_logger
 from app.core.db import one_row
 from app.core.db import get_db as get_client
 from app.features.bookings._command_helpers import assert_target_user_is_client
-from app.features.bookings.calendar import _enforce_vendor_calendar, _vendor_is_approved_for_explore
+from app.features.bookings.calendar import (
+    _enforce_max_bookings_per_day,
+    _enforce_vendor_calendar,
+    _vendor_is_approved_for_explore,
+    rethrow_booking_capacity_db_error,
+)
+from app.features.bookings.line_item_validation import validate_quote_line_items
 from app.features.bookings.notifications import _notify_booking_changed
 from app.features.bookings.pricing import build_pricing_breakdown, persisted_booking_total_label
 from app.features.chat.service import assert_conversation_matches_pair, send_quote_message
 from app.features.notifications.service import upsert_booking_notification
+from app.features.vendors.moderation import get_approved_vendor_payload
+from app.features.vendors.list_pricing import (
+    compute_automatic_discount_lines,
+    resolve_line_items,
+)
 from app.features.auth.accounts import assert_user_not_suspended
 
 logger = get_logger(__name__)
@@ -31,10 +42,7 @@ def create_booking_request(
     event_address: str | None = None,
     notes: str | None,
     selected_option_ids: list[str],
-    line_items: list[dict[str, Any]],
-    total_label: str,
 ) -> dict[str, Any]:
-    _ = total_label  # Client sends a display hint; persisted total is server-computed.
     if client_user_id == vendor_user_id:
         raise ValueError("Cannot book your own account as vendor.")
 
@@ -61,7 +69,21 @@ def create_booking_request(
 
     _enforce_vendor_calendar(vendor_user_id, event_date, event_end_date)
 
+    payload = get_approved_vendor_payload(vendor_user_id)
+    if payload is None:
+        raise ValueError(
+            "This vendor is not available for booking right now. "
+            "They may be unlisted or not yet approved.",
+        )
+
+    _enforce_max_bookings_per_day(vendor_user_id, payload, event_date, event_end_date)
+
+    line_items = resolve_line_items(payload, selected_option_ids)
+    line_items = line_items + compute_automatic_discount_lines(payload, line_items, event_date)
+
     pb = build_pricing_breakdown(line_items=line_items, vendor_adjustments=[])
+    if float(pb.get("vendor_portion_gbp") or 0) <= 0 and not pb.get("has_pricing_tbc"):
+        raise ValueError("This booking has no valid price.")
     row_out: dict[str, Any] = {
         "client_user_id": client_user_id,
         "vendor_user_id": vendor_user_id,
@@ -79,7 +101,10 @@ def create_booking_request(
         "initiator": "client",
     }
 
-    res = get_client().table("booking_requests").insert(row_out).execute()
+    try:
+        res = get_client().table("booking_requests").insert(row_out).execute()
+    except Exception as e:
+        rethrow_booking_capacity_db_error(e)
     created = one_row(res)
     if created is None:
         raise RuntimeError("Failed to create booking request")
@@ -134,6 +159,17 @@ def create_vendor_quote_booking_request(
 
     _enforce_vendor_calendar(vendor_user_id, event_date, event_end_date)
 
+    vpayload = get_approved_vendor_payload(vendor_user_id) or {}
+    _enforce_max_bookings_per_day(vendor_user_id, vpayload, event_date, event_end_date)
+
+    line_items = validate_quote_line_items(line_items)
+
+    pb = build_pricing_breakdown(line_items=line_items, vendor_adjustments=[])
+    if pb.get("has_pricing_tbc"):
+        raise ValueError("Each quote line needs a price.")
+    if float(pb.get("vendor_portion_gbp") or 0) <= 0:
+        raise ValueError("Quote total must be greater than zero.")
+
     if get_settings().local_auth_mode:
         logger.info(
             "create_vendor_quote_booking_request local_auth_mode skip DB vendor=%s client=%s",
@@ -146,7 +182,6 @@ def create_vendor_quote_booking_request(
             "created_at": None,
         }
 
-    pb = build_pricing_breakdown(line_items=line_items, vendor_adjustments=[])
     row_out: dict[str, Any] = {
         "client_user_id": client_user_id,
         "vendor_user_id": vendor_user_id,
@@ -165,7 +200,10 @@ def create_vendor_quote_booking_request(
     if conversation_id and conversation_id.strip():
         row_out["conversation_id"] = conversation_id.strip()
 
-    res = get_client().table("booking_requests").insert(row_out).execute()
+    try:
+        res = get_client().table("booking_requests").insert(row_out).execute()
+    except Exception as e:
+        rethrow_booking_capacity_db_error(e)
     created = one_row(res)
     if created is None:
         raise RuntimeError("Failed to create vendor quote")

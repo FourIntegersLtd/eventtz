@@ -189,7 +189,10 @@ def admin_patch_booking_payment_fields(
     patch = body.model_dump(exclude_unset=True)
     if not patch:
         raise HTTPException(status_code=400, detail="No fields to update")
-    ok = patch_booking_payment_fields(booking_id, patch)
+    try:
+        ok = patch_booking_payment_fields(booking_id, patch)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
     if not ok:
         raise HTTPException(status_code=400, detail="Could not update payment fields")
     insert_admin_audit_log(

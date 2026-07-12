@@ -25,6 +25,11 @@ class VendorProfileState(BaseModel):
     updated_at: str | None = None
 
 
+class VendorBusinessNameAvailabilityResponse(BaseModel):
+    success: bool = True
+    available: bool
+
+
 class AdminVendorRow(BaseModel):
     id: str | None = None
     user_id: str

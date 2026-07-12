@@ -130,10 +130,20 @@ def count_unread_chat_total(user_id: str) -> int:
     return total
 
 
-def get_or_create_conversation(*, client_user_id: str, vendor_user_id: str) -> dict[str, Any]:
+def get_or_create_conversation(
+    *,
+    client_user_id: str,
+    vendor_user_id: str,
+    require_bookable_vendor: bool = True,
+) -> dict[str, Any]:
     if client_user_id == vendor_user_id:
         raise ValueError("Cannot start a chat with yourself.")
     _assert_vendor_exists(vendor_user_id)
+    if require_bookable_vendor:
+        from app.features.vendors.moderation import vendor_is_bookable_for_explore
+
+        if not vendor_is_bookable_for_explore(vendor_user_id):
+            raise ValueError("This vendor is not available for messages.")
     if get_settings().local_auth_mode:
         return {
             "id": LOCAL_CONVERSATION_ID,

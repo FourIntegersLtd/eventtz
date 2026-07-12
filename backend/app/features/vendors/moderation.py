@@ -368,3 +368,25 @@ def get_approved_vendor_payload(vendor_user_id: str) -> dict[str, Any] | None:
         return None
     p = rows[0].get("payload")
     return p if isinstance(p, dict) else {}
+
+
+def vendor_is_bookable_for_explore(vendor_user_id: str) -> bool:
+    """True when vendor is approved and visible for bookings / client chat."""
+    if get_settings().local_auth_mode:
+        row = local_vendors.get(vendor_user_id)
+        return bool(row and row.get("approval_status") == "approved")
+    try:
+        res = (
+            get_client()
+            .table("vendors")
+            .select("user_id")
+            .eq("user_id", vendor_user_id)
+            .eq("approval_status", "approved")
+            .limit(1)
+            .execute()
+        )
+    except Exception as e:
+        logger.warning("vendor_is_bookable_for_explore failed: %s", e, exc_info=True)
+        return False
+    rows = getattr(res, "data", None) or []
+    return bool(rows)

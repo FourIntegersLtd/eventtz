@@ -226,6 +226,31 @@ def patch_dispute_case(
         elif resolution_action == "partial_refund":
             if not refund_amount_gbp:
                 raise ValueError("refund_amount_gbp is required for a partial refund.")
+            booking_res = (
+                get_client()
+                .table("booking_requests")
+                .select("payment_amount_gbp,payment_status")
+                .eq("id", booking_request_id)
+                .limit(1)
+                .execute()
+            )
+            booking_rows = getattr(booking_res, "data", None) or []
+            if not booking_rows or not isinstance(booking_rows[0], dict):
+                raise ValueError("Booking not found.")
+            booking_row = booking_rows[0]
+            if str(booking_row.get("payment_status") or "") != "paid":
+                raise ValueError("Only paid bookings can be partially refunded.")
+            paid = booking_row.get("payment_amount_gbp")
+            try:
+                paid_amt = float(paid)
+            except (TypeError, ValueError):
+                paid_amt = 0.0
+            if paid_amt <= 0:
+                raise ValueError("No recorded payment amount for this booking.")
+            if refund_amount_gbp <= 0 or refund_amount_gbp > paid_amt:
+                raise ValueError(
+                    f"Partial refund must be between 0 and GBP {paid_amt:.2f}.",
+                )
             admin_refund_booking(booking_request_id, amount_gbp=refund_amount_gbp)
 
     try:

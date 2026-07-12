@@ -13,8 +13,45 @@ from app.features.bookings.notifications import (
     _notify_booking_changed,
 )
 from app.features.bookings.queries import _row_initiator, get_booking_request_for_vendor
-from app.features.bookings.pricing import build_pricing_breakdown, persisted_booking_total_label
+from app.features.bookings.pricing import (
+    build_pricing_breakdown,
+    persisted_booking_total_label,
+)
 from app.features.notifications.service import upsert_booking_notification
+
+
+def _validate_adjustment_caps(
+    line_items: list[dict[str, Any]],
+    stored: list[dict[str, Any]],
+) -> None:
+    settings = get_settings()
+    max_single = float(settings.booking_max_adjustment_gbp)
+    max_pct = float(settings.booking_max_adjustment_pct_of_subtotal)
+
+    positive_subtotal = 0.0
+    for li in line_items:
+        if not isinstance(li, dict):
+            continue
+        try:
+            v = float(li.get("unit_price_gbp") or 0)
+        except (TypeError, ValueError):
+            continue
+        if v > 0:
+            positive_subtotal += v
+    positive_adj = sum(a["amount_gbp"] for a in stored if a["amount_gbp"] > 0)
+
+    for a in stored:
+        amt = a["amount_gbp"]
+        if amt > 0 and amt > max_single:
+            raise ValueError(
+                f"Each surcharge cannot exceed GBP {max_single:,.0f}.",
+            )
+
+    if positive_subtotal > 0 and positive_adj > positive_subtotal * (max_pct / 100.0):
+        raise ValueError(
+            "Total surcharges cannot exceed "
+            f"{max_pct:.0f}% of the quoted line items.",
+        )
 
 
 def put_vendor_booking_adjustments(
@@ -70,10 +107,12 @@ def put_vendor_booking_adjustments(
             },
         )
 
+    _validate_adjustment_caps(line_items, stored)
+
     pb = build_pricing_breakdown(line_items=line_items, vendor_adjustments=stored)
-    if float(pb.get("vendor_portion_gbp") or 0) < 0:
+    if float(pb.get("vendor_portion_gbp") or 0) <= 0:
         raise ValueError(
-            "Discounts cannot exceed the quoted line items plus any other adjustments.",
+            "Discounts cannot reduce the booking total to zero or below.",
         )
     total_label = persisted_booking_total_label(pb)
     adj_final = pb.get("vendor_adjustments") or []

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from datetime import date, datetime, timedelta
 from typing import Any, Literal
 
@@ -13,43 +12,9 @@ from app.features.vendors.search_ai import parse_marketplace_query
 
 logger = get_logger(__name__)
 
+from app.features.vendors.list_pricing import min_listing_price_gbp
+
 SortKey = Literal["relevance", "price_asc", "price_desc", "proximity", "rating"]
-
-
-def _parse_money_gbp(raw: str | None) -> float | None:
-    if raw is None or not isinstance(raw, str):
-        return None
-    t = re.sub(r"[^0-9.]", "", raw.strip())
-    if not t:
-        return None
-    try:
-        n = float(t)
-        return n if n >= 0 and n < 1e9 else None
-    except ValueError:
-        return None
-
-
-def _min_listing_price_gbp(payload: dict[str, Any]) -> float | None:
-    candidates: list[float] = []
-    h = _parse_money_gbp(payload.get("hourlyRate") if isinstance(payload.get("hourlyRate"), str) else None)
-    if h is not None:
-        candidates.append(h)
-    d = _parse_money_gbp(payload.get("dailyRate") if isinstance(payload.get("dailyRate"), str) else None)
-    if d is not None:
-        candidates.append(d)
-    pkgs = payload.get("packages")
-    if isinstance(pkgs, list):
-        for item in pkgs:
-            if not isinstance(item, dict):
-                continue
-            pr = item.get("price")
-            if isinstance(pr, str):
-                n = _parse_money_gbp(pr)
-                if n is not None:
-                    candidates.append(n)
-    if not candidates:
-        return None
-    return min(candidates)
 
 
 def _services_offered(payload: dict[str, Any]) -> list[str]:
@@ -250,7 +215,7 @@ def search_approved_vendors(
             if _keyword_hit_count(hay, keywords) == 0:
                 continue
 
-        min_price = _min_listing_price_gbp(payload)
+        min_price = min_listing_price_gbp(payload)
         if budget_min is not None and min_price is not None and min_price < budget_min:
             continue
         if budget_max is not None and min_price is not None and min_price > budget_max:
