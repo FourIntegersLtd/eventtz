@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { getApiErrorDetail } from "@/lib/api-errors";
+import { getApiErrorDetail, postBookingCheckoutSync } from "@/lib/bookingCheckoutApi";
 import {
   fetchClientBookingDetail,
   fetchClientBookings,
@@ -73,6 +73,7 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
   const [cancelOpen, setCancelOpen] = useState(false);
   const [pendingQuoteAction, setPendingQuoteAction] = useState<null | "accept" | "decline">(null);
   const paymentBannerRef = useRef<HTMLDivElement>(null);
+  const pendingPaymentSyncRef = useRef<string | null>(null);
   const paymentDue = detail?.status === "accepted" && detail?.payment_status === "unpaid";
 
   useEffect(() => {
@@ -80,6 +81,28 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
       paymentBannerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [paymentDue, detail?.id]);
+
+  useEffect(() => {
+    pendingPaymentSyncRef.current = null;
+  }, [selectedBookingId]);
+
+  useEffect(() => {
+    if (!selectedBookingId || detail?.payment_status !== "pending") return;
+    if (pendingPaymentSyncRef.current === selectedBookingId) return;
+    pendingPaymentSyncRef.current = selectedBookingId;
+    void postBookingCheckoutSync(selectedBookingId)
+      .then(() => fetchClientBookingDetail(selectedBookingId))
+      .then((booking) => {
+        if (booking.payment_status === "paid" || booking.payment_status === "payout_released") {
+          setDetail(booking);
+          bumpDetail();
+        }
+      })
+      .catch(() => {
+        /* webhook may still be in flight, or checkout was abandoned */
+      });
+  }, [selectedBookingId, detail?.payment_status, bumpDetail, setDetail]);
+
   useEffect(() => {
     void markAllClientBookingNotificationsRead()
       .then(() => {
@@ -147,6 +170,54 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
   };
 
   const paymentBanner = searchParams.get("payment");
+  const checkoutSessionId = searchParams.get("session_id");
+  const [paymentSyncing, setPaymentSyncing] = useState(false);
+  const [paymentSyncError, setPaymentSyncError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!selectedBookingId || paymentBanner !== "success") return;
+    if (detail?.payment_status === "paid" || detail?.payment_status === "payout_released") return;
+    let cancelled = false;
+    setPaymentSyncing(true);
+    setPaymentSyncError(null);
+    void postBookingCheckoutSync(selectedBookingId, checkoutSessionId)
+      .then(() => fetchClientBookingDetail(selectedBookingId))
+      .then((booking) => {
+        if (cancelled) return;
+        setDetail(booking);
+        bumpDetail();
+        router.replace(`/client/bookings/${encodeURIComponent(selectedBookingId)}`, {
+          scroll: false,
+        });
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) {
+          setPaymentSyncError(
+            getApiErrorDetail(e) ??
+              "Payment went through but we could not confirm it yet. Refresh in a moment.",
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setPaymentSyncing(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    selectedBookingId,
+    paymentBanner,
+    checkoutSessionId,
+    detail?.payment_status,
+    router,
+    setDetail,
+    bumpDetail,
+  ]);
+
+  const paymentConfirmed =
+    detail?.payment_status === "paid" || detail?.payment_status === "payout_released";
+  const showPaymentSuccessBanner =
+    paymentBanner === "success" && (paymentConfirmed || (!checkoutSessionId && !paymentSyncing));
 
   const rows = list.map(toClientBookingRowViewModel);
   const viewModel = detail
@@ -287,14 +358,26 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
                       {paymentBanner === "success" || paymentBanner === "cancelled" ? (
                         <div
                           className={`rounded-lg border px-3 py-2 text-sm ${
-                            paymentBanner === "success"
-                              ? "border-emerald-200 bg-emerald-50 text-emerald-900"
-                              : "border-amber-200 bg-amber-50 text-amber-900"
+                            paymentBanner === "cancelled"
+                              ? "border-amber-200 bg-amber-50 text-amber-900"
+                              : paymentSyncError
+                                ? "border-red-200 bg-red-50 text-red-800"
+                                : "border-emerald-200 bg-emerald-50 text-emerald-900"
                           }`}
                         >
-                          {paymentBanner === "success"
-                            ? "Payment successful — thanks! The vendor has been notified."
-                            : "Checkout was cancelled. You can try paying again whenever you're ready."}
+                          {paymentBanner === "success" ? (
+                            paymentSyncing ? (
+                              "Confirming your payment…"
+                            ) : paymentSyncError ? (
+                              paymentSyncError
+                            ) : showPaymentSuccessBanner ? (
+                              "Payment successful — thanks! The vendor has been notified."
+                            ) : (
+                              "Confirming your payment…"
+                            )
+                          ) : (
+                            "Checkout was cancelled. You can try paying again whenever you're ready."
+                          )}
                         </div>
                       ) : null}
 

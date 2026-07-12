@@ -376,13 +376,13 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
                 ) : detail && detail.status === "pending" && detail.initiator !== "vendor" ? (
                   <div className="rounded-lg border border-amber-200/90 bg-amber-50/80 px-3 py-3">
                     <p className="text-xs font-semibold uppercase tracking-wide text-amber-900">
-                      Additional costs &amp; discounts (before you accept)
+                      Extra costs or discounts
                     </p>
                     <p className="mt-1 text-xs text-amber-950/80">
-                      Add delivery, travel, or other costs. Use a discount line to reduce the quote
-                      (entered as a positive amount — the client sees it as a reduction). The Eventtz
-                      service fee ({getBookingServiceFeePercent()}%) applies to the vendor portion
-                      after adjustments.
+                      Before you accept, add delivery, travel, or other charges. To lower the quote,
+                      add a discount line and enter the amount as a positive number. The client
+                      will see it taken off. The Eventtz fee ({getBookingServiceFeePercent()}%) is
+                      calculated on your share after these changes.
                     </p>
                     <ul className="mt-3 space-y-2">
                       {adjDrafts.map((row, idx) => (

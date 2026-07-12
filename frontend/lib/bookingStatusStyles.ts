@@ -26,7 +26,7 @@ export function paymentStatusLabel(paymentStatus: string): string {
     case "unpaid":
       return "Unpaid";
     case "pending":
-      return "Payment pending";
+      return "Processing payment";
     case "paid":
       return "Paid";
     case "payout_released":
