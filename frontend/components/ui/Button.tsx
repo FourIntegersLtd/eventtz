@@ -2,30 +2,22 @@
 
 import { forwardRef, type ButtonHTMLAttributes } from "react";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { FOCUS_RING, RADIUS } from "@/components/ui/tokens";
+import {
+  getButtonClassName,
+  type ButtonShape,
+  type ButtonSize,
+  type ButtonVariant,
+} from "@/components/ui/buttonStyles";
 
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "destructive";
-export type ButtonSize = "sm" | "md"
+export type { ButtonShape, ButtonSize, ButtonVariant };
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
   size?: ButtonSize;
+  shape?: ButtonShape;
   loading?: boolean;
   /** Icon-only or icon+label leading element. */
   icon?: React.ReactNode;
-};
-
-const VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  primary: "bg-primary text-white hover:opacity-95 disabled:opacity-50",
-  secondary:
-    "border border-neutral-200 bg-white text-neutral-800 hover:bg-neutral-50 disabled:opacity-50",
-  ghost: "text-neutral-700 hover:bg-neutral-100 disabled:opacity-50",
-  destructive: "bg-red-600 text-white hover:bg-red-700 disabled:opacity-50",
-};
-
-const SIZE_CLASSES: Record<ButtonSize, string> = {
-  sm: "min-h-11 px-3 py-2.5 text-sm",
-  md: "min-h-11 px-4 py-2 text-sm",
 };
 
 /**
@@ -36,7 +28,17 @@ const SIZE_CLASSES: Record<ButtonSize, string> = {
  * itself communicates progress.
  */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { variant = "primary", size = "md", loading = false, icon, disabled, className = "", children, ...rest },
+  {
+    variant = "primary",
+    size = "md",
+    shape = "default",
+    loading = false,
+    icon,
+    disabled,
+    className = "",
+    children,
+    ...rest
+  },
   ref,
 ) {
   return (
@@ -44,7 +46,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       ref={ref}
       type={rest.type ?? "button"}
       disabled={disabled || loading}
-      className={`inline-flex items-center justify-center gap-2 ${RADIUS.md} font-semibold transition ${MOTION_PRESS} ${FOCUS_RING} ${VARIANT_CLASSES[variant]} ${SIZE_CLASSES[size]} ${className}`.trim()}
+      className={getButtonClassName({ variant, size, shape, className })}
       {...rest}
     >
       {loading ? (
@@ -56,5 +58,3 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     </button>
   );
 });
-
-const MOTION_PRESS = "duration-150 ease-out active:scale-[0.97]";

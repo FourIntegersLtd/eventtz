@@ -1,7 +1,8 @@
 "use client";
 
 import { Heart } from "lucide-react";
-import Link from "next/link";
+import { portalCard } from "@/components/portal-shell/portalTheme";
+import { useRouter } from "next/navigation";
 import { displayServicesOffered } from "@/features/client/browse/browseLabels";
 import { StarRating } from "@/components/ui/StarRating";
 import { VendorPortfolioCover } from "@/components/vendor/VendorPortfolioCover";
@@ -36,6 +37,7 @@ export function MarketplaceVendorCard({
   onToggleBookmark,
   showBookmark = true,
 }: MarketplaceVendorCardProps) {
+  const router = useRouter();
   const v = card.vendor;
   const detailHref = vendorDetailHref ?? `/client/browse/${v.user_id}`;
   const p = v.payload ?? {};
@@ -65,27 +67,42 @@ export function MarketplaceVendorCard({
   const rc = v.review_count ?? 0;
   const ra = v.review_average;
 
+  const openDetail = () => {
+    router.push(detailHref);
+  };
+
   return (
-    <div className="group relative rounded-2xl border border-neutral-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-primary-soft">
+    <div
+      role="link"
+      tabIndex={0}
+      onClick={openDetail}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          openDetail();
+        }
+      }}
+      className={`group relative isolate cursor-pointer ${portalCard} text-left transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30`}
+    >
       {showBookmark ? (
         <button
           type="button"
+          onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => {
-            e.preventDefault();
             e.stopPropagation();
             onToggleBookmark?.();
           }}
-          className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-neutral-200 bg-white/95 text-neutral-600 shadow-sm transition hover:border-primary hover:text-primary"
+          className="absolute right-3 top-3 z-20 flex h-11 w-11 touch-manipulation items-center justify-center rounded-full border border-neutral-200 bg-white/95 text-neutral-600 shadow-sm transition hover:border-primary hover:text-primary"
           aria-label={bookmarked ? "Remove saved vendor" : "Save vendor"}
         >
           <Heart
-            className="h-4 w-4"
+            className="h-4 w-4 pointer-events-none"
             strokeWidth={2}
             fill={bookmarked ? "currentColor" : "none"}
           />
         </button>
       ) : null}
-      <Link href={detailHref} className="block p-3 text-left">
+      <div className="block p-3">
         <VendorPortfolioCover
           payload={p}
           businessName={biz}
@@ -129,7 +146,7 @@ export function MarketplaceVendorCard({
             ))}
           </div>
         ) : null}
-      </Link>
+      </div>
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { TextField } from "@/components/ui/TextField";
 import { TextArea } from "@/components/ui/TextArea";
 import { Select } from "@/components/ui/Select";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { todayIsoDate, validateEventDates } from "@/lib/eventDateValidation";
 import { postVendorQuote } from "@/lib/vendorBookingsApi";
 import { fetchVendorProfile } from "@/lib/vendorProfileApi";
 
@@ -114,6 +115,8 @@ export function VendorQuoteFormModal({
     }
   };
 
+  const minEventDate = todayIsoDate();
+
   const submit = async () => {
     setError(null);
     const name = eventName.trim();
@@ -136,14 +139,10 @@ export function VendorQuoteFormModal({
       setError("Choose an event date.");
       return;
     }
-    const endRaw = eventEndDate.trim();
-    if (endRaw.length >= 10) {
-      const start = ed.slice(0, 10);
-      const end = endRaw.slice(0, 10);
-      if (end < start) {
-        setError("End date must be on or after the event date.");
-        return;
-      }
+    const dateError = validateEventDates(ed, eventEndDate);
+    if (dateError) {
+      setError(dateError);
+      return;
     }
     if (Number.isNaN(p) || p < 0) {
       setError("Enter a valid price in GBP.");
@@ -199,7 +198,7 @@ export function VendorQuoteFormModal({
     >
       <div className="space-y-4">
         <p className="text-sm text-neutral-600">
-          They can accept or decline this quote from Bookings once it&apos;s sent.
+          They can accept or decline from Bookings.
         </p>
         {error ? (
           <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
@@ -217,12 +216,14 @@ export function VendorQuoteFormModal({
           <TextField
             label="Event date"
             type="date"
+            min={minEventDate}
             value={eventDate}
             onChange={(e) => setEventDate(e.target.value)}
           />
           <TextField
             label="End date (optional)"
             type="date"
+            min={eventDate.trim() || minEventDate}
             value={eventEndDate}
             onChange={(e) => setEventEndDate(e.target.value)}
           />

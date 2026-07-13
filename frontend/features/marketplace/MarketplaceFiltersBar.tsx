@@ -2,6 +2,7 @@
 
 import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/Button";
 import type { MarketplaceSort } from "@/lib/clientExploreApi";
 import type { MarketplaceSearchState } from "@/lib/marketplaceSearchParams";
 
@@ -122,13 +123,9 @@ function BudgetSortControls({ state, onCommit }: MarketplaceFiltersBarProps) {
               >
                 Clear
               </button>
-              <button
-                type="button"
-                onClick={apply}
-                className="rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-white transition hover:opacity-95"
-              >
+              <Button type="button" size="sm" shape="pill" onClick={apply}>
                 Apply
-              </button>
+              </Button>
             </div>
           </div>
         )}

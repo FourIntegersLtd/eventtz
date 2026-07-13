@@ -8,7 +8,7 @@ export default function ClientBrowsePage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#f5f2f8] px-4 py-16">
+        <div className="min-h-screen bg-auth-bg px-4 py-16">
           <LoadingState label="Loading browse…" variant="page" />
         </div>
       }

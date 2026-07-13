@@ -1,5 +1,9 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useRef, type ReactNode } from "react";
 import { ChevronDown, Pencil } from "lucide-react";
+import { portalCard } from "@/components/portal-shell/portalTheme";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import {
   EVENT_TYPE_OPTIONS,
   RADIUS_OPTIONS,
@@ -60,7 +64,7 @@ function ReviewSection({
   children: ReactNode;
 }) {
   return (
-    <details className="group rounded-2xl bg-white shadow-sm ring-1 ring-neutral-200/50 transition-shadow open:shadow-md open:ring-primary/20">
+    <details className={`group ${portalCard} transition-shadow open:shadow-md open:ring-primary/20`}>
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 [&::-webkit-details-marker]:hidden">
         <span className="flex min-w-0 flex-1 items-center gap-2">
           <ChevronDown
@@ -115,6 +119,9 @@ export type StepReviewProps = {
   onGenerateBioWithAI: () => void | Promise<void>;
   generatingBio?: boolean;
   onNavigateToStep: (step: number) => void;
+  uploadingProfileImage?: boolean;
+  profileImageError?: string | null;
+  onUploadProfileImage: (file: File) => void | Promise<void>;
 };
 
 export function StepReview({
@@ -124,7 +131,11 @@ export function StepReview({
   onGenerateBioWithAI,
   generatingBio,
   onNavigateToStep,
+  uploadingProfileImage,
+  profileImageError,
+  onUploadProfileImage,
 }: StepReviewProps) {
+  const profileImageInputRef = useRef<HTMLInputElement>(null);
   const radiusLabel =
     RADIUS_OPTIONS.find((o) => o.value === data.travelRadius)?.label ?? "—";
   const deliveryLabel =
@@ -148,27 +159,60 @@ export function StepReview({
         subtext={STEP_COPY[9].subtext}
       />
       <AnimatedStepItem index={4}>
-        <div className="flex justify-center">
-        <div className="relative">
-          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-primary text-2xl font-semibold text-white">
-            {(data.firstName[0] ?? "?") + (data.lastName[0] ?? "")}
+        <div className="flex flex-col items-center gap-2">
+          <div className="relative">
+            {data.profileImageUrl ? (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={data.profileImageUrl}
+                  alt="Profile"
+                  className="h-24 w-24 rounded-full border border-neutral-200 object-cover object-center shadow-sm"
+                />
+              </>
+            ) : (
+              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-primary text-2xl font-semibold text-white">
+                {(data.firstName[0] ?? "?") + (data.lastName[0] ?? "")}
+              </div>
+            )}
+            <input
+              ref={profileImageInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              disabled={uploadingProfileImage}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void onUploadProfileImage(f);
+                e.target.value = "";
+              }}
+            />
+            <button
+              type="button"
+              aria-label="Edit profile image"
+              disabled={uploadingProfileImage}
+              onClick={() => profileImageInputRef.current?.click()}
+              className="absolute -bottom-1 -right-1 inline-flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 shadow-sm hover:bg-neutral-50 disabled:opacity-60"
+            >
+              {uploadingProfileImage ? (
+                <LoadingSpinner size="sm" />
+              ) : (
+                <Pencil className="h-4 w-4" />
+              )}
+            </button>
           </div>
-          <button
-            type="button"
-            aria-label="Edit profile image"
-            className="absolute -bottom-1 -right-1 inline-flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 shadow-sm hover:bg-neutral-50"
-          >
-            <Pencil className="h-4 w-4" />
-          </button>
-        </div>
+          <p className="max-w-xs text-center text-xs text-neutral-500">
+            This photo appears first on your public profile. Tap the pencil to upload or
+            change it.
+          </p>
+          {profileImageError ? (
+            <p className="text-xs text-red-600">{profileImageError}</p>
+          ) : null}
         </div>
       </AnimatedStepItem>
       <AnimatedStepItem index={5}>
         <label className={labelClass()}>Public bio</label>
-        <p className="mb-2 text-xs text-neutral-500">
-          A short, single-paragraph summary (3–4 lines) that appears on your public
-          profile.
-        </p>
+        <p className="mb-2 text-xs text-neutral-500">Short bio for your public profile.</p>
         <textarea
           className={`${inputClass()} min-h-[100px]`}
           value={data.aiBioDraft}
@@ -201,7 +245,7 @@ export function StepReview({
               Quick template (local)
             </button>
             <p className="mt-1 text-center text-[11px] text-neutral-500 sm:text-left">
-              Inserts an editable starter paragraph — no AI used.
+              Editable starter text. No AI.
             </p>
           </div>
         </div>

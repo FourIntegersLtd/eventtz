@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Calendar, ExternalLink, MapPin, MessageCircle } from "lucide-react";
+import { portalPanelShell } from "@/components/portal-shell/portalTheme";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PaymentStatusBadge } from "@/components/ui/PaymentStatusBadge";
@@ -11,6 +12,18 @@ import type {
   BookingDetailSlots,
   BookingDetailViewModel,
 } from "@/features/bookings/bookingViewModel";
+
+function formatBookingLocation(
+  postcode: string | null,
+  address: string | null,
+): { primary: string; secondary: string | null } {
+  const addr = address?.trim() || null;
+  const pc = postcode?.trim() || null;
+  if (addr && pc) return { primary: addr, secondary: pc };
+  if (addr) return { primary: addr, secondary: null };
+  if (pc) return { primary: pc, secondary: null };
+  return { primary: "Not added yet", secondary: null };
+}
 
 function ActionButton({ action }: { action: BookingDetailAction }) {
   return (
@@ -56,7 +69,7 @@ export function BookingDetailPanel({
 }: BookingDetailPanelProps) {
   if (loading) {
     return (
-      <div className="flex h-full max-h-full min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50">
+      <div className={`${portalPanelShell} sm:p-8`}>
         <SkeletonDetailHeader />
       </div>
     );
@@ -64,7 +77,7 @@ export function BookingDetailPanel({
 
   if (error) {
     return (
-      <div className="flex h-full max-h-full min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50">
+      <div className={`${portalPanelShell} sm:p-8`}>
         <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
         </p>
@@ -74,14 +87,17 @@ export function BookingDetailPanel({
 
   if (!booking) {
     return (
-      <div className="flex h-full max-h-full min-h-0 flex-1 items-center justify-center overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50">
+      <div className={`${portalPanelShell} items-center justify-center`}>
         <EmptyState title={emptyTitle} className="border-0" />
       </div>
     );
   }
 
+  const location = formatBookingLocation(booking.venuePostcode, booking.venueAddress);
+  const hasFooter = footerActions.length > 0 || Boolean(slots.footerSection);
+
   return (
-    <div className="flex h-full max-h-full min-h-0 flex-1 flex-col gap-6 overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50 sm:p-8">
+    <div className={`${portalPanelShell} sm:p-8`}>
       <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         <div className="min-w-0 flex-1">
           <h2 className="font-heading text-xl font-semibold text-neutral-900">{booking.eventName}</h2>
@@ -108,7 +124,7 @@ export function BookingDetailPanel({
         </p>
       ) : null}
 
-      <div className="scroll-pane min-h-0 flex-1 space-y-8 pr-1">
+      <div className="scroll-pane min-h-0 flex-1 space-y-8 pb-6 pr-1">
         {slots.beforeSections}
         <section>
           <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-neutral-500">Event &amp; contact</h3>
@@ -127,9 +143,15 @@ export function BookingDetailPanel({
               <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-neutral-400" aria-hidden />
               <div className="min-w-0">
                 <p className="text-xs font-medium text-neutral-500">Location</p>
-                <p className="mt-0.5 text-sm font-medium text-neutral-900">{booking.venuePostcode ?? "—"}</p>
-                {booking.venueAddress ? (
-                  <p className="mt-0.5 text-xs text-neutral-600">{booking.venueAddress}</p>
+                <p
+                  className={`mt-0.5 text-sm font-medium ${
+                    location.primary === "Not added yet" ? "text-neutral-500" : "text-neutral-900"
+                  }`}
+                >
+                  {location.primary}
+                </p>
+                {location.secondary ? (
+                  <p className="mt-0.5 text-xs text-neutral-600">{location.secondary}</p>
                 ) : null}
               </div>
             </div>
@@ -182,6 +204,7 @@ export function BookingDetailPanel({
               pricing={booking.pricing ?? undefined}
               variant={booking.pricingVariant}
               lineItems={booking.lineItems}
+              compareTotalLabel={booking.compareTotalLabel}
             />
             {booking.paidAtLabel ? (
               <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl bg-emerald-50/50 px-5 py-4 text-sm ring-1 ring-emerald-200/80">
@@ -209,18 +232,21 @@ export function BookingDetailPanel({
         {slots.afterSections}
 
         {slots.disputeSection}
-      </div>
 
-      {footerActions.length > 0 ? (
-        <div className="mt-auto shrink-0 border-t border-neutral-100 pt-6">
-          <div className="flex flex-wrap justify-end gap-2">
-            {footerActions.map((a) => (
-              <ActionButton key={a.key} action={a} />
-            ))}
-          </div>
-          {footerNote ? <p className="mt-2 text-right text-xs text-neutral-500">{footerNote}</p> : null}
-        </div>
-      ) : null}
+        {hasFooter ? (
+          <section className="border-t border-neutral-100 pt-6">
+            {slots.footerSection}
+            {footerActions.length > 0 ? (
+              <div className={`flex flex-wrap justify-end gap-2 ${slots.footerSection ? "mt-4" : ""}`}>
+                {footerActions.map((a) => (
+                  <ActionButton key={a.key} action={a} />
+                ))}
+              </div>
+            ) : null}
+            {footerNote ? <p className="mt-2 text-right text-xs text-neutral-500">{footerNote}</p> : null}
+          </section>
+        ) : null}
+      </div>
     </div>
   );
 }

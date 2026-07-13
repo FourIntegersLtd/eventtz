@@ -90,9 +90,7 @@ export function StepPricing({ data, update }: StepPricingProps) {
       </OnboardingSubQuestion>
       <OnboardingSubQuestion headline={copy.packagesHeadline} indexOffset={6}>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-xs text-neutral-500">
-            Package name and price are required for any package you fill in.
-          </p>
+          <p className="text-xs text-neutral-500">Name and price required per package.</p>
           <button
             type="button"
             onClick={addPackage}

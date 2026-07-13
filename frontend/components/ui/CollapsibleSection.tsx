@@ -2,6 +2,7 @@
 
 import { ChevronDown } from "lucide-react";
 import { useId, useState, type ReactNode } from "react";
+import { portalInsetCard } from "@/components/portal-shell/portalTheme";
 
 export type CollapsibleSectionProps = {
   title: string;
@@ -26,7 +27,7 @@ export function CollapsibleSection({
 
   return (
     <div
-      className={`overflow-hidden rounded-xl border border-neutral-200/90 bg-white shadow-sm ${className}`.trim()}
+      className={`overflow-hidden ${portalInsetCard} ${className}`.trim()}
     >
       <button
         type="button"

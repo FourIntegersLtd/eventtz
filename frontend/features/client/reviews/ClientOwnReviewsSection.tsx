@@ -47,7 +47,7 @@ export function ClientOwnReviewsSection({ showShell = true }: ClientOwnReviewsSe
         </p>
       ) : reviews.length === 0 ? (
         <p className={showShell ? "mt-3 text-sm text-neutral-600" : "text-sm text-neutral-600"}>
-          You have not left any reviews yet.
+          You haven't left any reviews yet.
         </p>
       ) : (
         <div className={showShell ? "mt-4 space-y-3" : "space-y-3"}>

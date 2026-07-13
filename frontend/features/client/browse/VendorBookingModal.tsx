@@ -16,6 +16,8 @@ import {
   computeBookingEstimateGbp,
   formatBookingEstimateLabel,
 } from "@/lib/vendorDiscountDisplay";
+import { getBookingServiceFeePercent } from "@/lib/bookingServiceFee";
+import { todayIsoDate, validateEventDates, isPastIsoDate } from "@/lib/eventDateValidation";
 import {
   type BrowsePricingOption,
   buildBookingLineItems,
@@ -75,9 +77,13 @@ export function VendorBookingModal({
   }, [onClose]);
 
   useEffect(() => {
-    if (searchPrefill?.eventDate) setEventDate(searchPrefill.eventDate);
+    if (searchPrefill?.eventDate) {
+      const d = searchPrefill.eventDate;
+      setEventDate(isPastIsoDate(d) ? "" : d);
+    }
     if (searchPrefill?.eventEndDate !== undefined) {
-      setEventEndDate(searchPrefill.eventEndDate ?? "");
+      const end = searchPrefill.eventEndDate ?? "";
+      setEventEndDate(end && isPastIsoDate(end) ? "" : end);
     }
   }, [searchPrefill?.eventDate, searchPrefill?.eventEndDate]);
 
@@ -121,6 +127,21 @@ export function VendorBookingModal({
     };
   }, [lineItems, vendorPayload, eventDate]);
 
+  const clientEstimateLabel = useMemo(() => {
+    if (estimate.label === "TBC" || estimate.label.includes("TBC")) {
+      return estimate.label;
+    }
+    const match = estimate.label.match(/[\d,.]+/);
+    if (!match) return estimate.label;
+    const vendorPortion = Number.parseFloat(match[0].replace(/,/g, ""));
+    if (!Number.isFinite(vendorPortion)) return estimate.label;
+    const feePct = getBookingServiceFeePercent();
+    const withFee = Math.round(vendorPortion * (1 + feePct / 100) * 100) / 100;
+    return formatBookingEstimateLabel(withFee, false);
+  }, [estimate.label]);
+
+  const minEventDate = todayIsoDate();
+
   const submit = () => {
     if (!eventName.trim()) {
       setValidationError("Please enter an event name.");
@@ -130,12 +151,13 @@ export function VendorBookingModal({
       setValidationError("Please choose an event date.");
       return;
     }
-    if (selectedIds.size === 0) {
-      setValidationError("Close this and select at least one package or rate first.");
+    const dateError = validateEventDates(eventDate, eventEndDate);
+    if (dateError) {
+      setValidationError(dateError);
       return;
     }
-    if (eventEndDate.trim() && eventDate && eventEndDate.trim() < eventDate) {
-      setValidationError("End date must be on or after the event date.");
+    if (selectedIds.size === 0) {
+      setValidationError("Close this and select at least one package or rate first.");
       return;
     }
     if (calendarConflict) {
@@ -233,12 +255,12 @@ export function VendorBookingModal({
             </p>
             {searchPrefill?.datesFlexible ? (
               <p className="mt-2 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs text-neutral-600">
-                You searched with flexible dates. Confirm the event dates before sending.
+                You searched with flexible dates. Confirm dates before sending.
               </p>
             ) : null}
             {searchPrefill?.eventDate && !searchPrefill.datesFlexible ? (
               <p className="mt-2 rounded-lg border border-primary/20 bg-primary/[0.06] px-3 py-2 text-xs text-neutral-700">
-                Dates prefilled from your search.
+                Dates from your search.
               </p>
             ) : null}
           </div>
@@ -246,8 +268,7 @@ export function VendorBookingModal({
           <div className="max-h-[min(70vh,560px)] space-y-4 overflow-y-auto px-5 py-4 sm:px-6">
             {calendarConflict ? (
               <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
-                These dates fall on days this vendor marked unavailable (blocked days or
-                non-working weekdays). Choose other dates or contact them via Messages.
+                These dates may not work for this vendor. Pick new dates or message them.
               </div>
             ) : null}
             <div>
@@ -281,6 +302,7 @@ export function VendorBookingModal({
                 <input
                   id="booking-event-date"
                   type="date"
+                  min={minEventDate}
                   value={eventDate}
                   onChange={(e) => {
                     setEventDate(e.target.value);
@@ -299,6 +321,7 @@ export function VendorBookingModal({
                 <input
                   id="booking-event-end"
                   type="date"
+                  min={eventDate.trim() || minEventDate}
                   value={eventEndDate}
                   onChange={(e) => {
                     setEventEndDate(e.target.value);
@@ -328,9 +351,7 @@ export function VendorBookingModal({
                 placeholder="e.g. The Grand Hall, 12 Park Lane, London"
                 className="mt-1.5 w-full resize-y rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
-              <p className="mt-1 text-xs text-neutral-500">
-                Add this now or before you pay. Your vendor needs it to deliver or set up.
-              </p>
+              <p className="mt-1 text-xs text-neutral-500">Add before you pay.</p>
             </div>
 
             <div>
@@ -420,11 +441,14 @@ export function VendorBookingModal({
 
             <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-neutral-600">Estimated vendor total</span>
+                <span className="text-neutral-600">Estimated total</span>
                 <span className="font-heading text-lg font-semibold text-neutral-900">
-                  {estimate.label}
+                  {clientEstimateLabel}
                 </span>
               </div>
+              <p className="mt-2 text-xs text-neutral-500">
+                Includes Eventtz fee. The vendor may adjust the price before you pay.
+              </p>
             </div>
 
             {validationError ? (

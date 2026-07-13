@@ -26,7 +26,7 @@ function openedByTitle(dispute: ParticipantDispute): string {
   if (dispute.opened_by_you) return "You opened this dispute";
   if (dispute.opened_by_role === "client") return "The client opened this dispute";
   if (dispute.opened_by_role === "vendor") return "The vendor opened this dispute";
-  return "Opened by a party on this booking";
+  return "Opened on this booking";
 }
 
 export function ParticipantDisputeDetailPanel({ role, dispute, loading, error }: Props) {
@@ -129,7 +129,7 @@ export function ParticipantDisputeDetailPanel({ role, dispute, loading, error }:
         </p>
         {dispute.chat_included_for_review ? (
           <p className="mt-2 text-xs text-neutral-500">
-            The in-app message thread was included for Eventtz review when this case was opened.
+            Your booking messages were included for review.
           </p>
         ) : null}
       </section>

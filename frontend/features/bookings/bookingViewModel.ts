@@ -18,6 +18,8 @@ export type BookingListRowViewModel = {
   initiatorBadgeLabel?: string | null;
   /** Vendor view only: the review left once a booking completes. */
   reviewLine?: string | null;
+  /** Shown under the pending badge — role-aware copy from `bookingListPendingSubtext`. */
+  pendingSubtext?: string | null;
 };
 
 export type BookingDetailAction = {
@@ -66,13 +68,17 @@ export type BookingDetailViewModel = {
   paidAtLabel: string | null;
   /** Money lifecycle badge, independent of `status` — e.g. "Paid", "Paid out", "Refunded". */
   paymentStatus: string | null;
+  /** Strikethrough "was" total when the vendor updated pricing after the request. */
+  compareTotalLabel?: string | null;
 };
 
 export type BookingDetailSlots = {
-  /** Rendered right under the header (e.g. quote accept/decline venue picker, vendor adjustments editor). */
+  /** Rendered right under the header (e.g. payment banners). */
   beforeSections?: ReactNode;
   /** Rendered after the standard sections, before the dispute section (e.g. review form/summary). */
   afterSections?: ReactNode;
+  /** Pinned below the scroll area — primary actions for this booking (e.g. accept / decline). */
+  footerSection?: ReactNode;
   /** Always rendered last. */
   disputeSection: ReactNode;
 };

@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { EventtzLogo } from "@/components/branding/EventtzLogo";
+import { getButtonClassName } from "@/components/ui/buttonStyles";
 import {
   BROWSE_LINK,
   EXPLORE_NAV_LINKS,
@@ -120,13 +121,23 @@ export function LandingNav({
 
   const closeMobile = () => setMobileOpen(false);
 
-  const outlineCtaClass = darkNav
-    ? "ml-1 inline-flex items-center rounded-full border border-white/40 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
-    : "ml-1 inline-flex items-center rounded-full border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-800 transition hover:bg-neutral-50";
+  const outlineCtaClass = getButtonClassName({
+    variant: darkNav ? "invertedOutline" : "outline",
+    shape: "pill",
+    className: "ml-1 px-4 py-2",
+  });
 
-  const primaryCtaClass = darkNav
-    ? "ml-2 inline-flex items-center rounded-full bg-white px-5 py-2 text-sm font-semibold text-neutral-900 transition hover:opacity-90"
-    : "ml-2 inline-flex items-center rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90";
+  const primaryCtaClass = getButtonClassName({
+    variant: darkNav ? "inverted" : "primary",
+    shape: "pill",
+    className: "ml-2 px-5 py-2",
+  });
+
+  const mobileBrowseClass = getButtonClassName({
+    variant: darkNav ? "inverted" : "primary",
+    shape: "pill",
+    className: "px-4 py-2.5 text-xs",
+  });
 
   return (
     <header
@@ -175,14 +186,7 @@ export function LandingNav({
         </nav>
 
         <div className="flex items-center gap-2 lg:hidden">
-          <NavLinkItem
-            href={BROWSE_LINK.href}
-            className={
-              darkNav
-                ? "inline-flex min-h-11 items-center rounded-full bg-white px-4 py-2.5 text-xs font-semibold text-neutral-900"
-                : "inline-flex min-h-11 items-center rounded-full bg-primary px-4 py-2.5 text-xs font-semibold text-white"
-            }
-          >
+          <NavLinkItem href={BROWSE_LINK.href} className={mobileBrowseClass}>
             Browse
           </NavLinkItem>
           <button

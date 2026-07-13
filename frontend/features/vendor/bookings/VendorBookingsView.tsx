@@ -1,8 +1,14 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { BackLink } from "@/components/ui/BackLink";
+import {
+  BOOKING_CONFIRM_COPY,
+  PAYMENT_FLOW_COPY,
+} from "@/features/bookings/bookingConfirmCopy";
+import { BookingCompletionBanner } from "@/features/bookings/BookingCompletionBanner";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { BookingDisputeSection } from "@/features/bookings/BookingDisputeSection";
 import { BookingDetailPanel } from "@/features/bookings/BookingDetailPanel";
@@ -12,8 +18,8 @@ import type { BookingDetailAction } from "@/features/bookings/bookingViewModel";
 import { BOOKING_EMPTY_LIST_TITLE } from "@/features/bookings/bookingListConstants";
 import { useParticipantBookingsScaffold } from "@/features/bookings/useParticipantBookingsScaffold";
 import { ChatDrawer } from "@/features/chat/ChatDrawer";
-import { getBookingServiceFeePercent } from "@/lib/bookingServiceFee";
 import { BookingReviewPanel } from "@/features/reviews/BookingReviewPanel";
+import { VendorBookingResponseFlow } from "@/features/vendor/bookings/VendorBookingResponseFlow";
 import {
   fetchVendorBookingDetail,
   fetchVendorBookings,
@@ -26,15 +32,6 @@ import {
   toVendorBookingDetailViewModel,
   toVendorBookingRowViewModel,
 } from "@/features/vendor/bookings/vendorBookingViewModel";
-
-const ADJUSTMENT_TAGS = [
-  { value: "delivery", label: "Delivery" },
-  { value: "travel", label: "Travel" },
-  { value: "materials", label: "Materials" },
-  { value: "labour", label: "Extra labour" },
-  { value: "discount", label: "Discount" },
-  { value: "other", label: "Other" },
-] as const;
 
 type AdjDraftRow = {
   kind: "cost" | "discount";
@@ -50,6 +47,9 @@ type VendorBookingsViewProps = {
 
 export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const listStatusFilter = searchParams.get("status") ?? "";
+  const urlTab = searchParams.get("tab");
 
   const fetchList = useCallback((t: "active" | "closed") => fetchVendorBookings(t), []);
   const fetchDetail = useCallback((id: string) => fetchVendorBookingDetail(id), []);
@@ -77,30 +77,20 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
     getDetailStatus,
   });
 
+  useEffect(() => {
+    if (urlTab === "active" || urlTab === "closed") {
+      setTab(urlTab);
+    }
+  }, [urlTab, setTab]);
+
   const [actionBusy, setActionBusy] = useState(false);
   const [pendingAction, setPendingAction] = useState<
-    null | "accept" | "reject" | "complete" | "vendor_cancel" | "withdraw"
+    null | "accept" | "decline" | "complete" | "vendor_cancel" | "withdraw"
   >(null);
-  const [adjDrafts, setAdjDrafts] = useState<AdjDraftRow[]>([]);
   const [adjSaving, setAdjSaving] = useState(false);
   const [confirmAction, setConfirmAction] = useState<null | "withdraw" | "vendor_cancel" | "complete">(
     null,
   );
-
-  useEffect(() => {
-    if (!detail?.vendor_adjustments) {
-      setAdjDrafts([]);
-      return;
-    }
-    setAdjDrafts(
-      detail.vendor_adjustments.map((a) => ({
-        kind: a.amount_gbp < 0 ? "discount" : "cost",
-        tag: a.tag || "other",
-        label: a.label,
-        amount: String(Math.abs(a.amount_gbp)),
-      })),
-    );
-  }, [detail?.id, detail?.vendor_adjustments]);
 
   const applyBookingStatus = async (next: "accepted" | "declined") => {
     if (!detail?.id) return;
@@ -109,7 +99,7 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
     if (next === "accepted" && detail.status !== "pending" && detail.status !== "declined") return;
     setActionError(null);
     setActionBusy(true);
-    setPendingAction(next === "accepted" ? "accept" : "reject");
+    setPendingAction(next === "accepted" ? "accept" : "decline");
     try {
       await patchVendorBookingStatus(detail.id, next);
       bumpDetail();
@@ -169,72 +159,67 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
     }
   };
 
-  const saveAdjustments = async () => {
+  const sendUpdatedPrice = async (rows: AdjDraftRow[]) => {
     if (!detail?.id || detail.status !== "pending") return;
     setActionError(null);
-    const filled = adjDrafts.filter((r) => r.label.trim() && r.amount.trim());
     const parsed: { tag: string; label: string; amount_gbp: number }[] = [];
-    for (const r of filled) {
+    for (const r of rows) {
       const raw = Number.parseFloat(r.amount);
       if (!Number.isFinite(raw) || raw <= 0) {
-        setActionError(
-          "Each line needs a valid positive amount (discounts: enter the amount to take off).",
-        );
+        setActionError("Each line needs a valid positive amount.");
         return;
       }
       const amount_gbp = r.kind === "discount" ? -raw : raw;
-      parsed.push({ tag: (r.tag || "other").trim() || "other", label: r.label.trim(), amount_gbp });
+      if (r.kind === "cost" && !r.label.trim()) {
+        setActionError("Say what each extra charge is for.");
+        return;
+      }
+      parsed.push({
+        tag: (r.tag || "other").trim() || "other",
+        label: r.label.trim() || (r.kind === "discount" ? "Discount" : "Additional cost"),
+        amount_gbp,
+      });
+    }
+    if (parsed.length === 0) {
+      setActionError("Add a charge or discount first.");
+      return;
     }
     setAdjSaving(true);
     try {
       const updated = await putVendorBookingAdjustments(detail.id, parsed);
       setDetail(updated);
     } catch (e: unknown) {
-      setActionError(getApiErrorDetail(e) ?? "Could not save additional costs.");
+      setActionError(getApiErrorDetail(e) ?? "Could not send the updated price.");
     } finally {
       setAdjSaving(false);
     }
   };
 
-  const rows = list.map(toVendorBookingRowViewModel);
+  const rows = useMemo(
+    () =>
+      list
+        .map(toVendorBookingRowViewModel)
+        .filter((row) => {
+          if (listStatusFilter !== "pending") return true;
+          return row.status === "pending";
+        }),
+    [list, listStatusFilter],
+  );
   const viewModel = detail
     ? toVendorBookingDetailViewModel(detail, () => setChatOpen(true))
     : null;
 
   const headerActions: BookingDetailAction[] = [];
-  if (detail?.status === "pending") {
-    if (detail.initiator === "vendor") {
-      headerActions.push({
-        key: "withdraw",
-        label: "Withdraw quote",
-        loadingLabel: "Withdrawing…",
-        variant: "destructive",
-        disabled: actionBusy,
-        loading: pendingAction === "withdraw",
-        onClick: () => setConfirmAction("withdraw"),
-      });
-    } else {
-      headerActions.push(
-        {
-          key: "accept",
-          label: "Accept",
-          loadingLabel: "Accepting…",
-          variant: "primary",
-          disabled: actionBusy,
-          loading: pendingAction === "accept",
-          onClick: () => void applyBookingStatus("accepted"),
-        },
-        {
-          key: "reject",
-          label: "Reject",
-          loadingLabel: "Rejecting…",
-          variant: "destructive",
-          disabled: actionBusy,
-          loading: pendingAction === "reject",
-          onClick: () => void applyBookingStatus("declined"),
-        },
-      );
-    }
+  if (detail?.status === "pending" && detail.initiator === "vendor") {
+    headerActions.push({
+      key: "withdraw",
+      label: "Withdraw quote",
+      loadingLabel: "Withdrawing…",
+      variant: "destructive",
+      disabled: actionBusy,
+      loading: pendingAction === "withdraw",
+      onClick: () => setConfirmAction("withdraw"),
+    });
   } else if (detail?.status === "declined" && detail.initiator !== "vendor") {
     headerActions.push({
       key: "accept",
@@ -248,7 +233,10 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
   }
 
   const footerActions: BookingDetailAction[] = [];
-  if (detail?.status === "accepted") {
+  if (
+    detail?.status === "accepted" &&
+    detail.payment_status !== "payout_released"
+  ) {
     if (detail.payment_status === "paid" && !detail.vendor_completion_confirmed_at) {
       footerActions.push({
         key: "complete",
@@ -271,269 +259,193 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
     });
   }
 
+  const vendorCancelCopy =
+    detail?.payment_status === "paid"
+      ? BOOKING_CONFIRM_COPY.cancelVendorPaid
+      : BOOKING_CONFIRM_COPY.cancelVendor;
+
   const confirmCopy: Record<
     "withdraw" | "vendor_cancel" | "complete",
-    { title: string; confirmLabel: string; loadingLabel: string; variant: "destructive" | "primary" }
+    {
+      title: string;
+      description: string;
+      confirmLabel: string;
+      loadingLabel: string;
+      cancelLabel?: string;
+      variant: "destructive" | "primary";
+    }
   > = {
     withdraw: {
-      title: "Withdraw this quote?",
-      confirmLabel: "Withdraw quote",
-      loadingLabel: "Withdrawing…",
+      title: BOOKING_CONFIRM_COPY.withdrawQuote.title,
+      description: BOOKING_CONFIRM_COPY.withdrawQuote.description,
+      cancelLabel: BOOKING_CONFIRM_COPY.withdrawQuote.cancelLabel,
+      confirmLabel: BOOKING_CONFIRM_COPY.withdrawQuote.confirmLabel,
+      loadingLabel: BOOKING_CONFIRM_COPY.withdrawQuote.confirmLoadingLabel,
       variant: "destructive",
     },
     vendor_cancel: {
-      title: "Cancel this booking?",
-      confirmLabel: "Yes, cancel",
-      loadingLabel: "Cancelling…",
+      title: vendorCancelCopy.title,
+      description: vendorCancelCopy.description,
+      cancelLabel: vendorCancelCopy.cancelLabel,
+      confirmLabel: vendorCancelCopy.confirmLabel,
+      loadingLabel: vendorCancelCopy.confirmLoadingLabel,
       variant: "destructive",
     },
     complete: {
-      title: "Confirm the event is complete?",
-      confirmLabel: "Confirm complete",
-      loadingLabel: "Confirming…",
+      title: BOOKING_CONFIRM_COPY.confirmComplete.title,
+      description: BOOKING_CONFIRM_COPY.confirmComplete.description,
+      confirmLabel: BOOKING_CONFIRM_COPY.confirmComplete.confirmLabel,
+      loadingLabel: BOOKING_CONFIRM_COPY.confirmComplete.confirmLoadingLabel,
       variant: "primary",
     },
   };
 
+  const showClientResponseFlow =
+    detail?.status === "pending" && detail.initiator !== "vendor";
+
   return (
     <>
-    {confirmAction ? (
-      <ConfirmDialog
-        isOpen
-        title={confirmCopy[confirmAction].title}
-        confirmLabel={confirmCopy[confirmAction].confirmLabel}
-        confirmLoadingLabel={confirmCopy[confirmAction].loadingLabel}
-        confirmVariant={confirmCopy[confirmAction].variant}
-        loading={actionBusy}
-        onCancel={() => setConfirmAction(null)}
-        onConfirm={() => {
-          const action = confirmAction;
-          setConfirmAction(null);
-          if (action === "withdraw") void applyWithdrawVendorQuote();
-          else if (action === "vendor_cancel") void applyVendorCancel();
-          else if (action === "complete") void applyConfirmCompletion();
-        }}
-      />
-    ) : null}
-    {detail ? (
-      <ChatDrawer
-        isOpen={chatOpen}
-        onClose={() => setChatOpen(false)}
-        portal="vendor"
-        counterpartyName={detail.client_email ?? "this client"}
-        conversationId={detail.conversation_id}
-        counterpartyUserId={detail.client_user_id ?? undefined}
-        onConversationCreated={(conversationId) => {
-          setDetail((d) => (d && d.id === detail.id ? { ...d, conversation_id: conversationId } : d));
-        }}
-      />
-    ) : null}
-    <MasterDetailLayout
-      hasSelection={!!selectedBookingId}
-      list={
-        <BookingListPanel
-          tab={tab}
-          onTabChange={setTab}
-          rows={rows}
-          loading={listLoading}
-          error={listError}
-          selectedId={selectedBookingId ?? null}
-          onSelect={(id) => router.push(`/vendor/bookings/${id}`)}
-            emptyTitle={BOOKING_EMPTY_LIST_TITLE[tab]}
+      {confirmAction ? (
+        <ConfirmDialog
+          isOpen
+          title={confirmCopy[confirmAction].title}
+          description={confirmCopy[confirmAction].description}
+          cancelLabel={confirmCopy[confirmAction].cancelLabel}
+          confirmLabel={confirmCopy[confirmAction].confirmLabel}
+          confirmLoadingLabel={confirmCopy[confirmAction].loadingLabel}
+          confirmVariant={confirmCopy[confirmAction].variant}
+          loading={actionBusy}
+          onCancel={() => setConfirmAction(null)}
+          onConfirm={() => {
+            const action = confirmAction;
+            setConfirmAction(null);
+            if (action === "withdraw") void applyWithdrawVendorQuote();
+            else if (action === "vendor_cancel") void applyVendorCancel();
+            else if (action === "complete") void applyConfirmCompletion();
+          }}
         />
-      }
-      detail={
-        <div className="flex h-full min-h-0 flex-col overflow-hidden">
-          {selectedBookingId ? (
-            <button
-              type="button"
-              onClick={() => router.push("/vendor/bookings")}
-              className="mb-3 inline-flex w-fit shrink-0 items-center gap-1 text-sm font-medium text-neutral-600 hover:text-neutral-900 lg:hidden"
-            >
-              ← Back to bookings
-            </button>
-          ) : null}
-          <BookingDetailPanel
-            booking={viewModel}
-            loading={detailLoading}
-            error={detailError}
-            actionError={actionError}
-            headerActions={headerActions}
-            footerActions={footerActions}
-            emptyTitle={list.length === 0 ? "No bookings yet" : "Select a booking"}
-            slots={{
-              beforeSections:
-                detail && detail.status === "accepted" && detail.payment_status === "unpaid" ? (
-                  <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-4 shadow-sm">
-                    <p className="text-sm font-semibold text-amber-950">
-                      Waiting on the client&apos;s payment
-                    </p>
-                    <p className="mt-1 text-sm text-amber-900/90">
-                      The client hasn&apos;t paid yet. You&apos;ll be able to confirm the event is
-                      complete once their payment goes through.
-                    </p>
-                  </div>
-                ) : detail && detail.status === "pending" && detail.initiator !== "vendor" ? (
-                  <div className="rounded-lg border border-amber-200/90 bg-amber-50/80 px-3 py-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-amber-900">
-                      Extra costs or discounts
-                    </p>
-                    <p className="mt-1 text-xs text-amber-950/80">
-                      Before you accept, add delivery, travel, or other charges. To lower the quote,
-                      add a discount line and enter the amount as a positive number. The client
-                      will see it taken off. The Eventtz fee ({getBookingServiceFeePercent()}%) is
-                      calculated on your share after these changes.
-                    </p>
-                    <ul className="mt-3 space-y-2">
-                      {adjDrafts.map((row, idx) => (
-                        <li
-                          key={`${detail.id}-adj-${idx}`}
-                          className="flex flex-col gap-2 rounded-lg border border-amber-200/80 bg-white p-2 sm:flex-row sm:items-end"
-                        >
-                          <div className="w-full min-w-[7rem] sm:w-28">
-                            <label className="text-[10px] font-medium text-neutral-500">Type</label>
-                            <select
-                              value={row.kind}
-                              onChange={(e) => {
-                                const t = [...adjDrafts];
-                                const kind = e.target.value as "cost" | "discount";
-                                const prev = t[idx];
-                                t[idx] = {
-                                  ...prev,
-                                  kind,
-                                  tag:
-                                    kind === "discount"
-                                      ? "discount"
-                                      : prev.tag === "discount"
-                                        ? "delivery"
-                                        : prev.tag,
-                                };
-                                setAdjDrafts(t);
-                              }}
-                              className="mt-0.5 w-full rounded-lg border border-neutral-200 px-2 py-1.5 text-sm"
-                            >
-                              <option value="cost">Extra cost</option>
-                              <option value="discount">Discount</option>
-                            </select>
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <label className="text-[10px] font-medium text-neutral-500">Tag</label>
-                            <select
-                              value={row.tag}
-                              onChange={(e) => {
-                                const t = [...adjDrafts];
-                                t[idx] = { ...t[idx], tag: e.target.value };
-                                setAdjDrafts(t);
-                              }}
-                              className="mt-0.5 w-full rounded-lg border border-neutral-200 px-2 py-1.5 text-sm"
-                            >
-                              {ADJUSTMENT_TAGS.map((o) => (
-                                <option key={o.value} value={o.value}>
-                                  {o.label}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="min-w-0 flex-[2]">
-                            <label className="text-[10px] font-medium text-neutral-500">
-                              Description
-                            </label>
-                            <input
-                              type="text"
-                              value={row.label}
-                              onChange={(e) => {
-                                const t = [...adjDrafts];
-                                t[idx] = { ...t[idx], label: e.target.value };
-                                setAdjDrafts(t);
-                              }}
-                              placeholder="e.g. Delivery to venue"
-                              className="mt-0.5 w-full rounded-lg border border-neutral-200 px-2 py-1.5 text-sm"
-                            />
-                          </div>
-                          <div className="w-full sm:w-28">
-                            <label className="text-[10px] font-medium text-neutral-500">
-                              {row.kind === "discount" ? "£ off" : "£"}
-                            </label>
-                            <input
-                              type="number"
-                              min={0.01}
-                              step={0.01}
-                              value={row.amount}
-                              onChange={(e) => {
-                                const t = [...adjDrafts];
-                                t[idx] = { ...t[idx], amount: e.target.value };
-                                setAdjDrafts(t);
-                              }}
-                              className="mt-0.5 w-full rounded-lg border border-neutral-200 px-2 py-1.5 text-sm"
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => setAdjDrafts(adjDrafts.filter((_, i) => i !== idx))}
-                            className="text-xs font-semibold text-red-700 hover:underline sm:mb-1"
-                          >
-                            Remove
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setAdjDrafts([...adjDrafts, { kind: "cost", tag: "delivery", label: "", amount: "" }])
-                        }
-                        className="rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-amber-950 hover:bg-amber-100"
-                      >
-                        + Add cost
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setAdjDrafts([
-                            ...adjDrafts,
-                            { kind: "discount", tag: "discount", label: "", amount: "" },
-                          ])
-                        }
-                        className="rounded-lg border border-emerald-300 bg-emerald-50/80 px-3 py-1.5 text-xs font-semibold text-emerald-950 hover:bg-emerald-100"
-                      >
-                        + Add discount
-                      </button>
-                      <button
-                        type="button"
-                        disabled={adjSaving || actionBusy}
-                        onClick={() => void saveAdjustments()}
-                        className="rounded-lg bg-amber-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-950 disabled:opacity-60"
-                      >
-                        {adjSaving ? "Saving…" : "Save adjustments"}
-                      </button>
-                    </div>
-                  </div>
+      ) : null}
+      {detail ? (
+        <ChatDrawer
+          isOpen={chatOpen}
+          onClose={() => setChatOpen(false)}
+          portal="vendor"
+          counterpartyName={detail.client_email ?? "this client"}
+          conversationId={detail.conversation_id}
+          counterpartyUserId={detail.client_user_id ?? undefined}
+          onConversationCreated={(conversationId) => {
+            setDetail((d) =>
+              d && d.id === detail.id ? { ...d, conversation_id: conversationId } : d,
+            );
+          }}
+        />
+      ) : null}
+      <MasterDetailLayout
+        hasSelection={!!selectedBookingId}
+        list={
+          <BookingListPanel
+            tab={tab}
+            onTabChange={setTab}
+            rows={rows}
+            loading={listLoading}
+            error={listError}
+            selectedId={selectedBookingId ?? null}
+            onSelect={(id) => router.push(`/vendor/bookings/${id}`)}
+            emptyTitle={BOOKING_EMPTY_LIST_TITLE[tab]}
+          />
+        }
+        detail={
+          <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+            {selectedBookingId ? (
+              <BackLink
+                href="/vendor/bookings"
+                label="Back to bookings"
+                tone="muted"
+                mobileOnly
+                className="mb-3 shrink-0"
+              />
+            ) : null}
+            <div className="min-h-0 flex-1 overflow-hidden">
+              <BookingDetailPanel
+              booking={viewModel}
+              loading={detailLoading}
+              error={detailError}
+              actionError={actionError}
+              headerActions={headerActions}
+              footerActions={footerActions}
+              emptyTitle={list.length === 0 ? "No bookings yet" : "Select a booking"}
+              slots={{
+                beforeSections: detail ? (
+                  <>
+                    {detail.status === "accepted" && detail.payment_status === "unpaid" ? (
+                      <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-4 shadow-sm">
+                        <p className="text-sm font-semibold text-amber-950">
+                          Waiting on the client&apos;s payment
+                        </p>
+                        <p className="mt-1 text-sm text-amber-900/90">
+                          The client hasn&apos;t paid yet. You&apos;ll be able to confirm the event is
+                          complete once their payment goes through.
+                        </p>
+                      </div>
+                    ) : null}
+
+                    <BookingCompletionBanner
+                      viewer="vendor"
+                      status={detail.status}
+                      paymentStatus={detail.payment_status}
+                      eventDate={detail.event_date}
+                      eventEndDate={detail.event_end_date}
+                      waitingOn={detail.completion_waiting_on}
+                      autoReleaseAt={detail.payout_auto_release_at}
+                      confirmDisabled={actionBusy}
+                      onConfirm={() => setConfirmAction("complete")}
+                    />
+
+                    {detail.status === "cancelled" &&
+                    (detail.payment_status === "refunded" ||
+                      detail.payment_status === "partially_refunded") ? (
+                      <div className="mt-4 rounded-xl border border-neutral-200 bg-neutral-50 px-4 pb-4 pt-5 text-sm text-neutral-700">
+                        {PAYMENT_FLOW_COPY.cancelledRefundedVendor}
+                      </div>
+                    ) : null}
+                  </>
                 ) : undefined,
-              afterSections:
-                detail && detail.status === "completed" ? (
-                  <BookingReviewPanel
-                    title="Client review"
-                    review={detail.review}
-                    showReviewer
-                    emptyLabel="The client has not left a review for this booking yet."
+                footerSection: showClientResponseFlow ? (
+                  <VendorBookingResponseFlow
+                    key={`${detail.id}-${detail.vendor_adjustments.length}`}
+                    detail={detail}
+                    actionBusy={actionBusy}
+                    adjSaving={adjSaving}
+                    onAcceptAtListedPrice={() => void applyBookingStatus("accepted")}
+                    onDecline={() => void applyBookingStatus("declined")}
+                    onSendUpdatedPrice={(rows) => void sendUpdatedPrice(rows)}
                   />
                 ) : undefined,
-              disputeSection: detail ? (
-                <BookingDisputeSection
-                  bookingId={detail.id}
-                  role="vendor"
-                  bookingStatus={detail.status}
-                  presentation="drawer"
-                />
-              ) : (
-                <></>
-              ),
-            }}
-          />
-        </div>
-      }
-    />
+                afterSections:
+                  detail && detail.status === "completed" ? (
+                    <BookingReviewPanel
+                      title="Client review"
+                      review={detail.review}
+                      showReviewer
+                      emptyLabel="The client has not left a review for this booking yet."
+                    />
+                  ) : undefined,
+                disputeSection: detail ? (
+                  <BookingDisputeSection
+                    bookingId={detail.id}
+                    role="vendor"
+                    bookingStatus={detail.status}
+                    presentation="drawer"
+                  />
+                ) : (
+                  <></>
+                ),
+              }}
+              />
+            </div>
+          </div>
+        }
+      />
     </>
   );
 }

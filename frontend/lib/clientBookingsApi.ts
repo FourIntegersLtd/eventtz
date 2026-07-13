@@ -36,6 +36,10 @@ export type ClientBookingListItem = {
   /** Only meaningful for `group: "completed"` rows — powers the review nudge. */
   has_review: boolean;
   payment_status: string;
+  has_price_update?: boolean;
+  /** Who still needs to confirm the event went well (accepted + paid bookings). */
+  completion_waiting_on?: "client" | "vendor" | "both" | null;
+  client_completion_confirmed_at?: string | null;
 };
 
 export type ClientBookingsListResponse = {
@@ -66,11 +70,17 @@ export type ClientBookingDetail = {
   payment_status: string;
   client_completion_confirmed_at: string | null;
   vendor_completion_confirmed_at: string | null;
+  /** When the vendor payout releases automatically (48h after the event) if no one confirms. */
+  payout_auto_release_at?: string | null;
+  /** Who still needs to confirm the event went well. */
+  completion_waiting_on?: "client" | "vendor" | "both" | null;
   /** Present when the client has submitted a review for this booking. */
   review?: { id: string; rating: number; body: string; created_at: string | null } | null;
   initiator?: BookingInitiator;
   conversation_id: string | null;
   counterparty_phone?: string | null;
+  /** Client-facing total at request time (before vendor price changes). */
+  initial_client_total_label?: string | null;
 };
 
 export type ClientBookingDetailResponse = {

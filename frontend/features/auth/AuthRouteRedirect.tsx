@@ -25,7 +25,7 @@ function Redirect({ to, forceParams }: AuthRouteRedirectProps) {
   }, [router, searchParams, to, forceParams]);
 
   return (
-    <main className="min-h-screen bg-[#f5f2f8] px-4 py-10">
+    <main className="min-h-screen bg-auth-bg px-4 py-10">
       <p className="text-center text-sm text-neutral-600">Redirecting…</p>
     </main>
   );

@@ -189,7 +189,7 @@ export function buildBrowsePricingOptions(vendor: ExploreVendor): BrowsePricingO
         promoLines,
         description:
           pkg.details.trim() ||
-          "The vendor listed this package with a price — ask what’s included when you get in touch.",
+          "Ask the vendor what's included.",
         timelineLine,
         featureLines: serviceLines,
       };
@@ -209,8 +209,7 @@ export function buildBrowsePricingOptions(vendor: ExploreVendor): BrowsePricingO
       unitPriceGbp: priced.unitPriceGbp,
       discountBadge: priced.discountBadge,
       promoLines,
-      description:
-        "Per-hour rate from this vendor’s pricing step. Scope, hours, and travel are confirmed when you enquire.",
+      description: "Hourly rate. Confirm hours and travel with the vendor.",
       timelineLine: null,
       featureLines: serviceLines,
     });
@@ -227,8 +226,7 @@ export function buildBrowsePricingOptions(vendor: ExploreVendor): BrowsePricingO
       unitPriceGbp: priced.unitPriceGbp,
       discountBadge: priced.discountBadge,
       promoLines,
-      description:
-        "Per-day rate from this vendor’s pricing step. Coverage and travel are confirmed when you enquire.",
+      description: "Daily rate. Confirm coverage and travel with the vendor.",
       timelineLine: null,
       featureLines: serviceLines,
     });
@@ -248,8 +246,7 @@ export function buildBrowsePricingOptions(vendor: ExploreVendor): BrowsePricingO
       unitPriceGbp: null,
       discountBadge: null,
       promoLines: [],
-      description:
-        "This vendor has not published package prices or fixed hourly/daily rates yet. Send an enquiry to discuss your event.",
+      description: "Prices aren't listed yet. Ask for a quote.",
       timelineLine: null,
       featureLines: serviceLines.length > 0 ? serviceLines : [],
     },

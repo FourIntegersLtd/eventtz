@@ -1,5 +1,6 @@
 "use client";
 
+import { portalCard, portalCardPadding } from "@/components/portal-shell/portalTheme";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -13,6 +14,7 @@ import { AttentionFeedCard } from "@/features/dashboard/AttentionFeedCard";
 import { dashboardNotificationUpdates } from "@/features/dashboard/attentionFeedHelpers";
 import type { AttentionItem } from "@/features/dashboard/attentionTypes";
 import { useMarketplaceBookmarks } from "@/features/marketplace/useMarketplaceBookmarks";
+import { eventDayOver } from "@/features/bookings/eventDay";
 import { useClientDashboard } from "./useClientDashboard";
 import { ClientBookingsCalendarCard } from "./ClientBookingsCalendarCard";
 
@@ -68,6 +70,33 @@ export function ClientDashboardView() {
           subtitle: `${b.event_name} · ${formatEventDate(b.event_date)}`,
           href: `/client/bookings/${b.id}`,
           ctaLabel: "Review",
+        });
+      }
+    }
+
+    for (const b of activeBookings) {
+      if (b.status !== "accepted" || b.payment_status !== "paid") continue;
+      if (!b.completion_waiting_on) continue;
+      if (!eventDayOver(b.event_date, b.event_end_date)) continue;
+      if (b.completion_waiting_on === "vendor") {
+        items.push({
+          id: `completion-wait-${b.id}`,
+          priority: 2,
+          tone: "info",
+          title: `Waiting for ${b.vendor_display_name} to confirm`,
+          subtitle: `${b.event_name} · you've confirmed — the vendor is paid once they confirm too`,
+          href: `/client/bookings/${b.id}`,
+          ctaLabel: "View",
+        });
+      } else {
+        items.push({
+          id: `completion-confirm-${b.id}`,
+          priority: 0,
+          tone: "urgent",
+          title: "How did your event go?",
+          subtitle: `${b.event_name} · confirm it's complete, or report a problem`,
+          href: `/client/bookings/${b.id}`,
+          ctaLabel: "Confirm",
         });
       }
     }
@@ -173,9 +202,7 @@ export function ClientDashboardView() {
                   <p className="font-heading text-xl font-semibold sm:text-2xl">
                     No upcoming events yet
                   </p>
-                  <p className="mt-1 text-sm text-white/80">
-                    Browse vendors and send a request to get your next event planned.
-                  </p>
+                  <p className="mt-1 text-sm text-white/80">Browse vendors to get started.</p>
                 </div>
               </div>
               <Link
@@ -194,7 +221,7 @@ export function ClientDashboardView() {
         <div className="grid w-full min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 sm:gap-5">
           <Link
             href="/client/bookings?tab=active&status=pending"
-            className="flex min-w-0 w-full flex-col justify-between overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50 transition hover:shadow-md"
+            className={`flex min-w-0 w-full flex-col justify-between overflow-hidden ${portalCard} ${portalCardPadding} transition hover:shadow-md`}
           >
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 text-amber-700">
               <Calendar className="h-4 w-4" aria-hidden />
@@ -207,7 +234,7 @@ export function ClientDashboardView() {
 
           <Link
             href="/client/messages"
-            className="flex min-w-0 w-full flex-col justify-between overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50 transition hover:shadow-md"
+            className={`flex min-w-0 w-full flex-col justify-between overflow-hidden ${portalCard} ${portalCardPadding} transition hover:shadow-md`}
           >
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
               <MessageSquare className="h-4 w-4" aria-hidden />
@@ -220,7 +247,7 @@ export function ClientDashboardView() {
 
           <Link
             href="/client/favorites"
-            className="flex flex-col justify-between rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50 transition hover:shadow-md hover:-translate-y-0.5 sm:col-span-1"
+            className={`flex flex-col justify-between ${portalCard} ${portalCardPadding} transition hover:shadow-md hover:-translate-y-0.5 sm:col-span-1`}
           >
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-rose-100 text-rose-600">
               <Heart className="h-4 w-4" aria-hidden />
@@ -253,13 +280,11 @@ export function ClientDashboardView() {
             />
           ) : null}
 
-          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50">
+          <div className={`${portalCard} ${portalCardPadding}`}>
             <p className="font-heading text-sm font-semibold text-neutral-900">
               Planning something new?
             </p>
-            <p className="mt-1 text-sm text-neutral-500">
-              Search vendors by category, location, and date to send a booking request.
-            </p>
+            <p className="mt-1 text-sm text-neutral-500">Find a vendor for your next event.</p>
             <Button
               variant="secondary"
               size="sm"

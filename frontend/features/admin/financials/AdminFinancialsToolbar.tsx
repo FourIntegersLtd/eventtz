@@ -13,6 +13,7 @@ const PERIODS: { value: FinancialsPeriod; label: string }[] = [
 type AdminFinancialsPeriodControlProps = {
   period: FinancialsPeriod;
   csvBusy: boolean;
+  showExport?: boolean;
   onPeriodChange: (period: FinancialsPeriod) => void;
   onExportCsv: () => void;
 };
@@ -21,6 +22,7 @@ type AdminFinancialsPeriodControlProps = {
 export function AdminFinancialsPeriodControl({
   period,
   csvBusy,
+  showExport = true,
   onPeriodChange,
   onExportCsv,
 }: AdminFinancialsPeriodControlProps) {
@@ -45,16 +47,18 @@ export function AdminFinancialsPeriodControl({
         </button>
       ))}
       <span className="mx-0.5 h-5 w-px shrink-0 bg-neutral-200/90" aria-hidden />
-      <Button
-        variant="ghost"
-        size="sm"
-        className="min-h-9 gap-0 px-2.5"
-        icon={<Download className="h-4 w-4" aria-hidden />}
-        loading={csvBusy}
-        aria-label="Export CSV"
-        title="Export CSV"
-        onClick={onExportCsv}
-      />
+      {showExport ? (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="min-h-9 gap-0 px-2.5"
+          icon={<Download className="h-4 w-4" aria-hidden />}
+          loading={csvBusy}
+          aria-label="Export CSV"
+          title="Export CSV"
+          onClick={onExportCsv}
+        />
+      ) : null}
     </div>
   );
 }

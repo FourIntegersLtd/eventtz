@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
-import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { EventtzLogo } from "@/components/branding/EventtzLogo";
 import { PortalShell } from "@/components/portal-shell/PortalShell";
+import { BackLink } from "@/components/ui/BackLink";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { useToast } from "@/components/ui/Toast";
 import {
@@ -90,13 +90,7 @@ function ClientVendorDetailPageContent() {
 
   const headerBar = (
     <div className="mb-6 flex flex-wrap items-center gap-3">
-      <Link
-        href="/client/browse"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-600 hover:text-neutral-900"
-      >
-        <ArrowLeft className="h-4 w-4" strokeWidth={2} aria-hidden />
-        Back to browse
-      </Link>
+      <BackLink href="/client/browse" label="Back to browse" tone="muted" />
       {!user ? (
         <Link
           href="/"
@@ -110,7 +104,7 @@ function ClientVendorDetailPageContent() {
 
   if (!userId) {
     return (
-      <main className="min-h-screen bg-[#f5f2f8] px-4 py-10">
+      <main className="min-h-screen bg-auth-bg px-4 py-10">
         <p className="text-center text-sm text-neutral-600">Invalid link.</p>
       </main>
     );
@@ -133,12 +127,7 @@ function ClientVendorDetailPageContent() {
           <p className="text-sm text-neutral-700">
             This vendor could not be found or is no longer listed.
           </p>
-          <Link
-            href="/client/browse"
-            className="inline-flex text-sm font-medium text-primary hover:underline"
-          >
-            Back to browse
-          </Link>
+          <BackLink href="/client/browse" label="Back to browse" />
         </div>
       );
     }
@@ -147,15 +136,14 @@ function ClientVendorDetailPageContent() {
       <>
         {marketplaceSearchMismatchReasons ? (
           <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-            <p className="font-semibold">Heads up — your URL search doesn’t match this vendor</p>
+            <p className="font-semibold">This vendor doesn't match your search filters</p>
             <ul className="mt-2 list-inside list-disc space-y-1 text-amber-900">
               {marketplaceSearchMismatchReasons.map((r, i) => (
                 <li key={`${i}-${r.slice(0, 40)}`}>{r}</li>
               ))}
             </ul>
             <p className="mt-2 text-xs text-amber-800/90">
-              You can still book or message them — double-check dates and services. Marketplace
-              search would filter differently.
+              You can still book or message them. Check dates and services first.
             </p>
           </div>
         ) : null}
@@ -184,7 +172,7 @@ function ClientVendorDetailPageContent() {
               setBookingOpen(false);
               showToast({
                 title: "Request sent",
-                description: `${businessName} will be notified and can respond when they're ready.`,
+                description: `${businessName} will be notified.`,
                 tone: "success",
               });
               router.push(`/client/bookings/${bookingId}`);
@@ -224,8 +212,8 @@ function ClientVendorDetailPageContent() {
   }
 
   return (
-    <main className="min-h-dvh bg-[#f5f2f8]">
-      <header className="border-b border-slate-200/60 bg-[#f5f2f8]/90 px-4 py-3 backdrop-blur sm:px-6 lg:px-12">
+    <main className="min-h-dvh bg-auth-bg">
+      <header className="border-b border-neutral-200/60 bg-auth-bg/90 px-4 py-3 backdrop-blur sm:px-6 lg:px-12">
         <div className="mx-auto flex min-w-0 max-w-6xl flex-wrap items-center justify-between gap-3">
           <EventtzLogo priority href={logoHref} />
           <nav className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 text-sm">
@@ -272,7 +260,7 @@ export default function ClientVendorDetailPage() {
   return (
     <Suspense
       fallback={
-        <main className="min-h-screen bg-[#f5f2f8] px-4 py-10">
+        <main className="min-h-screen bg-auth-bg px-4 py-10">
           <LoadingState label="Loading vendor…" variant="page" />
         </main>
       }

@@ -68,9 +68,7 @@ export function ClientBookingReviewForm({
       <p className="text-sm font-semibold text-neutral-900">
         How was your experience with {vendorName}?
       </p>
-      <p className="mt-1 text-xs text-neutral-600">
-        Tap a star to get started — your review helps other clients choose vendors on Eventtz.
-      </p>
+      <p className="mt-1 text-xs text-neutral-600">Tap a star to leave a review.</p>
       <div className="mt-3">
         <StarRating
           rating={rating}
@@ -91,7 +89,7 @@ export function ClientBookingReviewForm({
             onChange={(e) => setBody(e.target.value)}
             rows={4}
             maxLength={4000}
-            placeholder="Share what went well (minimum 10 characters)."
+            placeholder="What went well? (min 10 characters)"
           />
           {error ? <p className="text-xs text-red-700">{error}</p> : null}
           <Button variant="primary" loading={busy} onClick={() => void submit()}>

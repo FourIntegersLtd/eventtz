@@ -1,5 +1,6 @@
 "use client";
 
+import { portalCard, portalCardPadding } from "@/components/portal-shell/portalTheme";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MessageSquare } from "lucide-react";
@@ -55,7 +56,7 @@ export function ChatPortalView({ portal, selectedConversationId }: ChatPortalVie
     } finally {
       setLoading(false);
     }
-  }, [portal]);
+  }, []);
 
   useEffect(() => {
     void load();
@@ -68,7 +69,7 @@ export function ChatPortalView({ portal, selectedConversationId }: ChatPortalVie
       hasSelection={!!selectedConversationId}
       list={
         <div className="flex h-full max-h-full min-h-0 flex-col overflow-hidden">
-        <div className="flex h-full max-h-full min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-neutral-200/50">
+        <div className={`flex h-full max-h-full min-h-0 flex-1 flex-col overflow-hidden ${portalCard}`}>
           <div className="border-b border-neutral-100 px-5 py-4">
             <p className="text-sm font-semibold text-neutral-900">
               {rows.length} conversation{rows.length === 1 ? "" : "s"}
@@ -153,17 +154,15 @@ export function ChatPortalView({ portal, selectedConversationId }: ChatPortalVie
       detail={
         selectedConversationId ? (
           <div className="flex h-full min-h-0 flex-col overflow-hidden">
-            <button
-              type="button"
-              onClick={() => router.push(base)}
-              className="mb-3 inline-flex w-fit shrink-0 items-center gap-1 text-sm font-medium text-neutral-600 hover:text-neutral-900 lg:hidden"
-            >
-              ← Back to messages
-            </button>
-            <ChatThreadView portal={portal} conversationId={selectedConversationId} />
+            <ChatThreadView
+              portal={portal}
+              conversationId={selectedConversationId}
+              backHref={base}
+              backLabel="Messages"
+            />
           </div>
         ) : (
-          <div className="flex h-full min-h-0 flex-1 items-center justify-center overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50">
+          <div className={`flex h-full min-h-0 flex-1 items-center justify-center overflow-hidden ${portalCard} ${portalCardPadding}`}>
             <EmptyState
               className="border-0"
               icon={<MessageSquare className="h-9 w-9" strokeWidth={1.5} />}

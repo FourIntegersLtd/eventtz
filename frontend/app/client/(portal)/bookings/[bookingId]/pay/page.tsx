@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { BackLink } from "@/components/ui/BackLink";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
@@ -10,6 +10,7 @@ import {
   fetchClientBookingDetail,
   patchClientBookingVenue,
 } from "@/lib/clientBookingsApi";
+import { PAYMENT_FLOW_COPY } from "@/features/bookings/bookingConfirmCopy";
 
 /** Collects venue details if needed, then redirects to Stripe Checkout. */
 export default function ClientBookingPayPage() {
@@ -53,7 +54,7 @@ export default function ClientBookingPayPage() {
     if (!bookingId) return;
     const addr = venueAddress.trim();
     if (addr.length < 3) {
-      setError("Enter the venue address so your vendor knows where to go.");
+      setError("Enter the venue address.");
       return;
     }
     setBusy(true);
@@ -69,24 +70,31 @@ export default function ClientBookingPayPage() {
   };
 
   if (loading) {
-    return <LoadingState label="Preparing secure checkout…" variant="centered" className="py-16" />;
+    return (
+      <div className="w-full max-w-3xl space-y-6">
+        <BackLink
+          href={`/client/bookings/${encodeURIComponent(bookingId)}`}
+          label="Back to booking"
+        />
+        <LoadingState label="Preparing secure checkout…" variant="centered" className="py-16" />
+      </div>
+    );
   }
 
   if (needsVenue) {
     return (
       <div className="w-full max-w-3xl space-y-6">
-        <Link
+        <BackLink
           href={`/client/bookings/${encodeURIComponent(bookingId)}`}
-          className="inline-flex text-sm font-medium text-primary hover:underline"
-        >
-          ← Back to booking
-        </Link>
+          label="Back to booking"
+        />
         <header>
           <h1 className="font-heading text-xl font-semibold text-neutral-900">Event location</h1>
-          <p className="mt-2 text-sm text-neutral-600">
-            Tell your vendor where the event is. Type the venue name and address.
-          </p>
+          <p className="mt-2 text-sm text-neutral-600">Where is the event?</p>
         </header>
+        <p className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-600">
+          {PAYMENT_FLOW_COPY.beforePay}
+        </p>
         {error ? (
           <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
             {error}
@@ -129,6 +137,10 @@ export default function ClientBookingPayPage() {
     <div className="w-full max-w-3xl space-y-6">
       {error ? (
         <>
+          <BackLink
+            href={`/client/bookings/${encodeURIComponent(bookingId)}`}
+            label="Back to booking"
+          />
           <p className="text-sm text-red-700">{error}</p>
           <Button
             variant="secondary"
@@ -138,7 +150,13 @@ export default function ClientBookingPayPage() {
           </Button>
         </>
       ) : (
-        <LoadingState label="Redirecting you to secure checkout…" variant="centered" className="py-16" />
+        <>
+          <BackLink
+            href={`/client/bookings/${encodeURIComponent(bookingId)}`}
+            label="Back to booking"
+          />
+          <LoadingState label="Redirecting you to secure checkout…" variant="centered" className="py-16" />
+        </>
       )}
     </div>
   );

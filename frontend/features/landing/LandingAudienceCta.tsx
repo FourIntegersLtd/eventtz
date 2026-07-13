@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import { LandingSection } from "@/features/landing/LandingSection";
 import { landingSectionClass } from "@/features/landing/landingSectionStyles";
 
@@ -16,16 +16,18 @@ export function LandingAudienceCta() {
               Stop starting in the group chat.
             </h2>
             <p className="mt-2 text-sm text-violet-100/90">
-              Find vetted vendors. Book with a paper trail.
+              Find vetted vendors and book with confidence.
             </p>
           </div>
-          <Link
+          <ButtonLink
             href="/client/browse"
-            className="mt-8 inline-flex w-fit items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-primary transition hover:opacity-90"
+            variant="inverted"
+            shape="pill"
+            className="mt-8 w-fit px-6 py-3"
           >
             Browse vendors
             <ArrowRight className="h-4 w-4" aria-hidden />
-          </Link>
+          </ButtonLink>
         </div>
 
         <div className="flex flex-col justify-between rounded-3xl border border-primary-border bg-primary-soft/40 p-8 shadow-sm sm:p-10">
@@ -38,13 +40,14 @@ export function LandingAudienceCta() {
               Get found by clients who are ready to book.
             </p>
           </div>
-          <Link
+          <ButtonLink
             href="/register?type=vendor"
-            className="mt-8 inline-flex w-fit items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+            shape="pill"
+            className="mt-8 w-fit px-6 py-3"
           >
             Join as a vendor
             <ArrowRight className="h-4 w-4" aria-hidden />
-          </Link>
+          </ButtonLink>
         </div>
       </div>
     </LandingSection>

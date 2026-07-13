@@ -127,6 +127,8 @@ export interface VendorOnboardingData {
   allergenInfo: string;
   // Step 9
   aiBioDraft: string;
+  /** Public profile / cover photo — shown first on marketplace listings. */
+  profileImageUrl: string;
   confirmTruthful: boolean;
   confirmTerms: boolean;
 }
@@ -189,6 +191,7 @@ export const initialVendorOnboardingData: VendorOnboardingData = {
   isHalal: false,
   allergenInfo: "",
   aiBioDraft: "",
+  profileImageUrl: "",
   confirmTruthful: false,
   confirmTerms: false,
 };

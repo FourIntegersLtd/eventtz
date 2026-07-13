@@ -16,12 +16,13 @@ import { portalPageTitle } from "@/components/portal-shell/portalNav";
 export default function VendorPortalLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isProfileRoute = pathname.startsWith("/vendor/profile");
+  const isContactRoute = pathname.startsWith("/vendor/contact");
   const title = portalPageTitle(pathname, "vendor");
 
   return (
     <RequireAuth redirectTo={`/login?next=${encodeURIComponent(pathname)}`}>
       <RequireVendor>
-        {isProfileRoute ? (
+        {isProfileRoute || isContactRoute ? (
           <PortalShell portal="vendor" title={title}>
             {children}
           </PortalShell>

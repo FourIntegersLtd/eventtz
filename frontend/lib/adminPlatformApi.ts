@@ -14,6 +14,7 @@ export type AdminDashboardSummary = {
   bookings_declined: number;
   bookings_cancelled: number;
   bookings_paid_count: number;
+  bookings_needing_support: number;
   conversations_count: number;
   reviews_count: number;
 };
@@ -39,6 +40,13 @@ export type AdminDashboardMetrics = {
   open_disputes_count: number;
 };
 
+export type AdminBookingListSupportSummary = {
+  needs_attention_count: number;
+  max_severity: "critical" | "warning" | null;
+  primary_label: string | null;
+  next_action: string | null;
+};
+
 export type AdminBookingListItem = {
   id: string;
   status: string;
@@ -51,6 +59,7 @@ export type AdminBookingListItem = {
   client_total_label?: string | null;
   paid_at?: string | null;
   payment_status: string;
+  support?: AdminBookingListSupportSummary | null;
 };
 
 export type AdminBookingsListResponse = {
@@ -177,6 +186,7 @@ export type AdminBookingsQuery = {
   date_from?: string;
   date_to?: string;
   search?: string;
+  needs_attention?: boolean;
 };
 
 export async function fetchAdminBookings(
@@ -341,4 +351,90 @@ export async function patchBookingPaymentFields(
   },
 ): Promise<void> {
   await api.patch(`/api/v1/admin/bookings/${bookingId}/payment-fields`, body);
+}
+
+export type AdminBookingAttentionFlag = {
+  code: string;
+  severity: "critical" | "warning";
+  label: string;
+};
+
+export type AdminBookingSupportMeta = {
+  needs_attention: AdminBookingAttentionFlag[];
+  open_dispute: {
+    id: string;
+    status: string;
+    summary: string;
+    created_at?: string | null;
+  } | null;
+  support_hold: boolean;
+  vendor_stripe_payouts_enabled: boolean;
+  next_action: string | null;
+};
+
+export type AdminBookingDetail = Record<string, unknown> & {
+  support?: AdminBookingSupportMeta;
+};
+
+async function postAdminBookingAction(
+  bookingId: string,
+  action: string,
+  body?: Record<string, unknown>,
+): Promise<AdminBookingDetail> {
+  const { data } = await api.post<{ success: boolean; booking: AdminBookingDetail }>(
+    `/api/v1/admin/bookings/${bookingId}/${action}`,
+    body ?? {},
+  );
+  return data.booking;
+}
+
+export async function adminSyncBookingPayment(bookingId: string): Promise<AdminBookingDetail> {
+  return postAdminBookingAction(bookingId, "sync-payment");
+}
+
+export async function adminResetBookingCheckout(bookingId: string): Promise<AdminBookingDetail> {
+  return postAdminBookingAction(bookingId, "reset-checkout");
+}
+
+export async function adminReleaseBookingPayout(bookingId: string): Promise<AdminBookingDetail> {
+  return postAdminBookingAction(bookingId, "release-payout");
+}
+
+export async function adminRetryBookingPayout(bookingId: string): Promise<AdminBookingDetail> {
+  return postAdminBookingAction(bookingId, "retry-payout");
+}
+
+export async function adminCompleteBookingCancellation(
+  bookingId: string,
+): Promise<AdminBookingDetail> {
+  return postAdminBookingAction(bookingId, "complete-cancellation");
+}
+
+export async function adminCancelBookingOnBehalf(
+  bookingId: string,
+  body: { party: "client" | "vendor"; reason: string },
+): Promise<AdminBookingDetail> {
+  return postAdminBookingAction(bookingId, "cancel-on-behalf", body);
+}
+
+export async function adminConfirmBookingCompletion(
+  bookingId: string,
+  body: { party: "client" | "vendor" },
+): Promise<AdminBookingDetail> {
+  return postAdminBookingAction(bookingId, "confirm-completion", body);
+}
+
+export async function adminRunBookingMaintenance(bookingId: string): Promise<AdminBookingDetail> {
+  return postAdminBookingAction(bookingId, "run-maintenance");
+}
+
+export async function adminSetBookingSupportHold(
+  bookingId: string,
+  hold: boolean,
+): Promise<AdminBookingDetail> {
+  const { data } = await api.patch<{ success: boolean; booking: AdminBookingDetail }>(
+    `/api/v1/admin/bookings/${bookingId}/support-hold`,
+    { hold },
+  );
+  return data.booking;
 }

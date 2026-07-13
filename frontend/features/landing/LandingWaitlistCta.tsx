@@ -1,5 +1,6 @@
 "use client";
 
+import { getButtonClassName } from "@/components/ui/buttonStyles";
 import { WAITLIST_URL } from "@/features/landing/landingData";
 import { LandingSectionHeading } from "@/features/landing/LandingSectionHeading";
 
@@ -15,7 +16,10 @@ export function LandingWaitlistCta() {
           href={WAITLIST_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-primary px-6 py-3.5 text-base font-medium text-white transition hover:opacity-90 active:scale-[0.98] sm:mt-10 sm:w-auto sm:px-8 sm:py-4"
+          className={getButtonClassName({
+            shape: "pill",
+            className: "mt-8 w-full px-6 py-3.5 text-base font-medium sm:mt-10 sm:w-auto sm:px-8 sm:py-4",
+          })}
         >
           Join the waitlist
         </a>

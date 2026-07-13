@@ -4,7 +4,7 @@ import { BadgeCheck, CreditCard, MapPin, Tags } from "lucide-react";
 
 const TRUST_ITEMS = [
   { icon: BadgeCheck, label: "Vetted vendors" },
-  { icon: CreditCard, label: "Secure checkout" },
+  { icon: CreditCard, label: "Secure payments" },
   { icon: MapPin, label: "UK-wide" },
   { icon: Tags, label: "Real bookings" },
 ] as const;

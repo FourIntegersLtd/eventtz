@@ -1,5 +1,6 @@
 "use client";
 
+import { portalCard } from "@/components/portal-shell/portalTheme";
 import Link from "next/link";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { PaymentStatusBadge } from "@/components/ui/PaymentStatusBadge";
@@ -26,9 +27,7 @@ export function ClientPaymentsView() {
   return (
     <div className="w-full max-w-3xl space-y-6">
       <header>
-        <p className="text-sm text-neutral-600">
-          Bookings where payment has been initiated or completed. Open a booking for full details.
-        </p>
+        <p className="text-sm text-neutral-600">Your payment history.</p>
       </header>
 
       {loading ? (
@@ -42,7 +41,7 @@ export function ClientPaymentsView() {
           No paid bookings yet.
         </p>
       ) : (
-        <ul className="divide-y divide-neutral-100 rounded-2xl bg-white shadow-sm ring-1 ring-neutral-200/50">
+        <ul className={`divide-y divide-neutral-100 ${portalCard}`}>
           {rows.map((b) => (
             <li key={b.id}>
               <Link

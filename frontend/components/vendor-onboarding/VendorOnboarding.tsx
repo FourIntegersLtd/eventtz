@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { portalCard, portalCardPaddingLg } from "@/components/portal-shell/portalTheme";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -54,6 +55,9 @@ export function VendorOnboarding() {
     onUploadAdditionalDoc,
     onRemoveAdditionalDoc,
     onRemoveOtherDoc,
+    uploadingProfileImage,
+    profileImageError,
+    onUploadProfileImage,
     stripeStatus,
     connectingStripe,
     stripeConnectError,
@@ -92,6 +96,9 @@ export function VendorOnboarding() {
     onUploadAdditionalDoc,
     onRemoveAdditionalDoc,
     onRemoveOtherDoc,
+    uploadingProfileImage,
+    profileImageError,
+    onUploadProfileImage,
     stripeStatus,
     connectingStripe,
     stripeConnectError,
@@ -108,7 +115,7 @@ export function VendorOnboarding() {
 
   if (loadStatus === "error") {
     return (
-      <div className="mx-auto w-full max-w-3xl rounded-2xl bg-white p-5 text-center text-sm text-red-800 shadow-sm ring-1 ring-red-200/50">
+      <div className={`mx-auto w-full max-w-3xl ${portalCard} p-5 text-center text-sm text-red-800 ring-red-200/50`}>
         We couldn&apos;t load your saved profile. Refresh the page or try again in a few minutes.
       </div>
     );
@@ -155,10 +162,9 @@ export function VendorOnboarding() {
     <div className="w-full max-w-5xl text-neutral-900">
       {isWalkthrough && (
         <div className="mb-6 rounded-2xl bg-primary/5 p-4 text-sm text-neutral-800 shadow-sm ring-1 ring-primary/15">
-          <strong className="font-semibold text-neutral-900">Walkthrough mode</strong>
+          <strong className="font-semibold text-neutral-900">Preview mode</strong>
           {" — "}
-          Step through onboarding to test the flow. Changes still save; finishing won&apos;t
-          re-submit an already-approved profile.{" "}
+          Changes save, but your profile won&apos;t be resubmitted.{" "}
           <Link
             href="/vendor/settings"
             className="font-medium text-primary underline-offset-2 hover:underline"
@@ -176,11 +182,11 @@ export function VendorOnboarding() {
           </strong>{" "}
           {approvalStatus === "banned"
             ? "An admin has restricted this profile. You can’t edit it until that changes."
-            : "Editing is paused while our team checks your details. Tap “Check approval status” anytime to see if you’re live."}
+            : "You can edit again after our review."}
         </div>
       )}
       {formError && (
-        <div className="mb-8 rounded-2xl bg-red-50 p-4 text-sm text-red-800 shadow-sm ring-1 ring-red-200/50">
+        <div className="mb-8 rounded-2xl bg-red-50 p-4 text-sm text-red-800 shadow-sm ring-1 ring-red-200/50 whitespace-pre-line">
           {formError}
         </div>
       )}
@@ -232,7 +238,7 @@ export function VendorOnboarding() {
               </button>
             </nav>
           </aside>
-          <div className="min-w-0 flex-1 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-neutral-200/50 sm:p-8">
+          <div className={`min-w-0 flex-1 ${portalCard} ${portalCardPaddingLg}`}>
             <div key={step}>
               <OnboardingStepContent {...stepContentProps} />
             </div>
@@ -267,7 +273,7 @@ export function VendorOnboarding() {
               </div>
             </div>
           )}
-          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-neutral-200/50 sm:p-8">
+          <div className={`${portalCard} ${portalCardPaddingLg}`}>
             <div key={step}>
               <OnboardingStepContent {...stepContentProps} />
             </div>
@@ -287,7 +293,7 @@ export function VendorOnboarding() {
                       </button>
                     )}
                     <p className="text-center text-xs text-neutral-500 sm:text-left">
-                      Close anytime — your answers stay saved on this device.
+                      Close anytime. Your progress is saved.
                     </p>
                   </div>
                   <button
@@ -303,13 +309,35 @@ export function VendorOnboarding() {
             )}
 
             {step === 10 && (
-              <div className="mt-10 flex justify-center border-t border-neutral-100 pt-8">
-                <Link
-                  href="/vendor/dashboard"
-                  className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:opacity-90 sm:w-auto sm:min-w-[12rem]"
-                >
-                  OK — back to dashboard
-                </Link>
+              <div className="mt-10 flex flex-col items-center gap-3 border-t border-neutral-100 pt-8 text-center">
+                {approvalStatus === "approved" ? (
+                  <Link
+                    href="/vendor/dashboard"
+                    className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:opacity-90 sm:w-auto sm:min-w-[12rem]"
+                  >
+                    Go to dashboard
+                  </Link>
+                ) : approvalStatus === "banned" ? (
+                  <p className="max-w-md text-sm text-neutral-600">
+                    Your profile is not visible to clients. Contact support if you believe this
+                    is a mistake.
+                  </p>
+                ) : (
+                  <>
+                    <p className="max-w-md text-sm leading-relaxed text-neutral-600">
+                      Your dashboard unlocks after approval. We&apos;ll email you when you&apos;re
+                      live.
+                    </p>
+                    <button
+                      type="button"
+                      disabled={refreshingStatus}
+                      onClick={() => void onRefreshStatus()}
+                      className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:opacity-90 disabled:opacity-60 sm:w-auto sm:min-w-[12rem]"
+                    >
+                      {refreshingStatus ? "Checking…" : "Check approval status"}
+                    </button>
+                  </>
+                )}
               </div>
             )}
           </div>

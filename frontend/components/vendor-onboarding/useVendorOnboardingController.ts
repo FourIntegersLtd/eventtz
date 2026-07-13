@@ -375,8 +375,34 @@ export function useVendorOnboardingController(options?: { isWalkthrough?: boolea
       portfolioFileNamesPersisted: prev.portfolioFileNamesPersisted.filter(
         (u) => u !== url,
       ),
+      profileImageUrl: prev.profileImageUrl === url ? "" : prev.profileImageUrl,
     }));
   }, []);
+
+  const [uploadingProfileImage, setUploadingProfileImage] = useState(false);
+  const [profileImageError, setProfileImageError] = useState<string | null>(null);
+
+  const onUploadProfileImage = useCallback(
+    async (file: File) => {
+      if (!user?.id) {
+        setProfileImageError("Please sign in again, then retry your upload.");
+        return;
+      }
+      setUploadingProfileImage(true);
+      setProfileImageError(null);
+      try {
+        const uploaded = await uploadImage(file);
+        setData((prev) => ({ ...prev, profileImageUrl: uploaded.public_url }));
+      } catch {
+        setProfileImageError(
+          "Could not upload profile image. Check your connection and try again.",
+        );
+      } finally {
+        setUploadingProfileImage(false);
+      }
+    },
+    [user?.id],
+  );
 
   const [uploadingDoc, setUploadingDoc] = useState<
     Record<"foodHygiene" | "indemnity" | "other", boolean>
@@ -669,6 +695,9 @@ export function useVendorOnboardingController(options?: { isWalkthrough?: boolea
     removePortfolioFileAtIndex,
     acceptPortfolioQualityAnyway,
     onRemovePersistedPortfolioImage,
+    uploadingProfileImage,
+    profileImageError,
+    onUploadProfileImage,
     uploadingVideo,
     videoUploadError,
     onUploadPortfolioVideo,

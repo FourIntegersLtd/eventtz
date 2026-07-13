@@ -48,6 +48,9 @@ type Props = {
   ) => void | Promise<void>;
   onRemoveAdditionalDoc: (kind: "foodHygiene" | "indemnity") => void;
   onRemoveOtherDoc: (url: string) => void;
+  uploadingProfileImage?: boolean;
+  profileImageError?: string | null;
+  onUploadProfileImage: (file: File) => void | Promise<void>;
   stripeStatus?: VendorPaymentsStatus | null;
   connectingStripe?: boolean;
   stripeConnectError?: string | null;
@@ -83,6 +86,9 @@ export function OnboardingStepContent({
   onUploadAdditionalDoc,
   onRemoveAdditionalDoc,
   onRemoveOtherDoc,
+  uploadingProfileImage,
+  profileImageError,
+  onUploadProfileImage,
   stripeStatus,
   connectingStripe,
   stripeConnectError,
@@ -153,6 +159,9 @@ export function OnboardingStepContent({
           onGenerateBioWithAI={onGenerateBioWithAI}
           generatingBio={generatingBio}
           onNavigateToStep={onNavigateToStep}
+          uploadingProfileImage={uploadingProfileImage}
+          profileImageError={profileImageError}
+          onUploadProfileImage={onUploadProfileImage}
         />
       );
     case 10:

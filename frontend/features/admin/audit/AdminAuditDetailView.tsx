@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { BackLink } from "@/components/ui/BackLink";
 import { fetchAdminAuditLogEntry, type AdminAuditLogItem } from "@/lib/adminPlatformApi";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
@@ -75,6 +76,7 @@ export function AdminAuditDetailView({ entryId }: Props) {
 
   return (
     <div className="space-y-6">
+      <BackLink href="/admin/audit" label="Activity log" icon="chevron" tone="muted" />
       <nav className="text-sm text-neutral-600">
         <Link href="/admin/audit" className="text-primary hover:underline">
           Activity log

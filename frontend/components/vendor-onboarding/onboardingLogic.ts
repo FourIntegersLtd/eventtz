@@ -8,6 +8,7 @@ import {
 } from "./constants";
 import type { VendorOnboardingData } from "./types";
 import { parseMoneyNumber } from "@/lib/vendorDiscountDisplay";
+import { portfolioFileKey } from "@/lib/portfolioFileKey";
 
 const BIO_MAX_WORDS = 60;
 
@@ -70,52 +71,59 @@ function pctInRange(raw: string, label: string): string | null {
   return null;
 }
 
-export function validateStep(step: number, d: VendorOnboardingData): string | null {
+export function validateStepErrors(step: number, d: VendorOnboardingData): string[] {
+  const errors: string[] = [];
+
   switch (step) {
     case 1:
-      if (!d.firstName.trim() || !d.lastName.trim()) return "Enter your name.";
-      if (!d.phone.trim()) return "Enter your phone number.";
-      return null;
+      if (!d.firstName.trim()) errors.push("First name");
+      if (!d.lastName.trim()) errors.push("Last name");
+      if (!d.phone.trim()) errors.push("Phone number");
+      break;
     case 2:
-      if (!d.businessName.trim()) return "Enter your business name.";
-      if (d.servicesOffered.length === 0) return "Select at least one service.";
-      if (d.eventTypes.length === 0) return "Select at least one event type.";
-      return null;
-    case 3:
-      if (!d.baseCity.trim()) return "Enter your base city.";
-      if (d.deliveryModes.length === 0) {
-        return "Choose at least one way your service is provided.";
+      if (!d.businessName.trim()) errors.push("Business name");
+      if (d.servicesOffered.length === 0) errors.push("Service category");
+      else if (d.servicesOffered.includes("other")) {
+        errors.push("A listed service category (Other is not available yet)");
       }
-      if (!d.travelRadius) return "Select how far you can travel or deliver (miles).";
+      if (d.eventTypes.length === 0) errors.push("At least one event type");
+      break;
+    case 3:
+      if (!d.baseCity.trim()) errors.push("Base city");
+      if (d.deliveryModes.length === 0) {
+        errors.push("How your service is provided");
+      }
+      if (!d.travelRadius) errors.push("Travel or delivery radius");
       if (!d.travelDeliveryPolicy) {
-        return "Select a default travel / delivery option.";
+        errors.push("Default travel / delivery option");
       }
       if (
         d.travelDeliveryPolicy === "custom" &&
         !d.travelDeliveryPolicyCustomText.trim()
       ) {
-        return "Describe your custom travel / delivery rule.";
+        errors.push("Custom travel / delivery rule description");
       }
-      return null;
+      break;
     case 4: {
       const hourlyErr = moneyInRange(d.hourlyRate, "Hourly rate");
-      if (hourlyErr) return hourlyErr;
+      if (hourlyErr) errors.push(hourlyErr.replace(/\.$/, ""));
       const dailyErr = moneyInRange(d.dailyRate, "Daily rate");
-      if (dailyErr) return dailyErr;
+      if (dailyErr) errors.push(dailyErr.replace(/\.$/, ""));
 
       const hasPackagePrice = d.packages.some((p) => p.price.trim());
       if (!d.hourlyRate.trim() && !d.dailyRate.trim() && !hasPackagePrice) {
-        return "Add at least one rate or a package price.";
+        errors.push("At least one rate or package price");
       }
       for (const p of d.packages) {
         const hasAny =
           p.title.trim() || p.price.trim() || p.details.trim() || p.duration.trim();
         if (hasAny && (!p.title.trim() || !p.price.trim())) {
-          return "Each package needs a name and a price.";
+          errors.push("Each package needs a name and a price");
+          break;
         }
         if (p.price.trim()) {
           const pkgErr = moneyInRange(p.price, "Package price", true);
-          if (pkgErr) return pkgErr;
+          if (pkgErr) errors.push(pkgErr.replace(/\.$/, ""));
         }
       }
       if (d.offerDiscounts) {
@@ -125,19 +133,18 @@ export function validateStep(step: number, d: VendorOnboardingData): string | nu
           [d.offPeakDiscountPercent, "Off-peak discount"],
         ] as const) {
           const err = pctInRange(raw, label);
-          if (err) return err;
+          if (err) errors.push(err.replace(/\.$/, ""));
         }
         const bulkErr = moneyInRange(d.bulkDiscountThreshold, "Bulk threshold");
-        if (bulkErr) return bulkErr;
+        if (bulkErr) errors.push(bulkErr.replace(/\.$/, ""));
       }
-      return null;
+      break;
     }
     case 5:
-      if (d.availableWeekdays.length === 0) return "Pick at least one weekday.";
+      if (d.availableWeekdays.length === 0) errors.push("At least one weekday");
       if (!d.maxBookingsPerDay) {
-        return "Set max bookings per day (min 1).";
-      }
-      {
+        errors.push("Max bookings per day");
+      } else {
         const n = parseMoneyNumber(String(d.maxBookingsPerDay).trim());
         if (
           n === null ||
@@ -145,37 +152,52 @@ export function validateStep(step: number, d: VendorOnboardingData): string | nu
           n > MAX_MAX_BOOKINGS_PER_DAY ||
           !Number.isInteger(n)
         ) {
-          return `Max bookings per day must be ${MIN_MAX_BOOKINGS_PER_DAY}–${MAX_MAX_BOOKINGS_PER_DAY}.`;
+          errors.push(
+            `Max bookings per day (${MIN_MAX_BOOKINGS_PER_DAY}–${MAX_MAX_BOOKINGS_PER_DAY})`,
+          );
         }
       }
-      return null;
+      break;
     case 6: {
       const portfolioUnique = new Set([
         ...d.portfolioFileNamesPersisted,
-        ...d.portfolioFiles.map((f) => f.name),
+        ...d.portfolioFiles.map((f) => portfolioFileKey(f)),
       ]);
-      if (portfolioUnique.size < 5) return "Upload at least 5 images (max 20).";
-      if (portfolioUnique.size > 20) return "Maximum 20 images.";
-      return null;
+      if (portfolioUnique.size < 5) errors.push("At least 5 portfolio images");
+      if (portfolioUnique.size > 20) errors.push("No more than 20 portfolio images");
+      break;
     }
     case 7:
       if (!d.stripeConnectStarted) {
-        return "Start Stripe Connect verification to continue.";
+        errors.push("Stripe Connect verification");
       }
-      return null;
+      break;
     case 8:
-      // Additional info is entirely optional — nothing to validate.
-      return null;
-    case 9: {
-      if (!d.confirmTruthful || !d.confirmTerms) {
-        return "Confirm the checkboxes to submit.";
+      break;
+    case 9:
+      if (!d.confirmTruthful) {
+        errors.push("Confirmation that details are truthful");
+      }
+      if (!d.confirmTerms) {
+        errors.push("Acceptance of Terms & Conditions");
       }
       if (bioWordCount(d.aiBioDraft) > BIO_MAX_WORDS) {
-        return `Shorten your bio to ${BIO_MAX_WORDS} words or fewer.`;
+        errors.push(`Public bio (${BIO_MAX_WORDS} words or fewer)`);
       }
-      return null;
-    }
+      break;
     default:
-      return null;
+      break;
   }
+
+  return errors;
+}
+
+export function formatStepValidationErrors(errors: string[]): string | null {
+  if (errors.length === 0) return null;
+  if (errors.length === 1) return `Missing or incomplete: ${errors[0]}.`;
+  return `Please complete the following:\n${errors.map((e) => `• ${e}`).join("\n")}`;
+}
+
+export function validateStep(step: number, d: VendorOnboardingData): string | null {
+  return formatStepValidationErrors(validateStepErrors(step, d));
 }

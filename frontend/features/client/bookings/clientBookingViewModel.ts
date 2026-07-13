@@ -12,6 +12,7 @@ export function toClientBookingRowViewModel(row: ClientBookingListItem): Booking
   return toBookingListRowViewModel(row, {
     counterpartyLine: row.vendor_display_name,
     initiatorBadgeLabel: row.initiator === "vendor" ? "Vendor quote" : null,
+    portal: "client",
   });
 }
 

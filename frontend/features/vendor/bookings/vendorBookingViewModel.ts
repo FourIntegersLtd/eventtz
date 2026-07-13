@@ -10,11 +10,12 @@ import {
 
 export function toVendorBookingRowViewModel(row: VendorBookingListItem): BookingListRowViewModel {
   return toBookingListRowViewModel(row, {
-    counterpartyLine: row.client_email ?? "Client",
+    counterpartyLine: row.client_display_name ?? row.client_email ?? "Client",
     initiatorBadgeLabel: row.initiator === "vendor" ? "Your quote" : null,
     reviewLine: row.review
       ? `${row.review.rating}/5 — ${row.review.reviewer_display}`
       : null,
+    portal: "vendor",
   });
 }
 
@@ -25,7 +26,7 @@ export function toVendorBookingDetailViewModel(
   return toBookingDetailViewModel(detail, {
     role: "vendor",
     counterpartyRoleLabel: "Client",
-    counterpartyName: detail.client_email ?? "Client",
+    counterpartyName: detail.client_display_name ?? detail.client_email ?? "Client",
     notesLabel: "Notes from client",
     onOpenChat,
   });

@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import {
   VENDOR_SPOTLIGHT_BENEFITS,
   VENDOR_SPOTLIGHT_SECTION,
@@ -24,13 +24,14 @@ export function LandingVendorSpotlight() {
             title={VENDOR_SPOTLIGHT_SECTION.title}
             align="left"
           />
-          <Link
+          <ButtonLink
             href="/register?type=vendor"
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+            shape="pill"
+            className="mt-8 px-6 py-3"
           >
             Join as a vendor
             <ArrowRight className="h-4 w-4" aria-hidden />
-          </Link>
+          </ButtonLink>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">

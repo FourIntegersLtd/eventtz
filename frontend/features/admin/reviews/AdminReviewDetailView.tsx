@@ -3,10 +3,13 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { BackLink } from "@/components/ui/BackLink";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ADMIN_CONFIRM_COPY } from "@/features/bookings/bookingConfirmCopy";
 import { ReviewVisibilityBadge } from "@/components/ui/ReviewVisibilityBadge";
 import { StarRating } from "@/components/ui/StarRating";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { useAdminPermissions } from "@/features/admin/useAdminPermissions";
 import {
   fetchAdminReview,
   patchReviewVisibility,
@@ -44,6 +47,7 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 export function AdminReviewDetailView({ reviewId }: Props) {
+  const { canModerateReviews } = useAdminPermissions();
   const [review, setReview] = useState<AdminReviewRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -97,6 +101,7 @@ export function AdminReviewDetailView({ reviewId }: Props) {
 
   return (
     <div className="space-y-6">
+      <BackLink href={backHref} label="Reviews" icon="chevron" tone="muted" />
       <nav className="text-sm text-neutral-600">
         <Link href={backHref} className="text-primary hover:underline">
           Reviews
@@ -114,14 +119,16 @@ export function AdminReviewDetailView({ reviewId }: Props) {
           <h1 className="mt-2 font-heading text-2xl font-semibold text-neutral-900">{vendorName}</h1>
           <p className="mt-1 text-sm text-neutral-600">{formatReviewWhen(review.created_at)}</p>
         </div>
-        <Button
-          variant={review.hidden_at ? "primary" : "destructive"}
-          size="sm"
-          loading={busy}
-          onClick={() => setConfirmHide(true)}
-        >
-          {review.hidden_at ? "Show publicly" : "Hide from profile"}
-        </Button>
+        {canModerateReviews ? (
+          <Button
+            variant={review.hidden_at ? "primary" : "destructive"}
+            size="sm"
+            loading={busy}
+            onClick={() => setConfirmHide(true)}
+          >
+            {review.hidden_at ? "Show publicly" : "Hide from profile"}
+          </Button>
+        ) : null}
       </div>
 
       <DetailSection title="Review">
@@ -188,8 +195,21 @@ export function AdminReviewDetailView({ reviewId }: Props) {
 
       <ConfirmDialog
         isOpen={confirmHide}
-        title={review.hidden_at ? "Show review publicly?" : "Hide review from profile?"}
-        confirmLabel={review.hidden_at ? "Show" : "Hide"}
+        title={
+          review.hidden_at
+            ? ADMIN_CONFIRM_COPY.showReview.title
+            : ADMIN_CONFIRM_COPY.hideReview.title
+        }
+        description={
+          review.hidden_at
+            ? ADMIN_CONFIRM_COPY.showReview.description
+            : ADMIN_CONFIRM_COPY.hideReview.description
+        }
+        confirmLabel={
+          review.hidden_at
+            ? ADMIN_CONFIRM_COPY.showReview.confirmLabel
+            : ADMIN_CONFIRM_COPY.hideReview.confirmLabel
+        }
         confirmVariant={review.hidden_at ? "primary" : "destructive"}
         loading={busy}
         onCancel={() => setConfirmHide(false)}

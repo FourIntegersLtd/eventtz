@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { AlertTriangle, ChevronRight } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -23,12 +23,22 @@ import {
   AdminTableRow,
 } from "@/features/admin/components/AdminTable";
 import { useAdminBookings } from "@/features/admin/bookings/useAdminBookings";
+import type { AdminBookingListItem } from "@/lib/adminPlatformApi";
 
 const STATUSES = ["", "pending", "accepted", "completed", "declined", "cancelled"];
+
+function supportRowClass(support: AdminBookingListItem["support"]): string | undefined {
+  if (!support?.needs_attention_count) return undefined;
+  return support.max_severity === "critical" ? "bg-red-50/50" : "bg-amber-50/40";
+}
 
 export function AdminBookingsView() {
   const searchParams = useSearchParams();
   const initialStatus = useMemo(() => searchParams.get("status") ?? "", [searchParams]);
+  const initialNeedsAttention = useMemo(
+    () => searchParams.get("needs_attention") === "1",
+    [searchParams],
+  );
 
   const {
     rows,
@@ -46,7 +56,9 @@ export function AdminBookingsView() {
     setDateFrom,
     dateTo,
     setDateTo,
-  } = useAdminBookings({ status: initialStatus });
+    needsAttentionOnly,
+    setNeedsAttentionOnly,
+  } = useAdminBookings({ status: initialStatus, needs_attention: initialNeedsAttention });
 
   const maxOffset = Math.max(0, total - limit);
   const canPrev = offset > 0;
@@ -106,6 +118,18 @@ export function AdminBookingsView() {
             }}
           />
         </AdminFilterDateRange>
+        <label className="flex h-11 items-center gap-2 self-end text-sm text-neutral-700">
+          <input
+            type="checkbox"
+            checked={needsAttentionOnly}
+            onChange={(e) => {
+              setOffset(0);
+              setNeedsAttentionOnly(e.target.checked);
+            }}
+            className="h-4 w-4 rounded border-neutral-300"
+          />
+          Needs support only
+        </label>
       </AdminFilterBar>
 
       {loading ? (
@@ -123,11 +147,12 @@ export function AdminBookingsView() {
                 <AdminTableHeaderCell>Vendor</AdminTableHeaderCell>
                 <AdminTableHeaderCell>Total</AdminTableHeaderCell>
                 <AdminTableHeaderCell>Payment</AdminTableHeaderCell>
+                <AdminTableHeaderCell>Support</AdminTableHeaderCell>
                 <AdminTableHeaderCell className="text-right"> </AdminTableHeaderCell>
               </AdminTableHead>
               <AdminTableBody>
                 {rows.map((r) => (
-                  <AdminTableRow key={r.id}>
+                  <AdminTableRow key={r.id} className={supportRowClass(r.support)}>
                     <AdminTableCell>
                       <div className="font-medium text-neutral-900">{r.event_name || "—"}</div>
                       <div className="text-xs text-neutral-500">{r.event_date}</div>
@@ -145,6 +170,29 @@ export function AdminBookingsView() {
                     <AdminTableCell className="text-neutral-700">{r.client_total_label ?? "—"}</AdminTableCell>
                     <AdminTableCell>
                       <PaymentStatusBadge status={r.payment_status} />
+                    </AdminTableCell>
+                    <AdminTableCell className="max-w-[14rem]">
+                      {r.support?.needs_attention_count ? (
+                        <div className="space-y-0.5">
+                          <span
+                            className={`inline-flex items-center gap-1 text-xs font-semibold ${
+                              r.support.max_severity === "critical"
+                                ? "text-red-800"
+                                : "text-amber-900"
+                            }`}
+                          >
+                            <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                            {r.support.next_action ?? "Review"}
+                          </span>
+                          {r.support.primary_label ? (
+                            <p className="line-clamp-2 text-[11px] leading-snug text-neutral-600">
+                              {r.support.primary_label}
+                            </p>
+                          ) : null}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-neutral-400">—</span>
+                      )}
                     </AdminTableCell>
                     <AdminTableCell className="text-right">
                       <Link

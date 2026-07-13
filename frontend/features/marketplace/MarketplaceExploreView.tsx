@@ -6,6 +6,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { EventtzLogo } from "@/components/branding/EventtzLogo";
 import { PortalShell } from "@/components/portal-shell/PortalShell";
+import { ButtonLink } from "@/components/ui/ButtonLink";
+import { getButtonClassName } from "@/components/ui/buttonStyles";
 import {
   fetchExploreVendorsSearch,
   type ExploreVendorSearchRow,
@@ -151,11 +153,11 @@ export function MarketplaceExploreView({
       ) : visibleCards.length === 0 ? (
         <p className="mt-6 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-600">
           {savedOnly
-            ? "No saved vendors yet — tap the heart on any vendor card while browsing to add them here."
-            : "No vendors match these filters yet. Try clearing types, widening your budget"}
+            ? "No saved vendors yet. Tap the heart on a vendor to save them."
+            : "No vendors match these filters. Try clearing filters"}
           {!savedOnly && state.dates.length > 0 && !state.dateFlexible
-            ? ", or choosing different dates — some vendors may be unavailable on the days you selected."
-            : savedOnly ? "" : ", or adjusting your search."}
+            ? " or different dates."
+            : savedOnly ? "" : " or widening your search."}
         </p>
       ) : (
         <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -192,8 +194,8 @@ export function MarketplaceExploreView({
   }
 
   return (
-    <div className="min-h-dvh bg-page-bg text-slate-800">
-      <header className="bg-violet-50/95 backdrop-blur-xl">
+    <div className="min-h-dvh bg-page-bg text-neutral-900">
+      <header className="bg-primary-soft/95 backdrop-blur-xl">
         <div className="mx-auto flex min-w-0 max-w-8xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-12">
           <EventtzLogo
             href="/"
@@ -206,16 +208,17 @@ export function MarketplaceExploreView({
           <nav className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-2 text-sm sm:flex-none">
             <Link
               href="/login"
-              className="rounded-full px-3 py-1.5 font-medium text-slate-700 transition hover:bg-white/80"
+              className={getButtonClassName({
+                variant: "ghost",
+                shape: "pill",
+                className: "px-3 py-1.5",
+              })}
             >
               Sign in
             </Link>
-            <Link
-              href="/register?type=client"
-              className="rounded-full bg-primary px-4 py-2 font-semibold text-white transition hover:opacity-95"
-            >
+            <ButtonLink href="/register?type=client" shape="pill" className="px-4 py-2">
               Create account
-            </Link>
+            </ButtonLink>
           </nav>
         </div>
       </header>

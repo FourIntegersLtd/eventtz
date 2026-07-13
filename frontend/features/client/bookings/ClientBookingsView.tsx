@@ -1,10 +1,13 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { BackLink } from "@/components/ui/BackLink";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { resolveWasClientTotalLabel } from "@/lib/bookingPriceLabels";
 import { getApiErrorDetail, postBookingCheckoutSync } from "@/lib/bookingCheckoutApi";
+import { BookingPriceUpdateBanner } from "@/features/bookings/BookingPriceUpdateBanner";
 import {
   fetchClientBookingDetail,
   fetchClientBookings,
@@ -31,6 +34,11 @@ import {
 import { BOOKING_EMPTY_LIST_TITLE } from "@/features/bookings/bookingListConstants";
 import { useParticipantBookingsScaffold } from "@/features/bookings/useParticipantBookingsScaffold";
 import { BookingReviewPanel } from "@/features/reviews/BookingReviewPanel";
+import {
+  BOOKING_CONFIRM_COPY,
+  PAYMENT_FLOW_COPY,
+} from "@/features/bookings/bookingConfirmCopy";
+import { BookingCompletionBanner } from "@/features/bookings/BookingCompletionBanner";
 
 type ClientBookingsViewProps = {
   /** Present on `/client/bookings/[bookingId]` — absent on the `/client/bookings` index. */
@@ -42,6 +50,8 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
   const searchParams = useSearchParams();
   const rateParam = Number(searchParams.get("rate") ?? "");
   const deepLinkRating = rateParam >= 1 && rateParam <= 5 ? rateParam : undefined;
+  const listStatusFilter = searchParams.get("status") ?? "";
+  const urlTab = searchParams.get("tab");
 
   const fetchList = useCallback((t: "active" | "closed") => fetchClientBookings(t), []);
   const fetchDetail = useCallback((id: string) => fetchClientBookingDetail(id), []);
@@ -69,11 +79,21 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
     getDetailStatus,
   });
 
+  useEffect(() => {
+    if (urlTab === "active" || urlTab === "closed") {
+      setTab(urlTab);
+    }
+  }, [urlTab, setTab]);
+
   const [actionBusy, setActionBusy] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [declineQuoteOpen, setDeclineQuoteOpen] = useState(false);
+  const [declinePriceOpen, setDeclinePriceOpen] = useState(false);
   const [pendingQuoteAction, setPendingQuoteAction] = useState<null | "accept" | "decline">(null);
+  const [pendingPriceAction, setPendingPriceAction] = useState<null | "accept" | "decline">(null);
   const paymentBannerRef = useRef<HTMLDivElement>(null);
   const pendingPaymentSyncRef = useRef<string | null>(null);
+  const checkoutReturnSyncRef = useRef<string | null>(null);
   const paymentDue =
     detail?.status === "accepted" &&
     (detail?.payment_status === "unpaid" || detail?.payment_status === "pending");
@@ -86,6 +106,7 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
 
   useEffect(() => {
     pendingPaymentSyncRef.current = null;
+    checkoutReturnSyncRef.current = null;
   }, [selectedBookingId]);
 
   useEffect(() => {
@@ -140,17 +161,32 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
     setActionBusy(true);
     setPendingQuoteAction(next === "accepted" ? "accept" : "decline");
     try {
-      if (next === "accepted") {
-        await patchClientBookingStatus(bookingId, next);
-      } else {
-        await patchClientBookingStatus(bookingId, next);
-      }
+      await patchClientBookingStatus(bookingId, next);
       bumpDetail();
     } catch (e: unknown) {
       setActionError(getApiErrorDetail(e) ?? "Could not update this quote.");
     } finally {
       setActionBusy(false);
       setPendingQuoteAction(null);
+    }
+  };
+
+  const applyClientUpdatedPriceResponse = async (next: "accepted" | "declined") => {
+    if (!detail?.id) return;
+    if (detail.initiator !== "client" || detail.status !== "pending") return;
+    if (detail.vendor_adjustments.length === 0) return;
+    const bookingId = detail.id;
+    setActionError(null);
+    setActionBusy(true);
+    setPendingPriceAction(next === "accepted" ? "accept" : "decline");
+    try {
+      await patchClientBookingStatus(bookingId, next);
+      bumpDetail();
+    } catch (e: unknown) {
+      setActionError(getApiErrorDetail(e) ?? "Could not update this booking.");
+    } finally {
+      setActionBusy(false);
+      setPendingPriceAction(null);
     }
   };
 
@@ -173,14 +209,29 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
 
   const paymentBanner = searchParams.get("payment");
   const checkoutSessionId = searchParams.get("session_id");
-  const [paymentSyncing, setPaymentSyncing] = useState(false);
   const [paymentSyncError, setPaymentSyncError] = useState<string | null>(null);
+
+  const paymentConfirmed =
+    detail?.payment_status === "paid" || detail?.payment_status === "payout_released";
+
+  /** Strip checkout redirect params once payment is already recorded. */
+  useEffect(() => {
+    if (!selectedBookingId || paymentBanner !== "success") return;
+    if (!paymentConfirmed) return;
+    router.replace(`/client/bookings/${encodeURIComponent(selectedBookingId)}`, {
+      scroll: false,
+    });
+  }, [selectedBookingId, paymentBanner, paymentConfirmed, router]);
 
   useEffect(() => {
     if (!selectedBookingId || paymentBanner !== "success") return;
-    if (detail?.payment_status === "paid" || detail?.payment_status === "payout_released") return;
+    if (paymentConfirmed) return;
+
+    const syncKey = `${selectedBookingId}:${checkoutSessionId ?? ""}`;
+    if (checkoutReturnSyncRef.current === syncKey) return;
+    checkoutReturnSyncRef.current = syncKey;
+
     let cancelled = false;
-    setPaymentSyncing(true);
     setPaymentSyncError(null);
     void postBookingCheckoutSync(selectedBookingId, checkoutSessionId)
       .then(() => fetchClientBookingDetail(selectedBookingId))
@@ -196,12 +247,9 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
         if (!cancelled) {
           setPaymentSyncError(
             getApiErrorDetail(e) ??
-              "Payment went through but we could not confirm it yet. Refresh in a moment.",
+              "Payment went through. Refresh in a moment if it doesn't update.",
           );
         }
-      })
-      .finally(() => {
-        if (!cancelled) setPaymentSyncing(false);
       });
     return () => {
       cancelled = true;
@@ -210,28 +258,58 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
     selectedBookingId,
     paymentBanner,
     checkoutSessionId,
-    detail?.payment_status,
+    paymentConfirmed,
     router,
     setDetail,
     bumpDetail,
   ]);
 
-  const paymentConfirmed =
-    detail?.payment_status === "paid" || detail?.payment_status === "payout_released";
-  const showPaymentSuccessBanner =
-    paymentBanner === "success" && (paymentConfirmed || (!checkoutSessionId && !paymentSyncing));
+  const showCheckoutReturnBanner =
+    paymentBanner === "success" || paymentBanner === "cancelled";
+  const checkoutReturnMessage =
+    paymentBanner === "cancelled"
+      ? "Payment cancelled. Try again when you're ready."
+      : paymentSyncError
+        ? paymentSyncError
+        : paymentConfirmed
+          ? PAYMENT_FLOW_COPY.paymentSuccess
+          : "Confirming your payment…";
 
-  const rows = list.map(toClientBookingRowViewModel);
+  const rows = useMemo(
+    () =>
+      list
+        .map(toClientBookingRowViewModel)
+        .filter((row) => {
+          if (listStatusFilter !== "pending") return true;
+          return row.status === "pending";
+        }),
+    [list, listStatusFilter],
+  );
   const viewModel = detail
     ? toClientBookingDetailViewModel(detail, () => setChatOpen(true))
     : null;
 
+  const showUpdatedPriceBanner =
+    detail?.status === "pending" &&
+    detail.initiator === "client" &&
+    detail.vendor_adjustments.length > 0;
+
+  const clientCancelCopy =
+    detail?.payment_status === "paid"
+      ? BOOKING_CONFIRM_COPY.cancelClientPaid
+      : BOOKING_CONFIRM_COPY.cancelClient;
+
+  const showCancelledRefunded =
+    detail?.status === "cancelled" &&
+    (detail.payment_status === "refunded" || detail.payment_status === "partially_refunded");
+
   const footerActions: BookingDetailAction[] = [];
-  if (
+  const canCancel =
     detail &&
     (detail.status === "pending" || detail.status === "accepted") &&
-    !(detail.initiator === "vendor" && detail.status === "pending")
-  ) {
+    detail.payment_status !== "payout_released" &&
+    !(detail.initiator === "vendor" && detail.status === "pending");
+  if (canCancel) {
     footerActions.push({
       key: "cancel",
       label: "Cancel booking",
@@ -276,7 +354,7 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
         variant: "destructive",
         disabled: actionBusy,
         loading: pendingQuoteAction === "decline",
-        onClick: () => void applyClientQuoteResponse("declined"),
+        onClick: () => setDeclineQuoteOpen(true),
       },
     );
   }
@@ -285,10 +363,11 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
     <>
       <ConfirmDialog
         isOpen={cancelOpen}
-        title="Cancel this booking?"
-        cancelLabel="Keep booking"
-        confirmLabel="Yes, cancel"
-        confirmLoadingLabel="Cancelling…"
+        title={clientCancelCopy.title}
+        description={clientCancelCopy.description}
+        cancelLabel={clientCancelCopy.cancelLabel}
+        confirmLabel={clientCancelCopy.confirmLabel}
+        confirmLoadingLabel={clientCancelCopy.confirmLoadingLabel}
         confirmVariant="destructive"
         loading={actionBusy}
         onCancel={() => setCancelOpen(false)}
@@ -297,13 +376,46 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
 
       <ConfirmDialog
         isOpen={confirmCompleteOpen}
-        title="Confirm the event is complete?"
-        confirmLabel="Confirm complete"
-        confirmLoadingLabel="Confirming…"
+        title={BOOKING_CONFIRM_COPY.confirmComplete.title}
+        description={BOOKING_CONFIRM_COPY.confirmComplete.description}
+        confirmLabel={BOOKING_CONFIRM_COPY.confirmComplete.confirmLabel}
+        confirmLoadingLabel={BOOKING_CONFIRM_COPY.confirmComplete.confirmLoadingLabel}
         confirmVariant="primary"
         loading={confirmingCompletion}
         onCancel={() => setConfirmCompleteOpen(false)}
         onConfirm={() => void confirmCompletion()}
+      />
+
+      <ConfirmDialog
+        isOpen={declineQuoteOpen}
+        title={BOOKING_CONFIRM_COPY.declineQuote.title}
+        description={BOOKING_CONFIRM_COPY.declineQuote.description}
+        cancelLabel={BOOKING_CONFIRM_COPY.declineQuote.cancelLabel}
+        confirmLabel={BOOKING_CONFIRM_COPY.declineQuote.confirmLabel}
+        confirmLoadingLabel={BOOKING_CONFIRM_COPY.declineQuote.confirmLoadingLabel}
+        confirmVariant="destructive"
+        loading={actionBusy && pendingQuoteAction === "decline"}
+        onCancel={() => setDeclineQuoteOpen(false)}
+        onConfirm={() => {
+          setDeclineQuoteOpen(false);
+          void applyClientQuoteResponse("declined");
+        }}
+      />
+
+      <ConfirmDialog
+        isOpen={declinePriceOpen}
+        title={BOOKING_CONFIRM_COPY.declineUpdatedPrice.title}
+        description={BOOKING_CONFIRM_COPY.declineUpdatedPrice.description}
+        cancelLabel={BOOKING_CONFIRM_COPY.declineUpdatedPrice.cancelLabel}
+        confirmLabel={BOOKING_CONFIRM_COPY.declineUpdatedPrice.confirmLabel}
+        confirmLoadingLabel={BOOKING_CONFIRM_COPY.declineUpdatedPrice.confirmLoadingLabel}
+        confirmVariant="destructive"
+        loading={actionBusy && pendingPriceAction === "decline"}
+        onCancel={() => setDeclinePriceOpen(false)}
+        onConfirm={() => {
+          setDeclinePriceOpen(false);
+          void applyClientUpdatedPriceResponse("declined");
+        }}
       />
 
       {detail ? (
@@ -335,17 +447,18 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
           />
         }
         detail={
-          <div className="flex h-full min-h-0 flex-col overflow-hidden">
+          <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
             {selectedBookingId ? (
-              <button
-                type="button"
-                onClick={() => router.push("/client/bookings")}
-                className="mb-3 inline-flex w-fit shrink-0 items-center gap-1 text-sm font-medium text-neutral-600 hover:text-neutral-900 lg:hidden"
-              >
-                ← Back to bookings
-              </button>
+              <BackLink
+                href="/client/bookings"
+                label="Back to bookings"
+                tone="muted"
+                mobileOnly
+                className="mb-3 shrink-0"
+              />
             ) : null}
-            <BookingDetailPanel
+            <div className="min-h-0 flex-1 overflow-hidden">
+              <BookingDetailPanel
               booking={viewModel}
               loading={detailLoading}
               error={detailError}
@@ -357,9 +470,23 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
                 beforeSections:
                   detail ? (
                     <>
-                      {paymentBanner === "success" || paymentBanner === "cancelled" ? (
+                      {showUpdatedPriceBanner ? (
+                        <BookingPriceUpdateBanner
+                          wasTotalLabel={resolveWasClientTotalLabel(detail)}
+                          nowTotalLabel={
+                            detail.pricing?.client_total_label ?? detail.total_label
+                          }
+                          pricing={detail.pricing}
+                          actionBusy={actionBusy}
+                          pendingAction={pendingPriceAction}
+                          onAccept={() => void applyClientUpdatedPriceResponse("accepted")}
+                          onDecline={() => setDeclinePriceOpen(true)}
+                        />
+                      ) : null}
+
+                      {showCheckoutReturnBanner ? (
                         <div
-                          className={`rounded-lg border px-3 py-2 text-sm ${
+                          className={`mt-4 rounded-xl border px-4 pb-4 pt-5 text-sm ${
                             paymentBanner === "cancelled"
                               ? "border-amber-200 bg-amber-50 text-amber-900"
                               : paymentSyncError
@@ -367,35 +494,42 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
                                 : "border-emerald-200 bg-emerald-50 text-emerald-900"
                           }`}
                         >
-                          {paymentBanner === "success" ? (
-                            paymentSyncing ? (
-                              "Confirming your payment…"
-                            ) : paymentSyncError ? (
-                              paymentSyncError
-                            ) : showPaymentSuccessBanner ? (
-                              "Payment successful — thanks! The vendor has been notified."
-                            ) : (
-                              "Confirming your payment…"
-                            )
-                          ) : (
-                            "Checkout was cancelled. You can try paying again whenever you're ready."
-                          )}
+                          {checkoutReturnMessage}
+                        </div>
+                      ) : null}
+
+                      <BookingCompletionBanner
+                        viewer="client"
+                        status={detail.status}
+                        paymentStatus={detail.payment_status}
+                        eventDate={detail.event_date}
+                        eventEndDate={detail.event_end_date}
+                        waitingOn={detail.completion_waiting_on}
+                        autoReleaseAt={detail.payout_auto_release_at}
+                        confirmDisabled={actionBusy || confirmingCompletion}
+                        onConfirm={() => setConfirmCompleteOpen(true)}
+                      />
+
+                      {showCancelledRefunded ? (
+                        <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 pb-4 pt-5 text-sm text-emerald-900">
+                          {PAYMENT_FLOW_COPY.cancelledRefunded}
                         </div>
                       ) : null}
 
                       {paymentDue ? (
                         <div
                           ref={paymentBannerRef}
-                          className="flex flex-col gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between"
+                          className="mt-4 flex flex-col gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 pb-4 pt-5 shadow-sm sm:flex-row sm:items-center sm:justify-between"
                         >
                           <div>
                             <p className="text-sm font-semibold text-amber-950">
-                              Payment needed to confirm this booking
+                              Payment needed
                             </p>
                             <p className="mt-1 text-sm text-amber-900/90">
-                              The vendor has accepted — pay now to secure your date. The vendor
-                              can&apos;t start preparing or mark the event complete until your
-                              payment goes through.
+                              Pay now to confirm your booking.
+                            </p>
+                            <p className="mt-1 text-xs text-amber-900/75">
+                              {PAYMENT_FLOW_COPY.beforePay}
                             </p>
                           </div>
                           <Button
@@ -441,7 +575,8 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
                   <></>
                 ),
               }}
-            />
+              />
+            </div>
           </div>
         }
       />

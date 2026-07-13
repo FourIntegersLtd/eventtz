@@ -5,6 +5,8 @@ import type {
   BookingListRowViewModel,
 } from "@/features/bookings/bookingViewModel";
 import type { BookingLineItemRow, BookingPricing } from "@/features/bookings/BookingPricingBreakdown";
+import { clientTotalBeforeVendorAdjustments } from "@/lib/bookingPriceLabels";
+import { bookingListPendingSubtext } from "@/features/bookings/bookingPendingLabels";
 
 type ParticipantBookingDetailSource = {
   id: string;
@@ -24,6 +26,8 @@ type ParticipantBookingDetailSource = {
   payment_status: string;
   conversation_id: string | null;
   counterparty_phone?: string | null;
+  initial_client_total_label?: string | null;
+  vendor_adjustments?: { id: string }[];
 };
 
 type ParticipantBookingListSource = {
@@ -34,6 +38,8 @@ type ParticipantBookingListSource = {
   total_label: string;
   client_total_label?: string | null;
   initiator?: BookingInitiator;
+  has_price_update?: boolean;
+  payment_status?: string;
 };
 
 type ToBookingDetailViewModelConfig = {
@@ -50,6 +56,13 @@ export function toBookingDetailViewModel(
   config: ToBookingDetailViewModelConfig,
 ): BookingDetailViewModel {
   const isVendorInitiated = detail.initiator === "vendor";
+  const hasPriceUpdate = (detail.vendor_adjustments?.length ?? 0) > 0;
+  const compareTotalLabel =
+    hasPriceUpdate
+      ? detail.initial_client_total_label?.trim() ||
+        clientTotalBeforeVendorAdjustments(detail.pricing) ||
+        null
+      : null;
   return {
     id: detail.id,
     eventName: detail.event_name,
@@ -75,6 +88,7 @@ export function toBookingDetailViewModel(
     portal: config.role,
     paidAtLabel: detail.paid_at ? formatDateTime(detail.paid_at) : null,
     paymentStatus: detail.payment_status !== "unpaid" ? detail.payment_status : null,
+    compareTotalLabel,
   };
 }
 
@@ -84,6 +98,7 @@ export function toBookingListRowViewModel(
     counterpartyLine: string;
     initiatorBadgeLabel?: string | null;
     reviewLine?: string | null;
+    portal: "client" | "vendor";
   },
 ): BookingListRowViewModel {
   return {
@@ -95,5 +110,11 @@ export function toBookingListRowViewModel(
     counterpartyLine: config.counterpartyLine,
     initiatorBadgeLabel: config.initiatorBadgeLabel ?? null,
     reviewLine: config.reviewLine ?? null,
+    pendingSubtext: bookingListPendingSubtext(config.portal, {
+      status: row.status,
+      initiator: row.initiator,
+      hasPriceUpdate: row.has_price_update,
+      paymentStatus: row.payment_status,
+    }),
   };
 }

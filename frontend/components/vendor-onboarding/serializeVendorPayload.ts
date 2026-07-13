@@ -152,6 +152,7 @@ export function vendorDataToPayload(
     isHalal: data.isHalal,
     allergenInfo: data.allergenInfo,
     aiBioDraft: clampBioWords(data.aiBioDraft),
+    profileImageUrl: data.profileImageUrl.trim(),
     confirmTruthful: data.confirmTruthful,
     confirmTerms: data.confirmTerms,
   };
@@ -260,6 +261,7 @@ export function mergePayloadIntoVendorData(
     isHalal: typeof p.isHalal === "boolean" ? p.isHalal : false,
     allergenInfo: coerceStr(p, "allergenInfo"),
     aiBioDraft: coerceStr(p, "aiBioDraft"),
+    profileImageUrl: coerceStr(p, "profileImageUrl"),
     confirmTruthful:
       typeof p.confirmTruthful === "boolean" ? p.confirmTruthful : false,
     confirmTerms: typeof p.confirmTerms === "boolean" ? p.confirmTerms : false,

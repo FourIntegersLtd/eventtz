@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ADMIN_CONFIRM_COPY } from "@/features/bookings/bookingConfirmCopy";
 import { AccountStatusBadge } from "@/components/ui/AccountStatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { fetchAdminClients, patchClientSuspended, type AdminClientRow } from "@/lib/adminPlatformApi";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import { AdminPageHeader } from "@/features/admin/components/AdminPageHeader";
+import { useAdminPermissions } from "@/features/admin/useAdminPermissions";
 import {
   AdminTable,
   AdminTableBody,
@@ -19,6 +21,7 @@ import {
 } from "@/features/admin/components/AdminTable";
 
 export function AdminClientsView() {
+  const { canSuspendClients } = useAdminPermissions();
   const [rows, setRows] = useState<AdminClientRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -94,18 +97,22 @@ export function AdminClientsView() {
                     <AccountStatusBadge suspended={r.account_suspended} />
                   </AdminTableCell>
                   <AdminTableCell className="text-right">
-                    <button
-                      type="button"
-                      disabled={busyId === r.user_id}
-                      onClick={() => setConfirmTarget(r)}
-                      className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
-                        r.account_suspended
-                          ? "border border-green-200 bg-green-50 text-green-900 hover:bg-green-100"
-                          : "border border-amber-200 bg-amber-50 text-amber-900 hover:bg-amber-100"
-                      }`}
-                    >
-                      {r.account_suspended ? "Unsuspend" : "Suspend"}
-                    </button>
+                    {canSuspendClients ? (
+                      <button
+                        type="button"
+                        disabled={busyId === r.user_id}
+                        onClick={() => setConfirmTarget(r)}
+                        className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
+                          r.account_suspended
+                            ? "border border-green-200 bg-green-50 text-green-900 hover:bg-green-100"
+                            : "border border-amber-200 bg-amber-50 text-amber-900 hover:bg-amber-100"
+                        }`}
+                      >
+                        {r.account_suspended ? "Unsuspend" : "Suspend"}
+                      </button>
+                    ) : (
+                      <span className="text-xs text-neutral-400">—</span>
+                    )}
                   </AdminTableCell>
                 </AdminTableRow>
               ))}
@@ -116,8 +123,21 @@ export function AdminClientsView() {
 
       <ConfirmDialog
         isOpen={Boolean(confirmTarget)}
-        title={confirmTarget?.account_suspended ? "Unsuspend client?" : "Suspend client?"}
-        confirmLabel={confirmTarget?.account_suspended ? "Unsuspend" : "Suspend"}
+        title={
+          confirmTarget?.account_suspended
+            ? ADMIN_CONFIRM_COPY.unsuspendClient.title
+            : ADMIN_CONFIRM_COPY.suspendClient.title
+        }
+        description={
+          confirmTarget?.account_suspended
+            ? ADMIN_CONFIRM_COPY.unsuspendClient.description
+            : ADMIN_CONFIRM_COPY.suspendClient.description
+        }
+        confirmLabel={
+          confirmTarget?.account_suspended
+            ? ADMIN_CONFIRM_COPY.unsuspendClient.confirmLabel
+            : ADMIN_CONFIRM_COPY.suspendClient.confirmLabel
+        }
         confirmVariant={confirmTarget?.account_suspended ? "primary" : "destructive"}
         loading={busyId === confirmTarget?.user_id}
         onCancel={() => setConfirmTarget(null)}

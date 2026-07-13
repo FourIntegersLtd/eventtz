@@ -4,6 +4,7 @@ import { AlertTriangle, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Drawer } from "@/components/ui/Drawer";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { getApiErrorDetail } from "@/lib/api-errors";
@@ -20,6 +21,7 @@ import {
 import { ParticipantDisputeStatusBadge } from "@/components/ui/ParticipantDisputeStatusBadge";
 import type { PortalRole } from "@/components/portal-shell/portalNav";
 import { portalRoute } from "@/components/portal-shell/portalNav";
+import { BOOKING_CONFIRM_COPY } from "@/features/bookings/bookingConfirmCopy";
 
 const POLL_MS = 50_000;
 
@@ -44,6 +46,8 @@ export function BookingDisputeSection({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [submitConfirmOpen, setSubmitConfirmOpen] = useState(false);
+  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
 
   const load = useCallback(async () => {
     setError(null);
@@ -86,6 +90,25 @@ export function BookingDisputeSection({
   const statusAllowsNewDispute = canOpenDisputeForBookingStatus(bookingStatus);
   /** Match backend: one active case per booking; status must be pending/accepted/completed for new cases. */
   const canOpenNew = statusAllowsNewDispute && !hasActive;
+
+  const submitDispute = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const created =
+        role === "client"
+          ? await postClientBookingDispute(bookingId, summary.trim())
+          : await postVendorBookingDispute(bookingId, summary.trim());
+      setDisputes((prev) => [created, ...prev.filter((x) => x.id !== created.id)]);
+      setSummary("");
+      setSubmitConfirmOpen(false);
+      await load();
+    } catch (e: unknown) {
+      setError(getApiErrorDetail(e) ?? "Could not submit dispute.");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const body = (
     <>
@@ -151,23 +174,7 @@ export function BookingDisputeSection({
               <button
                 type="button"
                 disabled={busy || summary.trim().length < 10}
-                onClick={async () => {
-                  setBusy(true);
-                  setError(null);
-                  try {
-                    const created =
-                      role === "client"
-                        ? await postClientBookingDispute(bookingId, summary.trim())
-                        : await postVendorBookingDispute(bookingId, summary.trim());
-                    setDisputes((prev) => [created, ...prev.filter((x) => x.id !== created.id)]);
-                    setSummary("");
-                    await load();
-                  } catch (e: unknown) {
-                    setError(getApiErrorDetail(e) ?? "Could not submit dispute.");
-                  } finally {
-                    setBusy(false);
-                  }
-                }}
+                onClick={() => setSubmitConfirmOpen(true)}
                 className="rounded-xl bg-neutral-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {busy ? "Submitting…" : "Open a dispute"}
@@ -182,6 +189,18 @@ export function BookingDisputeSection({
   if (presentation === "drawer") {
     return (
       <>
+        <ConfirmDialog
+          isOpen={submitConfirmOpen}
+          title={BOOKING_CONFIRM_COPY.openDispute.title}
+          description={BOOKING_CONFIRM_COPY.openDispute.description}
+          cancelLabel={BOOKING_CONFIRM_COPY.openDispute.cancelLabel}
+          confirmLabel={BOOKING_CONFIRM_COPY.openDispute.confirmLabel}
+          confirmLoadingLabel={BOOKING_CONFIRM_COPY.openDispute.confirmLoadingLabel}
+          confirmVariant="destructive"
+          loading={busy}
+          onCancel={() => setSubmitConfirmOpen(false)}
+          onConfirm={() => void submitDispute()}
+        />
         <button
           type="button"
           onClick={() => setDrawerOpen(true)}
@@ -202,11 +221,11 @@ export function BookingDisputeSection({
                     Loading…
                   </span>
                 ) : hasActive ? (
-                  "A case is open — tap for status"
+                  "Open dispute"
                 ) : disputes.length > 0 ? (
                   "View past cases"
                 ) : (
-                  "Report an issue with this booking"
+                  "Report an issue"
                 )}
               </p>
             </div>
@@ -220,7 +239,7 @@ export function BookingDisputeSection({
             <ChevronRight className="h-5 w-5 text-neutral-400" aria-hidden />
           </div>
         </button>
-        <Drawer isOpen={drawerOpen} onClose={() => setDrawerOpen(false)} title="Help & disputes">
+        <Drawer isOpen={drawerOpen} onClose={closeDrawer} title="Help & disputes">
           <div className="mt-3">{body}</div>
         </Drawer>
       </>
@@ -228,16 +247,30 @@ export function BookingDisputeSection({
   }
 
   return (
-    <section className="rounded-2xl border border-amber-200/80 bg-gradient-to-br from-amber-50/90 to-white px-4 py-4 shadow-sm">
-      <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-800">
-          <AlertTriangle className="h-5 w-5" aria-hidden />
+    <>
+      <ConfirmDialog
+        isOpen={submitConfirmOpen}
+        title={BOOKING_CONFIRM_COPY.openDispute.title}
+        description={BOOKING_CONFIRM_COPY.openDispute.description}
+        cancelLabel={BOOKING_CONFIRM_COPY.openDispute.cancelLabel}
+        confirmLabel={BOOKING_CONFIRM_COPY.openDispute.confirmLabel}
+        confirmLoadingLabel={BOOKING_CONFIRM_COPY.openDispute.confirmLoadingLabel}
+        confirmVariant="destructive"
+        loading={busy}
+        onCancel={() => setSubmitConfirmOpen(false)}
+        onConfirm={() => void submitDispute()}
+      />
+      <section className="rounded-2xl border border-amber-200/80 bg-gradient-to-br from-amber-50/90 to-white px-4 py-4 shadow-sm">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-800">
+            <AlertTriangle className="h-5 w-5" aria-hidden />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-heading text-sm font-semibold text-neutral-900">Help & disputes</h3>
+          </div>
         </div>
-        <div className="min-w-0 flex-1">
-          <h3 className="font-heading text-sm font-semibold text-neutral-900">Help & disputes</h3>
-        </div>
-      </div>
-      {body}
-    </section>
+        {body}
+      </section>
+    </>
   );
 }

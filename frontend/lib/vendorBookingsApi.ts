@@ -37,6 +37,8 @@ export type VendorBookingListItem = {
   event_end_date: string | null;
   total_label: string;
   client_email: string | null;
+  /** Friendly client name (preferred name or derived) — safe to show pre-payment. */
+  client_display_name: string | null;
   created_at: string | null;
   /** Full amount incl. vendor additions + Eventtz fee (when quote is all priced). */
   client_total_label: string | null;
@@ -44,6 +46,10 @@ export type VendorBookingListItem = {
   initiator?: BookingInitiator;
   conversation_id: string | null;
   payment_status: string;
+  has_price_update?: boolean;
+  /** Who still needs to confirm the event went well (accepted + paid bookings). */
+  completion_waiting_on?: "client" | "vendor" | "both" | null;
+  vendor_completion_confirmed_at?: string | null;
 };
 
 export type VendorBookingsListResponse = {
@@ -67,6 +73,8 @@ export type VendorBookingDetail = {
   pricing: BookingPricingBreakdown | null;
   client_user_id: string | null;
   client_email: string | null;
+  /** Friendly client name (preferred name or derived) — safe to show pre-payment. */
+  client_display_name: string | null;
   created_at: string | null;
   /** Set automatically when payment succeeds (e.g. Stripe webhook). */
   paid_at: string | null;
@@ -74,10 +82,16 @@ export type VendorBookingDetail = {
   payment_status: string;
   client_completion_confirmed_at: string | null;
   vendor_completion_confirmed_at: string | null;
+  /** When the vendor payout releases automatically (48h after the event) if no one confirms. */
+  payout_auto_release_at?: string | null;
+  /** Who still needs to confirm the event went well. */
+  completion_waiting_on?: "client" | "vendor" | "both" | null;
   review: VendorReviewSummary | null;
   initiator?: BookingInitiator;
   counterparty_phone?: string | null;
   conversation_id: string | null;
+  /** Client-facing total at request time (before vendor price changes). */
+  initial_client_total_label?: string | null;
 };
 
 export type VendorBookingDetailResponse = {

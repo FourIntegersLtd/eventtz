@@ -11,6 +11,7 @@
   --accent-gold: #c4a05a;
   --accent-violet: #8b6bb8;
   --page-bg: #faf8fc;
+  --auth-bg: #f5f2f8;
 }
 
 @theme inline {
@@ -23,6 +24,7 @@
   --color-accent-gold: var(--accent-gold);
   --color-accent-violet: var(--accent-violet);
   --color-page-bg: var(--page-bg);
+  --color-auth-bg: var(--auth-bg);
   --font-sans: var(--font-jakarta), ui-sans-serif, sans-serif;
   --font-heading: var(--font-fraunces), ui-serif, serif;
 }
@@ -54,6 +56,10 @@ body {
 
 .bg-page-bg {
   background-color: var(--page-bg);
+}
+
+.bg-auth-bg {
+  background-color: var(--auth-bg);
 }
 
 .bg-primary-soft {

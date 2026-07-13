@@ -1,5 +1,6 @@
 "use client";
 
+import { portalCard, portalCardPadding } from "@/components/portal-shell/portalTheme";
 import Link from "next/link";
 import { Bell, ChevronRight } from "lucide-react";
 import type { PortalRole } from "@/components/portal-shell/portalNav";
@@ -13,12 +14,9 @@ export function SettingsNotificationsSection({ role }: Props) {
   const href = portalRoute(role, "notifications");
 
   return (
-    <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50 sm:p-6">
+    <section className={`${portalCard} ${portalCardPadding}`}>
       <h2 className="font-heading text-lg font-semibold text-neutral-900">Notifications</h2>
-      <p className="mt-1 text-sm text-neutral-500">
-        Booking updates, new messages, and dispute changes appear in the bell menu and on your
-        notifications page. Email notification preferences are coming soon.
-      </p>
+      <p className="mt-1 text-sm text-neutral-500">Booking updates and messages.</p>
 
       <Link
         href={href}
@@ -28,7 +26,7 @@ export function SettingsNotificationsSection({ role }: Props) {
           <Bell className="h-4 w-4" aria-hidden />
         </span>
         <span className="min-w-0 flex-1 text-sm font-medium text-neutral-900">
-          View notification history
+          All notifications
         </span>
         <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" aria-hidden />
       </Link>

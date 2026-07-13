@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { portalCard, portalCardPadding } from "@/components/portal-shell/portalTheme";
 import { useMemo, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Modal } from "@/components/ui/Modal";
@@ -8,6 +9,7 @@ import { formatEventDate, shortDateLabel } from "@/lib/dateFormat";
 import { AttentionFeedCard } from "@/features/dashboard/AttentionFeedCard";
 import { dashboardNotificationUpdates } from "@/features/dashboard/attentionFeedHelpers";
 import type { AttentionItem } from "@/features/dashboard/attentionTypes";
+import { eventDayOver } from "@/features/bookings/eventDay";
 import { useVendorDashboard } from "./useVendorDashboard";
 import { VendorBookingsCalendarCard } from "./VendorBookingsCalendarCard";
 
@@ -29,6 +31,7 @@ export function VendorDashboardView() {
     chatUnread,
     updates,
     needsResponse,
+    activeBookings,
     bookingsByDate,
     upcomingAgenda,
     errorMessage,
@@ -49,6 +52,31 @@ export function VendorDashboardView() {
         timestamp: shortDateLabel(b.event_date),
         href: `/vendor/bookings/${b.id}`,
       });
+    }
+
+    for (const b of activeBookings) {
+      if (b.status !== "accepted" || b.payment_status !== "paid") continue;
+      if (!b.completion_waiting_on) continue;
+      if (!eventDayOver(b.event_date, b.event_end_date)) continue;
+      if (b.completion_waiting_on === "client") {
+        items.push({
+          id: `completion-wait-${b.id}`,
+          priority: 2,
+          tone: "info",
+          title: "Waiting for the client to confirm",
+          subtitle: `${b.event_name} · you'll be paid once they confirm, or automatically after 48 hours`,
+          href: `/vendor/bookings/${b.id}`,
+        });
+      } else {
+        items.push({
+          id: `completion-confirm-${b.id}`,
+          priority: 0,
+          tone: "urgent",
+          title: "Confirm the event is complete",
+          subtitle: `${b.event_name} · confirm to get paid sooner`,
+          href: `/vendor/bookings/${b.id}`,
+        });
+      }
     }
 
     if (chatUnread > 0) {
@@ -90,7 +118,7 @@ export function VendorDashboardView() {
     }
 
     return items;
-  }, [loadStatus, needsResponse, chatUnread, updates, upcomingAgenda]);
+  }, [loadStatus, needsResponse, activeBookings, chatUnread, updates, upcomingAgenda]);
 
   return (
     <div className="w-full min-w-0 max-w-full space-y-6 pt-2">
@@ -106,7 +134,7 @@ export function VendorDashboardView() {
             <div className="grid w-full min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
               <Link
                 href="/vendor/bookings?tab=active"
-                className="flex min-w-0 w-full flex-col justify-between overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50 transition hover:shadow-md sm:p-6"
+                className={`flex min-w-0 w-full flex-col justify-between overflow-hidden ${portalCard} ${portalCardPadding} transition hover:shadow-md`}
               >
                 <p className="text-base font-medium text-neutral-500">Active bookings</p>
                 <p className="mt-4 text-3xl font-semibold tracking-tight text-neutral-900 sm:text-4xl">
@@ -115,7 +143,7 @@ export function VendorDashboardView() {
               </Link>
               <Link
                 href="/vendor/bookings?tab=active&status=pending"
-                className="flex min-w-0 w-full flex-col justify-between overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50 transition hover:shadow-md sm:p-6"
+                className={`flex min-w-0 w-full flex-col justify-between overflow-hidden ${portalCard} ${portalCardPadding} transition hover:shadow-md`}
               >
                 <p className="text-base font-medium text-neutral-500">Pending response</p>
                 <p

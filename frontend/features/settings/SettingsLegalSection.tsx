@@ -1,5 +1,6 @@
 "use client";
 
+import { portalCard, portalCardPadding } from "@/components/portal-shell/portalTheme";
 import Link from "next/link";
 import { ChevronRight, FileText } from "lucide-react";
 
@@ -11,7 +12,7 @@ const LEGAL_LINKS = [
 
 export function SettingsLegalSection() {
   return (
-    <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50 sm:p-6">
+    <section className={`${portalCard} ${portalCardPadding}`}>
       <h2 className="font-heading text-lg font-semibold text-neutral-900">Legal</h2>
       <ul className="mt-4 divide-y divide-neutral-100">
         {LEGAL_LINKS.map((item) => (

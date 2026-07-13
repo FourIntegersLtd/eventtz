@@ -10,6 +10,7 @@ import {
   buildMarketplaceSearchUrl,
   type MarketplaceSearchState,
 } from "@/lib/marketplaceSearchParams";
+import { EVENT_DATE_PAST_ERROR, isPastIsoDate, todayIsoDate } from "@/lib/eventDateValidation";
 
 const OTHER_TOOLTIP =
   "We’re expanding categories. Join the waitlist to hear when your vendor type goes live.";
@@ -56,6 +57,7 @@ export function HeroMarketplaceSearch({
   );
   const [typesOpen, setTypesOpen] = useState(false);
   const [datesOpen, setDatesOpen] = useState(false);
+  const [datePickerError, setDatePickerError] = useState<string | null>(null);
   const typesRef = useRef<HTMLDivElement>(null);
   const datesRef = useRef<HTMLDivElement>(null);
 
@@ -138,6 +140,11 @@ export function HeroMarketplaceSearch({
 
   const addDate = (iso: string) => {
     if (!iso) return;
+    if (isPastIsoDate(iso)) {
+      setDatePickerError(EVENT_DATE_PAST_ERROR);
+      return;
+    }
+    setDatePickerError(null);
     setState((s) => {
       if (s.dateFlexible) return { ...s, dates: [iso], dateFlexible: false };
       const next = [...s.dates.filter((d) => d !== iso), iso].slice(0, 3);
@@ -299,6 +306,7 @@ export function HeroMarketplaceSearch({
               {state.dates.length < 3 && !state.dateFlexible && (
                 <input
                   type="date"
+                  min={todayIsoDate()}
                   className="mt-2 w-full rounded-lg border border-neutral-200 px-2 py-2 text-sm"
                   onChange={(e) => {
                     addDate(e.target.value);
@@ -306,6 +314,9 @@ export function HeroMarketplaceSearch({
                   }}
                 />
               )}
+              {datePickerError ? (
+                <p className="mt-2 text-xs font-medium text-red-600">{datePickerError}</p>
+              ) : null}
               <label className="mt-3 flex cursor-pointer items-center gap-2 border-t border-neutral-100 pt-3 text-sm text-neutral-800">
                 <input
                   type="checkbox"

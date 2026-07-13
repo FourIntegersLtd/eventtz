@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { EventtzLogo } from "@/components/branding/EventtzLogo";
+import { BackLink } from "@/components/ui/BackLink";
 import { Button } from "@/components/ui/Button";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { TextField } from "@/components/ui/TextField";
@@ -106,9 +106,7 @@ export function AdminLoginView() {
             </form>
 
             <p className="mt-6 text-center text-sm text-neutral-600 lg:text-left">
-              <Link href="/" className="font-medium text-primary hover:underline">
-                Back to site
-              </Link>
+              <BackLink href="/" label="Back to site" />
             </p>
           </div>
         </section>

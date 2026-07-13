@@ -1,5 +1,6 @@
 "use client";
 
+import { portalCard } from "@/components/portal-shell/portalTheme";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -90,7 +91,7 @@ export function BookingsCalendarCard<TItem extends { id: string }>({
   const weekday = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
   return (
-    <div className="w-full min-w-0 overflow-hidden rounded-2xl bg-white p-4 shadow-sm ring-1 ring-neutral-200/50 sm:p-5">
+    <div className={`w-full min-w-0 overflow-hidden ${portalCard} p-4 sm:p-5`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{title}</p>

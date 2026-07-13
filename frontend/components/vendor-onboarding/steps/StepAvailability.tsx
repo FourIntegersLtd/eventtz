@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { STEP_COPY } from "../onboardingCopy";
 import type { VendorOnboardingData, VendorOnboardingUpdate } from "../types";
 import {
@@ -5,6 +6,7 @@ import {
   OnboardingSubQuestion,
 } from "../ui/OnboardingQuestionLayout";
 import { inputClass, ToggleChip } from "./form-primitives";
+import { EVENT_DATE_PAST_ERROR, isPastIsoDate, todayIsoDate } from "@/lib/eventDateValidation";
 
 export type StepAvailabilityProps = {
   data: VendorOnboardingData;
@@ -29,6 +31,7 @@ function toUkDate(iso: string): string {
 
 export function StepAvailability({ data, update }: StepAvailabilityProps) {
   const copy = STEP_COPY[5];
+  const [blockedDateError, setBlockedDateError] = useState<string | null>(null);
 
   const toggleDay = (d: number) => {
     const s = new Set(data.availableWeekdays);
@@ -82,16 +85,26 @@ export function StepAvailability({ data, update }: StepAvailabilityProps) {
       >
         <input
           type="date"
+          min={todayIsoDate()}
           className={inputClass()}
           onChange={(e) => {
             const v = e.target.value;
             if (!v) return;
+            if (isPastIsoDate(v)) {
+              setBlockedDateError(EVENT_DATE_PAST_ERROR);
+              e.target.value = "";
+              return;
+            }
+            setBlockedDateError(null);
             if (!data.blockedDates.includes(v)) {
               update({ blockedDates: [...data.blockedDates, v] });
             }
             e.target.value = "";
           }}
         />
+        {blockedDateError ? (
+          <p className="mt-2 text-xs font-medium text-red-600">{blockedDateError}</p>
+        ) : null}
         {data.blockedDates.length > 0 && (
           <ul className="mt-2 flex flex-wrap gap-2">
             {data.blockedDates.map((d) => (

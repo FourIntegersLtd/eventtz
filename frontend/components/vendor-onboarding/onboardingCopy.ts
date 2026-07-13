@@ -1,65 +1,57 @@
-/** Conversational copy for vendor onboarding steps (QuietNight-style framing). */
+/** Conversational copy for vendor onboarding steps. */
 
 export const STEP_COPY = {
   1: {
     lead: "Let's get started",
     headline: "What should we call you?",
-    subtext:
-      "Your name and phone help clients reach you after they book. We only show this on confirmed bookings.",
+    subtext: "Clients see these after booking.",
   },
   2: {
     headline: "What's your business called?",
-    subtext: "Tell us who you are and what kind of events you serve.",
-    businessNameSupporting:
-      "Must be unique — we check when you leave this field.",
+    subtext: "Who you are and what events you serve.",
+    businessNameSupporting: "Must be unique.",
     servicesHeadline: "What services do you offer?",
-    servicesSubtext: "Select all that apply. Choose Other if you don't fit these categories.",
+    servicesSubtext: "Pick your main service.",
     eventTypesHeadline: "Which events do you work on?",
   },
   3: {
     headline: "Where are you based?",
-    subtext: "Your location helps us match you with nearby clients and set travel expectations.",
+    subtext: "So clients can find you nearby.",
     deliveryHeadline: "How do you deliver your service?",
     deliverySubtext: "Select all that apply.",
     radiusHeadline: "How far can you travel or deliver?",
-    policyHeadline: "What's your default travel or delivery rule?",
-    policySubtext:
-      "We've pre-selected the most common option — change it if it doesn't match how you handle fees.",
+    policyHeadline: "Travel or delivery fees",
+    policySubtext: "Pick what fits how you charge.",
   },
   4: {
     headline: "How do you price your work?",
-    subtext:
-      "Add packages with pricing and details so clients can compare offers.",
-    fixedRatesHeadline: "Do you charge hourly or daily rates?",
+    subtext: "Add packages so clients can compare.",
+    fixedRatesHeadline: "Hourly or daily rates?",
     packagesHeadline: "What packages do you offer?",
     bookingHeadline: "Any discounts?",
   },
   5: {
     headline: "When are you available?",
-    subtext:
-      "Set the days you take bookings and how many events you can handle in a day.",
-    daysHeadline: "Which days do you usually accept bookings?",
-    blockedHeadline: "Any dates you're not available?",
-    blockedSubtext: "Optional — add holidays or days off.",
-    maxBookingsHeadline: "How many bookings can you take per day?",
+    subtext: "Your working days and how many bookings you take per day.",
+    daysHeadline: "Which days do you take bookings?",
+    blockedHeadline: "Dates you're not available",
+    blockedSubtext: "Optional.",
+    maxBookingsHeadline: "Bookings per day",
   },
   6: {
-    headline: "Show clients your best work",
-    subtext:
-      "Photos and video help clients trust your style. Add portfolio images, a showreel, and social links.",
+    headline: "Show your best work",
+    subtext: "Add photos, video, and social links.",
   },
   7: {
-    headline: "Ready to get paid?",
-    subtext:
-      "Connect Stripe so you can receive payouts when clients pay for bookings through Eventtz.",
+    headline: "Get paid",
+    subtext: "Connect Stripe to receive payments.",
   },
   8: {
-    headline: "Anything else we should know?",
-    subtext:
-      "Upload certificates or insurance if relevant. All fields here are optional unless noted.",
+    headline: "Anything else?",
+    subtext: "Certificates and insurance are optional.",
   },
   9: {
-    headline: "Does everything look right?",
-    subtext: "Review your profile below. You can edit any section before you submit.",
+    headline: "Look good?",
+    subtext: "Check everything before you submit.",
   },
 } as const;

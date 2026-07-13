@@ -1,6 +1,8 @@
 "use client";
 
+import { portalCard, portalCardPadding } from "@/components/portal-shell/portalTheme";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/components/auth/AuthProvider";
 import {
   fetchContactSharingSettings,
   updateContactSharingSettings,
@@ -15,6 +17,7 @@ export type ContactSharingSettingsSectionProps = {
 };
 
 export function ContactSharingSettingsSection({ role }: ContactSharingSettingsSectionProps) {
+  const { user } = useAuth();
   const [settings, setSettings] = useState<ContactSharingSettings | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +31,7 @@ export function ContactSharingSettingsSection({ role }: ContactSharingSettingsSe
   }, []);
 
   const toggle = async (
-    key: keyof Pick<ContactSharingSettings, "share_email" | "share_phone" | "share_address">,
+    key: keyof Pick<ContactSharingSettings, "share_email" | "share_phone">,
   ) => {
     if (!settings) return;
     setSaving(true);
@@ -40,7 +43,7 @@ export function ContactSharingSettingsSection({ role }: ContactSharingSettingsSe
       setSettings(updated);
       setSaved(true);
     } catch {
-      setError("Could not save — try again.");
+      setError("Could not save. Try again.");
     } finally {
       setSaving(false);
     }
@@ -64,17 +67,21 @@ export function ContactSharingSettingsSection({ role }: ContactSharingSettingsSe
 
   if (!settings) {
     return (
-      <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50 sm:p-6">
+      <section className={`${portalCard} ${portalCardPadding}`}>
         <LoadingState label="Loading contact preferences…" variant="inline" />
       </section>
     );
   }
 
   return (
-    <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50 sm:p-6">
-      <h2 className="font-heading text-lg font-semibold text-neutral-900">Contact sharing</h2>
+    <section className={`${portalCard} ${portalCardPadding}`}>
+      <h2 className="font-heading text-lg font-semibold text-neutral-900">
+        {isVendor ? "Contact" : "After you pay"}
+      </h2>
       <p className="mt-1 text-sm text-neutral-500">
-        Personal details are only shared with your booking partner after they pay on Eventtz.
+        {isVendor
+          ? "What clients see once they've paid."
+          : "Email and phone stay hidden until you pay."}
       </p>
 
       {error ? (
@@ -83,7 +90,7 @@ export function ContactSharingSettingsSection({ role }: ContactSharingSettingsSe
         </p>
       ) : null}
       {saved ? (
-        <p className="mt-3 text-xs font-medium text-primary">Preferences saved.</p>
+        <p className="mt-3 text-xs font-medium text-primary">Saved.</p>
       ) : null}
 
       <div className="mt-4 space-y-3">
@@ -95,7 +102,12 @@ export function ContactSharingSettingsSection({ role }: ContactSharingSettingsSe
             disabled={saving}
             onChange={() => void toggle("share_email")}
           />
-          <span>Share my email</span>
+          <span>
+            Share my email
+            {!isVendor && user?.email ? (
+              <span className="mt-0.5 block text-xs text-neutral-500">{user.email}</span>
+            ) : null}
+          </span>
         </label>
         <label className="flex items-start gap-3 text-sm">
           <input
@@ -105,31 +117,21 @@ export function ContactSharingSettingsSection({ role }: ContactSharingSettingsSe
             disabled={saving}
             onChange={() => void toggle("share_phone")}
           />
-          <span>Share my phone number</span>
+          <span>
+            Share my phone
+            {isVendor ? (
+              <span className="mt-0.5 block text-xs text-neutral-500">From your profile</span>
+            ) : (
+              <span className="mt-0.5 block text-xs text-neutral-500">Add a number below</span>
+            )}
+          </span>
         </label>
-        {!isVendor ? (
-          <label className="flex items-start gap-3 text-sm">
-            <input
-              type="checkbox"
-              className="mt-0.5"
-              checked={settings.share_address}
-              disabled={saving}
-              onChange={() => void toggle("share_address")}
-            />
-            <span>
-              Share full event address with vendor
-              <span className="mt-0.5 block text-xs text-neutral-500">
-                Postcode is always visible for quotes; this controls the full street address.
-              </span>
-            </span>
-          </label>
-        ) : null}
       </div>
 
       {!isVendor ? (
         <div className="mt-5">
           <label className={labelClass()} htmlFor="settings-contact-phone">
-            Phone number to share (optional)
+            Phone (optional)
           </label>
           <input
             id="settings-contact-phone"

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
 import { patchAdminDispute, type AdminDisputeCase } from "@/lib/adminPlatformApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { RESOLUTION_ACTIONS, resolutionActionLabel } from "./disputeFormatters";
@@ -57,22 +58,12 @@ export function DisputeResolveModal({ dispute, onClose, onResolved }: DisputeRes
       zIndexClassName="z-[70]"
       footer={
         <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            disabled={busy}
-            onClick={onClose}
-            className="rounded-lg border border-neutral-200 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-60"
-          >
+          <Button type="button" variant="secondary" disabled={busy} onClick={onClose}>
             Cancel
-          </button>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void submit()}
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-60"
-          >
-            {busy ? "Resolving…" : "Resolve & move money"}
-          </button>
+          </Button>
+          <Button type="button" loading={busy} onClick={() => void submit()}>
+            Resolve & move money
+          </Button>
         </div>
       }
     >

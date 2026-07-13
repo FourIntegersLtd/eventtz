@@ -48,23 +48,28 @@ export function StepSubmitted({
           Your profile isn&apos;t visible to clients.
         </p>
       ) : (
-        <p className="text-xs text-neutral-500">
-          <button
-            type="button"
-            disabled={refreshing}
-            onClick={onRefreshStatus}
-            className="inline-flex items-center justify-center gap-2 font-medium text-primary underline hover:no-underline disabled:opacity-50"
-          >
-            {refreshing ? (
-              <>
-                <LoadingSpinner size="sm" />
-                Checking…
-              </>
-            ) : (
-              "Check approval status"
-            )}
-          </button>
-        </p>
+        <>
+          <p className="mx-auto max-w-md text-sm leading-relaxed text-neutral-600">
+            Your profile is under review. We usually respond within a few business days.
+          </p>
+          <p className="text-xs text-neutral-500">
+            <button
+              type="button"
+              disabled={refreshing}
+              onClick={onRefreshStatus}
+              className="inline-flex items-center justify-center gap-2 font-medium text-primary underline hover:no-underline disabled:opacity-50"
+            >
+              {refreshing ? (
+                <>
+                  <LoadingSpinner size="sm" />
+                  Checking…
+                </>
+              ) : (
+                "Check approval status"
+              )}
+            </button>
+          </p>
+        </>
       )}
     </div>
   );

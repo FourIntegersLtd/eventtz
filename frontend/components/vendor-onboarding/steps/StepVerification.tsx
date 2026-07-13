@@ -1,3 +1,4 @@
+import { portalCard, portalCardPadding } from "@/components/portal-shell/portalTheme";
 import { STEP_COPY } from "../onboardingCopy";
 import type { VendorOnboardingData, VendorOnboardingUpdate } from "../types";
 import type { VendorPaymentsStatus } from "@/lib/vendorPaymentsApi";
@@ -30,7 +31,7 @@ export function StepVerification({
     <div className="space-y-8">
       <OnboardingQuestionLayout headline={copy.headline} subtext={copy.subtext} />
       <OnboardingSubQuestion headline="Connect your payout account" indexOffset={3}>
-        <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50">
+        <div className={`${portalCard} ${portalCardPadding}`}>
           {payoutsReady ? (
             <p className="flex items-center gap-2 text-sm font-medium text-primary">
               <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10">
@@ -44,7 +45,7 @@ export function StepVerification({
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </span>
-              Stripe Connect verified — you can receive payouts.
+              Stripe verified. You can receive payouts.
             </p>
           ) : (
             <>

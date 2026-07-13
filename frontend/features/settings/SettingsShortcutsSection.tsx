@@ -1,5 +1,6 @@
 "use client";
 
+import { portalCard, portalCardPadding } from "@/components/portal-shell/portalTheme";
 import Link from "next/link";
 import { ChevronRight, CalendarDays, ShieldAlert, Star, Wallet, type LucideIcon } from "lucide-react";
 import type { PortalRole } from "@/components/portal-shell/portalNav";
@@ -17,13 +18,13 @@ function shortcutsForRole(role: PortalRole): Shortcut[] {
     href: portalRoute(role, "bookings"),
     label: role === "client" ? "My bookings" : "Bookings",
     description:
-      role === "client" ? "Requests, quotes, and payments" : "Requests, quotes, and confirmed events",
+      role === "client" ? "Bookings and payments" : "All bookings",
     icon: CalendarDays,
   };
   const disputes = {
     href: portalRoute(role, "disputes"),
     label: "Disputes",
-    description: "Cases on your bookings",
+    description: "Open cases",
     icon: ShieldAlert,
   };
 
@@ -32,13 +33,13 @@ function shortcutsForRole(role: PortalRole): Shortcut[] {
       {
         href: "/vendor/profile/reviews",
         label: "Client reviews",
-        description: "Feedback from completed bookings",
+        description: "From clients",
         icon: Star,
       },
       {
         href: portalRoute("vendor", "payments"),
-        label: "Payments & Stripe",
-        description: "Payout account and payment history",
+        label: "Payments",
+        description: "Payouts",
         icon: Wallet,
       },
       disputes,
@@ -50,13 +51,13 @@ function shortcutsForRole(role: PortalRole): Shortcut[] {
     {
       href: "/client/settings/reviews",
       label: "Your reviews",
-      description: "Feedback you left after completed bookings",
+      description: "Reviews you wrote",
       icon: Star,
     },
     {
       href: "/client/payments",
       label: "Payment history",
-      description: "Paid and in-progress bookings",
+      description: "What you've paid",
       icon: Wallet,
     },
     bookings,
@@ -72,9 +73,8 @@ export function SettingsShortcutsSection({ role }: Props) {
   const shortcuts = shortcutsForRole(role);
 
   return (
-    <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50 sm:p-6">
+    <section className={`${portalCard} ${portalCardPadding}`}>
       <h2 className="font-heading text-lg font-semibold text-neutral-900">Shortcuts</h2>
-      <p className="mt-1 text-sm text-neutral-500">Jump to related areas of your account.</p>
 
       <ul className="mt-4 divide-y divide-neutral-100">
         {shortcuts.map((item) => {

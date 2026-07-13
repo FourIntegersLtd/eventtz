@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { AuthPageShell } from "@/components/auth/AuthPageShell";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { Select } from "@/components/ui/Select";
 import { TextField } from "@/components/ui/TextField";
 import { dashboardPathForUserType } from "@/features/auth/authRouting";
@@ -27,9 +28,9 @@ export function UnifiedRegisterView() {
 
   return (
     <AuthPageShell logoHref={isAuthenticated ? dashboardPathForUserType(userType) : "/"}>
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-sm ring-1 ring-neutral-200/50 sm:p-8">
+      <Card padding="lg" className="w-full max-w-md">
         <h1 className="font-heading text-2xl font-semibold text-neutral-900">Create your account</h1>
-        <p className="mt-1 text-sm text-neutral-500">Tell us a bit about you to get started.</p>
+        <p className="mt-1 text-sm text-neutral-500">Choose an account type to get started.</p>
 
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
           <Select
@@ -37,8 +38,8 @@ export function UnifiedRegisterView() {
             value={accountType}
             onChange={(e) => setAccountType(e.target.value === "vendor" ? "vendor" : "client")}
           >
-            <option value="client">Client — planning an event</option>
-            <option value="vendor">Vendor — offering services</option>
+            <option value="client">Client</option>
+            <option value="vendor">Vendor</option>
           </Select>
 
           <TextField
@@ -84,7 +85,7 @@ export function UnifiedRegisterView() {
             Sign in
           </Link>
         </p>
-      </div>
+      </Card>
     </AuthPageShell>
   );
 }

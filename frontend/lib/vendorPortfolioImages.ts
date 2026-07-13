@@ -20,5 +20,10 @@ export function portfolioImageUrlsFromPayload(
 export function firstPortfolioImageUrlFromPayload(
   payload: Record<string, unknown>,
 ): string | null {
+  const profile = payload.profileImageUrl;
+  if (typeof profile === "string") {
+    const url = profile.trim();
+    if (/^https?:\/\//i.test(url)) return url;
+  }
   return portfolioImageUrlsFromPayload(payload)[0] ?? null;
 }

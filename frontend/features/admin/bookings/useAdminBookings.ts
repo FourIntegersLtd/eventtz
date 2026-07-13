@@ -18,6 +18,9 @@ export function useAdminBookings(initial?: Partial<AdminBookingsQuery>) {
   const [search, setSearch] = useState(initial?.search ?? "");
   const [dateFrom, setDateFrom] = useState(initial?.date_from ?? "");
   const [dateTo, setDateTo] = useState(initial?.date_to ?? "");
+  const [needsAttentionOnly, setNeedsAttentionOnly] = useState(
+    Boolean(initial?.needs_attention),
+  );
 
   const load = useCallback(async () => {
     setError(null);
@@ -29,6 +32,7 @@ export function useAdminBookings(initial?: Partial<AdminBookingsQuery>) {
         search: search.trim() || undefined,
         date_from: dateFrom || undefined,
         date_to: dateTo || undefined,
+        needs_attention: needsAttentionOnly || undefined,
       };
       const res = await fetchAdminBookings(q);
       setRows(res.bookings);
@@ -38,7 +42,7 @@ export function useAdminBookings(initial?: Partial<AdminBookingsQuery>) {
     } finally {
       setLoading(false);
     }
-  }, [offset, limit, status, search, dateFrom, dateTo]);
+  }, [offset, limit, status, search, dateFrom, dateTo, needsAttentionOnly]);
 
   useEffect(() => {
     void load();
@@ -60,6 +64,8 @@ export function useAdminBookings(initial?: Partial<AdminBookingsQuery>) {
     setDateFrom,
     dateTo,
     setDateTo,
+    needsAttentionOnly,
+    setNeedsAttentionOnly,
     reload: load,
   };
 }

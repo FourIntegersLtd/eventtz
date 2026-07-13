@@ -6,6 +6,7 @@ import {
   User,
   Wallet,
 } from "lucide-react";
+import { portalCard } from "@/components/portal-shell/portalTheme";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SkeletonListRows } from "@/components/ui/Skeleton";
 import { SegmentedControl, type SegmentedControlOption } from "@/components/ui/SegmentedControl";
@@ -61,7 +62,7 @@ export function BookingListPanel({
         </p>
       ) : null}
 
-      <div className="scroll-pane mt-4 min-h-0 flex-1 rounded-2xl bg-white shadow-sm ring-1 ring-neutral-200/50">
+      <div className={`scroll-pane mt-4 min-h-0 flex-1 ${portalCard}`}>
         {loading ? (
           <div className="p-5">
             <SkeletonListRows rows={4} />
@@ -96,9 +97,9 @@ export function BookingListPanel({
                       </p>
                       <div className="mt-0.5 flex flex-col items-end gap-1">
                         <StatusBadge status={row.status} />
-                        {row.status === "pending" && row.initiatorBadgeLabel ? (
+                        {row.pendingSubtext ? (
                           <span className="text-[10px] font-medium text-neutral-500">
-                            Waiting for client
+                            {row.pendingSubtext}
                           </span>
                         ) : null}
                       </div>

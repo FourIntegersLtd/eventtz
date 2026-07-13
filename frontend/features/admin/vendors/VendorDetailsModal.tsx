@@ -735,30 +735,30 @@ export function VendorDetailsModal({
               <ProfileSection icon={CheckCircle2} title="Change approval">
                 <div className="grid gap-3 sm:grid-cols-3">
                   <ApprovalCard
-                    title="Approve"
-                    icon={CheckCircle2}
-                    variant="primary"
-                    isCurrent={vendor.approval_status === "approved"}
-                    disabled={busyId === vendor.user_id}
-                    loading={busyId === vendor.user_id}
-                    onClick={() => onSetApproval(vendor.user_id, "approved")}
-                  />
-                  <ApprovalCard
-                    title="Pending"
-                    icon={Clock}
-                    variant="secondary"
-                    isCurrent={vendor.approval_status === "pending"}
-                    disabled={busyId === vendor.user_id}
-                    loading={busyId === vendor.user_id}
-                    onClick={() => onSetApproval(vendor.user_id, "pending")}
-                  />
-                  <ApprovalCard
-                    title="Ban"
-                    icon={Ban}
-                    variant="destructive"
-                    isCurrent={vendor.approval_status === "banned"}
-                    disabled={busyId === vendor.user_id}
-                    loading={busyId === vendor.user_id}
+                      title="Approve"
+                      icon={CheckCircle2}
+                      variant="primary"
+                      isCurrent={vendor.approval_status === "approved"}
+                      disabled={busyId === vendor.user_id}
+                      loading={busyId === vendor.user_id}
+                      onClick={() => onSetApproval(vendor.user_id, "approved")}
+                    />
+                    <ApprovalCard
+                      title="Pending"
+                      icon={Clock}
+                      variant="secondary"
+                      isCurrent={vendor.approval_status === "pending"}
+                      disabled={busyId === vendor.user_id}
+                      loading={busyId === vendor.user_id}
+                      onClick={() => onSetApproval(vendor.user_id, "pending")}
+                    />
+                    <ApprovalCard
+                      title="Ban"
+                      icon={Ban}
+                      variant="destructive"
+                      isCurrent={vendor.approval_status === "banned"}
+                      disabled={busyId === vendor.user_id}
+                      loading={busyId === vendor.user_id}
                     onClick={() => onSetApproval(vendor.user_id, "banned")}
                   />
                 </div>

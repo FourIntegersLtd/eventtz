@@ -23,6 +23,7 @@ import {
   adminSidebarActive,
   adminSidebarIdle,
 } from "@/features/admin/adminTheme";
+import { resolveAdminRole } from "@/lib/adminRole";
 
 const ADMIN_NAV: readonly { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -205,6 +206,11 @@ export function AdminShell({ title, children }: AdminShellProps) {
           <div className="shrink-0">
             <EventtzLogo variant="sidebar" priority href="/admin/dashboard" />
             <p className="mt-1 text-xs font-medium text-neutral-500">Admin console</p>
+            {user ? (
+              <p className="mt-0.5 text-[11px] text-neutral-400">
+                {resolveAdminRole(user) === "super_admin" ? "Super admin" : "Support admin"}
+              </p>
+            ) : null}
           </div>
           <nav className="scroll-pane mt-6 flex min-h-0 flex-1 flex-col space-y-0.5">
             <NavLinks pathname={pathname} items={ADMIN_NAV} />

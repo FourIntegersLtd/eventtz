@@ -68,6 +68,17 @@ export function AdminDashboardView() {
         tone: "urgent",
       });
     }
+    const bookingsNeedingSupport = summary.bookings_needing_support ?? 0;
+
+    if (bookingsNeedingSupport > 0) {
+      items.push({
+        id: "bookings-support",
+        title: `${bookingsNeedingSupport} booking${bookingsNeedingSupport === 1 ? "" : "s"} need a support action`,
+        href: "/admin/commerce?tab=bookings&needs_attention=1",
+        ctaLabel: "View",
+        tone: "urgent",
+      });
+    }
     if (summary.bookings_pending > 0) {
       items.push({
         id: "bookings-pending",
@@ -90,6 +101,7 @@ export function AdminDashboardView() {
 
   const activeBookings = summary.bookings_pending + summary.bookings_accepted;
   const engagement = summary.conversations_count + summary.reviews_count;
+  const bookingsNeedingSupport = summary.bookings_needing_support ?? 0;
 
   return (
     <div className="space-y-6">
@@ -120,9 +132,18 @@ export function AdminDashboardView() {
           label="Active bookings"
           value={activeBookings}
           icon={CalendarDays}
-          tone="info"
-          href="/admin/commerce?tab=bookings"
-          linkLabel="View bookings"
+          tone={bookingsNeedingSupport > 0 ? "warning" : "info"}
+          highlight={bookingsNeedingSupport > 0}
+          href={
+            bookingsNeedingSupport > 0
+              ? "/admin/commerce?tab=bookings&needs_attention=1"
+              : "/admin/commerce?tab=bookings"
+          }
+          linkLabel={
+            bookingsNeedingSupport > 0
+              ? `${bookingsNeedingSupport} need support`
+              : "View bookings"
+          }
         />
         <AdminKpiCard
           label="Paid bookings"

@@ -6,6 +6,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import type { PortalRole } from "@/components/portal-shell/portalNav";
 import { portalRoute } from "@/components/portal-shell/portalNav";
 import { Drawer } from "@/components/ui/Drawer";
+import { BackLink } from "@/components/ui/BackLink";
 import { ParticipantDisputeDetailPanel } from "@/features/disputes/ParticipantDisputeDetailPanel";
 import { ParticipantDisputesListView } from "@/features/bookings/ParticipantDisputesListView";
 import {
@@ -96,6 +97,12 @@ export function ParticipantDisputesPortalView({ role, selectedDisputeId = null }
         subtitle={dispute ? participantDisputeBookingLabel(dispute) : undefined}
         widthClassName="max-w-lg"
       >
+        <BackLink
+          href={disputesBase}
+          label="Back to disputes"
+          tone="muted"
+          className="mb-4"
+        />
         <ParticipantDisputeDetailPanel
           role={role}
           dispute={dispute}

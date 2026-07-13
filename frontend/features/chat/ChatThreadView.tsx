@@ -1,9 +1,11 @@
 "use client";
 
+import { portalCard } from "@/components/portal-shell/portalTheme";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, FileText, Receipt, Send } from "lucide-react";
+import { ChevronRight, FileText, Receipt, Send } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { BackLink } from "@/components/ui/BackLink";
 import { Button } from "@/components/ui/Button";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { VendorQuoteFormModal } from "@/features/vendor/quotes/VendorQuoteFormModal";
@@ -193,7 +195,7 @@ export function ChatThreadView({
 
   if (loading) {
     return (
-      <div className="rounded-2xl bg-white px-5 py-8 shadow-sm ring-1 ring-neutral-200/50">
+      <div className={`${portalCard} px-5 py-8`}>
         <LoadingState label="Loading conversation…" variant="centered" className="py-4" />
       </div>
     );
@@ -206,13 +208,7 @@ export function ChatThreadView({
           {error}
         </p>
         {backHref ? (
-          <Link
-            href={backHref}
-            className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-          >
-            <ChevronLeft className="h-4 w-4" aria-hidden />
-            {backLabel}
-          </Link>
+          <BackLink href={backHref} label={backLabel} icon="chevron" tone="muted" />
         ) : null}
       </div>
     );
@@ -222,20 +218,20 @@ export function ChatThreadView({
 
   return (
     <div
-      className={`flex max-h-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-neutral-200/50 ${
+      className={`flex max-h-full flex-col overflow-hidden ${portalCard} ${
         isDrawer ? "min-h-[50dvh]" : "h-full min-h-0 flex-1"
       }`}
     >
       {/* Header — matches inbox card header */}
       <div className="flex flex-col gap-3 border-b border-neutral-100 px-4 py-4 sm:flex-row sm:items-center sm:gap-3 sm:px-5">
         {backHref && !isDrawer ? (
-          <Link
+          <BackLink
             href={backHref}
-            className="inline-flex items-center gap-0.5 text-sm font-medium text-neutral-500 transition hover:text-neutral-900"
-          >
-            <ChevronLeft className="h-4 w-4" aria-hidden />
-            <span className="sr-only sm:not-sr-only">{backLabel}</span>
-          </Link>
+            label={backLabel}
+            icon="chevron"
+            tone="muted"
+            mobileOnly
+          />
         ) : null}
 
         <div

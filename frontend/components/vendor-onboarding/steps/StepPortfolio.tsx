@@ -79,6 +79,7 @@ export function StepPortfolio({
   onRemovePortfolioVideo,
 }: StepPortfolioProps) {
   const [objectUrls, setObjectUrls] = useState<Record<string, string>>({});
+  const [duplicateNotice, setDuplicateNotice] = useState<string | null>(null);
 
   useEffect(() => {
     const next: Record<string, string> = {};
@@ -103,7 +104,7 @@ export function StepPortfolio({
     () =>
       new Set([
         ...data.portfolioFileNamesPersisted,
-        ...data.portfolioFiles.map((f) => f.name),
+        ...data.portfolioFiles.map((f) => portfolioFileKey(f)),
       ]).size,
     [data.portfolioFileNamesPersisted, data.portfolioFiles],
   );
@@ -130,7 +131,7 @@ export function StepPortfolio({
     <div className="space-y-8">
       <OnboardingQuestionLayout
         headline={STEP_COPY[6].headline}
-        subtext={`${STEP_COPY[6].subtext} We check each new photo for quality before you continue.`}
+        subtext={`${STEP_COPY[6].subtext} We check new photos before you continue.`}
       />
       <OnboardingSubQuestion headline="Upload your portfolio photos" indexOffset={3}>
         <div className="rounded-xl border-2 border-dashed border-neutral-200 bg-neutral-50/80 p-8 text-center">
@@ -142,17 +143,32 @@ export function StepPortfolio({
             id="portfolio-imgs"
             onChange={(e) => {
               const files = Array.from(e.target.files ?? []);
-              const existingNames = new Set([
-                ...data.portfolioFileNamesPersisted,
-                ...data.portfolioFiles.map((f) => f.name),
+              const existingKeys = new Set([
+                ...data.portfolioFiles.map((f) => portfolioFileKey(f)),
               ]);
+              const existingPersistedUrls = new Set(data.portfolioFileNamesPersisted);
               const next: File[] = [...data.portfolioFiles];
+              const skippedDuplicates: string[] = [];
               for (const f of files) {
-                if (existingNames.size >= 20) break;
-                if (!existingNames.has(f.name)) {
-                  existingNames.add(f.name);
-                  next.push(f);
+                const key = portfolioFileKey(f);
+                if (existingKeys.size + existingPersistedUrls.size >= 20) break;
+                if (existingKeys.has(key)) {
+                  skippedDuplicates.push(f.name);
+                  continue;
                 }
+                existingKeys.add(key);
+                next.push(f);
+              }
+              if (skippedDuplicates.length > 0) {
+                const label =
+                  skippedDuplicates.length === 1
+                    ? `"${skippedDuplicates[0]}"`
+                    : `${skippedDuplicates.length} images`;
+                setDuplicateNotice(
+                  `${label} already in your portfolio — duplicate${skippedDuplicates.length === 1 ? "" : "s"} skipped.`,
+                );
+              } else {
+                setDuplicateNotice(null);
               }
               update({ portfolioFiles: next });
               e.target.value = "";
@@ -170,6 +186,9 @@ export function StepPortfolio({
           <p className="mt-1 text-xs text-neutral-500">
             Min 5, max 20 · {totalCount} uploaded
           </p>
+          {duplicateNotice ? (
+            <p className="mt-2 text-xs font-medium text-amber-800">{duplicateNotice}</p>
+          ) : null}
         </div>
 
         {(data.portfolioFileNamesPersisted.length > 0 || data.portfolioFiles.length > 0) && (
@@ -294,8 +313,7 @@ export function StepPortfolio({
         </div>
         {data.socialLinks.length === 0 ? (
           <p className="text-xs text-neutral-500">
-            Add Instagram, TikTok, or your website — clients trust profiles with social
-            links.
+            Add Instagram, TikTok, or your website.
           </p>
         ) : (
           <div className="space-y-2">

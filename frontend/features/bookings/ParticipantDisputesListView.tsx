@@ -1,5 +1,6 @@
 "use client";
 
+import { portalCard, portalCardPadding } from "@/components/portal-shell/portalTheme";
 import { ChevronRight } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -77,11 +78,11 @@ export function ParticipantDisputesListView({ role, selectedId = null, onSelect 
         </div>
       ) : null}
       {rows.length === 0 ? (
-        <p className="rounded-2xl bg-white p-5 text-center text-sm text-neutral-700 shadow-sm ring-1 ring-neutral-200/50">
+        <p className={`${portalCard} ${portalCardPadding} text-center text-sm text-neutral-700`}>
           No disputes yet.
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-2xl bg-white shadow-sm ring-1 ring-neutral-200/50">
+        <div className={`overflow-x-auto ${portalCard}`}>
           <table className="min-w-full divide-y divide-neutral-100 text-sm">
             <thead className="bg-neutral-50/50 text-left text-xs font-medium uppercase tracking-wide text-neutral-500">
               <tr>

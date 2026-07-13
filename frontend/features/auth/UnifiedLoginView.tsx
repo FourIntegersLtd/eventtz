@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { AuthPageShell } from "@/components/auth/AuthPageShell";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { TextField } from "@/components/ui/TextField";
 import { dashboardPathForUserType } from "@/features/auth/authRouting";
 import { useUnifiedLogin } from "@/features/auth/useUnifiedLogin";
@@ -23,11 +24,9 @@ export function UnifiedLoginView() {
 
   return (
     <AuthPageShell logoHref={isAuthenticated ? dashboardPathForUserType(userType) : "/"}>
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-sm ring-1 ring-neutral-200/50 sm:p-8">
+      <Card padding="lg" className="w-full max-w-md">
         <h1 className="font-heading text-2xl font-semibold text-neutral-900">Sign in</h1>
-        <p className="mt-1 text-sm text-neutral-500">
-          One account for planning events and managing bookings.
-        </p>
+        <p className="mt-1 text-sm text-neutral-500">Sign in to your account.</p>
 
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
           <TextField
@@ -68,7 +67,7 @@ export function UnifiedLoginView() {
             Create account
           </Link>
         </p>
-      </div>
+      </Card>
     </AuthPageShell>
   );
 }

@@ -16,12 +16,14 @@ import {
   financialsPeriodRange,
   type FinancialsPeriod,
 } from "@/features/admin/financials/AdminFinancialsToolbar";
+import { useAdminPermissions } from "@/features/admin/useAdminPermissions";
 
 function formatGbp(value: number): string {
   return `£${value.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 export function AdminFinancialsView() {
+  const { canExportFinancials } = useAdminPermissions();
   const [period, setPeriod] = useState<FinancialsPeriod>("30d");
   const [from, setFrom] = useState(() => financialsPeriodRange("30d").from);
   const [to, setTo] = useState(() => financialsPeriodRange("30d").to);
@@ -62,6 +64,7 @@ export function AdminFinancialsView() {
         <AdminFinancialsPeriodControl
           period={period}
           csvBusy={csvBusy}
+          showExport={canExportFinancials}
           onPeriodChange={handlePeriodChange}
           onExportCsv={() => {
             setCsvBusy(true);

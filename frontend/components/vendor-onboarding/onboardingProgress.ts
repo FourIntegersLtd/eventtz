@@ -49,11 +49,11 @@ export function onboardingStepLabel(step: number): string {
 
 export function onboardingEncouragement(step: number): string {
   if (step === 1) {
-    return `Most vendors finish in ${onboardingDurationRangeLabel()}. You can stop anytime — we save your progress.`;
+    return `Takes about ${onboardingDurationRangeLabel()}. Your progress is saved.`;
   }
-  if (step <= 3) return "Short steps. No rush — come back later if you need to.";
-  if (step <= 5) return "Nice progress so far. Most of the heavy lifting is behind you.";
-  if (step <= 7) return "Over halfway. A few quick sections left.";
-  if (step === 8) return "Almost there — documents and optional extras.";
-  return "Last step — check everything looks right, then submit.";
+  if (step <= 3) return "Short steps. Come back anytime.";
+  if (step <= 5) return "Good progress.";
+  if (step <= 7) return "Nearly there.";
+  if (step === 8) return "Last few optional details.";
+  return "Final check, then submit.";
 }

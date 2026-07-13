@@ -4,8 +4,10 @@ import Link from "next/link";
 import { MessageSquare } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useAdminPermissions } from "@/features/admin/useAdminPermissions";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ADMIN_CONFIRM_COPY } from "@/features/bookings/bookingConfirmCopy";
 import { Drawer } from "@/components/ui/Drawer";
 import { adminCard } from "@/features/admin/adminTheme";
 import { patchAdminDispute, type AdminDisputeCase } from "@/lib/adminPlatformApi";
@@ -34,6 +36,7 @@ export function DisputeActionPanel({
   onResolve,
 }: DisputeActionPanelProps) {
   const { user } = useAuth();
+  const { canResolveDisputesFinancially } = useAdminPermissions();
   const [sharedNote, setSharedNote] = useState(dispute.resolution_note ?? "");
   const [status, setStatus] = useState(dispute.status);
   const [noteBusy, setNoteBusy] = useState(false);
@@ -57,7 +60,9 @@ export function DisputeActionPanel({
     setChatOpen(false);
   }, [dispute.id, dispute.resolution_note, dispute.status]);
 
-  const canResolve = dispute.status === "open" || dispute.status === "under_review";
+  const canResolve =
+    canResolveDisputesFinancially &&
+    (dispute.status === "open" || dispute.status === "under_review");
 
   const saveSharedNote = async () => {
     setError(null);
@@ -191,7 +196,9 @@ export function DisputeActionPanel({
                   onChange={(e) => {
                     const next = e.target.value as AdminDisputeCase["status"];
                     if (next === "resolved") {
-                      onResolve(dispute);
+                      if (canResolveDisputesFinancially) {
+                        onResolve(dispute);
+                      }
                       return;
                     }
                     setStatus(next);
@@ -273,8 +280,9 @@ export function DisputeActionPanel({
 
       <ConfirmDialog
         isOpen={confirmClose}
-        title="Close this dispute?"
-        confirmLabel="Close dispute"
+        title={ADMIN_CONFIRM_COPY.closeDispute.title}
+        description={ADMIN_CONFIRM_COPY.closeDispute.description}
+        confirmLabel={ADMIN_CONFIRM_COPY.closeDispute.confirmLabel}
         confirmVariant="destructive"
         loading={statusBusy}
         onCancel={() => {

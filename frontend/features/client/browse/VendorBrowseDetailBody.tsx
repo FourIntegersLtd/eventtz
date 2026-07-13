@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, CalendarCheck, Check, Clock, Info, MessageCircle } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import type { ExploreVendor } from "@/lib/clientExploreApi";
 import { displayEventTypes, displayServicesOffered } from "./browseLabels";
 import {
@@ -59,7 +61,7 @@ export function VendorBrowseDetailBody({
   const city = payloadStr(p, "baseCity").trim() || "United Kingdom";
   const bio =
     payloadStr(p, "aiBioDraft").trim() ||
-    "This vendor has not added a public bio yet. Send an enquiry to discuss your event, timeline, and budget.";
+    "This vendor has not added a bio yet.";
   const services = Array.isArray(p.servicesOffered)
     ? p.servicesOffered.map((s) => String(s))
     : [];
@@ -271,8 +273,8 @@ export function VendorBrowseDetailBody({
             </h3>
             <p className="mt-0.5 text-xs text-neutral-500">
               {onRequestBooking
-                ? "Select one or more packages or rates. Your estimate updates as you go."
-                : "Compare what’s on offer — sign in to request a booking or message the vendor."}
+                ? "Select packages to see your estimate."
+                : "Sign in to book or message this vendor."}
             </p>
           </div>
 
@@ -425,19 +427,15 @@ export function VendorBrowseDetailBody({
                   />
                   <p className="text-sm leading-snug text-neutral-800">
                     <span className="font-semibold text-neutral-900">
-                      You need a client account to contact this vendor.
+                      Sign in to contact this vendor.
                     </span>{" "}
-                    Create a free account below — then you can message vendors and plan
-                    your event.
+                    Create a free client account below.
                   </p>
                 </div>
-                <Link
-                  href={buildRegisterLink()}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-neutral-900 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-neutral-800"
-                >
+                <ButtonLink href={buildRegisterLink()} className="w-full">
                   Create account
                   <ArrowRight className="h-4 w-4" strokeWidth={2.5} aria-hidden />
-                </Link>
+                </ButtonLink>
                 <p className="text-center text-xs text-neutral-500">
                   Already have an account?{" "}
                   <Link
@@ -455,8 +453,10 @@ export function VendorBrowseDetailBody({
                     Select at least one package or rate to continue.
                   </p>
                 ) : null}
-                <button
+                <Button
                   type="button"
+                  className="w-full"
+                  icon={<CalendarCheck className="h-4 w-4 shrink-0" strokeWidth={2.25} aria-hidden />}
                   onClick={() => {
                     if (selectedPackageIds.size === 0) {
                       setBookingSelectError(true);
@@ -464,26 +464,26 @@ export function VendorBrowseDetailBody({
                     }
                     onRequestBooking([...selectedPackageIds]);
                   }}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-neutral-900 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-neutral-800"
                 >
-                  <CalendarCheck className="h-4 w-4 shrink-0" strokeWidth={2.25} aria-hidden />
                   Request booking
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="secondary"
+                  className="w-full"
+                  icon={<MessageCircle className="h-4 w-4 shrink-0" strokeWidth={2.25} aria-hidden />}
                   onClick={() => {
                     if (onContactVendor) onContactVendor();
                     else onContinue();
                   }}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg border-2 border-neutral-900 bg-white px-4 py-3 text-sm font-semibold text-neutral-900 transition hover:bg-neutral-50"
                 >
-                  <MessageCircle className="h-4 w-4 shrink-0" strokeWidth={2.25} aria-hidden />
                   Message vendor
-                </button>
+                </Button>
               </div>
             ) : (
-              <button
+              <Button
                 type="button"
+                className="w-full"
                 onClick={() => {
                   if (onContactVendor) {
                     onContactVendor();
@@ -491,10 +491,9 @@ export function VendorBrowseDetailBody({
                     onContinue();
                   }
                 }}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-neutral-900 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-neutral-800"
               >
                 Contact me
-              </button>
+              </Button>
             )}
           </div>
         </div>

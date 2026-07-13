@@ -1,5 +1,6 @@
 "use client";
 
+import { portalCard } from "@/components/portal-shell/portalTheme";
 import { ChevronDown } from "lucide-react";
 
 export type BookingPricing = {
@@ -53,6 +54,8 @@ type BookingPricingBreakdownProps = {
   variant?: "client" | "vendor";
   /** When set, line items (subtotal) becomes expandable with per-line detail. */
   lineItems?: BookingLineItemRow[];
+  /** Strikethrough total shown above the current total when price changed after request. */
+  compareTotalLabel?: string | null;
 };
 
 export function BookingPricingBreakdown({
@@ -60,6 +63,7 @@ export function BookingPricingBreakdown({
   pricing,
   variant = "client",
   lineItems,
+  compareTotalLabel,
 }: BookingPricingBreakdownProps) {
   if (!pricing) {
     return (
@@ -73,14 +77,14 @@ export function BookingPricingBreakdown({
   }
 
   return (
-    <div className="space-y-4 rounded-2xl bg-white p-5 ring-1 ring-neutral-200/50">
-      <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+    <div className={`overflow-hidden ${portalCard}`}>
+      <p className="px-5 pt-5 text-xs font-semibold uppercase tracking-wide text-neutral-500">
         {variant === "client" ? "Pricing breakdown" : "Client-facing total"}
       </p>
-      <div className="space-y-4 text-sm">
+      <div className="space-y-4 px-5 pb-5 pt-3 text-sm">
         {lineItems && lineItems.length > 0 ? (
-          <details className="group" open>
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-2xl bg-white px-5 py-4 text-neutral-700 shadow-sm ring-1 ring-neutral-200/50 transition hover:bg-neutral-50 [&::-webkit-details-marker]:hidden">
+          <details className="group -mx-5 border-y border-neutral-200/50" open>
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-5 py-4 text-neutral-700 transition hover:bg-neutral-50 [&::-webkit-details-marker]:hidden">
               <span className="flex min-w-0 items-center gap-3">
                 <span className="font-medium text-neutral-900">What&apos;s included</span>
                 <ChevronDown
@@ -92,7 +96,7 @@ export function BookingPricingBreakdown({
                 {pricing.line_items_subtotal_label}
               </span>
             </summary>
-            <div className="mt-3 rounded-2xl bg-neutral-50/50 px-5 py-5 ring-1 ring-neutral-200/50">
+            <div className="border-t border-neutral-200/50 bg-neutral-50/40 px-5 py-5">
               <ul className="space-y-5">
                 {lineItems.map((li, idx) => {
                   const isDiscount = isAutoDiscountLine(li.id, li.unit_price_gbp);
@@ -148,7 +152,7 @@ export function BookingPricingBreakdown({
         )}
         {pricing.vendor_adjustments.length > 0 ? (
           <div className="border-t border-neutral-200/50 px-1 pt-5">
-            <p className="text-xs font-medium text-neutral-500">Additions &amp; discounts</p>
+            <p className="text-xs font-medium text-neutral-500">Additions and discounts</p>
             <ul className="mt-3 space-y-2.5">
               {pricing.vendor_adjustments.map((a) => {
                 const isDiscount = a.amount_gbp < 0;
@@ -181,19 +185,13 @@ export function BookingPricingBreakdown({
         ) : null}
         {variant === "vendor" ? (
           <div className="flex justify-between gap-2 border-t border-neutral-200/50 px-1 pt-5 font-heading text-xl font-bold text-neutral-900">
-            <span className="flex items-center gap-2 font-heading">
-              Your payout
-              <span className="hidden text-xs font-normal text-neutral-500 sm:inline">(subtotal ± adjustments)</span>
-            </span>
+            <span className="flex items-center gap-2 font-heading">Your payout</span>
             <span className="tabular-nums text-neutral-900">{pricing.vendor_portion_label}</span>
           </div>
         ) : (
           <>
             <div className="flex justify-between gap-2 border-t border-neutral-200/50 px-1 pt-5 font-medium text-neutral-900">
-              <span className="flex items-center gap-2">
-                Vendor portion
-                <span className="hidden text-xs font-normal text-neutral-500 sm:inline">(subtotal ± adjustments)</span>
-              </span>
+              <span>Vendor portion</span>
               <span className="font-semibold tabular-nums text-neutral-900">{pricing.vendor_portion_label}</span>
             </div>
             <div className="flex justify-between gap-2 px-1 pt-3 text-neutral-600">
@@ -205,13 +203,20 @@ export function BookingPricingBreakdown({
             </div>
             <div className="flex justify-between gap-2 border-t border-neutral-200/50 px-1 pt-5 font-heading text-xl font-bold text-neutral-900">
               <span>Total due</span>
-              <span className="tabular-nums text-neutral-900">{pricing.client_total_label}</span>
+              <span className="text-right tabular-nums text-neutral-900">
+                {compareTotalLabel ? (
+                  <span className="mr-2 text-sm font-normal text-neutral-500 line-through">
+                    {compareTotalLabel}
+                  </span>
+                ) : null}
+                {pricing.client_total_label}
+              </span>
             </div>
           </>
         )}
         {pricing.has_pricing_tbc ? (
-          <p className="px-1 pt-2 text-xs text-amber-700">
-            Some lines are “TBC” — final totals may change when the vendor confirms numbers.
+          <p className="pt-2 text-xs text-amber-700">
+            Some items are TBC and may change the total.
           </p>
         ) : null}
       </div>

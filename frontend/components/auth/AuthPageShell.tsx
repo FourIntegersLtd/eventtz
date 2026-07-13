@@ -1,17 +1,27 @@
 import type { ReactNode } from "react";
 import { EventtzLogo } from "@/components/branding/EventtzLogo";
+import { authPageBg, authPageGradient } from "@/components/portal-shell/portalTheme";
+import { BackLink } from "@/components/ui/BackLink";
 
 type AuthPageShellProps = {
   children: ReactNode;
   logoHref: string;
+  /** Shown in the header when the user may want to leave auth without signing in. */
+  backHref?: string;
+  backLabel?: string;
 };
 
-export function AuthPageShell({ children, logoHref }: AuthPageShellProps) {
+export function AuthPageShell({
+  children,
+  logoHref,
+  backHref = "/",
+  backLabel = "Back to home",
+}: AuthPageShellProps) {
   return (
-    <main className="relative min-h-dvh overflow-x-hidden bg-[#f5f2f8]">
+    <main className={`relative min-h-dvh overflow-x-hidden ${authPageBg}`}>
       {/* Soft branded gradient + blurred blobs so the auth pages don't read as a bare form on a flat tint. */}
       <div
-        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#f5f2f8] via-[#efe7f6] to-[#e4d9f2]"
+        className={`pointer-events-none absolute inset-0 ${authPageGradient}`}
         aria-hidden
       />
       <div
@@ -27,8 +37,11 @@ export function AuthPageShell({ children, logoHref }: AuthPageShellProps) {
         aria-hidden
       />
 
-      <header className="relative z-10 border-b border-slate-200/60 bg-white/40 px-4 py-3 backdrop-blur-md sm:px-6 lg:px-12">
-        <EventtzLogo priority href={logoHref} />
+      <header className="relative z-10 border-b border-neutral-200/60 bg-white/40 px-4 py-3 backdrop-blur-md sm:px-6 lg:px-12">
+        <div className="flex items-center justify-between gap-4">
+          <EventtzLogo priority href={logoHref} />
+          <BackLink href={backHref} label={backLabel} tone="muted" />
+        </div>
       </header>
       <div className="relative z-10 flex items-center justify-center px-4 py-10 sm:py-14">
         {children}

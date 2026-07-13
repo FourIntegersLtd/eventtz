@@ -14,6 +14,7 @@ import {
   OnboardingSubQuestion,
 } from "../ui/OnboardingQuestionLayout";
 import { checkBusinessNameAvailable } from "@/lib/vendorProfileApi";
+import { Modal } from "@/components/ui/Modal";
 import { inputClass, labelClass, ToggleChip } from "./form-primitives";
 
 export type StepBusinessProps = {
@@ -23,15 +24,10 @@ export type StepBusinessProps = {
   setBusinessNameError: (v: string | null) => void;
 };
 
-/** Other is exclusive: choosing a category clears Other; choosing Other clears categories. */
-function toggleService(current: string[], value: string): string[] {
-  if (value === "other") {
-    return current.includes("other") ? [] : ["other"];
-  }
-  const withoutOther = current.filter((x) => x !== "other");
-  return withoutOther.includes(value)
-    ? withoutOther.filter((x) => x !== value)
-    : [...withoutOther, value];
+/** Single service selection — tap again to clear. Other opens the waitlist modal instead. */
+function selectService(current: string[], value: string): string[] {
+  if (value === "other") return current;
+  return current[0] === value ? [] : [value];
 }
 
 function isEventTypeActive(eventTypes: string[], value: string): boolean {
@@ -66,6 +62,7 @@ export function StepBusiness({
   const copy = STEP_COPY[2];
   const [checkingName, setCheckingName] = useState(false);
   const [nameAvailable, setNameAvailable] = useState<boolean | null>(null);
+  const [waitlistModalOpen, setWaitlistModalOpen] = useState(false);
 
   const verifyBusinessName = async (name: string) => {
     const trimmed = name.trim();
@@ -134,13 +131,12 @@ export function StepBusiness({
               key={o.value}
               active={data.servicesOffered.includes(o.value)}
               onClick={() => {
-                const selectingOther = o.value === "other";
-                const currentlyHasOther = data.servicesOffered.includes("other");
-                if (selectingOther && !currentlyHasOther) {
-                  window.open(VENDOR_WAITLIST_URL, "_blank", "noopener,noreferrer");
+                if (o.value === "other") {
+                  setWaitlistModalOpen(true);
+                  return;
                 }
                 update({
-                  servicesOffered: toggleService(data.servicesOffered, o.value),
+                  servicesOffered: selectService(data.servicesOffered, o.value),
                 });
               }}
             >
@@ -166,6 +162,42 @@ export function StepBusiness({
           ))}
         </div>
       </OnboardingSubQuestion>
+
+      <Modal
+        isOpen={waitlistModalOpen}
+        onClose={() => setWaitlistModalOpen(false)}
+        title="Category not available yet"
+        maxWidthClassName="max-w-md"
+        footer={
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              onClick={() => setWaitlistModalOpen(false)}
+              className="rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                window.open(VENDOR_WAITLIST_URL, "_blank", "noopener,noreferrer");
+                setWaitlistModalOpen(false);
+              }}
+              className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:opacity-95"
+            >
+              Join the waitlist
+            </button>
+          </div>
+        }
+      >
+        <p className="text-sm leading-relaxed text-neutral-700">
+          We&apos;re not onboarding vendors in unlisted categories yet. Join the waitlist and
+          we&apos;ll be in touch.
+        </p>
+        <p className="mt-3 text-sm text-neutral-600">
+          To continue now, pick the closest listed category.
+        </p>
+      </Modal>
     </div>
   );
 }

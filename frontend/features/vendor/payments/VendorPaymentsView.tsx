@@ -1,5 +1,6 @@
 "use client";
 
+import { portalCard, portalCardPadding } from "@/components/portal-shell/portalTheme";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2, CreditCard } from "lucide-react";
@@ -60,14 +61,14 @@ export function VendorPaymentsView() {
       const { onboarding_url } = await postConnectStripeAccount("/vendor/payments");
       window.location.href = onboarding_url;
     } catch {
-      setError("We couldn't start Stripe Connect onboarding. Check your connection and try again.");
+      setError("Couldn't start Stripe setup. Try again.");
       setConnecting(false);
     }
   };
 
   return (
     <div className="max-w-2xl space-y-6">
-      <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200/50 sm:p-6">
+      <div className={`${portalCard} ${portalCardPadding}`}>
         <div className="flex items-start gap-3">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
             <CreditCard className="h-5 w-5" aria-hidden />
@@ -85,7 +86,7 @@ export function VendorPaymentsView() {
           <div className="mt-5">
             <p className="flex items-center gap-2 text-sm font-medium text-primary">
               <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
-              Stripe Connect verified — you can receive payouts.
+              Stripe verified. You can receive payouts.
             </p>
             <button
               type="button"
@@ -107,7 +108,7 @@ export function VendorPaymentsView() {
             {!error && started ? (
               <p className="mt-4 flex items-center gap-2 text-sm font-medium text-amber-700">
                 <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
-                Stripe Connect started. Finish verification on Stripe to receive payouts.
+                Finish Stripe setup to receive payments.
               </p>
             ) : null}
           </div>
