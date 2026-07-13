@@ -383,9 +383,8 @@ body {
   appearance: none;
 }
 
-/* Legacy native date shell (if any remain) */
+/* Native date input width containment (desktop only — visibility via Tailwind in DateInput). */
 .date-input-shell {
-  display: grid;
   grid-template-columns: minmax(0, 1fr);
   width: 100%;
   max-width: 100%;

@@ -212,7 +212,7 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(function D
 
   return (
     <div className={`min-w-0 max-w-full ${shellClassName}`.trim()}>
-      <div className="date-input-shell hidden min-w-0 max-w-full lg:block">
+      <div className="date-input-shell hidden min-w-0 max-w-full lg:grid">
         <input
           ref={ref}
           id={id}
