@@ -1,6 +1,5 @@
 "use client";
 
-import { LandingAudienceCta } from "@/features/landing/LandingAudienceCta";
 import { LandingBrowseStrip } from "@/features/landing/LandingBrowseStrip";
 import { LandingClientJourneyScroll } from "@/features/landing/LandingClientJourneyScroll";
 import { LandingFaq } from "@/features/landing/LandingFaq";
@@ -28,7 +27,6 @@ export default function LandingMarketplace() {
       <LandingWhyEventtz />
       <LandingInspirationGrid />
       <LandingVendorSection />
-      <LandingAudienceCta />
       <LandingFaq />
       <LandingFooter />
       <ScrollToTopButton />

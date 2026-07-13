@@ -113,7 +113,7 @@ export function LandingScrollFeatureShowcase({
       </div>
 
       <div
-        className={`sticky top-[4.25rem] z-30 mt-6 flex justify-center py-3 backdrop-blur-md sm:mt-8 ${stickyBarBg}`}
+        className={`z-30 mt-6 flex justify-center py-2 sm:mt-8 lg:sticky lg:top-[4.25rem] lg:py-3 lg:backdrop-blur-md ${stickyBarBg}`}
       >
         <div
           className="flex w-full max-w-lg items-center rounded-full bg-neutral-100 p-1 ring-1 ring-neutral-200/90"
@@ -122,6 +122,7 @@ export function LandingScrollFeatureShowcase({
         >
           {steps.map((step, index) => {
             const active = activeStepId === step.id;
+            const StepIcon = step.Icon;
             return (
               <button
                 key={step.id}
@@ -130,12 +131,13 @@ export function LandingScrollFeatureShowcase({
                 aria-selected={active}
                 aria-controls={step.id}
                 onClick={() => scrollToStep(index)}
-                className={`flex-1 rounded-full px-2 py-2.5 text-center text-sm font-semibold transition-all duration-300 motion-reduce:transition-none sm:px-4 ${
+                className={`flex flex-1 items-center justify-center gap-1 rounded-full px-1.5 py-2.5 text-center text-xs font-semibold transition-all duration-300 motion-reduce:transition-none sm:gap-1.5 sm:px-3 sm:text-sm ${
                   active
                     ? "bg-primary text-white shadow-sm"
                     : "text-neutral-600 hover:text-primary"
                 }`}
               >
+                <StepIcon className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" strokeWidth={2.25} aria-hidden />
                 {step.stepLabel}
               </button>
             );
@@ -163,6 +165,7 @@ export function LandingScrollFeatureShowcase({
         <div className="min-w-0 space-y-0">
           {steps.map((step, index) => {
             const active = activeIndex === index;
+            const StepIcon = step.Icon;
             return (
               <article
                 key={step.id}
@@ -171,21 +174,12 @@ export function LandingScrollFeatureShowcase({
                 className="flex flex-col justify-center border-t border-neutral-200/80 py-8 first:border-t-0 first:pt-4 sm:py-10 lg:min-h-[calc(100dvh-7.5rem)] lg:py-0"
                 aria-current={active ? "step" : undefined}
               >
-                <div className="mb-6 lg:hidden">
-                  <StepScreenshot
-                    step={step}
-                    fallback={imageFallbacks?.[step.id]}
-                    visible
-                    priority={index === 0}
-                    layout="inline"
-                  />
-                </div>
-
                 <p
-                  className={`text-xs font-semibold uppercase tracking-[0.2em] transition-colors duration-500 ${
+                  className={`inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] transition-colors duration-500 ${
                     active ? "text-primary" : "text-neutral-400"
                   }`}
                 >
+                  <StepIcon className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
                   {step.stepLabel}
                 </p>
                 <h3
@@ -199,8 +193,18 @@ export function LandingScrollFeatureShowcase({
                   {step.description}
                 </p>
 
+                <div className="mt-6 lg:hidden">
+                  <StepScreenshot
+                    step={step}
+                    fallback={imageFallbacks?.[step.id]}
+                    visible
+                    priority={index === 0}
+                    layout="inline"
+                  />
+                </div>
+
                 {step.quote ? (
-                  <blockquote className="mt-6 border-l-2 border-primary/25 pl-4 text-sm italic leading-relaxed text-neutral-500 sm:text-base">
+                  <blockquote className="mt-6 hidden border-l-2 border-primary/25 pl-4 text-sm italic leading-relaxed text-neutral-500 sm:text-base lg:block">
                     &ldquo;{step.quote}&rdquo;
                   </blockquote>
                 ) : null}

@@ -3,9 +3,12 @@ import {
   BadgeCheck,
   Camera,
   Cake,
+  CircleCheck,
   CreditCard,
   MessageCircle,
   Package,
+  Search,
+  Send,
   ShieldCheck,
   Sparkles,
   UtensilsCrossed,
@@ -331,6 +334,7 @@ export type LandingScrollFeatureStep = {
   imageAlt: string;
   ctaHref?: string;
   ctaLabel?: string;
+  Icon: LucideIcon;
 };
 
 export const PRICING_TRUST_SECTION: LandingScreenshotSection = {
@@ -393,6 +397,7 @@ export const CLIENT_JOURNEY_SCROLL_STEPS: LandingScrollFeatureStep[] = [
     imageAlt: "Vendor profile with package pricing and discounts on Eventtz",
     ctaHref: PRICING_TRUST_SECTION.ctaHref,
     ctaLabel: PRICING_TRUST_SECTION.ctaLabel,
+    Icon: Search,
   },
   {
     id: "book-request",
@@ -404,6 +409,7 @@ export const CLIENT_JOURNEY_SCROLL_STEPS: LandingScrollFeatureStep[] = [
     imageAlt: "Request a booking on Eventtz",
     ctaHref: BOOK_SECTION.ctaHref,
     ctaLabel: BOOK_SECTION.ctaLabel,
+    Icon: Send,
   },
   {
     id: "chat-quote",
@@ -415,6 +421,7 @@ export const CLIENT_JOURNEY_SCROLL_STEPS: LandingScrollFeatureStep[] = [
     imageAlt: "Chat conversation with a vendor quote on Eventtz",
     ctaHref: CHAT_SECTION.ctaHref,
     ctaLabel: CHAT_SECTION.ctaLabel,
+    Icon: MessageCircle,
   },
   {
     id: "quote-accept",
@@ -426,6 +433,7 @@ export const CLIENT_JOURNEY_SCROLL_STEPS: LandingScrollFeatureStep[] = [
     imageAlt: "Vendor booking with accept and reject on Eventtz",
     ctaHref: QUOTE_SECTION.ctaHref,
     ctaLabel: QUOTE_SECTION.ctaLabel,
+    Icon: CircleCheck,
   },
 ];
 
@@ -434,6 +442,15 @@ export const VENDOR_SECTION = {
   title: "List your services, take bookings, and get paid when the event is done.",
   ctaHref: "/register?type=vendor",
   ctaLabel: "Join as a vendor",
+} as const;
+
+export const CLIENT_AUDIENCE_CTA = {
+  eyebrow: "Clients",
+  title: "Stop searching in the group chat.",
+  description:
+    "Find vetted vendors, agree the details in one place, and book without another group chat.",
+  href: "/client/browse",
+  label: "Browse vendors",
 } as const;
 
 export type LandingJourneyStage = "browse" | "chat" | "pay";
