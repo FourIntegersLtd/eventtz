@@ -15,7 +15,7 @@ import { ScrollToTopButton } from "@/components/ui/ScrollToTopButton";
 
 export default function LandingMarketplace() {
   return (
-    <div className="min-h-dvh overflow-x-clip bg-page-bg text-neutral-900">
+    <div className="min-h-dvh bg-page-bg text-neutral-900">
       <LandingNav variant="solid" />
       <LandingHero />
       <LandingBrowseStrip />

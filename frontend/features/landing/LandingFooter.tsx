@@ -19,7 +19,8 @@ import { LANDING_PAGE_CONTAINER_CLASS } from "@/features/landing/landingSectionS
 const SOCIAL_ICON_CLASS =
   "flex h-10 w-10 items-center justify-center rounded-lg border border-primary-border bg-white text-neutral-700 transition-all hover:scale-105 hover:border-primary/30 hover:bg-primary-muted hover:text-primary";
 
-const FOOTER_LINK_CLASS = "text-neutral-600 transition-colors hover:text-primary";
+const FOOTER_LINK_CLASS =
+  "break-words text-neutral-600 transition-colors hover:text-primary";
 
 type LandingFooterProps = {
   className?: string;

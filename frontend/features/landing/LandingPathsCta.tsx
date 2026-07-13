@@ -61,13 +61,13 @@ export function LandingPathsCta() {
             <Link
               key={path.eyebrow}
               href={path.href}
-              className={`flex items-center gap-3.5 rounded-2xl border border-primary-border/60 p-4 shadow-sm transition active:scale-[0.99] ${
+              className={`flex items-start gap-3.5 rounded-2xl border border-primary-border/60 p-4 shadow-sm transition active:scale-[0.99] ${
                 isClient ? "bg-white" : "bg-primary-soft/30"
               }`}
             >
               <PathIcon Icon={path.Icon} />
               <PathMobileCopy eyebrow={path.eyebrow} title={path.title} />
-              <ChevronRight className="h-5 w-5 shrink-0 text-neutral-400" aria-hidden />
+              <ChevronRight className="mt-3 h-5 w-5 shrink-0 self-start text-neutral-400" aria-hidden />
             </Link>
           );
         })}
@@ -150,7 +150,7 @@ function PathMobileCopy({ eyebrow, title }: { eyebrow: string; title: string }) 
       <span className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/80">
         {eyebrow}
       </span>
-      <span className="font-heading mt-0.5 block text-[15px] font-semibold leading-snug text-primary">
+      <span className="font-heading mt-0.5 block text-sm font-semibold leading-snug text-primary">
         {title}
       </span>
     </span>

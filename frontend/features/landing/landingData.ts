@@ -261,7 +261,7 @@ export const NAV_DROPDOWN_LINK_CLASS =
 export const HERO_VIDEO_SRC = "/videos/hero.mp4";
 
 /** Light marketing hero — left copy column. Right column reserved for hero image. */
-export const HERO_EYEBROW = "Trusted African event vendors";
+export const HERO_EYEBROW = "Trusted event vendors";
 
 export const HERO_HEADLINE = {
   lead: "Best place to hire top",

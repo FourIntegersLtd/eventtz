@@ -20,33 +20,29 @@ export function LandingHero() {
     variant: "primary",
     shape: "default",
     className:
-      "mt-7 inline-flex w-full justify-center px-7 py-3.5 text-base font-semibold sm:mt-8 sm:w-auto",
+      "mt-6 inline-flex w-full justify-center px-7 py-3.5 text-base font-semibold sm:mt-8 sm:w-auto",
   });
 
   return (
-    <section className="relative isolate flex min-h-dvh flex-col overflow-x-clip bg-[#f7f8fc] pt-20 sm:pt-24 lg:pt-28">
-      <div
-        className="pointer-events-none absolute -left-24 top-10 h-72 w-72 rounded-full bg-primary/10 blur-3xl"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute right-0 top-32 h-64 w-64 rounded-full bg-accent-gold/15 blur-3xl"
-        aria-hidden
-      />
+    <section className="relative isolate flex min-h-0 flex-col bg-[#f7f8fc] pt-20 sm:pt-24 lg:min-h-dvh lg:pt-28">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+        <div className="absolute -left-24 top-10 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute right-0 top-32 h-64 w-64 rounded-full bg-accent-gold/15 blur-3xl" />
+      </div>
 
       <div
-        className={`relative flex flex-1 flex-col justify-center py-6 sm:py-8 lg:py-10 ${LANDING_HERO_CONTAINER_CLASS}`}
+        className={`relative flex flex-1 flex-col justify-start py-6 sm:py-8 lg:justify-center lg:py-10 ${LANDING_HERO_CONTAINER_CLASS}`}
       >
-        <div className="grid items-center gap-8 sm:gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-16 xl:gap-24 2xl:gap-28">
+        <div className="grid items-center gap-5 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-16 xl:gap-24 2xl:gap-28">
           <div className="min-w-0 text-left motion-safe:animate-[hero-copy-in_0.65s_ease-out_both]">
             <p className="flex items-center gap-3 text-sm font-semibold text-primary">
               <span className="inline-block h-px w-8 bg-primary" aria-hidden />
               {HERO_EYEBROW}
             </p>
 
-            <h1 className="font-heading mt-4 text-[1.85rem] font-semibold leading-[1.2] tracking-tight text-neutral-900 sm:mt-5 sm:text-4xl lg:text-[2.85rem] xl:text-5xl">
+            <h1 className="font-heading mt-4 text-[1.65rem] font-semibold leading-[1.2] tracking-tight text-neutral-900 sm:mt-5 sm:text-4xl lg:text-[2.85rem] xl:text-5xl">
               {HERO_HEADLINE.lead}{" "}
-              <span className="inline-flex flex-wrap items-baseline gap-x-2 gap-y-1 sm:flex-nowrap sm:gap-x-3">
+              <span className="inline-flex max-w-full flex-wrap items-baseline gap-x-2 gap-y-1 md:flex-nowrap md:gap-x-3">
                 {HERO_HEADLINE.sticky} <HeroRotatingWord />
               </span>
             </h1>
@@ -62,7 +58,7 @@ export function LandingHero() {
             </Link>
           </div>
 
-          <div className="relative mx-auto w-full max-w-[20rem] motion-safe:animate-[hero-copy-in_0.75s_ease-out_0.08s_both] sm:max-w-md lg:mx-0 lg:max-w-none lg:justify-self-end lg:pl-6 xl:pl-10 2xl:pl-14">
+          <div className="relative mx-auto w-full max-w-[18rem] motion-safe:animate-[hero-copy-in_0.75s_ease-out_0.08s_both] sm:max-w-md lg:mx-0 lg:max-w-none lg:justify-self-end lg:pl-6 xl:pl-10 2xl:pl-14">
             <div className="relative overflow-hidden rounded-[1.75rem] border border-primary-border/70 bg-white/60 p-1.5 shadow-primary-soft sm:rounded-[2.5rem] sm:p-2.5">
               <Image
                 src={HERO_IMAGE_SRC}
@@ -70,13 +66,13 @@ export function LandingHero() {
                 width={900}
                 height={900}
                 priority
-                className="h-auto max-h-[min(40dvh,18rem)] w-full rounded-[1.35rem] object-contain sm:max-h-[min(48dvh,26rem)] sm:rounded-[2rem] lg:max-h-[min(58dvh,34rem)] xl:max-h-[min(62dvh,38rem)]"
+                className="h-auto max-h-[min(34dvh,15rem)] w-full rounded-[1.35rem] object-contain sm:max-h-[min(48dvh,26rem)] sm:rounded-[2rem] lg:max-h-[min(58dvh,34rem)] xl:max-h-[min(62dvh,38rem)]"
               />
             </div>
           </div>
         </div>
 
-        <div className="relative z-20 mx-auto mt-7 w-full min-w-0 max-w-3xl motion-safe:animate-[hero-copy-in_0.75s_ease-out_0.12s_both] sm:mt-10 lg:mt-12 xl:max-w-4xl">
+        <div className="relative z-20 mx-auto mt-5 w-full min-w-0 max-w-3xl overflow-visible motion-safe:animate-[hero-copy-in_0.75s_ease-out_0.12s_both] sm:mt-10 lg:mt-12 xl:max-w-4xl">
           <HeroMarketplaceSearch variant="landing" submitToPath="/client/browse" />
         </div>
       </div>

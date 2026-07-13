@@ -83,7 +83,7 @@ export function LandingReviewsSection() {
   return (
     <LandingSection
       id="reviews"
-      className={landingSectionClass("white")}
+      className={landingSectionClass("white", { shell: "content" })}
     >
       <LandingSectionHeading
         eyebrow={REVIEWS_SECTION.eyebrow}
@@ -93,7 +93,7 @@ export function LandingReviewsSection() {
       {loading ? (
         <LoadingState label="Loading reviews…" variant="centered" className={`${LANDING_SECTION_CONTENT_MT} py-12`} />
       ) : (
-        <div className={`${LANDING_SECTION_CONTENT_MT} grid gap-5 sm:grid-cols-3`}>
+        <div className={`${LANDING_SECTION_CONTENT_MT} grid gap-5 sm:grid-cols-2 lg:grid-cols-3`}>
           {reviews.map((review) => (
             <article
               key={review.id}

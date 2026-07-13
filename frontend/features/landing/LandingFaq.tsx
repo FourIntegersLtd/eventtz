@@ -23,7 +23,7 @@ export function LandingFaq() {
   return (
     <LandingSection
       id="faq"
-      className={landingSectionClass("white")}
+      className={landingSectionClass("white", { shell: "content" })}
       width="3xl"
     >
       <LandingSectionHeading eyebrow={FAQ_SECTION.eyebrow} title={FAQ_SECTION.title} />
@@ -37,7 +37,7 @@ export function LandingFaq() {
               setTab(id);
               setOpenKey(null);
             }}
-            className={`flex-1 rounded-full py-2 text-sm font-medium transition ${
+            className={`flex min-h-11 flex-1 items-center justify-center rounded-full py-2.5 text-sm font-medium transition ${
               tab === id
                 ? "bg-primary text-white shadow-sm"
                 : "text-primary/70 hover:text-primary"
@@ -57,7 +57,7 @@ export function LandingFaq() {
               <button
                 type="button"
                 onClick={() => setOpenKey(isOpen ? null : faqKey)}
-                className={`flex w-full items-start justify-between gap-3 py-3.5 text-left text-sm font-medium transition sm:items-center sm:gap-4 sm:py-4 ${
+                className={`flex min-h-11 w-full items-start justify-between gap-3 py-3.5 text-left text-sm font-medium transition sm:items-center sm:gap-4 sm:py-4 ${
                   isOpen ? "text-primary" : "text-neutral-800"
                 }`}
               >

@@ -135,7 +135,7 @@ export function LandingScrollFeatureShowcase({
         className={`z-30 mt-6 flex justify-center py-2 sm:mt-8 lg:sticky lg:top-[4.25rem] lg:py-3 lg:backdrop-blur-md ${stickyBarBg}`}
       >
         <div
-          className="flex w-full max-w-lg items-center rounded-full bg-neutral-100 p-1 ring-1 ring-neutral-200/90"
+          className="flex w-full max-w-none items-center rounded-full bg-neutral-100 p-1 ring-1 ring-neutral-200/90 sm:max-w-lg"
           role="tablist"
           aria-label={tablistAriaLabel}
         >
@@ -150,14 +150,14 @@ export function LandingScrollFeatureShowcase({
                 aria-selected={active}
                 aria-controls={step.id}
                 onClick={() => scrollToStep(index)}
-                className={`flex flex-1 items-center justify-center gap-1 rounded-full px-1.5 py-2.5 text-center text-xs font-semibold transition-all duration-300 motion-reduce:transition-none sm:gap-1.5 sm:px-3 sm:text-sm ${
+                className={`flex min-h-11 flex-1 items-center justify-center gap-1 rounded-full px-2 py-2.5 text-center text-[11px] font-semibold transition-all duration-300 motion-reduce:transition-none sm:min-h-0 sm:gap-1.5 sm:px-3 sm:text-sm ${
                   active
                     ? "bg-primary text-white shadow-sm"
                     : "text-neutral-600 hover:text-primary"
                 }`}
               >
                 <StepIcon className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" strokeWidth={2.25} aria-hidden />
-                {step.stepLabel}
+                <span className="truncate">{step.stepLabel}</span>
               </button>
             );
           })}
@@ -190,7 +190,7 @@ export function LandingScrollFeatureShowcase({
                 key={step.id}
                 id={step.id}
                 ref={setStepRef(index)}
-                className="flex flex-col justify-center border-t border-neutral-200/80 py-8 first:border-t-0 first:pt-4 sm:py-10 lg:min-h-[calc(100dvh-7.5rem)] lg:py-0"
+                className="flex flex-col justify-center border-t border-neutral-200/80 py-6 first:border-t-0 first:pt-4 sm:py-10 lg:min-h-[calc(100dvh-7.5rem)] lg:py-0"
                 aria-current={active ? "step" : undefined}
               >
                 <p
@@ -212,7 +212,7 @@ export function LandingScrollFeatureShowcase({
                   {step.description}
                 </p>
 
-                <div className="mt-6 lg:hidden">
+                <div className="mt-5 max-h-[40dvh] overflow-hidden rounded-2xl lg:hidden">
                   <StepScreenshot
                     step={step}
                     fallback={imageFallbacks?.[step.id]}

@@ -20,7 +20,7 @@ export function LandingSectionHeading({
   return (
     <div className={`${isCenter ? "mx-auto text-center" : "text-left"} max-w-2xl ${className}`}>
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{eyebrow}</p>
-      <h2 className="font-heading mt-2.5 text-xl font-semibold tracking-tight text-primary sm:text-2xl sm:text-3xl md:text-4xl">
+      <h2 className="font-heading mt-2.5 text-xl font-semibold tracking-tight text-primary sm:text-3xl md:text-4xl">
         {title}
       </h2>
       {description ? (

@@ -16,11 +16,32 @@ export const LANDING_HERO_CONTAINER_CLASS =
 
 export const LANDING_SECTION_BORDER = "border-t border-primary-border/50";
 
-/** Standard section padding — use on most content blocks. */
-export const LANDING_SECTION_PY = "py-16 sm:py-20 md:py-24";
+/**
+ * Viewport-tiered section shells (prefer `min-h-dvh`, never force exact `h-dvh`):
+ * - **full** — one story per screen (hero, discover)
+ * - **near** — story sections on desktop; natural height on mobile
+ * - **content** — dense blocks (grids, FAQ); generous padding only
+ */
+export type LandingSectionShell = "full" | "near" | "content";
+
+export const LANDING_SECTION_SHELL = {
+  full: "relative flex min-h-dvh flex-col",
+  near: "relative min-h-0 lg:min-h-dvh",
+  content: "relative",
+} as const;
+
+/** Padding inside shells — content is the most common. */
+export const LANDING_SECTION_SHELL_PY = {
+  full: "py-16 sm:py-20 lg:py-24",
+  near: "py-20 sm:py-24 lg:py-28",
+  content: "py-20 sm:py-24 md:py-28",
+} as const;
+
+/** @deprecated Prefer `LANDING_SECTION_SHELL_PY.content` via `landingSectionClass`. */
+export const LANDING_SECTION_PY = LANDING_SECTION_SHELL_PY.content;
 
 /** Screenshot / feature sections — same vertical scale as standard sections. */
-export const LANDING_FEATURE_PY = LANDING_SECTION_PY;
+export const LANDING_FEATURE_PY = LANDING_SECTION_SHELL_PY.content;
 
 /** Compact strip below hero (categories browse). */
 export const LANDING_STRIP_PY = "pt-10 pb-14 sm:pt-12 sm:pb-16";
@@ -34,14 +55,40 @@ export const LANDING_SECTION_BG = {
 
 export type LandingSectionTone = keyof typeof LANDING_SECTION_BG;
 
-export function landingSectionClass(tone: LandingSectionTone, extra = ""): string {
-  return [LANDING_SECTION_BORDER, LANDING_SECTION_BG[tone], LANDING_SECTION_PY, extra]
+type LandingSectionClassOptions = {
+  shell?: LandingSectionShell;
+  /** When false, omit the top hairline (e.g. first band after nav). Default true. */
+  bordered?: boolean;
+  extra?: string;
+};
+
+/**
+ * Shared landing section surface.
+ * Pass a string as the 2nd arg for legacy `extra` classes, or an options object.
+ */
+export function landingSectionClass(
+  tone: LandingSectionTone,
+  options: LandingSectionClassOptions | string = {},
+): string {
+  const opts: LandingSectionClassOptions =
+    typeof options === "string" ? { extra: options } : options;
+  const shell = opts.shell ?? "content";
+  const bordered = opts.bordered !== false;
+
+  return [
+    bordered ? LANDING_SECTION_BORDER : "",
+    LANDING_SECTION_BG[tone],
+    LANDING_SECTION_SHELL[shell],
+    LANDING_SECTION_SHELL_PY[shell],
+    opts.extra ?? "",
+  ]
     .filter(Boolean)
     .join(" ");
 }
 
-export function landingFeatureSectionClass(tone: LandingSectionTone): string {
-  return [LANDING_SECTION_BORDER, LANDING_SECTION_BG[tone], LANDING_FEATURE_PY].join(" ");
+export function landingFeatureSectionClass(tone: LandingSectionTone, extra = ""): string {
+  /** Scroll/feature showcases grow past one screen — use content shell, not near. */
+  return landingSectionClass(tone, { shell: "content", extra });
 }
 
 /** Inner gap between section heading and primary content. */

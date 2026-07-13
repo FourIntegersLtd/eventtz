@@ -14,7 +14,7 @@ export function LandingInspirationGrid() {
   return (
     <LandingSection
       id="inspiration"
-      className={`hidden overflow-x-clip md:block ${landingSectionClass("soft")}`}
+      className={`hidden overflow-x-clip md:block ${landingSectionClass("soft", { shell: "content" })}`}
       width="7xl"
     >
       <LandingSectionHeading

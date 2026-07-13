@@ -95,15 +95,18 @@ export function HeroMarketplaceSearch({
   const responsiveGridCols = gridColsForFieldCount(visibleFieldCount);
 
   const shellClassName = landing
-    ? `grid w-full min-w-0 max-w-full grid-cols-1 gap-2 overflow-visible rounded-2xl border border-primary-border bg-white p-2 shadow-primary-soft sm:grid-cols-2 sm:gap-0 sm:rounded-full sm:p-1.5 ${responsiveGridCols} lg:items-center`
+    ? `grid w-full min-w-0 max-w-full grid-cols-1 gap-2 overflow-visible rounded-2xl border border-primary-border bg-white p-2 shadow-primary-soft ${responsiveGridCols} lg:items-center lg:gap-0 lg:rounded-full lg:p-1.5`
     : `grid min-w-0 max-w-full grid-cols-1 gap-3 overflow-visible rounded-2xl border border-neutral-200 bg-white p-3 shadow-sm sm:grid-cols-2 ${responsiveGridCols} lg:items-end`;
 
-  const submitSpanClass =
-    visibleFieldCount === 1 ? "sm:col-span-1" : "sm:col-span-2";
+  const submitSpanClass = landing
+    ? "lg:col-span-1"
+    : visibleFieldCount === 1
+      ? "sm:col-span-1"
+      : "sm:col-span-2";
   const fieldClassName = "relative z-20 min-w-0";
-  const landingFieldDivider = landing ? "sm:border-l sm:border-primary-border" : "";
+  const landingFieldDivider = landing ? "lg:border-l lg:border-primary-border" : "";
   const submitClassName = landing
-    ? `flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-8 text-sm font-semibold text-white transition hover:opacity-95 ${submitSpanClass} lg:col-span-1 lg:w-auto lg:justify-self-end lg:px-6`
+    ? `flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-white transition hover:opacity-95 sm:px-6 ${submitSpanClass} lg:w-auto lg:justify-self-end lg:px-6`
     : `flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-white transition hover:opacity-95 ${submitSpanClass} lg:col-span-1 lg:w-auto lg:justify-self-end`;
 
   const toggleType = useCallback((value: string) => {
@@ -178,7 +181,7 @@ export function HeroMarketplaceSearch({
             }}
             className={
               landing
-                ? `flex h-12 w-full items-center justify-between gap-2 rounded-xl px-4 text-left text-sm font-medium text-neutral-900 sm:rounded-none sm:bg-transparent ${landingFieldDivider}`
+                ? `flex h-12 w-full items-center justify-between gap-2 rounded-xl px-4 text-left text-sm font-medium text-neutral-900 lg:rounded-none lg:bg-transparent ${landingFieldDivider}`
                 : "flex h-12 w-full items-center justify-between gap-2 rounded-xl border border-neutral-200 bg-neutral-50 px-3 text-left text-sm text-neutral-900"
             }
           >
@@ -258,7 +261,7 @@ export function HeroMarketplaceSearch({
             placeholder="Search vendors or city"
             className={
               landing
-                ? "h-12 w-full rounded-xl border-0 bg-transparent py-3 pl-11 pr-4 text-base text-neutral-900 placeholder:text-neutral-400 focus:border-0 focus:outline-none focus:ring-0 sm:rounded-none"
+                ? "h-12 w-full rounded-xl border-0 bg-transparent py-3 pl-11 pr-4 text-base text-neutral-900 placeholder:text-neutral-400 focus:border-0 focus:outline-none focus:ring-0 lg:rounded-none"
                 : "h-12 w-full rounded-xl border border-neutral-200 bg-white py-2 pl-10 pr-4 text-sm text-neutral-900 outline-none ring-primary/15 focus:border-primary focus:ring-2"
             }
           />
@@ -277,7 +280,7 @@ export function HeroMarketplaceSearch({
             }}
             className={
               landing
-                ? `flex h-12 w-full items-center justify-between gap-2 rounded-xl px-4 text-left text-sm font-medium text-neutral-900 sm:rounded-none sm:bg-transparent ${landingFieldDivider}`
+                ? `flex h-12 w-full items-center justify-between gap-2 rounded-xl px-4 text-left text-sm font-medium text-neutral-900 lg:rounded-none lg:bg-transparent ${landingFieldDivider}`
                 : "flex h-12 w-full items-center justify-between gap-2 rounded-xl border border-neutral-200 bg-neutral-50 px-3 text-left text-sm text-neutral-900"
             }
           >

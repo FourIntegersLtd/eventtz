@@ -162,7 +162,7 @@ export function LandingNav({
       ) : null}
 
       <header
-        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${
+        className={`fixed top-0 left-0 right-0 z-[100] pt-[env(safe-area-inset-top)] transition-all duration-300 ${
           mobileOpen
             ? darkNav
               ? "bg-neutral-950"
@@ -234,7 +234,7 @@ export function LandingNav({
 
       {mobileOpen ? (
         <div
-          className={`fixed inset-x-0 bottom-0 top-16 z-[95] overflow-y-auto pb-[max(2rem,env(safe-area-inset-bottom))] lg:hidden ${
+          className={`fixed inset-x-0 bottom-0 top-[calc(env(safe-area-inset-top)+3.75rem)] z-[95] overflow-y-auto pb-[max(2rem,env(safe-area-inset-bottom))] lg:hidden ${
             darkNav ? "text-white" : "text-neutral-900"
           }`}
         >

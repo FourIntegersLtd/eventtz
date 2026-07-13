@@ -46,18 +46,20 @@ export function HeroRotatingWord() {
       : "motion-safe:animate-[hero-word-in_0.45s_ease-out_both]";
 
   return (
-    <span className="relative inline-flex max-w-full translate-y-[-0.05em] align-baseline overflow-hidden rounded-xl bg-primary px-2.5 py-[0.16em] text-[0.92em] sm:rounded-2xl sm:px-3.5 sm:text-[1em]">
+    <span className="relative inline-flex min-w-0 max-w-full translate-y-[-0.05em] align-baseline overflow-hidden">
       <span className="invisible whitespace-nowrap font-semibold" aria-hidden>
         makeup artists
       </span>
       <span className="sr-only">{word}</span>
       <span
-        className="absolute inset-0 flex items-center justify-center overflow-hidden px-2.5 sm:px-3.5"
+        className="absolute inset-0 flex items-center overflow-hidden"
         aria-hidden
       >
         <span
           key={`${word}-${phase === "in" ? index : `out-${index}`}`}
-          className={`whitespace-nowrap font-semibold text-white ${reduceMotion ? "" : motionClass}`}
+          className={`whitespace-nowrap font-semibold text-primary underline decoration-primary/35 decoration-2 underline-offset-[0.18em] ${
+            reduceMotion ? "" : motionClass
+          }`}
         >
           {word}
         </span>

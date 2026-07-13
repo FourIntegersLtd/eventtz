@@ -10,7 +10,7 @@ export function LandingWhyEventtz() {
   return (
     <LandingSection
       id="why-eventtz"
-      className={landingSectionClass("muted")}
+      className={landingSectionClass("muted", { shell: "near" })}
     >
       <div className="mx-auto max-w-2xl text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
