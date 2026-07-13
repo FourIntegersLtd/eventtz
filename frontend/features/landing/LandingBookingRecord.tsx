@@ -13,7 +13,7 @@ function JourneyPanelMock({ stage }: { stage: "browse" | "chat" | "pay" }) {
     return (
       <div className="p-4 sm:p-5">
         <p className="text-xs font-medium text-neutral-500">Amara&apos;s Kitchen · Catering</p>
-        <p className="font-heading mt-1 text-base font-semibold text-primary">Wedding buffet package</p>
+        <p className="font-heading mt-1 text-base font-semibold text-primary">Wedding buffet service</p>
         <p className="mt-2 text-sm">
           <span className="text-neutral-400 line-through">GBP 1,200</span>{" "}
           <span className="font-semibold text-primary">GBP 1,080</span>

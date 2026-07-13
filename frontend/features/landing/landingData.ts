@@ -59,7 +59,7 @@ export const CATEGORIES: LandingCategory[] = [
     name: "Photography",
     value: "photography",
     Icon: Camera,
-    description: "See packages and prices on every profile before you send a message.",
+    description: "See services and prices on every profile before you send a message.",
     iconBg: "bg-amber-500",
     iconColor: "text-white",
   },
@@ -193,7 +193,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
     items: [
       {
         q: "How do I join Eventtz?",
-        a: "Create your profile, add your packages, and connect payments.",
+        a: "Create your profile, add your services, and connect payments.",
       },
       {
         q: "When will my profile go live?",
@@ -343,7 +343,7 @@ export const PRICING_TRUST_SECTION: LandingScreenshotSection = {
   eyebrow: "Browse",
   title: "See the price before the DM",
   description:
-    "Every listing shows packages and sale prices upfront, so you can compare vendors before you send a message.",
+    "Every listing shows services and sale prices upfront, so you can compare vendors before you send a message.",
   screenshotSrc: "/images/landing-images/pricing.png",
   ctaHref: "/client/browse",
   ctaLabel: "Browse vendors",
@@ -353,7 +353,7 @@ export const BOOK_SECTION: LandingScreenshotSection = {
   eyebrow: "Request",
   title: "One request stays on the record",
   description:
-    "Pick your package, add your date and venue, and send a request that lives on one booking from day one.",
+    "Pick your service, add your date and venue, and send a request that lives on one booking from day one.",
   screenshotSrc: "/images/landing-images/book.png",
   ctaHref: "/client/browse",
   ctaLabel: "Browse vendors",
@@ -363,7 +363,7 @@ export const CHAT_SECTION: LandingScreenshotSection = {
   eyebrow: "Agree",
   title: "Sort the details in one thread",
   description:
-    "Message the vendor, tweak the package, and get a clear quote back, all in the same conversation instead of scattered DMs.",
+    "Message the vendor, tweak the service, and get a clear quote back, all in the same conversation instead of scattered DMs.",
   screenshotSrc: "/images/landing-images/chat.png",
   ctaHref: "/client/browse",
   ctaLabel: "Browse vendors",
@@ -396,7 +396,7 @@ export const CLIENT_JOURNEY_SCROLL_STEPS: LandingScrollFeatureStep[] = [
     description: PRICING_TRUST_SECTION.description,
     quote: "I keep having to send a DM just to get prices.",
     imageSrc: PRICING_TRUST_SECTION.screenshotSrc,
-    imageAlt: "Vendor profile with package pricing and discounts on Eventtz",
+    imageAlt: "Vendor profile with service pricing and discounts on Eventtz",
     ctaHref: PRICING_TRUST_SECTION.ctaHref,
     ctaLabel: PRICING_TRUST_SECTION.ctaLabel,
     Icon: Search,
@@ -475,9 +475,9 @@ export const BOOKING_RECORD_SECTION = {
 export const BOOKING_RECORD_JOURNEY: LandingJourneyStep[] = [
   {
     title: "Browse with clear prices",
-    description: "Compare packages on each profile before you open a message.",
+    description: "Compare services on each profile before you open a message.",
     mockStage: "browse",
-    screenshotAlt: "Vendor profile with package pricing on Eventtz",
+    screenshotAlt: "Vendor profile with service pricing on Eventtz",
   },
   {
     title: "Agree in chat",
