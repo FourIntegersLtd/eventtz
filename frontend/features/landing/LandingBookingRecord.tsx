@@ -54,7 +54,6 @@ export function LandingBookingRecord() {
     <LandingSection
       id="booking-record"
       className="border-t border-primary-border/50 bg-primary-soft/30 py-16 sm:py-20 md:py-24"
-      width="6xl"
     >
       <LandingSectionHeading
         eyebrow={BOOKING_RECORD_SECTION.eyebrow}

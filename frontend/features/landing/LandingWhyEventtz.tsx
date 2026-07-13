@@ -11,7 +11,6 @@ export function LandingWhyEventtz() {
     <LandingSection
       id="why-eventtz"
       className={landingSectionClass("muted")}
-      width="6xl"
     >
       <div className="mx-auto max-w-2xl text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">

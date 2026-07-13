@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useMemo, useState, type ChangeEvent } from "react";
+import { forwardRef, useEffect, useId, useMemo, useState, type ChangeEvent, type InputHTMLAttributes } from "react";
 import { FOCUS_RING, RADIUS } from "@/components/ui/tokens";
 import {
   dayOptions,
@@ -12,17 +12,10 @@ import {
 } from "@/lib/isoDateParts";
 import { todayIsoDate } from "@/lib/eventDateValidation";
 
-export type DateInputProps = {
-  id?: string;
-  value?: string;
-  defaultValue?: string;
-  min?: string;
-  disabled?: boolean;
-  className?: string;
+export type DateInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & {
   shellClassName?: string;
   /** Admin-style filters: start blank until the user picks a date. */
   allowEmpty?: boolean;
-  onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
 };
 
 type PartState = {
@@ -56,24 +49,33 @@ function emitChange(onChange: DateInputProps["onChange"], iso: string) {
   onChange({ target: { value: iso } } as ChangeEvent<HTMLInputElement>);
 }
 
-const selectClass = (className: string) =>
-  `box-border h-11 min-w-0 w-full max-w-full appearance-none rounded-lg border border-neutral-200 bg-white px-1.5 py-2 text-[13px] text-neutral-900 sm:px-2 sm:text-sm ${FOCUS_RING} ${RADIUS.sm} ${className}`.trim();
+const nativeInputClass = (className: string) =>
+  `box-border block h-11 w-full min-w-0 max-w-full rounded-lg border border-neutral-200 bg-white px-2 py-2 text-sm text-neutral-900 [color-scheme:light] sm:px-3 ${FOCUS_RING} ${RADIUS.sm} ${className}`.trim();
 
-/**
- * Cross-browser date picker (day / month / year selects).
- * Avoids Safari iOS `input[type=date]` overflow and inconsistent chrome.
- */
-export function DateInput({
+const selectClass = (className: string) =>
+  `box-border h-11 min-w-0 w-full max-w-full appearance-none rounded-lg border border-neutral-200 bg-white px-2 py-2 text-sm text-neutral-900 sm:px-3 ${FOCUS_RING} ${RADIUS.sm} ${className}`.trim();
+
+type SelectDateInputProps = {
+  id?: string;
+  value?: string;
+  defaultValue?: string;
+  min: string;
+  disabled?: boolean;
+  className?: string;
+  allowEmpty: boolean;
+  onChange?: DateInputProps["onChange"];
+};
+
+function SelectDateInput({
   id,
   value,
   defaultValue,
-  min = todayIsoDate(),
+  min,
   disabled = false,
   className = "",
-  shellClassName = "",
-  allowEmpty = false,
+  allowEmpty,
   onChange,
-}: DateInputProps) {
+}: SelectDateInputProps) {
   const groupId = useId();
   const isControlled = value !== undefined;
   const [parts, setParts] = useState<PartState>(() =>
@@ -125,7 +127,7 @@ export function DateInput({
   const fieldId = id ?? groupId;
 
   return (
-    <div className={`date-picker-shell min-w-0 max-w-full ${shellClassName}`.trim()} role="group" aria-labelledby={fieldId}>
+    <div className="date-picker-shell min-w-0 max-w-full" role="group" aria-labelledby={fieldId}>
       <span id={fieldId} className="sr-only">
         Date
       </span>
@@ -178,3 +180,64 @@ export function DateInput({
     </div>
   );
 }
+
+/**
+ * Desktop: native `input[type=date]` (lg+).
+ * Mobile/tablet: day / month / year selects (avoids iOS Safari overflow).
+ */
+export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(function DateInput(
+  {
+    id,
+    value,
+    defaultValue,
+    min = todayIsoDate(),
+    disabled = false,
+    className = "",
+    shellClassName = "",
+    allowEmpty = false,
+    onChange,
+    ...rest
+  },
+  ref,
+) {
+  const resolvedMin = typeof min === "string" ? min : todayIsoDate();
+  const isControlled = value !== undefined;
+  const nativeInputProps = isControlled
+    ? {
+        value: allowEmpty ? value : value || resolvedMin,
+      }
+    : {
+        defaultValue: allowEmpty ? (defaultValue ?? "") : (defaultValue ?? resolvedMin),
+      };
+
+  return (
+    <div className={`min-w-0 max-w-full ${shellClassName}`.trim()}>
+      <div className="date-input-shell hidden min-w-0 max-w-full lg:block">
+        <input
+          ref={ref}
+          id={id}
+          type="date"
+          min={resolvedMin}
+          disabled={disabled}
+          onChange={onChange}
+          className={nativeInputClass(className)}
+          {...nativeInputProps}
+          {...rest}
+        />
+      </div>
+
+      <div className="lg:hidden">
+        <SelectDateInput
+          id={id}
+          value={typeof value === "string" ? value : undefined}
+          defaultValue={typeof defaultValue === "string" ? defaultValue : undefined}
+          min={resolvedMin}
+          disabled={disabled}
+          className={className}
+          allowEmpty={allowEmpty}
+          onChange={onChange}
+        />
+      </div>
+    </div>
+  );
+});

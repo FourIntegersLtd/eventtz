@@ -10,6 +10,7 @@ import {
   HERO_SUBHEADLINE,
   HERO_VIDEO_SRC,
 } from "@/features/landing/landingData";
+import { LANDING_PAGE_CONTAINER_CLASS } from "@/features/landing/landingSectionStyles";
 
 export function LandingHero() {
   const heroVideoRef = useRef<HTMLVideoElement>(null);
@@ -123,7 +124,7 @@ export function LandingHero() {
         )}
       </button>
 
-      <div className="relative z-10 mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-10">
+      <div className={`relative z-10 ${LANDING_PAGE_CONTAINER_CLASS}`}>
         <div className="max-w-3xl text-left">
           <h1 className="font-heading text-4xl font-semibold leading-[1.08] tracking-tight text-white drop-shadow-[0_2px_24px_rgba(0,0,0,0.45)] sm:text-5xl md:text-6xl lg:text-7xl">
             Book <span className="text-accent-gold">African</span> event vendors in the UK

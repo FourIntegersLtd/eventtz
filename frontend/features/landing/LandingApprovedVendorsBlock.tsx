@@ -2,6 +2,7 @@
 
 import { ApprovedVendorsSection } from "@/features/client/browse/ApprovedVendorsSection";
 import type { ExploreVendor } from "@/lib/clientExploreApi";
+import { LANDING_PAGE_CONTAINER_CLASS } from "@/features/landing/landingSectionStyles";
 
 type LandingApprovedVendorsBlockProps = {
   vendors: ExploreVendor[];
@@ -15,7 +16,7 @@ export function LandingApprovedVendorsBlock({
   error,
 }: LandingApprovedVendorsBlockProps) {
   return (
-    <section className="mx-auto w-full max-w-7xl px-4 py-14 sm:px-6 sm:py-16 lg:px-12">
+    <section className={`py-14 sm:py-16 ${LANDING_PAGE_CONTAINER_CLASS}`}>
       <ApprovedVendorsSection
         query=""
         vendors={vendors}

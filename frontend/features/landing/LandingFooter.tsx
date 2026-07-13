@@ -14,6 +14,7 @@ import {
   FOOTER_CONTACT_EMAIL,
   FOOTER_LEGAL_LINKS,
 } from "@/lib/footerLinks";
+import { LANDING_PAGE_CONTAINER_CLASS } from "@/features/landing/landingSectionStyles";
 
 const SOCIAL_ICON_CLASS =
   "flex h-10 w-10 items-center justify-center rounded-lg border border-primary-border bg-white text-neutral-700 transition-all hover:scale-105 hover:border-primary/30 hover:bg-primary-muted hover:text-primary";
@@ -41,7 +42,7 @@ export function LandingFooter({
     <footer
       className={`border-t border-primary-border/60 bg-primary-soft/40 ${className}`.trim()}
     >
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:py-16">
+      <div className={`py-12 sm:py-16 lg:py-16 ${LANDING_PAGE_CONTAINER_CLASS}`}>
         <div className="grid grid-cols-1 gap-12 sm:gap-16 lg:grid-cols-12 lg:gap-8">
           <div className="flex flex-col gap-6 lg:col-span-3">
             <div className="flex flex-col gap-3">

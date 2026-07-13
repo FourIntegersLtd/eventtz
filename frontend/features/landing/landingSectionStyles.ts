@@ -1,5 +1,15 @@
 /** Shared vertical rhythm and surfaces for the marketing landing page. */
 
+/** Horizontal gutters shared across landing nav, hero, and sections. */
+export const LANDING_HORIZONTAL_PADDING = "px-4 sm:px-6 lg:px-12";
+
+/** Primary landing content width — keep nav, hero, and sections on the same vertical grid. */
+export const LANDING_PAGE_MAX_WIDTH = "max-w-7xl";
+
+/** Horizontal alignment for nav, hero, and primary landing content. */
+export const LANDING_PAGE_CONTAINER_CLASS =
+  `mx-auto w-full ${LANDING_PAGE_MAX_WIDTH} ${LANDING_HORIZONTAL_PADDING}`;
+
 export const LANDING_SECTION_BORDER = "border-t border-primary-border/50";
 
 /** Standard section padding — use on most content blocks. */

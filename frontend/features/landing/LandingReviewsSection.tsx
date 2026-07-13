@@ -84,7 +84,6 @@ export function LandingReviewsSection() {
     <LandingSection
       id="reviews"
       className={landingSectionClass("white")}
-      width="6xl"
     >
       <LandingSectionHeading
         eyebrow={REVIEWS_SECTION.eyebrow}

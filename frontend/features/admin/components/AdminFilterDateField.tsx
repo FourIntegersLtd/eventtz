@@ -19,7 +19,7 @@ export function AdminFilterDateField({
 }: AdminFilterDateFieldProps) {
   return (
     <label
-      className={`grid min-w-0 max-w-full grid-cols-1 overflow-hidden text-sm lg:w-auto lg:min-w-[9rem] ${className}`.trim()}
+      className={`grid w-full min-w-0 max-w-full grid-cols-1 text-sm lg:w-auto lg:min-w-[12.5rem] ${className}`.trim()}
     >
       <span className="text-neutral-600">
         {label}

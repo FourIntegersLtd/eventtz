@@ -1,6 +1,7 @@
 "use client";
 
 import { BadgeCheck, CreditCard, MapPin, Tags } from "lucide-react";
+import { LANDING_PAGE_CONTAINER_CLASS } from "@/features/landing/landingSectionStyles";
 
 const TRUST_ITEMS = [
   { icon: BadgeCheck, label: "Vetted vendors" },
@@ -11,8 +12,8 @@ const TRUST_ITEMS = [
 
 export function LandingTrustStrip() {
   return (
-    <section className="relative z-20 -mt-10 px-4 sm:px-6 lg:px-12">
-      <div className="mx-auto grid max-w-6xl grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+    <section className="relative z-20 -mt-10">
+      <div className={`grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4 ${LANDING_PAGE_CONTAINER_CLASS}`}>
         {TRUST_ITEMS.map(({ icon: Icon, label }) => (
           <div
             key={label}

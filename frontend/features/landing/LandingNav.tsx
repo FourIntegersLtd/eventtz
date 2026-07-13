@@ -15,6 +15,7 @@ import {
   SIGN_IN_LINK,
 } from "@/features/landing/landingData";
 import { useLandingNavScroll } from "@/features/landing/useLandingNavScroll";
+import { LANDING_PAGE_CONTAINER_CLASS } from "@/features/landing/landingSectionStyles";
 
 type NavLinkItemProps = {
   href: string;
@@ -152,122 +153,139 @@ export function LandingNav({
   });
 
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${
-        navSolid
-          ? "border-b border-primary-border/40 bg-white/85 shadow-sm backdrop-blur-xl"
-          : "bg-gradient-to-b from-black/50 to-transparent backdrop-blur-[2px]"
-      }`}
-    >
-      <div className="mx-auto flex max-w-8xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6 lg:px-12">
+    <>
+      {mobileOpen ? (
         <div
-          className={`inline-flex shrink-0 items-center transition ${darkNav ? "drop-shadow-md brightness-0 invert" : ""}`}
-        >
-          <EventtzLogo
-            href="/"
-            className="inline-flex shrink-0 items-center"
-            variant="header"
-            imageClassName="h-9 w-auto sm:h-10 md:h-11"
-            width={200}
-            height={72}
-            priority
-          />
-        </div>
+          className={`fixed inset-0 z-[90] lg:hidden ${darkNav ? "bg-neutral-950" : "bg-white"}`}
+          aria-hidden
+        />
+      ) : null}
 
-        <nav className="hidden items-center gap-0.5 lg:flex lg:justify-end lg:overflow-visible">
-          <NavDropdown darkNav={darkNav} label="Explore" align="left" items={exploreLinks} />
-
-          <NavLinkItem
-            href={SIGN_IN_LINK.href}
-            className={
-              darkNav
-                ? "rounded-lg px-3 py-2 text-sm font-medium text-white/95 transition hover:bg-white/10"
-                : "rounded-lg px-3 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 hover:text-primary"
-            }
-          >
-            {SIGN_IN_LINK.label}
-          </NavLinkItem>
-
-          <NavLinkItem href={REGISTER_LINK.href} className={outlineCtaClass}>
-            {REGISTER_LINK.label}
-          </NavLinkItem>
-
-          <NavLinkItem href={BROWSE_LINK.href} className={primaryCtaClass}>
-            {BROWSE_LINK.label}
-          </NavLinkItem>
-        </nav>
-
-        <div className="flex items-center gap-2 lg:hidden">
-          <NavLinkItem href={BROWSE_LINK.href} className={mobileHeaderBrowseClass}>
-            {BROWSE_LINK.label}
-          </NavLinkItem>
-          <button
-            type="button"
-            onClick={() => setMobileOpen((o) => !o)}
-            className={
-              darkNav
-                ? "flex h-10 w-10 items-center justify-center rounded-lg border border-white/30 bg-white/10 text-white backdrop-blur-sm"
-                : "flex h-10 w-10 items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-800"
-            }
-            aria-label={mobileOpen ? "Close menu" : "Open menu"}
-          >
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
-        </div>
-      </div>
-
-      {mobileOpen && (
+      <header
+        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${
+          mobileOpen
+            ? darkNav
+              ? "bg-neutral-950"
+              : "bg-white shadow-sm"
+            : navSolid
+              ? "border-b border-primary-border/40 bg-white/85 shadow-sm backdrop-blur-xl"
+              : "bg-gradient-to-b from-black/50 to-transparent backdrop-blur-[2px]"
+        }`}
+      >
         <div
-          className={`border-t px-4 py-4 lg:hidden ${
-            darkNav ? "border-white/10 bg-neutral-950/90 backdrop-blur-md" : "border-neutral-200/80 bg-white"
-          }`}
+          className={`flex items-center justify-between gap-3 py-3 sm:py-2.5 ${LANDING_PAGE_CONTAINER_CLASS}`}
         >
-          <nav className="flex flex-col gap-0.5">
-            {mobileSectionLinks.map((item) => (
-              <NavLinkItem
-                key={`${item.href}-${item.label}`}
-                href={item.href}
-                className={`rounded-lg px-3 py-2.5 text-sm font-medium ${
-                  darkNav ? "text-white/90 hover:bg-white/10" : "text-neutral-800 hover:bg-neutral-50"
-                }`}
-                onClick={closeMobile}
-              >
-                {item.label}
-              </NavLinkItem>
-            ))}
-          </nav>
-
           <div
-            className={`mt-4 flex flex-col gap-2 border-t pt-4 ${
-              darkNav ? "border-white/10" : "border-neutral-200/80"
-            }`}
+            className={`inline-flex shrink-0 items-center transition ${darkNav ? "drop-shadow-md brightness-0 invert" : ""}`}
           >
-            <NavLinkItem
-              href={BROWSE_LINK.href}
-              className={mobileMenuPrimaryClass}
-              onClick={closeMobile}
-            >
-              {BROWSE_LINK.label} vendors
-            </NavLinkItem>
-            <NavLinkItem
-              href={REGISTER_LINK.href}
-              className={mobileMenuSecondaryClass}
-              onClick={closeMobile}
-            >
-              {REGISTER_LINK.label}
-            </NavLinkItem>
+            <EventtzLogo
+              href="/"
+              className="inline-flex shrink-0 items-center"
+              variant="header"
+              imageClassName="h-9 w-auto sm:h-10 md:h-11"
+              width={200}
+              height={72}
+              priority
+            />
+          </div>
+
+          <nav className="hidden items-center gap-0.5 lg:ml-auto lg:flex lg:justify-end lg:overflow-visible">
+            <NavDropdown darkNav={darkNav} label="Explore" align="left" items={exploreLinks} />
+
             <NavLinkItem
               href={SIGN_IN_LINK.href}
-              className={`rounded-lg px-3 py-2 text-center text-sm font-medium ${
-                darkNav ? "text-white/80 hover:text-white" : "text-neutral-600 hover:text-primary"
-              }`}
-              onClick={closeMobile}
+              className={
+                darkNav
+                  ? "rounded-lg px-3 py-2 text-sm font-medium text-white/95 transition hover:bg-white/10"
+                  : "rounded-lg px-3 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 hover:text-primary"
+              }
             >
               {SIGN_IN_LINK.label}
             </NavLinkItem>
+
+            <NavLinkItem href={REGISTER_LINK.href} className={outlineCtaClass}>
+              {REGISTER_LINK.label}
+            </NavLinkItem>
+
+            <NavLinkItem href={BROWSE_LINK.href} className={primaryCtaClass}>
+              {BROWSE_LINK.label}
+            </NavLinkItem>
+          </nav>
+
+          <div className="ml-auto flex shrink-0 items-center gap-2.5 lg:hidden">
+            <NavLinkItem href={BROWSE_LINK.href} className={mobileHeaderBrowseClass}>
+              {BROWSE_LINK.label}
+            </NavLinkItem>
+            <button
+              type="button"
+              onClick={() => setMobileOpen((o) => !o)}
+              className={
+                darkNav
+                  ? "flex h-10 w-10 items-center justify-center rounded-lg border border-white/30 bg-white/10 text-white backdrop-blur-sm"
+                  : "flex h-10 w-10 items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-800"
+              }
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            >
+              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
         </div>
-      )}
-    </header>
+      </header>
+
+      {mobileOpen ? (
+        <div
+          className={`fixed inset-x-0 bottom-0 top-16 z-[95] overflow-y-auto pb-[max(2rem,env(safe-area-inset-bottom))] lg:hidden ${
+            darkNav ? "text-white" : "text-neutral-900"
+          }`}
+        >
+          <div className={`flex flex-col ${LANDING_PAGE_CONTAINER_CLASS}`}>
+            <nav className="flex flex-col gap-1 pt-2">
+              {mobileSectionLinks.map((item) => (
+                <NavLinkItem
+                  key={`${item.href}-${item.label}`}
+                  href={item.href}
+                  className={`rounded-lg py-3.5 text-[15px] font-medium leading-none ${
+                    darkNav ? "text-white/90 hover:bg-white/10" : "text-neutral-800 hover:bg-neutral-50"
+                  }`}
+                  onClick={closeMobile}
+                >
+                  {item.label}
+                </NavLinkItem>
+              ))}
+            </nav>
+
+            <div
+              className={`mt-10 flex flex-col gap-3 border-t pt-6 ${
+                darkNav ? "border-white/10" : "border-neutral-200/80"
+              }`}
+            >
+              <NavLinkItem
+                href={BROWSE_LINK.href}
+                className={mobileMenuPrimaryClass}
+                onClick={closeMobile}
+              >
+                {BROWSE_LINK.label} vendors
+              </NavLinkItem>
+              <NavLinkItem
+                href={REGISTER_LINK.href}
+                className={mobileMenuSecondaryClass}
+                onClick={closeMobile}
+              >
+                {REGISTER_LINK.label}
+              </NavLinkItem>
+              <NavLinkItem
+                href={SIGN_IN_LINK.href}
+                className={`rounded-lg py-3.5 text-center text-[15px] font-medium ${
+                  darkNav ? "text-white/80 hover:text-white" : "text-neutral-600 hover:text-primary"
+                }`}
+                onClick={closeMobile}
+              >
+                {SIGN_IN_LINK.label}
+              </NavLinkItem>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 }
