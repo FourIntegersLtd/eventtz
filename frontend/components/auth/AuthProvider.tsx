@@ -25,7 +25,7 @@ type AuthContextValue = {
   ) => Promise<{ message?: string | null }>;
   signOut: () => Promise<void>;
   refreshUser: () => Promise<void>;
-};
+}
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
