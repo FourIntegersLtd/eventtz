@@ -2,6 +2,12 @@
 export const LANDING_SCREENSHOT_DEFAULT_WIDTH = 1920;
 export const LANDING_SCREENSHOT_DEFAULT_HEIGHT = 1200;
 
+/** Natural aspect: frame grows with the image (mobile inline shots). */
+export const LANDING_SCREENSHOT_NATURAL_CLASS = "block h-auto w-full";
+
+/** Fixed-aspect frames: fill edge-to-edge without letterboxing. */
+export const LANDING_SCREENSHOT_FILL_CLASS = "h-full w-full object-cover object-top";
+
 /**
  * Max CSS width so a screenshot stays sharp on 2× displays.
  * Export at 2× your target display width (e.g. 2560px for a 1280px-wide slot).

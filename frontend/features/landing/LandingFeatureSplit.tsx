@@ -23,6 +23,13 @@ import {
 export const LANDING_SCREENSHOT_FRAME_CLASS =
   "overflow-hidden rounded-lg border border-neutral-200 bg-white";
 
+/** Screenshots that already include their own chrome (e.g. full-page capture). */
+export const LANDING_SCREENSHOT_FRAMELESS_CLASS = "overflow-hidden rounded-lg";
+
+export function landingScreenshotFrameClass(frameless = false): string {
+  return frameless ? LANDING_SCREENSHOT_FRAMELESS_CLASS : LANDING_SCREENSHOT_FRAME_CLASS;
+}
+
 type LandingFeatureSplitProps = {
   id?: string;
   eyebrow?: string;

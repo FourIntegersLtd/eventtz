@@ -5,11 +5,16 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { LANDING_SCREENSHOT_FRAME_CLASS } from "@/features/landing/LandingFeatureSplit";
+import {
+  LANDING_SCREENSHOT_FRAME_CLASS,
+  LANDING_SCREENSHOT_FRAMELESS_CLASS,
+} from "@/features/landing/LandingFeatureSplit";
 import { LandingSection } from "@/features/landing/LandingSection";
 import {
   LANDING_SCREENSHOT_DEFAULT_HEIGHT,
   LANDING_SCREENSHOT_DEFAULT_WIDTH,
+  LANDING_SCREENSHOT_FILL_CLASS,
+  LANDING_SCREENSHOT_NATURAL_CLASS,
   LANDING_SPLIT_SCREENSHOT_SIZES,
 } from "@/features/landing/landingScreenshotConfig";
 import {
@@ -47,15 +52,24 @@ function StepScreenshot({
   priority?: boolean;
   layout?: "stacked" | "inline";
 }) {
+  const imageClassName =
+    layout === "inline" ? LANDING_SCREENSHOT_NATURAL_CLASS : LANDING_SCREENSHOT_FILL_CLASS;
+
   const frame = (
-    <div className={layout === "inline" ? "w-full" : "h-full w-full"}>
+    <div
+      className={
+        layout === "inline"
+          ? "w-full leading-[0]"
+          : "h-full w-full overflow-hidden leading-[0]"
+      }
+    >
       {step.imageSrc ? (
         <Image
           src={step.imageSrc}
           alt={step.imageAlt}
           width={LANDING_SCREENSHOT_DEFAULT_WIDTH}
           height={LANDING_SCREENSHOT_DEFAULT_HEIGHT}
-          className="block h-auto w-full"
+          className={imageClassName}
           sizes={LANDING_SPLIT_SCREENSHOT_SIZES}
           priority={priority}
           unoptimized
@@ -66,20 +80,25 @@ function StepScreenshot({
     </div>
   );
 
+  const frameClass =
+    layout === "stacked"
+      ? LANDING_SCREENSHOT_FRAMELESS_CLASS
+      : LANDING_SCREENSHOT_FRAME_CLASS;
+
   if (layout === "inline") {
-    return <div className={LANDING_SCREENSHOT_FRAME_CLASS}>{frame}</div>;
+    return <div className={frameClass}>{frame}</div>;
   }
 
   return (
     <div
       className={`absolute inset-0 transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
         visible
-          ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
-          : "pointer-events-none translate-y-3 scale-[0.985] opacity-0"
+          ? "z-10 pointer-events-auto translate-y-0 scale-100 opacity-100"
+          : "z-0 pointer-events-none invisible translate-y-3 scale-[0.985] opacity-0"
       }`}
       aria-hidden={!visible}
     >
-      {frame}
+      <div className={`h-full w-full ${frameClass}`}>{frame}</div>
     </div>
   );
 }
@@ -109,7 +128,7 @@ export function LandingScrollFeatureShowcase({
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{eyebrow}</p>
         ) : null}
         <h2 className={`${LANDING_FEATURE_HEADLINE_CLASS} ${eyebrow ? "mt-2.5" : ""}`}>{title}</h2>
-        <p className={LANDING_FEATURE_BODY_CLASS}>{description}</p>
+        <p className={`${LANDING_FEATURE_BODY_CLASS} hidden md:block`}>{description}</p>
       </div>
 
       <div

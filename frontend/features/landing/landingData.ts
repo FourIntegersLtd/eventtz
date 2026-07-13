@@ -332,6 +332,8 @@ export type LandingScrollFeatureStep = {
   quote?: string;
   imageSrc?: string;
   imageAlt: string;
+  /** Screenshot already includes border/chrome; skip the landing frame border. */
+  imageFrameless?: boolean;
   ctaHref?: string;
   ctaLabel?: string;
   Icon: LucideIcon;

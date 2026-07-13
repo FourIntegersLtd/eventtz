@@ -134,7 +134,7 @@ export function VendorBrowseDetailBody({
     <div className="grid gap-8 lg:grid-cols-[1fr_minmax(280px,360px)] lg:items-start lg:gap-10">
       <div className="min-w-0 space-y-6">
         <div className="overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100 shadow-sm">
-          <div className="relative flex min-h-[12rem] max-h-[min(28rem,70vh)] items-center justify-center bg-neutral-100">
+          <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-100">
             <div className="absolute left-4 top-4 z-10">
               <span className="inline-flex rounded-full border border-neutral-200 bg-white/95 px-3 py-1 text-xs font-semibold text-neutral-800 shadow-sm">
                 {city}
@@ -145,11 +145,11 @@ export function VendorBrowseDetailBody({
               <img
                 src={activePhotoUrl}
                 alt={`${businessName} portfolio`}
-                className="max-h-[min(28rem,70vh)] w-full object-contain object-center"
+                className="h-full w-full object-cover object-center"
                 decoding="async"
               />
             ) : (
-              <div className="flex aspect-[4/3] w-full items-center justify-center bg-gradient-to-br from-neutral-100 via-white to-[#e8e4ef]">
+              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-neutral-100 via-white to-[#e8e4ef]">
                 <span className="font-heading text-4xl font-semibold tracking-tight text-neutral-300 sm:text-5xl">
                   {businessName.slice(0, 1).toUpperCase()}
                 </span>
@@ -177,7 +177,7 @@ export function VendorBrowseDetailBody({
                     <img
                       src={url}
                       alt=""
-                      className="h-full w-full object-contain object-center"
+                      className="h-full w-full object-cover object-center"
                       decoding="async"
                     />
                   </button>
