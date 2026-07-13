@@ -44,56 +44,45 @@ export const CATEGORIES: LandingCategory[] = [
     value: "baking",
     Icon: Cake,
     description: "Cakes and sweet tables worth showing off.",
-    iconBg: "bg-orange-500",
-    iconColor: "text-white",
+    iconBg: "bg-orange-100",
+    iconColor: "text-orange-500",
   },
   {
     name: "Catering",
     value: "catering",
     Icon: UtensilsCrossed,
     description: "Food your guests will remember.",
-    iconBg: "bg-rose-500",
-    iconColor: "text-white",
+    iconBg: "bg-rose-100",
+    iconColor: "text-rose-500",
   },
   {
     name: "Photography",
     value: "photography",
     Icon: Camera,
     description: "See services and prices on every profile before you send a message.",
-    iconBg: "bg-amber-500",
-    iconColor: "text-white",
+    iconBg: "bg-violet-100",
+    iconColor: "text-violet-600",
   },
   {
     name: "Makeup",
     value: "makeup",
     Icon: Sparkles,
     description: "Bridal, party, and on-the-day looks.",
-    iconBg: "bg-fuchsia-500",
-    iconColor: "text-white",
+    iconBg: "bg-fuchsia-100",
+    iconColor: "text-fuchsia-500",
   },
   {
     name: "Rentals",
     value: "rentals",
     Icon: Package,
     description: "Décor, marquees, furniture, and hire.",
-    iconBg: "bg-violet-600",
-    iconColor: "text-white",
+    iconBg: "bg-sky-100",
+    iconColor: "text-sky-600",
   },
 ];
 
 /** Strip above the fold uses the same categories as the detailed grid. */
 export const BROWSE_CATEGORIES = CATEGORIES;
-
-const HERO_QUICK_LINK_LABELS: Record<string, string> = {
-  baking: "Custom cakes & baking",
-  catering: "Catering & drinks",
-};
-
-/** Derived from CATEGORIES so the hero quick links can't drift out of sync with the category list. */
-export const HERO_QUICK_LINKS = CATEGORIES.map(({ name, value }) => ({
-  label: HERO_QUICK_LINK_LABELS[value] ?? name,
-  href: `/client/browse?types=${value}`,
-}));
 
 export type GalleryVideo = {
   src: string;
@@ -271,11 +260,33 @@ export const NAV_DROPDOWN_LINK_CLASS =
  */
 export const HERO_VIDEO_SRC = "/videos/hero.mp4";
 
-/** Outcome-first hero line (below H1). `accent` is highlighted in the hero. */
+/** Light marketing hero — left copy column. Right column reserved for hero image. */
+export const HERO_EYEBROW = "Trusted African event vendors";
+
+export const HERO_HEADLINE = {
+  lead: "Best place to hire top",
+  sticky: "African",
+} as const;
+
+/** Rotates inside the purple highlight on the hero H1. */
+export const HERO_ROTATING_WORDS = [
+  "vendors",
+  "photographers",
+  "caterers",
+  "bakers",
+  "makeup artists",
+] as const;
+
+/** Outcome-first hero line (below H1). */
 export const HERO_SUBHEADLINE = {
   lead: "Eventtz helps you find and book trusted vendors securely, so you can plan your celebrations with ",
   accent: "confidence",
   tail: ".",
+} as const;
+
+export const HERO_CTA = {
+  label: "Hire top African vendors",
+  href: "/client/browse",
 } as const;
 
 export type LandingValuePillar = {
@@ -496,7 +507,6 @@ export const BOOKING_RECORD_JOURNEY: LandingJourneyStep[] = [
 export const FAQ_SECTION = {
   eyebrow: "FAQ",
   title: "Planning in the group chat? That's where things get lost.",
-  footnote: "More categories coming. ",
 } as const;
 
 export const FEATURED_VENDORS_SECTION = {
@@ -512,6 +522,7 @@ export const REVIEWS_SECTION = {
 export const BROWSE_SECTION = {
   eyebrow: "Discover",
   title: "Start with what you need",
+  description: "Pick a category and jump straight into trusted vendors.",
 } as const;
 
 export const EXPLORE_NAV_LINKS = [

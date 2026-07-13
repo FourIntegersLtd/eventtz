@@ -13,8 +13,9 @@ import { LandingSectionHeading } from "@/features/landing/LandingSectionHeading"
 import { LandingSection } from "@/features/landing/LandingSection";
 import { LoadingState } from "@/components/ui/LoadingState";
 import {
+  LANDING_SECTION_BG,
+  LANDING_SECTION_BORDER,
   LANDING_SECTION_CONTENT_MT,
-  landingSectionClass,
 } from "@/features/landing/landingSectionStyles";
 
 const MAX_ITEMS = 6;
@@ -47,7 +48,11 @@ export function LandingFeaturedVendors() {
   );
 
   return (
-    <LandingSection id="featured" className={landingSectionClass("muted")} width="7xl">
+    <LandingSection
+      id="featured"
+      className={`${LANDING_SECTION_BORDER} ${LANDING_SECTION_BG.muted} pt-28 pb-16 sm:pt-16 sm:pb-20 md:pt-20 md:pb-24`}
+      width="7xl"
+    >
       <div className="flex flex-wrap items-end justify-between gap-4">
         <LandingSectionHeading
           eyebrow={FEATURED_VENDORS_SECTION.eyebrow}

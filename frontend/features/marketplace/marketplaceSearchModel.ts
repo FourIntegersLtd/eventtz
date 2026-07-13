@@ -19,6 +19,7 @@ function labelForService(value: string): string {
 /**
  * When multiple vendor types are selected and a vendor matches more than one,
  * emit one card per matched type (same `user_id`, different highlight).
+ * Related/fallback rows stay visible even if they don't share the chip types.
  */
 export function expandVendorsForSearchResults(
   vendors: ExploreVendorSearchRow[],
@@ -28,6 +29,8 @@ export function expandVendorsForSearchResults(
 
   for (const v of vendors) {
     const matched = Array.isArray(v.matched_services) ? v.matched_services : [];
+    const tier = v.match_tier ?? "exact";
+    const softTier = tier === "related" || tier === "fallback";
 
     if (selectedTypes.length === 0) {
       out.push({
@@ -39,7 +42,16 @@ export function expandVendorsForSearchResults(
     }
 
     const types = matched.filter((t) => selectedTypes.includes(t));
-    if (types.length === 0) continue;
+    if (types.length === 0) {
+      if (softTier) {
+        out.push({
+          vendor: v,
+          highlightService: matched[0] ?? null,
+          cardKey: `${v.user_id}::${tier}`,
+        });
+      }
+      continue;
+    }
 
     if (types.length === 1) {
       out.push({

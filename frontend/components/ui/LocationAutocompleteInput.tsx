@@ -44,6 +44,13 @@ export type LocationAutocompleteInputProps = {
   className?: string;
   /** Hide the clear ("x") button. Defaults to shown. */
   showClear?: boolean;
+  /**
+   * Place suggestions via Photon.
+   * - `true` (default): always
+   * - `"lg"`: desktop only — mobile stays a plain text input (avoids dropdown interrupting typing)
+   * - `false`: never (free-text only)
+   */
+  enableSuggestions?: boolean | "lg";
 };
 
 /**
@@ -66,12 +73,16 @@ export function LocationAutocompleteInput({
   inputClassName,
   className,
   showClear = true,
+  enableSuggestions = true,
 }: LocationAutocompleteInputProps) {
   const reactId = useId();
   const id = inputId ?? `location-ac-${reactId}`;
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [desktopSuggestionsOk, setDesktopSuggestionsOk] = useState(
+    () => enableSuggestions !== "lg",
+  );
   const [menuRect, setMenuRect] = useState<MenuRect | null>(null);
   const [fetchedSuggestions, setFetchedSuggestions] = useState<Suggestion[]>([]);
   const debouncedQuery = useDebouncedValue(value, 220);
@@ -79,13 +90,31 @@ export function LocationAutocompleteInput({
   const anchorRef = useRef<HTMLDivElement | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
 
+  const suggestionsAllowed =
+    enableSuggestions === true || (enableSuggestions === "lg" && desktopSuggestionsOk);
   const queryLongEnough = debouncedQuery.trim().length >= 2;
-  const suggestions = open && queryLongEnough ? fetchedSuggestions : [];
+  const suggestions =
+    suggestionsAllowed && open && queryLongEnough ? fetchedSuggestions : [];
   const showMenu = suggestions.length > 0;
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (enableSuggestions !== "lg") {
+      setDesktopSuggestionsOk(true);
+      return;
+    }
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const sync = () => {
+      setDesktopSuggestionsOk(mq.matches);
+      if (!mq.matches) setOpen(false);
+    };
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, [enableSuggestions]);
 
   const updateMenuRect = () => {
     const anchor = anchorRef.current;
@@ -116,7 +145,7 @@ export function LocationAutocompleteInput({
   }, [showMenu, suggestions.length, value]);
 
   useEffect(() => {
-    if (!open || !queryLongEnough) return;
+    if (!suggestionsAllowed || !open || !queryLongEnough) return;
     let cancelled = false;
     void (async () => {
       setBusy(true);
@@ -130,7 +159,7 @@ export function LocationAutocompleteInput({
     return () => {
       cancelled = true;
     };
-  }, [debouncedQuery, open, queryLongEnough]);
+  }, [debouncedQuery, open, queryLongEnough, suggestionsAllowed]);
 
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
@@ -215,15 +244,17 @@ export function LocationAutocompleteInput({
           aria-controls={showMenu ? `${id}-listbox` : undefined}
           value={value}
           disabled={disabled}
-          onFocus={() => setOpen(true)}
+          onFocus={() => {
+            if (suggestionsAllowed) setOpen(true);
+          }}
           onChange={(e) => {
             onChange(e.target.value);
-            setOpen(true);
+            if (suggestionsAllowed) setOpen(true);
           }}
           placeholder={placeholder ?? "Start typing a city or town…"}
           className={inputClassName ?? DEFAULT_INPUT_CLASS}
         />
-        {busy ? (
+        {suggestionsAllowed && busy ? (
           <LoadingSpinner
             size="sm"
             className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400"

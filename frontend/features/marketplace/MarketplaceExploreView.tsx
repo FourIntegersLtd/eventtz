@@ -48,6 +48,7 @@ export function MarketplaceExploreView({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [vendors, setVendors] = useState<ExploreVendorSearchRow[]>([]);
+  const [matchNotice, setMatchNotice] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -55,7 +56,7 @@ export function MarketplaceExploreView({
       setLoading(true);
       setError(null);
       try {
-        const { vendors: rows } = await fetchExploreVendorsSearch({
+        const { vendors: rows, matchNotice: notice } = await fetchExploreVendorsSearch({
           query: state.query || undefined,
           types: state.types.length ? state.types : undefined,
           location: state.location || undefined,
@@ -65,7 +66,10 @@ export function MarketplaceExploreView({
           budgetMax: state.budgetMax,
           sort: state.sort,
         });
-        if (!cancelled) setVendors(rows);
+        if (!cancelled) {
+          setVendors(rows);
+          setMatchNotice(notice);
+        }
       } catch {
         if (!cancelled) setError("Could not load vendors right now.");
       } finally {
@@ -98,6 +102,22 @@ export function MarketplaceExploreView({
     ? expanded.filter((card) => savedIds.has(card.vendor.user_id))
     : expanded;
   const displayCount = visibleCards.length;
+
+  const exactCards = useMemo(
+    () =>
+      visibleCards.filter(
+        (card) => !card.vendor.match_tier || card.vendor.match_tier === "exact",
+      ),
+    [visibleCards],
+  );
+  const alsoConsiderCards = useMemo(
+    () =>
+      visibleCards.filter(
+        (card) =>
+          card.vendor.match_tier === "related" || card.vendor.match_tier === "fallback",
+      ),
+    [visibleCards],
+  );
 
   const filtersAndResults = (
     <div className="w-full min-w-0">
@@ -142,9 +162,11 @@ export function MarketplaceExploreView({
             : "No vendors match these filters. Try clearing filters"}
           {!savedOnly && state.dates.length > 0 && !state.dateFlexible
             ? " or different dates."
-            : savedOnly ? "" : " or widening your search."}
+            : savedOnly
+              ? ""
+              : " or widening your search."}
         </p>
-      ) : (
+      ) : savedOnly ? (
         <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {visibleCards.map((card) => (
             <MarketplaceVendorCard
@@ -155,6 +177,50 @@ export function MarketplaceExploreView({
               onToggleBookmark={() => toggle(card.vendor.user_id)}
             />
           ))}
+        </div>
+      ) : (
+        <div className="mt-6 space-y-8">
+          {matchNotice ? (
+            <p className="rounded-lg border border-primary-border/60 bg-primary-soft/40 px-4 py-3 text-sm text-neutral-800">
+              {matchNotice}
+            </p>
+          ) : null}
+
+          {exactCards.length > 0 ? (
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {exactCards.map((card) => (
+                <MarketplaceVendorCard
+                  key={card.cardKey}
+                  card={card}
+                  vendorDetailHref={buildClientBrowseVendorUrl(card.vendor.user_id, state)}
+                  bookmarked={isSaved(card.vendor.user_id)}
+                  onToggleBookmark={() => toggle(card.vendor.user_id)}
+                />
+              ))}
+            </div>
+          ) : null}
+
+          {alsoConsiderCards.length > 0 ? (
+            <div>
+              <div className="mb-4 border-t border-neutral-200 pt-6">
+                <p className="text-sm font-semibold text-neutral-900">Also consider</p>
+                <p className="mt-1 text-sm text-neutral-600">
+                  Close matches by service, area, or availability.
+                </p>
+              </div>
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {alsoConsiderCards.map((card) => (
+                  <MarketplaceVendorCard
+                    key={card.cardKey}
+                    card={card}
+                    vendorDetailHref={buildClientBrowseVendorUrl(card.vendor.user_id, state)}
+                    bookmarked={isSaved(card.vendor.user_id)}
+                    onToggleBookmark={() => toggle(card.vendor.user_id)}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
       )}
     </div>

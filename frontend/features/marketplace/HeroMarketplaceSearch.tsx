@@ -5,14 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { SERVICE_OPTIONS, VENDOR_WAITLIST_URL } from "@/components/vendor-onboarding/constants";
-import { LocationAutocompleteInput } from "@/components/ui/LocationAutocompleteInput";
-import { DateInput } from "@/components/ui/DateInput";
 import {
   buildMarketplaceSearchUrl,
   type MarketplaceSearchState,
 } from "@/lib/marketplaceSearchParams";
 import { EVENT_DATE_PAST_ERROR, isPastIsoDate, todayIsoDate } from "@/lib/eventDateValidation";
 import { formatEventDate } from "@/lib/dateFormat";
+import { DateInput } from "@/components/ui/DateInput";
 
 const OTHER_TOOLTIP =
   "We’re expanding categories. Join the waitlist to hear when your vendor type goes live.";
@@ -240,17 +239,24 @@ export function HeroMarketplaceSearch({
         </div>
         )}
 
-        {/* Search query — vendor name, city, or services */}
-        <div className={fieldClassName}>
-          <LocationAutocompleteInput
-            inputId="hero-query"
-            ariaLabel="Search vendors"
-            icon={Search}
-            iconClassName={landing ? "text-primary" : "text-neutral-400"}
+        {/* Free-text search — vendor name, city, or services (not place autocomplete) */}
+        <div className={`relative ${fieldClassName}`}>
+          <Search
+            className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${
+              landing ? "text-primary" : "text-neutral-400"
+            }`}
+            aria-hidden
+          />
+          <input
+            id="hero-query"
+            type="search"
+            enterKeyHint="search"
+            autoComplete="off"
+            aria-label="Search vendors"
             value={state.query}
-            onChange={(next) => setState((s) => ({ ...s, query: next }))}
+            onChange={(e) => setState((s) => ({ ...s, query: e.target.value }))}
             placeholder="Search vendors or city"
-            inputClassName={
+            className={
               landing
                 ? "h-12 w-full rounded-xl border-0 bg-transparent py-3 pl-11 pr-4 text-base text-neutral-900 placeholder:text-neutral-400 focus:border-0 focus:outline-none focus:ring-0 sm:rounded-none"
                 : "h-12 w-full rounded-xl border border-neutral-200 bg-white py-2 pl-10 pr-4 text-sm text-neutral-900 outline-none ring-primary/15 focus:border-primary focus:ring-2"
@@ -356,8 +362,8 @@ export function HeroMarketplaceSearch({
       </div>
 
       {landing && (
-        <p className="text-center text-xs text-white/85">
-          <Link href="/client/browse" className="font-medium underline-offset-2 hover:underline">
+        <p className="mt-3 text-center text-xs text-neutral-500">
+          <Link href="/client/browse" className="font-medium text-primary underline-offset-2 hover:underline">
             Browse all vendors
           </Link>
         </p>

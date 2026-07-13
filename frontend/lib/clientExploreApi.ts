@@ -16,6 +16,8 @@ export type ExploreVendor = {
 
 export type ExploreVendorSearchRow = ExploreVendor & {
   matched_services: string[];
+  /** exact | related | fallback — close-enough search tier */
+  match_tier?: "exact" | "related" | "fallback";
 };
 
 export type MarketplaceSort =
@@ -40,6 +42,9 @@ type ExploreVendorSearchApiResponse = {
   success: boolean;
   total_count: number;
   vendors: ExploreVendorSearchRow[];
+  match_notice?: string | null;
+  has_exact?: boolean;
+  has_related?: boolean;
 };
 
 export async function fetchExploreVendors(): Promise<ExploreVendor[]> {
@@ -65,11 +70,21 @@ export async function fetchExploreVendorById(
 
 export async function fetchExploreVendorsSearch(
   q: ExploreSearchQuery,
-): Promise<{ totalCount: number; vendors: ExploreVendorSearchRow[] }> {
+): Promise<{
+  totalCount: number;
+  vendors: ExploreVendorSearchRow[];
+  matchNotice: string | null;
+  hasExact: boolean;
+  hasRelated: boolean;
+}> {
   const sp = new URLSearchParams();
   const searchText = (q.query?.trim() || q.location?.trim()) ?? "";
   if (searchText) sp.set("q", searchText);
   if (q.types?.length) sp.set("types", q.types.join(","));
+  if (q.location?.trim() && q.query?.trim()) {
+    // Dedicated location (when distinct from q) — backend treats as soft signal.
+    sp.set("location", q.location.trim());
+  }
   if (q.dates?.length && !q.flexible) {
     sp.set("dates", q.dates.slice(0, 3).join(","));
   }
@@ -86,5 +101,8 @@ export async function fetchExploreVendorsSearch(
   return {
     totalCount: data.total_count ?? 0,
     vendors: data.vendors ?? [],
+    matchNotice: data.match_notice ?? null,
+    hasExact: Boolean(data.has_exact),
+    hasRelated: Boolean(data.has_related),
   };
 }
