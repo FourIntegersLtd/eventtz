@@ -198,7 +198,11 @@ export function HeroMarketplaceSearch({
           {typesOpen && (
             <div
               id={panelId}
-              className="absolute left-0 right-0 top-full z-[70] mt-1 box-border min-w-0 max-w-full max-h-72 overflow-y-auto rounded-xl border border-neutral-200 bg-white p-2 shadow-lg"
+              className={
+                landing
+                  ? "absolute bottom-full left-0 right-0 z-[70] mb-1 box-border min-w-0 max-w-full max-h-72 overflow-y-auto rounded-xl border border-neutral-200 bg-white p-2 shadow-lg"
+                  : "absolute left-0 right-0 top-full z-[70] mt-1 box-border min-w-0 max-w-full max-h-72 overflow-y-auto rounded-xl border border-neutral-200 bg-white p-2 shadow-lg"
+              }
             >
               {SERVICE_OPTIONS.map((opt) =>
                 opt.value === "other" ? (
@@ -299,7 +303,11 @@ export function HeroMarketplaceSearch({
           {datesOpen && (
             <div
               id={datePanelId}
-              className="absolute left-0 right-0 top-full z-[70] mt-1 box-border min-w-0 max-w-full rounded-xl border border-neutral-200 bg-white p-3 shadow-lg"
+              className={
+                landing
+                  ? "absolute bottom-full left-0 right-0 z-[70] mb-1 box-border min-w-0 max-w-full rounded-xl border border-neutral-200 bg-white p-3 shadow-lg"
+                  : "absolute left-0 right-0 top-full z-[70] mt-1 box-border min-w-0 max-w-full rounded-xl border border-neutral-200 bg-white p-3 shadow-lg"
+              }
             >
               <p className="text-xs font-medium text-neutral-500">
                 Up to 3 dates

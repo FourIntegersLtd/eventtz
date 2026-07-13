@@ -24,7 +24,7 @@ export function LandingHero() {
   });
 
   return (
-    <section className="relative isolate flex min-h-0 flex-col bg-[#f7f8fc] pt-20 sm:pt-24 lg:min-h-dvh lg:pt-28">
+    <section className="relative z-30 isolate flex min-h-0 flex-col bg-[#f7f8fc] pt-20 sm:pt-24 lg:min-h-dvh lg:pt-28">
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
         <div className="absolute -left-24 top-10 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
         <div className="absolute right-0 top-32 h-64 w-64 rounded-full bg-accent-gold/15 blur-3xl" />
