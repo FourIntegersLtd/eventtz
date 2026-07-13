@@ -8,10 +8,12 @@ export type TextFieldProps = InputHTMLAttributes<HTMLInputElement> & {
   label: string;
   error?: string;
   hint?: string;
+  /** When `type="date"`, start blank until the user picks (optional end dates, filters). */
+  allowEmpty?: boolean;
 };
 
 export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function TextField(
-  { label, error, hint, id, className = "", type, ...rest },
+  { label, error, hint, id, className = "", type, allowEmpty, ...rest },
   ref,
 ) {
   const generatedId = useId();
@@ -27,12 +29,14 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
       </label>
       {type === "date" ? (
         <DateInput
-          ref={ref}
           id={inputId}
-          aria-invalid={Boolean(error)}
-          aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
-          className={inputClassName}
-          {...rest}
+          allowEmpty={allowEmpty}
+          value={typeof rest.value === "string" ? rest.value : undefined}
+          defaultValue={typeof rest.defaultValue === "string" ? rest.defaultValue : undefined}
+          min={typeof rest.min === "string" ? rest.min : undefined}
+          disabled={rest.disabled}
+          onChange={rest.onChange}
+          className={className}
         />
       ) : (
         <input

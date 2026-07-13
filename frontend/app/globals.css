@@ -358,7 +358,32 @@ body {
   height: 0;
 }
 
-/* Safari iOS: native date inputs ignore width unless min logical width is reset */
+/* Custom day/month/year picker — avoids iOS native date input overflow */
+.date-picker-shell {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.date-picker-grid {
+  display: grid;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.date-picker-grid select {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Legacy native date shell (if any remain) */
 .date-input-shell {
   display: grid;
   grid-template-columns: minmax(0, 1fr);

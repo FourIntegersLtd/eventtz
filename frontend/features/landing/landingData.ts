@@ -536,12 +536,11 @@ export const WAITLIST_LINK_LABEL = "Join the waitlist" as const;
 export type MobileNavLink = {
   href: string;
   label: string;
-  primary?: boolean;
 };
 
-export const MOBILE_NAV_LINKS: MobileNavLink[] = [
-  ...EXPLORE_NAV_LINKS,
-  SIGN_IN_LINK,
-  BROWSE_LINK,
-  { ...REGISTER_LINK, primary: true },
+/** Short list for the mobile drawer — desktop keeps the full Explore dropdown. */
+export const MOBILE_NAV_SECTION_LINKS: MobileNavLink[] = [
+  { href: "#booking-journey", label: "How booking works" },
+  { href: "#for-vendors", label: "For vendors" },
+  { href: "#faq", label: "FAQ" },
 ];

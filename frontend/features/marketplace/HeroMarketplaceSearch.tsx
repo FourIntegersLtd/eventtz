@@ -12,6 +12,7 @@ import {
   type MarketplaceSearchState,
 } from "@/lib/marketplaceSearchParams";
 import { EVENT_DATE_PAST_ERROR, isPastIsoDate, todayIsoDate } from "@/lib/eventDateValidation";
+import { formatEventDate } from "@/lib/dateFormat";
 
 const OTHER_TOOLTIP =
   "We’re expanding categories. Join the waitlist to hear when your vendor type goes live.";
@@ -59,6 +60,7 @@ export function HeroMarketplaceSearch({
   const [typesOpen, setTypesOpen] = useState(false);
   const [datesOpen, setDatesOpen] = useState(false);
   const [datePickerError, setDatePickerError] = useState<string | null>(null);
+  const [draftEventDate, setDraftEventDate] = useState(() => todayIsoDate());
   const typesRef = useRef<HTMLDivElement>(null);
   const datesRef = useRef<HTMLDivElement>(null);
 
@@ -139,18 +141,19 @@ export function HeroMarketplaceSearch({
     else router.push(url);
   };
 
-  const addDate = (iso: string) => {
-    if (!iso) return;
-    if (isPastIsoDate(iso)) {
+  const addDraftDate = () => {
+    if (!draftEventDate) return;
+    if (isPastIsoDate(draftEventDate)) {
       setDatePickerError(EVENT_DATE_PAST_ERROR);
       return;
     }
     setDatePickerError(null);
     setState((s) => {
-      if (s.dateFlexible) return { ...s, dates: [iso], dateFlexible: false };
-      const next = [...s.dates.filter((d) => d !== iso), iso].slice(0, 3);
+      if (s.dateFlexible) return { ...s, dates: [draftEventDate], dateFlexible: false };
+      const next = [...s.dates.filter((d) => d !== draftEventDate), draftEventDate].slice(0, 3);
       return { ...s, dates: next };
     });
+    setDraftEventDate(todayIsoDate());
   };
 
   const removeDate = (iso: string) => {
@@ -300,21 +303,29 @@ export function HeroMarketplaceSearch({
                     onClick={() => removeDate(d)}
                     className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
                   >
-                    {d} ×
+                    {formatEventDate(d)} ×
                   </button>
                 ))}
               </div>
-              {state.dates.length < 3 && !state.dateFlexible && (
-                <DateInput
-                  min={todayIsoDate()}
-                  shellClassName="mt-2"
-                  className="focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  onChange={(e) => {
-                    addDate(e.target.value);
-                    e.target.value = "";
-                  }}
-                />
-              )}
+              {state.dates.length < 3 && !state.dateFlexible ? (
+                <div className="mt-2 min-w-0 space-y-2">
+                  <DateInput
+                    value={draftEventDate}
+                    min={todayIsoDate()}
+                    onChange={(e) => {
+                      setDraftEventDate(e.target.value);
+                      setDatePickerError(null);
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={addDraftDate}
+                    className="inline-flex h-10 w-full items-center justify-center rounded-lg bg-primary/10 text-sm font-semibold text-primary transition hover:bg-primary/15"
+                  >
+                    Add this date
+                  </button>
+                </div>
+              ) : null}
               {datePickerError ? (
                 <p className="mt-2 text-xs font-medium text-red-600">{datePickerError}</p>
               ) : null}

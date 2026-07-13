@@ -51,7 +51,7 @@ export function VendorQuoteFormModal({
 }: VendorQuoteFormModalProps) {
   const router = useRouter();
   const [eventName, setEventName] = useState("");
-  const [eventDate, setEventDate] = useState("");
+  const [eventDate, setEventDate] = useState(todayIsoDate());
   const [eventEndDate, setEventEndDate] = useState("");
   const [packages, setPackages] = useState<VendorPackageOption[]>([]);
   const [selectedPackageId, setSelectedPackageId] = useState<string>(CUSTOM_OPTION_ID);
@@ -99,7 +99,7 @@ export function VendorQuoteFormModal({
 
   const reset = () => {
     setEventName("");
-    setEventDate("");
+    setEventDate(todayIsoDate());
     setEventEndDate("");
     setSelectedPackageId(CUSTOM_OPTION_ID);
     setHeading("");
@@ -223,6 +223,7 @@ export function VendorQuoteFormModal({
           <TextField
             label="End date (optional)"
             type="date"
+            allowEmpty
             min={eventDate.trim() || minEventDate}
             value={eventEndDate}
             onChange={(e) => setEventEndDate(e.target.value)}

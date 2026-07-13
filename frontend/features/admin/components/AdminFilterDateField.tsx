@@ -26,10 +26,10 @@ export function AdminFilterDateField({
         {optional ? <span className="text-neutral-400"> · optional</span> : null}
       </span>
       <DateInput
+        allowEmpty
         value={value}
         onChange={(e) => onChange(e.target.value)}
         shellClassName="mt-1"
-        className="focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
       />
     </label>
   );

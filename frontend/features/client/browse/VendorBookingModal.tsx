@@ -59,7 +59,9 @@ export function VendorBookingModal({
   // Selection happens once, on the profile sidebar — this modal only confirms dates/venue/notes.
   const selectedIds = useMemo(() => new Set(initialSelectedIds), [initialSelectedIds]);
   const [eventName, setEventName] = useState("");
-  const [eventDate, setEventDate] = useState(searchPrefill?.eventDate ?? "");
+  const [eventDate, setEventDate] = useState(
+    searchPrefill?.eventDate?.trim() ? searchPrefill.eventDate : todayIsoDate(),
+  );
   const [eventEndDate, setEventEndDate] = useState(searchPrefill?.eventEndDate ?? "");
   const [venueAddress, setVenueAddress] = useState("");
   const [notes, setNotes] = useState("");
@@ -321,6 +323,7 @@ export function VendorBookingModal({
                 </label>
                 <DateInput
                   id="booking-event-end"
+                  allowEmpty
                   min={eventDate.trim() || minEventDate}
                   value={eventEndDate}
                   onChange={(e) => {

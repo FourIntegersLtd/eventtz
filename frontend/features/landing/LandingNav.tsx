@@ -10,7 +10,7 @@ import {
   BROWSE_LINK,
   EXPLORE_NAV_LINKS,
   REGISTER_LINK,
-  MOBILE_NAV_LINKS,
+  MOBILE_NAV_SECTION_LINKS,
   NAV_DROPDOWN_LINK_CLASS,
   SIGN_IN_LINK,
 } from "@/features/landing/landingData";
@@ -107,7 +107,7 @@ export function LandingNav({
     href: withSectionPrefix(item.href, sectionLinkPrefix),
   }));
 
-  const mobileLinks = MOBILE_NAV_LINKS.map((item) => ({
+  const mobileSectionLinks = MOBILE_NAV_SECTION_LINKS.map((item) => ({
     ...item,
     href: withSectionPrefix(item.href, sectionLinkPrefix),
   }));
@@ -133,10 +133,22 @@ export function LandingNav({
     className: "ml-2 px-5 py-2",
   });
 
-  const mobileBrowseClass = getButtonClassName({
+  const mobileHeaderBrowseClass = getButtonClassName({
     variant: darkNav ? "inverted" : "primary",
     shape: "pill",
-    className: "px-4 py-2.5 text-xs",
+    className: "inline-flex shrink-0 items-center px-4 py-2.5 text-xs font-semibold sm:text-sm",
+  });
+
+  const mobileMenuPrimaryClass = getButtonClassName({
+    variant: darkNav ? "inverted" : "primary",
+    shape: "pill",
+    className: "inline-flex w-full items-center justify-center px-4 py-3 text-sm font-semibold",
+  });
+
+  const mobileMenuSecondaryClass = getButtonClassName({
+    variant: darkNav ? "invertedOutline" : "outline",
+    shape: "pill",
+    className: "inline-flex w-full items-center justify-center px-4 py-3 text-sm font-semibold",
   });
 
   return (
@@ -186,8 +198,8 @@ export function LandingNav({
         </nav>
 
         <div className="flex items-center gap-2 lg:hidden">
-          <NavLinkItem href={BROWSE_LINK.href} className={mobileBrowseClass}>
-            Browse
+          <NavLinkItem href={BROWSE_LINK.href} className={mobileHeaderBrowseClass}>
+            {BROWSE_LINK.label}
           </NavLinkItem>
           <button
             type="button"
@@ -210,25 +222,49 @@ export function LandingNav({
             darkNav ? "border-white/10 bg-neutral-950/90 backdrop-blur-md" : "border-neutral-200/80 bg-white"
           }`}
         >
-          <div className="flex flex-col gap-1">
-            {mobileLinks.map((item) => (
+          <nav className="flex flex-col gap-0.5">
+            {mobileSectionLinks.map((item) => (
               <NavLinkItem
                 key={`${item.href}-${item.label}`}
                 href={item.href}
                 className={`rounded-lg px-3 py-2.5 text-sm font-medium ${
-                  item.primary
-                    ? darkNav
-                      ? "text-white"
-                      : "text-primary"
-                    : darkNav
-                      ? "text-white/90"
-                      : "text-neutral-800"
+                  darkNav ? "text-white/90 hover:bg-white/10" : "text-neutral-800 hover:bg-neutral-50"
                 }`}
                 onClick={closeMobile}
               >
                 {item.label}
               </NavLinkItem>
             ))}
+          </nav>
+
+          <div
+            className={`mt-4 flex flex-col gap-2 border-t pt-4 ${
+              darkNav ? "border-white/10" : "border-neutral-200/80"
+            }`}
+          >
+            <NavLinkItem
+              href={BROWSE_LINK.href}
+              className={mobileMenuPrimaryClass}
+              onClick={closeMobile}
+            >
+              {BROWSE_LINK.label} vendors
+            </NavLinkItem>
+            <NavLinkItem
+              href={REGISTER_LINK.href}
+              className={mobileMenuSecondaryClass}
+              onClick={closeMobile}
+            >
+              {REGISTER_LINK.label}
+            </NavLinkItem>
+            <NavLinkItem
+              href={SIGN_IN_LINK.href}
+              className={`rounded-lg px-3 py-2 text-center text-sm font-medium ${
+                darkNav ? "text-white/80 hover:text-white" : "text-neutral-600 hover:text-primary"
+              }`}
+              onClick={closeMobile}
+            >
+              {SIGN_IN_LINK.label}
+            </NavLinkItem>
           </div>
         </div>
       )}

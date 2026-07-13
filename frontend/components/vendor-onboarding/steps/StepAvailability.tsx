@@ -30,9 +30,47 @@ function toUkDate(iso: string): string {
   return `${day}/${month}/${year}`;
 }
 
+function BlockedDatePicker({
+  blockedDates,
+  onAdd,
+}: {
+  blockedDates: string[];
+  onAdd: (iso: string) => void;
+}) {
+  const [draftDate, setDraftDate] = useState(() => todayIsoDate());
+  const [error, setError] = useState<string | null>(null);
+
+  const handleAdd = () => {
+    if (isPastIsoDate(draftDate)) {
+      setError(EVENT_DATE_PAST_ERROR);
+      return;
+    }
+    if (blockedDates.includes(draftDate)) {
+      setError("That date is already blocked.");
+      return;
+    }
+    setError(null);
+    onAdd(draftDate);
+    setDraftDate(todayIsoDate());
+  };
+
+  return (
+    <div className="min-w-0 space-y-2">
+      <DateInput value={draftDate} min={todayIsoDate()} onChange={(e) => setDraftDate(e.target.value)} />
+      <button
+        type="button"
+        onClick={handleAdd}
+        className="inline-flex h-10 w-full items-center justify-center rounded-lg border border-neutral-200 bg-white text-sm font-semibold text-primary transition hover:bg-neutral-50"
+      >
+        Add blocked date
+      </button>
+      {error ? <p className="text-xs font-medium text-red-600">{error}</p> : null}
+    </div>
+  );
+}
+
 export function StepAvailability({ data, update }: StepAvailabilityProps) {
   const copy = STEP_COPY[5];
-  const [blockedDateError, setBlockedDateError] = useState<string | null>(null);
 
   const toggleDay = (d: number) => {
     const s = new Set(data.availableWeekdays);
@@ -84,27 +122,10 @@ export function StepAvailability({ data, update }: StepAvailabilityProps) {
         subtext={copy.blockedSubtext}
         indexOffset={6}
       >
-        <DateInput
-          min={todayIsoDate()}
-          className={inputClass()}
-          onChange={(e) => {
-            const v = e.target.value;
-            if (!v) return;
-            if (isPastIsoDate(v)) {
-              setBlockedDateError(EVENT_DATE_PAST_ERROR);
-              e.target.value = "";
-              return;
-            }
-            setBlockedDateError(null);
-            if (!data.blockedDates.includes(v)) {
-              update({ blockedDates: [...data.blockedDates, v] });
-            }
-            e.target.value = "";
-          }}
+        <BlockedDatePicker
+          blockedDates={data.blockedDates}
+          onAdd={(iso) => update({ blockedDates: [...data.blockedDates, iso] })}
         />
-        {blockedDateError ? (
-          <p className="mt-2 text-xs font-medium text-red-600">{blockedDateError}</p>
-        ) : null}
         {data.blockedDates.length > 0 && (
           <ul className="mt-2 flex flex-wrap gap-2">
             {data.blockedDates.map((d) => (
