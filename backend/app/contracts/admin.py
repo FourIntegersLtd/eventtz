@@ -21,6 +21,7 @@ class AdminDashboardSummary(BaseModel):
     bookings_declined: int = 0
     bookings_cancelled: int = 0
     bookings_paid_count: int = 0
+    bookings_needing_support: int = 0
     conversations_count: int = 0
     reviews_count: int = 0
 
@@ -46,6 +47,13 @@ class AdminDashboardMetrics(BaseModel):
     open_disputes_count: int = 0
 
 
+class AdminBookingListSupportSummary(BaseModel):
+    needs_attention_count: int = 0
+    max_severity: Literal["critical", "warning"] | None = None
+    primary_label: str | None = None
+    next_action: str | None = None
+
+
 class AdminBookingListItem(BaseModel):
     id: str
     status: str
@@ -58,6 +66,7 @@ class AdminBookingListItem(BaseModel):
     client_total_label: str | None = None
     paid_at: str | None = None
     payment_status: str = "unpaid"
+    support: AdminBookingListSupportSummary | None = None
 
 
 class AdminBookingsListResponse(BaseModel):
@@ -270,3 +279,16 @@ class AdminBookingPaymentPatchBody(BaseModel):
     stripe_payment_intent_id: str | None = None
     stripe_charge_id: str | None = None
     payment_amount_gbp: float | None = None
+
+
+class AdminCancelOnBehalfBody(BaseModel):
+    party: Literal["client", "vendor"]
+    reason: str = Field(min_length=3, max_length=2000)
+
+
+class AdminConfirmCompletionBody(BaseModel):
+    party: Literal["client", "vendor"]
+
+
+class AdminSupportHoldBody(BaseModel):
+    hold: bool

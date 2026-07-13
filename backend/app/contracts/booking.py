@@ -140,7 +140,10 @@ class CreateBookingRequestBody(BaseModel):
         return None
 
     @model_validator(mode="after")
-    def event_end_on_or_after_start(self) -> Self:
+    def event_dates_valid(self) -> Self:
+        today = date.today()
+        if self.event_date < today:
+            raise ValueError("Event date cannot be in the past.")
         if self.event_end_date is not None and self.event_end_date < self.event_date:
             raise ValueError("Event end date must be on or after the event start date.")
         return self
@@ -156,7 +159,10 @@ class CreateVendorQuoteBody(BaseModel):
     line_items: list[BookingLineItemIn] = Field(min_length=1)
 
     @model_validator(mode="after")
-    def quote_end_on_or_after_start(self) -> Self:
+    def quote_dates_valid(self) -> Self:
+        today = date.today()
+        if self.event_date < today:
+            raise ValueError("Event date cannot be in the past.")
         if self.event_end_date is not None and self.event_end_date < self.event_date:
             raise ValueError("Event end date must be on or after the event start date.")
         return self
@@ -177,12 +183,16 @@ class VendorBookingListItem(BaseModel):
     event_end_date: str | None = None
     total_label: str
     client_email: str | None = None
+    client_display_name: str | None = None
     created_at: str | None = None
     client_total_label: str | None = None
     review: VendorReviewSummary | None = None
     initiator: Literal["client", "vendor"] = "client"
     conversation_id: str | None = None
     payment_status: str = "unpaid"
+    has_price_update: bool = False
+    completion_waiting_on: Literal["client", "vendor", "both"] | None = None
+    vendor_completion_confirmed_at: str | None = None
 
 
 class VendorBookingsListResponse(BaseModel):
@@ -204,14 +214,18 @@ class VendorBookingDetail(BaseModel):
     line_items: list[dict[str, Any]]
     vendor_adjustments: list[VendorAdjustmentItem] = Field(default_factory=list)
     pricing: BookingPricingBreakdown | None = None
+    initial_client_total_label: str | None = None
     client_user_id: str | None = None
     client_email: str | None = None
+    client_display_name: str | None = None
     counterparty_phone: str | None = None
     created_at: str | None = None
     paid_at: str | None = None
     payment_status: str = "unpaid"
     client_completion_confirmed_at: str | None = None
     vendor_completion_confirmed_at: str | None = None
+    payout_auto_release_at: str | None = None
+    completion_waiting_on: Literal["client", "vendor", "both"] | None = None
     review: VendorReviewSummary | None = None
     initiator: Literal["client", "vendor"] = "client"
     conversation_id: str | None = None
@@ -253,6 +267,9 @@ class ClientBookingListItem(BaseModel):
     conversation_id: str | None = None
     has_review: bool = False
     payment_status: str = "unpaid"
+    has_price_update: bool = False
+    completion_waiting_on: Literal["client", "vendor", "both"] | None = None
+    client_completion_confirmed_at: str | None = None
 
 
 class ClientBookingsListResponse(BaseModel):
@@ -276,11 +293,14 @@ class ClientBookingDetail(BaseModel):
     line_items: list[dict[str, Any]]
     vendor_adjustments: list[VendorAdjustmentItem] = Field(default_factory=list)
     pricing: BookingPricingBreakdown | None = None
+    initial_client_total_label: str | None = None
     created_at: str | None = None
     paid_at: str | None = None
     payment_status: str = "unpaid"
     client_completion_confirmed_at: str | None = None
     vendor_completion_confirmed_at: str | None = None
+    payout_auto_release_at: str | None = None
+    completion_waiting_on: Literal["client", "vendor", "both"] | None = None
     review: ClientReviewSummary | None = None
     initiator: Literal["client", "vendor"] = "client"
     conversation_id: str | None = None

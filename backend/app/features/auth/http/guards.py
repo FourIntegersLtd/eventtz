@@ -74,7 +74,7 @@ def require_super_admin(request: Request, response: Response) -> dict[str, Any]:
     if not is_super_admin_user(user):
         raise HTTPException(
             status_code=403,
-            detail="Only super admins can manage the admin team.",
+            detail="Only super admins can perform this action.",
         )
     return user
 

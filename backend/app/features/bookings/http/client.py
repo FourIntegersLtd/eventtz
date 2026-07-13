@@ -41,7 +41,9 @@ from app.contracts.reviews import (
 from app.features.bookings.payments import (
     confirm_completion_for_client,
     create_checkout_session_for_booking,
+    maybe_auto_release_payout_for_booking,
     sync_checkout_payment_for_client,
+    touch_completion_side_effects_for_booking_rows,
 )
 from app.features.bookings import (
     cancel_booking_request_for_client,
@@ -78,6 +80,8 @@ def list_client_bookings(
         rows = list_booking_requests_for_client(client_id, group=g)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
+    if g == "active":
+        touch_completion_side_effects_for_booking_rows(rows)
     bookings = [ClientBookingListItem(**r) for r in rows]
     return ClientBookingsListResponse(bookings=bookings)
 
@@ -95,6 +99,8 @@ def get_client_booking(
     except ValueError as e:
         raise HTTPException(status_code=400, detail="Invalid booking id.") from e
 
+    # Backstop between hourly cron runs: release an overdue payout before serving detail.
+    maybe_auto_release_payout_for_booking(booking_id)
     row = get_booking_request_for_client(client_id, booking_id)
     if not row:
         raise HTTPException(status_code=404, detail="Booking not found.")

@@ -128,6 +128,8 @@ def hydrate_user_from_db(auth_user: dict[str, Any]) -> dict[str, Any]:
     if get_settings().local_auth_mode:
         merged_user.setdefault("user_type", "client")
         merged_user.setdefault("account_suspended", False)
+        merged_user.setdefault("preferred_name", None)
+        merged_user.setdefault("client_onboarding_completed", True)
         return merged_user
 
     merged_user["user_type"] = user_type_from_auth_metadatas(merged_user) or "client"
@@ -139,6 +141,13 @@ def hydrate_user_from_db(auth_user: dict[str, Any]) -> dict[str, Any]:
         merged_user["account_suspended"] = bool(db_profile.get("account_suspended", False))
     else:
         merged_user.setdefault("account_suspended", False)
+
+    if merged_user.get("user_type") == "client":
+        from app.features.settings.client_onboarding import get_client_onboarding
+
+        onboarding = get_client_onboarding(str(uid))
+        merged_user["preferred_name"] = onboarding.get("preferred_name")
+        merged_user["client_onboarding_completed"] = bool(onboarding.get("completed", False))
 
     if merged_user.get("user_type") == "admin":
         merged_user["admin_role"] = resolve_admin_role(

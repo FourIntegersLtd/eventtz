@@ -89,7 +89,8 @@ def build_pricing_breakdown(
 ) -> dict[str, Any]:
     """
     vendor_portion = sum(line items) + sum(adjustments). Adjustments may be negative (discounts).
-    service_fee = vendor_portion * (fee_percent/100).
+    service_fee = fee_base * (fee_percent/100) where fee_base is line items plus any discounts
+    (negative adjustments). Surcharges (positive adjustments) are not included in the fee base.
     client_total = vendor_portion + service_fee (when no TBC in lines).
     """
     pct = service_fee_percent
@@ -102,7 +103,8 @@ def build_pricing_breakdown(
     adj_sum = sum(a["amount_gbp"] for a in adj_list)
 
     vendor_portion = round(li_sum + adj_sum, 2)
-    fee = round(vendor_portion * (pct / 100.0), 2)
+    fee_base = round(max(0.0, li_sum + min(adj_sum, 0)), 2)
+    fee = round(fee_base * (pct / 100.0), 2)
     client_total = round(vendor_portion + fee, 2)
 
     return {

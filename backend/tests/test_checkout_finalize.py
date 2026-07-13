@@ -32,7 +32,7 @@ def test_rejects_stale_checkout_session(mock_get_client, _pi_fields):
     mock_table.eq.return_value = mock_table
     mock_table.limit.return_value = mock_table
     mock_table.execute.return_value = MagicMock(
-        data=[{"stripe_checkout_session_id": "cs_current", "payment_status": "pending"}],
+        data=[{"stripe_checkout_session_id": "cs_current", "payment_status": "pending", "status": "accepted"}],
     )
 
     ok = _finalize_booking_payment_from_checkout_session(_session(session_id="cs_old", amount_pence=52500))
@@ -51,7 +51,7 @@ def test_rejects_amount_mismatch(mock_get_client, _pi_fields):
     mock_table.eq.return_value = mock_table
     mock_table.limit.return_value = mock_table
     mock_table.execute.return_value = MagicMock(
-        data=[{"stripe_checkout_session_id": "cs_1", "payment_status": "pending"}],
+        data=[{"stripe_checkout_session_id": "cs_1", "payment_status": "pending", "status": "accepted"}],
     )
 
     session = {
@@ -84,7 +84,7 @@ def test_accepts_matching_current_session(mock_get_client, _pi_fields, _notify, 
     mock_table.limit.return_value = mock_table
     mock_table.in_.return_value = mock_table
     mock_table.execute.side_effect = [
-        MagicMock(data=[{"stripe_checkout_session_id": "cs_1", "payment_status": "pending"}]),
+        MagicMock(data=[{"stripe_checkout_session_id": "cs_1", "payment_status": "pending", "status": "accepted"}]),
         MagicMock(data=[{"id": "b1", "client_user_id": "c1", "vendor_user_id": "v1"}]),
     ]
 

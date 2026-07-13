@@ -20,6 +20,8 @@ BookingNotifyKind = Literal[
     "booking_cancelled_by_client",
     "booking_cancelled_by_vendor",
     "booking_pricing_updated",
+    "client_confirmed_updated_price",
+    "client_declined_updated_price",
     "vendor_quote_received",
     "vendor_quote_accepted",
     "vendor_quote_declined",
@@ -29,6 +31,8 @@ BookingNotifyKind = Literal[
     "vendor_payout_released",
     "payment_refunded",
     "completion_confirmed_awaiting_other_party",
+    "completion_reminder",
+    "vendor_completion_reminder",
 ]
 
 

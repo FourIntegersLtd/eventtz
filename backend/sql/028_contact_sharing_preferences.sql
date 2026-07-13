@@ -10,4 +10,5 @@ ALTER TABLE public.users
 COMMENT ON COLUMN public.users.contact_phone IS 'Optional phone the user may share with booking counterparties when share_phone is true.';
 COMMENT ON COLUMN public.users.share_email IS 'When true, email is visible to the counterparty on accepted bookings.';
 COMMENT ON COLUMN public.users.share_phone IS 'When true, contact_phone is visible to the counterparty on accepted bookings.';
-COMMENT ON COLUMN public.users.share_address IS 'When true, event address/postcode is visible to the counterparty on accepted bookings.';
+COMMENT ON COLUMN public.users.share_address IS
+  'Legacy client pref; booking venue is always visible to vendors. Not used for contact masking.';

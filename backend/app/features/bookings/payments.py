@@ -16,6 +16,10 @@ from app.core.config import get_settings
 from app.core.logging import get_logger
 from app.features.payments import stripe as stripe_service
 from app.core.db import get_db as get_client
+from app.features.bookings.completion_rules import (
+    compute_payout_auto_release_at,
+    event_day_over,
+)
 from app.features.bookings.pricing import build_pricing_breakdown
 from app.features.bookings.pricing_refresh import refresh_booking_pricing
 from app.features.bookings.queries import get_booking_request_for_client
@@ -205,6 +209,13 @@ def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> 
         logger.warning("checkout session: booking %s not found", booking_id)
         return False
     booking_row = existing_rows[0]
+    if str(booking_row.get("status") or "") != "accepted":
+        logger.warning(
+            "checkout session rejected: booking %s status=%s",
+            booking_id,
+            booking_row.get("status"),
+        )
+        return False
 
     stored_session = str(booking_row.get("stripe_checkout_session_id") or "").strip()
     if stored_session and session_id and stored_session != session_id:
@@ -272,12 +283,16 @@ def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> 
             },
         )
         .eq("id", booking_id)
+        .eq("status", "accepted")
         .in_("payment_status", ["pending", "unpaid"])
         .execute()
     )
     updated = getattr(upd, "data", None) or []
     if not updated:
-        logger.info("checkout session: booking %s already paid; skipping", booking_id)
+        logger.info(
+            "checkout session: booking %s not eligible for payment (status/payment); skipping",
+            booking_id,
+        )
         return False
     row = updated[0] if isinstance(updated[0], dict) else {}
     client_id = str(row.get("client_user_id") or "")
@@ -287,14 +302,20 @@ def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> 
             user_id=client_id,
             booking_id=booking_id,
             kind="payment_received",
-            body="Your payment was successful. The vendor has been notified.",
+            body=(
+                "Payment received — we'll keep it safe until the event is done. "
+                "After the event, confirm it went well and the vendor gets paid."
+            ),
         )
     if vendor_id:
         upsert_booking_notification(
             user_id=vendor_id,
             booking_id=booking_id,
             kind="vendor_payment_received",
-            body="The client has paid for this booking. Funds will be released once the event is confirmed complete.",
+            body=(
+                "The client has paid. Confirm when the event is done to get paid — "
+                "or you'll be paid automatically 48 hours after the event."
+            ),
         )
     _notify_pair(client_id, vendor_id)
     return True
@@ -331,6 +352,8 @@ def sync_checkout_payment_for_client(
     row = get_booking_request_for_client(client_user_id, booking_id)
     if row is None:
         raise ValueError("Booking not found.")
+    if str(row.get("status") or "") != "accepted":
+        raise ValueError("This booking can no longer be paid.")
 
     payment_status = str(row.get("payment_status") or "unpaid")
     if payment_status in ("paid", "payout_released", "refunded", "partially_refunded"):
@@ -534,9 +557,14 @@ def _confirm_completion(booking_id: str, *, actor: str, user_id: str) -> dict[st
                 user_id=waiting_user,
                 booking_id=booking_id,
                 kind="completion_confirmed_awaiting_other_party",
-                body="The other party marked this booking complete. Confirm on your side to release payout.",
+                body=(
+                    "The client confirmed the event went well. Confirm on your side to get paid."
+                    if actor == "client"
+                    else "The vendor confirmed the event is complete. Confirm on your side so they can be paid."
+                ),
             )
         _notify_pair(client_id, vendor_id)
+        touch_booking_completion_side_effects(row)
         return _serialize_completion_state(row)
 
     return _finalize_completion(row)
@@ -564,16 +592,20 @@ def admin_release_payout_for_booking(booking_id: str) -> dict[str, Any] | None:
     return _finalize_completion(row)
 
 
-def admin_refund_booking(booking_id: str, *, amount_gbp: float | None) -> dict[str, Any] | None:
-    """Dispute resolution: refund_client (amount_gbp=None) or partial_refund (amount_gbp set)."""
-    if get_settings().local_auth_mode:
-        return None
-    db = get_client()
-    res = db.table("booking_requests").select("*").eq("id", booking_id).limit(1).execute()
-    rows = getattr(res, "data", None) or []
-    if not rows or not isinstance(rows[0], dict):
-        return None
-    row = rows[0]
+def _refund_paid_booking_row(
+    row: dict[str, Any],
+    *,
+    amount_gbp: float | None,
+    idempotency_suffix: str,
+    refund_body: str,
+) -> dict[str, Any]:
+    """Issue a Stripe refund for a `paid` booking row and flip payment_status.
+
+    Shared by admin dispute refunds and cancellation refunds. Raises ValueError
+    (with a user-friendly message) when the refund cannot be issued — callers
+    must not proceed with their own state changes in that case.
+    """
+    booking_id = str(row.get("id") or "")
     if str(row.get("payment_status") or "") != "paid":
         raise ValueError("Only paid bookings can be refunded.")
     pi_id = row.get("stripe_payment_intent_id")
@@ -585,7 +617,7 @@ def admin_refund_booking(booking_id: str, *, amount_gbp: float | None) -> dict[s
             payment_intent_id=str(pi_id),
             booking_id=booking_id,
             amount_gbp=amount_gbp,
-            idempotency_suffix="partial" if amount_gbp is not None else "full",
+            idempotency_suffix=idempotency_suffix,
         )
     except Exception as e:
         logger.exception("Stripe refund failed booking=%s", booking_id)
@@ -593,7 +625,8 @@ def admin_refund_booking(booking_id: str, *, amount_gbp: float | None) -> dict[s
 
     new_status = "partially_refunded" if amount_gbp is not None else "refunded"
     upd = (
-        db.table("booking_requests")
+        get_client()
+        .table("booking_requests")
         .update({"payment_status": new_status})
         .eq("id", booking_id)
         .eq("payment_status", "paid")
@@ -609,7 +642,228 @@ def admin_refund_booking(booking_id: str, *, amount_gbp: float | None) -> dict[s
             user_id=client_id,
             booking_id=booking_id,
             kind="payment_refunded",
-            body="Your payment for this booking was refunded.",
+            body=refund_body,
         )
     _notify_pair(client_id, vendor_id)
     return final_row
+
+
+def refund_booking_on_cancel(booking_id: str, *, cancelled_by: str) -> dict[str, Any] | None:
+    """Full refund when a paid booking is cancelled before the vendor is paid.
+
+    Raises ValueError when the refund can't be issued — the caller must NOT
+    cancel the booking in that case (money moves first, status second).
+    """
+    if get_settings().local_auth_mode:
+        return None
+    res = get_client().table("booking_requests").select("*").eq("id", booking_id).limit(1).execute()
+    rows = getattr(res, "data", None) or []
+    if not rows or not isinstance(rows[0], dict):
+        return None
+    return _refund_paid_booking_row(
+        rows[0],
+        amount_gbp=None,
+        idempotency_suffix=f"cancel-{cancelled_by}",
+        refund_body=(
+            "This booking was cancelled. Your payment has been refunded in full — "
+            "it should reach your card in 5-10 working days."
+        ),
+    )
+
+
+def admin_refund_booking(booking_id: str, *, amount_gbp: float | None) -> dict[str, Any] | None:
+    """Dispute resolution: refund_client (amount_gbp=None) or partial_refund (amount_gbp set)."""
+    if get_settings().local_auth_mode:
+        return None
+    res = get_client().table("booking_requests").select("*").eq("id", booking_id).limit(1).execute()
+    rows = getattr(res, "data", None) or []
+    if not rows or not isinstance(rows[0], dict):
+        return None
+    return _refund_paid_booking_row(
+        rows[0],
+        amount_gbp=amount_gbp,
+        idempotency_suffix="partial" if amount_gbp is not None else "full",
+        refund_body="Your payment for this booking was refunded.",
+    )
+
+
+# --- Post-event auto-release + reminders (hourly maintenance cron) ---
+
+LIST_COMPLETION_TOUCH_CAP = 10
+
+
+def _format_release_date(release_at: datetime) -> str:
+    """Human-readable release date (portable across platforms)."""
+    return release_at.strftime("%A %d %B").replace(" 0", " ")
+
+
+def maybe_send_completion_reminder_for_row(row: dict[str, Any]) -> bool:
+    """Send one post-event nudge per booking to whoever hasn't confirmed yet."""
+    if row.get("completion_reminder_sent_at"):
+        return False
+    if not event_day_over(row):
+        return False
+    booking_id = str(row.get("id") or "")
+    client_id = str(row.get("client_user_id") or "")
+    vendor_id = str(row.get("vendor_user_id") or "")
+    release_at = compute_payout_auto_release_at(row)
+    release_label = _format_release_date(release_at) if release_at else "soon"
+    if client_id and not row.get("client_completion_confirmed_at"):
+        upsert_booking_notification(
+            user_id=client_id,
+            booking_id=booking_id,
+            kind="completion_reminder",
+            body=(
+                "How did your event go? If everything went well, confirm it's complete. "
+                f"If something went wrong, report a problem before {release_label} — "
+                "otherwise we'll pay the vendor automatically."
+            ),
+        )
+    if vendor_id and not row.get("vendor_completion_confirmed_at"):
+        upsert_booking_notification(
+            user_id=vendor_id,
+            booking_id=booking_id,
+            kind="vendor_completion_reminder",
+            body=(
+                "Confirm the event is complete to get paid sooner. If the client "
+                f"doesn't respond, you'll be paid automatically on {release_label} "
+                "unless they've reported a problem."
+            ),
+        )
+    get_client().table("booking_requests").update(
+        {"completion_reminder_sent_at": _now_iso()},
+    ).eq("id", booking_id).execute()
+    _notify_pair(client_id, vendor_id)
+    return True
+
+
+def touch_booking_completion_side_effects(row: dict[str, Any]) -> bool:
+    """Per-booking: send post-event reminder (once), then try auto-release if due."""
+    try:
+        maybe_send_completion_reminder_for_row(row)
+    except Exception:
+        logger.exception("completion reminder failed booking=%s", row.get("id"))
+    try:
+        return _auto_release_payout_row(row)
+    except ValueError:
+        logger.warning("auto-release failed booking=%s", row.get("id"))
+        return False
+    except Exception:
+        logger.exception("auto-release failed booking=%s", row.get("id"))
+        return False
+
+
+def touch_completion_side_effects_for_booking_rows(
+    rows: list[dict[str, Any]],
+    *,
+    cap: int = LIST_COMPLETION_TOUCH_CAP,
+) -> None:
+    """Lazy backstop on list fetch: reminders + overdue payouts (capped per request)."""
+    if get_settings().local_auth_mode:
+        return
+    touched = 0
+    for row in rows:
+        if touched >= cap:
+            break
+        if str(row.get("status") or "") != "accepted":
+            continue
+        if str(row.get("payment_status") or "") != "paid":
+            continue
+        if not event_day_over(row):
+            continue
+        touch_booking_completion_side_effects(row)
+        touched += 1
+
+
+def _auto_release_payout_row(row: dict[str, Any]) -> bool:
+    """Release the payout for one booking if the auto-release window has passed.
+
+    Returns True when the payout was released. Raises ValueError when the Stripe
+    transfer fails (propagated from _finalize_completion).
+    """
+    # Local import: disputes.py imports the bookings package which loads this module.
+    from app.features.bookings.disputes import has_active_dispute_for_booking
+
+    booking_id = str(row.get("id") or "")
+    if row.get("payout_auto_released_at"):
+        return False
+    release_at = compute_payout_auto_release_at(row)
+    if release_at is None or datetime.now(timezone.utc) < release_at:
+        return False
+    if has_active_dispute_for_booking(booking_id):
+        return False
+    if row.get("support_hold"):
+        return False
+    result = _finalize_completion(row)
+    if str((result or {}).get("payment_status") or "") != "payout_released":
+        # e.g. vendor Stripe account not ready — leave for a later run.
+        return False
+    get_client().table("booking_requests").update(
+        {"payout_auto_released_at": _now_iso()},
+    ).eq("id", booking_id).execute()
+    logger.info("payout auto-released booking=%s", booking_id)
+    return True
+
+
+def maybe_auto_release_payout_for_booking(booking_id: str) -> bool:
+    """Backstop on booking detail fetch so users never see a stale overdue payout."""
+    if get_settings().local_auth_mode:
+        return False
+    res = get_client().table("booking_requests").select("*").eq("id", booking_id).limit(1).execute()
+    rows = getattr(res, "data", None) or []
+    if not rows or not isinstance(rows[0], dict):
+        return False
+    return touch_booking_completion_side_effects(rows[0])
+
+
+def _due_completion_candidates(limit: int, *, extra_null_col: str) -> list[dict[str, Any]]:
+    """Accepted + paid bookings whose event day has ended (incl. multi-day events)."""
+    res = (
+        get_client()
+        .table("booking_requests")
+        .select("*")
+        .eq("status", "accepted")
+        .eq("payment_status", "paid")
+        .is_(extra_null_col, "null")
+        .limit(limit * 3)
+        .execute()
+    )
+    now = datetime.now(timezone.utc)
+    eligible: list[dict[str, Any]] = []
+    for row in getattr(res, "data", None) or []:
+        if not isinstance(row, dict):
+            continue
+        if not event_day_over(row, now):
+            continue
+        eligible.append(row)
+        if len(eligible) >= limit:
+            break
+    return eligible
+
+
+def process_due_payout_auto_releases(limit: int = 50) -> int:
+    """Hourly cron: pay vendors whose auto-release window has passed. Returns count released."""
+    if get_settings().local_auth_mode:
+        return 0
+    released = 0
+    for row in _due_completion_candidates(limit, extra_null_col="payout_auto_released_at"):
+        try:
+            if _auto_release_payout_row(row):
+                released += 1
+        except Exception:
+            logger.exception("auto-release failed booking=%s", row.get("id"))
+    return released
+
+
+def send_completion_reminders(limit: int = 50) -> int:
+    """Hourly cron: one post-event nudge per booking to whoever hasn't confirmed yet."""
+    if get_settings().local_auth_mode:
+        return 0
+    sent = 0
+    for row in _due_completion_candidates(limit, extra_null_col="completion_reminder_sent_at"):
+        try:
+            if maybe_send_completion_reminder_for_row(row):
+                sent += 1
+        except Exception:
+            logger.exception("completion reminder failed booking=%s", row.get("id"))
+    return sent

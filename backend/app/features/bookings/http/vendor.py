@@ -28,7 +28,11 @@ from app.contracts.disputes import (
     ParticipantDisputesListResponse,
 )
 from app.contracts.payments import ConfirmCompletionResponse
-from app.features.bookings.payments import confirm_completion_for_vendor
+from app.features.bookings.payments import (
+    confirm_completion_for_vendor,
+    maybe_auto_release_payout_for_booking,
+    touch_completion_side_effects_for_booking_rows,
+)
 from app.features.bookings import (
     create_vendor_quote_booking_request,
     get_booking_request_for_vendor,
@@ -110,6 +114,8 @@ def list_vendor_bookings(
         rows = list_booking_requests_for_vendor(vendor_id, group=g)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
+    if g == "active":
+        touch_completion_side_effects_for_booking_rows(rows)
     bookings = [VendorBookingListItem(**r) for r in rows]
     return VendorBookingsListResponse(bookings=bookings)
 
@@ -218,6 +224,8 @@ def get_vendor_booking(
     except ValueError as e:
         raise HTTPException(status_code=400, detail="Invalid booking id.") from e
 
+    # Backstop between hourly cron runs: release an overdue payout before serving detail.
+    maybe_auto_release_payout_for_booking(booking_id)
     row = get_booking_request_for_vendor(vendor_id, booking_id)
     if not row:
         raise HTTPException(status_code=404, detail="Booking not found.")

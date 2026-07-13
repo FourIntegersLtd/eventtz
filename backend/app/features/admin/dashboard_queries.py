@@ -11,6 +11,7 @@ from app.core.config import get_settings
 from app.core.logging import get_logger
 from app.core.db import get_db as get_client
 from app.features.admin._helpers import opt_admin_ts
+from app.features.admin.booking_diagnostics import count_bookings_needing_support_attention
 from app.features.bookings.pricing import build_pricing_breakdown
 from app.features.bookings import _paid_at_iso
 
@@ -58,6 +59,7 @@ def get_admin_dashboard_summary() -> dict[str, Any]:
             "bookings_declined": 0,
             "bookings_cancelled": 0,
             "bookings_paid_count": 0,
+            "bookings_needing_support": 0,
             "conversations_count": 0,
             "reviews_count": 0,
         }
@@ -79,6 +81,7 @@ def get_admin_dashboard_summary() -> dict[str, Any]:
 
     conv = _count_rows("conversations")
     rev = _count_rows("booking_reviews")
+    bsupport = count_bookings_needing_support_attention()
 
     return {
         "users_client": uc,
@@ -93,6 +96,7 @@ def get_admin_dashboard_summary() -> dict[str, Any]:
         "bookings_declined": bd,
         "bookings_cancelled": bcn,
         "bookings_paid_count": bpaid,
+        "bookings_needing_support": bsupport,
         "conversations_count": conv,
         "reviews_count": rev,
     }

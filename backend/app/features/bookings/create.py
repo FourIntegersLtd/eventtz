@@ -84,6 +84,7 @@ def create_booking_request(
     pb = build_pricing_breakdown(line_items=line_items, vendor_adjustments=[])
     if float(pb.get("vendor_portion_gbp") or 0) <= 0 and not pb.get("has_pricing_tbc"):
         raise ValueError("This booking has no valid price.")
+    client_total = str(pb.get("client_total_label") or persisted_booking_total_label(pb))
     row_out: dict[str, Any] = {
         "client_user_id": client_user_id,
         "vendor_user_id": vendor_user_id,
@@ -97,6 +98,7 @@ def create_booking_request(
         "selected_option_ids": selected_option_ids,
         "line_items": line_items,
         "total_label": persisted_booking_total_label(pb),
+        "initial_client_total_label": client_total,
         "vendor_adjustments": [],
         "initiator": "client",
     }
@@ -193,6 +195,7 @@ def create_vendor_quote_booking_request(
         "selected_option_ids": [],
         "line_items": line_items,
         "total_label": persisted_booking_total_label(pb),
+        "initial_client_total_label": str(pb.get("client_total_label") or persisted_booking_total_label(pb)),
         "vendor_adjustments": [],
         "initiator": "vendor",
         "event_postcode": None,

@@ -148,11 +148,12 @@ def mask_booking_list_client_email(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def _mask_all_counterparty_contact(out: dict[str, Any], *, viewer_role: str) -> dict[str, Any]:
+    # Event venue (event_address / event_postcode) is booking data, not contact
+    # info — vendors need it to decide whether to accept or quote travel, so it
+    # is never masked here. Only personal contact channels are gated.
     out.pop("counterparty_phone", None)
     out["client_email"] = None
     out["vendor_email"] = None
-    if viewer_role == "vendor":
-        out["event_address"] = None
     return out
 
 
@@ -164,8 +165,10 @@ def apply_counterparty_contact_visibility(
     detail: dict[str, Any],
 ) -> dict[str, Any]:
     """
-    Mask counterparty contact fields until the client has paid, then honour sharing prefs.
-    viewer_role: 'vendor' (viewing client) or 'client' (viewing vendor).
+    Mask counterparty contact fields (email/phone) until the client has paid,
+    then honour sharing prefs. Booking event venue is never masked — vendors
+    need it to decide whether to accept. viewer_role: 'vendor' (viewing
+    client) or 'client' (viewing vendor).
     """
     out = dict(detail)
     if not is_booking_contact_unlocked(payment_status):
@@ -183,8 +186,6 @@ def apply_counterparty_contact_visibility(
             out["counterparty_phone"] = prefs["contact_phone"]
         else:
             out["counterparty_phone"] = None
-        if not prefs.get("share_address"):
-            out["event_address"] = None
         return out
 
     # Client viewing vendor — client always sees their own event location.

@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, HTTPException, Request, Response
 
-from app.features.auth.http.guards import require_admin
+from app.features.auth.http.guards import require_admin, require_super_admin
 from app.core.logging import get_logger
 from app.contracts.disputes import AdminVendorInsightsResponse
 from app.contracts.vendor import (

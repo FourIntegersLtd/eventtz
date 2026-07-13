@@ -121,6 +121,7 @@ def normalize_payload_fields(payload: dict[str, Any], user_id: str) -> dict[str,
         "portfolioVideoNamePersisted",
         "foodHygieneCertNamePersisted",
         "indemnityCertNamePersisted",
+        "profileImageUrl",
     ):
         if key in out:
             v = _coerce_str(out, key).strip()

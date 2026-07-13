@@ -6,13 +6,22 @@ from typing import Literal
 
 Portal = Literal["client", "vendor"]
 
-# Kinds whose stored `body` is booking-specific (pricing, quotes) — keep it in the feed.
+# Kinds whose stored `body` is booking-specific (pricing, quotes, refunds, deadlines) —
+# keep it in the feed.
 _USE_STORED_BODY: frozenset[str] = frozenset(
     {
         "booking_accepted",
         "booking_pricing_updated",
         "vendor_quote_received",
         "vendor_quote_accepted",
+        "booking_cancelled_by_client",
+        "booking_cancelled_by_vendor",
+        "payment_received",
+        "vendor_payment_received",
+        "payment_refunded",
+        "completion_confirmed_awaiting_other_party",
+        "completion_reminder",
+        "vendor_completion_reminder",
     }
 )
 
@@ -48,8 +57,16 @@ _COPY: dict[str, dict[Portal, tuple[str, str]]] = {
         "vendor": ("Booking complete", "This booking is marked complete."),
     },
     "booking_pricing_updated": {
-        "client": ("Price updated", "The vendor changed the price for this booking."),
-        "vendor": ("Price updated", "You updated the price for this booking."),
+        "client": ("Updated price", "Review the new total and accept or decline."),
+        "vendor": ("Updated price sent", "Waiting for the client to confirm."),
+    },
+    "client_confirmed_updated_price": {
+        "vendor": ("Price confirmed", "The client accepted. Waiting for payment."),
+        "client": ("Price confirmed", "You accepted the updated price."),
+    },
+    "client_declined_updated_price": {
+        "vendor": ("Booking declined", "The client declined the updated price."),
+        "client": ("Booking declined", "You declined the updated price."),
     },
     "vendor_quote_received": {
         "client": ("New quote", "Review the quote and accept or decline."),
@@ -86,6 +103,12 @@ _COPY: dict[str, dict[Portal, tuple[str, str]]] = {
     "completion_confirmed_awaiting_other_party": {
         "client": ("Confirm completion", "The other party marked this booking complete."),
         "vendor": ("Confirm completion", "The other party marked this booking complete."),
+    },
+    "completion_reminder": {
+        "client": ("How did your event go?", "Confirm it's complete, or report a problem."),
+    },
+    "vendor_completion_reminder": {
+        "vendor": ("Confirm to get paid", "Confirm the event is complete to get paid sooner."),
     },
 }
 

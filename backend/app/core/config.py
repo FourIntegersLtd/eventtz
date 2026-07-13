@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     log_file_name: str = "eventtz.log"
     log_max_bytes: int = 10_000_000
     log_backup_count: int = 3
-    #: Platform service fee as % of vendor portion (line items + vendor adjustments).
+    #: Platform service fee as % of quoted work (line items + discount adjustments; surcharges excluded).
     booking_service_fee_percent: float = Field(
         default=5.0,
         validation_alias=AliasChoices("BOOKING_SERVICE_FEE_PERCENT"),
@@ -117,15 +117,46 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("STRIPE_WEBHOOK_SECRET"),
     )
 
+    #: Hours after the event (end of event day UTC) before the vendor payout is
+    #: released automatically when the client has paid and no dispute is open.
+    booking_payout_auto_release_hours_after_event: int = Field(
+        default=48,
+        validation_alias=AliasChoices("BOOKING_PAYOUT_AUTO_RELEASE_HOURS_AFTER_EVENT"),
+    )
+
     #: Comma-separated emails treated as super_admin when DB admin_role is not set yet.
     super_admin_emails: str = Field(
         default="hello@fourintegers.com",
         validation_alias=AliasChoices("SUPER_ADMIN_EMAILS"),
     )
+    #: Comma-separated ops inbox for admin alert emails (defaults to super_admin_emails).
+    admin_notify_emails: str = Field(
+        default="",
+        validation_alias=AliasChoices("ADMIN_NOTIFY_EMAILS"),
+    )
+    resend_api_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("RESEND_API_KEY"),
+    )
+    email_from: str = Field(
+        default="Eventtz <hello@eventtz.co.uk>",
+        validation_alias=AliasChoices("EMAIL_FROM"),
+    )
+    email_enabled: bool = Field(
+        default=True,
+        validation_alias=AliasChoices("EMAIL_ENABLED"),
+    )
 
     @property
     def super_admin_emails_list(self) -> list[str]:
         return [e.strip().lower() for e in self.super_admin_emails.split(",") if e.strip()]
+
+    @property
+    def admin_notify_emails_list(self) -> list[str]:
+        raw = self.admin_notify_emails.strip()
+        if raw:
+            return [e.strip().lower() for e in raw.split(",") if e.strip()]
+        return self.super_admin_emails_list
 
     @property
     def cors_origins_list(self) -> list[str]:

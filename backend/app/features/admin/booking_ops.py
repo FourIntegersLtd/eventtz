@@ -25,7 +25,51 @@ from app.features.bookings.reviews import (
     get_vendor_review_for_booking,
 )
 
+from app.features.admin.booking_diagnostics import (
+    compute_admin_booking_support_meta,
+    summarize_support_for_booking_rows,
+)
+
 logger = get_logger(__name__)
+
+_LIST_SELECT = (
+    "id,status,event_name,event_date,event_end_date,client_user_id,vendor_user_id,created_at,updated_at,"
+    "line_items,vendor_adjustments,paid_at,payment_status,stripe_payment_intent_id,stripe_checkout_session_id,"
+    "stripe_transfer_id,support_hold,client_completion_confirmed_at,vendor_completion_confirmed_at,"
+    "payout_auto_released_at"
+)
+
+_NEEDS_ATTENTION_SCAN_LIMIT = 400
+
+
+def _booking_list_item(
+    row: dict[str, Any],
+    *,
+    emails: dict[str, str | None],
+    names: dict[str, str],
+    support: dict[str, Any] | None,
+) -> dict[str, Any]:
+    cid = str(row.get("client_user_id") or "")
+    vid = str(row.get("vendor_user_id") or "")
+    li = row.get("line_items")
+    if not isinstance(li, list):
+        li = []
+    va = row.get("vendor_adjustments")
+    pb = build_pricing_breakdown(line_items=li, vendor_adjustments=va)
+    return {
+        "id": str(row.get("id", "")),
+        "status": str(row.get("status", "")),
+        "event_name": str(row.get("event_name", "")),
+        "event_date": _normalize_date_str(row.get("event_date")),
+        "client_email": emails.get(cid),
+        "vendor_email": emails.get(vid),
+        "vendor_display_name": names.get(vid, "Vendor"),
+        "created_at": row.get("created_at"),
+        "client_total_label": _client_total_label_for_list(pb),
+        "paid_at": _paid_at_iso(row),
+        "payment_status": str(row.get("payment_status") or "unpaid"),
+        "support": support,
+    }
 
 
 def list_bookings_for_admin(
@@ -36,6 +80,7 @@ def list_bookings_for_admin(
     date_from: str | None = None,
     date_to: str | None = None,
     search: str | None = None,
+    needs_attention: bool = False,
 ) -> tuple[list[dict[str, Any]], int]:
     if get_settings().local_auth_mode:
         return [], 0
@@ -43,11 +88,7 @@ def list_bookings_for_admin(
     offset = max(0, offset)
     client = get_client()
     try:
-        q = client.table("booking_requests").select(
-            "id,status,event_name,event_date,client_user_id,vendor_user_id,created_at,updated_at,"
-            "line_items,vendor_adjustments,paid_at,payment_status",
-            count="exact",
-        )
+        q = client.table("booking_requests").select(_LIST_SELECT, count="exact")
         if status and status.strip().lower() not in ("", "all"):
             q = q.eq("status", status.strip().lower())
         if date_from:
@@ -56,45 +97,43 @@ def list_bookings_for_admin(
             q = q.lte("created_at", date_to)
         if search and search.strip():
             q = q.ilike("event_name", f"%{search.strip()}%")
-        q = apply_recent_first_order(q)
-        res = q.range(offset, offset + limit - 1).execute()
+        if needs_attention:
+            q = apply_recent_first_order(q)
+            res = q.limit(_NEEDS_ATTENTION_SCAN_LIMIT).execute()
+            rows = sort_booking_rows_recent_first(
+                [r for r in (getattr(res, "data", None) or []) if isinstance(r, dict)],
+            )
+            summaries = summarize_support_for_booking_rows(rows)
+            rows = [r for r in rows if summaries.get(str(r.get("id") or ""), {}).get("needs_attention_count", 0) > 0]
+            total = len(rows)
+            rows = rows[offset : offset + limit]
+        else:
+            q = apply_recent_first_order(q)
+            res = q.range(offset, offset + limit - 1).execute()
+            rows = sort_booking_rows_recent_first(
+                [r for r in (getattr(res, "data", None) or []) if isinstance(r, dict)],
+            )
+            total = int(getattr(res, "count", None) or len(rows))
     except Exception as e:
         logger.warning("list_bookings_for_admin failed: %s", e, exc_info=True)
         return [], 0
-
-    rows = sort_booking_rows_recent_first(
-        [r for r in (getattr(res, "data", None) or []) if isinstance(r, dict)],
-    )
-    total = int(getattr(res, "count", None) or len(rows))
 
     cids = list({str(r.get("client_user_id") or "") for r in rows if r.get("client_user_id")})
     vids = list({str(r.get("vendor_user_id") or "") for r in rows if r.get("vendor_user_id")})
     emails = _client_emails_by_id([*cids, *vids])
     names = _vendor_display_names_by_id(vids)
+    summaries = summarize_support_for_booking_rows(rows)
 
     out: list[dict[str, Any]] = []
     for row in rows:
-        cid = str(row.get("client_user_id") or "")
-        vid = str(row.get("vendor_user_id") or "")
-        li = row.get("line_items")
-        if not isinstance(li, list):
-            li = []
-        va = row.get("vendor_adjustments")
-        pb = build_pricing_breakdown(line_items=li, vendor_adjustments=va)
+        booking_id = str(row.get("id") or "")
         out.append(
-            {
-                "id": str(row.get("id", "")),
-                "status": str(row.get("status", "")),
-                "event_name": str(row.get("event_name", "")),
-                "event_date": _normalize_date_str(row.get("event_date")),
-                "client_email": emails.get(cid),
-                "vendor_email": emails.get(vid),
-                "vendor_display_name": names.get(vid, "Vendor"),
-                "created_at": row.get("created_at"),
-                "client_total_label": _client_total_label_for_list(pb),
-                "paid_at": _paid_at_iso(row),
-                "payment_status": str(row.get("payment_status") or "unpaid"),
-            },
+            _booking_list_item(
+                row,
+                emails=emails,
+                names=names,
+                support=summaries.get(booking_id),
+            ),
         )
     return out, total
 
@@ -157,6 +196,7 @@ def get_booking_detail_for_admin(booking_id: str) -> dict[str, Any] | None:
         "paid_at": _paid_at_iso(row),
         "stripe_payment_intent_id": row.get("stripe_payment_intent_id"),
         "stripe_charge_id": row.get("stripe_charge_id"),
+        "stripe_checkout_session_id": row.get("stripe_checkout_session_id"),
         "payment_amount_gbp": float(row["payment_amount_gbp"])
         if row.get("payment_amount_gbp") is not None
         else None,
@@ -177,4 +217,5 @@ def get_booking_detail_for_admin(booking_id: str) -> dict[str, Any] | None:
     out["review_client_summary"] = (
         get_client_review_for_booking(booking_id, cid) if cid else None
     )
+    out["support"] = compute_admin_booking_support_meta(row)
     return out

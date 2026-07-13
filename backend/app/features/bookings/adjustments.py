@@ -66,7 +66,7 @@ def put_vendor_booking_adjustments(
     client = get_client()
     res = (
         client.table("booking_requests")
-        .select("id,status,line_items,client_user_id,initiator")
+        .select("id,status,line_items,client_user_id,initiator,initial_client_total_label")
         .eq("id", booking_id)
         .eq("vendor_user_id", vendor_user_id)
         .limit(1)
@@ -117,9 +117,16 @@ def put_vendor_booking_adjustments(
     total_label = persisted_booking_total_label(pb)
     adj_final = pb.get("vendor_adjustments") or []
 
+    patch: dict[str, Any] = {"vendor_adjustments": adj_final, "total_label": total_label}
+    if not str(row0.get("initial_client_total_label") or "").strip():
+        pb_initial = build_pricing_breakdown(line_items=line_items, vendor_adjustments=[])
+        patch["initial_client_total_label"] = str(
+            pb_initial.get("client_total_label") or persisted_booking_total_label(pb_initial),
+        )
+
     upd = (
         client.table("booking_requests")
-        .update({"vendor_adjustments": adj_final, "total_label": total_label})
+        .update(patch)
         .eq("id", booking_id)
         .eq("vendor_user_id", vendor_user_id)
         .eq("status", "pending")
@@ -131,7 +138,7 @@ def put_vendor_booking_adjustments(
     if client_uid:
         ttl = str(pb.get("client_total_label") or total_label)
         body = _client_booking_pricing_explanation_body(
-            lead_sentence="The vendor updated costs on your request.",
+            lead_sentence="Your vendor sent an updated price.",
             total_label=ttl,
             adjustments=list(adj_final),
         )
