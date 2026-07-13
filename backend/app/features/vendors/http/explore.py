@@ -80,7 +80,7 @@ def get_explore_vendors_search(
         description="relevance | price_asc | price_desc | proximity | rating",
     ),
 ) -> ExploreVendorSearchResponse:
-    rows = search_approved_vendors(
+    result = search_approved_vendors(
         types=types,
         location=location,
         q=q,
@@ -90,8 +90,21 @@ def get_explore_vendors_search(
         budget_max=budget_max,
         sort=sort,
     )
-    logger.info("GET /vendors/explore/search total_count=%s sort=%s", len(rows), sort)
-    return ExploreVendorSearchResponse(success=True, total_count=len(rows), vendors=rows)
+    logger.info(
+        "GET /vendors/explore/search total_count=%s exact=%s related=%s sort=%s",
+        len(result.vendors),
+        result.has_exact,
+        result.has_related,
+        sort,
+    )
+    return ExploreVendorSearchResponse(
+        success=True,
+        total_count=len(result.vendors),
+        vendors=result.vendors,
+        match_notice=result.match_notice,
+        has_exact=result.has_exact,
+        has_related=result.has_related,
+    )
 
 
 @router.get("/{vendor_user_id}/reviews", response_model=VendorPublicReviewsResponse)

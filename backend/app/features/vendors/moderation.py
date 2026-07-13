@@ -14,7 +14,6 @@ from app.core.db import (
     is_missing_approval_status_column,
     local_vendors,
 )
-from app.features.bookings.reviews import get_review_stats_for_vendors
 from app.features.vendors.profile import get_vendor_profile
 
 logger = get_logger(__name__)
@@ -191,6 +190,8 @@ def get_vendor_admin_insights(vendor_user_id: str) -> dict[str, Any]:
         }
 
     client = get_client()
+    from app.features.bookings.reviews import get_review_stats_for_vendors
+
     stats = get_review_stats_for_vendors([vendor_user_id])
     sm = stats.get(vendor_user_id) or {}
     avg = sm.get("average_rating")

@@ -1,6 +1,5 @@
 """Booking feature — public API."""
 
-from app.features.bookings.calendar import vendor_can_initiate_chat
 from app.features.bookings.commands import (
     cancel_booking_request_for_client,
     create_booking_request,
@@ -43,3 +42,13 @@ __all__ = [
     "_paid_at_iso",
     "_vendor_display_names_by_id",
 ]
+
+
+def __getattr__(name: str):
+    # Lazy: calendar imports vendors.search / moderation (cycle via reviews).
+    if name == "vendor_can_initiate_chat":
+        from app.features.bookings.calendar import vendor_can_initiate_chat
+
+        return vendor_can_initiate_chat
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+

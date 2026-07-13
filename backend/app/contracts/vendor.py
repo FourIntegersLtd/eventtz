@@ -78,12 +78,19 @@ class ExploreVendorSearchRow(ExploreVendorRow):
     """Explore row with which service tags matched the current search."""
 
     matched_services: list[str] = Field(default_factory=list)
+    match_tier: str = Field(
+        default="exact",
+        description="exact | related | fallback — ranking tier for close-enough search",
+    )
 
 
 class ExploreVendorSearchResponse(BaseModel):
     success: bool = True
     total_count: int = 0
     vendors: list[ExploreVendorSearchRow] = Field(default_factory=list)
+    match_notice: str | None = None
+    has_exact: bool = False
+    has_related: bool = False
 
 
 class AdminVendorApprovalBody(BaseModel):
