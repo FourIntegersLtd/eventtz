@@ -46,24 +46,34 @@ export function HeroRotatingWord() {
       : "motion-safe:animate-[hero-word-in_0.45s_ease-out_both]";
 
   return (
-    <span className="relative inline-flex min-w-0 max-w-full translate-y-[-0.05em] align-baseline overflow-hidden">
-      <span className="invisible whitespace-nowrap font-semibold" aria-hidden>
-        makeup artists
-      </span>
-      <span className="sr-only">{word}</span>
-      <span
-        className="absolute inset-0 flex items-center overflow-hidden"
-        aria-hidden
-      >
+    <span className="relative inline-flex translate-y-[-0.05em] align-baseline pb-[0.28em]">
+      <span className="relative inline-block overflow-y-hidden px-0.5">
         <span
           key={`${word}-${phase === "in" ? index : `out-${index}`}`}
-          className={`whitespace-nowrap font-semibold text-primary underline decoration-primary/35 decoration-2 underline-offset-[0.18em] ${
+          className={`inline-block whitespace-nowrap font-semibold text-primary ${
             reduceMotion ? "" : motionClass
           }`}
         >
           {word}
         </span>
+        <span className="sr-only">{word}</span>
       </span>
+
+      {/* Inverted-C arch underline — matches the word width */}
+      <svg
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[0.38em] w-full text-primary"
+        viewBox="0 0 120 12"
+        preserveAspectRatio="none"
+        aria-hidden
+      >
+        <path
+          d="M3 10.5 Q 60 1.5 117 10.5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+        />
+      </svg>
     </span>
   );
 }

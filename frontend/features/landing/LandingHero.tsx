@@ -33,7 +33,7 @@ export function LandingHero() {
       <div
         className={`relative flex flex-1 flex-col justify-start py-6 sm:py-8 lg:justify-center lg:py-10 ${LANDING_HERO_CONTAINER_CLASS}`}
       >
-        <div className="grid items-center gap-5 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-16 xl:gap-24 2xl:gap-28">
+        <div className="grid items-center gap-5 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-10 xl:gap-14 2xl:gap-16">
           <div className="min-w-0 text-left motion-safe:animate-[hero-copy-in_0.65s_ease-out_both]">
             <p className="flex items-center gap-3 text-sm font-semibold text-primary">
               <span className="inline-block h-px w-8 bg-primary" aria-hidden />
@@ -58,7 +58,7 @@ export function LandingHero() {
             </Link>
           </div>
 
-          <div className="relative mx-auto w-full max-w-[18rem] motion-safe:animate-[hero-copy-in_0.75s_ease-out_0.08s_both] sm:max-w-md lg:mx-0 lg:max-w-none lg:justify-self-end lg:pl-6 xl:pl-10 2xl:pl-14">
+          <div className="relative mx-auto w-full max-w-[18rem] motion-safe:animate-[hero-copy-in_0.75s_ease-out_0.08s_both] sm:max-w-md lg:mx-0 lg:max-w-none lg:justify-self-end lg:pl-2 xl:pl-4">
             <div className="relative overflow-hidden rounded-[1.75rem] border border-primary-border/70 bg-white/60 p-1.5 shadow-primary-soft sm:rounded-[2.5rem] sm:p-2.5">
               <Image
                 src={HERO_IMAGE_SRC}

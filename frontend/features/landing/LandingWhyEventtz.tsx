@@ -19,12 +19,12 @@ export function LandingWhyEventtz() {
         <h2 className="font-heading mt-2.5 text-2xl font-semibold tracking-tight text-primary sm:text-3xl md:text-4xl">
           {WHY_EVENTTZ_SECTION.title}
         </h2>
-        <p className="mt-3 hidden text-sm leading-relaxed text-neutral-600 sm:text-base md:block">
+        {/* <p className="mt-3 hidden text-sm leading-relaxed text-neutral-600 sm:text-base md:block">
           {WHY_EVENTTZ_SECTION.description}
-        </p>
+        </p> */}
       </div>
 
-      <div className={`grid gap-8 sm:grid-cols-2 lg:grid-cols-4 ${LANDING_SECTION_CONTENT_MT}`}>
+      <div className={`mx-auto grid max-w-5xl gap-8 sm:grid-cols-3 ${LANDING_SECTION_CONTENT_MT}`}>
         {WHY_EVENTTZ_PILLARS.map(({ title, description, Icon }) => (
           <div key={title} className="text-center md:px-2">
             <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent-gold/15 text-primary">

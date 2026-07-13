@@ -4,7 +4,6 @@ import {
   Camera,
   Cake,
   CircleCheck,
-  CreditCard,
   MessageCircle,
   Package,
   Search,
@@ -315,12 +314,8 @@ export const WHY_EVENTTZ_PILLARS: LandingValuePillar[] = [
   },
   {
     title: "Pay when it's confirmed",
-    description: "See the full price before you pay.",
-    Icon: CreditCard,
-  },
-  {
-    title: "Help when things go wrong",
-    description: "Tell us what went wrong and we hold payment until it's sorted.",
+    description:
+      "See the full price before you pay. If something goes wrong, we hold payment until it's sorted.",
     Icon: ShieldCheck,
   },
 ];
