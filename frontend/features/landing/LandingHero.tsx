@@ -135,7 +135,7 @@ export function LandingHero() {
           </p>
         </div>
 
-        <div className="mt-8 w-full min-w-0 max-w-4xl">
+        <div className="relative z-20 mt-8 w-full min-w-0 max-w-4xl">
           <HeroMarketplaceSearch variant="landing" submitToPath="/client/browse" />
         </div>
 

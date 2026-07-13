@@ -94,12 +94,12 @@ export function HeroMarketplaceSearch({
   const responsiveGridCols = gridColsForFieldCount(visibleFieldCount);
 
   const shellClassName = landing
-    ? `grid w-full min-w-0 max-w-full grid-cols-1 gap-2 overflow-x-clip rounded-2xl border border-primary-border bg-white p-2 shadow-primary-soft sm:grid-cols-2 sm:gap-0 sm:rounded-full sm:p-1.5 ${responsiveGridCols} lg:items-center`
-    : `grid min-w-0 max-w-full grid-cols-1 gap-3 overflow-x-clip rounded-2xl border border-neutral-200 bg-white p-3 shadow-sm sm:grid-cols-2 ${responsiveGridCols} lg:items-end`;
+    ? `grid w-full min-w-0 max-w-full grid-cols-1 gap-2 overflow-visible rounded-2xl border border-primary-border bg-white p-2 shadow-primary-soft sm:grid-cols-2 sm:gap-0 sm:rounded-full sm:p-1.5 ${responsiveGridCols} lg:items-center`
+    : `grid min-w-0 max-w-full grid-cols-1 gap-3 overflow-visible rounded-2xl border border-neutral-200 bg-white p-3 shadow-sm sm:grid-cols-2 ${responsiveGridCols} lg:items-end`;
 
   const submitSpanClass =
     visibleFieldCount === 1 ? "sm:col-span-1" : "sm:col-span-2";
-  const fieldClassName = "relative min-w-0";
+  const fieldClassName = "relative z-20 min-w-0";
   const landingFieldDivider = landing ? "sm:border-l sm:border-primary-border" : "";
   const submitClassName = landing
     ? `flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-8 text-sm font-semibold text-white transition hover:opacity-95 ${submitSpanClass} lg:col-span-1 lg:w-auto lg:justify-self-end lg:px-6`
@@ -193,7 +193,7 @@ export function HeroMarketplaceSearch({
           {typesOpen && (
             <div
               id={panelId}
-              className="absolute left-0 right-0 top-full z-[60] mt-1 box-border min-w-0 max-w-full max-h-72 overflow-auto rounded-xl border border-neutral-200 bg-white p-2 shadow-lg"
+              className="absolute left-0 right-0 top-full z-[70] mt-1 box-border min-w-0 max-w-full max-h-72 overflow-y-auto rounded-xl border border-neutral-200 bg-white p-2 shadow-lg"
             >
               {SERVICE_OPTIONS.map((opt) =>
                 opt.value === "other" ? (
@@ -287,7 +287,7 @@ export function HeroMarketplaceSearch({
           {datesOpen && (
             <div
               id={datePanelId}
-              className="absolute left-0 right-0 top-full z-[60] mt-1 box-border min-w-0 max-w-full overflow-hidden rounded-xl border border-neutral-200 bg-white p-3 shadow-lg"
+              className="absolute left-0 right-0 top-full z-[70] mt-1 box-border min-w-0 max-w-full rounded-xl border border-neutral-200 bg-white p-3 shadow-lg"
             >
               <p className="text-xs font-medium text-neutral-500">
                 Up to 3 dates
