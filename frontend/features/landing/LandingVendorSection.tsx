@@ -35,7 +35,7 @@ export function LandingVendorSection() {
           </ButtonLink>
         </div>
 
-        <div className={`min-w-0 ${LANDING_SCREENSHOT_FRAME_CLASS}`}>
+        <div className={`hidden min-w-0 lg:block ${LANDING_SCREENSHOT_FRAME_CLASS}`}>
           <VendorDashboardMock />
         </div>
       </div>

@@ -39,14 +39,16 @@ function StepScreenshot({
   fallback,
   visible,
   priority,
+  layout = "stacked",
 }: {
   step: LandingScrollFeatureStep;
   fallback?: ReactNode;
   visible: boolean;
   priority?: boolean;
+  layout?: "stacked" | "inline";
 }) {
   const frame = (
-    <div className="h-full w-full">
+    <div className={layout === "inline" ? "w-full" : "h-full w-full"}>
       {step.imageSrc ? (
         <Image
           src={step.imageSrc}
@@ -63,6 +65,10 @@ function StepScreenshot({
       )}
     </div>
   );
+
+  if (layout === "inline") {
+    return <div className={LANDING_SCREENSHOT_FRAME_CLASS}>{frame}</div>;
+  }
 
   return (
     <div
@@ -165,6 +171,16 @@ export function LandingScrollFeatureShowcase({
                 className="flex flex-col justify-center border-t border-neutral-200/80 py-8 first:border-t-0 first:pt-4 sm:py-10 lg:min-h-[calc(100dvh-7.5rem)] lg:py-0"
                 aria-current={active ? "step" : undefined}
               >
+                <div className="mb-6 lg:hidden">
+                  <StepScreenshot
+                    step={step}
+                    fallback={imageFallbacks?.[step.id]}
+                    visible
+                    priority={index === 0}
+                    layout="inline"
+                  />
+                </div>
+
                 <p
                   className={`text-xs font-semibold uppercase tracking-[0.2em] transition-colors duration-500 ${
                     active ? "text-primary" : "text-neutral-400"
