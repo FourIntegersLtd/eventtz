@@ -25,23 +25,9 @@ export function LandingWhyEventtz() {
         </p>
       </div>
 
-      <div className={`mx-auto grid max-w-4xl gap-3 sm:grid-cols-3 ${LANDING_SECTION_CONTENT_MT}`}>
-        {WHY_EVENTTZ_SECTION.pains.map((pain) => (
-          <p
-            key={pain}
-            className="rounded-2xl border border-primary-border/60 bg-neutral-50 px-4 py-3.5 text-sm italic leading-relaxed text-neutral-600"
-          >
-            &ldquo;{pain}&rdquo;
-          </p>
-        ))}
-      </div>
-
-      <div className={`grid gap-10 md:grid-cols-3 md:gap-8 ${LANDING_SECTION_STACK_MT}`}>
+      <div className={`grid gap-8 sm:grid-cols-2 lg:grid-cols-4 ${LANDING_SECTION_CONTENT_MT}`}>
         {WHY_EVENTTZ_PILLARS.map(({ title, description, Icon }) => (
-          <div
-            key={title}
-            className="relative text-center md:px-4 md:after:absolute md:after:-right-4 md:after:top-8 md:after:h-[calc(100%-4rem)] md:after:w-px md:after:bg-primary-border/70 md:last:after:hidden"
-          >
+          <div key={title} className="text-center md:px-2">
             <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent-gold/15 text-primary">
               <Icon className="h-6 w-6" strokeWidth={1.6} aria-hidden />
             </span>

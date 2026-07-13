@@ -1,17 +1,13 @@
 import type { LucideIcon } from "lucide-react";
 import {
   BadgeCheck,
-  Banknote,
-  Calendar,
   Camera,
   Cake,
   CreditCard,
-  MapPin,
   MessageCircle,
   Package,
   ShieldCheck,
   Sparkles,
-  Tag,
   UtensilsCrossed,
 } from "lucide-react";
 import type { IconType } from "react-icons";
@@ -28,53 +24,6 @@ export const WAITLIST_URL = "https://forms.gle/6c4Ezw5MNuQaYr238";
 
 /** Matches checkout UI and backend `BOOKING_SERVICE_FEE_PERCENT` (default 5). */
 const SERVICE_FEE_PERCENT_LABEL = `${getBookingServiceFeePercent()}%`;
-
-export type LandingStep = {
-  step: number;
-  title: string;
-  description: string;
-};
-
-export const VENDOR_STEPS: LandingStep[] = [
-  {
-    step: 1,
-    title: "Build your profile",
-    description: "Show your work, set your prices, and open your calendar.",
-  },
-  {
-    step: 2,
-    title: "Show up in search",
-    description: "Clients find you when they're ready to book.",
-  },
-  {
-    step: 3,
-    title: "Get paid when the job's done",
-    description: "Connect Stripe once. Get paid after the event is complete.",
-  },
-];
-
-export const CLIENT_STEPS: LandingStep[] = [
-  {
-    step: 1,
-    title: "Find your vendor",
-    description: "Search by service, city, and date.",
-  },
-  {
-    step: 2,
-    title: "Agree the details",
-    description: "Message, confirm the quote, and check they're available.",
-  },
-  {
-    step: 3,
-    title: "Lock in your date",
-    description: "Pay once they accept. Your payment is held until the event is done.",
-  },
-  {
-    step: 4,
-    title: "Complete and review",
-    description: "Confirm it went well and leave a review.",
-  },
-];
 
 export type LandingCategory = {
   name: string;
@@ -107,7 +56,7 @@ export const CATEGORIES: LandingCategory[] = [
     name: "Photography",
     value: "photography",
     Icon: Camera,
-    description: "Packages and prices on every profile.",
+    description: "See packages and prices on every profile before you send a message.",
     iconBg: "bg-amber-500",
     iconColor: "text-white",
   },
@@ -207,31 +156,31 @@ export const FAQ_SECTIONS: FaqSection[] = [
     items: [
       {
         q: "How does booking work?",
-        a: "Pick services on a profile, send your date and venue, chat to confirm the price, then pay when they accept. It all stays on one booking.",
+        a: "Choose a vendor, add your date and venue, chat to agree the price, then pay once the vendor accepts. Everything stays in one place.",
       },
       {
         q: "When do I pay?",
-        a: "After the vendor accepts. You see the full total, including our service fee, before you confirm.",
+        a: "After the vendor accepts. You see the full total, including our service fee, before you pay.",
       },
       {
         q: "Is there a service fee?",
-        a: `Yes. ${SERVICE_FEE_PERCENT_LABEL} at checkout, shown before you pay. No hidden extras.`,
+        a: `Yes. ${SERVICE_FEE_PERCENT_LABEL}, shown before you pay. No hidden extras.`,
       },
       {
         q: "Is my payment safe?",
-        a: "Yes. We hold your payment until the event is done. The vendor is paid once you both confirm it went well, or automatically 48 hours after the event if there's no problem.",
+        a: "Yes. We hold your payment until the event is done. The vendor is paid once you and the vendor confirm it went well, or automatically 48 hours after the event if there is no problem.",
       },
       {
         q: "What if I need to cancel?",
-        a: "You can cancel from your booking before the vendor is paid. If you've already paid, you get a full refund back to your card, usually within 5-10 working days.",
+        a: "You can cancel from your booking before the vendor is paid. If you have already paid, you get a full refund back to your card, usually within 5-10 working days.",
       },
       {
         q: "Are vendors vetted?",
-        a: "Every vendor completes onboarding. We review profiles before they appear in search.",
+        a: "Every vendor completes onboarding. Each profile is reviewed before going live on Eventtz.",
       },
       {
         q: "What if something goes wrong?",
-        a: "Report a problem from your booking. We pause any payment to the vendor and help resolve it.",
+        a: "Report a problem from your booking. We pause payment to the vendor and help sort it out.",
       },
     ],
   },
@@ -241,15 +190,15 @@ export const FAQ_SECTIONS: FaqSection[] = [
     items: [
       {
         q: "How do I join Eventtz?",
-        a: "Create your profile, add your services, and set up payments.",
+        a: "Create your profile, add your packages, and connect payments.",
       },
       {
         q: "When will my profile go live?",
-        a: "After onboarding, Stripe verification, and our team approves your listing.",
+        a: "After you finish setup, verify with Stripe, and our team approves your profile.",
       },
       {
         q: "How do I get paid?",
-        a: "Clients pay through Eventtz when they book. After the event, confirm it's complete and you're paid, or automatically 48 hours after the event if there's no problem.",
+        a: "When a client books you, payment comes through Eventtz. After the event, mark it complete to get paid, or automatically 48 hours after the event if there is no problem.",
       },
       {
         q: "Does Eventtz take a cut from my earnings?",
@@ -257,7 +206,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       },
       {
         q: "What happens if there is a dispute?",
-        a: "Either side can open one. We review it and may hold payout until it's sorted.",
+        a: "You or the client can report a problem. We review it and may hold payment until it is sorted.",
       },
     ],
   },
@@ -335,23 +284,19 @@ export type LandingValuePillar = {
 export const WHY_EVENTTZ_SECTION = {
   eyebrow: "Why Eventtz",
   title: "The vendors exist. The booking lives in the group chat.",
-  description: "Find trusted vendors, agree the details in one place, and pay when you're both ready.",
-  pains: [
-    "I've been chasing the caterer on WhatsApp for weeks.",
-    "I keep having to send a DM just to get prices.",
-    "They want a deposit. I've never worked with them before.",
-  ],
+  description:
+    "You can find great vendors, but dates, prices, and payment still get lost in DMs and screenshots. Eventtz helps you find trusted vendors and handle payments safely, all in one place.",
 } as const;
 
 export const WHY_EVENTTZ_PILLARS: LandingValuePillar[] = [
   {
     title: "Checked before you book",
-    description: "We review every vendor before they go live.",
+    description: "Every vendor is reviewed before going live on Eventtz.",
     Icon: BadgeCheck,
   },
   {
     title: "One thread, one booking",
-    description: "Message, agree a price, and book in one place.",
+    description: "Message, agree a price, and book without switching apps.",
     Icon: MessageCircle,
   },
   {
@@ -359,66 +304,9 @@ export const WHY_EVENTTZ_PILLARS: LandingValuePillar[] = [
     description: "See the full price before you pay.",
     Icon: CreditCard,
   },
-];
-
-export type LandingVendorBenefit = {
-  title: string;
-  description: string;
-  Icon: LucideIcon;
-};
-
-export const VENDOR_SPOTLIGHT_SECTION = {
-  eyebrow: "For vendors",
-  title: "Your next booking shouldn't come from a DM",
-} as const;
-
-export const VENDOR_SPOTLIGHT_BENEFITS: LandingVendorBenefit[] = [
-  {
-    title: "Show up when it matters",
-    description: "Appear in search by category, city, and date.",
-    Icon: MapPin,
-  },
-  {
-    title: "You set the price",
-    description: "Packages, hourly rates, or custom quotes. Your call.",
-    Icon: Banknote,
-  },
-  {
-    title: "Run bookings in one app",
-    description: "Requests, chat, and calendar in the same place.",
-    Icon: Calendar,
-  },
-  {
-    title: "Paid through Stripe",
-    description: "Connect once. Get paid when the job is complete.",
-    Icon: ShieldCheck,
-  },
-];
-
-export const TRUST_SAFETY_SECTION = {
-  eyebrow: "Trust & safety",
-  title: "Built for real bookings, not just browsing",
-} as const;
-
-export const TRUST_SAFETY_ITEMS: LandingValuePillar[] = [
-  {
-    title: "Checked before they go live",
-    description: "Vendors don't show up in search until we've checked them.",
-    Icon: BadgeCheck,
-  },
-  {
-    title: "Full price before you pay",
-    description: "Vendor quote plus service fee, shown in full at checkout.",
-    Icon: CreditCard,
-  },
-  {
-    title: "Everything on the booking",
-    description: "Messages, quotes, and payments in one place.",
-    Icon: MessageCircle,
-  },
   {
     title: "Help when things go wrong",
-    description: "Either side can flag an issue. We help resolve it.",
+    description: "Tell us what went wrong and we hold payment until it's sorted.",
     Icon: ShieldCheck,
   },
 ];
@@ -433,10 +321,23 @@ export type LandingScreenshotSection = {
   ctaLabel?: string;
 };
 
+export type LandingScrollFeatureStep = {
+  id: string;
+  stepLabel: string;
+  title: string;
+  description: string;
+  quote?: string;
+  imageSrc?: string;
+  imageAlt: string;
+  ctaHref?: string;
+  ctaLabel?: string;
+};
+
 export const PRICING_TRUST_SECTION: LandingScreenshotSection = {
   eyebrow: "Browse",
   title: "See the price before the DM",
-  description: "Packages and sale prices on every listing. Compare before you message.",
+  description:
+    "Every listing shows packages and sale prices upfront, so you can compare vendors before you send a message.",
   screenshotSrc: "/images/landing-images/pricing.png",
   ctaHref: "/client/browse",
   ctaLabel: "Browse vendors",
@@ -444,53 +345,96 @@ export const PRICING_TRUST_SECTION: LandingScreenshotSection = {
 
 export const BOOK_SECTION: LandingScreenshotSection = {
   eyebrow: "Request",
-  title: "One request. On the record.",
-  description: "Pick your package, add your date and venue, and send the vendor a request.",
+  title: "One request stays on the record",
+  description:
+    "Pick your package, add your date and venue, and send a request that lives on one booking from day one.",
   screenshotSrc: "/images/landing-images/book.png",
+  ctaHref: "/client/browse",
+  ctaLabel: "Browse vendors",
+};
+
+export const CHAT_SECTION: LandingScreenshotSection = {
+  eyebrow: "Agree",
+  title: "Sort the details in one thread",
+  description:
+    "Message the vendor, tweak the package, and get a clear quote back, all in the same conversation instead of scattered DMs.",
+  screenshotSrc: "/images/landing-images/chat.png",
   ctaHref: "/client/browse",
   ctaLabel: "Browse vendors",
 };
 
 export const QUOTE_SECTION: LandingScreenshotSection = {
   eyebrow: "Confirm",
-  title: "They confirm. You pay.",
-  description: "The vendor confirms your details and price before payment.",
+  title: "They confirm before you pay",
+  description:
+    "The vendor checks your details and locks in the price before checkout, so you're never paying blind.",
   screenshotSrc: "/images/landing-images/quote.png",
   ctaHref: "/client/browse",
   ctaLabel: "Browse vendors",
 };
 
-export const VENDOR_TOOLS_SECTION: LandingScreenshotSection = {
-  eyebrow: "For vendors",
-  title: "Your prices, your calendar, one profile",
-  description: "Manage prices, bookings, and payments in one place.",
-  screenshotSrc: undefined,
-  ctaHref: "/register?type=vendor",
-  ctaLabel: "Join as a vendor",
-};
+export const CLIENT_JOURNEY_SCROLL_SECTION = {
+  eyebrow: "How booking works",
+  title: "From browsing to booked, in one place.",
+  description:
+    "Compare vendors, agree the plan together, and pay when you're ready, without losing track in another group chat.",
+  summary:
+    "See prices before you message anyone. Pick who you like, chat through the details, and pay when you're both happy.",
+} as const;
 
-export const VENDOR_TOOLS_PILLARS: LandingValuePillar[] = [
+export const CLIENT_JOURNEY_SCROLL_STEPS: LandingScrollFeatureStep[] = [
   {
-    title: "Packages or quotes",
-    description: "Fixed packages, rates, or custom quotes from chat.",
-    Icon: Package,
+    id: "pricing-trust",
+    stepLabel: "Browse",
+    title: PRICING_TRUST_SECTION.title,
+    description: PRICING_TRUST_SECTION.description,
+    quote: "I keep having to send a DM just to get prices.",
+    imageSrc: PRICING_TRUST_SECTION.screenshotSrc,
+    imageAlt: "Vendor profile with package pricing and discounts on Eventtz",
+    ctaHref: PRICING_TRUST_SECTION.ctaHref,
+    ctaLabel: PRICING_TRUST_SECTION.ctaLabel,
   },
   {
-    title: "Discounts that sell",
-    description: "List, bulk, and off-peak rules on your profile.",
-    Icon: Tag,
+    id: "book-request",
+    stepLabel: "Request",
+    title: BOOK_SECTION.title,
+    description: BOOK_SECTION.description,
+    quote: "I've been chasing the caterer on WhatsApp for weeks.",
+    imageSrc: BOOK_SECTION.screenshotSrc,
+    imageAlt: "Request a booking on Eventtz",
+    ctaHref: BOOK_SECTION.ctaHref,
+    ctaLabel: BOOK_SECTION.ctaLabel,
   },
   {
-    title: "Your calendar",
-    description: "Weekdays, blocked dates, and a daily booking cap.",
-    Icon: Calendar,
+    id: "chat-quote",
+    stepLabel: "Agree",
+    title: CHAT_SECTION.title,
+    description: CHAT_SECTION.description,
+    quote: "Every question turned into three more messages somewhere else.",
+    imageSrc: CHAT_SECTION.screenshotSrc,
+    imageAlt: "Chat conversation with a vendor quote on Eventtz",
+    ctaHref: CHAT_SECTION.ctaHref,
+    ctaLabel: CHAT_SECTION.ctaLabel,
   },
   {
-    title: "Paid through Stripe",
-    description: "Connect once. Payout after the job is complete.",
-    Icon: ShieldCheck,
+    id: "quote-accept",
+    stepLabel: "Confirm",
+    title: QUOTE_SECTION.title,
+    description: QUOTE_SECTION.description,
+    quote: "They want a deposit. I've never worked with them before.",
+    imageSrc: QUOTE_SECTION.screenshotSrc,
+    imageAlt: "Vendor booking with accept and reject on Eventtz",
+    ctaHref: QUOTE_SECTION.ctaHref,
+    ctaLabel: QUOTE_SECTION.ctaLabel,
   },
 ];
+
+export const VENDOR_SECTION = {
+  eyebrow: "For vendors",
+  title: "List your services, take bookings, and get paid when the event is done.",
+  ctaHref: "/register?type=vendor",
+  ctaLabel: "Join as a vendor",
+} as const;
 
 export type LandingJourneyStage = "browse" | "chat" | "pay";
 
@@ -505,34 +449,30 @@ export type LandingJourneyStep = {
 export const BOOKING_RECORD_SECTION = {
   eyebrow: "One booking",
   title: "One booking, one record",
-  description: "Browse, message, pay, and complete without losing the thread.",
+  description:
+    "From the first browse to the final review, every message, quote, and payment stays on the same booking.",
 } as const;
 
 export const BOOKING_RECORD_JOURNEY: LandingJourneyStep[] = [
   {
     title: "Browse with clear prices",
-    description: "Compare packages before you message.",
+    description: "Compare packages on each profile before you open a message.",
     mockStage: "browse",
     screenshotAlt: "Vendor profile with package pricing on Eventtz",
   },
   {
     title: "Agree in chat",
-    description: "Message the vendor and accept the quote.",
+    description: "Work through the details in the thread and accept the quote when it's right.",
     mockStage: "chat",
     screenshotAlt: "Chat conversation with a vendor quote on Eventtz",
   },
   {
     title: "Pay and complete",
-    description: "Pay after they accept. Leave a review when it's done.",
+    description: "Pay after they accept, then confirm the event went well and leave a review.",
     mockStage: "pay",
     screenshotAlt: "Secure checkout for an accepted booking on Eventtz",
   },
 ];
-
-export const HOW_IT_WORKS_SECTION = {
-  eyebrow: "How it works",
-  title: "From search to booked",
-} as const;
 
 export const FAQ_SECTION = {
   eyebrow: "FAQ",
@@ -559,10 +499,7 @@ export const EXPLORE_NAV_LINKS = [
   { href: "#browse", label: "Categories" },
   { href: "#featured", label: "Featured vendors" },
   { href: "#reviews", label: "Reviews" },
-  { href: "#how-it-works", label: "How it works" },
-  { href: "#pricing-trust", label: "Pricing" },
-  { href: "#book-request", label: "Book" },
-  { href: "#quote-accept", label: "Confirm" },
+  { href: "#booking-journey", label: "How booking works" },
   { href: "#why-eventtz", label: "Why Eventtz" },
   { href: "#inspiration", label: "Celebrations" },
   { href: "#for-vendors", label: "For vendors" },

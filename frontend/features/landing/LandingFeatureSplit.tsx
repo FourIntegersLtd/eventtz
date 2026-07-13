@@ -11,9 +11,17 @@ import {
   landingFeatureSectionClass,
   type LandingSectionTone,
 } from "@/features/landing/landingSectionStyles";
+import {
+  LANDING_SCREENSHOT_DEFAULT_HEIGHT,
+  LANDING_SCREENSHOT_DEFAULT_WIDTH,
+  landingScreenshotMaxCssWidth,
+  landingStackedScreenshotSizes,
+  LANDING_SPLIT_SCREENSHOT_SIZES,
+} from "@/features/landing/landingScreenshotConfig";
 
-/** Wrapper for landing product screenshots (no border). */
-export const LANDING_SCREENSHOT_FRAME_CLASS = "overflow-hidden";
+/** Wrapper for landing product screenshots and mocks. */
+export const LANDING_SCREENSHOT_FRAME_CLASS =
+  "overflow-hidden rounded-lg border border-neutral-200 bg-white";
 
 type LandingFeatureSplitProps = {
   id?: string;
@@ -61,8 +69,8 @@ function LandingScreenshot({
   priority,
   sizes,
   className = "",
-  imageWidth = 1920,
-  imageHeight = 1200,
+  imageWidth = LANDING_SCREENSHOT_DEFAULT_WIDTH,
+  imageHeight = LANDING_SCREENSHOT_DEFAULT_HEIGHT,
 }: {
   imageSrc?: string;
   imageAlt: string;
@@ -106,8 +114,8 @@ export function LandingFeatureSplit({
   ctaHref,
   ctaLabel,
   variant = "split",
-  imageWidth = 1920,
-  imageHeight = 1200,
+  imageWidth = LANDING_SCREENSHOT_DEFAULT_WIDTH,
+  imageHeight = LANDING_SCREENSHOT_DEFAULT_HEIGHT,
   imagePosition = "left",
   imageLayout = "default",
   tone = "white",
@@ -141,14 +149,17 @@ export function LandingFeatureSplit({
       <LandingSection id={id} className={resolvedSectionClass} width="7xl">
         <div className={`flex flex-col gap-6 sm:gap-8 lg:gap-12`}>
           {copyBlock}
-          <div className="-mx-4 w-[calc(100%+2rem)] min-w-0 sm:mx-0 sm:w-full">
+          <div
+            className="mx-auto w-full min-w-0"
+            style={{ maxWidth: landingScreenshotMaxCssWidth(imageWidth) }}
+          >
             <LandingScreenshot
               imageSrc={imageSrc}
               imageAlt={imageAlt}
               imageFallback={imageFallback}
               isMobileShot={isMobileShot}
               priority={id === "pricing-trust" || id === "book-request"}
-              sizes="100vw"
+              sizes={landingStackedScreenshotSizes(imageWidth)}
               className="w-full"
               imageWidth={imageWidth}
               imageHeight={imageHeight}
@@ -167,7 +178,7 @@ export function LandingFeatureSplit({
         imageFallback={imageFallback}
         isMobileShot={isMobileShot}
         priority={id === "pricing-trust" || id === "book-request" || id === "quote-accept"}
-        sizes={isMobileShot ? "85vw" : "100vw"}
+        sizes={isMobileShot ? "85vw" : LANDING_SPLIT_SCREENSHOT_SIZES}
         className={isMobileShot ? "mx-auto w-full max-w-[20rem] sm:max-w-[22rem] lg:max-w-none" : "w-full"}
         imageWidth={imageWidth}
         imageHeight={imageHeight}

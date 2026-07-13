@@ -33,7 +33,7 @@ export function LandingFooter({
   const browseHref = `${sectionLinkPrefix}#browse`;
   const featuredHref = `${sectionLinkPrefix}#featured`;
   const forVendorsHref = `${sectionLinkPrefix}#for-vendors`;
-  const howItWorksHref = `${sectionLinkPrefix}#how-it-works`;
+  const bookingJourneyHref = `${sectionLinkPrefix}#booking-journey`;
   const faqHref = `${sectionLinkPrefix}#faq`;
   const reviewsHref = `${sectionLinkPrefix}#reviews`;
 
@@ -141,8 +141,8 @@ export function LandingFooter({
               </h4>
               <ul className="space-y-3 text-sm">
                 <li>
-                  <Link href={howItWorksHref} className={FOOTER_LINK_CLASS}>
-                    How it works
+                  <Link href={bookingJourneyHref} className={FOOTER_LINK_CLASS}>
+                    How booking works
                   </Link>
                 </li>
                 <li>
