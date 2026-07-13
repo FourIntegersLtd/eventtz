@@ -6,6 +6,7 @@ import {
   OnboardingSubQuestion,
 } from "../ui/OnboardingQuestionLayout";
 import { inputClass, ToggleChip } from "./form-primitives";
+import { DateInput } from "@/components/ui/DateInput";
 import { EVENT_DATE_PAST_ERROR, isPastIsoDate, todayIsoDate } from "@/lib/eventDateValidation";
 
 export type StepAvailabilityProps = {
@@ -83,8 +84,7 @@ export function StepAvailability({ data, update }: StepAvailabilityProps) {
         subtext={copy.blockedSubtext}
         indexOffset={6}
       >
-        <input
-          type="date"
+        <DateInput
           min={todayIsoDate()}
           className={inputClass()}
           onChange={(e) => {

@@ -212,7 +212,7 @@ export function VendorQuoteFormModal({
           placeholder="e.g. Sarah & James — wedding reception"
           maxLength={500}
         />
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2">
           <TextField
             label="Event date"
             type="date"

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { SERVICE_OPTIONS, VENDOR_WAITLIST_URL } from "@/components/vendor-onboarding/constants";
 import { LocationAutocompleteInput } from "@/components/ui/LocationAutocompleteInput";
+import { DateInput } from "@/components/ui/DateInput";
 import {
   buildMarketplaceSearchUrl,
   type MarketplaceSearchState,
@@ -93,8 +94,8 @@ export function HeroMarketplaceSearch({
   const responsiveGridCols = gridColsForFieldCount(visibleFieldCount);
 
   const shellClassName = landing
-    ? `grid w-full grid-cols-1 gap-2 rounded-2xl border border-primary-border bg-white p-2 shadow-primary-soft sm:grid-cols-2 sm:gap-0 sm:rounded-full sm:p-1.5 ${responsiveGridCols} lg:items-center`
-    : `grid grid-cols-1 gap-3 rounded-2xl border border-neutral-200 bg-white p-3 shadow-sm sm:grid-cols-2 ${responsiveGridCols} lg:items-end`;
+    ? `grid w-full min-w-0 max-w-full grid-cols-1 gap-2 overflow-x-clip rounded-2xl border border-primary-border bg-white p-2 shadow-primary-soft sm:grid-cols-2 sm:gap-0 sm:rounded-full sm:p-1.5 ${responsiveGridCols} lg:items-center`
+    : `grid min-w-0 max-w-full grid-cols-1 gap-3 overflow-x-clip rounded-2xl border border-neutral-200 bg-white p-3 shadow-sm sm:grid-cols-2 ${responsiveGridCols} lg:items-end`;
 
   const submitSpanClass =
     visibleFieldCount === 1 ? "sm:col-span-1" : "sm:col-span-2";
@@ -159,7 +160,7 @@ export function HeroMarketplaceSearch({
   return (
     <form
       onSubmit={onSubmit}
-      className={`flex w-full flex-col gap-3 ${className}`}
+      className={`flex w-full min-w-0 max-w-full flex-col gap-3 ${className}`}
     >
       <div className={shellClassName}>
         {/* Types */}
@@ -192,7 +193,7 @@ export function HeroMarketplaceSearch({
           {typesOpen && (
             <div
               id={panelId}
-              className="absolute left-0 right-0 top-full z-[60] mt-1 max-h-72 overflow-auto rounded-xl border border-neutral-200 bg-white p-2 shadow-lg"
+              className="absolute left-0 right-0 top-full z-[60] mt-1 box-border min-w-0 max-w-full max-h-72 overflow-auto rounded-xl border border-neutral-200 bg-white p-2 shadow-lg"
             >
               {SERVICE_OPTIONS.map((opt) =>
                 opt.value === "other" ? (
@@ -286,7 +287,7 @@ export function HeroMarketplaceSearch({
           {datesOpen && (
             <div
               id={datePanelId}
-              className="absolute left-0 right-0 top-full z-[60] mt-1 rounded-xl border border-neutral-200 bg-white p-3 shadow-lg"
+              className="absolute left-0 right-0 top-full z-[60] mt-1 box-border min-w-0 max-w-full overflow-hidden rounded-xl border border-neutral-200 bg-white p-3 shadow-lg"
             >
               <p className="text-xs font-medium text-neutral-500">
                 Up to 3 dates
@@ -304,10 +305,10 @@ export function HeroMarketplaceSearch({
                 ))}
               </div>
               {state.dates.length < 3 && !state.dateFlexible && (
-                <input
-                  type="date"
+                <DateInput
                   min={todayIsoDate()}
-                  className="mt-2 w-full rounded-lg border border-neutral-200 px-2 py-2 text-sm"
+                  shellClassName="mt-2"
+                  className="focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                   onChange={(e) => {
                     addDate(e.target.value);
                     e.target.value = "";

@@ -20,7 +20,6 @@ import {
 } from "@/lib/marketplaceSearchParams";
 import { HeroMarketplaceSearch } from "@/features/marketplace/HeroMarketplaceSearch";
 import { MarketplaceFiltersBar } from "@/features/marketplace/MarketplaceFiltersBar";
-import { MarketplaceCategoryChips } from "@/features/marketplace/MarketplaceCategoryChips";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { MarketplaceVendorCard } from "@/features/marketplace/MarketplaceVendorCard";
@@ -92,16 +91,6 @@ export function MarketplaceExploreView({
     [pathname, router],
   );
 
-  const toggleCategory = useCallback(
-    (value: string) => {
-      const types = state.types.includes(value)
-        ? state.types.filter((t) => t !== value)
-        : [...state.types, value];
-      commit({ ...state, types });
-    },
-    [state, commit],
-  );
-
   const { isSaved, toggle, savedIds } = useMarketplaceBookmarks();
 
   const savedOnly = mode === "favorites";
@@ -112,10 +101,6 @@ export function MarketplaceExploreView({
 
   const filtersAndResults = (
     <div className="w-full min-w-0">
-      {!savedOnly ? (
-        <MarketplaceCategoryChips selectedTypes={state.types} onToggle={toggleCategory} />
-      ) : null}
-
       <HeroMarketplaceSearch
         key={fetchKey}
         variant="default"
@@ -228,10 +213,6 @@ export function MarketplaceExploreView({
           <h1 className="font-heading text-2xl font-semibold text-neutral-900 sm:text-3xl">
             Find vendors
           </h1>
-          <p className="mt-2 max-w-2xl text-sm text-neutral-600 sm:text-base">
-            Search by category, location, and dates. Save favourites locally until
-            accounts support synced lists.
-          </p>
         </div>
         {filtersAndResults}
         <ScrollToTopButton />

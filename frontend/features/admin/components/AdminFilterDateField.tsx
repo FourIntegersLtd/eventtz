@@ -1,5 +1,7 @@
 "use client";
 
+import { DateInput } from "@/components/ui/DateInput";
+
 type AdminFilterDateFieldProps = {
   label: string;
   value: string;
@@ -23,14 +25,12 @@ export function AdminFilterDateField({
         {label}
         {optional ? <span className="text-neutral-400"> · optional</span> : null}
       </span>
-      <div className="date-input-shell mt-1">
-        <input
-          type="date"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="box-border block h-11 rounded-lg border border-neutral-200 bg-white px-2 py-2 text-sm [color-scheme:light] sm:px-3"
-        />
-      </div>
+      <DateInput
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        shellClassName="mt-1"
+        className="focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+      />
     </label>
   );
 }

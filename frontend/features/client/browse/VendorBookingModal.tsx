@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AlertCircle, CalendarRange, Pencil, X } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { DateInput } from "@/components/ui/DateInput";
 import {
   getBookingRequestErrorMessage,
   postBookingRequest,
@@ -291,43 +292,43 @@ export function VendorBookingModal({
               />
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div>
+            <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="min-w-0">
                 <label
                   htmlFor="booking-event-date"
                   className="block text-xs font-semibold uppercase tracking-wide text-neutral-500"
                 >
                   Event date
                 </label>
-                <input
+                <DateInput
                   id="booking-event-date"
-                  type="date"
                   min={minEventDate}
                   value={eventDate}
                   onChange={(e) => {
                     setEventDate(e.target.value);
                     setValidationError(null);
                   }}
-                  className="mt-1.5 w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  shellClassName="mt-1.5"
+                  className="focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
-              <div>
+              <div className="min-w-0">
                 <label
                   htmlFor="booking-event-end"
                   className="block text-xs font-semibold uppercase tracking-wide text-neutral-500"
                 >
                   End date <span className="font-normal normal-case text-neutral-400">(optional)</span>
                 </label>
-                <input
+                <DateInput
                   id="booking-event-end"
-                  type="date"
                   min={eventDate.trim() || minEventDate}
                   value={eventEndDate}
                   onChange={(e) => {
                     setEventEndDate(e.target.value);
                     setValidationError(null);
                   }}
-                  className="mt-1.5 w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  shellClassName="mt-1.5"
+                  className="focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
             </div>
