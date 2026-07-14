@@ -14,6 +14,7 @@ import {
   portfolioImageUrlsFromPayload,
 } from "./vendorBrowseDetailModel";
 import { VendorReviewsSection } from "./VendorReviewsSection";
+import { PortfolioLightbox } from "./PortfolioLightbox";
 import { getMarket, marketLocationFallback } from "@/lib/markets";
 
 const TRAVEL_DELIVERY_LABELS: Record<string, string> = {
@@ -83,9 +84,11 @@ export function VendorBrowseDetailBody({
     [p],
   );
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   useEffect(() => {
     setActivePhotoIndex(0);
+    setLightboxOpen(false);
   }, [vendor.user_id, portfolioUrls.length]);
 
   const activePhotoUrl =
@@ -138,19 +141,26 @@ export function VendorBrowseDetailBody({
       <div className="min-w-0 space-y-6">
         <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-100 shadow-sm">
           <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-100">
-            <div className="absolute left-4 top-4 z-10">
+            <div className="pointer-events-none absolute left-4 top-4 z-10">
               <span className="inline-flex rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-neutral-900 shadow-sm ring-1 ring-black/5">
                 {city}
               </span>
             </div>
             {activePhotoUrl ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
-                src={activePhotoUrl}
-                alt={`${businessName} portfolio`}
-                className="h-full w-full object-cover object-center"
-                decoding="async"
-              />
+              <button
+                type="button"
+                onClick={() => setLightboxOpen(true)}
+                className="group relative block h-full w-full cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset"
+                aria-label={`Open ${businessName} portfolio fullscreen`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={activePhotoUrl}
+                  alt={`${businessName} portfolio`}
+                  className="h-full w-full object-cover object-center transition duration-300 group-hover:scale-[1.02]"
+                  decoding="async"
+                />
+              </button>
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-neutral-100 via-white to-neutral-50">
                 <span className="font-heading text-4xl font-semibold tracking-tight text-neutral-300 sm:text-5xl">
@@ -509,6 +519,16 @@ export function VendorBrowseDetailBody({
           </div>
         </div>
       </aside>
+
+      {lightboxOpen && portfolioUrls.length > 0 ? (
+        <PortfolioLightbox
+          urls={portfolioUrls}
+          index={activePhotoIndex}
+          alt={`${businessName} portfolio`}
+          onClose={() => setLightboxOpen(false)}
+          onIndexChange={setActivePhotoIndex}
+        />
+      ) : null}
     </div>
   );
 }
