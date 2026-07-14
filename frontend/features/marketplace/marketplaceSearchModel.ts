@@ -17,9 +17,7 @@ function labelForService(value: string): string {
 }
 
 /**
- * When multiple vendor types are selected and a vendor matches more than one,
- * emit one card per matched type (same `user_id`, different highlight).
- * Related/fallback rows stay visible even if they don't share the chip types.
+ * One card per vendor. Highlight the first matched selected type (or first matched service).
  */
 export function expandVendorsForSearchResults(
   vendors: ExploreVendorSearchRow[],
@@ -36,7 +34,7 @@ export function expandVendorsForSearchResults(
       out.push({
         vendor: v,
         highlightService: matched[0] ?? null,
-        cardKey: `${v.user_id}::default`,
+        cardKey: v.user_id,
       });
       continue;
     }
@@ -53,22 +51,11 @@ export function expandVendorsForSearchResults(
       continue;
     }
 
-    if (types.length === 1) {
-      out.push({
-        vendor: v,
-        highlightService: types[0] ?? null,
-        cardKey: `${v.user_id}::${types[0]}`,
-      });
-      continue;
-    }
-
-    for (const t of types) {
-      out.push({
-        vendor: v,
-        highlightService: t,
-        cardKey: `${v.user_id}::${t}`,
-      });
-    }
+    out.push({
+      vendor: v,
+      highlightService: types[0] ?? null,
+      cardKey: v.user_id,
+    });
   }
 
   return out;

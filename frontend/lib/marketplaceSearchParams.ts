@@ -11,7 +11,12 @@ export type MarketplaceSearchState = {
   budgetMin: number | null;
   budgetMax: number | null;
   sort: MarketplaceSort;
+  /** 1-based page; browse search pages 6 vendors from the API. */
+  page: number;
 };
+
+/** Vendors requested per browse page (backend `limit`). */
+export const MARKETPLACE_PAGE_SIZE = 6;
 
 const SORT_VALUES: MarketplaceSort[] = [
   "relevance",
@@ -61,6 +66,8 @@ export function marketplaceStateFromSearchParams(
   const legacyLocation = sp.get("location")?.trim() ?? "";
   const q = sp.get("q")?.trim() ?? "";
   const country = normalizeCountryCode(sp.get("country") ?? DEFAULT_COUNTRY_CODE);
+  const pageRaw = Number.parseInt(sp.get("page") ?? "1", 10);
+  const page = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 1;
 
   return {
     query: q || legacyLocation,
@@ -72,6 +79,7 @@ export function marketplaceStateFromSearchParams(
     budgetMin: parseNum(sp.get("budget_min")),
     budgetMax: parseNum(sp.get("budget_max")),
     sort: parseSort(sp.get("sort")),
+    page,
   };
 }
 
@@ -94,6 +102,7 @@ export function buildMarketplaceSearchUrl(
   if (state.budgetMin != null) sp.set("budget_min", String(state.budgetMin));
   if (state.budgetMax != null) sp.set("budget_max", String(state.budgetMax));
   if (state.sort !== "relevance") sp.set("sort", state.sort);
+  if (state.page > 1) sp.set("page", String(state.page));
   const queryString = sp.toString();
   return queryString ? `${path}?${queryString}` : path;
 }

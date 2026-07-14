@@ -134,12 +134,12 @@ export function VendorBrowseDetailBody({
   const buildLoginLink = () => appendAuthParams(loginHref);
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[1fr_minmax(280px,360px)] lg:items-start lg:gap-10">
+    <div className="grid gap-8 lg:grid-cols-[1fr_minmax(260px,340px)] lg:items-start lg:gap-10">
       <div className="min-w-0 space-y-6">
-        <div className="overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100 shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-100 shadow-sm">
           <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-100">
             <div className="absolute left-4 top-4 z-10">
-              <span className="inline-flex rounded-full border border-neutral-200 bg-white/95 px-3 py-1 text-xs font-semibold text-neutral-800 shadow-sm">
+              <span className="inline-flex rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-neutral-900 shadow-sm ring-1 ring-black/5">
                 {city}
               </span>
             </div>
@@ -152,7 +152,7 @@ export function VendorBrowseDetailBody({
                 decoding="async"
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-neutral-100 via-white to-[#e8e4ef]">
+              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-neutral-100 via-white to-neutral-50">
                 <span className="font-heading text-4xl font-semibold tracking-tight text-neutral-300 sm:text-5xl">
                   {businessName.slice(0, 1).toUpperCase()}
                 </span>
@@ -160,7 +160,7 @@ export function VendorBrowseDetailBody({
             )}
           </div>
           {portfolioUrls.length > 0 ? (
-            <div className="flex gap-2 overflow-x-auto border-t border-neutral-200 bg-white px-3 py-3">
+            <div className="flex gap-2.5 overflow-x-auto border-t border-neutral-200 bg-neutral-50/70 px-3 py-3">
               {portfolioUrls.map((url, index) => {
                 const selected = index === activePhotoIndex;
                 return (
@@ -168,9 +168,9 @@ export function VendorBrowseDetailBody({
                     key={url}
                     type="button"
                     onClick={() => setActivePhotoIndex(index)}
-                    className={`h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-neutral-50 ring-2 transition ${
+                    className={`h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-white ring-2 transition ${
                       selected
-                        ? "ring-primary"
+                        ? "ring-neutral-400"
                         : "ring-transparent hover:ring-neutral-300"
                     }`}
                     aria-label={`View portfolio photo ${index + 1}`}
@@ -188,11 +188,11 @@ export function VendorBrowseDetailBody({
               })}
             </div>
           ) : (
-            <div className="flex gap-2 border-t border-neutral-200 bg-white px-3 py-3">
+            <div className="flex gap-2.5 border-t border-neutral-200 bg-neutral-50/70 px-3 py-3">
               {[0, 1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="h-14 flex-1 rounded-lg bg-gradient-to-br from-neutral-100 to-neutral-200/80 ring-1 ring-inset ring-neutral-200/80"
+                  className="h-14 flex-1 rounded-lg bg-neutral-100 ring-1 ring-inset ring-neutral-200/80"
                 />
               ))}
             </div>
@@ -206,8 +206,8 @@ export function VendorBrowseDetailBody({
           <p className="mt-2 text-sm leading-relaxed text-neutral-700">{bio}</p>
         </section>
 
-        <section className="overflow-hidden rounded-2xl border border-neutral-200/90 bg-gradient-to-br from-white via-white to-[#f8f6fc] shadow-sm ring-1 ring-neutral-100">
-          <div className="border-b border-neutral-100/80 bg-white/60 px-4 py-3 sm:px-5">
+        <section className="overflow-hidden rounded-2xl border border-neutral-200/90 bg-white shadow-sm">
+          <div className="border-b border-neutral-100 px-4 py-3 sm:px-5">
             <h3 className="font-heading text-sm font-semibold text-neutral-900">
               Services &amp; event fit
             </h3>
@@ -225,7 +225,7 @@ export function VendorBrowseDetailBody({
                   {serviceLabels.map((label, i) => (
                     <li
                       key={`svc-${i}-${label}`}
-                      className="inline-flex rounded-full border border-primary/20 bg-primary/[0.09] px-3 py-1 text-xs font-medium text-primary"
+                      className="inline-flex rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1 text-xs font-medium text-neutral-800"
                     >
                       {label}
                     </li>
@@ -255,7 +255,7 @@ export function VendorBrowseDetailBody({
               )}
             </div>
             {travel ? (
-              <div className="rounded-xl border border-dashed border-neutral-200/90 bg-white/70 px-3 py-3 sm:px-4">
+              <div className="rounded-xl border border-dashed border-neutral-200/90 bg-neutral-50/70 px-3 py-3 sm:px-4">
                 <h4 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-500">
                   Travel &amp; delivery
                 </h4>
@@ -269,8 +269,8 @@ export function VendorBrowseDetailBody({
       </div>
 
       <aside className="lg:sticky lg:top-2">
-        <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-md ring-1 ring-black/5">
-          <div className="border-b border-neutral-200 bg-neutral-50/80 px-4 py-3">
+        <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+          <div className="border-b border-neutral-200 bg-neutral-50/80 px-4 py-3.5">
             <h3 className="font-heading text-sm font-semibold text-neutral-900">
               Pricing &amp; booking
             </h3>
@@ -281,57 +281,44 @@ export function VendorBrowseDetailBody({
             </p>
           </div>
 
-          <div className="max-h-[min(65vh,520px)] overflow-y-auto overscroll-contain">
+          <div className="max-h-[min(65vh,520px)] space-y-3 overflow-y-auto overscroll-contain bg-neutral-50/60 p-3 sm:p-3.5">
             {pricingOptions.map((opt) => {
               const isOpen = detailOpenId === opt.id;
               const showCheckbox = Boolean(onRequestBooking);
+              const selected = selectedPackageIds.has(opt.id);
               return (
                 <div
                   key={opt.id}
-                  className="border-b border-neutral-100 last:border-b-0"
+                  className={`overflow-hidden rounded-xl border bg-white transition ${
+                    selected
+                      ? "border-neutral-300 shadow-sm"
+                      : "border-neutral-200/90 hover:border-neutral-300"
+                  }`}
                 >
-                  <div className="flex gap-3 p-3 sm:p-4">
+                  <div className="flex gap-3 px-3.5 pt-3.5 sm:px-4 sm:pt-4">
                     {showCheckbox ? (
                       <input
                         type="checkbox"
-                        checked={selectedPackageIds.has(opt.id)}
+                        checked={selected}
                         onChange={() => togglePackage(opt.id)}
-                        className="mt-1 h-4 w-4 shrink-0 rounded border-neutral-300 text-primary focus:ring-primary"
+                        className="mt-1 h-4 w-4 shrink-0 rounded border-neutral-300 text-primary focus:ring-primary/30"
                         aria-label={`Include ${opt.heading}`}
                       />
                     ) : null}
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1 pb-3.5 sm:pb-4">
                       <div className="flex flex-wrap items-baseline justify-between gap-2">
                         <p className="text-sm font-semibold text-neutral-900">
                           {opt.heading}
                         </p>
-                        {opt.priceDisplay != null ? (
-                          <div className="text-right">
-                            {opt.compareAtDisplay ? (
-                              <p className="text-xs text-neutral-500 line-through">
-                                GBP {opt.compareAtDisplay}
-                              </p>
-                            ) : null}
-                            <p
-                              className={`font-heading text-lg font-bold ${
-                                opt.compareAtDisplay ? "text-primary" : "text-neutral-900"
-                              }`}
-                            >
-                              GBP {opt.priceDisplay}
-                            </p>
-                            {opt.discountBadge ? (
-                              <p className="mt-0.5 text-xs font-medium text-green-700">
-                                {opt.discountBadge}
-                              </p>
-                            ) : null}
-                          </div>
-                        ) : (
-                          <p className="text-sm font-semibold text-neutral-700">TBC</p>
-                        )}
+                        {opt.priceDisplay != null && opt.compareAtDisplay ? (
+                          <p className="text-xs text-neutral-500 line-through">
+                            GBP {opt.compareAtDisplay}
+                          </p>
+                        ) : null}
                       </div>
                       <p
                         className={`mt-1.5 text-sm leading-relaxed text-neutral-600 ${
-                          isOpen ? "hidden" : "line-clamp-1"
+                          isOpen ? "hidden" : "line-clamp-2"
                         }`}
                       >
                         {opt.description}
@@ -364,7 +351,7 @@ export function VendorBrowseDetailBody({
                           onClick={() =>
                             setDetailOpenId(isOpen ? null : opt.id)
                           }
-                          className="mt-2 text-xs font-medium text-primary hover:underline"
+                          className="mt-2 text-xs font-medium text-neutral-700 underline-offset-2 hover:underline"
                         >
                           {isOpen ? "Hide details" : "See what's included"}
                         </button>
@@ -382,7 +369,7 @@ export function VendorBrowseDetailBody({
                                   className="flex items-start gap-2 text-sm text-neutral-800"
                                 >
                                   <Check
-                                    className="mt-0.5 h-4 w-4 shrink-0 text-primary"
+                                    className="mt-0.5 h-4 w-4 shrink-0 text-neutral-500"
                                     strokeWidth={2.5}
                                     aria-hidden
                                   />
@@ -395,13 +382,34 @@ export function VendorBrowseDetailBody({
                       ) : null}
                     </div>
                   </div>
+                  <div className="flex items-center justify-between gap-3 border-t border-neutral-100 bg-neutral-50 px-3.5 py-2.5 sm:px-4">
+                    <p className="font-heading text-base font-semibold text-neutral-900">
+                      {opt.priceDisplay != null ? (
+                        <>
+                          <span className="text-xs font-medium text-neutral-500">From </span>
+                          GBP {opt.priceDisplay}
+                        </>
+                      ) : (
+                        <span className="text-sm font-semibold text-neutral-700">Quote</span>
+                      )}
+                    </p>
+                    {opt.discountBadge ? (
+                      <span className="text-[11px] font-semibold tracking-wide text-green-700 uppercase">
+                        {opt.discountBadge}
+                      </span>
+                    ) : (
+                      <span className="text-[11px] font-semibold tracking-[0.12em] text-neutral-500 uppercase">
+                        Package
+                      </span>
+                    )}
+                  </div>
                 </div>
               );
             })}
           </div>
 
           {onRequestBooking && selectedPackageIds.size > 0 ? (
-            <div className="border-t border-neutral-200 bg-primary/[0.06] px-4 py-3">
+            <div className="border-t border-neutral-200 bg-neutral-50 px-4 py-3.5">
               <p className="text-xs font-medium uppercase tracking-wide text-neutral-600">
                 Estimated total
               </p>
@@ -416,15 +424,15 @@ export function VendorBrowseDetailBody({
             </div>
           ) : null}
 
-          <div className="space-y-3 border-t border-neutral-200 p-4">
+          <div className="space-y-3 border-t border-neutral-200 bg-white p-4">
             {requireLoginForActions ? (
               <>
                 <div
-                  className="flex gap-2.5 rounded-lg border border-primary/30 bg-primary/[0.07] px-3 py-2.5"
+                  className="flex gap-2.5 rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2.5"
                   role="status"
                 >
                   <Info
-                    className="mt-0.5 h-4 w-4 shrink-0 text-primary"
+                    className="mt-0.5 h-4 w-4 shrink-0 text-neutral-500"
                     strokeWidth={2}
                     aria-hidden
                   />

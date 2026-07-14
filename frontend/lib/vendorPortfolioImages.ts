@@ -17,7 +17,7 @@ export function portfolioImageUrlsFromPayload(
   return out.slice(0, 20);
 }
 
-export function firstPortfolioImageUrlFromPayload(
+export function profileImageUrlFromPayload(
   payload: Record<string, unknown>,
 ): string | null {
   const profile = payload.profileImageUrl;
@@ -25,5 +25,15 @@ export function firstPortfolioImageUrlFromPayload(
     const url = profile.trim();
     if (/^https?:\/\//i.test(url)) return url;
   }
-  return portfolioImageUrlsFromPayload(payload)[0] ?? null;
+  return null;
+}
+
+/** Prefer portfolio work for listing covers; fall back to profile photo. */
+export function firstPortfolioImageUrlFromPayload(
+  payload: Record<string, unknown>,
+): string | null {
+  return (
+    portfolioImageUrlsFromPayload(payload)[0] ??
+    profileImageUrlFromPayload(payload)
+  );
 }

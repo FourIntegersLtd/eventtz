@@ -16,10 +16,12 @@ import {
   buildClientBrowseVendorUrl,
   buildMarketplaceSearchUrl,
   marketplaceStateFromSearchParams,
+  MARKETPLACE_PAGE_SIZE,
   type MarketplaceSearchState,
 } from "@/lib/marketplaceSearchParams";
 import { HeroMarketplaceSearch } from "@/features/marketplace/HeroMarketplaceSearch";
 import { MarketplaceFiltersBar } from "@/features/marketplace/MarketplaceFiltersBar";
+import { MarketplacePagination } from "@/features/marketplace/MarketplacePagination";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { MarketplaceVendorCard } from "@/features/marketplace/MarketplaceVendorCard";
@@ -29,6 +31,9 @@ import {
 } from "@/features/marketplace/marketplaceSearchModel";
 import { useMarketplaceBookmarks } from "@/features/marketplace/useMarketplaceBookmarks";
 import { ScrollToTopButton } from "@/components/ui/ScrollToTopButton";
+
+const CARD_GRID =
+  "grid justify-items-center gap-6 sm:grid-cols-2 sm:gap-7 lg:grid-cols-3 lg:gap-8";
 
 export function MarketplaceExploreView({
   mode = "browse",
@@ -48,6 +53,7 @@ export function MarketplaceExploreView({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [vendors, setVendors] = useState<ExploreVendorSearchRow[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [matchNotice, setMatchNotice] = useState<string | null>(null);
 
   const { isSaved, toggle, savedIds, ready: bookmarksReady } = useMarketplaceBookmarks();
@@ -61,6 +67,7 @@ export function MarketplaceExploreView({
     if (savedOnly && !bookmarksReady) return;
     if (savedOnly && bookmarksReady && savedIds.size === 0) {
       setVendors([]);
+      setTotalCount(0);
       setMatchNotice(null);
       setLoading(false);
       return;
@@ -70,20 +77,25 @@ export function MarketplaceExploreView({
       setLoading(true);
       setError(null);
       try {
-        const { vendors: rows, matchNotice: notice } = await fetchExploreVendorsSearch({
-          query: state.query || undefined,
-          types: state.types.length ? state.types : undefined,
-          location: state.location || undefined,
-          country: state.country,
-          dates: state.dates,
-          flexible: state.dateFlexible,
-          budgetMin: state.budgetMin,
-          budgetMax: state.budgetMax,
-          sort: state.sort,
-          vendorIds: favoriteVendorIds,
-        });
+        const page = state.page;
+        const { vendors: rows, matchNotice: notice, totalCount: total } =
+          await fetchExploreVendorsSearch({
+            query: state.query || undefined,
+            types: state.types.length ? state.types : undefined,
+            location: state.location || undefined,
+            country: state.country,
+            dates: state.dates,
+            flexible: state.dateFlexible,
+            budgetMin: state.budgetMin,
+            budgetMax: state.budgetMax,
+            sort: state.sort,
+            vendorIds: favoriteVendorIds,
+            limit: MARKETPLACE_PAGE_SIZE,
+            offset: (page - 1) * MARKETPLACE_PAGE_SIZE,
+          });
         if (!cancelled) {
           setVendors(rows);
+          setTotalCount(total);
           setMatchNotice(notice);
         }
       } catch {
@@ -95,7 +107,7 @@ export function MarketplaceExploreView({
     return () => {
       cancelled = true;
     };
-  }, [fetchKey, state, savedOnly, bookmarksReady, favoriteVendorIds]);
+  }, [fetchKey, state, savedOnly, bookmarksReady, favoriteVendorIds, savedIds.size]);
 
   const expanded = useMemo(
     () => expandVendorsForSearchResults(vendors, state.types),
@@ -111,8 +123,18 @@ export function MarketplaceExploreView({
     [pathname, router],
   );
 
+  const goToPage = useCallback(
+    (page: number) => {
+      commit({ ...state, page });
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    },
+    [commit, state],
+  );
+
   const visibleCards = expanded;
-  const displayCount = visibleCards.length;
+  const displayCount = totalCount;
 
   const exactCards = useMemo(
     () =>
@@ -129,6 +151,15 @@ export function MarketplaceExploreView({
       ),
     [visibleCards],
   );
+
+  const pagination = !loading && !error && totalCount > MARKETPLACE_PAGE_SIZE ? (
+    <MarketplacePagination
+      page={state.page}
+      totalCount={totalCount}
+      pageSize={MARKETPLACE_PAGE_SIZE}
+      onPageChange={goToPage}
+    />
+  ) : null;
 
   const filtersAndResults = (
     <div className="w-full min-w-0">
@@ -178,17 +209,20 @@ export function MarketplaceExploreView({
               : " or widening your search."}
         </p>
       ) : savedOnly ? (
-        <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {visibleCards.map((card) => (
-            <MarketplaceVendorCard
-              key={card.cardKey}
-              card={card}
-              vendorDetailHref={buildClientBrowseVendorUrl(card.vendor.user_id, state)}
-              bookmarked={isSaved(card.vendor.user_id)}
-              onToggleBookmark={() => toggle(card.vendor.user_id)}
-            />
-          ))}
-        </div>
+        <>
+          <div className={`mt-6 ${CARD_GRID}`}>
+            {visibleCards.map((card) => (
+              <MarketplaceVendorCard
+                key={card.cardKey}
+                card={card}
+                vendorDetailHref={buildClientBrowseVendorUrl(card.vendor.user_id, state)}
+                bookmarked={isSaved(card.vendor.user_id)}
+                onToggleBookmark={() => toggle(card.vendor.user_id)}
+              />
+            ))}
+          </div>
+          {pagination}
+        </>
       ) : (
         <div className="mt-6 space-y-8">
           {matchNotice ? (
@@ -198,7 +232,7 @@ export function MarketplaceExploreView({
           ) : null}
 
           {exactCards.length > 0 ? (
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div className={CARD_GRID}>
               {exactCards.map((card) => (
                 <MarketplaceVendorCard
                   key={card.cardKey}
@@ -219,7 +253,7 @@ export function MarketplaceExploreView({
                   Close matches by service, area, or availability.
                 </p>
               </div>
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              <div className={CARD_GRID}>
                 {alsoConsiderCards.map((card) => (
                   <MarketplaceVendorCard
                     key={card.cardKey}
@@ -232,6 +266,8 @@ export function MarketplaceExploreView({
               </div>
             </div>
           ) : null}
+
+          {pagination}
         </div>
       )}
     </div>

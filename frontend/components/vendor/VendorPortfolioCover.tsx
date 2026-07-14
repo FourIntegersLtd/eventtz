@@ -8,8 +8,10 @@ type VendorPortfolioCoverProps = {
   businessName?: string;
   className?: string;
   overlay?: ReactNode;
-  /** Shorter cover area — full image visible, no crop. */
+  /** Cover height. Listing cards use a taller hero. */
   heightClass?: string;
+  /** `cover` fills the frame (cards); `contain` shows the full image. */
+  objectFit?: "cover" | "contain";
 };
 
 export function VendorPortfolioCover({
@@ -18,8 +20,10 @@ export function VendorPortfolioCover({
   className = "rounded-xl",
   overlay,
   heightClass = "h-24",
+  objectFit = "contain",
 }: VendorPortfolioCoverProps) {
   const coverUrl = firstPortfolioImageUrlFromPayload(payload);
+  const fitClass = objectFit === "cover" ? "object-cover" : "object-contain";
 
   return (
     <div
@@ -31,12 +35,12 @@ export function VendorPortfolioCover({
           <img
             src={coverUrl}
             alt=""
-            className="absolute inset-0 h-full w-full object-contain object-center"
+            className={`absolute inset-0 h-full w-full object-center ${fitClass}`}
             decoding="async"
           />
           {overlay ? (
             <div
-              className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent"
+              className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-black/5 to-transparent"
               aria-hidden
             />
           ) : null}

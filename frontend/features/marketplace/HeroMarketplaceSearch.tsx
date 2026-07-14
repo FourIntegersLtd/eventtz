@@ -41,6 +41,7 @@ const emptyState = (): MarketplaceSearchState => ({
   budgetMin: null,
   budgetMax: null,
   sort: "relevance",
+  page: 1,
 });
 
 export function HeroMarketplaceSearch({
@@ -140,7 +141,8 @@ export function HeroMarketplaceSearch({
       state.budgetMin != null ||
       state.budgetMax != null;
     if (!hasCriteria) return;
-    const url = buildMarketplaceSearchUrl(submitToPath, state);
+    const url = buildMarketplaceSearchUrl(submitToPath, { ...state, page: 1 });
+
     if (submitMode === "replace") router.replace(url);
     else router.push(url);
   };

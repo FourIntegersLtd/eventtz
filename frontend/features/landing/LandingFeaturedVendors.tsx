@@ -17,8 +17,6 @@ import {
   landingSectionClass,
 } from "@/features/landing/landingSectionStyles";
 
-const MAX_ITEMS = 6;
-
 export function LandingFeaturedVendors() {
   const [vendors, setVendors] = useState<ExploreVendorSearchRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +26,11 @@ export function LandingFeaturedVendors() {
     let cancelled = false;
     void (async () => {
       try {
-        const { vendors: rows } = await fetchExploreVendorsSearch({ sort: "relevance" });
+        const { vendors: rows } = await fetchExploreVendorsSearch({
+          sort: "relevance",
+          limit: 6,
+          offset: 0,
+        });
         if (!cancelled) setVendors(rows);
       } catch {
         if (!cancelled) setError("Could not load vendors.");
@@ -41,10 +43,8 @@ export function LandingFeaturedVendors() {
     };
   }, []);
 
-  const cards = useMemo(
-    () => expandVendorsForSearchResults(vendors, []).slice(0, MAX_ITEMS),
-    [vendors],
-  );
+  const cards = useMemo(() => expandVendorsForSearchResults(vendors, []), [vendors]);
+
 
   return (
     <LandingSection
@@ -80,7 +80,7 @@ export function LandingFeaturedVendors() {
           No vendors yet.
         </p>
       ) : (
-        <div className={`${LANDING_SECTION_CONTENT_MT} grid gap-5 sm:grid-cols-2 lg:grid-cols-3`}>
+        <div className={`${LANDING_SECTION_CONTENT_MT} grid justify-items-center gap-6 sm:grid-cols-2 sm:gap-7 lg:grid-cols-3 lg:gap-8`}>
           {cards.map((card) => (
             <MarketplaceVendorCard key={card.cardKey} card={card} showBookmark={false} />
           ))}

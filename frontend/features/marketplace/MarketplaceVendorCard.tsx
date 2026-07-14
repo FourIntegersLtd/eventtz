@@ -1,18 +1,33 @@
 "use client";
 
-import { Heart } from "lucide-react";
+import {
+  BadgeCheck,
+  Briefcase,
+  Clock,
+  Globe,
+  Heart,
+  MapPin,
+  Star,
+} from "lucide-react";
 import { portalCard } from "@/components/portal-shell/portalTheme";
 import { useRouter } from "next/navigation";
-import { displayServicesOffered } from "@/features/client/browse/browseLabels";
-import { StarRating } from "@/components/ui/StarRating";
 import { VendorPortfolioCover } from "@/components/vendor/VendorPortfolioCover";
 import { buildBrowsePricingOptions } from "@/features/client/browse/vendorBrowseDetailModel";
 import type { ExpandedSearchCard } from "@/features/marketplace/marketplaceSearchModel";
-import { SERVICE_OPTIONS } from "@/components/vendor-onboarding/constants";
+import {
+  EVENT_TYPE_OPTIONS,
+  SERVICE_OPTIONS,
+} from "@/components/vendor-onboarding/constants";
 import { formatMoney, getMarket, marketLocationFallback } from "@/lib/markets";
+import { radiusOptionsForMarket } from "@/lib/photonLocationAutocomplete";
+import { profileImageUrlFromPayload } from "@/lib/vendorPortfolioImages";
 
 function labelForService(value: string): string {
   return SERVICE_OPTIONS.find((o) => o.value === value)?.label ?? value;
+}
+
+function labelForEventType(value: string): string {
+  return EVENT_TYPE_OPTIONS.find((o) => o.value === value)?.label ?? value;
 }
 
 type MarketplaceVendorCardProps = {
@@ -23,6 +38,21 @@ type MarketplaceVendorCardProps = {
   onToggleBookmark?: () => void;
   showBookmark?: boolean;
 };
+
+function DetailChip({
+  icon,
+  label,
+}: {
+  icon: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <div className="flex min-w-0 items-center gap-2 rounded-xl border border-neutral-200/80 bg-white px-2.5 py-2 text-xs font-medium text-neutral-700 shadow-sm">
+      <span className="shrink-0 text-primary/70">{icon}</span>
+      <span className="truncate">{label}</span>
+    </div>
+  );
+}
 
 export function MarketplaceVendorCard({
   card,
@@ -42,29 +72,66 @@ export function MarketplaceVendorCard({
     marketLocationFallback(
       typeof p.countryCode === "string" ? p.countryCode : undefined,
     );
-  const bio =
-    (typeof p.aiBioDraft === "string" && p.aiBioDraft.trim()) ||
-    (typeof p.travelDeliveryPolicy === "string" && p.travelDeliveryPolicy.trim()) ||
-    "Professional vendor available for your next event.";
+
   const servicesRaw = Array.isArray(p.servicesOffered)
     ? p.servicesOffered.map((s) => String(s))
     : [];
+  const categoryValue = card.highlightService ?? servicesRaw[0] ?? null;
+  const categoryLabel = categoryValue ? labelForService(categoryValue) : "Vendor";
 
   const options = buildBrowsePricingOptions(v);
-  const priced = options
-    .map((o) => o.unitPriceGbp)
-    .filter((n): n is number => n != null && Number.isFinite(n));
-  const minGbp = priced.length > 0 ? Math.min(...priced) : null;
+  const pricedOptions = options.filter(
+    (o) => o.unitPriceGbp != null && Number.isFinite(o.unitPriceGbp),
+  );
+  const cheapest = pricedOptions.reduce<(typeof options)[number] | null>(
+    (best, o) => {
+      if (best == null || (o.unitPriceGbp ?? Infinity) < (best.unitPriceGbp ?? Infinity)) {
+        return o;
+      }
+      return best;
+    },
+    null,
+  );
   const market = getMarket(typeof p.countryCode === "string" ? p.countryCode : undefined);
+  const minGbp = cheapest?.unitPriceGbp ?? null;
   const priceLabel =
-    minGbp != null ? `From ${formatMoney(minGbp, market.currency)}` : "Request a quote";
+    minGbp != null ? formatMoney(minGbp, market.currency) : "Quote";
+  const packageTitle =
+    cheapest?.heading?.trim() ||
+    (categoryLabel !== "Vendor" ? `${categoryLabel} package` : "Custom package");
 
-  const highlight = card.highlightService
-    ? labelForService(card.highlightService)
-    : null;
+  const travelKey = typeof p.travelRadius === "string" ? p.travelRadius : "";
+  const travelLabel =
+    radiusOptionsForMarket(market).find((o) => o.value === travelKey)?.label ??
+    null;
+  const travelChip = travelLabel
+    ? travelLabel.toLowerCase().startsWith("under")
+      ? `Travels ${travelLabel.toLowerCase()}`
+      : `Travels ${travelLabel}`
+    : "Local & travel";
 
+  const durationChip =
+    cheapest?.timelineLine?.trim() ||
+    (cheapest?.id.startsWith("rate-hourly")
+      ? "Hourly"
+      : cheapest?.id.startsWith("rate-daily")
+        ? "Daily"
+        : "Flexible timing");
+
+  const eventTypesRaw = Array.isArray(p.eventTypes)
+    ? p.eventTypes.map((s) => String(s)).filter(Boolean)
+    : [];
+  const eventChip =
+    eventTypesRaw.length === 0
+      ? categoryLabel
+      : eventTypesRaw.includes("all")
+        ? "All events"
+        : labelForEventType(eventTypesRaw[0]!);
+
+  const avatarUrl = profileImageUrlFromPayload(p);
   const rc = v.review_count ?? 0;
   const ra = v.review_average;
+  const showRating = rc > 0 && ra != null;
 
   const openDetail = () => {
     router.push(detailHref);
@@ -81,7 +148,7 @@ export function MarketplaceVendorCard({
           openDetail();
         }
       }}
-      className={`group relative isolate cursor-pointer ${portalCard} text-left transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30`}
+      className={`group relative isolate mx-auto flex w-full max-w-[22rem] cursor-pointer flex-col overflow-hidden ${portalCard} text-left transition hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30`}
     >
       {showBookmark ? (
         <button
@@ -95,56 +162,99 @@ export function MarketplaceVendorCard({
           aria-label={bookmarked ? "Remove saved vendor" : "Save vendor"}
         >
           <Heart
-            className="h-4 w-4 pointer-events-none"
+            className="pointer-events-none h-4 w-4"
             strokeWidth={2}
             fill={bookmarked ? "currentColor" : "none"}
           />
         </button>
       ) : null}
-      <div className="block p-3">
-        <VendorPortfolioCover
-          payload={p}
-          businessName={biz}
-          overlay={
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="inline-flex rounded-full border border-primary/20 bg-white/95 px-2.5 py-1 text-xs font-medium text-primary shadow-sm">
-                {city}
-              </p>
-              {highlight ? (
-                <p className="inline-flex rounded-full border border-amber-200 bg-amber-50/95 px-2.5 py-1 text-xs font-medium text-amber-900 shadow-sm">
-                  {highlight}
-                </p>
-              ) : null}
-            </div>
-          }
-        />
-        <h4 className="font-heading mt-3 text-base font-semibold text-neutral-900 group-hover:text-primary">
-          {biz}
-        </h4>
-        <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-neutral-600">
-          {rc > 0 && ra != null ? (
-            <>
-              <StarRating rating={Math.round(ra)} size="sm" />
-              <span>
-                {ra.toFixed(1)} ({rc} review{rc === 1 ? "" : "s"})
-              </span>
-            </>
-          ) : null}
-        </p>
-        <p className="mt-1 line-clamp-2 text-sm text-neutral-600">{bio}</p>
-        <p className="mt-3 text-sm font-medium text-neutral-900">{priceLabel}</p>
-        {servicesRaw.length > 0 ? (
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {displayServicesOffered(servicesRaw).slice(0, 4).map((svc) => (
-              <span
-                key={svc}
-                className="inline-flex rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] font-medium text-neutral-700"
-              >
-                {labelForService(svc)}
-              </span>
-            ))}
+
+      <VendorPortfolioCover
+        payload={p}
+        businessName={biz}
+        heightClass="h-44 sm:h-48"
+        objectFit="cover"
+        className="rounded-none"
+        overlay={
+          <div className="flex flex-wrap items-start gap-2">
+            <p className="inline-flex rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-neutral-900 shadow-sm ring-1 ring-black/5">
+              {categoryLabel}
+            </p>
           </div>
-        ) : null}
+        }
+      />
+
+      <div className="flex flex-1 flex-col bg-[#faf8fc] px-3.5 pb-0 pt-3.5">
+        <div className="flex items-center gap-3">
+          <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-primary/10 ring-2 ring-white shadow-sm">
+            {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={avatarUrl}
+                alt=""
+                className="h-full w-full object-cover object-center"
+              />
+            ) : (
+              <span className="flex h-full w-full items-center justify-center text-sm font-semibold text-primary">
+                {biz.slice(0, 1).toUpperCase()}
+              </span>
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="flex min-w-0 items-center gap-1 text-sm font-semibold text-neutral-900">
+              <span className="truncate">{biz}</span>
+              <BadgeCheck
+                className="h-4 w-4 shrink-0 text-primary"
+                strokeWidth={2}
+                aria-label="Verified vendor"
+              />
+            </p>
+            <p className="truncate text-xs text-neutral-500">{categoryLabel}</p>
+          </div>
+          {showRating ? (
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/15 bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary">
+              <Star className="h-3 w-3 fill-current" aria-hidden />
+              {ra.toFixed(1)}
+              <span className="font-medium text-primary/70">({rc})</span>
+            </span>
+          ) : null}
+        </div>
+
+        <h4 className="font-heading mt-3 line-clamp-2 text-lg font-semibold leading-snug text-neutral-900 group-hover:text-primary">
+          {packageTitle}
+        </h4>
+
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <DetailChip icon={<MapPin className="h-3.5 w-3.5" strokeWidth={1.75} />} label={city} />
+          <DetailChip
+            icon={<Globe className="h-3.5 w-3.5" strokeWidth={1.75} />}
+            label={travelChip}
+          />
+          <DetailChip
+            icon={<Briefcase className="h-3.5 w-3.5" strokeWidth={1.75} />}
+            label={eventChip}
+          />
+          <DetailChip
+            icon={<Clock className="h-3.5 w-3.5" strokeWidth={1.75} />}
+            label={durationChip}
+          />
+        </div>
+      </div>
+
+      <div className="mt-3.5 flex items-center justify-between gap-3 border-t border-primary/10 bg-primary-soft px-4 py-3.5">
+        <p className="font-heading text-lg font-semibold text-primary">
+          {minGbp != null ? (
+            <>
+              <span className="text-sm font-medium text-primary/65">From </span>
+              {priceLabel}
+            </>
+          ) : (
+            priceLabel
+          )}
+        </p>
+        <span className="text-[11px] font-semibold tracking-[0.12em] text-primary/80 uppercase">
+          View profile
+        </span>
       </div>
     </div>
   );

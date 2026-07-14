@@ -180,9 +180,9 @@ export function VendorReviewsSection({ vendorUserId }: VendorReviewsSectionProps
                     onClick={() => goToIndex(i)}
                     aria-label={`Go to review ${i + 1}`}
                     aria-current={i === index ? "true" : undefined}
-                    className={`h-2 rounded-full transition-all duration-300 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 ${
+                    className={`h-2 rounded-full transition-all duration-300 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 ${
                       i === index
-                        ? "w-7 bg-primary"
+                        ? "w-7 bg-neutral-700"
                         : "w-2 bg-neutral-300 hover:bg-neutral-400"
                     }`}
                   />

@@ -62,16 +62,22 @@ function BudgetSortControls({ state, onCommit }: MarketplaceFiltersBarProps) {
   const hasBudget = state.budgetMin != null || state.budgetMax != null;
 
   const apply = () => {
-    onCommit({ ...state, budgetMin: parseBudget(minStr), budgetMax: parseBudget(maxStr) });
+    onCommit({
+      ...state,
+      budgetMin: parseBudget(minStr),
+      budgetMax: parseBudget(maxStr),
+      page: 1,
+    });
     setOpen(false);
   };
 
   const clear = () => {
     setMinStr("");
     setMaxStr("");
-    onCommit({ ...state, budgetMin: null, budgetMax: null });
+    onCommit({ ...state, budgetMin: null, budgetMax: null, page: 1 });
     setOpen(false);
   };
+
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -143,7 +149,9 @@ function BudgetSortControls({ state, onCommit }: MarketplaceFiltersBarProps) {
         <select
           aria-label="Sort results"
           value={state.sort}
-          onChange={(e) => onCommit({ ...state, sort: e.target.value as MarketplaceSort })}
+          onChange={(e) =>
+            onCommit({ ...state, sort: e.target.value as MarketplaceSort, page: 1 })
+          }
           className="h-9 appearance-none rounded-full border border-neutral-200 bg-white pl-3.5 pr-8 text-sm font-medium text-neutral-700 outline-none transition hover:bg-neutral-50 focus:border-primary focus:ring-2 focus:ring-primary/15"
         >
           {SORT_OPTIONS.map((o) => (
