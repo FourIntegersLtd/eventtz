@@ -304,9 +304,9 @@ def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> 
             booking_id=booking_id,
             kind="payment_received",
             body=(
-                "Your payment was successful.\n\n"
+                "Your payment was successful. Thank you.\n\n"
                 "We will hold the funds safely until the event is complete. "
-                "After the event, please confirm that everything went well so the vendor can be paid."
+                "Afterwards, please confirm that everything went well so the vendor can be paid."
             ),
         )
     if vendor_id:
@@ -317,7 +317,8 @@ def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> 
             body=(
                 "The client has paid for this booking.\n\n"
                 "Confirm when the event is done to receive your payout sooner. "
-                "If you do not confirm, payment is released automatically 48 hours after the event."
+                "If you do not confirm, payment is released automatically 48 hours after the event "
+                "unless a problem is reported. Thank you for your patience."
             ),
         )
     _notify_pair(client_id, vendor_id)
@@ -514,7 +515,7 @@ def _finalize_completion(row: dict[str, Any]) -> dict[str, Any]:
             user_id=vendor_id,
             booking_id=booking_id,
             kind="vendor_payout_released",
-            body="Your payout for this booking has been released.\n\nIt should arrive in your connected account shortly, depending on your bank.",
+            body="Your payout for this booking has been released.\n\nIt should arrive in your connected account shortly, depending on your bank. Thank you for completing this booking with Eventtz.",
         )
     _notify_pair(client_id, vendor_id)
     return _serialize_completion_state(final_row)
@@ -735,7 +736,7 @@ def maybe_send_completion_reminder_for_row(row: dict[str, Any]) -> bool:
             body=(
                 "We hope your event went well.\n\n"
                 "If everything was as expected, please confirm the booking is complete. "
-                f"If something went wrong, report a problem before {release_label} — "
+                f"If something went wrong, report a problem before {release_label}, "
                 "otherwise we will pay the vendor automatically."
             ),
         )

@@ -1,8 +1,8 @@
             <tr>
-              <td style="padding: 0 20px 4px; background-color: #f4f0f8">
+              <td style="padding: 16px 20px 4px; background-color: #f4f0f8">
                 <p
                   style="
-                    margin: 16px 0 0;
+                    margin: 0;
                     font-size: 11px;
                     font-weight: 600;
                     letter-spacing: 0.08em;
@@ -58,43 +58,22 @@
                 </p>
               </td>
             </tr>
-            {% if loop.last %}
             <tr>
-              <td style="padding: 0 20px 24px; background-color: #f4f0f8">
+              <td style="padding: 0 0 {% if loop.last %}24px{% else %}16px{% endif %} 0; background-color: #f4f0f8; font-size: 0; line-height: 0">
                 <img
                   src="{{ section.image_url }}"
                   alt="{{ section.image_alt }}"
-                  width="552"
+                  width="600"
                   style="
                     display: block;
                     width: 100%;
-                    max-width: 552px;
+                    max-width: 100%;
                     height: auto;
-                    border-radius: 14px;
                     border: 0;
                   "
                 />
               </td>
             </tr>
-            {% else %}
-            <tr>
-              <td style="padding: 0 20px 16px; background-color: #f4f0f8">
-                <img
-                  src="{{ section.image_url }}"
-                  alt="{{ section.image_alt }}"
-                  width="552"
-                  style="
-                    display: block;
-                    width: 100%;
-                    max-width: 552px;
-                    height: auto;
-                    border-radius: 14px;
-                    border: 0;
-                  "
-                />
-              </td>
-            </tr>
-            {% endif %}
             {% else %}
             <tr>
               <td style="padding: 20px 20px 8px; background-color: #ffffff">
@@ -127,42 +106,21 @@
                 </p>
               </td>
             </tr>
-            {% if loop.last %}
             <tr>
-              <td style="padding: 0 20px 24px; background-color: #ffffff">
+              <td style="padding: 0 0 {% if loop.last %}24px{% else %}16px{% endif %} 0; background-color: #ffffff; font-size: 0; line-height: 0">
                 <img
                   src="{{ section.image_url }}"
                   alt="{{ section.image_alt }}"
-                  width="552"
+                  width="600"
                   style="
                     display: block;
                     width: 100%;
-                    max-width: 552px;
+                    max-width: 100%;
                     height: auto;
-                    border-radius: 14px;
                     border: 0;
                   "
                 />
               </td>
             </tr>
-            {% else %}
-            <tr>
-              <td style="padding: 0 20px 16px; background-color: #ffffff">
-                <img
-                  src="{{ section.image_url }}"
-                  alt="{{ section.image_alt }}"
-                  width="552"
-                  style="
-                    display: block;
-                    width: 100%;
-                    max-width: 552px;
-                    height: auto;
-                    border-radius: 14px;
-                    border: 0;
-                  "
-                />
-              </td>
-            </tr>
-            {% endif %}
             {% endif %}
             {% endfor %}

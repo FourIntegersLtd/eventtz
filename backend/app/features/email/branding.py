@@ -14,7 +14,7 @@ from app.features.email.constants import (
 # Match frontend `globals.css` / landing page.
 PRIMARY = "#3E1964"
 PRIMARY_SOFT = "#f4f0f8"
-PAGE_BG = "#f7f8fc"
+PAGE_BG = "#ffffff"
 ACCENT_GOLD = "#c4a05a"
 TEXT = "#2d2938"
 TEXT_MUTED = "#6b6575"
@@ -104,7 +104,7 @@ def client_welcome_showcase() -> list[dict[str, str]]:
             "title": "Pay with peace of mind",
             "description": (
                 "The vendor confirms the final price first. You pay when the details "
-                "are clear, not before."
+                "are clear, not before. We hold your payment safely until the event is done."
             ),
             "image_url": EMAIL_IMAGES["quote"],
             "image_alt": "Vendor quote confirmation on Eventtz",
@@ -120,7 +120,7 @@ def vendor_welcome_showcase() -> list[dict[str, str]]:
             "title": "Show clients what you do",
             "description": (
                 "Add your photos, services and prices so people know what you offer "
-                "before they message you."
+                "before they reach out. A clear profile invites the right enquiries."
             ),
             "image_url": EMAIL_IMAGES["pricing"],
             "image_alt": "Vendor profile on Eventtz",

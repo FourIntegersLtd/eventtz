@@ -214,24 +214,46 @@ class EmailService:
         business_name: str | None,
         login_url: str,
     ) -> bool:
+        biz = (business_name or "").strip()
         if approval_status == "approved":
             headline = "Your vendor profile is approved"
-            subtitle = "You are live on Eventtz. Clients can find and book you."
-            template_id = "vendor.approved"
+            subtitle = "You are live on Eventtz."
+            if biz:
+                body = (
+                    f"Congratulations: {biz} is now live on Eventtz.\n\n"
+                    "Clients can find you and send booking requests. "
+                    "Keep your availability and portfolio up to date, "
+                    "and connect Stripe if you have not already so you can get paid."
+                )
+            else:
+                body = (
+                    "Congratulations: your profile is now live on Eventtz.\n\n"
+                    "Clients can find you and send booking requests. "
+                    "Keep your availability and portfolio up to date, "
+                    "and connect Stripe if you have not already so you can get paid."
+                )
         elif approval_status == "banned":
             headline = "Your vendor account was suspended"
-            subtitle = "Contact support if you believe this is a mistake."
-            template_id = "vendor.banned"
+            subtitle = "You cannot receive new bookings right now."
+            body = (
+                "We have suspended your vendor account on Eventtz.\n\n"
+                "If you believe this was a mistake, or you need help resolving it, "
+                "please contact us and we will look into it carefully."
+            )
         else:
             headline = "Your vendor profile is under review"
-            subtitle = "We'll email you when a decision is made."
-            template_id = "vendor.pending"
+            subtitle = "Thank you for submitting your details."
+            body = (
+                "Our team is reviewing your profile now.\n\n"
+                "We will email you as soon as a decision is made. "
+                "You can still sign in and update your details while you wait."
+            )
 
         ctx = transactional_email_context(
             subject=headline,
             headline=headline,
             subtitle=subtitle,
-            body=f"Business: {business_name}" if business_name else None,
+            body=body,
             action_url=login_url,
             action_label="Open Eventtz",
         )
@@ -250,6 +272,7 @@ class EmailService:
         to_email: str,
         login_url: str,
     ) -> bool:
+        # Admin-facing: keep concise.
         ctx = transactional_email_context(
             subject="You've been invited to Eventtz admin",
             headline="Admin team invite",
@@ -276,8 +299,12 @@ class EmailService:
         ctx = transactional_email_context(
             subject="Your Eventtz account was suspended",
             headline="Account suspended",
-            subtitle="You cannot book or message on Eventtz until this is resolved.",
-            body="Contact support if you need help.",
+            subtitle="Your account access has been limited for now.",
+            body=(
+                "You cannot book or message on Eventtz until this is resolved.\n\n"
+                "If you need help or believe this was a mistake, please contact support "
+                "and we will look into it carefully."
+            ),
             action_url=support_url,
             action_label="Contact support" if support_url else None,
         )
@@ -303,40 +330,47 @@ class EmailService:
 
         if portal == "vendor":
             welcome_subtitle = (
-                "Welcome aboard. Eventtz is where clients find you and where "
-                "you keep every booking in one place."
+                "Welcome aboard. "
+                "Eventtz is where clients find you, and where you keep bookings, messages "
+                "and payments in one calm place."
             )
             showcase_eyebrow = "How it works for vendors"
             showcase_intro = (
-                "Set up your profile once, then let the enquiries come to you."
+                "A short tour of what happens once your profile is live. "
+                "Take it step by step; we are here if you need a hand."
             )
             showcase_intro_plain = showcase_intro
             welcome_cta_lead = (
-                "Take five minutes to finish your profile so clients can discover you."
+                "When you have a quiet moment, finish your profile so clients can discover you "
+                "with confidence."
             )
             welcome_cta_label = "Go to your dashboard"
             welcome_cta_url = f"{base}/vendor/dashboard"
             welcome_support_line = (
-                "Questions? Reply to this email or write us at hello@fourintegers.com."
+                "Questions? Reply to this email or write us at hello@fourintegers.com. "
+                "We are glad you are here."
             )
             showcase_sections = vendor_welcome_showcase()
         else:
             welcome_subtitle = (
-                "Welcome aboard. Whether it is your next owambe, birthday, or baby shower, "
-                "we are here to help you find vendors you can actually trust."
+                "Welcome aboard. "
+                "Whether it is your next owambe, birthday or baby shower, "
+                "we are here to help you find vendors you can trust."
             )
-            showcase_eyebrow = "A quick peek"
+            showcase_eyebrow = "A gentle start"
             showcase_intro = (
-                "Here is how most people use Eventtz when planning an event."
+                "Here is how most people use Eventtz when planning an event. "
+                "No rush; browse at your own pace."
             )
             showcase_intro_plain = showcase_intro
             welcome_cta_lead = (
-                "Ready to start? Browse vendors and send your first request."
+                "Ready when you are: browse vendors and send your first request."
             )
             welcome_cta_label = "Find vendors"
             welcome_cta_url = f"{base}/client/browse"
             welcome_support_line = (
-                "Got questions? Reply to this email or write us at hello@fourintegers.com."
+                "Got questions? Reply to this email or write us at hello@fourintegers.com. "
+                "We are happy to help."
             )
             showcase_sections = client_welcome_showcase()
 

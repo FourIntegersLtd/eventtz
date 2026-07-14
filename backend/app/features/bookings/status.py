@@ -224,10 +224,11 @@ def update_booking_request_status_for_vendor(
                 user_id=client_uid,
                 booking_id=booking_id,
                 kind="booking_declined_by_vendor",
-                body=(
-                    "Unfortunately, the vendor is unable to take this booking.\n\n"
-                    "You can browse other vendors on Eventtz and send a new request whenever you are ready."
-                ),
+                    body=(
+                        "Unfortunately the vendor is unable to take this booking.\n\n"
+                        "We are sorry that could not work out. You are welcome to browse other vendors "
+                        "on Eventtz and send a new request whenever you are ready."
+                    ),
             )
         _notify_booking_changed(client_user_id=client_uid, vendor_user_id=vendor_user_id)
         return {"id": booking_id, "status": "declined"}

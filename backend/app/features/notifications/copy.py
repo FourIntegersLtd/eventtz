@@ -36,39 +36,43 @@ DASHBOARD_DUPLICATE_KINDS: dict[Portal, frozenset[str]] = {
     "client": frozenset({"vendor_quote_received"}),
 }
 
+# Client/vendor facing: short, polite, warm. Prefer two short paragraphs.
+# Admin-facing copy lives in EmailService admin alerts and stays concise.
 _COPY: dict[str, dict[Portal, tuple[str, str]]] = {
     "booking_request_received": {
         "vendor": (
             "New booking request",
             "A client has sent you a new booking request on Eventtz.\n\n"
-            "Please review the date, service and details, and respond when you can. "
-            "The client will be notified as soon as you accept or decline.",
+            "Please take a moment to review the date, service and any notes they shared, "
+            "then accept or decline when you can. They will hear from us as soon as you respond.",
         ),
         "client": (
             "Booking sent",
-            "Your booking request has been sent to the vendor.\n\n"
+            "Your booking request is with the vendor.\n\n"
             "They will review the details and get back to you shortly. "
-            "You can follow progress from your bookings page.",
+            "You can follow everything from your bookings page, and message them if you need to add anything.",
         ),
     },
     "booking_accepted": {
         "client": (
             "Booking accepted",
-            "Good news — the vendor has accepted your booking.\n\n"
-            "You can pay when you are ready. Open the booking to review the final total "
-            "and complete payment.",
+            "Good news: the vendor has accepted your booking.\n\n"
+            "When you are ready, open the booking to check the final total and complete payment. "
+            "Your place is confirmed once payment goes through.",
         ),
         "vendor": (
             "Booking accepted",
-            "The client has accepted this booking.\n\n"
-            "We will notify you as soon as payment is received.",
+            "This booking is now accepted on your side.\n\n"
+            "We will let you know as soon as the client pays. In the meantime you can message them "
+            "on Eventtz if you need to finalise any details.",
         ),
     },
     "booking_declined_by_vendor": {
         "client": (
             "Booking declined",
-            "Unfortunately, the vendor is unable to take this booking.\n\n"
-            "You can browse other vendors on Eventtz and send a new request whenever you are ready.",
+            "Unfortunately the vendor is unable to take this booking.\n\n"
+            "We are sorry that could not work out. You are welcome to browse other vendors on Eventtz "
+            "and send a new request whenever you are ready.",
         ),
         "vendor": (
             "Booking declined",
@@ -80,182 +84,197 @@ _COPY: dict[str, dict[Portal, tuple[str, str]]] = {
         "vendor": (
             "Booking cancelled",
             "The client has cancelled this booking.\n\n"
-            "The booking is now closed. You can still message them on Eventtz if you need to.",
+            "The request is now closed. If you still need to tidy anything up, you can message them on Eventtz.",
         ),
         "client": (
             "Booking cancelled",
             "You cancelled this booking.\n\n"
-            "The vendor has been notified. If you paid in advance, any refund will be processed separately.",
+            "The vendor has been notified. If you had already paid, any refund will be handled separately "
+            "and usually reaches your card within a few working days.",
         ),
     },
     "booking_cancelled_by_vendor": {
         "client": (
             "Booking cancelled",
             "The vendor has cancelled this booking.\n\n"
-            "We are sorry this did not work out. You can explore other vendors on Eventtz whenever you are ready.",
+            "We are sorry this did not go ahead. You can explore other vendors on Eventtz whenever you are ready, "
+            "and we are here if you need help finding a replacement.",
         ),
         "vendor": (
             "Booking cancelled",
             "You cancelled this booking.\n\n"
-            "The client has been notified.",
+            "The client has been notified. Thank you for letting them know in good time.",
         ),
     },
     "booking_completed": {
         "client": (
             "Booking complete",
-            "This booking is now complete.\n\n"
-            "Thank you for using Eventtz. We hope your event went well.",
+            "This booking is now marked as complete.\n\n"
+            "Thank you for using Eventtz. We hope your event went smoothly, and we would love to help again next time.",
         ),
         "vendor": (
             "Booking complete",
             "This booking has been marked as complete.\n\n"
-            "Thank you for providing your service through Eventtz.",
+            "Thank you for delivering through Eventtz. We appreciate the care you put into every booking.",
         ),
     },
     "booking_pricing_updated": {
         "client": (
             "Updated price",
             "Your vendor has sent an updated price for this booking.\n\n"
-            "Please review the new total and accept or decline when you are ready.",
+            "Please take a look at the new total when you can, then accept or decline. "
+            "Nothing changes until you confirm.",
         ),
         "vendor": (
             "Updated price sent",
-            "You sent an updated price to the client.\n\n"
-            "We will notify you as soon as they confirm.",
+            "Your updated price is with the client.\n\n"
+            "We will notify you as soon as they accept or decline. You can still message them "
+            "if they need a quick explanation of what changed.",
         ),
     },
     "client_confirmed_updated_price": {
         "vendor": (
             "Price confirmed",
-            "The client accepted the updated price.\n\n"
-            "Payment is now due. We will let you know when it is received.",
+            "The client accepted your updated price.\n\n"
+            "Payment is now due on their side. We will let you know the moment it is received.",
         ),
         "client": (
             "Price confirmed",
             "You accepted the updated price.\n\n"
-            "You can pay when you are ready from your bookings page.",
+            "When you are ready, you can pay from your bookings page. "
+            "Your funds are held safely until the event is complete.",
         ),
     },
     "client_declined_updated_price": {
         "vendor": (
             "Booking declined",
             "The client declined the updated price.\n\n"
-            "This booking has been closed. No further action is needed.",
+            "This booking has been closed. No further action is needed, though you are welcome "
+            "to stay in touch on Eventtz if another date comes up.",
         ),
         "client": (
             "Booking declined",
-            "You declined the updated price.\n\n"
-            "This booking has been closed. You can send a new request or browse other vendors.",
+            "You declined the updated price, so this booking is now closed.\n\n"
+            "You can send a new request or browse other vendors whenever you like.",
         ),
     },
     "vendor_quote_received": {
         "client": (
             "New quote",
-            "You have received a new quote from a vendor.\n\n"
-            "Open the booking to review the details and accept or decline when you are ready.",
+            "A vendor has sent you a quote on Eventtz.\n\n"
+            "Open the booking to review what is included and the total, then accept or decline when you are ready. "
+            "Feel free to message them if anything needs clarifying first.",
         ),
         "vendor": (
             "Quote sent",
-            "Your quote has been sent to the client.\n\n"
-            "We will notify you when they respond.",
+            "Your quote is with the client.\n\n"
+            "We will notify you when they respond. You can keep chatting on Eventtz in the meantime.",
         ),
     },
     "vendor_quote_accepted": {
         "vendor": (
             "Quote accepted",
-            "The client accepted your quote.\n\n"
-            "Payment will follow once they are ready.",
+            "Great news: the client accepted your quote.\n\n"
+            "Payment will follow once they are ready. We will email you as soon as it lands.",
         ),
         "client": (
             "Quote accepted",
             "You accepted this quote.\n\n"
-            "You can pay when you are ready from your bookings page.",
+            "When you are ready, you can pay from your bookings page. "
+            "We hold your payment safely until the event is complete.",
         ),
     },
     "vendor_quote_declined": {
         "vendor": (
             "Quote declined",
             "The client declined your quote.\n\n"
-            "The booking has been closed. You can still message them on Eventtz.",
+            "The booking has been closed. You can still message them on Eventtz if useful.",
         ),
         "client": (
             "Quote declined",
             "You declined this quote.\n\n"
-            "The vendor has been notified. You can request a new quote or browse other vendors.",
+            "The vendor has been notified. You are welcome to request a new quote or look at other vendors.",
         ),
     },
     "vendor_quote_withdrawn": {
         "client": (
             "Quote withdrawn",
-            "The vendor withdrew their quote.\n\n"
-            "This booking is no longer active. You can message them or explore other vendors.",
+            "The vendor withdrew their quote, so this booking is no longer active.\n\n"
+            "You can message them on Eventtz or explore other vendors when you are ready.",
         ),
         "vendor": (
             "Quote withdrawn",
             "You withdrew your quote.\n\n"
-            "The client has been notified.",
+            "The client has been notified. Thank you for keeping things clear with them.",
         ),
     },
     "payment_received": {
         "client": (
             "Payment received",
-            "Your payment was successful.\n\n"
+            "Thank you. Your payment went through successfully.\n\n"
             "We will hold the funds safely until the event is complete. "
-            "After the event, please confirm that everything went well so the vendor can be paid.",
+            "Afterwards, please confirm that everything went well so the vendor can be paid.",
         ),
         "vendor": (
             "Payment received",
             "The client has paid for this booking.\n\n"
-            "We will release your payout after the event is confirmed complete.",
+            "Your payout is released after the event is confirmed complete. "
+            "We will keep you updated every step of the way.",
         ),
     },
     "vendor_payment_received": {
         "vendor": (
             "Payment received",
-            "The client has paid for this booking.\n\n"
+            "The client has paid for this booking. Thank you for waiting patiently.\n\n"
             "Confirm when the event is done to receive your payout sooner. "
-            "If you do not confirm, payment is released automatically 48 hours after the event.",
+            "If neither of you confirms, payment is released automatically 48 hours after the event "
+            "unless a problem is reported.",
         ),
         "client": (
             "Payment sent",
-            "Your payment has been sent.\n\n"
-            "The vendor has been notified and can see the booking is paid.",
+            "Your payment has been sent and the vendor has been notified.\n\n"
+            "We are looking after the funds until the event is complete. "
+            "You can still message the vendor on Eventtz if you need to.",
         ),
     },
     "vendor_payout_released": {
         "vendor": (
             "Payout sent",
             "Your payout for this booking has been released.\n\n"
-            "It should arrive in your connected account shortly, depending on your bank.",
+            "It should arrive in your connected account shortly, depending on your bank. "
+            "Thank you for completing this booking with Eventtz.",
         ),
         "client": (
             "Payout released",
             "The vendor has received their payout for this booking.\n\n"
-            "Thank you for completing your booking on Eventtz.",
+            "Thank you for completing your booking on Eventtz. We hope your event was a success.",
         ),
     },
     "payment_refunded": {
         "client": (
             "Refund issued",
             "A refund has been issued for this booking.\n\n"
-            "It should reach your card within 5–10 working days, depending on your bank.",
+            "It should reach your card within 5 to 10 working days, depending on your bank. "
+            "If you need help, just reply or contact support.",
         ),
         "vendor": (
             "Refund issued",
             "The client was refunded for this booking.\n\n"
-            "The booking is now closed from a payment perspective.",
+            "The payment side of this booking is now closed. Thank you for your understanding.",
         ),
     },
     "completion_confirmed_awaiting_other_party": {
         "client": (
             "Confirm completion",
             "The other party has marked this booking as complete.\n\n"
-            "Please confirm on your side so the vendor can be paid, or report a problem if something went wrong.",
+            "Please confirm on your side when you can, so the vendor can be paid. "
+            "If something did not go as planned, report a problem from the booking instead.",
         ),
         "vendor": (
             "Confirm completion",
             "The other party has marked this booking as complete.\n\n"
-            "Please confirm on your side to receive your payout.",
+            "Please confirm on your side when you can, so your payout can be released. "
+            "Thank you for wrapping this one up promptly.",
         ),
     },
     "completion_reminder": {
@@ -263,7 +282,7 @@ _COPY: dict[str, dict[Portal, tuple[str, str]]] = {
             "How did your event go?",
             "We hope your event went well.\n\n"
             "If everything was as expected, please confirm the booking is complete. "
-            "If something went wrong, report a problem before the automatic payout date.",
+            "If something went wrong, report a problem before the automatic payout date so we can help.",
         ),
     },
     "vendor_completion_reminder": {
