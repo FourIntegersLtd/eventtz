@@ -88,7 +88,8 @@ export function BlogPostView({ slug }: BlogPostViewProps) {
           <h1 className="font-heading text-4xl font-semibold tracking-tight text-neutral-900 sm:text-5xl">
             {post.title}
           </h1>
-          {post.subtitle ? (
+          {post.subtitle &&
+          post.subtitle.trim().toLowerCase() !== post.title.trim().toLowerCase() ? (
             <p className="text-lg leading-relaxed text-neutral-600 sm:text-xl">{post.subtitle}</p>
           ) : null}
         </header>

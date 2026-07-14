@@ -87,11 +87,20 @@ export function BlogIndexView() {
                   <h2 className="mt-2 font-heading text-2xl font-semibold text-neutral-900 transition group-hover:text-primary sm:text-3xl">
                     {post.title}
                   </h2>
-                  {post.subtitle || post.excerpt ? (
-                    <p className="mt-2 text-base leading-relaxed text-neutral-600">
-                      {post.subtitle || post.excerpt}
-                    </p>
-                  ) : null}
+                  {(() => {
+                    const blurb = (post.subtitle || post.excerpt || "").trim();
+                    if (
+                      !blurb ||
+                      blurb.toLowerCase() === post.title.trim().toLowerCase()
+                    ) {
+                      return null;
+                    }
+                    return (
+                      <p className="mt-2 text-base leading-relaxed text-neutral-600">
+                        {blurb}
+                      </p>
+                    );
+                  })()}
                 </Link>
               </article>
             </li>

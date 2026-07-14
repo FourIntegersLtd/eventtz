@@ -66,18 +66,26 @@ export function AdminBlogEditorView({ postId }: AdminBlogEditorViewProps) {
   }, [load]);
 
   const persistBody = async () => {
+    const titleTrim = title.trim();
+    const subtitleTrim = subtitle.trim();
+    // Avoid storing a subtitle that just repeats the title (shows twice on the public post page).
+    const subtitleOut =
+      subtitleTrim && subtitleTrim.toLowerCase() !== titleTrim.toLowerCase()
+        ? subtitleTrim
+        : null;
     const updated = await updateAdminBlogPost(postId, {
-      title,
-      subtitle: subtitle || null,
+      title: titleTrim,
+      subtitle: subtitleOut,
       slug,
       cover_image_url: coverUrl,
       author_name: authorName.trim() || null,
       body_json: bodyJson ?? undefined,
       body_html: bodyHtml,
-      excerpt: subtitle || title.slice(0, 160) || null,
+      excerpt: subtitleOut,
     });
     setPost(updated);
     setSlug(updated.slug);
+    if (!subtitleOut && subtitleTrim) setSubtitle("");
     return updated;
   };
 
