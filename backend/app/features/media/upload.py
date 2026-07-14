@@ -31,7 +31,7 @@ async def _upload_user_object(
     file: UploadFile,
     subdir: str,
     allowed_prefixes: tuple[str, ...],
-    max_bytes: int,
+    max_bytes: int | None,
     error_hint: str,
 ) -> UploadedImage:
     if not user_id:
@@ -47,8 +47,9 @@ async def _upload_user_object(
     raw = await file.read()
     if not raw:
         raise ValidationError("Empty upload.")
-    if len(raw) > max_bytes:
-        raise PayloadTooLargeError("File is too large.")
+    if max_bytes is not None and len(raw) > max_bytes:
+        mb = max(1, round(max_bytes / 1_000_000))
+        raise PayloadTooLargeError(f"File is too large (max {mb}MB).")
 
     name = (file.filename or "upload").strip()
     ext = ""
@@ -90,13 +91,13 @@ async def _upload_user_object(
 
 
 async def upload_user_image(*, user_id: str, file: UploadFile) -> UploadedImage:
-    settings = get_settings()
+    # No app-level size cap for images (infra/proxy limits may still apply).
     return await _upload_user_object(
         user_id=user_id,
         file=file,
         subdir="images",
         allowed_prefixes=("image/",),
-        max_bytes=settings.media_max_upload_bytes,
+        max_bytes=None,
         error_hint="Only image uploads are supported.",
     )
 

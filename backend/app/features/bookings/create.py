@@ -19,7 +19,13 @@ from app.features.bookings.calendar import (
 from app.features.bookings.line_item_validation import validate_quote_line_items
 from app.features.bookings.notifications import _notify_booking_changed
 from app.features.bookings.pricing import build_pricing_breakdown, persisted_booking_total_label
-from app.features.chat.service import assert_conversation_matches_pair, send_quote_message
+from app.features.chat.service import (
+    assert_conversation_matches_pair,
+    get_or_create_conversation,
+    insert_message,
+    send_quote_message,
+)
+from app.features.realtime.sse import notify_user
 from app.features.email.dispatch import dispatch_booking_notification
 from app.features.vendors.moderation import get_approved_vendor_payload
 from app.features.vendors.list_pricing import (
@@ -29,6 +35,55 @@ from app.features.vendors.list_pricing import (
 from app.features.auth.accounts import assert_user_not_suspended
 
 logger = get_logger(__name__)
+
+
+def _post_client_booking_notes_to_chat(
+    *,
+    booking_id: str,
+    client_user_id: str,
+    vendor_user_id: str,
+    notes: str | None,
+) -> str | None:
+    """
+    When the client includes booking notes, mirror them into the DM thread so the
+    vendor sees an unread message before accepting/declining. Returns conversation id.
+    """
+    text = (notes or "").strip()
+    if not text or not booking_id:
+        return None
+    try:
+        conv = get_or_create_conversation(
+            client_user_id=client_user_id,
+            vendor_user_id=vendor_user_id,
+            require_bookable_vendor=False,
+        )
+        cid = str(conv.get("id") or "").strip()
+        if not cid:
+            return None
+        insert_message(
+            conversation_id=cid,
+            sender_user_id=client_user_id,
+            body=text,
+        )
+        try:
+            get_client().table("booking_requests").update({"conversation_id": cid}).eq(
+                "id",
+                booking_id,
+            ).execute()
+        except Exception:
+            logger.exception(
+                "create_booking_request: link conversation_id failed booking=%s",
+                booking_id,
+            )
+        notify_user(client_user_id, "chat_unread_changed")
+        notify_user(vendor_user_id, "chat_unread_changed")
+        return cid
+    except Exception:
+        logger.exception(
+            "create_booking_request: post notes to chat failed booking=%s",
+            booking_id,
+        )
+        return None
 
 
 def create_booking_request(
@@ -111,6 +166,12 @@ def create_booking_request(
     if created is None:
         raise RuntimeError("Failed to create booking request")
     bid = str(created.get("id", ""))
+    _post_client_booking_notes_to_chat(
+        booking_id=bid,
+        client_user_id=client_user_id,
+        vendor_user_id=vendor_user_id,
+        notes=row_out.get("notes") if isinstance(row_out.get("notes"), str) else None,
+    )
     if vendor_user_id:
         dispatch_booking_notification(
             user_id=vendor_user_id,

@@ -17,6 +17,7 @@ class BlogPostListItem(BaseModel):
     subtitle: str | None = None
     cover_image_url: str | None = None
     excerpt: str | None = None
+    author_name: str | None = None
     status: BlogPostStatus = "draft"
     published_at: str | None = None
     created_at: str | None = None
@@ -52,6 +53,7 @@ class BlogPostCreateBody(BaseModel):
     title: str = Field(default="Untitled", max_length=300)
     subtitle: str | None = Field(default=None, max_length=500)
     slug: str | None = Field(default=None, max_length=200)
+    author_name: str | None = Field(default=None, max_length=120)
 
 
 class BlogPostUpdateBody(BaseModel):
@@ -62,6 +64,7 @@ class BlogPostUpdateBody(BaseModel):
     body_json: dict[str, Any] | None = None
     body_html: str | None = None
     excerpt: str | None = Field(default=None, max_length=600)
+    author_name: str | None = Field(default=None, max_length=120)
 
 
 class BlogPostDeleteResponse(BaseModel):

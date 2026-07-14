@@ -88,6 +88,17 @@ def test_submit_rejects_invalid_discount():
         )
 
 
+def test_validate_step_6_allows_empty_portfolio():
+    validate_step_fields(6, {"portfolioFileNames": []})
+    validate_step_fields(6, {})
+
+
+def test_validate_step_6_rejects_over_cap():
+    payload = {"portfolioFileNames": [f"img-{i}" for i in range(21)]}
+    with pytest.raises(ValidationError, match="maximum 20"):
+        validate_step_fields(6, payload)
+
+
 def test_normalize_strips_external_portfolio_url():
     payload = {
         "portfolioFileNames": [

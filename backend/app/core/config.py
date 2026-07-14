@@ -54,11 +54,7 @@ class Settings(BaseSettings):
         default="eventtz-images",
         validation_alias=AliasChoices("MEDIA_IMAGES_BUCKET"),
     )
-    media_max_upload_bytes: int = Field(
-        default=8_000_000,
-        validation_alias=AliasChoices("MEDIA_MAX_UPLOAD_BYTES"),
-    )
-    #: Larger cap for video/document uploads (portfolio video, certificates).
+    #: Cap for video/document uploads (portfolio video, certificates). Images have no app size limit.
     media_max_file_upload_bytes: int = Field(
         default=50_000_000,
         validation_alias=AliasChoices("MEDIA_MAX_FILE_UPLOAD_BYTES"),

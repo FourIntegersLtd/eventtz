@@ -18,6 +18,15 @@ logger = get_logger(__name__)
 _SLUG_RE = re.compile(r"[^a-z0-9]+")
 _LOCAL_POSTS: dict[str, dict[str, Any]] = {}
 
+_LIST_COLS = (
+    "id,slug,title,subtitle,cover_image_url,excerpt,author_name,"
+    "status,published_at,created_at,updated_at"
+)
+_LIST_COLS_LEGACY = (
+    "id,slug,title,subtitle,cover_image_url,excerpt,"
+    "status,published_at,created_at,updated_at"
+)
+
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -33,6 +42,8 @@ def slugify(title: str) -> str:
 
 
 def _row_to_list_item(row: dict[str, Any]) -> dict[str, Any]:
+    author = row.get("author_name")
+    author_s = str(author).strip() if isinstance(author, str) and author.strip() else None
     return {
         "id": _str_id(row.get("id")),
         "slug": str(row.get("slug") or ""),
@@ -40,6 +51,7 @@ def _row_to_list_item(row: dict[str, Any]) -> dict[str, Any]:
         "subtitle": row.get("subtitle"),
         "cover_image_url": row.get("cover_image_url"),
         "excerpt": row.get("excerpt"),
+        "author_name": author_s,
         "status": str(row.get("status") or "draft"),
         "published_at": row.get("published_at"),
         "created_at": row.get("created_at"),
@@ -121,6 +133,7 @@ def create_draft_post(
         "excerpt": None,
         "status": "draft",
         "author_admin_user_id": author_admin_user_id,
+        "author_name": None,
         "published_at": None,
         "created_at": now,
         "updated_at": now,
@@ -164,16 +177,27 @@ def list_posts_for_admin() -> list[dict[str, Any]]:
         )
         return [_row_to_list_item(r) for r in rows]
     try:
-        res = (
-            apply_recent_first_order(
-                get_client().table("blog_posts").select(
-                    "id,slug,title,subtitle,cover_image_url,excerpt,status,published_at,created_at,updated_at",
-                ),
-                column="updated_at",
+        try:
+            res = (
+                apply_recent_first_order(
+                    get_client().table("blog_posts").select(_LIST_COLS),
+                    column="updated_at",
+                )
+                .limit(500)
+                .execute()
             )
-            .limit(500)
-            .execute()
-        )
+        except Exception as e:
+            err = str(e).lower()
+            if "author_name" not in err and "42703" not in err:
+                raise
+            res = (
+                apply_recent_first_order(
+                    get_client().table("blog_posts").select(_LIST_COLS_LEGACY),
+                    column="updated_at",
+                )
+                .limit(500)
+                .execute()
+            )
     except Exception:
         logger.exception("blog: list admin failed")
         return []
@@ -219,6 +243,11 @@ def update_post(post_id: str, fields: dict[str, Any]) -> dict[str, Any]:
     if "excerpt" in fields:
         ex = fields["excerpt"]
         patch["excerpt"] = str(ex).strip() if isinstance(ex, str) and ex.strip() else None
+    if "author_name" in fields:
+        name = fields["author_name"]
+        patch["author_name"] = (
+            str(name).strip()[:120] if isinstance(name, str) and name.strip() else None
+        )
     if "slug" in fields and fields["slug"]:
         patch["slug"] = _unique_slug(str(fields["slug"]).strip(), exclude_id=post_id)
     if "body_json" in fields and fields["body_json"] is not None:
@@ -318,17 +347,29 @@ def list_published_posts(*, limit: int = 50) -> list[dict[str, Any]]:
         rows.sort(key=lambda r: str(r.get("published_at") or ""), reverse=True)
         return [_row_to_list_item(r) for r in rows[:lim]]
     try:
-        res = (
-            get_client()
-            .table("blog_posts")
-            .select(
-                "id,slug,title,subtitle,cover_image_url,excerpt,status,published_at,created_at,updated_at",
+        try:
+            res = (
+                get_client()
+                .table("blog_posts")
+                .select(_LIST_COLS)
+                .eq("status", "published")
+                .order("published_at", desc=True)
+                .limit(lim)
+                .execute()
             )
-            .eq("status", "published")
-            .order("published_at", desc=True)
-            .limit(lim)
-            .execute()
-        )
+        except Exception as e:
+            err = str(e).lower()
+            if "author_name" not in err and "42703" not in err:
+                raise
+            res = (
+                get_client()
+                .table("blog_posts")
+                .select(_LIST_COLS_LEGACY)
+                .eq("status", "published")
+                .order("published_at", desc=True)
+                .limit(lim)
+                .execute()
+            )
     except Exception:
         logger.exception("blog: list public failed")
         return []

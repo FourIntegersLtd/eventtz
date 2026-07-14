@@ -250,8 +250,6 @@ def validate_step_fields(step: int, payload: dict[str, Any]) -> None:
     elif step == 6:
         names = payload.get("portfolioFileNames")
         count = len(names) if isinstance(names, list) else 0
-        if count < 5:
-            raise ValidationError("Step portfolio: upload at least 5 images.")
         if count > 20:
             raise ValidationError("Step portfolio: maximum 20 images.")
 

@@ -52,6 +52,12 @@ def test_create_publish_public_visibility(mock_settings):
     public = blog_service.get_published_post_by_slug("hello-world")
     assert public is not None
     assert public["title"] == "Hello World"
+    assert public.get("author_name") is None
+
+    blog_service.update_post(draft["id"], {"author_name": "Eventtz Team"})
+    public = blog_service.get_published_post_by_slug("hello-world")
+    assert public is not None
+    assert public["author_name"] == "Eventtz Team"
 
     blog_service.unpublish_post(draft["id"])
     assert blog_service.get_published_post_by_slug("hello-world") is None
