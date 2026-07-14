@@ -42,7 +42,8 @@ export function AdminEmailTestingView() {
   const [templates, setTemplates] = useState<AdminEmailTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [templateId, setTemplateId] = useState("");
-  const [toEmail, setToEmail] = useState(user?.email ?? "");
+  const [toEmail, setToEmail] = useState("");
+  const [emailInitialized, setEmailInitialized] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -74,11 +75,14 @@ export function AdminEmailTestingView() {
     void load();
   }, [load]);
 
+  // Seed once from the signed-in admin email; never overwrite while they type or clear.
   useEffect(() => {
-    if (user?.email && !toEmail) {
+    if (emailInitialized) return;
+    if (user?.email) {
       setToEmail(user.email);
+      setEmailInitialized(true);
     }
-  }, [user?.email, toEmail]);
+  }, [user?.email, emailInitialized]);
 
   const sendTest = async () => {
     const email = toEmail.trim();
@@ -148,15 +152,31 @@ export function AdminEmailTestingView() {
           <label htmlFor="admin-email-test-to" className="block text-sm font-medium text-neutral-800">
             Send to
           </label>
-          <input
-            id="admin-email-test-to"
-            type="email"
-            value={toEmail}
-            onChange={(e) => setToEmail(e.target.value)}
-            placeholder="you@example.com"
-            autoComplete="email"
-            className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-          />
+          <div className="flex gap-2">
+            <input
+              id="admin-email-test-to"
+              type="text"
+              inputMode="email"
+              autoComplete="off"
+              spellCheck={false}
+              value={toEmail}
+              onChange={(e) => setToEmail(e.target.value)}
+              placeholder="name@example.com"
+              className="min-w-0 flex-1 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
+            {toEmail ? (
+              <button
+                type="button"
+                onClick={() => setToEmail("")}
+                className="shrink-0 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+              >
+                Clear
+              </button>
+            ) : null}
+          </div>
+          <p className="text-xs text-neutral-500">
+            Any inbox. Replace the address above or clear it and type a new one.
+          </p>
         </div>
 
         <Button
