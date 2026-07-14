@@ -1,5 +1,5 @@
             <tr>
-              <td style="padding: 16px 20px 4px; background-color: #f4f0f8">
+              <td style="padding: 32px 24px 12px; background-color: #f4f0f8">
                 <p
                   style="
                     margin: 0;
@@ -14,9 +14,9 @@
                 </p>
                 <p
                   style="
-                    margin: 10px 0 0;
+                    margin: 12px 0 0;
                     font-size: 17px;
-                    line-height: 1.5;
+                    line-height: 1.55;
                     color: #2d2938;
                   "
                 >
@@ -28,7 +28,7 @@
             {% for section in showcase_sections %}
             {% if section.tone == 'soft' %}
             <tr>
-              <td style="padding: 20px 20px 8px; background-color: #f4f0f8">
+              <td style="padding: 28px 24px 12px; background-color: #f4f0f8">
                 <p
                   style="
                     margin: 0;
@@ -43,7 +43,7 @@
                 </p>
                 <p
                   style="
-                    margin: 10px 0 0;
+                    margin: 12px 0 0;
                     font-size: 22px;
                     font-weight: 600;
                     letter-spacing: -0.02em;
@@ -53,13 +53,13 @@
                 >
                   {{ section.title }}
                 </p>
-                <p style="margin: 8px 0 0; font-size: 15px; line-height: 1.55; color: #6b6575">
+                <p style="margin: 10px 0 0; font-size: 15px; line-height: 1.55; color: #6b6575">
                   {{ section.description }}
                 </p>
               </td>
             </tr>
             <tr>
-              <td style="padding: 0 0 {% if loop.last %}24px{% else %}16px{% endif %} 0; background-color: #f4f0f8; font-size: 0; line-height: 0">
+              <td style="padding: 8px 0 {% if loop.last %}36px{% else %}28px{% endif %} 0; background-color: #f4f0f8; font-size: 0; line-height: 0">
                 <img
                   src="{{ section.image_url }}"
                   alt="{{ section.image_alt }}"
@@ -76,7 +76,7 @@
             </tr>
             {% else %}
             <tr>
-              <td style="padding: 20px 20px 8px; background-color: #ffffff">
+              <td style="padding: 28px 24px 12px; background-color: #ffffff">
                 <p
                   style="
                     margin: 0;
@@ -91,7 +91,7 @@
                 </p>
                 <p
                   style="
-                    margin: 10px 0 0;
+                    margin: 12px 0 0;
                     font-size: 22px;
                     font-weight: 600;
                     letter-spacing: -0.02em;
@@ -101,13 +101,13 @@
                 >
                   {{ section.title }}
                 </p>
-                <p style="margin: 8px 0 0; font-size: 15px; line-height: 1.55; color: #6b6575">
+                <p style="margin: 10px 0 0; font-size: 15px; line-height: 1.55; color: #6b6575">
                   {{ section.description }}
                 </p>
               </td>
             </tr>
             <tr>
-              <td style="padding: 0 0 {% if loop.last %}24px{% else %}16px{% endif %} 0; background-color: #ffffff; font-size: 0; line-height: 0">
+              <td style="padding: 8px 0 {% if loop.last %}36px{% else %}28px{% endif %} 0; background-color: #ffffff; font-size: 0; line-height: 0">
                 <img
                   src="{{ section.image_url }}"
                   alt="{{ section.image_alt }}"

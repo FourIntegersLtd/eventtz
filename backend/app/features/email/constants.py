@@ -24,6 +24,8 @@ EMAIL_IMAGE_BASE = "https://osceguide.s3.eu-west-2.amazonaws.com/Four+Integers+L
 EMAIL_IMAGES: dict[str, str] = {
     "logo": f"{EMAIL_IMAGE_BASE}/eventtz-logo.png",
     "hero": f"{EMAIL_IMAGE_BASE}/hero.png",
+    "welcome_clients": f"{EMAIL_IMAGE_BASE}/welcome-clients.png",
+    "welcome_vendors": f"{EMAIL_IMAGE_BASE}/welcome-vendors.png",
     "pricing": f"{EMAIL_IMAGE_BASE}/pricing.png",
     "book": f"{EMAIL_IMAGE_BASE}/book.png",
     "chat": f"{EMAIL_IMAGE_BASE}/chat.png",

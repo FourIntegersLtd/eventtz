@@ -6,7 +6,7 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.features.email.constants import APP_NAME
+from app.features.email.constants import APP_NAME, EMAIL_IMAGES
 from app.features.email.delivery_log import booking_template_id, claim_booking_email_send
 from app.features.email.branding import (
     base_email_context,
@@ -351,6 +351,7 @@ class EmailService:
                 "We are glad you are here."
             )
             showcase_sections = vendor_welcome_showcase()
+            hero_image_url = EMAIL_IMAGES["welcome_vendors"]
         else:
             welcome_subtitle = (
                 "Welcome aboard. "
@@ -373,6 +374,7 @@ class EmailService:
                 "We are happy to help."
             )
             showcase_sections = client_welcome_showcase()
+            hero_image_url = EMAIL_IMAGES["welcome_clients"]
 
         ctx = base_email_context(
             display_name=name,
@@ -385,6 +387,7 @@ class EmailService:
             welcome_cta_label=welcome_cta_label,
             welcome_cta_url=welcome_cta_url,
             welcome_support_line=welcome_support_line,
+            hero_image_url=hero_image_url,
         )
         subject = f"Welcome to {APP_NAME}"
         html = render_template("marketing/welcome.html", ctx)

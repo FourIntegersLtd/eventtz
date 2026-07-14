@@ -173,6 +173,18 @@ def test_send_welcome_vendor(mock_settings, mock_resend):
     mock_resend.assert_called_once()
     assert mock_resend.call_args.kwargs["subject"] == "Welcome to Eventtz"
     assert "vendor@example.com" in mock_resend.call_args.kwargs["to"]
+    assert "welcome-vendors.png" in mock_resend.call_args.kwargs["html"]
+
+
+@patch("app.features.email.service.resend_send", return_value=True)
+@patch("app.features.email.service.get_settings")
+def test_send_welcome_client_hero(mock_settings, mock_resend):
+    mock_settings.return_value.frontend_url = "https://eventtz.com"
+    mock_settings.return_value.local_auth_mode = False
+    svc = EmailService()
+    ok = svc.send_welcome(to_email="client@example.com", user_type="client")
+    assert ok is True
+    assert "welcome-clients.png" in mock_resend.call_args.kwargs["html"]
 
 
 @patch("app.features.email.dispatch.get_settings")
