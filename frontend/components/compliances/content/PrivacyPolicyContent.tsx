@@ -13,7 +13,7 @@ export function PrivacyPolicyContent() {
       <p className="compliance-meta">
         Effective date: 1 July 2026
         <br />
-        Last updated: 11 July 2026
+        Last updated: 14 July 2026
       </p>
       <p>
         Eventtz (&quot;Eventtz&quot;, &quot;we&quot;, &quot;us&quot;, or
@@ -103,19 +103,19 @@ export function PrivacyPolicyContent() {
         <p>Depending on the activity, we rely on:</p>
         <ul>
           <li>
-            <strong>Contract</strong> — to provide the Platform and fulfil
+            <strong>Contract:</strong> to provide the Platform and fulfil
             bookings;
           </li>
           <li>
-            <strong>Legitimate interests</strong> — to secure the Platform,
+            <strong>Legitimate interests:</strong> to secure the Platform,
             prevent fraud, and improve services, balanced against your rights;
           </li>
           <li>
-            <strong>Consent</strong> — for optional marketing or non-essential
+            <strong>Consent:</strong> for optional marketing or non-essential
             cookies where required;
           </li>
           <li>
-            <strong>Legal obligation</strong> — for record-keeping, tax, and
+            <strong>Legal obligation:</strong> for record-keeping, tax, and
             compliance.
           </li>
         </ul>

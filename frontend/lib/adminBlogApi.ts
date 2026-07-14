@@ -9,6 +9,7 @@ export type BlogPostListItem = {
   subtitle: string | null;
   cover_image_url: string | null;
   excerpt: string | null;
+  author_name: string | null;
   status: BlogPostStatus;
   published_at: string | null;
   created_at: string | null;
@@ -56,6 +57,7 @@ export async function updateAdminBlogPost(
     body_json?: Record<string, unknown>;
     body_html?: string;
     excerpt?: string | null;
+    author_name?: string | null;
   },
 ): Promise<BlogPostAdminDetail> {
   const { data } = await api.patch<{ post: BlogPostAdminDetail }>(

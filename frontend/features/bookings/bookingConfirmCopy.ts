@@ -72,6 +72,21 @@ export const BOOKING_CONFIRM_COPY = {
     confirmLabel: "Yes, decline",
     confirmLoadingLabel: "Declining…",
   },
+  acceptBooking: {
+    title: "Accept this booking?",
+    description:
+      "You'll confirm you're available at the listed price. The client will be asked to pay to secure the booking.",
+    cancelLabel: "Go back",
+    confirmLabel: "Yes, accept",
+    confirmLoadingLabel: "Accepting…",
+  },
+  reviewUnreadBeforeRespond: {
+    title: "Review their message first",
+    description:
+      "This client sent you a message with details for the booking. Open the chat and read it before you accept or decline.",
+    cancelLabel: "Go back",
+    confirmLabel: "Open chat",
+  },
   openDispute: {
     title: "Report a problem?",
     description:

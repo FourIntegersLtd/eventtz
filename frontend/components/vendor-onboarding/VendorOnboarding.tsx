@@ -9,7 +9,9 @@ import { STEP_LABELS } from "./constants";
 import { OnboardingStepContent } from "./OnboardingStepContent";
 import { OnboardingProgressHeader } from "./OnboardingProgressHeader";
 import { useVendorOnboardingController } from "./useVendorOnboardingController";
+import { Button } from "@/components/ui/Button";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { Modal } from "@/components/ui/Modal";
 
 export function VendorOnboarding() {
   const router = useRouter();
@@ -22,6 +24,7 @@ export function VendorOnboarding() {
     data,
     businessNameError,
     formError,
+    setFormError,
     loadStatus,
     saving,
     approvalStatus,
@@ -185,11 +188,24 @@ export function VendorOnboarding() {
             : "You can edit again after our review."}
         </div>
       )}
-      {formError && (
-        <div className="mb-8 rounded-2xl bg-red-50 p-4 text-sm text-red-800 shadow-sm ring-1 ring-red-200/50 whitespace-pre-line">
-          {formError}
-        </div>
-      )}
+      <Modal
+        isOpen={!!formError}
+        onClose={() => setFormError(null)}
+        title="Almost there"
+        zIndexClassName="z-[70]"
+        maxWidthClassName="max-w-md"
+        footer={
+          <div className="flex justify-end">
+            <Button variant="primary" onClick={() => setFormError(null)}>
+              OK
+            </Button>
+          </div>
+        }
+      >
+        {formError ? (
+          <p className="whitespace-pre-line text-sm text-neutral-700">{formError}</p>
+        ) : null}
+      </Modal>
 
       {!useWizardLayout ? (
         <div className="flex flex-col gap-8 md:flex-row md:items-start">

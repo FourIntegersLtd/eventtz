@@ -30,6 +30,7 @@ const BIO_MAX_WORDS = 60;
 const DELIVERY_LABELS: Record<string, string> = {
   travel_to_client: "I travel to the client",
   client_comes: "Clients come to me",
+  travel_both: "I travel to clients and clients also travel to me",
   ship_to_client: "I deliver to clients (e.g. courier)",
 };
 
@@ -141,12 +142,28 @@ export function StepReview({
     radiusOptionsForMarket(getMarket(data.countryCode)).find(
       (o) => o.value === data.travelRadius,
     )?.label ?? "—";
-  const deliveryLabel =
-    data.deliveryModes.length === 0
-      ? "—"
-      : data.deliveryModes
-          .map((m) => DELIVERY_LABELS[m] ?? m)
-          .join(" · ");
+  const deliveryLabel = (() => {
+    if (data.deliveryModes.length === 0) return "—";
+    const hasBoth =
+      data.deliveryModes.includes("travel_both") ||
+      (data.deliveryModes.includes("travel_to_client") &&
+        data.deliveryModes.includes("client_comes"));
+    const labels: string[] = [];
+    if (hasBoth) {
+      labels.push(DELIVERY_LABELS.travel_both);
+    } else {
+      if (data.deliveryModes.includes("travel_to_client")) {
+        labels.push(DELIVERY_LABELS.travel_to_client);
+      }
+      if (data.deliveryModes.includes("client_comes")) {
+        labels.push(DELIVERY_LABELS.client_comes);
+      }
+    }
+    if (data.deliveryModes.includes("ship_to_client")) {
+      labels.push(DELIVERY_LABELS.ship_to_client);
+    }
+    return labels.join(" · ");
+  })();
   const wordCount = bioWordCount(data.aiBioDraft);
   const overLimit = wordCount > BIO_MAX_WORDS;
   const persistedPortfolioUrls = portfolioImageUrlsFromPayload({

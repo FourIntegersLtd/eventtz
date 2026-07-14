@@ -9,7 +9,7 @@ export function CookiesPolicyContent() {
       <p className="compliance-meta">
         Effective date: 1 July 2026
         <br />
-        Last updated: 11 July 2026
+        Last updated: 14 July 2026
       </p>
       <p>
         This Cookie Policy explains how Eventtz, operated by Four Integers Ltd,

@@ -80,6 +80,7 @@ export function StepPortfolio({
 }: StepPortfolioProps) {
   const [objectUrls, setObjectUrls] = useState<Record<string, string>>({});
   const [duplicateNotice, setDuplicateNotice] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
 
   useEffect(() => {
     const next: Record<string, string> = {};
@@ -127,14 +128,73 @@ export function StepPortfolio({
     update({ socialLinks: data.socialLinks.filter((s) => s.id !== id) });
   };
 
+  const addPortfolioFiles = (files: File[]) => {
+    const images = files.filter((f) => f.type.startsWith("image/"));
+    if (images.length === 0) return;
+    const existingKeys = new Set(data.portfolioFiles.map((f) => portfolioFileKey(f)));
+    const existingPersistedUrls = new Set(data.portfolioFileNamesPersisted);
+    const next: File[] = [...data.portfolioFiles];
+    const skippedDuplicates: string[] = [];
+    for (const f of images) {
+      const key = portfolioFileKey(f);
+      if (existingKeys.size + existingPersistedUrls.size >= 20) break;
+      if (existingKeys.has(key)) {
+        skippedDuplicates.push(f.name);
+        continue;
+      }
+      existingKeys.add(key);
+      next.push(f);
+    }
+    if (skippedDuplicates.length > 0) {
+      const label =
+        skippedDuplicates.length === 1
+          ? `"${skippedDuplicates[0]}"`
+          : `${skippedDuplicates.length} images`;
+      setDuplicateNotice(
+        `${label} already in your portfolio — duplicate${skippedDuplicates.length === 1 ? "" : "s"} skipped.`,
+      );
+    } else {
+      setDuplicateNotice(null);
+    }
+    update({ portfolioFiles: next });
+  };
+
   return (
     <div className="space-y-8">
       <OnboardingQuestionLayout
         headline={STEP_COPY[6].headline}
-        subtext={`${STEP_COPY[6].subtext} We check new photos before you continue.`}
+        subtext={STEP_COPY[6].subtext}
       />
-      <OnboardingSubQuestion headline="Upload your portfolio photos" indexOffset={3}>
-        <div className="rounded-xl border-2 border-dashed border-neutral-200 bg-neutral-50/80 p-8 text-center">
+      <OnboardingSubQuestion headline="Upload your portfolio photos (optional)" indexOffset={3}>
+        <div
+          className={`rounded-xl border-2 border-dashed p-8 text-center transition ${
+            dragOver
+              ? "border-primary bg-primary/[0.06]"
+              : "border-neutral-200 bg-neutral-50/80"
+          }`}
+          onDragEnter={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setDragOver(true);
+          }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setDragOver(true);
+          }}
+          onDragLeave={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+            setDragOver(false);
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setDragOver(false);
+            addPortfolioFiles(Array.from(e.dataTransfer.files ?? []));
+          }}
+        >
           <input
             type="file"
             accept="image/*"
@@ -142,35 +202,7 @@ export function StepPortfolio({
             className="hidden"
             id="portfolio-imgs"
             onChange={(e) => {
-              const files = Array.from(e.target.files ?? []);
-              const existingKeys = new Set([
-                ...data.portfolioFiles.map((f) => portfolioFileKey(f)),
-              ]);
-              const existingPersistedUrls = new Set(data.portfolioFileNamesPersisted);
-              const next: File[] = [...data.portfolioFiles];
-              const skippedDuplicates: string[] = [];
-              for (const f of files) {
-                const key = portfolioFileKey(f);
-                if (existingKeys.size + existingPersistedUrls.size >= 20) break;
-                if (existingKeys.has(key)) {
-                  skippedDuplicates.push(f.name);
-                  continue;
-                }
-                existingKeys.add(key);
-                next.push(f);
-              }
-              if (skippedDuplicates.length > 0) {
-                const label =
-                  skippedDuplicates.length === 1
-                    ? `"${skippedDuplicates[0]}"`
-                    : `${skippedDuplicates.length} images`;
-                setDuplicateNotice(
-                  `${label} already in your portfolio — duplicate${skippedDuplicates.length === 1 ? "" : "s"} skipped.`,
-                );
-              } else {
-                setDuplicateNotice(null);
-              }
-              update({ portfolioFiles: next });
+              addPortfolioFiles(Array.from(e.target.files ?? []));
               e.target.value = "";
             }}
           />
@@ -184,7 +216,8 @@ export function StepPortfolio({
             </span>
           </label>
           <p className="mt-1 text-xs text-neutral-500">
-            Min 5, max 20 · {totalCount} uploaded
+            Optional · up to 20
+            {totalCount > 0 ? ` · ${totalCount} selected` : ""}
           </p>
           {duplicateNotice ? (
             <p className="mt-2 text-xs font-medium text-amber-800">{duplicateNotice}</p>

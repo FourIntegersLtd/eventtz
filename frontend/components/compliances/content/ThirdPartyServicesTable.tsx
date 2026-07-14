@@ -20,9 +20,19 @@ const ROWS = [
     location: "USA / EU",
   },
   {
+    service: "Resend",
+    purpose: "Transactional and account email delivery",
+    location: "USA",
+  },
+  {
     service: "OpenAI",
     purpose: "Optional AI assistance during vendor onboarding (e.g. bio suggestions)",
     location: "USA",
+  },
+  {
+    service: "Amazon Web Services (S3)",
+    purpose: "Email template image hosting",
+    location: "United Kingdom (eu-west-2)",
   },
   {
     service: "getAddress.io",
@@ -33,6 +43,11 @@ const ROWS = [
     service: "Ordnance Survey Places",
     purpose: "UK place-name search and geocoding",
     location: "United Kingdom",
+  },
+  {
+    service: "Photon (Komoot)",
+    purpose: "Place search and location autocomplete",
+    location: "EU (Germany)",
   },
 ] as const;
 

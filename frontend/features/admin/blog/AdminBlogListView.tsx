@@ -103,7 +103,10 @@ export function AdminBlogListView() {
                 <AdminTableRow key={p.id}>
                   <AdminTableCell>
                     <p className="font-medium text-neutral-900">{p.title || "Untitled"}</p>
-                    <p className="mt-0.5 text-xs text-neutral-500">/{p.slug}</p>
+                    <p className="mt-0.5 text-xs text-neutral-500">
+                      /{p.slug}
+                      {p.author_name?.trim() ? ` · By ${p.author_name.trim()}` : ""}
+                    </p>
                   </AdminTableCell>
                   <AdminTableCell>
                     <span

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { BlogByline } from "@/features/blog/BlogByline";
 import { fetchPublishedBlogPosts } from "@/lib/blogApi";
 import type { BlogPostListItem } from "@/lib/adminBlogApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
@@ -69,19 +70,20 @@ export function BlogIndexView() {
               <article>
                 <Link href={`/blog/${post.slug}`} className="group block">
                   {post.cover_image_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={post.cover_image_url}
-                      alt=""
-                      className="mb-5 aspect-[16/9] w-full object-cover transition duration-500 group-hover:opacity-95"
-                    />
+                    <div className="mb-5 overflow-hidden rounded-2xl bg-neutral-100">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={post.cover_image_url}
+                        alt=""
+                        className="block h-auto w-full transition duration-500 group-hover:opacity-95"
+                      />
+                    </div>
                   ) : null}
-                  <time
-                    dateTime={post.published_at ?? undefined}
-                    className="text-xs font-medium uppercase tracking-wider text-neutral-500"
-                  >
-                    {formatPublished(post.published_at)}
-                  </time>
+                  <BlogByline
+                    publishedAt={formatPublished(post.published_at)}
+                    publishedAtIso={post.published_at}
+                    authorName={post.author_name}
+                  />
                   <h2 className="mt-2 font-heading text-2xl font-semibold text-neutral-900 transition group-hover:text-primary sm:text-3xl">
                     {post.title}
                   </h2>

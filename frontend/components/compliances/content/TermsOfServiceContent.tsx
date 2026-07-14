@@ -14,7 +14,7 @@ export function TermsOfServiceContent() {
       <p className="compliance-meta">
         Effective date: 1 July 2026
         <br />
-        Last updated: 13 July 2026
+        Last updated: 14 July 2026
       </p>
       <p>
         These Terms of Service (&quot;Terms&quot;) govern your access to and use
@@ -73,7 +73,7 @@ export function TermsOfServiceContent() {
             the vendor is paid. If you haven&apos;t paid yet, nothing is charged.
           </li>
           <li>
-            If you cancel after paying — or the vendor cancels — you get a full
+            If you cancel after paying, or the vendor cancels, you get a full
             refund to your original payment method. Refunds usually take 5-10
             working days to arrive.
           </li>
@@ -97,8 +97,8 @@ export function TermsOfServiceContent() {
             it went well. Once both confirm, the vendor is paid.
           </li>
           <li>
-            If neither side confirms within 48 hours after the event — and no
-            problem has been reported — we pay the vendor automatically.
+            If neither side confirms within 48 hours after the event, and no
+            problem has been reported, we pay the vendor automatically.
           </li>
           <li>
             If something went wrong, report it from your booking before that
@@ -133,7 +133,7 @@ export function TermsOfServiceContent() {
           <li>communicate respectfully with vendors;</li>
           <li>pay agreed amounts through the Platform where required;</li>
           <li>
-            after the event, confirm it went well — or report any problems
+            after the event, confirm it went well, or report any problems
             promptly.
           </li>
         </ul>

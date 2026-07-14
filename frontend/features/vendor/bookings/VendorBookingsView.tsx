@@ -417,6 +417,7 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
                     onAcceptAtListedPrice={() => void applyBookingStatus("accepted")}
                     onDecline={() => void applyBookingStatus("declined")}
                     onSendUpdatedPrice={(rows) => void sendUpdatedPrice(rows)}
+                    onOpenChat={() => setChatOpen(true)}
                   />
                 ) : undefined,
                 afterSections:

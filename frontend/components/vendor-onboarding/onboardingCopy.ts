@@ -40,7 +40,7 @@ export const STEP_COPY = {
   },
   6: {
     headline: "Show your best work",
-    subtext: "Add photos, video, and social links.",
+    subtext: "Photos are optional — add them now or later.",
   },
   7: {
     headline: "Get paid",

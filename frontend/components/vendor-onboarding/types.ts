@@ -7,6 +7,7 @@ export type TravelRadius =
 export type DeliveryMode =
   | "travel_to_client"
   | "client_comes"
+  | "travel_both"
   | "ship_to_client";
 
 /** Step 3: default travel / delivery policy (single choice). */

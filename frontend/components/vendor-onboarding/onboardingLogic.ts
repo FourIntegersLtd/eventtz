@@ -164,7 +164,6 @@ export function validateStepErrors(step: number, d: VendorOnboardingData): strin
         ...d.portfolioFileNamesPersisted,
         ...d.portfolioFiles.map((f) => portfolioFileKey(f)),
       ]);
-      if (portfolioUnique.size < 5) errors.push("At least 5 portfolio images");
       if (portfolioUnique.size > 20) errors.push("No more than 20 portfolio images");
       break;
     }

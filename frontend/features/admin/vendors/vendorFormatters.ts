@@ -22,9 +22,18 @@ export function approvalLabel(status: string): string {
   return getVendorApprovalStatusMeta(status).label;
 }
 
+const DELIVERY_MODE_LABELS: Record<string, string> = {
+  travel_to_client: "I travel to the client",
+  client_comes: "Clients come to me",
+  travel_both: "I travel to clients and clients also travel to me",
+  ship_to_client: "I deliver to clients (e.g. courier)",
+};
+
 /** Turn snake_case API values into readable labels. */
 export function formatPayloadLabel(value: string): string {
   if (!value.trim()) return "—";
+  const known = DELIVERY_MODE_LABELS[value.trim()];
+  if (known) return known;
   return value
     .trim()
     .replace(/_/g, " ")

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { BlogByline } from "@/features/blog/BlogByline";
 import { fetchPublishedBlogPost, type BlogPostPublicDetail } from "@/lib/blogApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
 
@@ -69,17 +70,6 @@ export function BlogPostView({ slug }: BlogPostViewProps) {
 
   return (
     <article>
-      {post.cover_image_url ? (
-        <div className="relative w-full overflow-hidden bg-neutral-200">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={post.cover_image_url}
-            alt=""
-            className="max-h-[min(70vh,36rem)] w-full object-cover"
-          />
-        </div>
-      ) : null}
-
       <div className="mx-auto max-w-[42rem] px-4 pb-20 pt-10 sm:px-6 sm:pt-14">
         <Link
           href="/blog"
@@ -89,15 +79,12 @@ export function BlogPostView({ slug }: BlogPostViewProps) {
           All posts
         </Link>
 
-        <header className="mb-10 space-y-4 text-left">
-          {post.published_at ? (
-            <time
-              dateTime={post.published_at}
-              className="block text-xs font-medium uppercase tracking-[0.18em] text-neutral-500"
-            >
-              {formatPublished(post.published_at)}
-            </time>
-          ) : null}
+        <header className="mb-8 space-y-4 text-left">
+          <BlogByline
+            publishedAt={formatPublished(post.published_at)}
+            publishedAtIso={post.published_at}
+            authorName={post.author_name}
+          />
           <h1 className="font-heading text-4xl font-semibold tracking-tight text-neutral-900 sm:text-5xl">
             {post.title}
           </h1>
@@ -105,6 +92,17 @@ export function BlogPostView({ slug }: BlogPostViewProps) {
             <p className="text-lg leading-relaxed text-neutral-600 sm:text-xl">{post.subtitle}</p>
           ) : null}
         </header>
+
+        {post.cover_image_url ? (
+          <div className="mb-10 overflow-hidden rounded-2xl bg-neutral-100">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={post.cover_image_url}
+              alt=""
+              className="block h-auto w-full"
+            />
+          </div>
+        ) : null}
 
         <div
           className="blog-prose"

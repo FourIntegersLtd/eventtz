@@ -46,6 +46,7 @@ function coerceStr(p: Record<string, unknown>, k: string): string {
 const DELIVERY_SET = new Set<string>([
   "travel_to_client",
   "client_comes",
+  "travel_both",
   "ship_to_client",
 ]);
 

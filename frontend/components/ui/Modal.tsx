@@ -43,9 +43,9 @@ export function Modal({
         className="absolute inset-0 bg-black/45"
         onClick={onClose}
       />
-      <div className="absolute inset-0 overflow-y-auto p-4 sm:p-6">
+      <div className="absolute inset-0 flex items-center justify-center overflow-y-auto p-4 sm:p-6">
         <div
-          className={`mx-auto mt-4 sm:mt-8 rounded-2xl bg-white shadow-xl ${MODAL_PANEL} ${maxWidthClassName}`}
+          className={`my-auto w-full rounded-2xl bg-white shadow-xl ${MODAL_PANEL} ${maxWidthClassName}`}
         >
           <div className="flex items-center justify-between gap-3 border-b border-neutral-200 px-4 py-3 sm:px-5 sm:py-4">
             <h2 className="font-heading min-w-0 flex-1 pr-2 text-base font-semibold text-neutral-900 sm:text-lg">

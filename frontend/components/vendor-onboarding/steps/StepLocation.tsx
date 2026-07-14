@@ -23,6 +23,10 @@ export type StepLocationProps = {
 const DELIVERY_OPTIONS: { value: DeliveryMode; label: string }[] = [
   { value: "travel_to_client", label: "I travel to the client" },
   { value: "client_comes", label: "Clients come to me" },
+  {
+    value: "travel_both",
+    label: "I travel to clients and clients also travel to me",
+  },
   { value: "ship_to_client", label: "I deliver to clients (e.g. courier)" },
 ];
 
@@ -53,10 +57,44 @@ const TRAVEL_DELIVERY_POLICY_OPTIONS: {
   },
 ];
 
+function hasBothDirections(modes: DeliveryMode[]): boolean {
+  return (
+    modes.includes("travel_both") ||
+    (modes.includes("travel_to_client") && modes.includes("client_comes"))
+  );
+}
+
+function isDeliveryModeActive(modes: DeliveryMode[], value: DeliveryMode): boolean {
+  if (value === "travel_both") return hasBothDirections(modes);
+  if (value === "travel_to_client" || value === "client_comes") {
+    // Combined option owns the highlight when both directions apply.
+    if (hasBothDirections(modes)) return false;
+    return modes.includes(value);
+  }
+  return modes.includes(value);
+}
+
 function toggleDeliveryMode(
   current: DeliveryMode[],
   value: DeliveryMode,
 ): DeliveryMode[] {
+  if (value === "travel_both") {
+    if (hasBothDirections(current)) {
+      return current.filter(
+        (x) => x !== "travel_both" && x !== "travel_to_client" && x !== "client_comes",
+      );
+    }
+    return [
+      ...current.filter((x) => x !== "travel_to_client" && x !== "client_comes"),
+      "travel_both",
+    ];
+  }
+  if (value === "travel_to_client" || value === "client_comes") {
+    const withoutBoth = current.filter((x) => x !== "travel_both");
+    return withoutBoth.includes(value)
+      ? withoutBoth.filter((x) => x !== value)
+      : [...withoutBoth, value];
+  }
   return current.includes(value)
     ? current.filter((x) => x !== value)
     : [...current, value];
@@ -140,7 +178,7 @@ export function StepLocation({ data, update }: StepLocationProps) {
           {DELIVERY_OPTIONS.map(({ value, label }) => (
             <ToggleChip
               key={value}
-              active={data.deliveryModes.includes(value)}
+              active={isDeliveryModeActive(data.deliveryModes, value)}
               onClick={() =>
                 update({
                   deliveryModes: toggleDeliveryMode(data.deliveryModes, value),

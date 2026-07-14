@@ -32,6 +32,7 @@ export function AdminBlogEditorView({ postId }: AdminBlogEditorViewProps) {
   const [subtitle, setSubtitle] = useState("");
   const [slug, setSlug] = useState("");
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [authorName, setAuthorName] = useState("");
   const [bodyJson, setBodyJson] = useState<Record<string, unknown> | null>(null);
   const [bodyHtml, setBodyHtml] = useState("");
   const [loading, setLoading] = useState(true);
@@ -50,6 +51,7 @@ export function AdminBlogEditorView({ postId }: AdminBlogEditorViewProps) {
       setSubtitle(p.subtitle ?? "");
       setSlug(p.slug);
       setCoverUrl(p.cover_image_url);
+      setAuthorName(p.author_name ?? "");
       setBodyJson(p.body_json ?? null);
       setBodyHtml(p.body_html ?? "");
     } catch (e: unknown) {
@@ -69,6 +71,7 @@ export function AdminBlogEditorView({ postId }: AdminBlogEditorViewProps) {
       subtitle: subtitle || null,
       slug,
       cover_image_url: coverUrl,
+      author_name: authorName.trim() || null,
       body_json: bodyJson ?? undefined,
       body_html: bodyHtml,
       excerpt: subtitle || title.slice(0, 160) || null,
@@ -193,6 +196,18 @@ export function AdminBlogEditorView({ postId }: AdminBlogEditorViewProps) {
         />
         <label className="block text-sm text-neutral-600">
           <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-neutral-500">
+            Author
+          </span>
+          <input
+            value={authorName}
+            onChange={(e) => setAuthorName(e.target.value)}
+            placeholder="Shown as “By …” on the public blog"
+            maxLength={120}
+            className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+          />
+        </label>
+        <label className="block text-sm text-neutral-600">
+          <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-neutral-500">
             Slug
           </span>
           <input
@@ -207,12 +222,14 @@ export function AdminBlogEditorView({ postId }: AdminBlogEditorViewProps) {
             Cover image
           </p>
           {coverUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={coverUrl}
-              alt=""
-              className="mb-3 max-h-64 w-full rounded-xl object-cover"
-            />
+            <div className="mb-3 overflow-hidden rounded-xl bg-neutral-100">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={coverUrl}
+                alt=""
+                className="mx-auto max-h-80 w-full object-contain object-top"
+              />
+            </div>
           ) : null}
           <Button
             variant="secondary"

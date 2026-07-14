@@ -6,6 +6,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { BOOKING_CONFIRM_COPY } from "@/features/bookings/bookingConfirmCopy";
 import { inputClass, labelClass, ToggleChip } from "@/components/vendor-onboarding/steps/form-primitives";
 import type { BookingPricing } from "@/features/bookings/BookingPricingBreakdown";
+import { fetchConversation } from "@/lib/chatApi";
 import type { VendorBookingDetail } from "@/lib/vendorBookingsApi";
 import { getBookingServiceFeePercent } from "@/lib/bookingServiceFee";
 
@@ -18,6 +19,8 @@ type AdjDraftRow = {
 
 type AdjKind = "cost" | "discount";
 
+type PendingDecision = "accept" | "decline";
+
 type VendorBookingResponseFlowProps = {
   detail: VendorBookingDetail;
   actionBusy: boolean;
@@ -25,6 +28,8 @@ type VendorBookingResponseFlowProps = {
   onAcceptAtListedPrice: () => void;
   onDecline: () => void;
   onSendUpdatedPrice: (rows: AdjDraftRow[]) => void;
+  /** Opens the booking chat drawer so the vendor can read unread client messages. */
+  onOpenChat: () => void;
 };
 
 function friendlyMoneyLabel(label: string): string {
@@ -131,6 +136,7 @@ export function VendorBookingResponseFlow({
   onAcceptAtListedPrice,
   onDecline,
   onSendUpdatedPrice,
+  onOpenChat,
 }: VendorBookingResponseFlowProps) {
   const listedTotal =
     detail.pricing?.client_total_label ??
@@ -140,7 +146,9 @@ export function VendorBookingResponseFlow({
 
   const waitingForClient = hasSavedPriceUpdate(detail);
   const [step, setStep] = useState<"review" | "adjust">("review");
-  const [declineOpen, setDeclineOpen] = useState(false);
+  const [pendingDecision, setPendingDecision] = useState<PendingDecision | null>(null);
+  const [unreadGateOpen, setUnreadGateOpen] = useState(false);
+  const [checkingDecision, setCheckingDecision] = useState<PendingDecision | null>(null);
   const [adjKind, setAdjKind] = useState<AdjKind>("cost");
   const [lines, setLines] = useState<AdjDraftRow[]>([]);
   const [amountInput, setAmountInput] = useState("");
@@ -197,6 +205,34 @@ export function VendorBookingResponseFlow({
     if (adjKind === "cost" && amountInput.trim() && !reasonInput.trim()) return true;
     return false;
   }, [adjustDrafts, adjKind, amountInput, reasonInput]);
+
+  const requestDecision = async (kind: PendingDecision) => {
+    if (actionBusy || adjSaving || checkingDecision) return;
+    setCheckingDecision(kind);
+    try {
+      const conversationId = detail.conversation_id?.trim();
+      if (conversationId) {
+        try {
+          const conv = await fetchConversation(conversationId);
+          if ((conv.unread_count ?? 0) > 0) {
+            setPendingDecision(kind);
+            setUnreadGateOpen(true);
+            return;
+          }
+        } catch {
+          // Non-fatal: if unread check fails, proceed to the normal confirm dialog.
+        }
+      } else if ((detail.notes ?? "").trim()) {
+        // Older bookings may only have notes on the booking (not yet mirrored to chat).
+        setPendingDecision(kind);
+        setUnreadGateOpen(true);
+        return;
+      }
+      setPendingDecision(kind);
+    } finally {
+      setCheckingDecision(null);
+    }
+  };
 
   if (waitingForClient && step !== "adjust") {
     const currentTotal = friendlyMoneyLabel(
@@ -319,6 +355,16 @@ export function VendorBookingResponseFlow({
     );
   }
 
+  const acceptCopy = BOOKING_CONFIRM_COPY.acceptBooking;
+  const declineCopy = BOOKING_CONFIRM_COPY.declineBooking;
+  const unreadCopy = BOOKING_CONFIRM_COPY.reviewUnreadBeforeRespond;
+  const confirmOpen = pendingDecision !== null && !unreadGateOpen;
+  const hasChatThread = Boolean(detail.conversation_id?.trim());
+  const unreadGateDescription = hasChatThread
+    ? unreadCopy.description
+    : "The client left details on this booking. Review “Notes from client” above, then try again.";
+  const unreadGateConfirmLabel = hasChatThread ? unreadCopy.confirmLabel : "OK";
+
   return (
     <>
       <div className="space-y-3">
@@ -331,16 +377,16 @@ export function VendorBookingResponseFlow({
           <Button
             variant="primary"
             className="w-full sm:w-auto"
-            disabled={actionBusy || adjSaving}
-            loading={actionBusy}
-            onClick={onAcceptAtListedPrice}
+            disabled={actionBusy || adjSaving || !!checkingDecision}
+            loading={checkingDecision === "accept"}
+            onClick={() => void requestDecision("accept")}
           >
             Accept booking
           </Button>
           <Button
             variant="secondary"
             className="w-full sm:w-auto"
-            disabled={actionBusy || adjSaving}
+            disabled={actionBusy || adjSaving || !!checkingDecision}
             onClick={() => openAdjust([])}
           >
             Suggest a different price
@@ -349,8 +395,8 @@ export function VendorBookingResponseFlow({
         <div className="flex justify-end">
           <button
             type="button"
-            disabled={actionBusy || adjSaving}
-            onClick={() => setDeclineOpen(true)}
+            disabled={actionBusy || adjSaving || !!checkingDecision}
+            onClick={() => void requestDecision("decline")}
             className="text-sm font-medium text-red-700 hover:underline disabled:opacity-60"
           >
             Can&apos;t take this one
@@ -359,17 +405,51 @@ export function VendorBookingResponseFlow({
       </div>
 
       <ConfirmDialog
-        isOpen={declineOpen}
-        title={BOOKING_CONFIRM_COPY.declineBooking.title}
-        description={BOOKING_CONFIRM_COPY.declineBooking.description}
-        cancelLabel={BOOKING_CONFIRM_COPY.declineBooking.cancelLabel}
-        confirmLabel={BOOKING_CONFIRM_COPY.declineBooking.confirmLabel}
-        confirmLoadingLabel={BOOKING_CONFIRM_COPY.declineBooking.confirmLoadingLabel}
+        isOpen={unreadGateOpen}
+        title={unreadCopy.title}
+        description={unreadGateDescription}
+        cancelLabel={unreadCopy.cancelLabel}
+        confirmLabel={unreadGateConfirmLabel}
+        confirmVariant="primary"
+        onCancel={() => {
+          setUnreadGateOpen(false);
+          setPendingDecision(null);
+        }}
+        onConfirm={() => {
+          setUnreadGateOpen(false);
+          setPendingDecision(null);
+          if (hasChatThread) onOpenChat();
+        }}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmOpen && pendingDecision === "accept"}
+        title={acceptCopy.title}
+        description={acceptCopy.description}
+        cancelLabel={acceptCopy.cancelLabel}
+        confirmLabel={acceptCopy.confirmLabel}
+        confirmLoadingLabel={acceptCopy.confirmLoadingLabel}
+        confirmVariant="primary"
+        loading={actionBusy}
+        onCancel={() => setPendingDecision(null)}
+        onConfirm={() => {
+          setPendingDecision(null);
+          onAcceptAtListedPrice();
+        }}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmOpen && pendingDecision === "decline"}
+        title={declineCopy.title}
+        description={declineCopy.description}
+        cancelLabel={declineCopy.cancelLabel}
+        confirmLabel={declineCopy.confirmLabel}
+        confirmLoadingLabel={declineCopy.confirmLoadingLabel}
         confirmVariant="destructive"
         loading={actionBusy}
-        onCancel={() => setDeclineOpen(false)}
+        onCancel={() => setPendingDecision(null)}
         onConfirm={() => {
-          setDeclineOpen(false);
+          setPendingDecision(null);
           onDecline();
         }}
       />

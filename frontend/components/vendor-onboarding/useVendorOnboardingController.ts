@@ -670,6 +670,7 @@ export function useVendorOnboardingController(options?: { isWalkthrough?: boolea
     data,
     businessNameError,
     formError,
+    setFormError,
     loadStatus,
     saving,
     generatingBio,
