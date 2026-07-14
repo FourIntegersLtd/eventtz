@@ -9,6 +9,7 @@ from app.core.db import get_db as get_client
 from app.core.logging import get_logger
 from app.features.auth.lookup import user_emails_by_id
 from app.features.email.admin_recipients import admin_notify_recipients
+from app.features.email.branding import email_public_base
 from app.features.email.service import get_email_service
 from app.features.notifications.copy import Portal, format_booking_notification
 from app.features.notifications.service import (
@@ -20,6 +21,10 @@ from app.features.notifications.service import (
 logger = get_logger(__name__)
 
 NotifyMode = Literal["upsert", "insert_if_absent"]
+
+
+def _email_base() -> str:
+    return email_public_base()
 
 
 def _frontend_base() -> str:
@@ -124,7 +129,7 @@ def dispatch_booking_notification(
         stored_body=body,
     )
 
-    action_url = f"{_frontend_base()}{_booking_portal_path(resolved_portal, booking_id)}"
+    action_url = f"{_email_base()}{_booking_portal_path(resolved_portal, booking_id)}"
     get_email_service().send_booking_notification(
         kind=kind,
         to_email=to_email,
@@ -165,7 +170,7 @@ def send_admin_dispute_opened_email(
 ) -> bool:
     emails = user_emails_by_id([opened_by_user_id])
     opened_by = emails.get(opened_by_user_id)
-    admin_url = f"{_frontend_base()}/admin/disputes"
+    admin_url = f"{_email_base()}/admin/disputes"
     return get_email_service().send_admin_dispute_opened(
         booking_id=booking_id,
         dispute_id=dispute_id,
@@ -182,7 +187,7 @@ def send_admin_vendor_submitted_email(
     vendor_email: str | None,
     business_name: str | None,
 ) -> bool:
-    admin_url = f"{_frontend_base()}/admin/vendors"
+    admin_url = f"{_email_base()}/admin/vendors"
     return get_email_service().send_admin_vendor_submitted(
         vendor_user_id=vendor_user_id,
         vendor_email=vendor_email,
@@ -226,7 +231,7 @@ def send_vendor_approval_email(
         vendor_email = emails.get(vendor_user_id)
     if not vendor_email or "@" not in vendor_email:
         return False
-    login_url = f"{_frontend_base()}/auth/login"
+    login_url = f"{_email_base()}/signin"
     return get_email_service().send_vendor_approval_status(
         to_email=vendor_email,
         approval_status=approval_status,
@@ -236,12 +241,12 @@ def send_vendor_approval_email(
 
 
 def send_team_invite_email(*, email: str) -> bool:
-    login_url = f"{_frontend_base()}/auth/login"
+    login_url = f"{_email_base()}/signin"
     return get_email_service().send_team_invite(to_email=email.strip().lower(), login_url=login_url)
 
 
 def send_client_suspended_email(*, email: str) -> bool:
-    support_url = f"{_frontend_base()}/contact"
+    support_url = f"{_email_base()}/contact"
     return get_email_service().send_client_suspended(to_email=email, support_url=support_url)
 
 

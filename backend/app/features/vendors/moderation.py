@@ -6,6 +6,7 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
+from app.core.markets import normalize_country_code
 from app.core.db import (
     apply_recent_first_order,
     get_db as get_client,
@@ -344,15 +345,22 @@ def list_approved_vendors_for_explore(
     budget_max: float | None = None,
     service_types: list[str] | None = None,
     city_query: str | None = None,
+    country_code: str | None = None,
 ) -> list[dict[str, Any]]:
     if get_settings().local_auth_mode:
         out: list[dict[str, Any]] = []
+        country = normalize_country_code(country_code)
         for uid, row in local_vendors.items():
             if row.get("approval_status") != "approved":
                 continue
             if vendor_user_ids is not None and uid not in vendor_user_ids:
                 continue
             payload = row.get("payload") if isinstance(row.get("payload"), dict) else {}
+            payload_country = normalize_country_code(
+                str(payload.get("countryCode") or payload.get("country_code") or ""),
+            )
+            if payload_country != country:
+                continue
             out.append(
                 {
                     "user_id": uid,
@@ -367,14 +375,16 @@ def list_approved_vendors_for_explore(
 
     select_cols = (
         "user_id,status,approval_status,payload,updated_at,"
-        "min_list_price_gbp,base_city_normalized,services_offered"
+        "min_list_price_gbp,base_city_normalized,services_offered,country_code,currency"
     )
+    country = normalize_country_code(country_code)
     try:
         query = apply_recent_first_order(
             get_client()
             .table("vendors")
             .select(select_cols)
-            .eq("approval_status", "approved"),
+            .eq("approval_status", "approved")
+            .eq("country_code", country),
             column="updated_at",
         )
         if vendor_user_ids:
@@ -391,7 +401,7 @@ def list_approved_vendors_for_explore(
         res = query.execute()
     except Exception as e:
         err = str(e).lower()
-        if "min_list_price_gbp" in err or "services_offered" in err or "42703" in err:
+        if "min_list_price_gbp" in err or "services_offered" in err or "country_code" in err or "42703" in err:
             query = apply_recent_first_order(
                 get_client()
                 .table("vendors")

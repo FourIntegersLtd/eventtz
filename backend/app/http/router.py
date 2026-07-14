@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter
 
+from app.features.admin.http import email as admin_email
 from app.features.admin.http import messages as admin_messages
 from app.features.admin.http import platform as admin_platform
 from app.features.admin.http import vendors as admin_vendors
@@ -41,6 +42,7 @@ api_router.include_router(vendor_onboarding_ai.router)
 api_router.include_router(vendor_bookings.router)
 api_router.include_router(admin_vendors.router)
 api_router.include_router(admin_platform.router)
+api_router.include_router(admin_email.router)
 api_router.include_router(admin_messages.router)
 api_router.include_router(admin_blog.router)
 api_router.include_router(public_blog.router)

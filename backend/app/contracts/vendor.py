@@ -30,6 +30,17 @@ class VendorBusinessNameAvailabilityResponse(BaseModel):
     available: bool
 
 
+class VendorLocationPayload(BaseModel):
+    """Structured location fields stored in vendor JSONB payload."""
+
+    country_code: str = Field(default="GB", alias="countryCode", max_length=2)
+    base_city: str = Field(default="", alias="baseCity", max_length=120)
+    region: str | None = Field(default=None, max_length=120)
+    postal_code: str | None = Field(default=None, alias="postalCode", max_length=32)
+
+    model_config = {"populate_by_name": True}
+
+
 class AdminVendorRow(BaseModel):
     id: str | None = None
     user_id: str

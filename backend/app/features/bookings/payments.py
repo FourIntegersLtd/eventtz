@@ -304,8 +304,9 @@ def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> 
             booking_id=booking_id,
             kind="payment_received",
             body=(
-                "Payment received — we'll keep it safe until the event is done. "
-                "After the event, confirm it went well and the vendor gets paid."
+                "Your payment was successful.\n\n"
+                "We will hold the funds safely until the event is complete. "
+                "After the event, please confirm that everything went well so the vendor can be paid."
             ),
         )
     if vendor_id:
@@ -314,8 +315,9 @@ def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> 
             booking_id=booking_id,
             kind="vendor_payment_received",
             body=(
-                "The client has paid. Confirm when the event is done to get paid — "
-                "or you'll be paid automatically 48 hours after the event."
+                "The client has paid for this booking.\n\n"
+                "Confirm when the event is done to receive your payout sooner. "
+                "If you do not confirm, payment is released automatically 48 hours after the event."
             ),
         )
     _notify_pair(client_id, vendor_id)
@@ -456,8 +458,9 @@ def _finalize_completion(row: dict[str, Any]) -> dict[str, Any]:
                 booking_id=booking_id,
                 kind="completion_confirmed_awaiting_other_party",
                 body=(
-                    "Both sides confirmed this booking is complete, but your payout account "
-                    "isn't ready yet. Finish Stripe verification to receive the funds."
+                    "Both sides have confirmed this booking is complete, but your payout account "
+                    "is not ready yet.\n\n"
+                    "Please finish Stripe verification so we can release your funds."
                 ),
             )
         _notify_pair(client_id, vendor_id)
@@ -511,7 +514,7 @@ def _finalize_completion(row: dict[str, Any]) -> dict[str, Any]:
             user_id=vendor_id,
             booking_id=booking_id,
             kind="vendor_payout_released",
-            body="Your payout for this booking has been released.",
+            body="Your payout for this booking has been released.\n\nIt should arrive in your connected account shortly, depending on your bank.",
         )
     _notify_pair(client_id, vendor_id)
     return _serialize_completion_state(final_row)
@@ -569,9 +572,13 @@ def _confirm_completion(booking_id: str, *, actor: str, user_id: str) -> dict[st
                 booking_id=booking_id,
                 kind="completion_confirmed_awaiting_other_party",
                 body=(
-                    "The client confirmed the event went well. Confirm on your side to get paid."
+                    "The client confirmed the event went well.\n\n"
+                    "Please confirm on your side to receive your payout."
                     if actor == "client"
-                    else "The vendor confirmed the event is complete. Confirm on your side so they can be paid."
+                    else (
+                        "The vendor confirmed the event is complete.\n\n"
+                        "Please confirm on your side so they can be paid."
+                    )
                 ),
             )
         _notify_pair(client_id, vendor_id)
@@ -677,8 +684,8 @@ def refund_booking_on_cancel(booking_id: str, *, cancelled_by: str) -> dict[str,
         amount_gbp=None,
         idempotency_suffix=f"cancel-{cancelled_by}",
         refund_body=(
-            "This booking was cancelled. Your payment has been refunded in full — "
-            "it should reach your card in 5-10 working days."
+            "This booking was cancelled. Your payment has been refunded in full.\n\n"
+            "It should reach your card within 5–10 working days, depending on your bank."
         ),
     )
 
@@ -695,7 +702,7 @@ def admin_refund_booking(booking_id: str, *, amount_gbp: float | None) -> dict[s
         rows[0],
         amount_gbp=amount_gbp,
         idempotency_suffix="partial" if amount_gbp is not None else "full",
-        refund_body="Your payment for this booking was refunded.",
+        refund_body="Your payment for this booking was refunded.\n\nIt should reach your card within 5–10 working days, depending on your bank.",
     )
 
 
@@ -726,9 +733,10 @@ def maybe_send_completion_reminder_for_row(row: dict[str, Any]) -> bool:
             booking_id=booking_id,
             kind="completion_reminder",
             body=(
-                "How did your event go? If everything went well, confirm it's complete. "
+                "We hope your event went well.\n\n"
+                "If everything was as expected, please confirm the booking is complete. "
                 f"If something went wrong, report a problem before {release_label} — "
-                "otherwise we'll pay the vendor automatically."
+                "otherwise we will pay the vendor automatically."
             ),
         )
     if vendor_id and not row.get("vendor_completion_confirmed_at"):
@@ -737,9 +745,10 @@ def maybe_send_completion_reminder_for_row(row: dict[str, Any]) -> bool:
             booking_id=booking_id,
             kind="vendor_completion_reminder",
             body=(
-                "Confirm the event is complete to get paid sooner. If the client "
-                f"doesn't respond, you'll be paid automatically on {release_label} "
-                "unless they've reported a problem."
+                "Your event date has passed.\n\n"
+                "Please confirm the booking is complete to receive your payout sooner. "
+                f"If the client does not respond, you will be paid automatically on {release_label} "
+                "unless they have reported a problem."
             ),
         )
     get_client().table("booking_requests").update(

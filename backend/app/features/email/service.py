@@ -13,6 +13,7 @@ from app.features.email.branding import (
     client_welcome_showcase,
     display_name_from_email,
     email_public_base,
+    transactional_email_context,
     vendor_welcome_showcase,
 )
 from app.features.email.render import render_template
@@ -34,8 +35,9 @@ class EmailService:
         body: str | None,
         action_url: str | None,
         action_label: str = "View booking",
+        skip_dedupe: bool = False,
     ) -> bool:
-        if not claim_booking_email_send(
+        if not skip_dedupe and not claim_booking_email_send(
             kind=kind,
             recipient_email=to_email,
             recipient_user_id=recipient_user_id,
@@ -43,17 +45,17 @@ class EmailService:
         ):
             return False
 
-        ctx = {
-            "subject": headline,
-            "headline": headline,
-            "subtitle": subtitle,
-            "body": body,
-            "action_url": action_url,
-            "action_label": action_label,
-        }
+        ctx = transactional_email_context(
+            subject=headline,
+            headline=headline,
+            subtitle=subtitle,
+            body=body,
+            action_url=action_url,
+            action_label=action_label,
+        )
         html = render_template("booking/notification.html", ctx)
         text = render_template("booking/notification.txt", ctx)
-        subject = f"{headline} — {APP_NAME}"
+        subject = f"{headline} | {APP_NAME}"
         ok = resend_send(to=[to_email], subject=subject, html=html, text=text)
         if not ok:
             logger.warning(
@@ -77,15 +79,15 @@ class EmailService:
         action_label: str | None = None,
         to: list[str],
     ) -> bool:
-        ctx: dict[str, Any] = {
-            "subject": subject,
-            "headline": headline,
-            "intro": intro,
-            "fields": fields or [],
-            "body": body,
-            "action_url": action_url,
-            "action_label": action_label,
-        }
+        ctx = transactional_email_context(
+            subject=subject,
+            headline=headline,
+            intro=intro,
+            fields=fields or [],
+            body=body,
+            action_url=action_url,
+            action_label=action_label,
+        )
         html = render_template("admin/alert.html", ctx)
         text = render_template("admin/alert.txt", ctx)
         return resend_send(to=to, subject=subject, html=html, text=text)
@@ -134,7 +136,7 @@ class EmailService:
         ]
         return self.send_admin_alert(
             template_id="admin.dispute_opened",
-            subject=f"[Eventtz ops] Dispute opened — booking {booking_id[:8]}",
+            subject=f"[Eventtz ops] Dispute opened | booking {booking_id[:8]}",
             headline="Dispute opened",
             fields=fields,
             body=summary,
@@ -177,7 +179,7 @@ class EmailService:
     ) -> bool:
         return self.send_admin_alert(
             template_id="admin.refund_failed",
-            subject=f"[Eventtz ops] Refund failed — booking {booking_id[:8]}",
+            subject=f"[Eventtz ops] Refund failed | booking {booking_id[:8]}",
             headline="Stripe refund failed",
             fields=[("Booking", booking_id)],
             body=error_hint or "Check logs and Stripe dashboard.",
@@ -197,10 +199,10 @@ class EmailService:
             fields.append(("Vendor ID", vendor_user_id))
         return self.send_admin_alert(
             template_id="admin.payout_stuck",
-            subject=f"[Eventtz ops] Payout transfer failed — booking {booking_id[:8]}",
+            subject=f"[Eventtz ops] Payout transfer failed | booking {booking_id[:8]}",
             headline="Vendor payout transfer failed",
             fields=fields,
-            body=error_hint or "Stripe transfer failed — vendor may need Connect verification.",
+            body=error_hint or "Stripe transfer failed. Vendor may need Connect verification.",
             to=to,
         )
 
@@ -214,7 +216,7 @@ class EmailService:
     ) -> bool:
         if approval_status == "approved":
             headline = "Your vendor profile is approved"
-            subtitle = "You're live on Eventtz — clients can find and book you."
+            subtitle = "You are live on Eventtz. Clients can find and book you."
             template_id = "vendor.approved"
         elif approval_status == "banned":
             headline = "Your vendor account was suspended"
@@ -225,19 +227,19 @@ class EmailService:
             subtitle = "We'll email you when a decision is made."
             template_id = "vendor.pending"
 
-        ctx = {
-            "subject": headline,
-            "headline": headline,
-            "subtitle": subtitle,
-            "body": f"Business: {business_name}" if business_name else None,
-            "action_url": login_url,
-            "action_label": "Open Eventtz",
-        }
+        ctx = transactional_email_context(
+            subject=headline,
+            headline=headline,
+            subtitle=subtitle,
+            body=f"Business: {business_name}" if business_name else None,
+            action_url=login_url,
+            action_label="Open Eventtz",
+        )
         html = render_template("booking/notification.html", ctx)
         text = render_template("booking/notification.txt", ctx)
         return resend_send(
             to=[to_email],
-            subject=f"{headline} — {APP_NAME}",
+            subject=f"{headline} | {APP_NAME}",
             html=html,
             text=text,
         )
@@ -248,19 +250,19 @@ class EmailService:
         to_email: str,
         login_url: str,
     ) -> bool:
-        ctx = {
-            "subject": "You've been invited to Eventtz admin",
-            "headline": "Admin team invite",
-            "subtitle": "An administrator added you to the Eventtz admin console.",
-            "body": "Sign in with the email address this message was sent to.",
-            "action_url": login_url,
-            "action_label": "Sign in",
-        }
+        ctx = transactional_email_context(
+            subject="You've been invited to Eventtz admin",
+            headline="Admin team invite",
+            subtitle="An administrator added you to the Eventtz admin console.",
+            body="Sign in with the email address this message was sent to.",
+            action_url=login_url,
+            action_label="Sign in",
+        )
         html = render_template("booking/notification.html", ctx)
         text = render_template("booking/notification.txt", ctx)
         return resend_send(
             to=[to_email],
-            subject=f"Eventtz admin invite — {APP_NAME}",
+            subject=f"Eventtz admin invite | {APP_NAME}",
             html=html,
             text=text,
         )
@@ -271,19 +273,19 @@ class EmailService:
         to_email: str,
         support_url: str | None = None,
     ) -> bool:
-        ctx = {
-            "subject": "Your Eventtz account was suspended",
-            "headline": "Account suspended",
-            "subtitle": "You can't book or message on Eventtz until this is resolved.",
-            "body": "Contact support if you need help.",
-            "action_url": support_url,
-            "action_label": "Contact support" if support_url else None,
-        }
+        ctx = transactional_email_context(
+            subject="Your Eventtz account was suspended",
+            headline="Account suspended",
+            subtitle="You cannot book or message on Eventtz until this is resolved.",
+            body="Contact support if you need help.",
+            action_url=support_url,
+            action_label="Contact support" if support_url else None,
+        )
         html = render_template("booking/notification.html", ctx)
         text = render_template("booking/notification.txt", ctx)
         return resend_send(
             to=[to_email],
-            subject=f"Account suspended — {APP_NAME}",
+            subject=f"Account suspended | {APP_NAME}",
             html=html,
             text=text,
         )
@@ -314,16 +316,13 @@ class EmailService:
             )
             welcome_cta_label = "Go to your dashboard"
             welcome_cta_url = f"{base}/vendor/dashboard"
-            welcome_closing = (
-                "Thanks for joining Eventtz. We are glad to have you on the platform."
-            )
             welcome_support_line = (
                 "Questions? Reply to this email or write us at hello@fourintegers.com."
             )
             showcase_sections = vendor_welcome_showcase()
         else:
             welcome_subtitle = (
-                "You just joined Eventtz. Whether it is owambe, birthday, or baby shower, "
+                "Welcome aboard. Whether it is your next owambe, birthday, or baby shower, "
                 "we are here to help you find vendors you can actually trust."
             )
             showcase_eyebrow = "A quick peek"
@@ -336,9 +335,6 @@ class EmailService:
             )
             welcome_cta_label = "Find vendors"
             welcome_cta_url = f"{base}/client/browse"
-            welcome_closing = (
-                "Thanks for signing up. We are rooting for your event."
-            )
             welcome_support_line = (
                 "Got questions? Reply to this email or write us at hello@fourintegers.com."
             )
@@ -354,7 +350,6 @@ class EmailService:
             welcome_cta_lead=welcome_cta_lead,
             welcome_cta_label=welcome_cta_label,
             welcome_cta_url=welcome_cta_url,
-            welcome_closing=welcome_closing,
             welcome_support_line=welcome_support_line,
         )
         subject = f"Welcome to {APP_NAME}"

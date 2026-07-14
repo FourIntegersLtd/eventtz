@@ -59,6 +59,11 @@ def base_email_context(**extra: object) -> dict[str, object]:
     return ctx
 
 
+def transactional_email_context(**extra: object) -> dict[str, object]:
+    """Shared shell for booking + admin transactional emails."""
+    return base_email_context(**extra)
+
+
 def client_welcome_showcase() -> list[dict[str, str]]:
     return [
         {

@@ -7,6 +7,7 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.core.errors import ValidationError
+from app.core.markets import DEFAULT_COUNTRY_CODE, is_market_enabled, normalize_country_code
 from app.features.vendors.list_pricing import parse_money_gbp
 
 MAX_DISCOUNT_PCT = 100.0
@@ -139,6 +140,17 @@ def normalize_payload_fields(payload: dict[str, Any], user_id: str) -> dict[str,
             if _ISO_DATE.match(s[:10] if len(s) >= 10 else s)
         ]
 
+    country_raw = _coerce_str(out, "countryCode").strip().upper()
+    out["countryCode"] = normalize_country_code(country_raw or DEFAULT_COUNTRY_CODE)
+    if _coerce_str(out, "region").strip():
+        out["region"] = _coerce_str(out, "region").strip()[:120]
+    else:
+        out["region"] = ""
+    if _coerce_str(out, "postalCode").strip():
+        out["postalCode"] = _coerce_str(out, "postalCode").strip()[:32]
+    else:
+        out["postalCode"] = ""
+
     return out
 
 
@@ -162,6 +174,24 @@ def _money_in_range(raw: str, label: str, *, required: bool = False) -> None:
         raise ValidationError(f"Step pricing: {label} must be a valid amount.")
     if n < 0 or n > MAX_MONEY_GBP:
         raise ValidationError(f"Step pricing: {label} is out of allowed range.")
+
+
+def _validate_step_location(payload: dict[str, Any]) -> None:
+    country = normalize_country_code(_coerce_str(payload, "countryCode"))
+    if not is_market_enabled(country):
+        raise ValidationError("Step location: select a supported country.")
+    if not _coerce_str(payload, "baseCity").strip():
+        raise ValidationError("Step location: base city is required.")
+    modes = payload.get("deliveryModes")
+    if not isinstance(modes, list) or not any(str(x).strip() for x in modes):
+        raise ValidationError("Step location: pick at least one delivery option.")
+    if not _coerce_str(payload, "travelRadius").strip():
+        raise ValidationError("Step location: select how far you travel.")
+    policy = _coerce_str(payload, "travelDeliveryPolicy").strip()
+    if not policy:
+        raise ValidationError("Step location: select a travel / delivery policy.")
+    if policy == "custom" and not _coerce_str(payload, "travelDeliveryPolicyCustomText").strip():
+        raise ValidationError("Step location: describe your custom travel / delivery rule.")
 
 
 def validate_step_fields(step: int, payload: dict[str, Any]) -> None:
@@ -225,10 +255,13 @@ def validate_step_fields(step: int, payload: dict[str, Any]) -> None:
         if count > 20:
             raise ValidationError("Step portfolio: maximum 20 images.")
 
+    elif step == 3:
+        _validate_step_location(payload)
+
     elif step == 8:
         pass  # optional docs; URLs normalized on save
 
-    elif step in (1, 2, 3, 7):
+    elif step in (1, 2, 7):
         pass  # covered by existing frontend + minimal server checks on submit
 
 
@@ -249,6 +282,9 @@ def validate_payload_for_progress(
             validate_step_fields(s, payload)
         if not _coerce_str(payload, "businessName").strip():
             raise ValidationError("Business name is required before submit.")
+        if not _coerce_str(payload, "countryCode").strip():
+            payload = {**payload, "countryCode": DEFAULT_COUNTRY_CODE}
+        _validate_step_location(payload)
         if not _coerce_str(payload, "baseCity").strip():
             raise ValidationError("Base city is required before submit.")
         svcs = payload.get("servicesOffered")

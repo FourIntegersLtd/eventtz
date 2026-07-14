@@ -138,7 +138,7 @@ def put_vendor_booking_adjustments(
     if client_uid:
         ttl = str(pb.get("client_total_label") or total_label)
         body = _client_booking_pricing_explanation_body(
-            lead_sentence="Your vendor sent an updated price.",
+            lead_sentence="Your vendor sent an updated price for this booking.",
             total_label=ttl,
             adjustments=list(adj_final),
         )

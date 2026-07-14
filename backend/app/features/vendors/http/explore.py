@@ -20,6 +20,8 @@ from app.features.vendors.moderation import (
     get_approved_vendor_for_explore_by_id,
     list_approved_vendors_for_explore,
 )
+from app.core.markets import normalize_country_code
+
 from app.features.vendors.search import search_approved_vendors
 
 router = APIRouter(prefix="/vendors", tags=["vendors"])
@@ -38,8 +40,10 @@ def _parse_vendor_ids(raw: str | None) -> list[str] | None:
 
 
 @router.get("/explore", response_model=ExploreVendorsResponse)
-def get_explore_vendors() -> ExploreVendorsResponse:
-    rows = list_approved_vendors_for_explore()
+def get_explore_vendors(
+    country: str | None = Query(None, description="ISO country code (default GB)."),
+) -> ExploreVendorsResponse:
+    rows = list_approved_vendors_for_explore(country_code=normalize_country_code(country))
     rows = merge_review_stats_into_vendor_rows(rows)
     logger.info("GET /vendors/explore approved_vendors_count=%s", len(rows))
     return ExploreVendorsResponse(success=True, vendors=rows)
@@ -93,6 +97,7 @@ def get_explore_vendors_search(
         None,
         description="Comma-separated vendor user IDs — restrict search (e.g. favorites).",
     ),
+    country: str | None = Query(None, description="ISO country code (default GB)."),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
 ) -> ExploreVendorSearchResponse:
@@ -106,6 +111,7 @@ def get_explore_vendors_search(
         budget_max=budget_max,
         sort=sort,
         vendor_user_ids=_parse_vendor_ids(vendor_ids),
+        country=country,
         limit=limit,
         offset=offset,
     )

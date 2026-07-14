@@ -123,8 +123,8 @@ def update_booking_request_status_for_vendor(
                         booking_id=booking_id,
                         kind="booking_cancelled_by_vendor",
                         body=(
-                            "The vendor cancelled this booking. Your payment has been "
-                            "refunded in full — it should reach your card in 5-10 working days."
+                            "The vendor has cancelled this booking. Your payment has been refunded in full.\n\n"
+                            "It should reach your card within 5–10 working days, depending on your bank."
                         ),
                     )
                 else:
@@ -152,7 +152,10 @@ def update_booking_request_status_for_vendor(
                     user_id=client_uid,
                     booking_id=booking_id,
                     kind="vendor_quote_withdrawn",
-                    body="The vendor withdrew this quote.",
+                    body=(
+                        "The vendor withdrew their quote.\n\n"
+                        "This booking is no longer active. You can message them or explore other vendors."
+                    ),
                 )
             _notify_booking_changed(client_user_id=client_uid, vendor_user_id=vendor_user_id)
             return {"id": booking_id, "status": "cancelled"}
@@ -221,7 +224,10 @@ def update_booking_request_status_for_vendor(
                 user_id=client_uid,
                 booking_id=booking_id,
                 kind="booking_declined_by_vendor",
-                body="The vendor declined this booking request.",
+                body=(
+                    "Unfortunately, the vendor is unable to take this booking.\n\n"
+                    "You can browse other vendors on Eventtz and send a new request whenever you are ready."
+                ),
             )
         _notify_booking_changed(client_user_id=client_uid, vendor_user_id=vendor_user_id)
         return {"id": booking_id, "status": "declined"}
@@ -238,7 +244,7 @@ def _notify_client_booking_accepted(client_uid: str, booking_id: str) -> None:
     adj = full.get("vendor_adjustments")
     adj_list = adj if isinstance(adj, list) else []
     body = _client_booking_pricing_explanation_body(
-        lead_sentence="Your booking was accepted.",
+        lead_sentence="Good news — your booking was accepted.",
         total_label=ttl,
         adjustments=adj_list,
     )
@@ -297,9 +303,13 @@ def cancel_booking_request_for_client(
             booking_id=booking_id,
             kind="booking_cancelled_by_client",
             body=(
-                "The client cancelled this booking. Their payment has been refunded in full."
+                "The client has cancelled this booking. Their payment has been refunded in full.\n\n"
+                "No further action is needed on your side."
                 if refunded
-                else "The client cancelled this booking."
+                else (
+                    "The client has cancelled this booking.\n\n"
+                    "The booking is now closed. You can still message them on Eventtz if you need to."
+                )
             ),
         )
     _notify_booking_changed(client_user_id=client_user_id, vendor_user_id=vendor_uid)
@@ -362,14 +372,20 @@ def update_booking_request_status_for_client(
                     user_id=vendor_uid,
                     booking_id=booking_id,
                     kind="vendor_quote_declined",
-                    body="The client declined your quote.",
+                    body=(
+                        "The client declined your quote.\n\n"
+                        "The booking has been closed. You can still message them on Eventtz."
+                    ),
                 )
             else:
                 dispatch_booking_notification(
                     user_id=vendor_uid,
                     booking_id=booking_id,
                     kind="client_declined_updated_price",
-                    body="The client declined the updated price.",
+                    body=(
+                        "The client declined the updated price.\n\n"
+                        "This booking has been closed. No further action is needed."
+                    ),
                 )
         _notify_booking_changed(client_user_id=client_user_id, vendor_user_id=vendor_uid)
         return {"id": booking_id, "status": "declined"}
@@ -411,7 +427,10 @@ def _notify_client_confirmed_updated_price(vendor_uid: str, booking_id: str) -> 
         user_id=vendor_uid,
         booking_id=booking_id,
         kind="client_confirmed_updated_price",
-        body=f"The client accepted the updated price. Total due: {ttl}. Waiting for payment.",
+        body=(
+            f"The client accepted the updated price.\n\n"
+            f"Total due: {ttl}. We will notify you when payment is received."
+        ),
     )
 
 

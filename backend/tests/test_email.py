@@ -150,7 +150,6 @@ def test_welcome_template_renders_client_showcase(mock_svc_settings):
         welcome_cta_lead="Ready to start?",
         welcome_cta_label="Find vendors",
         welcome_cta_url="https://eventtz.com/client/browse",
-        welcome_closing="Thanks for signing up.",
         welcome_support_line="Got questions? Reply to this email.",
     )
     html = render_template("marketing/welcome.html", ctx)

@@ -9,6 +9,7 @@ from typing import Any
 from app.contracts.marketplace_search import MarketplaceQueryParseResult
 from app.core.config import get_settings
 from app.core.logging import get_logger
+from app.core.markets import get_market, normalize_country_code
 from app.core.vendor_taxonomy import (
     VENDOR_EVENT_TYPE_KEYS,
     VENDOR_SERVICE_KEYS,
@@ -177,7 +178,7 @@ def _cache_set(key: str, result: MarketplaceQueryParseResult) -> None:
     _PARSE_CACHE[key] = (time.monotonic() + ttl, result)
 
 
-def _parse_with_llm(raw_q: str) -> MarketplaceQueryParseResult:
+def _parse_with_llm(raw_q: str, *, country_code: str) -> MarketplaceQueryParseResult:
     client = try_openai_client()
     if client is None:
         return _fallback_parse(raw_q)
@@ -186,15 +187,16 @@ def _parse_with_llm(raw_q: str) -> MarketplaceQueryParseResult:
     model = (settings.openai_search_model or "gpt-4o-mini").strip() or "gpt-4o-mini"
     services = ", ".join(sorted(VENDOR_SERVICE_KEYS))
     events = ", ".join(sorted(VENDOR_EVENT_TYPE_KEYS))
+    market = get_market(country_code)
 
     prompt = (
-        "You parse vendor search queries for Eventtz, a UK events marketplace for African vendors. "
+        f"You parse vendor search queries for Eventtz, an events marketplace in {market.label}. "
         "Extract BOTH exact search intent AND close-enough expansions so we can still show useful vendors. "
         "Respond with a single JSON object ONLY (no markdown):\n"
         "{\n"
         '  "keywords": ["word", "..."],\n'
         '  "related_keywords": ["synonym or stem", "..."],\n'
-        '  "location": "primary UK city/area or null",\n'
+        f'  "location": "primary city/area in {market.label} or null",\n'
         '  "related_locations": ["nearby city or parent area", "..."],\n'
         '  "types": ["service_key", "..."],\n'
         '  "related_types": ["weaker service_key", "..."],\n'
@@ -208,7 +210,7 @@ def _parse_with_llm(raw_q: str) -> MarketplaceQueryParseResult:
         "small chops). Omit filler (in, for, my, the, near, someone, selling).\n"
         "- related_keywords: plurals/stems/synonyms that should still match "
         "(baker↔bakers↔baking, photographer↔photography, chops↔finger food↔canapes).\n"
-        "- location: primary UK city/area if mentioned, else null.\n"
+        f"- location: primary city/area in {market.label} if mentioned, else null.\n"
         "- related_locations: nearby towns, boroughs, or parent city (e.g. Croydon → London; "
         "Leeds → Bradford, Wakefield). Do not repeat location.\n"
         "- types: strongest service keys clearly implied "
@@ -256,19 +258,25 @@ def _parse_with_llm(raw_q: str) -> MarketplaceQueryParseResult:
         return _fallback_parse(raw_q)
 
 
-def parse_marketplace_query(raw_q: str) -> MarketplaceQueryParseResult:
+def parse_marketplace_query(
+    raw_q: str,
+    *,
+    country_code: str | None = None,
+) -> MarketplaceQueryParseResult:
     """Parse free-text search into keywords, location, and taxonomy filters."""
     normalized = _normalize_query(raw_q)
     if not normalized:
         return MarketplaceQueryParseResult()
 
-    cached = _cache_get(normalized)
+    market_country = normalize_country_code(country_code)
+    cache_key = f"{market_country}:{normalized}"
+    cached = _cache_get(cache_key)
     if cached is not None:
-        logger.debug("marketplace_search_ai: cache hit q=%r", normalized[:80])
+        logger.debug("marketplace_search_ai: cache hit q=%r country=%s", normalized[:80], market_country)
         return cached
 
-    result = _parse_with_llm(raw_q)
-    _cache_set(normalized, result)
+    result = _parse_with_llm(raw_q, country_code=market_country)
+    _cache_set(cache_key, result)
     return result
 
 

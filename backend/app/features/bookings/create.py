@@ -213,7 +213,8 @@ def create_vendor_quote_booking_request(
     ttl = str(pb.get("client_total_label") or persisted_booking_total_label(pb))
     if client_user_id:
         body = (
-            f"Total: {ttl}. Review the quote and accept or decline."
+            f"You have received a new quote from a vendor.\n\n"
+            f"Total: {ttl}. Please review the details and accept or decline when you are ready."
         )
         dispatch_booking_notification(
             user_id=client_user_id,

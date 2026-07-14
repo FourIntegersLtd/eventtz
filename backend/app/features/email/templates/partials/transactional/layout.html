@@ -1,35 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{{ subject }}</title>
-</head>
-<body style="margin:0;padding:0;background:#f7f8fc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#2d2938;-webkit-font-smoothing:antialiased;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f7f8fc;padding:32px 16px;">
-    <tr>
-      <td align="center">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid rgba(62,25,100,0.14);box-shadow:0 8px 32px rgba(62,25,100,0.08);">
-          <tr>
-            <td style="background:#3E1964;padding:20px 28px;text-align:center;">
-              <p style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:0.02em;">Eventtz</p>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:32px 28px 24px;">
-              {% block content %}{% endblock %}
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:0 28px 28px;border-top:1px solid rgba(62,25,100,0.08);">
-              <p style="margin:16px 0 0;color:#8a8199;font-size:12px;line-height:1.5;text-align:center;">
-                You're receiving this because you have an Eventtz account.
-              </p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ subject }}</title>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background-color: #f7f8fc;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
+        sans-serif;
+      color: #2d2938;
+      -webkit-font-smoothing: antialiased;
+    "
+  >
+    <table
+      role="presentation"
+      cellpadding="0"
+      cellspacing="0"
+      border="0"
+      width="100%"
+      style="background-color: #f7f8fc"
+    >
+      <tr>
+        <td align="center" style="padding: 16px 12px">
+          <table
+            role="presentation"
+            cellpadding="0"
+            cellspacing="0"
+            border="0"
+            width="600"
+            style="
+              max-width: 600px;
+              width: 100%;
+              background-color: #ffffff;
+              border-radius: 16px;
+              overflow: hidden;
+            "
+          >
+            <tr>
+              <td style="background: #ffffff; padding: 16px 20px; text-align: center">
+                {% if footer_logo_url %}
+                <img
+                  src="{{ footer_logo_url }}"
+                  alt="{{ app_name }}"
+                  width="160"
+                  style="display: block; margin: 0 auto; max-width: 160px; height: auto; border: 0"
+                />
+                {% else %}
+                <p
+                  style="
+                    margin: 0;
+                    color: #3e1964;
+                    font-size: 22px;
+                    font-weight: 700;
+                    letter-spacing: 0.02em;
+                  "
+                >
+                  {{ app_name }}
+                </p>
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 24px 24px">
+                {% block content %}{% endblock %}
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 4px 20px 20px; text-align: center">
+                <p style="margin: 0 0 10px; font-size: 13px; line-height: 1.5; color: #8a8199">
+                  You're receiving this because you have an {{ app_name }} account.
+                </p>
+                <p style="margin: 0 0 12px">
+                  <a
+                    href="{{ website_url }}"
+                    style="font-size: 14px; color: #3e1964; text-decoration: none; font-weight: 600"
+                    >{{ website_label }}</a
+                  >
+                </p>
+                <p style="margin: 0; font-size: 12px; color: #8a8199">
+                  <a href="{{ privacy_url }}" style="color: #6b6575; text-decoration: underline"
+                    >Privacy</a
+                  >
+                  &nbsp;·&nbsp;
+                  <a href="{{ terms_url }}" style="color: #6b6575; text-decoration: underline"
+                    >Terms</a
+                  >
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
 </html>

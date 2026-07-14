@@ -29,12 +29,14 @@ def _client_booking_pricing_explanation_body(
     total_label: str,
     adjustments: list[dict[str, Any]],
 ) -> str:
-    """In-app notification copy: headline total + optional vendor addition lines."""
-    msg = (
-        f"{lead_sentence.strip()} "
-        f"The amount includes your selected packages/rates, any vendor additions or discounts, "
-        f"and the Eventtz service fee. Total due: {total_label}."
-    )
+    """Notification copy: lead line, pricing breakdown, optional adjustments."""
+    paragraphs = [
+        lead_sentence.strip(),
+        (
+            "The total includes your selected packages or rates, any vendor additions or "
+            f"discounts, and the Eventtz service fee.\n\nTotal due: {total_label}."
+        ),
+    ]
 
     def _fmt_adj_gbp(amt: float) -> str:
         if amt >= 0:
@@ -53,5 +55,7 @@ def _client_booking_pricing_explanation_body(
             continue
         extras.append(f"{label} ({tag}): {_fmt_adj_gbp(amt)}")
     if extras:
-        msg += " Vendor adjustments: " + "; ".join(extras) + "."
-    return msg
+        paragraphs.append("Vendor adjustments: " + "; ".join(extras) + ".")
+
+    paragraphs.append("Please review the details on Eventtz and pay when you are ready.")
+    return "\n\n".join(paragraphs)

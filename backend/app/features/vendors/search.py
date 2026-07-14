@@ -7,6 +7,7 @@ from typing import Any, Literal
 
 from app.contracts.marketplace_search import MarketplaceSearchResult
 from app.core.logging import get_logger
+from app.core.markets import normalize_country_code
 from app.features.vendors.list_pricing import min_listing_price_gbp
 from app.features.vendors.moderation import list_approved_vendors_for_explore
 from app.features.vendors.search_ai import parse_marketplace_query
@@ -234,6 +235,7 @@ def search_approved_vendors(
     budget_max: float | None = None,
     sort: str = "relevance",
     vendor_user_ids: list[str] | None = None,
+    country: str | None = None,
     limit: int = 200,
     offset: int = 0,
 ) -> MarketplaceSearchResult:
@@ -251,7 +253,8 @@ def search_approved_vendors(
     offset = max(0, offset)
 
     raw_q = (q or "").strip()
-    parsed = parse_marketplace_query(raw_q) if raw_q else None
+    market_country = normalize_country_code(country)
+    parsed = parse_marketplace_query(raw_q, country_code=market_country) if raw_q else None
 
     city_query = (location or "").strip() or None
     if not city_query and parsed and parsed.location:
@@ -263,6 +266,7 @@ def search_approved_vendors(
         budget_max=budget_max,
         service_types=chip_types or None,
         city_query=city_query,
+        country_code=market_country,
     )
 
     primary_types = list(chip_types)

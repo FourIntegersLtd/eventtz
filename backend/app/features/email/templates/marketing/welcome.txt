@@ -14,7 +14,6 @@ Hello {{ display_name }},
 {{ welcome_cta_label }}: {{ welcome_cta_url }}
 
 {{ welcome_support_line }}
-{{ welcome_closing }}
 
 Kind regards,
 The {{ app_name }} team
