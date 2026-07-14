@@ -82,7 +82,10 @@ export interface VendorOnboardingData {
   servicesOffered: string[];
   eventTypes: string[];
   // Step 3
+  countryCode: string;
   baseCity: string;
+  region: string;
+  postalCode: string;
   deliveryModes: DeliveryMode[];
   travelRadius: TravelRadius | "";
   travelDeliveryPolicy: TravelDeliveryPolicy | "";
@@ -146,7 +149,10 @@ export const initialVendorOnboardingData: VendorOnboardingData = {
   businessName: "",
   servicesOffered: [],
   eventTypes: [],
+  countryCode: "GB",
   baseCity: "",
+  region: "",
+  postalCode: "",
   deliveryModes: [],
   travelRadius: "",
   travelDeliveryPolicy: "fee_included",

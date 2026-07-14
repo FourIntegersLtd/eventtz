@@ -1,5 +1,4 @@
 import api from "@/lib/axios";
-import type { ApiListResponse } from "@/lib/api-types";
 import type { VendorApprovalStatus, VendorProfileStatus } from "@/lib/domain-types";
 
 export type AdminVendorRow = {
@@ -14,9 +13,45 @@ export type AdminVendorRow = {
   updated_at?: string;
 };
 
-export async function fetchAdminVendors(): Promise<AdminVendorRow[]> {
-  const { data } = await api.get<ApiListResponse<AdminVendorRow>>("/api/v1/admin/vendors");
-  return data.vendors ?? [];
+export type AdminVendorsQuery = {
+  offset?: number;
+  limit?: number;
+  q?: string;
+  approval_status?: string;
+  status?: string;
+};
+
+export type AdminVendorsListResult = {
+  vendors: AdminVendorRow[];
+  total: number;
+  offset: number;
+  limit: number;
+};
+
+export async function fetchAdminVendors(
+  q: AdminVendorsQuery = {},
+): Promise<AdminVendorsListResult> {
+  const { data } = await api.get<{
+    success: boolean;
+    vendors: AdminVendorRow[];
+    total: number;
+    offset: number;
+    limit: number;
+  }>("/api/v1/admin/vendors", {
+    params: {
+      offset: q.offset ?? 0,
+      limit: q.limit ?? 50,
+      q: q.q?.trim() || undefined,
+      approval_status: q.approval_status || undefined,
+      status: q.status || undefined,
+    },
+  });
+  return {
+    vendors: data.vendors ?? [],
+    total: data.total ?? 0,
+    offset: data.offset ?? 0,
+    limit: data.limit ?? 50,
+  };
 }
 
 export async function patchVendorApproval(

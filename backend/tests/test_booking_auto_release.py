@@ -96,7 +96,7 @@ def test_auto_release_not_marked_when_payout_not_released(mock_finalize, _disput
 
 
 @patch("app.features.bookings.payments._finalize_completion")
-@patch("app.features.bookings.payments.upsert_booking_notification")
+@patch("app.features.bookings.payments.dispatch_booking_notification")
 @patch("app.features.bookings.payments.get_settings")
 @patch("app.features.bookings.payments.get_client")
 def test_mutual_confirm_still_releases_immediately(
@@ -117,7 +117,7 @@ def test_mutual_confirm_still_releases_immediately(
 
 
 @patch("app.features.bookings.payments._notify_pair")
-@patch("app.features.bookings.payments.upsert_booking_notification")
+@patch("app.features.bookings.payments.dispatch_booking_notification")
 @patch("app.features.bookings.payments.get_client")
 @patch("app.features.bookings.payments._due_completion_candidates")
 @patch("app.features.bookings.payments.get_settings")
@@ -141,7 +141,7 @@ def test_reminder_targets_only_unconfirmed_party(
     assert update_payload["completion_reminder_sent_at"]
 
 
-@patch("app.features.bookings.payments.upsert_booking_notification")
+@patch("app.features.bookings.payments.dispatch_booking_notification")
 @patch("app.features.bookings.payments._due_completion_candidates")
 @patch("app.features.bookings.payments.get_settings")
 def test_no_reminder_while_event_day_still_running(mock_settings, mock_candidates, mock_upsert):

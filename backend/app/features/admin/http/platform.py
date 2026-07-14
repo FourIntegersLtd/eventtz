@@ -23,6 +23,8 @@ from app.contracts.admin import (
     AdminClientSuspendedBody,
     AdminClientsListResponse,
     AdminClientRow,
+    AdminDirectorySearchResponse,
+    AdminDirectoryUserRow,
     AdminConversationMessagesResponse,
     AdminDashboardMetrics,
     AdminDashboardSummary,
@@ -71,6 +73,7 @@ from app.features.admin import (
     set_review_hidden,
 )
 from app.features.admin.team_ops import invite_admin_colleague, list_admin_team, patch_admin_team_member
+from app.features.admin.directory_search import search_directory_users_for_admin
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -482,11 +485,52 @@ def admin_financials_export(
 
 
 @router.get("/clients", response_model=AdminClientsListResponse)
-def admin_list_clients(request: Request, response: Response) -> AdminClientsListResponse:
+def admin_list_clients(
+    request: Request,
+    response: Response,
+    offset: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
+    q: str | None = Query(None, max_length=200),
+    suspended: bool | None = Query(None),
+) -> AdminClientsListResponse:
     require_admin(request, response)
-    rows = list_clients_for_admin()
+    rows, total = list_clients_for_admin(offset=offset, limit=limit, q=q, suspended=suspended)
     items = [AdminClientRow.model_validate(r) for r in rows]
-    return AdminClientsListResponse(success=True, clients=items)
+    return AdminClientsListResponse(
+        success=True,
+        clients=items,
+        total=total,
+        offset=offset,
+        limit=limit,
+    )
+
+
+@router.get("/directory/search", response_model=AdminDirectorySearchResponse)
+def admin_directory_search(
+    request: Request,
+    response: Response,
+    q: str = Query(..., min_length=1, max_length=200),
+    kinds: str = Query(
+        "client,vendor",
+        description="Comma-separated: client and/or vendor",
+    ),
+    limit: int = Query(20, ge=1, le=50),
+) -> AdminDirectorySearchResponse:
+    """Typeahead for admin recipient pickers — prefer over loading full client/vendor lists."""
+    require_admin(request, response)
+    kind_list = []
+    for part in kinds.split(","):
+        k = part.strip().lower()
+        if k in ("client", "clients"):
+            kind_list.append("client")
+        elif k in ("vendor", "vendors"):
+            kind_list.append("vendor")
+    if not kind_list:
+        kind_list = ["client", "vendor"]
+    rows = search_directory_users_for_admin(q=q, kinds=kind_list, limit=limit)  # type: ignore[arg-type]
+    return AdminDirectorySearchResponse(
+        users=[AdminDirectoryUserRow.model_validate(r) for r in rows],
+    )
 
 
 @router.patch("/clients/{user_id}/suspended")
@@ -514,9 +558,19 @@ def admin_set_client_suspended(
 
 
 @router.get("/disputes", response_model=AdminDisputesListResponse)
-def admin_list_disputes(request: Request, response: Response) -> AdminDisputesListResponse:
+def admin_list_disputes(
+    request: Request,
+    response: Response,
+    status: str = Query(
+        "all",
+        description="all | open (open+under_review) | under_review | resolved | closed",
+    ),
+) -> AdminDisputesListResponse:
     require_admin(request, response)
-    rows = list_disputes_for_admin()
+    try:
+        rows = list_disputes_for_admin(status=status)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
     items = [_dispute_row_to_model(r) for r in rows]
     return AdminDisputesListResponse(success=True, disputes=items)
 
@@ -714,9 +768,13 @@ def admin_audit_log(
     response: Response,
     offset: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
+    category: str = Query(
+        "all",
+        description="all | bookings | clients | vendors | disputes | reviews | chat | financials | team",
+    ),
 ) -> AdminAuditLogResponse:
     require_admin(request, response)
-    entries, total = list_admin_audit_log(offset=offset, limit=limit)
+    entries, total = list_admin_audit_log(offset=offset, limit=limit, category=category)
     items = [AdminAuditLogItem.model_validate(e) for e in entries]
     return AdminAuditLogResponse(success=True, entries=items, total=total)
 

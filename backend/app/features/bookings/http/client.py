@@ -65,19 +65,31 @@ def list_client_bookings(
     response: Response,
     group: str = Query(
         "active",
-        description="Filter bucket: active (pending+accepted), completed, or closed (declined+cancelled)",
+        description="Filter bucket: active, completed, closed, or all",
+    ),
+    status: str | None = Query(None, description="Optional exact booking status, e.g. pending"),
+    payment_status: str | None = Query(None, description="Optional exact payment_status"),
+    exclude_payment_status: str | None = Query(
+        None,
+        description="Exclude this payment_status (e.g. unpaid for payment history)",
     ),
 ) -> ClientBookingsListResponse:
     user = require_client(request, response)
     client_id = str(user.get("id") or "")
     g = group.strip().lower()
-    if g not in ("active", "completed", "closed"):
+    if g not in ("active", "completed", "closed", "all"):
         raise HTTPException(
             status_code=400,
-            detail="Query parameter group must be active, completed, or closed.",
+            detail="Query parameter group must be active, completed, closed, or all.",
         )
     try:
-        rows = list_booking_requests_for_client(client_id, group=g)
+        rows = list_booking_requests_for_client(
+            client_id,
+            group=g,
+            status=status,
+            payment_status=payment_status,
+            exclude_payment_status=exclude_payment_status,
+        )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     if g == "active":

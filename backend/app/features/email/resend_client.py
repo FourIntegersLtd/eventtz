@@ -5,6 +5,7 @@ from __future__ import annotations
 import httpx
 
 from app.core.config import get_settings
+from app.features.email.constants import EMAIL_ENABLED, EMAIL_FROM
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -20,7 +21,7 @@ def send_email(
     text: str | None = None,
 ) -> bool:
     settings = get_settings()
-    if settings.local_auth_mode or not settings.email_enabled:
+    if settings.local_auth_mode or not EMAIL_ENABLED:
         logger.info("email skipped (local auth or disabled): %s", subject)
         return False
     api_key = settings.resend_api_key.strip()
@@ -33,7 +34,7 @@ def send_email(
         return False
 
     payload: dict[str, object] = {
-        "from": settings.email_from,
+        "from": EMAIL_FROM,
         "to": recipients,
         "subject": subject,
         "html": html,

@@ -4,7 +4,8 @@ import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "re
 import { createPortal } from "react-dom";
 import { Building2, X, type LucideIcon } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { fetchUkLocationSuggestions } from "@/lib/photonLocationAutocomplete";
+import { fetchLocationSuggestions } from "@/lib/photonLocationAutocomplete";
+import { DEFAULT_COUNTRY_CODE } from "@/lib/markets";
 
 type Suggestion = { label: string; value: string };
 
@@ -51,12 +52,13 @@ export type LocationAutocompleteInputProps = {
    * - `false`: never (free-text only)
    */
   enableSuggestions?: boolean | "lg";
+  /** ISO country code for place suggestions (default GB). */
+  countryCode?: string;
 };
 
 /**
- * UK city/area autocomplete (Photon/OSM place search) — the one reusable location field for
- * every "city or area" input in the app (vendor onboarding, marketplace search, etc). Free text
- * is always accepted; suggestions are just a fast way to pick a recognised place.
+ * City/area autocomplete (Photon/OSM place search) — reusable for vendor onboarding and search.
+ * Free text is always accepted; suggestions help pick a recognised place in the selected country.
  */
 export function LocationAutocompleteInput({
   label,
@@ -74,6 +76,7 @@ export function LocationAutocompleteInput({
   className,
   showClear = true,
   enableSuggestions = true,
+  countryCode = DEFAULT_COUNTRY_CODE,
 }: LocationAutocompleteInputProps) {
   const reactId = useId();
   const id = inputId ?? `location-ac-${reactId}`;
@@ -150,7 +153,7 @@ export function LocationAutocompleteInput({
     void (async () => {
       setBusy(true);
       try {
-        const items = await fetchUkLocationSuggestions(debouncedQuery.trim());
+        const items = await fetchLocationSuggestions(debouncedQuery.trim(), { countryCode });
         if (!cancelled) setFetchedSuggestions(items);
       } finally {
         if (!cancelled) setBusy(false);
@@ -159,7 +162,7 @@ export function LocationAutocompleteInput({
     return () => {
       cancelled = true;
     };
-  }, [debouncedQuery, open, queryLongEnough, suggestionsAllowed]);
+  }, [debouncedQuery, open, queryLongEnough, suggestionsAllowed, countryCode]);
 
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {

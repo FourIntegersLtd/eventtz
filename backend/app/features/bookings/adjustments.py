@@ -17,7 +17,7 @@ from app.features.bookings.pricing import (
     build_pricing_breakdown,
     persisted_booking_total_label,
 )
-from app.features.notifications.service import upsert_booking_notification
+from app.features.email.dispatch import dispatch_booking_notification
 
 
 def _validate_adjustment_caps(
@@ -142,7 +142,7 @@ def put_vendor_booking_adjustments(
             total_label=ttl,
             adjustments=list(adj_final),
         )
-        upsert_booking_notification(
+        dispatch_booking_notification(
             user_id=client_uid,
             booking_id=booking_id,
             kind="booking_pricing_updated",

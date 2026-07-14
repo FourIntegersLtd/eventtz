@@ -8,6 +8,7 @@ import {
 } from "./constants";
 import type { VendorOnboardingData } from "./types";
 import { parseMoneyNumber } from "@/lib/vendorDiscountDisplay";
+import { marketLocationFallback } from "@/lib/markets";
 import { portfolioFileKey } from "@/lib/portfolioFileKey";
 
 const BIO_MAX_WORDS = 60;
@@ -40,7 +41,7 @@ export function buildDraftBio(d: VendorOnboardingData, variant: number): string 
   const services =
     d.servicesOffered.length > 0 ? d.servicesOffered.join(", ") : "event services";
   const events = formatEventTypesForBio(d.eventTypes);
-  const city = d.baseCity || "the UK";
+  const city = d.baseCity || marketLocationFallback(d.countryCode);
   const biz = d.businessName || "Our business";
   const draft =
     variant % 2 === 0

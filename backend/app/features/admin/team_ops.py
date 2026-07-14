@@ -8,6 +8,7 @@ from app.core.config import get_settings
 from app.core.logging import get_logger
 from app.core.db import get_db as get_client
 from app.features.auth.accounts import fetch_user_profile, fetch_user_profile_by_email, is_super_admin_user, resolve_admin_role
+from app.features.email.dispatch import send_team_invite_email
 
 logger = get_logger(__name__)
 
@@ -114,6 +115,10 @@ def invite_admin_colleague(email: str, *, password: str) -> dict[str, Any]:
         ).eq("id", uid).execute()
         _sync_supabase_admin_metadata(uid, admin_role="admin")
         _set_supabase_password(uid, pwd)
+        try:
+            send_team_invite_email(email=em)
+        except Exception:
+            logger.warning("admin team invite email failed email=%s", em, exc_info=True)
         return {
             "user_id": uid,
             "email": em,
@@ -140,6 +145,10 @@ def invite_admin_colleague(email: str, *, password: str) -> dict[str, Any]:
         {"id": uid, "email": em, "user_type": "admin", "admin_role": "admin"},
         on_conflict="id",
     ).execute()
+    try:
+        send_team_invite_email(email=em)
+    except Exception:
+        logger.warning("admin team invite email failed email=%s", em, exc_info=True)
     return {
         "user_id": uid,
         "email": em,

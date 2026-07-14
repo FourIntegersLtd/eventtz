@@ -99,11 +99,23 @@ def post_message(user: dict[str, Any], conversation_id: str, body: MessageCreate
     msg = send_message(conversation_id=conversation_id, sender_user_id=uid, body=body.body)
     notify_user(uid, "chat_unread_changed")
     conv = get_conversation_for_user(conversation_id, uid) or {}
-    peer = str(conv.get("peer_user_id") or "")
-    if peer:
-        notify_user(peer, "chat_unread_changed")
-    return MessageCreateResponse(message=MessageRow.model_validate(msg))
+    kind = str(conv.get("kind") or "dm")
+    if kind == "dm":
+        peer = str(conv.get("peer_user_id") or "")
+        if peer:
+            notify_user(peer, "chat_unread_changed")
+    elif kind == "support":
+        # Fan-out to admin accounts so the Messages inbox refreshes live.
+        try:
+            from app.features.admin.team_ops import list_admin_team
 
+            for member in list_admin_team():
+                admin_id = str(member.get("user_id") or member.get("id") or "")
+                if admin_id and admin_id != uid and not member.get("account_suspended"):
+                    notify_user(admin_id, "chat_unread_changed")
+        except Exception:
+            pass
+    return MessageCreateResponse(message=MessageRow.model_validate(msg))
 
 def mark_read(user: dict[str, Any], conversation_id: str) -> MarkReadResponse:
     uid = str(user.get("id") or "")

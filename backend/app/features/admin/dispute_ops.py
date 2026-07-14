@@ -118,19 +118,23 @@ def enrich_dispute_row(row: dict[str, Any]) -> dict[str, Any]:
     return enriched[0] if enriched else row
 
 
-def list_disputes_for_admin() -> list[dict[str, Any]]:
+def list_disputes_for_admin(*, status: str | None = None) -> list[dict[str, Any]]:
     if get_settings().local_auth_mode:
         return []
+    status_key = (status or "all").strip().lower()
     try:
-        res = (
-            apply_recent_first_order(
-                get_client()
-                .table("dispute_cases")
-                .select("*"),
-            )
-            .limit(500)
-            .execute()
+        q = apply_recent_first_order(
+            get_client().table("dispute_cases").select("*"),
         )
+        if status_key == "open":
+            q = q.in_("status", ["open", "under_review"])
+        elif status_key in ("under_review", "resolved", "closed"):
+            q = q.eq("status", status_key)
+        elif status_key not in ("", "all"):
+            raise ValueError("status must be all, open, under_review, resolved, or closed")
+        res = q.limit(500).execute()
+    except ValueError:
+        raise
     except Exception as e:
         logger.warning("list_disputes_for_admin failed: %s", e, exc_info=True)
         return []

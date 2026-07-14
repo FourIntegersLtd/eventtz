@@ -31,11 +31,15 @@ export type ExploreSearchQuery = {
   query?: string;
   types?: string[];
   location?: string;
+  country?: string;
   dates?: string[];
   flexible?: boolean;
   budgetMin?: number | null;
   budgetMax?: number | null;
   sort?: MarketplaceSort;
+  vendorIds?: string[];
+  limit?: number;
+  offset?: number;
 };
 
 type ExploreVendorSearchApiResponse = {
@@ -92,6 +96,10 @@ export async function fetchExploreVendorsSearch(
   if (q.budgetMin != null) sp.set("budget_min", String(q.budgetMin));
   if (q.budgetMax != null) sp.set("budget_max", String(q.budgetMax));
   if (q.sort && q.sort !== "relevance") sp.set("sort", q.sort);
+  if (q.country) sp.set("country", q.country);
+  if (q.vendorIds?.length) sp.set("vendor_ids", q.vendorIds.join(","));
+  if (q.limit != null) sp.set("limit", String(q.limit));
+  if (q.offset != null && q.offset > 0) sp.set("offset", String(q.offset));
 
   const qs = sp.toString();
   const url = qs

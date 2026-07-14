@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from typing import Any
-from urllib.parse import urlparse
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
@@ -15,6 +14,7 @@ from app.core.db import (
     local_vendors,
 )
 from app.features.vendors.profile import get_vendor_profile
+from app.features.email.dispatch import send_vendor_approval_email
 
 logger = get_logger(__name__)
 
@@ -54,7 +54,14 @@ def _log_admin_list_zero_probe(client: Any) -> None:
         logger.warning("list_vendors_for_admin zero probe public.vendors count failed: %s", e, exc_info=True)
 
 
-def list_vendors_for_admin() -> list[dict[str, Any]]:
+def list_vendors_for_admin(
+    *,
+    offset: int = 0,
+    limit: int = 50,
+    q: str | None = None,
+    approval_status: str | None = None,
+    status: str | None = None,
+) -> tuple[list[dict[str, Any]], int]:
     if get_settings().local_auth_mode:
         out: list[dict[str, Any]] = []
         for uid, row in local_vendors.items():
@@ -72,106 +79,141 @@ def list_vendors_for_admin() -> list[dict[str, Any]]:
                     "updated_at": row.get("updated_at"),
                 }
             )
+        term = (q or "").strip().lower()
+        if term:
+            out = [
+                r
+                for r in out
+                if term in str(r.get("email") or "").lower()
+                or term in str((r.get("payload") or {}).get("businessName") or "").lower()
+            ]
+        if approval_status:
+            out = [r for r in out if str(r.get("approval_status") or "") == approval_status]
+        if status:
+            out = [r for r in out if str(r.get("status") or "") == status]
         out = sorted(out, key=lambda r: str(r.get("updated_at") or ""), reverse=True)
-        logger.info("list_vendors_for_admin local_mode rows=%s", len(out))
-        return out
+        total = len(out)
+        return out[offset : offset + limit], total
 
-    settings = get_settings()
-    supabase_host = urlparse(settings.supabase_url).netloc or "(unset)"
+    limit = max(1, min(limit, 200))
+    offset = max(0, offset)
     client = get_client()
-    # Users explicitly marked vendor in public.users
-    ures = (
-        client.table("users")
-        .select("id,email,user_type,created_at,updated_at")
-        .eq("user_type", "vendor")
-        .execute()
-    )
-    udata = getattr(ures, "data", None) or []
-    users_by_id: dict[str, dict[str, Any]] = {
-        str(u["id"]): u for u in udata if isinstance(u, dict) and u.get("id")
-    }
-    n_users_vendor_role = len(users_by_id)
+    match_ids: list[str] | None = None
+    term = (q or "").strip()
+    if term:
+        pattern = f"%{term}%"
+        id_set: set[str] = set()
+        try:
+            ures = (
+                client.table("users")
+                .select("id")
+                .eq("user_type", "vendor")
+                .ilike("email", pattern)
+                .limit(500)
+                .execute()
+            )
+            for row in getattr(ures, "data", None) or []:
+                if isinstance(row, dict) and row.get("id"):
+                    id_set.add(str(row["id"]))
+        except Exception as e:
+            logger.warning("list_vendors_for_admin email search failed: %s", e, exc_info=True)
+        try:
+            vres = (
+                client.table("vendors")
+                .select("user_id")
+                .ilike("business_name_normalized", pattern)
+                .limit(500)
+                .execute()
+            )
+            for row in getattr(vres, "data", None) or []:
+                if isinstance(row, dict) and row.get("user_id"):
+                    id_set.add(str(row["user_id"]))
+        except Exception as e:
+            logger.warning("list_vendors_for_admin name search failed: %s", e, exc_info=True)
+        if not id_set:
+            return [], 0
+        match_ids = list(id_set)
 
-    # Every vendor profile row (includes accounts where public.users.user_type is still wrong/out of sync)
+    vendor_select = "id,user_id,status,approval_status,current_step,payload,created_at,updated_at"
     try:
-        vres = (
-            client.table("vendors")
-            .select("id,user_id,status,approval_status,current_step,payload,created_at,updated_at")
-            .execute()
+        query = apply_recent_first_order(
+            client.table("vendors").select(vendor_select, count="exact"),
+            column="updated_at",
         )
-    except Exception as e:
-        if not is_missing_approval_status_column(e):
-            raise
-        logger.warning("vendors.approval_status missing for admin list; defaulting pending. Run sql/004.")
-        vres = (
-            client.table("vendors")
-            .select("id,user_id,status,current_step,payload,created_at,updated_at")
-            .execute()
+    except Exception:
+        vendor_select = "id,user_id,status,current_step,payload,created_at,updated_at"
+        query = apply_recent_first_order(
+            client.table("vendors").select(vendor_select, count="exact"),
+            column="updated_at",
         )
-    vdata = getattr(vres, "data", None) or []
-    by_user_id: dict[str, dict[str, Any]] = {
-        str(v["user_id"]): v for v in vdata if isinstance(v, dict) and v.get("user_id")
-    }
-    n_vendors_rows = len(by_user_id)
 
-    all_user_ids = set(users_by_id.keys()) | set(by_user_id.keys())
-    missing_user_rows = all_user_ids - set(users_by_id.keys())
-    n_extra_user_fetch = len(missing_user_rows)
-    if missing_user_rows:
-        extra = (
-            client.table("users")
-            .select("id,email,user_type,created_at,updated_at")
-            .in_("id", list(missing_user_rows))
-            .execute()
-        )
-        for u in getattr(extra, "data", None) or []:
-            if isinstance(u, dict) and u.get("id"):
-                users_by_id[str(u["id"])] = u
+    if match_ids is not None:
+        query = query.in_("user_id", match_ids)
+    if approval_status and approval_status.strip():
+        query = query.eq("approval_status", approval_status.strip())
+    if status and status.strip():
+        query = query.eq("status", status.strip())
+
+    try:
+        res = query.range(offset, offset + limit - 1).execute()
+    except Exception as e:
+        if is_missing_approval_status_column(e) and approval_status:
+            logger.warning("list_vendors_for_admin approval filter skipped: %s", e)
+            return [], 0
+        logger.warning("list_vendors_for_admin failed: %s", e, exc_info=True)
+        return [], 0
+
+    vdata = [r for r in (getattr(res, "data", None) or []) if isinstance(r, dict)]
+    total = int(getattr(res, "count", None) or len(vdata))
+    user_ids = [str(v.get("user_id") or "") for v in vdata if v.get("user_id")]
+    emails_by_id: dict[str, str | None] = {}
+    if user_ids:
+        ures = client.table("users").select("id,email").in_("id", user_ids).execute()
+        for urow in getattr(ures, "data", None) or []:
+            if isinstance(urow, dict) and urow.get("id"):
+                emails_by_id[str(urow["id"])] = urow.get("email")
 
     rows: list[dict[str, Any]] = []
-    for uid in all_user_ids:
-        urow = users_by_id.get(uid)
-        vrow = by_user_id.get(uid)
-        payload = vrow.get("payload") if isinstance(vrow, dict) and isinstance(vrow.get("payload"), dict) else {}
+    for vrow in vdata:
+        uid = str(vrow.get("user_id") or "")
+        payload = vrow.get("payload") if isinstance(vrow.get("payload"), dict) else {}
         rows.append(
             {
-                "id": vrow.get("id") if isinstance(vrow, dict) else None,
+                "id": vrow.get("id"),
                 "user_id": uid,
-                "email": urow.get("email") if isinstance(urow, dict) else None,
-                "status": (vrow.get("status") if isinstance(vrow, dict) else None) or "draft",
-                "approval_status": (vrow.get("approval_status") if isinstance(vrow, dict) else None) or "pending",
-                "current_step": (vrow.get("current_step") if isinstance(vrow, dict) else None) or 1,
+                "email": emails_by_id.get(uid),
+                "status": vrow.get("status") or "draft",
+                "approval_status": vrow.get("approval_status") or "pending",
+                "current_step": vrow.get("current_step") or 1,
                 "payload": payload,
-                "created_at": (vrow.get("created_at") if isinstance(vrow, dict) else None)
-                or (urow.get("created_at") if isinstance(urow, dict) else None),
-                "updated_at": (vrow.get("updated_at") if isinstance(vrow, dict) else None)
-                or (urow.get("updated_at") if isinstance(urow, dict) else None),
+                "created_at": vrow.get("created_at"),
+                "updated_at": vrow.get("updated_at"),
             }
         )
-    rows.sort(key=lambda r: str(r.get("updated_at") or ""), reverse=True)
-    n_result = len(rows)
-    sample_ids = list(all_user_ids)[:5]
-    logger.info(
-        "list_vendors_for_admin supabase_host=%s local_auth_mode=False "
-        "public_users_vendor_role_count=%s public_vendors_row_count=%s "
-        "merged_distinct_user_ids=%s extra_users_fetched_for_vendors_rows=%s result_rows=%s sample_user_ids=%s",
-        supabase_host,
-        n_users_vendor_role,
-        n_vendors_rows,
-        len(all_user_ids),
-        n_extra_user_fetch,
-        n_result,
-        sample_ids,
-    )
-    if n_result == 0:
-        _log_admin_list_zero_probe(client)
-        logger.warning(
-            "list_vendors_for_admin returned zero rows: no merged vendor rows. "
-            "If probe shows total_row_count>0 for users/vendors but counts above are 0, "
-            "check user_type values and vendors.user_id FKs. "
-            "If probes are 0, this Supabase DB has no profile rows yet or a different project is selected.",
-        )
-    return rows
+    return rows, total
+
+
+def list_vendor_user_ids_for_broadcast() -> list[str]:
+    """All vendor user IDs — for admin message fan-out."""
+    if get_settings().local_auth_mode:
+        return list(local_vendors.keys())
+    client = get_client()
+    ids: set[str] = set()
+    try:
+        vres = client.table("vendors").select("user_id").execute()
+        for row in getattr(vres, "data", None) or []:
+            if isinstance(row, dict) and row.get("user_id"):
+                ids.add(str(row["user_id"]))
+    except Exception as e:
+        logger.warning("list_vendor_user_ids_for_broadcast vendors failed: %s", e, exc_info=True)
+    try:
+        ures = client.table("users").select("id").eq("user_type", "vendor").execute()
+        for row in getattr(ures, "data", None) or []:
+            if isinstance(row, dict) and row.get("id"):
+                ids.add(str(row["id"]))
+    except Exception as e:
+        logger.warning("list_vendor_user_ids_for_broadcast users failed: %s", e, exc_info=True)
+    return list(ids)
 
 
 def get_vendor_admin_insights(vendor_user_id: str) -> dict[str, Any]:
@@ -257,6 +299,8 @@ def get_vendor_admin_insights(vendor_user_id: str) -> dict[str, Any]:
 def set_vendor_approval(user_id: str, approval_status: str) -> dict[str, Any] | None:
     if approval_status not in ("pending", "approved", "banned"):
         raise ValueError("approval_status must be pending, approved, or banned")
+    previous = get_vendor_profile(user_id)
+    prev_status = str(previous.get("approval_status") or "pending") if previous else None
     if get_settings().local_auth_mode:
         row = local_vendors.get(user_id)
         if not row:
@@ -276,14 +320,37 @@ def set_vendor_approval(user_id: str, approval_status: str) -> dict[str, Any] | 
         raise RuntimeError(
             "vendors.approval_status column is missing. Run backend/sql/004_vendors_approval_status.sql."
         ) from e
-    return get_vendor_profile(user_id)
+    row = get_vendor_profile(user_id)
+    if row and prev_status != approval_status:
+        payload = row.get("payload") if isinstance(row.get("payload"), dict) else {}
+        bn = payload.get("businessName")
+        business_name = bn.strip() if isinstance(bn, str) else None
+        try:
+            send_vendor_approval_email(
+                vendor_user_id=user_id,
+                vendor_email=None,
+                approval_status=approval_status,
+                business_name=business_name,
+            )
+        except Exception:
+            logger.warning("vendor approval email failed user=%s", user_id, exc_info=True)
+    return row
 
 
-def list_approved_vendors_for_explore() -> list[dict[str, Any]]:
+def list_approved_vendors_for_explore(
+    *,
+    vendor_user_ids: list[str] | None = None,
+    budget_min: float | None = None,
+    budget_max: float | None = None,
+    service_types: list[str] | None = None,
+    city_query: str | None = None,
+) -> list[dict[str, Any]]:
     if get_settings().local_auth_mode:
         out: list[dict[str, Any]] = []
         for uid, row in local_vendors.items():
             if row.get("approval_status") != "approved":
+                continue
+            if vendor_user_ids is not None and uid not in vendor_user_ids:
                 continue
             payload = row.get("payload") if isinstance(row.get("payload"), dict) else {}
             out.append(
@@ -298,21 +365,48 @@ def list_approved_vendors_for_explore() -> list[dict[str, Any]]:
             )
         return out
 
+    select_cols = (
+        "user_id,status,approval_status,payload,updated_at,"
+        "min_list_price_gbp,base_city_normalized,services_offered"
+    )
     try:
-        res = (
-            apply_recent_first_order(
+        query = apply_recent_first_order(
+            get_client()
+            .table("vendors")
+            .select(select_cols)
+            .eq("approval_status", "approved"),
+            column="updated_at",
+        )
+        if vendor_user_ids:
+            query = query.in_("user_id", vendor_user_ids[:500])
+        if budget_min is not None:
+            query = query.gte("min_list_price_gbp", budget_min)
+        if budget_max is not None:
+            query = query.lte("min_list_price_gbp", budget_max)
+        if service_types:
+            query = query.overlaps("services_offered", service_types)
+        city = (city_query or "").strip().lower()
+        if city:
+            query = query.ilike("base_city_normalized", f"%{city}%")
+        res = query.execute()
+    except Exception as e:
+        err = str(e).lower()
+        if "min_list_price_gbp" in err or "services_offered" in err or "42703" in err:
+            query = apply_recent_first_order(
                 get_client()
                 .table("vendors")
                 .select("user_id,status,approval_status,payload,updated_at")
                 .eq("approval_status", "approved"),
+                column="updated_at",
             )
-            .execute()
-        )
-    except Exception as e:
-        if not is_missing_approval_status_column(e):
+            if vendor_user_ids:
+                query = query.in_("user_id", vendor_user_ids[:500])
+            res = query.execute()
+        elif is_missing_approval_status_column(e):
+            logger.warning("vendors.approval_status missing for explore list; returning empty list. Run sql/004.")
+            return []
+        else:
             raise
-        logger.warning("vendors.approval_status missing for explore list; returning empty list. Run sql/004.")
-        return []
 
     data = getattr(res, "data", None) or []
     user_ids = [str(row.get("user_id")) for row in data if isinstance(row, dict) and row.get("user_id")]
@@ -340,6 +434,58 @@ def list_approved_vendors_for_explore() -> list[dict[str, Any]]:
             }
         )
     return out
+
+
+def get_approved_vendor_for_explore_by_id(vendor_user_id: str) -> dict[str, Any] | None:
+    """Single approved vendor row for browse detail (no full-list scan)."""
+    if get_settings().local_auth_mode:
+        row = local_vendors.get(vendor_user_id)
+        if not row or row.get("approval_status") != "approved":
+            return None
+        payload = row.get("payload") if isinstance(row.get("payload"), dict) else {}
+        return {
+            "user_id": vendor_user_id,
+            "email": row.get("email"),
+            "status": row.get("status"),
+            "approval_status": row.get("approval_status"),
+            "payload": payload,
+            "updated_at": row.get("updated_at"),
+        }
+    try:
+        res = (
+            get_client()
+            .table("vendors")
+            .select("user_id,status,approval_status,payload,updated_at")
+            .eq("user_id", vendor_user_id)
+            .eq("approval_status", "approved")
+            .limit(1)
+            .execute()
+        )
+    except Exception as e:
+        if is_missing_approval_status_column(e):
+            return None
+        raise
+    rows = getattr(res, "data", None) or []
+    if not rows or not isinstance(rows[0], dict):
+        return None
+    row = rows[0]
+    uid = str(row.get("user_id") or "")
+    email = None
+    try:
+        ures = get_client().table("users").select("email").eq("id", uid).limit(1).execute()
+        urows = getattr(ures, "data", None) or []
+        if urows and isinstance(urows[0], dict):
+            email = urows[0].get("email")
+    except Exception:
+        pass
+    return {
+        "user_id": row.get("user_id"),
+        "email": email,
+        "status": row.get("status"),
+        "approval_status": row.get("approval_status"),
+        "payload": row.get("payload") if isinstance(row.get("payload"), dict) else {},
+        "updated_at": row.get("updated_at"),
+    }
 
 
 def get_approved_vendor_payload(vendor_user_id: str) -> dict[str, Any] | None:

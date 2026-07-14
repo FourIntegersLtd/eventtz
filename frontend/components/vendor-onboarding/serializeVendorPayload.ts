@@ -1,3 +1,4 @@
+import { DEFAULT_COUNTRY_CODE, normalizeCountryCode } from "@/lib/markets";
 import { clampBioWords } from "./onboardingLogic";
 import type {
   DeliveryMode,
@@ -110,7 +111,10 @@ export function vendorDataToPayload(
     businessName: data.businessName,
     servicesOffered: data.servicesOffered,
     eventTypes: data.eventTypes,
+    countryCode: data.countryCode,
     baseCity: data.baseCity,
+    region: data.region,
+    postalCode: data.postalCode,
     deliveryModes: data.deliveryModes,
     travelRadius: data.travelRadius,
     travelDeliveryPolicy: data.travelDeliveryPolicy,
@@ -213,7 +217,10 @@ export function mergePayloadIntoVendorData(
     businessName: coerceStr(p, "businessName"),
     servicesOffered: strArr("servicesOffered"),
     eventTypes: strArr("eventTypes"),
+    countryCode: normalizeCountryCode(coerceStr(p, "countryCode") || DEFAULT_COUNTRY_CODE),
     baseCity: coerceStr(p, "baseCity"),
+    region: coerceStr(p, "region"),
+    postalCode: coerceStr(p, "postalCode"),
     deliveryModes: parseDeliveryModes(p.deliveryModes),
     travelRadius: (tr as VendorOnboardingData["travelRadius"]) || "",
     travelDeliveryPolicy:

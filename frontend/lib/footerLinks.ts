@@ -1,5 +1,5 @@
-export const FOOTER_CONTACT_EMAIL = "hello@eventtz.co.uk";
-export const FOOTER_PRIVACY_EMAIL = "hello@eventtz.co.uk";
+export const FOOTER_CONTACT_EMAIL = "hello@fourintegers.com";
+export const FOOTER_PRIVACY_EMAIL = "hello@fourintegers.com";
 
 export const FOOTER_ADDRESS_LINES = [
   "82a James Carter Road",

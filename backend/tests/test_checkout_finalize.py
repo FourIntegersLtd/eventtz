@@ -71,7 +71,7 @@ def test_rejects_amount_mismatch(mock_get_client, _pi_fields):
 
 
 @patch("app.features.bookings.payments._notify_pair")
-@patch("app.features.bookings.payments.upsert_booking_notification")
+@patch("app.features.bookings.payments.dispatch_booking_notification")
 @patch("app.features.bookings.payments._payment_fields_from_checkout_session", return_value=("pi_test", "ch_test"))
 @patch("app.features.bookings.payments.get_client")
 def test_accepts_matching_current_session(mock_get_client, _pi_fields, _notify, _upsert):

@@ -1,0 +1,56 @@
+            <tr>
+              <td
+                style="
+                  padding: 24px 20px;
+                  background-color: #f4f0f8;
+                  text-align: center;
+                "
+              >
+                <p
+                  style="
+                    margin: 0 0 16px;
+                    font-size: 17px;
+                    line-height: 1.45;
+                    color: #2d2938;
+                  "
+                >
+                  {{ cta_lead }}
+                </p>
+                {% if cta_primary %}
+                <a
+                  href="{{ cta_url }}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style="
+                    display: inline-block;
+                    padding: 14px 32px;
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: #ffffff;
+                    text-decoration: none;
+                    border-radius: 980px;
+                    background-color: #3e1964;
+                  "
+                  >{{ cta_button_text }}</a
+                >
+                {% else %}
+                <a
+                  href="{{ cta_url }}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style="
+                    display: inline-block;
+                    padding: 14px 32px;
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: #2d2938;
+                    text-decoration: none;
+                    border-radius: 980px;
+                    background-color: #ffffff;
+                    border: 1px solid rgba(62, 25, 100, 0.14);
+                  "
+                  >{{ cta_button_text }}</a
+                >
+                {% endif %}
+              </td>
+            </tr>

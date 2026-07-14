@@ -5,6 +5,12 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import type { MarketplaceSort } from "@/lib/clientExploreApi";
 import type { MarketplaceSearchState } from "@/lib/marketplaceSearchParams";
+import {
+  budgetFilterLabel,
+  formatCurrencySymbol,
+  formatMoney,
+  getMarket,
+} from "@/lib/markets";
 
 type MarketplaceFiltersBarProps = {
   state: MarketplaceSearchState;
@@ -41,6 +47,8 @@ function BudgetSortControls({ state, onCommit }: MarketplaceFiltersBarProps) {
   const [minStr, setMinStr] = useState(() => (state.budgetMin != null ? String(state.budgetMin) : ""));
   const [maxStr, setMaxStr] = useState(() => (state.budgetMax != null ? String(state.budgetMax) : ""));
   const panelRef = useRef<HTMLDivElement>(null);
+  const market = getMarket(state.country);
+  const currencySymbol = formatCurrencySymbol(market.currency);
 
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
@@ -80,15 +88,15 @@ function BudgetSortControls({ state, onCommit }: MarketplaceFiltersBarProps) {
         >
           <SlidersHorizontal className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
           {hasBudget
-            ? `Budget: ${state.budgetMin != null ? `£${state.budgetMin}` : "any"}–${
-                state.budgetMax != null ? `£${state.budgetMax}` : "any"
+            ? `Budget: ${state.budgetMin != null ? formatMoney(state.budgetMin, market.currency) : "any"}–${
+                state.budgetMax != null ? formatMoney(state.budgetMax, market.currency) : "any"
               }`
             : "Budget"}
         </button>
         {open && (
           <div className="absolute right-0 top-full z-[60] mt-2 w-[min(16rem,calc(100vw-2rem))] rounded-2xl border border-neutral-200 bg-white p-4 shadow-lg shadow-neutral-900/5">
             <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-              Budget (GBP)
+              {budgetFilterLabel(state.country)}
             </p>
             <div className="mt-2.5 flex items-center gap-2">
               <input
@@ -98,7 +106,7 @@ function BudgetSortControls({ state, onCommit }: MarketplaceFiltersBarProps) {
                 inputMode="decimal"
                 value={minStr}
                 onChange={(e) => setMinStr(e.target.value)}
-                placeholder="Min"
+                placeholder={`Min (${currencySymbol})`}
                 aria-label="Minimum budget"
                 className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 outline-none ring-primary/15 focus:border-primary focus:bg-white focus:ring-2"
               />
@@ -110,7 +118,7 @@ function BudgetSortControls({ state, onCommit }: MarketplaceFiltersBarProps) {
                 inputMode="decimal"
                 value={maxStr}
                 onChange={(e) => setMaxStr(e.target.value)}
-                placeholder="Max"
+                placeholder={`Max (${currencySymbol})`}
                 aria-label="Maximum budget"
                 className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 outline-none ring-primary/15 focus:border-primary focus:bg-white focus:ring-2"
               />

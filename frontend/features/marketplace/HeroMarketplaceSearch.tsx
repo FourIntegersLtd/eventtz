@@ -9,6 +9,7 @@ import {
   buildMarketplaceSearchUrl,
   type MarketplaceSearchState,
 } from "@/lib/marketplaceSearchParams";
+import { DEFAULT_COUNTRY_CODE } from "@/lib/markets";
 import { EVENT_DATE_PAST_ERROR, isPastIsoDate, todayIsoDate } from "@/lib/eventDateValidation";
 import { formatEventDate } from "@/lib/dateFormat";
 import { DateInput } from "@/components/ui/DateInput";
@@ -34,6 +35,7 @@ const emptyState = (): MarketplaceSearchState => ({
   query: "",
   types: [],
   location: "",
+  country: DEFAULT_COUNTRY_CODE,
   dates: [],
   dateFlexible: false,
   budgetMin: null,
@@ -262,7 +264,7 @@ export function HeroMarketplaceSearch({
             aria-label="Search vendors"
             value={state.query}
             onChange={(e) => setState((s) => ({ ...s, query: e.target.value }))}
-            placeholder="Search vendors or city"
+            placeholder={landing ? "e.g. puff-puff vendor in Leeds" : "Search vendors or city"}
             className={
               landing
                 ? "h-12 w-full rounded-xl border-0 bg-transparent py-3 pl-11 pr-4 text-base text-neutral-900 placeholder:text-neutral-400 focus:border-0 focus:outline-none focus:ring-0 lg:rounded-none"

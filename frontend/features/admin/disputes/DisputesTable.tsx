@@ -33,13 +33,6 @@ export function DisputesTable({
   onStatusFilterChange,
   onManage,
 }: DisputesTableProps) {
-  const filtered =
-    statusFilter === "all"
-      ? rows
-      : statusFilter === "open"
-        ? rows.filter((r) => r.status === "open" || r.status === "under_review")
-        : rows.filter((r) => r.status === statusFilter);
-
   return (
     <>
       <AdminFilterBar>
@@ -59,7 +52,7 @@ export function DisputesTable({
         </label>
       </AdminFilterBar>
 
-      {filtered.length === 0 ? (
+      {rows.length === 0 ? (
         <EmptyState title="No disputes match this filter" />
       ) : (
         <AdminTable>
@@ -72,7 +65,7 @@ export function DisputesTable({
               <AdminTableHeaderCell className="text-right">Actions</AdminTableHeaderCell>
             </AdminTableHead>
             <AdminTableBody>
-              {filtered.map((r) => (
+              {rows.map((r) => (
                 <AdminTableRow key={r.id}>
                   <AdminTableCell className="w-[7rem] align-top">
                     <ParticipantDisputeStatusBadge status={r.status} />

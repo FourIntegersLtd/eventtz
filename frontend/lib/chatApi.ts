@@ -6,6 +6,8 @@ export type ChatConversation = {
   vendor_user_id: string;
   peer_user_id: string;
   peer_display_name: string;
+  kind?: "dm" | "support";
+  support_user_id?: string | null;
   created_at: string | null;
   last_message_at: string | null;
   unread_count: number;

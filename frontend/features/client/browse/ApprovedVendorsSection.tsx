@@ -7,6 +7,7 @@ import type { ExploreVendor } from "@/lib/clientExploreApi";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { VendorPortfolioCover } from "@/components/vendor/VendorPortfolioCover";
 import { displayEventTypes, displayServicesOffered } from "@/features/client/browse/browseLabels";
+import { marketLocationFallback } from "@/lib/markets";
 
 type ApprovedVendorsSectionProps = {
   query: string;
@@ -56,7 +57,11 @@ export function ApprovedVendorsSection({
             {displayVendors.map((v) => {
               const p = v.payload ?? {};
               const biz = (typeof p.businessName === "string" && p.businessName) || "Unnamed business";
-              const city = (typeof p.baseCity === "string" && p.baseCity) || "UK";
+              const city =
+                (typeof p.baseCity === "string" && p.baseCity) ||
+                marketLocationFallback(
+                  typeof p.countryCode === "string" ? p.countryCode : undefined,
+                );
               const bio =
                 (typeof p.aiBioDraft === "string" && p.aiBioDraft.trim()) ||
                 (typeof p.travelDeliveryPolicy === "string" && p.travelDeliveryPolicy.trim()) ||

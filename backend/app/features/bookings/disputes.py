@@ -10,6 +10,7 @@ from app.core.logging import get_logger
 from app.core.db import apply_recent_first_order, get_db as get_client
 from app.features.bookings import _client_emails_by_id, _vendor_display_names_by_id
 from app.features.bookings.dispute_commands import create_dispute_case
+from app.features.email.dispatch import send_admin_dispute_opened_email
 from app.features.realtime.sse import notify_user
 
 logger = get_logger(__name__)
@@ -364,6 +365,15 @@ def create_dispute_for_participant(
             notify_user(vid, "dispute_changed")
     except Exception:
         logger.warning("dispute_changed notify failed booking=%s", booking_id, exc_info=True)
+    try:
+        send_admin_dispute_opened_email(
+            booking_id=booking_id,
+            dispute_id=str(row.get("id") or ""),
+            summary=summary,
+            opened_by_user_id=user_id,
+        )
+    except Exception:
+        logger.warning("admin dispute email failed booking=%s", booking_id, exc_info=True)
     enriched = _enrich_participant_disputes([row], user_id)
     return (enriched[0] if enriched else None), None
 

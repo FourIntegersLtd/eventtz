@@ -5,6 +5,8 @@ import Link from "next/link";
 export type AdminSectionTab = {
   id: string;
   label: string;
+  /** Optional unread / count pill (Messages inbox, etc.). */
+  badge?: number;
 };
 
 type AdminSectionTabsProps = {
@@ -25,6 +27,7 @@ export function AdminSectionTabs({ tabs, activeId, basePath }: AdminSectionTabsP
     >
       {tabs.map((t) => {
         const selected = t.id === activeId;
+        const badge = typeof t.badge === "number" && t.badge > 0 ? t.badge : 0;
         return (
           <Link
             key={t.id}
@@ -32,13 +35,18 @@ export function AdminSectionTabs({ tabs, activeId, basePath }: AdminSectionTabsP
             scroll={false}
             role="tab"
             aria-selected={selected}
-            className={`inline-flex min-h-11 shrink-0 items-center rounded-lg px-4 py-2.5 text-sm font-medium transition ${
+            className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition ${
               selected
                 ? "bg-white text-neutral-900 shadow-sm ring-1 ring-neutral-200/80"
                 : "text-neutral-600 hover:text-neutral-900"
             }`}
           >
             {t.label}
+            {badge > 0 ? (
+              <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white tabular-nums">
+                {badge > 99 ? "99+" : badge}
+              </span>
+            ) : null}
           </Link>
         );
       })}

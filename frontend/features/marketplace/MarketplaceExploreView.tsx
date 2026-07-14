@@ -50,7 +50,21 @@ export function MarketplaceExploreView({
   const [vendors, setVendors] = useState<ExploreVendorSearchRow[]>([]);
   const [matchNotice, setMatchNotice] = useState<string | null>(null);
 
+  const { isSaved, toggle, savedIds, ready: bookmarksReady } = useMarketplaceBookmarks();
+  const savedOnly = mode === "favorites";
+  const favoriteVendorIds = useMemo(
+    () => (savedOnly && savedIds.size > 0 ? [...savedIds] : undefined),
+    [savedOnly, savedIds],
+  );
+
   useEffect(() => {
+    if (savedOnly && !bookmarksReady) return;
+    if (savedOnly && bookmarksReady && savedIds.size === 0) {
+      setVendors([]);
+      setMatchNotice(null);
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
     void (async () => {
       setLoading(true);
@@ -60,11 +74,13 @@ export function MarketplaceExploreView({
           query: state.query || undefined,
           types: state.types.length ? state.types : undefined,
           location: state.location || undefined,
+          country: state.country,
           dates: state.dates,
           flexible: state.dateFlexible,
           budgetMin: state.budgetMin,
           budgetMax: state.budgetMax,
           sort: state.sort,
+          vendorIds: favoriteVendorIds,
         });
         if (!cancelled) {
           setVendors(rows);
@@ -79,7 +95,7 @@ export function MarketplaceExploreView({
     return () => {
       cancelled = true;
     };
-  }, [fetchKey, state]);
+  }, [fetchKey, state, savedOnly, bookmarksReady, favoriteVendorIds]);
 
   const expanded = useMemo(
     () => expandVendorsForSearchResults(vendors, state.types),
@@ -95,12 +111,7 @@ export function MarketplaceExploreView({
     [pathname, router],
   );
 
-  const { isSaved, toggle, savedIds } = useMarketplaceBookmarks();
-
-  const savedOnly = mode === "favorites";
-  const visibleCards = savedOnly
-    ? expanded.filter((card) => savedIds.has(card.vendor.user_id))
-    : expanded;
+  const visibleCards = expanded;
   const displayCount = visibleCards.length;
 
   const exactCards = useMemo(

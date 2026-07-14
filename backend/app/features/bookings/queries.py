@@ -121,14 +121,16 @@ def list_booking_requests_for_vendor(
     vendor_user_id: str,
     *,
     group: str,
+    status: str | None = None,
+    payment_status: str | None = None,
+    exclude_payment_status: str | None = None,
 ) -> list[dict[str, Any]]:
-    """group: active (pending+accepted), completed, closed (completed+declined+cancelled).
+    """group: active (pending+accepted), completed, closed, or all.
 
-    `closed` includes `completed` so the UI can show a single "Closed" tab covering every
-    booking that's no longer active, with per-row status badges distinguishing the outcome.
+    Optional `status` / `payment_status` / `exclude_payment_status` refine the query on the server.
     """
-    if group not in ("active", "completed", "closed"):
-        raise ValueError("group must be active, completed, or closed")
+    if group not in ("active", "completed", "closed", "all"):
+        raise ValueError("group must be active, completed, closed, or all")
     if get_settings().local_auth_mode:
         return []
 
@@ -144,8 +146,16 @@ def list_booking_requests_for_vendor(
         q = q.in_("status", ["pending", "accepted"])
     elif group == "completed":
         q = q.eq("status", "completed")
-    else:
+    elif group == "closed":
         q = q.in_("status", ["completed", "declined", "cancelled"])
+    # group == "all": no status bucket filter
+
+    if status:
+        q = q.eq("status", status.strip().lower())
+    if payment_status:
+        q = q.eq("payment_status", payment_status.strip().lower())
+    if exclude_payment_status:
+        q = q.neq("payment_status", exclude_payment_status.strip().lower())
 
     res = apply_recent_first_order(q).execute()
     rows = sort_booking_rows_recent_first(
@@ -273,14 +283,16 @@ def list_booking_requests_for_client(
     client_user_id: str,
     *,
     group: str,
+    status: str | None = None,
+    payment_status: str | None = None,
+    exclude_payment_status: str | None = None,
 ) -> list[dict[str, Any]]:
-    """group: active (pending+accepted), completed, closed (completed+declined+cancelled).
+    """group: active (pending+accepted), completed, closed, or all.
 
-    `closed` includes `completed` so the UI can show a single "Closed" tab covering every
-    booking that's no longer active, with per-row status badges distinguishing the outcome.
+    Optional `status` / `payment_status` / `exclude_payment_status` refine the query on the server.
     """
-    if group not in ("active", "completed", "closed"):
-        raise ValueError("group must be active, completed, or closed")
+    if group not in ("active", "completed", "closed", "all"):
+        raise ValueError("group must be active, completed, closed, or all")
     if get_settings().local_auth_mode:
         return []
 
@@ -296,8 +308,15 @@ def list_booking_requests_for_client(
         q = q.in_("status", ["pending", "accepted"])
     elif group == "completed":
         q = q.eq("status", "completed")
-    else:
+    elif group == "closed":
         q = q.in_("status", ["completed", "declined", "cancelled"])
+
+    if status:
+        q = q.eq("status", status.strip().lower())
+    if payment_status:
+        q = q.eq("payment_status", payment_status.strip().lower())
+    if exclude_payment_status:
+        q = q.neq("payment_status", exclude_payment_status.strip().lower())
 
     res = apply_recent_first_order(q).execute()
     rows = sort_booking_rows_recent_first(

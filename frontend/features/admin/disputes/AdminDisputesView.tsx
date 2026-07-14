@@ -19,15 +19,16 @@ export function AdminDisputesView() {
 
   const load = useCallback(async () => {
     setError(null);
+    setLoading(true);
     try {
-      const list = await fetchAdminDisputes();
+      const list = await fetchAdminDisputes(statusFilter);
       setRows(list);
     } catch {
       setError("Could not load disputes.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [statusFilter]);
 
   useEffect(() => {
     void load();
@@ -39,7 +40,7 @@ export function AdminDisputesView() {
     if (fresh) setManaging(fresh);
   }, [rows, managing?.id]);
 
-  if (loading) {
+  if (loading && rows.length === 0) {
     return <AdminLoadingState label="Loading disputes…" />;
   }
 

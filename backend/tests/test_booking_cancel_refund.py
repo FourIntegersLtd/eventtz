@@ -50,7 +50,7 @@ def _mock_db(row: dict) -> tuple[MagicMock, MagicMock]:
 @patch("app.features.bookings.payments.refund_booking_on_cancel")
 @patch("app.features.bookings.disputes.has_active_dispute_for_booking", return_value=False)
 @patch("app.features.bookings.status._notify_booking_changed")
-@patch("app.features.bookings.status.upsert_booking_notification")
+@patch("app.features.bookings.status.dispatch_booking_notification")
 @patch("app.features.bookings.status.get_settings")
 @patch("app.features.bookings.status.get_client")
 def test_unpaid_client_cancel_skips_refund(
@@ -72,7 +72,7 @@ def test_unpaid_client_cancel_skips_refund(
 @patch("app.features.bookings.payments.refund_booking_on_cancel")
 @patch("app.features.bookings.disputes.has_active_dispute_for_booking", return_value=False)
 @patch("app.features.bookings.status._notify_booking_changed")
-@patch("app.features.bookings.status.upsert_booking_notification")
+@patch("app.features.bookings.status.dispatch_booking_notification")
 @patch("app.features.bookings.status.get_settings")
 @patch("app.features.bookings.status.get_client")
 def test_paid_client_cancel_refunds_first(
@@ -90,7 +90,7 @@ def test_paid_client_cancel_refunds_first(
 @patch("app.features.bookings.payments.refund_booking_on_cancel")
 @patch("app.features.bookings.disputes.has_active_dispute_for_booking", return_value=False)
 @patch("app.features.bookings.status._notify_booking_changed")
-@patch("app.features.bookings.status.upsert_booking_notification")
+@patch("app.features.bookings.status.dispatch_booking_notification")
 @patch("app.features.bookings.status.get_settings")
 @patch("app.features.bookings.status.get_client")
 def test_refund_failure_leaves_booking_uncancelled(
@@ -145,7 +145,7 @@ def test_cancel_blocked_while_dispute_open(
 @patch("app.features.bookings.payments.refund_booking_on_cancel")
 @patch("app.features.bookings.disputes.has_active_dispute_for_booking", return_value=False)
 @patch("app.features.bookings.status._notify_booking_changed")
-@patch("app.features.bookings.status.upsert_booking_notification")
+@patch("app.features.bookings.status.dispatch_booking_notification")
 @patch("app.features.bookings.status.get_settings")
 @patch("app.features.bookings.status.get_client")
 def test_paid_vendor_cancel_refunds_client(
@@ -163,7 +163,7 @@ def test_paid_vendor_cancel_refunds_client(
 
 
 @patch("app.features.bookings.payments._notify_pair")
-@patch("app.features.bookings.payments.upsert_booking_notification")
+@patch("app.features.bookings.payments.dispatch_booking_notification")
 @patch("app.features.bookings.payments.stripe_service.create_refund")
 @patch("app.features.bookings.payments.get_settings")
 @patch("app.features.bookings.payments.get_client")
@@ -237,7 +237,7 @@ def test_cancel_blocked_when_completed(
 @patch("app.features.bookings.payments.refund_booking_on_cancel")
 @patch("app.features.bookings.disputes.has_active_dispute_for_booking", return_value=False)
 @patch("app.features.bookings.status._notify_booking_changed")
-@patch("app.features.bookings.status.upsert_booking_notification")
+@patch("app.features.bookings.status.dispatch_booking_notification")
 @patch("app.features.bookings.status.get_settings")
 @patch("app.features.bookings.status.get_client")
 def test_cancel_retry_after_refund_skips_stripe(

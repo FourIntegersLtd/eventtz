@@ -45,6 +45,9 @@ class AdminVendorRow(BaseModel):
 class AdminVendorsListResponse(BaseModel):
     success: bool = True
     vendors: list[AdminVendorRow] = Field(default_factory=list)
+    total: int = 0
+    offset: int = 0
+    limit: int = 50
 
 
 class AdminVendorApprovalResponse(BaseModel):

@@ -32,3 +32,4 @@ class MarketplaceSearchResult:
     match_notice: str | None = None
     has_exact: bool = False
     has_related: bool = False
+    total_count: int = 0

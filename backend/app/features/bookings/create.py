@@ -20,7 +20,7 @@ from app.features.bookings.line_item_validation import validate_quote_line_items
 from app.features.bookings.notifications import _notify_booking_changed
 from app.features.bookings.pricing import build_pricing_breakdown, persisted_booking_total_label
 from app.features.chat.service import assert_conversation_matches_pair, send_quote_message
-from app.features.notifications.service import upsert_booking_notification
+from app.features.email.dispatch import dispatch_booking_notification
 from app.features.vendors.moderation import get_approved_vendor_payload
 from app.features.vendors.list_pricing import (
     compute_automatic_discount_lines,
@@ -112,11 +112,10 @@ def create_booking_request(
         raise RuntimeError("Failed to create booking request")
     bid = str(created.get("id", ""))
     if vendor_user_id:
-        upsert_booking_notification(
+        dispatch_booking_notification(
             user_id=vendor_user_id,
             booking_id=bid,
             kind="booking_request_received",
-            body=None,
         )
     _notify_booking_changed(client_user_id=client_user_id, vendor_user_id=vendor_user_id)
     return {
@@ -216,7 +215,7 @@ def create_vendor_quote_booking_request(
         body = (
             f"Total: {ttl}. Review the quote and accept or decline."
         )
-        upsert_booking_notification(
+        dispatch_booking_notification(
             user_id=client_user_id,
             booking_id=bid,
             kind="vendor_quote_received",

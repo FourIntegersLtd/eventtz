@@ -1,0 +1,20 @@
+            <tr>
+              <td style="padding: 4px 20px 16px; text-align: center">
+                {% if hero_image_url %}
+                <img
+                  src="{{ hero_image_url }}"
+                  alt="Welcome to {{ app_name }}"
+                  width="280"
+                  style="
+                    display: block;
+                    margin: 0 auto;
+                    max-width: 280px;
+                    width: 100%;
+                    height: auto;
+                    border: 0;
+                    border-radius: 18px;
+                  "
+                />
+                {% endif %}
+              </td>
+            </tr>

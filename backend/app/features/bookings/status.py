@@ -19,10 +19,7 @@ from app.features.bookings.queries import (
     get_booking_request_for_client,
     get_booking_request_for_vendor,
 )
-from app.features.notifications.service import (
-    insert_booking_notification_if_absent,
-    upsert_booking_notification,
-)
+from app.features.email.dispatch import dispatch_booking_notification
 
 
 def _guard_cancel_money_state(booking_id: str, *, status: str, payment_status: str) -> None:
@@ -121,7 +118,7 @@ def update_booking_request_status_for_vendor(
                 return None
             if client_uid:
                 if refunded:
-                    upsert_booking_notification(
+                    dispatch_booking_notification(
                         user_id=client_uid,
                         booking_id=booking_id,
                         kind="booking_cancelled_by_vendor",
@@ -131,10 +128,11 @@ def update_booking_request_status_for_vendor(
                         ),
                     )
                 else:
-                    insert_booking_notification_if_absent(
+                    dispatch_booking_notification(
                         user_id=client_uid,
                         booking_id=booking_id,
                         kind="booking_cancelled_by_vendor",
+                        mode="insert_if_absent",
                     )
             _notify_booking_changed(client_user_id=client_uid, vendor_user_id=vendor_user_id)
             return {"id": booking_id, "status": "cancelled"}
@@ -150,7 +148,7 @@ def update_booking_request_status_for_vendor(
             if not rows(upd):
                 return None
             if client_uid:
-                upsert_booking_notification(
+                dispatch_booking_notification(
                     user_id=client_uid,
                     booking_id=booking_id,
                     kind="vendor_quote_withdrawn",
@@ -219,7 +217,7 @@ def update_booking_request_status_for_vendor(
         if not rows(upd):
             return None
         if client_uid:
-            upsert_booking_notification(
+            dispatch_booking_notification(
                 user_id=client_uid,
                 booking_id=booking_id,
                 kind="booking_declined_by_vendor",
@@ -244,7 +242,7 @@ def _notify_client_booking_accepted(client_uid: str, booking_id: str) -> None:
         total_label=ttl,
         adjustments=adj_list,
     )
-    upsert_booking_notification(
+    dispatch_booking_notification(
         user_id=client_uid,
         booking_id=booking_id,
         kind="booking_accepted",
@@ -294,7 +292,7 @@ def cancel_booking_request_for_client(
     if not rows(upd):
         return None
     if vendor_uid:
-        upsert_booking_notification(
+        dispatch_booking_notification(
             user_id=vendor_uid,
             booking_id=booking_id,
             kind="booking_cancelled_by_client",
@@ -360,14 +358,14 @@ def update_booking_request_status_for_client(
             return None
         if vendor_uid:
             if is_vendor_quote:
-                upsert_booking_notification(
+                dispatch_booking_notification(
                     user_id=vendor_uid,
                     booking_id=booking_id,
                     kind="vendor_quote_declined",
                     body="The client declined your quote.",
                 )
             else:
-                upsert_booking_notification(
+                dispatch_booking_notification(
                     user_id=vendor_uid,
                     booking_id=booking_id,
                     kind="client_declined_updated_price",
@@ -409,7 +407,7 @@ def _notify_client_confirmed_updated_price(vendor_uid: str, booking_id: str) -> 
         return
     pricing = full.get("pricing") if isinstance(full.get("pricing"), dict) else {}
     ttl = str(pricing.get("client_total_label") or full.get("total_label") or "")
-    upsert_booking_notification(
+    dispatch_booking_notification(
         user_id=vendor_uid,
         booking_id=booking_id,
         kind="client_confirmed_updated_price",
@@ -430,7 +428,7 @@ def _notify_vendor_quote_accepted(vendor_uid: str, booking_id: str) -> None:
         total_label=ttl,
         adjustments=adj_list,
     )
-    upsert_booking_notification(
+    dispatch_booking_notification(
         user_id=vendor_uid,
         booking_id=booking_id,
         kind="vendor_quote_accepted",

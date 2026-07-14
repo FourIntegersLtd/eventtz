@@ -1,9 +1,11 @@
 import type { MarketplaceSort } from "@/lib/clientExploreApi";
+import { DEFAULT_COUNTRY_CODE, normalizeCountryCode } from "@/lib/markets";
 
 export type MarketplaceSearchState = {
   query: string;
   types: string[];
   location: string;
+  country: string;
   dates: string[];
   dateFlexible: boolean;
   budgetMin: number | null;
@@ -58,11 +60,13 @@ export function marketplaceStateFromSearchParams(
 
   const legacyLocation = sp.get("location")?.trim() ?? "";
   const q = sp.get("q")?.trim() ?? "";
+  const country = normalizeCountryCode(sp.get("country") ?? DEFAULT_COUNTRY_CODE);
 
   return {
     query: q || legacyLocation,
     types,
-    location: "",
+    location: legacyLocation && q ? legacyLocation : "",
+    country,
     dates,
     dateFlexible: parseBool(sp.get("flexible")),
     budgetMin: parseNum(sp.get("budget_min")),
@@ -80,6 +84,9 @@ export function buildMarketplaceSearchUrl(
   if (q) sp.set("q", q);
   if (state.types.length > 0) sp.set("types", state.types.join(","));
   if (state.location.trim()) sp.set("location", state.location.trim());
+  if (state.country && state.country !== DEFAULT_COUNTRY_CODE) {
+    sp.set("country", state.country);
+  }
   if (state.dates.length > 0 && !state.dateFlexible) {
     sp.set("dates", state.dates.slice(0, 3).join(","));
   }

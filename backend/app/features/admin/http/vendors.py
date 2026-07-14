@@ -1,6 +1,6 @@
 """Admin-only: list vendors and set approval status."""
 
-from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi import APIRouter, HTTPException, Query, Request, Response
 
 from app.features.auth.http.guards import require_admin, require_super_admin
 from app.core.logging import get_logger
@@ -22,15 +22,36 @@ logger = get_logger(__name__)
 
 
 @router.get("/vendors", response_model=AdminVendorsListResponse)
-def admin_list_vendors(request: Request, response: Response) -> AdminVendorsListResponse:
+def admin_list_vendors(
+    request: Request,
+    response: Response,
+    offset: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
+    q: str | None = Query(None, max_length=200),
+    approval_status: str | None = Query(None),
+    status: str | None = Query(None),
+) -> AdminVendorsListResponse:
     user = require_admin(request, response)
-    rows = list_vendors_for_admin()
+    rows, total = list_vendors_for_admin(
+        offset=offset,
+        limit=limit,
+        q=q,
+        approval_status=approval_status,
+        status=status,
+    )
     logger.info(
-        "GET /admin/vendors admin_user_id=%s vendors_count=%s",
+        "GET /admin/vendors admin_user_id=%s vendors_count=%s total=%s",
         user.get("id"),
         len(rows),
+        total,
     )
-    return AdminVendorsListResponse(success=True, vendors=rows)
+    return AdminVendorsListResponse(
+        success=True,
+        vendors=rows,
+        total=total,
+        offset=offset,
+        limit=limit,
+    )
 
 
 @router.get("/vendors/{user_id}/insights", response_model=AdminVendorInsightsResponse)

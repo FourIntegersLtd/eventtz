@@ -72,7 +72,13 @@ export function LandingHero() {
           </div>
         </div>
 
-        <div className="relative z-20 mx-auto mt-5 w-full min-w-0 max-w-3xl overflow-visible motion-safe:animate-[hero-copy-in_0.75s_ease-out_0.12s_both] sm:mt-10 lg:mt-12 xl:max-w-4xl">
+        <div className="relative z-20 mx-auto mt-12 w-full min-w-0 max-w-3xl overflow-visible motion-safe:animate-[hero-copy-in_0.75s_ease-out_0.12s_both] sm:mt-8 lg:mt-8 xl:max-w-4xl">
+          <p className="mb-2 flex flex-wrap items-center gap-2 text-sm text-neutral-600">
+            <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold tracking-wide text-primary">
+              AI-powered
+            </span>
+            <span>Search vendors in plain English.</span>
+          </p>
           <HeroMarketplaceSearch variant="landing" submitToPath="/client/browse" />
         </div>
       </div>

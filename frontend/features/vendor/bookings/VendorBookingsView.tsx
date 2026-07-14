@@ -51,7 +51,14 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
   const listStatusFilter = searchParams.get("status") ?? "";
   const urlTab = searchParams.get("tab");
 
-  const fetchList = useCallback((t: "active" | "closed") => fetchVendorBookings(t), []);
+  const fetchList = useCallback(
+    (t: "active" | "closed") =>
+      fetchVendorBookings({
+        group: t,
+        ...(listStatusFilter === "pending" ? { status: "pending" } : {}),
+      }),
+    [listStatusFilter],
+  );
   const fetchDetail = useCallback((id: string) => fetchVendorBookingDetail(id), []);
   const getDetailStatus = useCallback((b: VendorBookingDetail) => b.status, []);
 
@@ -195,16 +202,7 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
     }
   };
 
-  const rows = useMemo(
-    () =>
-      list
-        .map(toVendorBookingRowViewModel)
-        .filter((row) => {
-          if (listStatusFilter !== "pending") return true;
-          return row.status === "pending";
-        }),
-    [list, listStatusFilter],
-  );
+  const rows = useMemo(() => list.map(toVendorBookingRowViewModel), [list]);
   const viewModel = detail
     ? toVendorBookingDetailViewModel(detail, () => setChatOpen(true))
     : null;

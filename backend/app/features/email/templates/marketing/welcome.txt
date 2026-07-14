@@ -1,0 +1,25 @@
+Hello {{ display_name }},
+
+{{ welcome_subtitle }}
+
+{{ showcase_intro_plain }}
+
+{% for section in showcase_sections %}
+- {{ section.eyebrow }}: {{ section.title }}
+  {{ section.description }}
+
+{% endfor %}
+
+{{ welcome_cta_lead }}
+{{ welcome_cta_label }}: {{ welcome_cta_url }}
+
+{{ welcome_support_line }}
+{{ welcome_closing }}
+
+Kind regards,
+The {{ app_name }} team
+Four Integers Ltd
+
+{{ website_url }}
+Privacy: {{ privacy_url }}
+Terms: {{ terms_url }}

@@ -3,11 +3,12 @@
 import { portalCard } from "@/components/portal-shell/portalTheme";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, FileText, Receipt, Send } from "lucide-react";
+import { ChevronRight, FileText, Receipt } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { BackLink } from "@/components/ui/BackLink";
 import { Button } from "@/components/ui/Button";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { MessageComposer } from "@/features/chat/MessageComposer";
 import { VendorQuoteFormModal } from "@/features/vendor/quotes/VendorQuoteFormModal";
 import { formatDateTime } from "@/lib/dateFormat";
 import { getApiErrorDetail } from "@/lib/api-errors";
@@ -23,8 +24,6 @@ import {
 } from "@/lib/chatApi";
 import { fetchVendorBookings } from "@/lib/vendorBookingsApi";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
-
-const MAX_LEN = 5000;
 
 type ChatThreadViewProps = {
   portal: "client" | "vendor";
@@ -78,7 +77,7 @@ export function ChatThreadView({
     eventEndDate?: string;
   } | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const isSupport = conv?.kind === "support";
 
   const load = useCallback(async () => {
     setError(null);
@@ -167,13 +166,6 @@ export function ChatThreadView({
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
 
-  useEffect(() => {
-    const el = textareaRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
-  }, [draft]);
-
   const send = async () => {
     const text = draft.trim();
     if (!text || sending || !uid) return;
@@ -246,13 +238,15 @@ export function ChatThreadView({
             {peerName}
           </p>
           <p className="mt-0.5 text-xs text-neutral-500">
-            {portal === "vendor"
-              ? "Messages with this client — send a custom quote whenever you're ready."
-              : "Messages with this vendor about your event."}
+            {isSupport
+              ? "Messages with Eventtz Support."
+              : portal === "vendor"
+                ? "Messages with this client — send a custom quote whenever you're ready."
+                : "Messages with this vendor about your event."}
           </p>
         </div>
 
-        {portal === "vendor" && conv ? (
+        {portal === "vendor" && conv && !isSupport ? (
           <Button
             variant="secondary"
             size="sm"
@@ -265,7 +259,7 @@ export function ChatThreadView({
         ) : null}
       </div>
 
-      {portal === "vendor" && conv ? (
+      {portal === "vendor" && conv && !isSupport ? (
         <VendorQuoteFormModal
           isOpen={quoteOpen}
           onClose={() => setQuoteOpen(false)}
@@ -357,34 +351,13 @@ export function ChatThreadView({
 
       {/* Composer — same card language as rest of portal */}
       <div className="border-t border-neutral-100 px-5 py-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-          <textarea
-            ref={textareaRef}
-            value={draft}
-            onChange={(e) => setDraft(e.target.value.slice(0, MAX_LEN))}
-            placeholder="Type a message…"
-            rows={2}
-            className="min-h-[72px] w-full min-w-0 flex-1 resize-none rounded-xl bg-neutral-50 px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 ring-1 ring-neutral-200/60 transition focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/25"
-            aria-label="Message"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                void send();
-              }
-            }}
-          />
-          <Button
-            variant="primary"
-            size="md"
-            loading={sending}
-            disabled={!draft.trim()}
-            icon={<Send className="h-4 w-4" aria-hidden />}
-            onClick={() => void send()}
-            className="shrink-0"
-          >
-            Send
-          </Button>
-        </div>
+        <MessageComposer
+          value={draft}
+          onChange={setDraft}
+          onSend={() => void send()}
+          loading={sending}
+          placeholder="Type a message…"
+        />
       </div>
     </div>
   );

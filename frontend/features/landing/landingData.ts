@@ -534,6 +534,7 @@ export const EXPLORE_NAV_LINKS = [
 /** One login, one register — the account-type dropdown on `/register` replaces separate client/vendor forms. */
 export const SIGN_IN_LINK = { href: "/login", label: "Sign in" } as const;
 export const BROWSE_LINK = { href: "/client/browse", label: "Browse" } as const;
+export const BLOG_LINK = { href: "/blog", label: "Blog" } as const;
 export const REGISTER_LINK = { href: "/register", label: "Register" } as const;
 export const CREATE_ACCOUNT_LINK = { href: "/register", label: "Create account" } as const;
 export const FAQ_LINK = { href: "#faq", label: "FAQ" } as const;
@@ -546,6 +547,7 @@ export type MobileNavLink = {
 
 /** Short list for the mobile drawer — desktop keeps the full Explore dropdown. */
 export const MOBILE_NAV_SECTION_LINKS: MobileNavLink[] = [
+  { href: "/blog", label: "Blog" },
   { href: "#booking-journey", label: "How booking works" },
   { href: "#for-vendors", label: "For vendors" },
   { href: "#faq", label: "FAQ" },

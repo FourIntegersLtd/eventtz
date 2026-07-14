@@ -7,6 +7,7 @@ import { ChevronDown, Menu, X } from "lucide-react";
 import { EventtzLogo } from "@/components/branding/EventtzLogo";
 import { getButtonClassName } from "@/components/ui/buttonStyles";
 import {
+  BLOG_LINK,
   BROWSE_LINK,
   EXPLORE_NAV_LINKS,
   REGISTER_LINK,
@@ -193,6 +194,17 @@ export function LandingNav({
             <NavDropdown darkNav={darkNav} label="Explore" align="left" items={exploreLinks} />
 
             <NavLinkItem
+              href={BLOG_LINK.href}
+              className={
+                darkNav
+                  ? "rounded-lg px-3 py-2 text-sm font-medium text-white/95 transition hover:bg-white/10"
+                  : "rounded-lg px-3 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 hover:text-primary"
+              }
+            >
+              {BLOG_LINK.label}
+            </NavLinkItem>
+
+            <NavLinkItem
               href={SIGN_IN_LINK.href}
               className={
                 darkNav
@@ -203,13 +215,13 @@ export function LandingNav({
               {SIGN_IN_LINK.label}
             </NavLinkItem>
 
-            <NavLinkItem href={REGISTER_LINK.href} className={outlineCtaClass}>
+            <NavLinkItem href={REGISTER_LINK.href} className={primaryCtaClass}>
               {REGISTER_LINK.label}
             </NavLinkItem>
 
-            <NavLinkItem href={BROWSE_LINK.href} className={primaryCtaClass}>
+            {/* <NavLinkItem href={BROWSE_LINK.href} className={primaryCtaClass}>
               {BROWSE_LINK.label}
-            </NavLinkItem>
+            </NavLinkItem> */}
           </nav>
 
           <div className="ml-auto flex shrink-0 items-center gap-2.5 lg:hidden">

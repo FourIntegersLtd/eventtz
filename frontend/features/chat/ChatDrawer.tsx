@@ -1,14 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Send } from "lucide-react";
 import { Drawer } from "@/components/ui/Drawer";
-import { Button } from "@/components/ui/Button";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { CHAT_UNREAD_CLEARED_EVENT, postConversation, postMessage } from "@/lib/chatApi";
 import { ChatThreadView } from "@/features/chat/ChatThreadView";
-
-const MAX_LEN = 5000;
+import { MessageComposer } from "@/features/chat/MessageComposer";
 
 type ChatDrawerProps = {
   isOpen: boolean;
@@ -86,28 +83,17 @@ export function ChatDrawer({
               {error}
             </p>
           ) : null}
-          <textarea
+          <MessageComposer
+            variant="compose"
             value={draft}
-            onChange={(e) => setDraft(e.target.value.slice(0, MAX_LEN))}
-            placeholder={`Ask ${shortName} a question or share your project details (requirements, timeline, budget, etc.)`}
+            onChange={setDraft}
+            onSend={() => void startConversation()}
+            loading={busy}
             rows={8}
-            disabled={busy}
-            className="w-full resize-y rounded-xl border border-neutral-200 bg-neutral-50/80 px-3 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
+            placeholder={`Ask ${shortName} a question or share your project details (requirements, timeline, budget, etc.)`}
+            sendLabel="Send message"
+            enterToSend={false}
           />
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-neutral-400">
-              {draft.length}/{MAX_LEN}
-            </span>
-            <Button
-              variant="primary"
-              icon={<Send className="h-4 w-4" aria-hidden />}
-              disabled={!draft.trim()}
-              loading={busy}
-              onClick={() => void startConversation()}
-            >
-              Send message
-            </Button>
-          </div>
         </div>
       )}
     </Drawer>

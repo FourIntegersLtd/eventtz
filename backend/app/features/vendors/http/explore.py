@@ -16,11 +16,25 @@ from app.features.bookings.reviews import (
     list_public_reviews_for_vendor,
     merge_review_stats_into_vendor_rows,
 )
-from app.features.vendors.moderation import list_approved_vendors_for_explore
+from app.features.vendors.moderation import (
+    get_approved_vendor_for_explore_by_id,
+    list_approved_vendors_for_explore,
+)
 from app.features.vendors.search import search_approved_vendors
 
 router = APIRouter(prefix="/vendors", tags=["vendors"])
 logger = get_logger(__name__)
+
+
+def _parse_vendor_ids(raw: str | None) -> list[str] | None:
+    if not raw or not str(raw).strip():
+        return None
+    out: list[str] = []
+    for part in str(raw).split(","):
+        p = part.strip()
+        if p:
+            out.append(p)
+    return out[:500] if out else None
 
 
 @router.get("/explore", response_model=ExploreVendorsResponse)
@@ -33,37 +47,33 @@ def get_explore_vendors() -> ExploreVendorsResponse:
 
 @router.get("/explore/vendor/{vendor_user_id}", response_model=ExploreVendorSingleResponse)
 def get_explore_vendor_by_id(vendor_user_id: str) -> ExploreVendorSingleResponse:
-    """Single approved vendor for client browse detail (avoids loading the full list)."""
+    """Single approved vendor for client browse detail (direct lookup)."""
     try:
         uuid.UUID(vendor_user_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail="Invalid vendor id.") from e
 
-    rows = list_approved_vendors_for_explore()
-    for row in rows:
-        if not isinstance(row, dict):
-            continue
-        if str(row.get("user_id") or "") != vendor_user_id:
-            continue
-        merged = merge_review_stats_into_vendor_rows([row])
-        if not merged:
-            break
-        r0 = merged[0]
-        vendor = ExploreVendorRow(
-            user_id=str(r0.get("user_id") or ""),
-            email=r0.get("email"),
-            status=r0.get("status") or "draft",
-            approval_status=r0.get("approval_status") or "pending",
-            payload=r0.get("payload") if isinstance(r0.get("payload"), dict) else {},
-            updated_at=str(r0.get("updated_at")) if r0.get("updated_at") else None,
-            review_average=r0.get("review_average"),
-            review_count=int(r0.get("review_count") or 0),
-        )
-        logger.info("GET /vendors/explore/vendor/%s found", vendor_user_id)
-        return ExploreVendorSingleResponse(vendor=vendor)
+    row = get_approved_vendor_for_explore_by_id(vendor_user_id)
+    if not row:
+        logger.info("GET /vendors/explore/vendor/%s not found", vendor_user_id)
+        raise HTTPException(status_code=404, detail="Vendor not found or not listed.")
 
-    logger.info("GET /vendors/explore/vendor/%s not found", vendor_user_id)
-    raise HTTPException(status_code=404, detail="Vendor not found or not listed.")
+    merged = merge_review_stats_into_vendor_rows([row])
+    if not merged:
+        raise HTTPException(status_code=404, detail="Vendor not found or not listed.")
+    r0 = merged[0]
+    vendor = ExploreVendorRow(
+        user_id=str(r0.get("user_id") or ""),
+        email=r0.get("email"),
+        status=r0.get("status") or "draft",
+        approval_status=r0.get("approval_status") or "pending",
+        payload=r0.get("payload") if isinstance(r0.get("payload"), dict) else {},
+        updated_at=str(r0.get("updated_at")) if r0.get("updated_at") else None,
+        review_average=r0.get("review_average"),
+        review_count=int(r0.get("review_count") or 0),
+    )
+    logger.info("GET /vendors/explore/vendor/%s found", vendor_user_id)
+    return ExploreVendorSingleResponse(vendor=vendor)
 
 
 @router.get("/explore/search", response_model=ExploreVendorSearchResponse)
@@ -79,6 +89,12 @@ def get_explore_vendors_search(
         "relevance",
         description="relevance | price_asc | price_desc | proximity | rating",
     ),
+    vendor_ids: str | None = Query(
+        None,
+        description="Comma-separated vendor user IDs — restrict search (e.g. favorites).",
+    ),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
 ) -> ExploreVendorSearchResponse:
     result = search_approved_vendors(
         types=types,
@@ -89,9 +105,13 @@ def get_explore_vendors_search(
         budget_min=budget_min,
         budget_max=budget_max,
         sort=sort,
+        vendor_user_ids=_parse_vendor_ids(vendor_ids),
+        limit=limit,
+        offset=offset,
     )
     logger.info(
-        "GET /vendors/explore/search total_count=%s exact=%s related=%s sort=%s",
+        "GET /vendors/explore/search total_count=%s page=%s exact=%s related=%s sort=%s",
+        result.total_count,
         len(result.vendors),
         result.has_exact,
         result.has_related,
@@ -99,7 +119,7 @@ def get_explore_vendors_search(
     )
     return ExploreVendorSearchResponse(
         success=True,
-        total_count=len(result.vendors),
+        total_count=result.total_count,
         vendors=result.vendors,
         match_notice=result.match_notice,
         has_exact=result.has_exact,

@@ -14,6 +14,7 @@ from app.features.auth.session import (
     set_session_cookies,
 )
 from app.features.auth.accounts import hydrate_user_from_db, upsert_user_profile
+from app.features.email.dispatch import send_welcome_email
 
 # --- Schemas  ---
 
@@ -113,6 +114,7 @@ async def signup(
             )
         if result.get("session"):
             set_session_cookies(response, result["session"])
+        send_welcome_email(email=body.email, user_type=body.user_type)
         return SignupResponse(
             user=hydrate_user_from_db(result["user"]),
             session=result.get("session"),

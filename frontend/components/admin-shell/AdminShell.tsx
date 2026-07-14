@@ -2,9 +2,12 @@
 
 import Link from "next/link";
 import {
+  BookOpen,
   LayoutDashboard,
   LogOut,
+  Mail,
   Menu,
+  MessageSquare,
   Receipt,
   ScrollText,
   Shield,
@@ -13,7 +16,7 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { EventtzLogo } from "@/components/branding/EventtzLogo";
@@ -23,15 +26,29 @@ import {
   adminSidebarActive,
   adminSidebarIdle,
 } from "@/features/admin/adminTheme";
-import { resolveAdminRole } from "@/lib/adminRole";
+import { resolveAdminRole, isSuperAdmin } from "@/lib/adminRole";
+import { fetchAdminSupportConversations } from "@/lib/adminMessagesApi";
+import { CHAT_UNREAD_CLEARED_EVENT } from "@/lib/chatApi";
+import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 
-const ADMIN_NAV: readonly { href: string; label: string; icon: LucideIcon }[] = [
+type AdminNavItem = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  id?: string;
+  superAdminOnly?: boolean;
+};
+
+const ADMIN_NAV: readonly AdminNavItem[] = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/commerce?tab=bookings", label: "Commerce", icon: Receipt },
   { href: "/admin/directory?tab=vendors", label: "Directory", icon: Users },
+  { href: "/admin/messages?tab=inbox", label: "Messages", icon: MessageSquare, id: "messages" },
+  { href: "/admin/blog", label: "Blog", icon: BookOpen },
   { href: "/admin/trust?tab=disputes", label: "Trust & safety", icon: Shield },
   { href: "/admin/team", label: "Team", icon: UserCog },
   { href: "/admin/audit", label: "Activity log", icon: ScrollText },
+  { href: "/admin/email", label: "Email testing", icon: Mail, superAdminOnly: true },
 ];
 
 function navItemActive(pathname: string, itemHref: string): boolean {
@@ -58,6 +75,15 @@ function navItemActive(pathname: string, itemHref: string): boolean {
   if (itemHref.startsWith("/admin/team")) {
     return pathname === "/admin/team" || pathname.startsWith("/admin/team/");
   }
+  if (itemHref.startsWith("/admin/messages")) {
+    return pathname === "/admin/messages" || pathname.startsWith("/admin/messages/");
+  }
+  if (itemHref.startsWith("/admin/blog")) {
+    return pathname === "/admin/blog" || pathname.startsWith("/admin/blog/");
+  }
+  if (itemHref.startsWith("/admin/email")) {
+    return pathname === "/admin/email" || pathname.startsWith("/admin/email/");
+  }
   return pathname === itemHref || pathname.startsWith(`${itemHref}/`);
 }
 
@@ -75,25 +101,43 @@ function NavLinks({
   pathname,
   onNavigate,
   items,
+  badges,
 }: {
   pathname: string;
   onNavigate?: () => void;
-  items: readonly { href: string; label: string; icon: LucideIcon }[];
+  items: readonly AdminNavItem[];
+  badges?: Record<string, number>;
 }) {
   return (
     <>
       {items.map((item) => {
         const active = navItemActive(pathname, item.href);
         const Icon = item.icon;
+        const badge = item.id && badges?.[item.id] ? badges[item.id]! : 0;
+        const hasUnread = badge > 0;
         return (
           <Link
             key={item.href}
             href={item.href}
             onClick={onNavigate}
-            className={`flex items-center gap-2.5 rounded-r-lg px-3 py-2 text-sm transition ${active ? adminSidebarActive : adminSidebarIdle}`}
+            className={`flex items-center gap-2.5 rounded-r-lg px-3 py-2 text-sm transition ${
+              active
+                ? adminSidebarActive
+                : hasUnread
+                  ? "border-l-2 border-primary bg-primary/[0.06] font-medium text-neutral-900"
+                  : adminSidebarIdle
+            }`}
           >
-            <Icon className="h-4 w-4 shrink-0 opacity-80" aria-hidden />
-            {item.label}
+            <Icon
+              className={`h-4 w-4 shrink-0 ${hasUnread && !active ? "text-primary opacity-100" : "opacity-80"}`}
+              aria-hidden
+            />
+            <span className="min-w-0 flex-1 truncate">{item.label}</span>
+            {hasUnread ? (
+              <span className="ml-auto shrink-0 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white tabular-nums">
+                {badge > 99 ? "99+" : badge}
+              </span>
+            ) : null}
           </Link>
         );
       })}
@@ -134,6 +178,41 @@ export function AdminShell({ title, children }: AdminShellProps) {
   const router = useRouter();
   const { user, signOut } = useAuth();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [messagesUnread, setMessagesUnread] = useState(0);
+
+  const refreshMessagesUnread = useCallback(async () => {
+    try {
+      const list = await fetchAdminSupportConversations();
+      setMessagesUnread(list.reduce((sum, c) => sum + (c.unread_count || 0), 0));
+    } catch {
+      /* badge is best-effort */
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshMessagesUnread();
+  }, [refreshMessagesUnread, pathname]);
+
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") void refreshMessagesUnread();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [refreshMessagesUnread]);
+
+  useRealtimeRefresh("chat:data_refresh", () => void refreshMessagesUnread(), [
+    refreshMessagesUnread,
+  ]);
+
+  useEffect(() => {
+    const onCleared = () => void refreshMessagesUnread();
+    window.addEventListener(CHAT_UNREAD_CLEARED_EVENT, onCleared);
+    return () => window.removeEventListener(CHAT_UNREAD_CLEARED_EVENT, onCleared);
+  }, [refreshMessagesUnread]);
+
+  const navBadges = messagesUnread > 0 ? { messages: messagesUnread } : undefined;
+  const navItems = ADMIN_NAV.filter((item) => !item.superAdminOnly || isSuperAdmin(user));
 
   const closeMobile = () => setMobileNavOpen(false);
 
@@ -188,7 +267,12 @@ export function AdminShell({ title, children }: AdminShellProps) {
               </button>
             </div>
             <nav className="mt-4 flex min-h-0 flex-1 flex-col space-y-0.5 overflow-y-auto">
-              <NavLinks pathname={pathname} onNavigate={closeMobile} items={ADMIN_NAV} />
+              <NavLinks
+                pathname={pathname}
+                onNavigate={closeMobile}
+                items={navItems}
+                badges={navBadges}
+              />
             </nav>
             <AdminUserFooter
               email={user?.email}
@@ -213,7 +297,7 @@ export function AdminShell({ title, children }: AdminShellProps) {
             ) : null}
           </div>
           <nav className="scroll-pane mt-6 flex min-h-0 flex-1 flex-col space-y-0.5">
-            <NavLinks pathname={pathname} items={ADMIN_NAV} />
+            <NavLinks pathname={pathname} items={navItems} badges={navBadges} />
           </nav>
           <AdminUserFooter email={user?.email} onSignOut={() => void signOutAdmin()} />
         </aside>

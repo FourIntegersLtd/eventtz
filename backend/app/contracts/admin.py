@@ -121,6 +121,21 @@ class AdminClientRow(BaseModel):
 class AdminClientsListResponse(BaseModel):
     success: bool = True
     clients: list[AdminClientRow]
+    total: int = 0
+    offset: int = 0
+    limit: int = 50
+
+
+class AdminDirectoryUserRow(BaseModel):
+    user_id: str
+    label: str
+    kind: Literal["client", "vendor"]
+    email: str | None = None
+
+
+class AdminDirectorySearchResponse(BaseModel):
+    success: bool = True
+    users: list[AdminDirectoryUserRow]
 
 
 class AdminClientSuspendedBody(BaseModel):

@@ -78,20 +78,40 @@ def insert_admin_audit_log(
         logger.warning("insert_admin_audit_log failed: %s", e, exc_info=True)
 
 
-def list_admin_audit_log(*, limit: int = 100, offset: int = 0) -> tuple[list[dict[str, Any]], int]:
+def list_admin_audit_log(
+    *,
+    limit: int = 100,
+    offset: int = 0,
+    category: str | None = None,
+) -> tuple[list[dict[str, Any]], int]:
     if get_settings().local_auth_mode:
         return [], 0
+    cat = (category or "all").strip().lower()
+    # Prefix filters mirror frontend auditFormatters CATEGORY_BY_ACTION.
+    category_prefixes: dict[str, tuple[str, ...]] = {
+        "bookings": ("booking.",),
+        "clients": ("client.",),
+        "vendors": ("vendor.",),
+        "disputes": ("dispute.",),
+        "reviews": ("review.",),
+        "chat": ("chat.",),
+        "financials": ("financials.",),
+        "team": ("admin.team",),
+    }
     try:
-        res = (
-            apply_recent_first_order(
-                get_client()
-                .table("admin_audit_log")
-                .select("*", count="exact"),
-                column="created_at",
-            )
-            .range(offset, offset + max(limit, 1) - 1)
-            .execute()
+        q = apply_recent_first_order(
+            get_client().table("admin_audit_log").select("*", count="exact"),
+            column="created_at",
         )
+        prefixes = category_prefixes.get(cat)
+        if prefixes:
+            # PostgREST or_ filter: action.like.booking.*,action.like.client.*
+            or_parts = [f"action.like.{p}%" for p in prefixes]
+            q = q.or_(",".join(or_parts))
+        elif cat not in ("", "all"):
+            # Unknown category → empty
+            return [], 0
+        res = q.range(offset, offset + max(limit, 1) - 1).execute()
     except Exception as e:
         logger.warning("list_admin_audit_log failed: %s", e, exc_info=True)
         return [], 0

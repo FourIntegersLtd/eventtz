@@ -9,16 +9,10 @@ import { VendorPortfolioCover } from "@/components/vendor/VendorPortfolioCover";
 import { buildBrowsePricingOptions } from "@/features/client/browse/vendorBrowseDetailModel";
 import type { ExpandedSearchCard } from "@/features/marketplace/marketplaceSearchModel";
 import { SERVICE_OPTIONS } from "@/components/vendor-onboarding/constants";
+import { formatMoney, getMarket, marketLocationFallback } from "@/lib/markets";
 
 function labelForService(value: string): string {
   return SERVICE_OPTIONS.find((o) => o.value === value)?.label ?? value;
-}
-
-function formatFromPriceGbp(min: number): string {
-  return min.toLocaleString("en-GB", {
-    minimumFractionDigits: min % 1 === 0 ? 0 : 2,
-    maximumFractionDigits: 2,
-  });
 }
 
 type MarketplaceVendorCardProps = {
@@ -43,7 +37,11 @@ export function MarketplaceVendorCard({
   const p = v.payload ?? {};
   const biz =
     (typeof p.businessName === "string" && p.businessName) || "Unnamed business";
-  const city = (typeof p.baseCity === "string" && p.baseCity) || "UK";
+  const city =
+    (typeof p.baseCity === "string" && p.baseCity) ||
+    marketLocationFallback(
+      typeof p.countryCode === "string" ? p.countryCode : undefined,
+    );
   const bio =
     (typeof p.aiBioDraft === "string" && p.aiBioDraft.trim()) ||
     (typeof p.travelDeliveryPolicy === "string" && p.travelDeliveryPolicy.trim()) ||
@@ -57,8 +55,9 @@ export function MarketplaceVendorCard({
     .map((o) => o.unitPriceGbp)
     .filter((n): n is number => n != null && Number.isFinite(n));
   const minGbp = priced.length > 0 ? Math.min(...priced) : null;
+  const market = getMarket(typeof p.countryCode === "string" ? p.countryCode : undefined);
   const priceLabel =
-    minGbp != null ? `From GBP ${formatFromPriceGbp(minGbp)}` : "Request a quote";
+    minGbp != null ? `From ${formatMoney(minGbp, market.currency)}` : "Request a quote";
 
   const highlight = card.highlightService
     ? labelForService(card.highlightService)

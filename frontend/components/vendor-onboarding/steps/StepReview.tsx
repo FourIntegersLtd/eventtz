@@ -6,12 +6,13 @@ import { portalCard } from "@/components/portal-shell/portalTheme";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import {
   EVENT_TYPE_OPTIONS,
-  RADIUS_OPTIONS,
   SERVICE_OPTIONS,
   SOCIAL_PLATFORM_OPTIONS,
   WEEKDAY_LABELS,
 } from "../constants";
 import { bioWordCount } from "../onboardingLogic";
+import { getMarket } from "@/lib/markets";
+import { radiusOptionsForMarket } from "@/lib/photonLocationAutocomplete";
 import { STEP_COPY } from "../onboardingCopy";
 import { VendorPortfolioThumbGrid } from "@/components/vendor/VendorPortfolioThumbGrid";
 import { portfolioImageUrlsFromPayload } from "@/lib/vendorPortfolioImages";
@@ -137,7 +138,9 @@ export function StepReview({
 }: StepReviewProps) {
   const profileImageInputRef = useRef<HTMLInputElement>(null);
   const radiusLabel =
-    RADIUS_OPTIONS.find((o) => o.value === data.travelRadius)?.label ?? "—";
+    radiusOptionsForMarket(getMarket(data.countryCode)).find(
+      (o) => o.value === data.travelRadius,
+    )?.label ?? "—";
   const deliveryLabel =
     data.deliveryModes.length === 0
       ? "—"
@@ -291,7 +294,10 @@ export function StepReview({
         onNavigateToStep={onNavigateToStep}
       >
         <div className="grid gap-3 sm:grid-cols-2">
+          <Field label="Country" value={getMarket(data.countryCode).label} />
           <Field label="Base city" value={data.baseCity || "—"} />
+          {data.region ? <Field label="Region" value={data.region} /> : null}
+          {data.postalCode ? <Field label="Postcode" value={data.postalCode} /> : null}
           <Field label="Delivery modes" value={deliveryLabel} />
           <Field label="Travel radius" value={radiusLabel} />
           <Field

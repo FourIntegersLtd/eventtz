@@ -17,8 +17,15 @@ export type {
   BookingLineItem as ClientBookingLineItem,
 };
 
-/** List filter: active = pending+accepted, closed = declined+cancelled */
-export type ClientBookingsListGroup = ParticipantBookingsListGroup;
+/** List filter: active = pending+accepted, closed = declined+cancelled+completed, all = no bucket */
+export type ClientBookingsListGroup = ParticipantBookingsListGroup | "all";
+
+export type ClientBookingsListParams = {
+  group?: ClientBookingsListGroup;
+  status?: string;
+  payment_status?: string;
+  exclude_payment_status?: string;
+};
 
 export type ClientBookingListItem = {
   id: string;
@@ -89,11 +96,22 @@ export type ClientBookingDetailResponse = {
 };
 
 export async function fetchClientBookings(
-  group: ClientBookingsListGroup = "active",
+  groupOrParams: ClientBookingsListGroup | ClientBookingsListParams = "active",
 ): Promise<ClientBookingListItem[]> {
+  const params: ClientBookingsListParams =
+    typeof groupOrParams === "string" ? { group: groupOrParams } : groupOrParams;
   const { data } = await api.get<ClientBookingsListResponse>(
     "/api/v1/client/booking-requests",
-    { params: { group } },
+    {
+      params: {
+        group: params.group ?? "active",
+        ...(params.status ? { status: params.status } : {}),
+        ...(params.payment_status ? { payment_status: params.payment_status } : {}),
+        ...(params.exclude_payment_status
+          ? { exclude_payment_status: params.exclude_payment_status }
+          : {}),
+      },
+    },
   );
   return data.bookings ?? [];
 }

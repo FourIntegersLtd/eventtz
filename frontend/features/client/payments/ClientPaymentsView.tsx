@@ -9,11 +9,10 @@ import { formatEventDate } from "@/lib/dateFormat";
 import { useReviewsQuery } from "@/features/reviews/useReviewsQuery";
 
 async function fetchPaidBookings(): Promise<ClientBookingListItem[]> {
-  const [active, closed] = await Promise.all([
-    fetchClientBookings("active"),
-    fetchClientBookings("closed"),
-  ]);
-  return [...active, ...closed].filter((b) => b.payment_status !== "unpaid");
+  return fetchClientBookings({
+    group: "all",
+    exclude_payment_status: "unpaid",
+  });
 }
 
 export function ClientPaymentsView() {

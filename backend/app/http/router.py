@@ -2,11 +2,15 @@
 
 from fastapi import APIRouter
 
+from app.features.admin.http import messages as admin_messages
 from app.features.admin.http import platform as admin_platform
 from app.features.admin.http import vendors as admin_vendors
 from app.features.auth.http import routes as auth
+from app.features.blog.http import admin as admin_blog
+from app.features.blog.http import public as public_blog
 from app.features.bookings.http import client as client_booking_requests
 from app.features.bookings.http import vendor as vendor_bookings
+from app.features.favorites.http import client as client_favorites
 from app.features.contact.http.routes import client_router as contact_client_router
 from app.features.contact.http.routes import vendor_router as contact_vendor_router
 from app.features.chat.http import routes as chat
@@ -26,6 +30,7 @@ from app.features.vendors.http import profile as vendor_profile
 api_router = APIRouter()
 
 api_router.include_router(auth.router)
+api_router.include_router(client_favorites.router)
 api_router.include_router(contact_client_router)
 api_router.include_router(contact_vendor_router)
 api_router.include_router(chat.router)
@@ -36,6 +41,9 @@ api_router.include_router(vendor_onboarding_ai.router)
 api_router.include_router(vendor_bookings.router)
 api_router.include_router(admin_vendors.router)
 api_router.include_router(admin_platform.router)
+api_router.include_router(admin_messages.router)
+api_router.include_router(admin_blog.router)
+api_router.include_router(public_blog.router)
 api_router.include_router(vendors_explore.router)
 api_router.include_router(client_booking_requests.router)
 api_router.include_router(client_geo.router)

@@ -14,6 +14,7 @@ import {
   portfolioImageUrlsFromPayload,
 } from "./vendorBrowseDetailModel";
 import { VendorReviewsSection } from "./VendorReviewsSection";
+import { getMarket, marketLocationFallback } from "@/lib/markets";
 
 const TRAVEL_DELIVERY_LABELS: Record<string, string> = {
   fee_included: "Travel/delivery fee included",
@@ -58,7 +59,9 @@ export function VendorBrowseDetailBody({
   const p = vendor.payload ?? {};
   const businessName =
     payloadStr(p, "businessName").trim() || "Vendor";
-  const city = payloadStr(p, "baseCity").trim() || "United Kingdom";
+  const city =
+    payloadStr(p, "baseCity").trim() ||
+    marketLocationFallback(payloadStr(p, "countryCode") || undefined);
   const bio =
     payloadStr(p, "aiBioDraft").trim() ||
     "This vendor has not added a bio yet.";

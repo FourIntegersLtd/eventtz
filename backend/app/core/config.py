@@ -129,34 +129,14 @@ class Settings(BaseSettings):
         default="hello@fourintegers.com",
         validation_alias=AliasChoices("SUPER_ADMIN_EMAILS"),
     )
-    #: Comma-separated ops inbox for admin alert emails (defaults to super_admin_emails).
-    admin_notify_emails: str = Field(
-        default="",
-        validation_alias=AliasChoices("ADMIN_NOTIFY_EMAILS"),
-    )
     resend_api_key: str = Field(
         default="",
         validation_alias=AliasChoices("RESEND_API_KEY"),
-    )
-    email_from: str = Field(
-        default="Eventtz <hello@eventtz.co.uk>",
-        validation_alias=AliasChoices("EMAIL_FROM"),
-    )
-    email_enabled: bool = Field(
-        default=True,
-        validation_alias=AliasChoices("EMAIL_ENABLED"),
     )
 
     @property
     def super_admin_emails_list(self) -> list[str]:
         return [e.strip().lower() for e in self.super_admin_emails.split(",") if e.strip()]
-
-    @property
-    def admin_notify_emails_list(self) -> list[str]:
-        raw = self.admin_notify_emails.strip()
-        if raw:
-            return [e.strip().lower() for e in raw.split(",") if e.strip()]
-        return self.super_admin_emails_list
 
     @property
     def cors_origins_list(self) -> list[str]:

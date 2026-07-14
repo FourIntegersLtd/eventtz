@@ -24,9 +24,10 @@ from app.features.bookings.pricing import build_pricing_breakdown
 from app.features.bookings.pricing_refresh import refresh_booking_pricing
 from app.features.bookings.queries import get_booking_request_for_client
 from app.features.vendors.moderation import get_approved_vendor_payload
-from app.features.notifications.service import (
-    insert_booking_notification_if_absent,
-    upsert_booking_notification,
+from app.features.email.dispatch import (
+    dispatch_booking_notification,
+    send_admin_payout_stuck_email,
+    send_admin_refund_failed_email,
 )
 from app.features.realtime.sse import notify_user
 
@@ -298,7 +299,7 @@ def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> 
     client_id = str(row.get("client_user_id") or "")
     vendor_id = str(row.get("vendor_user_id") or "")
     if client_id:
-        upsert_booking_notification(
+        dispatch_booking_notification(
             user_id=client_id,
             booking_id=booking_id,
             kind="payment_received",
@@ -308,7 +309,7 @@ def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> 
             ),
         )
     if vendor_id:
-        upsert_booking_notification(
+        dispatch_booking_notification(
             user_id=vendor_id,
             booking_id=booking_id,
             kind="vendor_payment_received",
@@ -450,7 +451,7 @@ def _finalize_completion(row: dict[str, Any]) -> dict[str, Any]:
             vendor_id,
         )
         if vendor_id:
-            upsert_booking_notification(
+            dispatch_booking_notification(
                 user_id=vendor_id,
                 booking_id=booking_id,
                 kind="completion_confirmed_awaiting_other_party",
@@ -470,6 +471,11 @@ def _finalize_completion(row: dict[str, Any]) -> dict[str, Any]:
         )
     except Exception as e:
         logger.exception("Stripe transfer failed booking=%s vendor=%s", booking_id, vendor_id)
+        send_admin_payout_stuck_email(
+            booking_id=booking_id,
+            vendor_user_id=vendor_id or None,
+            error_hint=str(e)[:500],
+        )
         raise ValueError("We couldn't release the payout right now. Please try again shortly.") from e
 
     upd = (
@@ -494,9 +500,14 @@ def _finalize_completion(row: dict[str, Any]) -> dict[str, Any]:
     )
 
     if client_id:
-        insert_booking_notification_if_absent(user_id=client_id, booking_id=booking_id, kind="booking_completed")
+        dispatch_booking_notification(
+            user_id=client_id,
+            booking_id=booking_id,
+            kind="booking_completed",
+            mode="insert_if_absent",
+        )
     if vendor_id:
-        upsert_booking_notification(
+        dispatch_booking_notification(
             user_id=vendor_id,
             booking_id=booking_id,
             kind="vendor_payout_released",
@@ -553,7 +564,7 @@ def _confirm_completion(booking_id: str, *, actor: str, user_id: str) -> dict[st
         vendor_id = str(row.get("vendor_user_id") or "")
         waiting_user = vendor_id if actor == "client" else client_id
         if waiting_user:
-            upsert_booking_notification(
+            dispatch_booking_notification(
                 user_id=waiting_user,
                 booking_id=booking_id,
                 kind="completion_confirmed_awaiting_other_party",
@@ -621,6 +632,7 @@ def _refund_paid_booking_row(
         )
     except Exception as e:
         logger.exception("Stripe refund failed booking=%s", booking_id)
+        send_admin_refund_failed_email(booking_id=booking_id, error_hint=str(e)[:500])
         raise ValueError("We couldn't process the refund right now. Please try again shortly.") from e
 
     new_status = "partially_refunded" if amount_gbp is not None else "refunded"
@@ -638,7 +650,7 @@ def _refund_paid_booking_row(
     client_id = str(final_row.get("client_user_id") or "")
     vendor_id = str(final_row.get("vendor_user_id") or "")
     if client_id:
-        upsert_booking_notification(
+        dispatch_booking_notification(
             user_id=client_id,
             booking_id=booking_id,
             kind="payment_refunded",
@@ -709,7 +721,7 @@ def maybe_send_completion_reminder_for_row(row: dict[str, Any]) -> bool:
     release_at = compute_payout_auto_release_at(row)
     release_label = _format_release_date(release_at) if release_at else "soon"
     if client_id and not row.get("client_completion_confirmed_at"):
-        upsert_booking_notification(
+        dispatch_booking_notification(
             user_id=client_id,
             booking_id=booking_id,
             kind="completion_reminder",
@@ -720,7 +732,7 @@ def maybe_send_completion_reminder_for_row(row: dict[str, Any]) -> bool:
             ),
         )
     if vendor_id and not row.get("vendor_completion_confirmed_at"):
-        upsert_booking_notification(
+        dispatch_booking_notification(
             user_id=vendor_id,
             booking_id=booking_id,
             kind="vendor_completion_reminder",

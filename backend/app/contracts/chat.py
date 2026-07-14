@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -22,10 +22,12 @@ class ConversationCreateBodyShared(BaseModel):
 
 class ConversationRow(BaseModel):
     id: str
-    client_user_id: str
-    vendor_user_id: str
+    client_user_id: str = ""
+    vendor_user_id: str = ""
     peer_user_id: str
     peer_display_name: str
+    kind: Literal["dm", "support"] = "dm"
+    support_user_id: str | None = None
     created_at: str | None = None
     last_message_at: str | None = None
     unread_count: int = 0

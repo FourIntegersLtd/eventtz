@@ -105,12 +105,30 @@ export type VendorBookingStatusResponse = {
   status: string;
 };
 
+export type VendorBookingsListParams = {
+  group?: VendorBookingsListGroup | "all";
+  status?: string;
+  payment_status?: string;
+  exclude_payment_status?: string;
+};
+
 export async function fetchVendorBookings(
-  group: VendorBookingsListGroup = "active",
+  groupOrParams: VendorBookingsListGroup | "all" | VendorBookingsListParams = "active",
 ): Promise<VendorBookingListItem[]> {
+  const params: VendorBookingsListParams =
+    typeof groupOrParams === "string" ? { group: groupOrParams } : groupOrParams;
   const { data } = await api.get<VendorBookingsListResponse>(
     "/api/v1/vendor/booking-requests",
-    { params: { group } },
+    {
+      params: {
+        group: params.group ?? "active",
+        ...(params.status ? { status: params.status } : {}),
+        ...(params.payment_status ? { payment_status: params.payment_status } : {}),
+        ...(params.exclude_payment_status
+          ? { exclude_payment_status: params.exclude_payment_status }
+          : {}),
+      },
+    },
   );
   return data.bookings ?? [];
 }

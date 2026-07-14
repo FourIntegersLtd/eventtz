@@ -15,6 +15,8 @@ from app.features.vendors.business_name import (
     is_business_name_unique_violation,
 )
 from app.core.errors import ConflictError
+from app.features.email.dispatch import send_admin_vendor_submitted_email
+from app.features.vendors.explore_index import explore_search_patch_from_payload
 from app.features.vendors.payload_validation import (
     normalize_payload_fields,
     validate_payload_for_progress,
@@ -91,6 +93,7 @@ def upsert_vendor_profile(
 ) -> dict[str, Any]:
     existing = get_vendor_profile(user_id)
     previous_step = int(existing.get("current_step") or 1) if existing else 1
+    previous_status = str(existing.get("status") or "draft") if existing else "draft"
     merged_payload: dict[str, Any] = {}
     if existing and isinstance(existing.get("payload"), dict):
         merged_payload.update(existing["payload"])
@@ -124,6 +127,22 @@ def upsert_vendor_profile(
         elif prev and prev.get("email"):
             row["email"] = prev["email"]
         local_vendors[user_id] = row
+        if st == "submitted" and previous_status != "submitted":
+            payload_bn = merged_payload.get("businessName")
+            business_name = payload_bn.strip() if isinstance(payload_bn, str) else None
+            submit_email = (
+                user_email.strip().lower()
+                if isinstance(user_email, str) and user_email.strip()
+                else (str(row.get("email") or "") or None)
+            )
+            try:
+                send_admin_vendor_submitted_email(
+                    vendor_user_id=user_id,
+                    vendor_email=submit_email,
+                    business_name=business_name,
+                )
+            except Exception:
+                logger.warning("vendor submitted admin email failed user=%s", user_id, exc_info=True)
         return row
 
     # FK vendors.user_id -> users.id: ensure public.users row exists before vendors insert/update.
@@ -139,6 +158,7 @@ def upsert_vendor_profile(
         "current_step": current_step,
         "payload": merged_payload,
         "status": st,
+        **explore_search_patch_from_payload(merged_payload),
     }
     if existing:
         try:
@@ -157,4 +177,16 @@ def upsert_vendor_profile(
     out = get_vendor_profile(user_id)
     if not out:
         raise RuntimeError("vendors upsert returned no row")
+    if st == "submitted" and previous_status != "submitted":
+        payload_bn = merged_payload.get("businessName")
+        business_name = payload_bn.strip() if isinstance(payload_bn, str) else None
+        submit_email = norm_email
+        try:
+            send_admin_vendor_submitted_email(
+                vendor_user_id=user_id,
+                vendor_email=submit_email,
+                business_name=business_name,
+            )
+        except Exception:
+            logger.warning("vendor submitted admin email failed user=%s", user_id, exc_info=True)
     return out

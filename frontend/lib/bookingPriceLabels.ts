@@ -1,22 +1,21 @@
 import type { BookingPricing } from "@/features/bookings/BookingPricingBreakdown";
+import { DEFAULT_CURRENCY, formatMoney } from "@/lib/markets";
 
-/** Match backend `_fmt_gbp` for price-update banners. */
-export function formatGbpLabel(amount: number): string {
-  const rounded = Math.round(amount * 100) / 100;
-  const s = rounded.toFixed(2);
-  const display = s.endsWith(".00") ? String(Math.round(rounded)) : s;
-  return `GBP ${display}`;
+/** Match backend pricing labels for price-update banners. */
+export function formatGbpLabel(amount: number, currency: string = DEFAULT_CURRENCY): string {
+  return formatMoney(amount, currency);
 }
 
 /** Client total from line items only (no vendor surcharges/discount adjustments). */
 export function clientTotalBeforeVendorAdjustments(
   pricing: BookingPricing | null | undefined,
+  currency: string = DEFAULT_CURRENCY,
 ): string | null {
   if (!pricing || pricing.has_pricing_tbc) return null;
   const fee =
     Math.round(pricing.line_items_subtotal_gbp * (pricing.service_fee_percent / 100) * 100) / 100;
   const total = Math.round((pricing.line_items_subtotal_gbp + fee) * 100) / 100;
-  return formatGbpLabel(total);
+  return formatGbpLabel(total, currency);
 }
 
 export function resolveWasClientTotalLabel(detail: {

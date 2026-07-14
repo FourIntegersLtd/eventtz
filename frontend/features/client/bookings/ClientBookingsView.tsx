@@ -53,7 +53,14 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
   const listStatusFilter = searchParams.get("status") ?? "";
   const urlTab = searchParams.get("tab");
 
-  const fetchList = useCallback((t: "active" | "closed") => fetchClientBookings(t), []);
+  const fetchList = useCallback(
+    (t: "active" | "closed") =>
+      fetchClientBookings({
+        group: t,
+        ...(listStatusFilter === "pending" ? { status: "pending" } : {}),
+      }),
+    [listStatusFilter],
+  );
   const fetchDetail = useCallback((id: string) => fetchClientBookingDetail(id), []);
   const getDetailStatus = useCallback((b: ClientBookingDetail) => b.status, []);
 
@@ -275,16 +282,7 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
           ? PAYMENT_FLOW_COPY.paymentSuccess
           : "Confirming your payment…";
 
-  const rows = useMemo(
-    () =>
-      list
-        .map(toClientBookingRowViewModel)
-        .filter((row) => {
-          if (listStatusFilter !== "pending") return true;
-          return row.status === "pending";
-        }),
-    [list, listStatusFilter],
-  );
+  const rows = useMemo(() => list.map(toClientBookingRowViewModel), [list]);
   const viewModel = detail
     ? toClientBookingDetailViewModel(detail, () => setChatOpen(true))
     : null;

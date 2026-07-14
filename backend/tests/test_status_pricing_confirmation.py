@@ -57,7 +57,7 @@ def test_vendor_cannot_accept_while_client_must_confirm_price(mock_get_client, m
 
 @patch("app.features.bookings.status.get_booking_request_for_vendor")
 @patch("app.features.bookings.status._notify_booking_changed")
-@patch("app.features.bookings.status.upsert_booking_notification")
+@patch("app.features.bookings.status.dispatch_booking_notification")
 @patch("app.features.bookings.status.get_settings")
 @patch("app.features.bookings.status.get_client")
 def test_client_can_accept_updated_price(

@@ -1,0 +1,20 @@
+{% set email_title = 'Welcome to ' ~ app_name %}
+{% include 'partials/marketing/email_layout_open.html' %}
+
+{% set header_subtitle = welcome_subtitle %}
+{% include 'partials/marketing/email_header_block.html' %}
+{% include 'partials/marketing/email_hero_block.html' %}
+{% include 'partials/marketing/email_product_showcase.html' %}
+
+{% set cta_lead = welcome_cta_lead %}
+{% set cta_button_text = welcome_cta_label %}
+{% set cta_url = welcome_cta_url %}
+{% set cta_primary = true %}
+{% include 'partials/marketing/email_cta_block.html' %}
+
+{% set closing_line_1 = welcome_support_line %}
+{% set closing_line_2 = welcome_closing %}
+{% include 'partials/marketing/email_closing_signoff.html' %}
+{% include 'partials/marketing/email_chrome_and_footer.html' %}
+
+{% include 'partials/marketing/email_layout_close.html' %}

@@ -233,6 +233,9 @@ def search_approved_vendors(
     budget_min: float | None = None,
     budget_max: float | None = None,
     sort: str = "relevance",
+    vendor_user_ids: list[str] | None = None,
+    limit: int = 200,
+    offset: int = 0,
 ) -> MarketplaceSearchResult:
     """
     Returns approved vendors with optional filters, ordered exact → related → fallback.
@@ -242,12 +245,25 @@ def search_approved_vendors(
     appear in Related. If Exact+Related are empty, Fallback returns same-type (or all)
     approved vendors so browse is rarely blank.
     """
-    rows = list_approved_vendors_for_explore()
     chip_types = _parse_types_param(types)
     date_parts = _parse_dates_param(dates)
+    limit = max(1, min(limit, 200))
+    offset = max(0, offset)
 
     raw_q = (q or "").strip()
     parsed = parse_marketplace_query(raw_q) if raw_q else None
+
+    city_query = (location or "").strip() or None
+    if not city_query and parsed and parsed.location:
+        city_query = parsed.location
+
+    rows = list_approved_vendors_for_explore(
+        vendor_user_ids=vendor_user_ids,
+        budget_min=budget_min,
+        budget_max=budget_max,
+        service_types=chip_types or None,
+        city_query=city_query,
+    )
 
     primary_types = list(chip_types)
     if not primary_types and parsed and parsed.types:
@@ -483,11 +499,15 @@ def search_approved_vendors(
         date_softened=date_softened,
     )
 
+    total_count = len(enriched)
+    enriched = enriched[offset : offset + limit]
+
     logger.info(
-        "search_approved_vendors exact=%s related=%s fallback=%s q=%r",
+        "search_approved_vendors exact=%s related=%s fallback=%s total=%s q=%r",
         sum(1 for r in enriched if r.get("match_tier") == "exact"),
         sum(1 for r in enriched if r.get("match_tier") == "related"),
         sum(1 for r in enriched if r.get("match_tier") == "fallback"),
+        total_count,
         raw_q[:80],
     )
 
@@ -496,6 +516,7 @@ def search_approved_vendors(
         match_notice=notice,
         has_exact=has_exact,
         has_related=has_related,
+        total_count=total_count,
     )
 
 

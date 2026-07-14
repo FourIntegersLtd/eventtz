@@ -9,7 +9,7 @@ from app.features.admin.chat_lookup import (
     get_conversation_admin_meta,
     get_conversation_messages_admin,
 )
-from app.features.admin.client_ops import list_clients_for_admin, set_client_suspended
+from app.features.admin.client_ops import list_client_user_ids_for_broadcast, list_clients_for_admin, set_client_suspended
 from app.features.admin.dashboard_metrics import get_admin_dashboard_metrics
 from app.features.admin.dashboard_queries import (
     financials_export_csv_bytes,
