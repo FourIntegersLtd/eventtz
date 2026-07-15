@@ -182,7 +182,7 @@ export function BookingDetailPanel({
                 <div>
                   <p className="text-xs font-medium text-neutral-500">Messages</p>
                   <p className="mt-0.5 text-sm text-neutral-700">
-                    {booking.conversationId ? "Continue your conversation" : "No messages yet"}
+                    {booking.messagesHint}
                   </p>
                 </div>
               </div>
@@ -191,7 +191,7 @@ export function BookingDetailPanel({
                 size="sm"
                 onClick={booking.onOpenChat}
               >
-                {booking.conversationId ? "Open chat" : "Message"}
+                {booking.messagesActionLabel}
               </Button>
             </div>
           </div>

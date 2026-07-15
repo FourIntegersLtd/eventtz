@@ -24,7 +24,7 @@ import { getBookingServiceFeePercent } from "@/lib/bookingServiceFee";
 
 export const WAITLIST_URL = "https://forms.gle/6c4Ezw5MNuQaYr238";
 
-/** Matches checkout UI and backend `BOOKING_SERVICE_FEE_PERCENT` (default 5). */
+/** Matches checkout UI and backend `BOOKING_SERVICE_FEE_PERCENT` (constant 5%). */
 const SERVICE_FEE_PERCENT_LABEL = `${getBookingServiceFeePercent()}%`;
 
 export type LandingCategory = {

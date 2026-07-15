@@ -63,6 +63,21 @@ export function toBookingDetailViewModel(
         clientTotalBeforeVendorAdjustments(detail.pricing) ||
         null
       : null;
+  const hasNotes = Boolean(detail.notes?.trim());
+  const hasConversation = Boolean(detail.conversation_id);
+  let messagesHint = "No messages yet";
+  let messagesActionLabel = "Message";
+  if (hasConversation) {
+    messagesHint = "Continue your conversation";
+    messagesActionLabel = "Open chat";
+  } else if (hasNotes) {
+    messagesHint =
+      config.role === "vendor"
+        ? "Client left a note — open chat to reply"
+        : "Your note started this chat";
+    messagesActionLabel = "Open chat";
+  }
+
   return {
     id: detail.id,
     eventName: detail.event_name,
@@ -79,6 +94,8 @@ export function toBookingDetailViewModel(
     counterpartyHref: config.counterpartyHref,
     conversationId: detail.conversation_id,
     onOpenChat: config.onOpenChat,
+    messagesHint,
+    messagesActionLabel,
     notesLabel: config.notesLabel,
     notes: detail.notes,
     totalLabel: detail.total_label,

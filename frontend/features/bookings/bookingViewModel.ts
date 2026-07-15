@@ -57,6 +57,10 @@ export type BookingDetailViewModel = {
   conversationId: string | null;
   /** Opens the chat Drawer with this counterparty — always available from booking detail. */
   onOpenChat: () => void;
+  /** Short line under Messages (accounts for booking notes starting the thread). */
+  messagesHint: string;
+  /** Label on the Messages CTA button. */
+  messagesActionLabel: string;
   notesLabel: string;
   notes: string | null;
   totalLabel: string;

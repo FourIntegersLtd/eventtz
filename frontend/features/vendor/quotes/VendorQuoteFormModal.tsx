@@ -145,7 +145,7 @@ export function VendorQuoteFormModal({
       return;
     }
     if (Number.isNaN(p) || p < 0) {
-      setError("Enter a valid price in GBP.");
+      setError("Enter a valid price in pounds (£).");
       return;
     }
 

@@ -1,4 +1,4 @@
-/** Supported marketplace countries — mirror of backend `app/core/markets.py`. */
+/** Supported marketplace countries — mirror of backend `app/features/vendors/markets.py`. */
 
 export type DistanceUnit = "mi" | "km";
 

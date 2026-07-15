@@ -61,7 +61,7 @@ export function VendorPaymentsView() {
       const { onboarding_url } = await postConnectStripeAccount("/vendor/payments");
       window.location.href = onboarding_url;
     } catch {
-      setError("Couldn't start Stripe setup. Try again.");
+      setError("We couldn't start payout setup. Please try again.");
       setConnecting(false);
     }
   };
@@ -108,7 +108,7 @@ export function VendorPaymentsView() {
             {!error && started ? (
               <p className="mt-4 flex items-center gap-2 text-sm font-medium text-amber-700">
                 <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
-                Finish Stripe setup to receive payments.
+                Finish payout setup to receive payments.
               </p>
             ) : null}
           </div>

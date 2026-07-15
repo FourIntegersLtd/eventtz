@@ -43,7 +43,7 @@ export function ContactFormView({ role }: Props) {
       return;
     }
     if (showBookingId && !bookingId.trim()) {
-      setError("Please enter the booking id.");
+      setError("Please enter your booking reference.");
       return;
     }
     setBusy(true);
@@ -120,10 +120,10 @@ export function ContactFormView({ role }: Props) {
 
         {showBookingId ? (
           <TextField
-            label="Booking id"
+            label="Booking reference"
             value={bookingId}
             onChange={(e) => setBookingId(e.target.value)}
-            placeholder="Paste the booking id"
+            placeholder="Paste your booking reference"
             hint="You can copy this from your booking details page."
           />
         ) : null}

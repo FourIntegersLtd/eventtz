@@ -64,7 +64,7 @@ export default function ClientBookingPayPage() {
       const checkoutUrl = await postBookingCheckout(bookingId);
       window.location.href = checkoutUrl;
     } catch (e: unknown) {
-      setError(getApiErrorDetail(e) ?? "Could not start checkout. Try again.");
+      setError(getApiErrorDetail(e) ?? "We couldn't start payment. Please try again.");
       setBusy(false);
     }
   };
