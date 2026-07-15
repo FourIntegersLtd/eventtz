@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-from app.core.config import get_settings
+from app.core.constants import BOOKING_SERVICE_FEE_PERCENT
 
 
 def _fmt_gbp(amount: float) -> str:
@@ -95,7 +95,7 @@ def build_pricing_breakdown(
     """
     pct = service_fee_percent
     if pct is None:
-        pct = float(get_settings().booking_service_fee_percent)
+        pct = float(BOOKING_SERVICE_FEE_PERCENT)
     pct = max(0.0, min(100.0, pct))
 
     li_sum, has_tbc_lines = sum_line_items_gbp(line_items if isinstance(line_items, list) else [])

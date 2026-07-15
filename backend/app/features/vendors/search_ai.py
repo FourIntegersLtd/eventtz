@@ -8,6 +8,7 @@ from typing import Any
 
 from app.contracts.marketplace_search import MarketplaceQueryParseResult
 from app.core.config import get_settings
+from app.core.constants import OPENAI_SEARCH_MODEL
 from app.core.logging import get_logger
 from app.core.markets import get_market, normalize_country_code
 from app.core.vendor_taxonomy import (
@@ -184,7 +185,7 @@ def _parse_with_llm(raw_q: str, *, country_code: str) -> MarketplaceQueryParseRe
         return _fallback_parse(raw_q)
 
     settings = get_settings()
-    model = (settings.openai_search_model or "gpt-4o-mini").strip() or "gpt-4o-mini"
+    model = OPENAI_SEARCH_MODEL
     services = ", ".join(sorted(VENDOR_SERVICE_KEYS))
     events = ", ".join(sorted(VENDOR_EVENT_TYPE_KEYS))
     market = get_market(country_code)

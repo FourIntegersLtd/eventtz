@@ -8,7 +8,7 @@ from typing import Any
 
 from fastapi import HTTPException
 
-from app.core.config import get_settings
+from app.core.constants import OPENAI_BIO_MODEL, OPENAI_VISION_MODEL
 from app.core.logging import get_logger
 from app.features.ai.openai_helpers import extract_json_object, require_openai_client
 
@@ -59,9 +59,8 @@ def _sanitize_payload_for_bio(payload: dict[str, Any]) -> dict[str, Any]:
 
 def generate_vendor_public_bio(*, payload: dict[str, Any]) -> str:
     client = require_openai_client(log_context="vendor_onboarding_ai")
-    settings = get_settings()
     safe = _sanitize_payload_for_bio(payload)
-    model = settings.openai_bio_model.strip() or "gpt-4o-mini"
+    model = OPENAI_BIO_MODEL
     blob = json.dumps(safe, ensure_ascii=False, indent=2)
     logger.info(
         "vendor_onboarding_ai generate-bio: start model=%s incoming_payload_keys=%s "
@@ -122,7 +121,6 @@ def analyze_portfolio_image(*, image_bytes: bytes, content_type: str) -> tuple[b
     if not content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Only image uploads are supported.")
     client = require_openai_client(log_context="vendor_onboarding_ai")
-    settings = get_settings()
     b64 = base64.standard_b64encode(image_bytes).decode("ascii")
     data_url = f"data:{content_type};base64,{b64}"
     prompt = (
@@ -145,7 +143,7 @@ def analyze_portfolio_image(*, image_bytes: bytes, content_type: str) -> tuple[b
         }
     ]
     resp = client.responses.create(
-        model=settings.openai_vision_model.strip() or "gpt-4o-mini",
+        model=OPENAI_VISION_MODEL,
         input=input_msg,
         temperature=0.2,
         max_output_tokens=300,

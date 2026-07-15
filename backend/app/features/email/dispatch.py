@@ -211,6 +211,13 @@ def send_admin_payout_stuck_email(
     vendor_user_id: str | None,
     error_hint: str | None = None,
 ) -> bool:
+    from app.features.email.delivery_log import claim_admin_payout_stuck_email
+
+    if vendor_user_id and not claim_admin_payout_stuck_email(
+        booking_id=booking_id,
+        vendor_user_id=vendor_user_id,
+    ):
+        return False
     return get_email_service().send_admin_payout_stuck(
         booking_id=booking_id,
         vendor_user_id=vendor_user_id,

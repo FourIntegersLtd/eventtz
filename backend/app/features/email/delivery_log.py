@@ -9,6 +9,8 @@ from app.features.email.constants import EMAIL_DEDUPE_KINDS
 
 logger = get_logger(__name__)
 
+ADMIN_PAYOUT_STUCK_TEMPLATE = "admin.payout_stuck"
+
 
 def booking_template_id(kind: str) -> str:
     return f"booking.{kind}"
@@ -18,20 +20,16 @@ def should_dedupe_booking_kind(kind: str) -> bool:
     return kind in EMAIL_DEDUPE_KINDS
 
 
-def claim_booking_email_send(
+def claim_email_delivery(
     *,
-    kind: str,
+    template_id: str,
     recipient_email: str,
     recipient_user_id: str,
     booking_id: str,
 ) -> bool:
-    """Return True when the send should proceed; False when already logged (dedupe)."""
+    """Insert a delivery-log row; return False on unique conflict (already sent)."""
     if get_settings().local_auth_mode:
         return False
-    if not should_dedupe_booking_kind(kind):
-        return True
-
-    template_id = booking_template_id(kind)
     try:
         get_client().table("email_delivery_log").insert(
             {
@@ -58,3 +56,35 @@ def claim_booking_email_send(
             booking_id,
         )
         return True
+
+
+def claim_booking_email_send(
+    *,
+    kind: str,
+    recipient_email: str,
+    recipient_user_id: str,
+    booking_id: str,
+) -> bool:
+    """Return True when the send should proceed; False when already logged (dedupe)."""
+    if get_settings().local_auth_mode:
+        return False
+    if not should_dedupe_booking_kind(kind):
+        return True
+    return claim_email_delivery(
+        template_id=booking_template_id(kind),
+        recipient_email=recipient_email,
+        recipient_user_id=recipient_user_id,
+        booking_id=booking_id,
+    )
+
+
+def claim_admin_payout_stuck_email(*, booking_id: str, vendor_user_id: str) -> bool:
+    """One ops alert per booking (vendor_user_id keys the unique delivery-log index)."""
+    if not vendor_user_id:
+        return True
+    return claim_email_delivery(
+        template_id=ADMIN_PAYOUT_STUCK_TEMPLATE,
+        recipient_email="ops@eventtz.internal",
+        recipient_user_id=vendor_user_id,
+        booking_id=booking_id,
+    )

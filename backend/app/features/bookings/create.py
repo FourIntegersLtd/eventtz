@@ -37,6 +37,108 @@ from app.features.auth.accounts import assert_user_not_suspended
 logger = get_logger(__name__)
 
 
+def _conversation_has_client_notes(
+    *,
+    conversation_id: str,
+    client_user_id: str,
+    notes: str,
+) -> bool:
+    """True if this DM already contains the booking notes as a client message."""
+    text = notes.strip()
+    if not text or get_settings().local_auth_mode:
+        return False
+    try:
+        res = (
+            get_client()
+            .table("messages")
+            .select("id,body,sender_user_id,metadata")
+            .eq("conversation_id", conversation_id)
+            .eq("sender_user_id", client_user_id)
+            .order("created_at", desc=False)
+            .limit(40)
+            .execute()
+        )
+    except Exception:
+        logger.exception(
+            "ensure booking notes: list messages failed conv=%s",
+            conversation_id,
+        )
+        return False
+    for row in getattr(res, "data", None) or []:
+        if not isinstance(row, dict):
+            continue
+        meta = row.get("metadata")
+        if isinstance(meta, dict) and meta.get("source") == "booking_notes":
+            return True
+        if str(row.get("body") or "").strip() == text:
+            return True
+    return False
+
+
+def ensure_client_booking_notes_in_chat(
+    *,
+    booking_id: str,
+    client_user_id: str,
+    vendor_user_id: str,
+    notes: str | None,
+    conversation_id: str | None = None,
+) -> str | None:
+    """
+    Ensure client booking notes exist as the first DM in the client↔vendor thread,
+    and that booking_requests.conversation_id points at that thread.
+
+    Safe to call repeatedly (create + detail backfill). Returns conversation id or None.
+    """
+    text = (notes or "").strip()
+    existing_cid = (conversation_id or "").strip() or None
+    if not text or not booking_id:
+        return existing_cid
+    try:
+        cid = existing_cid
+        if not cid:
+            conv = get_or_create_conversation(
+                client_user_id=client_user_id,
+                vendor_user_id=vendor_user_id,
+                require_bookable_vendor=False,
+            )
+            cid = str(conv.get("id") or "").strip() or None
+        if not cid:
+            return None
+
+        if not _conversation_has_client_notes(
+            conversation_id=cid,
+            client_user_id=client_user_id,
+            notes=text,
+        ):
+            insert_message(
+                conversation_id=cid,
+                sender_user_id=client_user_id,
+                body=text,
+                metadata={"source": "booking_notes", "booking_id": booking_id},
+            )
+            notify_user(client_user_id, "chat_unread_changed")
+            notify_user(vendor_user_id, "chat_unread_changed")
+
+        if cid != existing_cid:
+            try:
+                get_client().table("booking_requests").update({"conversation_id": cid}).eq(
+                    "id",
+                    booking_id,
+                ).execute()
+            except Exception:
+                logger.exception(
+                    "ensure booking notes: link conversation_id failed booking=%s",
+                    booking_id,
+                )
+        return cid
+    except Exception:
+        logger.exception(
+            "ensure booking notes: failed booking=%s",
+            booking_id,
+        )
+        return existing_cid
+
+
 def _post_client_booking_notes_to_chat(
     *,
     booking_id: str,
@@ -44,46 +146,14 @@ def _post_client_booking_notes_to_chat(
     vendor_user_id: str,
     notes: str | None,
 ) -> str | None:
-    """
-    When the client includes booking notes, mirror them into the DM thread so the
-    vendor sees an unread message before accepting/declining. Returns conversation id.
-    """
-    text = (notes or "").strip()
-    if not text or not booking_id:
-        return None
-    try:
-        conv = get_or_create_conversation(
-            client_user_id=client_user_id,
-            vendor_user_id=vendor_user_id,
-            require_bookable_vendor=False,
-        )
-        cid = str(conv.get("id") or "").strip()
-        if not cid:
-            return None
-        insert_message(
-            conversation_id=cid,
-            sender_user_id=client_user_id,
-            body=text,
-        )
-        try:
-            get_client().table("booking_requests").update({"conversation_id": cid}).eq(
-                "id",
-                booking_id,
-            ).execute()
-        except Exception:
-            logger.exception(
-                "create_booking_request: link conversation_id failed booking=%s",
-                booking_id,
-            )
-        notify_user(client_user_id, "chat_unread_changed")
-        notify_user(vendor_user_id, "chat_unread_changed")
-        return cid
-    except Exception:
-        logger.exception(
-            "create_booking_request: post notes to chat failed booking=%s",
-            booking_id,
-        )
-        return None
+    """Create path helper — delegates to ensure_client_booking_notes_in_chat."""
+    return ensure_client_booking_notes_in_chat(
+        booking_id=booking_id,
+        client_user_id=client_user_id,
+        vendor_user_id=vendor_user_id,
+        notes=notes,
+        conversation_id=None,
+    )
 
 
 def create_booking_request(
@@ -166,11 +236,12 @@ def create_booking_request(
     if created is None:
         raise RuntimeError("Failed to create booking request")
     bid = str(created.get("id", ""))
-    _post_client_booking_notes_to_chat(
+    notes_val = row_out.get("notes") if isinstance(row_out.get("notes"), str) else None
+    conversation_id = _post_client_booking_notes_to_chat(
         booking_id=bid,
         client_user_id=client_user_id,
         vendor_user_id=vendor_user_id,
-        notes=row_out.get("notes") if isinstance(row_out.get("notes"), str) else None,
+        notes=notes_val,
     )
     if vendor_user_id:
         dispatch_booking_notification(
@@ -183,6 +254,7 @@ def create_booking_request(
         "id": bid,
         "status": str(created.get("status", "pending")),
         "created_at": created.get("created_at"),
+        "conversation_id": conversation_id,
     }
 
 

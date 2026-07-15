@@ -299,22 +299,62 @@ def retrieve_payment_intent(payment_intent_id: str) -> Any:
     return _stripe().PaymentIntent.retrieve(payment_intent_id, expand=["latest_charge"])
 
 
+def find_existing_transfer_id(booking_id: str) -> str | None:
+    """Return an existing Stripe Transfer for this booking, if any (by transfer_group)."""
+    group = f"booking_{booking_id}"
+    try:
+        listed = _stripe().Transfer.list(transfer_group=group, limit=10)
+    except Exception:
+        logger.exception("stripe: list transfers failed booking=%s", booking_id)
+        return None
+    rows = getattr(listed, "data", None) or []
+    for row in rows:
+        tid = str(getattr(row, "id", None) or (row.get("id") if isinstance(row, dict) else "") or "")
+        if tid:
+            return tid
+    return None
+
+
 def create_transfer(
     *,
     destination_account_id: str,
     amount_gbp: float,
     booking_id: str,
 ) -> str:
-    """Release the vendor's cut from Eventtz's Stripe balance to their connected account."""
-    transfer = _stripe().Transfer.create(
-        amount=_to_pence(amount_gbp),
-        currency="gbp",
-        destination=destination_account_id,
-        transfer_group=f"booking_{booking_id}",
-        metadata={"booking_id": booking_id},
-        idempotency_key=f"transfer-{booking_id}",
-    )
-    return str(transfer["id"])
+    """Release the vendor's cut from Eventtz's Stripe balance to their connected account.
+
+    Reclaims any existing Transfer for this booking (`transfer_group`) before creating.
+    Idempotency key is bound to amount + destination so a retry after corrected params
+    cannot collide with an earlier burned booking-only key.
+    """
+    existing = find_existing_transfer_id(booking_id)
+    if existing:
+        logger.info(
+            "stripe: reclaiming existing transfer=%s booking=%s",
+            existing,
+            booking_id,
+        )
+        return existing
+
+    amount_pence = _to_pence(amount_gbp)
+    if amount_pence < 1:
+        raise ValueError("Transfer amount must be at least £0.01.")
+    dest = destination_account_id.strip()
+    try:
+        transfer = _stripe().Transfer.create(
+            amount=amount_pence,
+            currency="gbp",
+            destination=dest,
+            transfer_group=f"booking_{booking_id}",
+            metadata={"booking_id": booking_id},
+            idempotency_key=f"transfer-{booking_id}-{amount_pence}-{dest}",
+        )
+        return str(transfer["id"])
+    except stripe.IdempotencyError:
+        reclaimed = find_existing_transfer_id(booking_id)
+        if reclaimed:
+            return reclaimed
+        raise
 
 
 def create_refund(

@@ -103,15 +103,6 @@ def one_row(res: Any) -> dict[str, Any] | None:
     return items[0] if items else None
 
 
-def require_one_row(res: Any, *, not_found_msg: str = "Not found.") -> dict[str, Any]:
-    from app.core.errors import NotFoundError
-
-    row = one_row(res)
-    if row is None:
-        raise NotFoundError(not_found_msg)
-    return row
-
-
 def is_missing_approval_status_column(err: Exception) -> bool:
     if not isinstance(err, APIError):
         return False

@@ -24,8 +24,32 @@ from app.features.settings.contact import (
     apply_counterparty_contact_visibility,
     mask_booking_list_client_email,
 )
+from app.features.bookings.create import ensure_client_booking_notes_in_chat
 
 logger = get_logger(__name__)
+
+
+def _backfill_notes_chat_on_detail(row: dict[str, Any], out: dict[str, Any]) -> None:
+    """If the booking has client notes, ensure they exist in the DM thread."""
+    notes = out.get("notes")
+    if not isinstance(notes, str) or not notes.strip():
+        return
+    cid = str(row.get("client_user_id") or "").strip()
+    vid = str(row.get("vendor_user_id") or "").strip()
+    bid = str(out.get("id") or "").strip()
+    if not cid or not vid or not bid:
+        return
+    linked = ensure_client_booking_notes_in_chat(
+        booking_id=bid,
+        client_user_id=cid,
+        vendor_user_id=vid,
+        notes=notes,
+        conversation_id=out.get("conversation_id")
+        if isinstance(out.get("conversation_id"), str)
+        else None,
+    )
+    if linked:
+        out["conversation_id"] = linked
 
 
 def _row_initiator(row: dict[str, Any]) -> str:
@@ -271,6 +295,7 @@ def get_booking_request_for_vendor(vendor_user_id: str, booking_id: str) -> dict
     out["initial_client_total_label"] = _initial_client_total_label(row, out.get("pricing"))
     bid = str(row.get("id", ""))
     out["review"] = get_vendor_review_for_booking(vendor_user_id, bid)
+    _backfill_notes_chat_on_detail(row, out)
     return apply_counterparty_contact_visibility(
         viewer_role="vendor",
         booking_status=str(out.get("status") or ""),
@@ -431,6 +456,7 @@ def get_booking_request_for_client(client_user_id: str, booking_id: str) -> dict
         out["review"] = get_client_review_for_booking(booking_id, client_user_id)
     except Exception:
         out["review"] = None
+    _backfill_notes_chat_on_detail(row, out)
     return apply_counterparty_contact_visibility(
         viewer_role="client",
         booking_status=str(out.get("status") or ""),

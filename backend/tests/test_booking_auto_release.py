@@ -175,10 +175,12 @@ def test_touch_booking_completion_side_effects_runs_both(mock_reminder, mock_rel
     mock_release.assert_called_once_with(row)
 
 
-@patch("app.features.bookings.payments.touch_booking_completion_side_effects")
+@patch("app.features.bookings.payments.maybe_send_completion_reminder_for_row", return_value=True)
 @patch("app.features.bookings.payments.get_settings")
-def test_list_touch_processes_eligible_rows_capped(mock_settings, mock_touch):
+def test_list_touch_reminders_only_no_payout(mock_settings, mock_reminder):
     mock_settings.return_value.local_auth_mode = False
     rows = [_paid_row(5, id=f"b{i}") for i in range(15)]
-    payments.touch_completion_side_effects_for_booking_rows(rows, cap=10)
-    assert mock_touch.call_count == 10
+    with patch("app.features.bookings.payments._auto_release_payout_row") as mock_release:
+        payments.touch_completion_side_effects_for_booking_rows(rows, cap=10)
+        assert mock_reminder.call_count == 10
+        mock_release.assert_not_called()

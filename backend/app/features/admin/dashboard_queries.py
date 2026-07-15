@@ -8,6 +8,7 @@ from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
 from app.core.config import get_settings
+from app.core.constants import BOOKING_SERVICE_FEE_PERCENT
 from app.core.logging import get_logger
 from app.core.db import get_db as get_client
 from app.features.admin._helpers import opt_admin_ts
@@ -179,7 +180,7 @@ def get_financials_summary(
     date_to: str | None,
 ) -> dict[str, Any]:
     settings = get_settings()
-    fee_pct = float(settings.booking_service_fee_percent or 5)
+    fee_pct = float(BOOKING_SERVICE_FEE_PERCENT)
     chart_start, chart_end = _financials_chart_range(date_from, date_to)
     daily_buckets: dict[str, dict[str, float | int]] = {
         d: {"count": 0, "gmv_gbp": 0.0, "platform_fee_gbp": 0.0, "vendor_portion_gbp": 0.0}

@@ -156,18 +156,26 @@ def _mark_webhook_event_processed(event_id: str, event_type: str) -> bool:
 def _payment_fields_from_checkout_session(session: dict[str, Any]) -> tuple[str | None, str | None]:
     """Extract payment_intent id and charge id from a Checkout Session (expanded or not)."""
     pi_raw = session.get("payment_intent")
+    if pi_raw is not None and not isinstance(pi_raw, (str, dict)):
+        pi_raw = stripe_service.stripe_object_to_dict(pi_raw)
+
     payment_intent_id: str | None = None
     charge_id: str | None = None
 
-    if isinstance(pi_raw, str) and pi_raw.strip():
-        payment_intent_id = pi_raw.strip()
+    if isinstance(pi_raw, str):
+        text = pi_raw.strip()
+        # Persist only bare Stripe ids — never stringified objects/blobs.
+        if text.startswith("pi_") and len(text) < 255 and "{" not in text:
+            payment_intent_id = text
     elif isinstance(pi_raw, dict):
         pid = pi_raw.get("id")
-        payment_intent_id = str(pid).strip() if pid else None
+        if isinstance(pid, str) and pid.startswith("pi_"):
+            payment_intent_id = pid
         latest_charge = pi_raw.get("latest_charge")
         if isinstance(latest_charge, dict):
-            charge_id = latest_charge.get("id")
-        elif isinstance(latest_charge, str):
+            cid = latest_charge.get("id")
+            charge_id = str(cid) if cid else None
+        elif isinstance(latest_charge, str) and latest_charge.startswith("ch_"):
             charge_id = latest_charge
 
     if payment_intent_id and not charge_id:
@@ -176,13 +184,32 @@ def _payment_fields_from_checkout_session(session: dict[str, Any]) -> tuple[str 
             pi_dict = pi if isinstance(pi, dict) else stripe_service.stripe_object_to_dict(pi)
             latest_charge = pi_dict.get("latest_charge")
             if isinstance(latest_charge, dict):
-                charge_id = latest_charge.get("id")
-            elif isinstance(latest_charge, str):
+                cid = latest_charge.get("id")
+                charge_id = str(cid) if cid else None
+            elif isinstance(latest_charge, str) and latest_charge.startswith("ch_"):
                 charge_id = latest_charge
         except Exception:
             logger.exception("Failed to retrieve PaymentIntent %s", payment_intent_id)
 
     return payment_intent_id, charge_id
+
+
+def _load_full_booking_row(booking_id: str) -> dict[str, Any] | None:
+    """Full booking row for money moves (list APIs omit vendor_amount_gbp)."""
+    if not booking_id:
+        return None
+    res = (
+        get_client()
+        .table("booking_requests")
+        .select("*")
+        .eq("id", booking_id)
+        .limit(1)
+        .execute()
+    )
+    rows = getattr(res, "data", None) or []
+    if not rows or not isinstance(rows[0], dict):
+        return None
+    return rows[0]
 
 
 def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> bool:
@@ -200,7 +227,7 @@ def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> 
     db = get_client()
     existing_res = (
         db.table("booking_requests")
-        .select("stripe_checkout_session_id,payment_status")
+        .select("stripe_checkout_session_id,payment_status,status")
         .eq("id", booking_id)
         .limit(1)
         .execute()
@@ -440,8 +467,14 @@ def _serialize_completion_state(row: dict[str, Any]) -> dict[str, Any]:
 
 def _finalize_completion(row: dict[str, Any]) -> dict[str, Any]:
     """Both parties have confirmed: mark completed and release the vendor payout."""
-    db = get_client()
     booking_id = str(row.get("id") or "")
+    # Always reload: list/dashboard rows omit vendor_amount_gbp and other money fields.
+    full = _load_full_booking_row(booking_id)
+    if full is None:
+        raise ValueError("Booking not found.")
+    row = full
+
+    db = get_client()
     client_id = str(row.get("client_user_id") or "")
     vendor_id = str(row.get("vendor_user_id") or "")
     vendor_amount = row.get("vendor_amount_gbp")
@@ -468,9 +501,28 @@ def _finalize_completion(row: dict[str, Any]) -> dict[str, Any]:
         return _serialize_completion_state(row)
 
     try:
+        amount_gbp = float(vendor_amount) if vendor_amount is not None else 0.0
+    except (TypeError, ValueError):
+        amount_gbp = 0.0
+    if amount_gbp <= 0:
+        hint = (
+            f"vendor_amount_gbp is missing or zero (raw={vendor_amount!r}); "
+            "cannot create a Stripe Transfer."
+        )
+        logger.error("Cannot release payout booking=%s: %s", booking_id, hint)
+        send_admin_payout_stuck_email(
+            booking_id=booking_id,
+            vendor_user_id=vendor_id or None,
+            error_hint=hint,
+        )
+        raise ValueError(
+            "Payout amount is missing for this booking. Please contact support.",
+        )
+
+    try:
         transfer_id = stripe_service.create_transfer(
             destination_account_id=str(vendor_stripe["stripe_account_id"]),
-            amount_gbp=float(vendor_amount or 0),
+            amount_gbp=amount_gbp,
             booking_id=booking_id,
         )
     except Exception as e:
@@ -760,7 +812,7 @@ def maybe_send_completion_reminder_for_row(row: dict[str, Any]) -> bool:
 
 
 def touch_booking_completion_side_effects(row: dict[str, Any]) -> bool:
-    """Per-booking: send post-event reminder (once), then try auto-release if due."""
+    """Per-booking (detail GET / cron): send post-event reminder, then try auto-release if due."""
     try:
         maybe_send_completion_reminder_for_row(row)
     except Exception:
@@ -780,7 +832,11 @@ def touch_completion_side_effects_for_booking_rows(
     *,
     cap: int = LIST_COMPLETION_TOUCH_CAP,
 ) -> None:
-    """Lazy backstop on list fetch: reminders + overdue payouts (capped per request)."""
+    """Lazy backstop on list/dashboard fetches: reminders only (no Stripe Transfer).
+
+    Payout auto-release runs on booking detail GET, hourly cron, and admin retry —
+    never on list polls, which fire repeatedly from the dashboard.
+    """
     if get_settings().local_auth_mode:
         return
     touched = 0
@@ -793,7 +849,10 @@ def touch_completion_side_effects_for_booking_rows(
             continue
         if not event_day_over(row):
             continue
-        touch_booking_completion_side_effects(row)
+        try:
+            maybe_send_completion_reminder_for_row(row)
+        except Exception:
+            logger.exception("completion reminder failed booking=%s", row.get("id"))
         touched += 1
 
 
