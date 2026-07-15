@@ -1,13 +1,13 @@
-"""Shared constants (not secrets — those stay in env / Settings)."""
+"""Fixed values shared across the app (not secrets — those go in env / Settings)."""
 
-# Auth cookies
+# Cookie names for stay-signed-in.
 ACCESS_COOKIE_NAME = "eventtz_access_token"
 REFRESH_COOKIE_NAME = "eventtz_refresh_token"
 
-# Platform fee on client total (line items + discounts; surcharges excluded).
+# Platform fee taken from the client's total (packages + discounts; extra costs don't add fee).
 BOOKING_SERVICE_FEE_PERCENT = 5.0
 
-# OpenAI models (product defaults — change in code when upgrading).
+# Which AI models we use by default (change here when upgrading).
 OPENAI_BIO_MODEL = "gpt-4o-mini"
 OPENAI_VISION_MODEL = "gpt-4o-mini"
 OPENAI_SEARCH_MODEL = "gpt-4o-mini"

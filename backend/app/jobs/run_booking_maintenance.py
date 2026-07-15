@@ -1,11 +1,11 @@
-"""Hourly booking maintenance — post-event reminders + overdue payout auto-release.
+"""Hourly booking maintenance: post-event reminders and overdue payout release.
 
-Run from backend/ (same env as the API — no extra secrets):
+Run from the backend directory (same environment as the API):
 
     PYTHONPATH=. python -m app.jobs.run_booking_maintenance
 
 Railway cron schedule: ``0 * * * *`` with that command on a service that shares
-``SUPABASE_*`` / ``STRIPE_*`` env vars with production.
+production ``SUPABASE_*`` and ``STRIPE_*`` environment variables.
 """
 
 from __future__ import annotations

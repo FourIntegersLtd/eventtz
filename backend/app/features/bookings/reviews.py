@@ -1,4 +1,4 @@
-"""Booking-linked reviews (one per booking) for public vendor aggregation."""
+"""Reviews linked to bookings (one per booking) for public vendor profiles."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ def _reviewer_display_from_email(email: str | None) -> str:
 
 
 def merge_review_stats_into_vendor_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Mutates each row with review_average and review_count (ExploreVendorRow fields)."""
+    """Add review_average and review_count to each row (ExploreVendorRow fields)."""
     if not rows:
         return rows
     ids = [str(r.get("user_id") or "") for r in rows if isinstance(r, dict) and r.get("user_id")]
@@ -381,8 +381,7 @@ def get_vendor_review_for_booking(vendor_user_id: str, booking_id: str) -> dict[
 
 
 def get_client_reviewed_booking_ids(client_user_id: str, booking_ids: list[str]) -> set[str]:
-    """Subset of `booking_ids` this client has already reviewed — used to power the
-    "leave a review" nudge without an extra round trip per booking."""
+    """Which booking ids this client has already reviewed — avoids an extra query per booking."""
     if get_settings().local_auth_mode or not client_user_id:
         return set()
     ids = list({str(b) for b in booking_ids if b})

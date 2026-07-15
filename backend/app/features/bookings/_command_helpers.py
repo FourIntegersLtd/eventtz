@@ -1,4 +1,4 @@
-"""Shared helpers for booking write operations."""
+"""Shared checks used when creating or updating bookings."""
 
 from __future__ import annotations
 

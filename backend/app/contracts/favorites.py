@@ -1,4 +1,4 @@
-"""Favorites API contracts."""
+"""Shared types for saved vendor favourites."""
 
 from __future__ import annotations
 

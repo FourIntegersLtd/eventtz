@@ -1,4 +1,4 @@
-"""Authoritative vendor list pricing: packages, rates, discounts, booking line items."""
+"""Vendor list prices: packages, rates, discounts, and booking line items."""
 
 from __future__ import annotations
 
@@ -145,7 +145,7 @@ class PricingOption:
 
 
 def build_pricing_options(payload: dict[str, Any]) -> list[PricingOption]:
-    """All selectable pricing blocks from vendor onboarding payload."""
+    """Packages and rates a client can choose from the vendor profile."""
     config = parse_vendor_discount_config(payload)
     service_lines = _services_feature_lines(payload)
     complete_pkgs = [p for p in _normalize_packages(payload) if _is_complete_package(p)]
@@ -232,8 +232,8 @@ def resolve_line_items(
     selected_option_ids: list[str],
 ) -> list[dict[str, Any]]:
     """
-    Validate selected option ids against vendor payload; return priced line items
-    with main list discount applied. Does not include automatic bulk/off-peak lines.
+    Check selected package or rate ids against the vendor profile and return priced line items
+    with the headline list discount applied. Bulk and off-peak discounts are added separately.
     """
     if not selected_option_ids:
         raise ValueError("Select at least one package or rate.")
@@ -302,8 +302,8 @@ def compute_automatic_discount_lines(
     event_date: date,
 ) -> list[dict[str, Any]]:
     """
-    Return 0–2 synthetic negative line items for bulk and off-peak discounts.
-    Applied after main list discount; bulk before off-peak.
+    Return 0–2 extra line items (negative amounts) for bulk and off-peak discounts.
+    Applied after the headline list discount; bulk is calculated before off-peak.
     """
     config = parse_vendor_discount_config(payload)
     if not config.offer_discounts:
@@ -360,7 +360,7 @@ def compute_automatic_discount_lines(
 
 
 def strip_automatic_discount_lines(line_items: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Remove synthetic auto-bulk / auto-off-peak rows before recomputing discounts."""
+    """Remove auto bulk and off-peak discount rows before recalculating discounts."""
     out: list[dict[str, Any]] = []
     for li in line_items:
         if not isinstance(li, dict):
@@ -377,13 +377,13 @@ def reconcile_automatic_discount_lines(
     payload: dict[str, Any],
     event_date: date,
 ) -> list[dict[str, Any]]:
-    """Positive line items + freshly computed auto discount lines."""
+    """Priced line items plus freshly calculated bulk and off-peak discount rows."""
     base = strip_automatic_discount_lines(line_items)
     return base + compute_automatic_discount_lines(payload, base, event_date)
 
 
 def min_listing_price_gbp(payload: dict[str, Any]) -> float | None:
-    """Lowest sale price after main list discount only (not bulk/off-peak)."""
+    """Lowest sale price after the headline list discount only (not bulk or off-peak)."""
     options = build_pricing_options(payload)
     prices = [o.unit_price_gbp for o in options if o.unit_price_gbp is not None]
     if not prices:

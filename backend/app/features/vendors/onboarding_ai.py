@@ -1,4 +1,4 @@
-"""OpenAI (Responses API) helpers for vendor onboarding: bio + image QA."""
+"""AI helpers for vendor onboarding: bio writing and portfolio image checks."""
 
 from __future__ import annotations
 
@@ -105,7 +105,7 @@ def generate_vendor_public_bio(*, payload: dict[str, Any]) -> str:
             "vendor_onboarding_ai generate-bio: empty output_text from model=%s (response id may be absent)",
             model,
         )
-        raise HTTPException(status_code=502, detail="AI returned an empty bio. Try again.")
+        raise HTTPException(status_code=502, detail="We couldn't write a bio this time. Please try again.")
     logger.info(
         "vendor_onboarding_ai generate-bio: ok model=%s output_chars=%s",
         model,
@@ -115,9 +115,9 @@ def generate_vendor_public_bio(*, payload: dict[str, Any]) -> str:
 
 
 def analyze_portfolio_image(*, image_bytes: bytes, content_type: str) -> tuple[bool, int, str]:
-    """Returns (ok, score 1-5, short summary). ok=false means poor quality for marketplace."""
+    """Returns (ok, score 1–5, short summary). ok=false means the image is not good enough for the marketplace."""
     if not image_bytes:
-        raise HTTPException(status_code=400, detail="Empty image.")
+        raise HTTPException(status_code=400, detail="Please choose an image to upload.")
     if not content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Only image uploads are supported.")
     client = require_openai_client(log_context="vendor_onboarding_ai")

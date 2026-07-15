@@ -1,4 +1,4 @@
-"""Thin Resend API client (httpx). No-op when email is disabled or key missing."""
+"""Small Resend API client (httpx). Skips sending when email is disabled or the API key is missing."""
 
 from __future__ import annotations
 

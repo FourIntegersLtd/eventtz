@@ -1,4 +1,4 @@
-"""Structured LLM output for marketplace free-text query parsing."""
+"""Shared types for AI-parsed marketplace search queries."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ class MarketplaceQueryParseResult(BaseModel):
     location: str | None = Field(default=None, max_length=120)
     types: list[str] = Field(default_factory=list)
     event_types: list[str] = Field(default_factory=list)
-    # Soft signals for Tier B (close enough)
+    # Looser match hints (related results, not exact matches)
     related_keywords: list[str] = Field(default_factory=list, max_length=16)
     related_types: list[str] = Field(default_factory=list)
     related_locations: list[str] = Field(default_factory=list, max_length=12)
@@ -26,7 +26,7 @@ class MarketplaceQueryParseResult(BaseModel):
 
 @dataclass
 class MarketplaceSearchResult:
-    """Explore search envelope: flat vendor list ordered exact → related → fallback."""
+    """Marketplace search result: vendors ordered exact match, then related, then fallback."""
 
     vendors: list[dict[str, Any]] = field(default_factory=list)
     match_notice: str | None = None

@@ -1,4 +1,4 @@
-"""Booking write operations — facade re-exporting create, status, adjustments, venue."""
+"""Re-exports booking write functions from create, status, adjustments, and venue."""
 
 from app.features.bookings.adjustments import put_vendor_booking_adjustments
 from app.features.bookings.create import (

@@ -1,11 +1,11 @@
-"""Sync denormalized explore search columns on vendors rows."""
+"""Keep explore search fields on the vendor row in sync when the profile is saved."""
 
 from __future__ import annotations
 
 from typing import Any
 
 from app.core.logging import get_logger
-from app.core.markets import get_market, normalize_country_code
+from app.features.vendors.markets import get_market, normalize_country_code
 from app.features.vendors.list_pricing import min_listing_price_gbp
 
 logger = get_logger(__name__)
@@ -19,7 +19,7 @@ def _services_offered_keys(payload: dict[str, Any]) -> list[str]:
 
 
 def explore_search_patch_from_payload(payload: dict[str, Any]) -> dict[str, Any]:
-    """Fields to merge into vendors row on profile save."""
+    """Search columns to write on the vendor row when the profile is saved."""
     country_code = normalize_country_code(
         str(payload.get("countryCode") or payload.get("country_code") or ""),
     )

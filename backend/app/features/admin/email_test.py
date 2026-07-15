@@ -1,4 +1,4 @@
-"""Catalog and dispatch for super-admin email template testing."""
+"""List email templates and send test messages for super-admins."""
 
 from __future__ import annotations
 

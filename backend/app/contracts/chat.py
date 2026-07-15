@@ -1,4 +1,4 @@
-"""Chat (client–vendor) request/response models."""
+"""Shared types for client–vendor messages."""
 
 from __future__ import annotations
 
@@ -48,7 +48,7 @@ class MessageRow(BaseModel):
     sender_user_id: str
     body: str
     created_at: str | None = None
-    #: Structured payload for non-plain-text messages, e.g. a quote card
+    #: Extra data for rich messages, e.g. a quote card
     #: ({"kind": "quote", "booking_request_id": ..., "event_name": ..., "total_label": ..., "status": ...}).
     metadata: dict[str, Any] | None = None
 

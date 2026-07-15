@@ -1,3 +1,5 @@
+"""Shared types for UK address lookup suggestions and full address details."""
+
 from pydantic import BaseModel, Field
 
 

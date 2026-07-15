@@ -1,4 +1,4 @@
-"""Public blog HTTP routes (no auth)."""
+"""Public blog routes (no sign-in required)."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Admin → user messaging (Eventtz Support threads)."""
+"""Shared types for admin messages to users (Eventtz Support threads)."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 class AdminMessageSendBody(BaseModel):
     body: str = Field(min_length=1, max_length=5000)
-    #: When set, expands to all matching user ids (optionally merged with recipient_user_ids).
+    #: When set, sends to all users of that type (optionally combined with recipient_user_ids).
     audience: Literal["clients", "vendors", "users"] | None = None
     recipient_user_ids: list[str] | None = None
 

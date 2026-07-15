@@ -1,4 +1,4 @@
-"""Vendor Stripe Connect onboarding (payouts)."""
+"""HTTP routes for vendor payout setup via Stripe."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Shared vendor response/request schemas."""
+"""Shared types for vendor profiles and marketplace listings."""
 
 from typing import Any
 
@@ -31,7 +31,7 @@ class VendorBusinessNameAvailabilityResponse(BaseModel):
 
 
 class VendorLocationPayload(BaseModel):
-    """Structured location fields stored in vendor JSONB payload."""
+    """Location fields stored in the vendor profile data."""
 
     country_code: str = Field(default="GB", alias="countryCode", max_length=2)
     base_city: str = Field(default="", alias="baseCity", max_length=120)
@@ -89,12 +89,12 @@ class ExploreVendorSingleResponse(BaseModel):
 
 
 class ExploreVendorSearchRow(ExploreVendorRow):
-    """Explore row with which service tags matched the current search."""
+    """Marketplace listing row, including which services matched the search."""
 
     matched_services: list[str] = Field(default_factory=list)
     match_tier: str = Field(
         default="exact",
-        description="exact | related | fallback — ranking tier for close-enough search",
+        description="exact | related | fallback — how closely the listing matched the search",
     )
 
 

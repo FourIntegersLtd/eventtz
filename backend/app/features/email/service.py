@@ -1,4 +1,4 @@
-"""Transactional email service (Jinja templates + Resend)."""
+"""Build and send automated emails (Jinja templates and Resend)."""
 
 from __future__ import annotations
 
@@ -272,7 +272,7 @@ class EmailService:
         to_email: str,
         login_url: str,
     ) -> bool:
-        # Admin-facing: keep concise.
+        # Keep admin invite emails short.
         ctx = transactional_email_context(
             subject="You've been invited to Eventtz admin",
             headline="Admin team invite",

@@ -1,8 +1,8 @@
 """
 UK address lookup — DISABLED (getAddress.io / OS Places commented out).
 
-Venue addresses are free text on the client. These stubs remain so geo routes
-do not break if called.
+Clients enter venue addresses as free text. These stubs remain so geo routes
+still respond if called.
 """
 
 from __future__ import annotations

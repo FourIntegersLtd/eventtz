@@ -1,4 +1,4 @@
-"""Sanitize blog HTML to a safe allowlist for public rendering."""
+"""Strip blog HTML down to a safe allowlist for public pages."""
 
 from __future__ import annotations
 

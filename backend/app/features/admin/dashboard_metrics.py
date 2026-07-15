@@ -1,4 +1,4 @@
-"""Admin dashboard time-series metrics for charts."""
+"""Admin dashboard chart data over time (bookings, payments, sign-ups)."""
 
 from __future__ import annotations
 

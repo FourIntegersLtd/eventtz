@@ -1,4 +1,4 @@
-"""Normalized vendor business name uniqueness."""
+"""Check vendor business names are unique (compared case-insensitively)."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ _NORMALIZE_RE = re.compile(r"\s+")
 
 
 def normalize_business_name(name: str) -> str:
-    """Trim, lowercase, collapse internal whitespace."""
+    """Trim, lowercase, and collapse repeated spaces."""
     return _NORMALIZE_RE.sub(" ", name.strip().lower())
 
 

@@ -1,4 +1,4 @@
-"""Booking requests table access."""
+"""Read booking requests from the database."""
 
 from __future__ import annotations
 

@@ -317,7 +317,7 @@ def count_bookings_needing_support_attention(*, scan_limit: int = 300) -> int:
 
 
 def compute_admin_booking_support_meta(row: dict[str, Any]) -> dict[str, Any]:
-    """Derive support diagnostics for admin booking detail."""
+    """Build support diagnostics for the admin booking detail view."""
     booking_id = str(row.get("id") or "")
     vendor_id = str(row.get("vendor_user_id") or "")
     vendor_stripe = _get_vendor_stripe_fields(vendor_id) if vendor_id else None

@@ -1,3 +1,5 @@
+"""Shared types for account settings and client first-visit setup."""
+
 from pydantic import BaseModel, Field
 
 

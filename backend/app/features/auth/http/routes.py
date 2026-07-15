@@ -1,4 +1,4 @@
-"""Auth routes with Supabase + optional local in-memory mode."""
+"""Sign-up, sign-in, and session routes (Supabase, or an in-memory store for local use)."""
 
 from typing import Any, Literal
 
@@ -74,7 +74,7 @@ async def signup(
     body: SignupRequest,
     response: Response,
 ):
-    """Register with email and password. Persists user_type to public.users when DB is available."""
+    """Register with email and password. Saves user_type to public.users when the database is available."""
     logger.info(
         "POST /auth/signup email=%s user_type=%s",
         body.email,
@@ -84,7 +84,7 @@ async def signup(
         try:
             user = local_auth_store.register_user(body.email, body.password, body.user_type)
         except ValueError:
-            raise HTTPException(status_code=400, detail="Email already registered") from None
+            raise HTTPException(status_code=400, detail="That email is already registered. Try signing in.") from None
         session = local_auth_store.create_session(body.email)
         set_session_cookies(response, session)
         return SignupResponse(
@@ -127,7 +127,7 @@ async def signup(
     )
     raise HTTPException(
         status_code=400,
-        detail=result.get("error", "Sign up failed"),
+        detail=result.get("error", "We couldn't create your account. Please try again."),
     )
 
 
@@ -140,7 +140,7 @@ async def sign_in(
     if local_auth_store.enabled():
         user = local_auth_store.authenticate(body.email, body.password)
         if not user:
-            raise HTTPException(status_code=401, detail="Invalid credentials")
+            raise HTTPException(status_code=401, detail="We couldn't sign you in with those details. Check your email and password, then try again.")
         session = local_auth_store.create_session(body.email)
         set_session_cookies(response, session)
         return SignInResponse(
@@ -163,7 +163,7 @@ async def sign_in(
         )
     raise HTTPException(
         status_code=401,
-        detail=result.get("error", "Invalid credentials"),
+        detail=result.get("error", "We couldn't sign you in with those details. Check your email and password, then try again."),
     )
 
 
@@ -192,7 +192,7 @@ async def sign_out(
         return SignOutResponse(success=True)
     raise HTTPException(
         status_code=400,
-        detail=result.get("error", "Sign out failed"),
+        detail=result.get("error", "We couldn't sign you out. Please try again."),
     )
 
 
@@ -207,17 +207,17 @@ async def refresh_session(
 
     refresh_token = body.refresh_token or request.cookies.get(REFRESH_COOKIE_NAME)
     if not refresh_token:
-        raise HTTPException(status_code=401, detail="Refresh token missing")
+        raise HTTPException(status_code=401, detail="Your session has expired. Please sign in again.")
     if local_auth_store.enabled():
         email = local_auth_store.email_for_refresh_token(refresh_token)
         if not email:
-            raise HTTPException(status_code=401, detail="Refresh failed")
+            raise HTTPException(status_code=401, detail="Your session has expired. Please sign in again.")
         local_auth_store.revoke_refresh_token(refresh_token)
         session = local_auth_store.create_session(email)
         set_session_cookies(response, session)
         user = local_auth_store.user_record_for_email(email)
         if not user:
-            raise HTTPException(status_code=401, detail="Unauthorized")
+            raise HTTPException(status_code=401, detail="Please sign in again.")
         return RefreshSessionResponse(
             success=True,
             user=hydrate_user_from_db(user),
@@ -236,7 +236,7 @@ async def refresh_session(
     clear_session_cookies(response)
     raise HTTPException(
         status_code=401,
-        detail=result.get("error", "Refresh failed"),
+        detail=result.get("error", "Your session has expired. Please sign in again."),
     )
 
 
@@ -245,6 +245,6 @@ async def me(
     request: Request,
     response: Response,
 ):
-    """Get current authenticated user from cookie access token."""
+    """Return the signed-in user from the cookie access token."""
     user = get_current_user_or_raise(request, response)
     return MeResponse(user=hydrate_user_from_db(user))

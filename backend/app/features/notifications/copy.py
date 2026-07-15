@@ -6,7 +6,7 @@ from typing import Literal
 
 Portal = Literal["client", "vendor"]
 
-# Kinds whose stored `body` is booking-specific (pricing, quotes, refunds, deadlines) —
+# Kinds whose stored body is booking-specific (pricing, quotes, refunds, deadlines) —
 # keep it in the feed and emails when present.
 _USE_STORED_BODY: frozenset[str] = frozenset(
     {
@@ -30,7 +30,7 @@ _USE_STORED_BODY: frozenset[str] = frozenset(
     }
 )
 
-# When the dashboard already surfaces live booking rows, skip these notification kinds.
+# When the dashboard already shows live booking rows, skip these notification kinds.
 DASHBOARD_DUPLICATE_KINDS: dict[Portal, frozenset[str]] = {
     "vendor": frozenset({"booking_request_received"}),
     "client": frozenset({"vendor_quote_received"}),

@@ -1,4 +1,4 @@
-"""Supabase client, PostgREST helpers, and shared DB utilities."""
+"""Database connection helpers and small query utilities."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ logger = get_logger(__name__)
 _service_client: Client | None = None
 _auth_client: Client | None = None
 
-# In-memory vendor rows for LOCAL_AUTH_MODE
+# Fake vendor rows kept in memory when running without a real database.
 local_vendors: dict[str, dict[str, Any]] = {}
 
 
@@ -32,7 +32,7 @@ def _create_supabase_client() -> Client:
         raise RuntimeError(
             "SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set",
         )
-    # HTTP/2 over a shared httpx pool can raise Errno 35 under concurrent PostgREST calls on macOS.
+    # Avoid HTTP/2 pool glitches under heavy parallel DB calls on some Mac setups.
     httpx_client = httpx.Client(
         http2=False,
         timeout=httpx.Timeout(30.0),
@@ -50,7 +50,7 @@ def _create_supabase_client() -> Client:
 
 
 def get_supabase() -> Client:
-    """Service-role client for DB, Storage, and other backend-only operations."""
+    """Main backend client for the database, file storage, and other server-only work."""
     global _service_client
     if _service_client is None:
         _service_client = _create_supabase_client()
@@ -58,7 +58,7 @@ def get_supabase() -> Client:
 
 
 def get_supabase_auth_client() -> Client:
-    """Isolated client for Supabase Auth flows (sign-in mutates Authorization)."""
+    """Separate client for sign-in / session calls so they don't clash with DB use."""
     global _auth_client
     if _auth_client is None:
         _auth_client = _create_supabase_client()
@@ -70,7 +70,7 @@ def get_db() -> Client:
 
 
 def get_client() -> Client:
-    """Deprecated alias — prefer ``get_db()``."""
+    """Old name for ``get_db()`` — prefer ``get_db()`` in new code."""
     return get_db()
 
 
@@ -81,7 +81,7 @@ def apply_recent_first_order(
     tie_breaker: str = "created_at",
     final_tie_breaker: str = "id",
 ) -> Any:
-    """Apply descending order for list endpoints (most recent first)."""
+    """Sort list queries so the newest items come first."""
     q = q.order(column, desc=True)
     if tie_breaker and tie_breaker != column:
         q = q.order(tie_breaker, desc=True)
@@ -91,7 +91,7 @@ def apply_recent_first_order(
 
 
 def rows(res: Any) -> list[dict[str, Any]]:
-    """Return ``data`` from a PostgREST execute result, or an empty list."""
+    """Turn a query result into a list of row dicts (or ``[]`` if empty)."""
     raw = getattr(res, "data", None)
     if not isinstance(raw, list):
         return []
@@ -99,11 +99,13 @@ def rows(res: Any) -> list[dict[str, Any]]:
 
 
 def one_row(res: Any) -> dict[str, Any] | None:
+    """First row from a query result, or ``None`` if there isn't one."""
     items = rows(res)
     return items[0] if items else None
 
 
 def is_missing_approval_status_column(err: Exception) -> bool:
+    """True when the database hasn't had the vendor approval column added yet."""
     if not isinstance(err, APIError):
         return False
     code = getattr(err, "code", None)
@@ -112,6 +114,7 @@ def is_missing_approval_status_column(err: Exception) -> bool:
 
 
 def is_approval_status_check_violation(err: Exception) -> bool:
+    """True when a vendor approval value isn't one of the allowed options."""
     if not isinstance(err, APIError):
         return False
     code = getattr(err, "code", None)

@@ -1,4 +1,4 @@
-"""Reusable auth + role guards for endpoints."""
+"""Checks that the caller is signed in and has the right account type."""
 
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ def require_role(
     role: UserType,
     forbidden_detail: str,
 ) -> dict[str, Any]:
-    """Return merged user if role matches, else 403."""
+    """Return the signed-in user if the role matches, else 403."""
     user = require_user(request, response)
     if user.get("user_type") != role:
         logger.warning(
@@ -94,7 +94,7 @@ def require_vendor(request: Request, response: Response) -> dict[str, Any]:
 
 
 def require_client(request: Request, response: Response) -> dict[str, Any]:
-    """403 if JWT user_type is not client (e.g. vendor/admin) or account is suspended."""
+    """403 if the signed-in user is not a client (e.g. vendor/admin) or the account is suspended."""
     return require_role(
         request,
         response,

@@ -1,4 +1,4 @@
-"""Users table access."""
+"""Read and write rows in the users table."""
 
 from __future__ import annotations
 

@@ -233,7 +233,7 @@ def get_vendor_booking(
     except ValueError as e:
         raise HTTPException(status_code=400, detail="Invalid booking id.") from e
 
-    # Backstop between hourly cron runs: release an overdue payout before serving detail.
+    # Safety net between hourly runs: pay the vendor if the automatic payout date has passed.
     maybe_auto_release_payout_for_booking(booking_id)
     row = get_booking_request_for_vendor(vendor_id, booking_id)
     if not row:

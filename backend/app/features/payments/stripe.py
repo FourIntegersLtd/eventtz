@@ -1,9 +1,7 @@
-"""Stripe integration primitives: Connect onboarding, Checkout, transfers, refunds.
+"""Talk to Stripe: vendor payout setup, client checkout, paying vendors, and refunds.
 
-Thin wrapper around the Stripe SDK plus the small amount of vendor/booking DB access needed to
-drive it (mirrors the DB-touching style of the other `*_service.py` modules). Higher-level booking
-money orchestration (loading/validating booking rows, writing `payment_status`, notifications)
-lives in `booking_payment_service.py`; this module should stay import-safe from `app.api`.
+Booking status checks and notifications live in bookings/payments.py.
+This file is the Stripe-specific toolkit those booking flows call into.
 """
 
 from __future__ import annotations
@@ -20,7 +18,7 @@ logger = get_logger(__name__)
 
 
 def _stripe() -> Any:
-    """Point the SDK at the current secret key and return it. Cheap; safe to call per-request."""
+    """Set the secret key on the SDK and return it. Cheap to call on every request."""
     stripe.api_key = get_settings().stripe_secret_key
     return stripe
 
@@ -30,7 +28,7 @@ def _to_pence(amount_gbp: float) -> int:
 
 
 def stripe_object_to_dict(obj: Any) -> dict[str, Any]:
-    """Normalize a Stripe SDK object (Event, Session, Account, …) to a plain dict."""
+    """Turn a Stripe SDK object (Event, Session, Account, …) into a plain dict."""
     if obj is None:
         return {}
     if isinstance(obj, dict):
@@ -69,7 +67,7 @@ def _get_user_email(user_id: str) -> str | None:
 
 
 def get_connect_status(vendor_user_id: str) -> dict[str, Any]:
-    """DB-only read of the vendor's Connect state (no Stripe round trip)."""
+    """Read the vendor's Connect state from the database (no Stripe API call)."""
     row = _get_vendor_row(vendor_user_id) or {}
     return {
         "stripe_account_id": row.get("stripe_account_id"),
@@ -79,7 +77,7 @@ def get_connect_status(vendor_user_id: str) -> dict[str, Any]:
 
 
 def _clear_vendor_stripe_connect(vendor_user_id: str) -> None:
-    """Drop a Connect account id that no longer exists on the current Stripe platform/key."""
+    """Remove a Connect account id that no longer exists on the current Stripe account or key."""
     get_client().table("vendors").update(
         {
             "stripe_account_id": None,
@@ -130,10 +128,9 @@ def _create_connect_express_account(vendor_user_id: str, row: dict[str, Any] | N
 
 
 def create_connect_onboarding_link(vendor_user_id: str, return_path: str = "/vendor/onboarding") -> str:
-    """Ensure a Stripe Express account exists for this vendor, then return a hosted onboarding URL.
+    """Create a Stripe Express account for this vendor if needed, then return an onboarding URL.
 
-    `return_path` lets callers bring the vendor back to wherever they started Connect from
-    (onboarding vs. the standalone Payments page) once they finish on Stripe.
+    `return_path` is where the vendor lands after Stripe (onboarding or the Payments page).
     """
     row = _get_vendor_row(vendor_user_id)
     account_id = row.get("stripe_account_id") if row else None
@@ -186,7 +183,7 @@ def create_connect_onboarding_link(vendor_user_id: str, return_path: str = "/ven
 
 
 def sync_connect_account_status(vendor_user_id: str) -> dict[str, Any]:
-    """Refresh charges_enabled/payouts_enabled from Stripe and persist onto `vendors`."""
+    """Fetch charges_enabled and payouts_enabled from Stripe and save them on the vendor row."""
     row = _get_vendor_row(vendor_user_id)
     account_id = row.get("stripe_account_id") if row else None
     if not account_id:
@@ -221,7 +218,7 @@ def sync_connect_account_status(vendor_user_id: str) -> dict[str, Any]:
 
 
 def sync_connect_account_status_by_account_id(account_id: str) -> str | None:
-    """Same as `sync_connect_account_status` but keyed by Stripe account id (for `account.updated` webhooks)."""
+    """Like sync_connect_account_status, but looked up by Stripe account id (for account.updated webhooks)."""
     res = (
         get_client()
         .table("vendors")
@@ -248,8 +245,8 @@ def create_checkout_session(
     client_user_id: str,
     description: str,
 ) -> dict[str, str]:
-    """Create a Checkout Session for the full client total. Funds land in Eventtz's own Stripe
-    balance (no `transfer_data`) — the vendor is paid later via an explicit Transfer."""
+    """Create a Checkout Session for the full client total. Money goes to Eventtz's Stripe
+    balance first — the vendor is paid later via an explicit Transfer."""
     settings = get_settings()
     metadata = {
         "booking_id": booking_id,
@@ -279,9 +276,9 @@ def create_checkout_session(
             "?payment=success&session_id={CHECKOUT_SESSION_ID}"
         ),
         cancel_url=f"{settings.frontend_url}/client/bookings/{booking_id}?payment=cancelled",
-        # No idempotency_key here: creating a Session never moves money, and a deterministic key
-        # would return a stale/expired session on retry. Money movement (Transfer/Refund below)
-        # does use deterministic keys since those calls are irreversible.
+        # Don't reuse a fixed "don't send twice" key here: starting checkout doesn't
+        # take payment, and reusing a key can hand back an old expired link.
+        # Paying the vendor and refunds do use those keys because they can't be undone.
     )
     return {"id": str(session["id"]), "url": str(session["url"])}
 
@@ -321,11 +318,11 @@ def create_transfer(
     amount_gbp: float,
     booking_id: str,
 ) -> str:
-    """Release the vendor's cut from Eventtz's Stripe balance to their connected account.
+    """Pay the vendor from Eventtz's Stripe balance into their connected account.
 
-    Reclaims any existing Transfer for this booking (`transfer_group`) before creating.
-    Idempotency key is bound to amount + destination so a retry after corrected params
-    cannot collide with an earlier burned booking-only key.
+    If we already paid this booking, return that earlier payment id.
+    The "don't send twice" key includes amount and destination so a retry with
+    corrected values does not clash with an earlier attempt.
     """
     existing = find_existing_transfer_id(booking_id)
     if existing:

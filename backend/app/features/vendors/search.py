@@ -1,4 +1,4 @@
-"""Filtered explore search over approved vendors (payload JSON)."""
+"""Search approved vendors with filters (reads profile JSON)."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from typing import Any, Literal
 
 from app.contracts.marketplace_search import MarketplaceSearchResult
 from app.core.logging import get_logger
-from app.core.markets import normalize_country_code
+from app.features.vendors.markets import normalize_country_code
 from app.features.vendors.list_pricing import min_listing_price_gbp
 from app.features.vendors.moderation import list_approved_vendors_for_explore
 from app.features.vendors.search_ai import parse_marketplace_query
@@ -87,7 +87,7 @@ def _vendor_available_for_event_dates(
 ) -> bool:
     """
     Uses onboarding fields: blockedDates (YYYY-MM-DD), availableWeekdays (Mon=0 … Sun=6).
-    If availableWeekdays is empty (legacy data), weekday check is skipped; blocked dates still apply.
+    If availableWeekdays is empty (older profiles), skip the weekday check; blocked dates still apply.
     """
     if not event_dates:
         return True
@@ -208,7 +208,7 @@ def _build_match_notice(
         return None
     base = (intent_summary or "").strip()
     if has_exact and (has_related or has_fallback):
-        return None  # FE shows "Also consider" divider; no scary banner
+        return None  # Frontend shows an "Also consider" divider; no warning banner needed
     if has_related and not has_exact:
         bits = ["No exact matches — showing close options"]
         if base:
@@ -240,12 +240,12 @@ def search_approved_vendors(
     offset: int = 0,
 ) -> MarketplaceSearchResult:
     """
-    Returns approved vendors with optional filters, ordered exact → related → fallback.
+    Return approved vendors with optional filters, ordered exact → related → fallback.
 
-    When the client sends specific event dates and ``flexible`` is false, Exact-tier
-    vendors must be available. Date misses with an otherwise-related profile can still
-    appear in Related. If Exact+Related are empty, Fallback returns same-type (or all)
-    approved vendors so browse is rarely blank.
+    When the client sends specific event dates and ``flexible`` is false, exact matches
+    must be free on those dates. A vendor who fits otherwise but is busy can still appear
+    as a related match. If there are no exact or related matches, fallback returns
+    same-type (or all) approved vendors so browse is rarely empty.
     """
     chip_types = _parse_types_param(types)
     date_parts = _parse_dates_param(dates)
@@ -296,7 +296,7 @@ def search_approved_vendors(
     apply_date_availability = bool(date_parts) and not flexible
     date_softened = False
 
-    # Broad pool for fallback: ignore text/date, keep budget + optional primary/related type.
+    # Fallback pool: ignore text and dates; keep budget and optional service type.
     fallback_type_pool = primary_types or related_types
 
     exact_rows: list[dict[str, Any]] = []
@@ -368,7 +368,7 @@ def search_approved_vendors(
             related_keyword_hits=rel_kw_hits,
             event_type_hits=event_type_hits,
         )
-        # Soft location preference is scoring-only (never hard exclude).
+        # Location only affects ranking — never removes a vendor from results.
         if primary_loc_hit:
             score += 0.5
 
@@ -398,17 +398,17 @@ def search_approved_vendors(
             "_related_loc_hit": related_loc_hit or primary_loc_hit,
         }
 
-        # --- Tier A Exact ---
+        # --- Exact matches ---
         if type_ok_exact and keyword_ok_exact and available:
             exact_rows.append({**out_row, "match_tier": "exact"})
             continue
 
-        # --- Tier B Related ---
+        # --- Related matches ---
         related_ok = False
         if type_ok_related and (keyword_ok_related or related_loc_hit or primary_loc_hit):
             related_ok = True
         if type_ok_exact and not available and apply_date_availability:
-            # Same type/profile but busy on the date → still useful.
+            # Right service but busy on the date — still worth showing.
             related_ok = True
             date_softened = True
         if type_ok_exact and not keyword_ok_exact and (rel_kw_hits > 0 or related_loc_hit):
@@ -442,7 +442,7 @@ def search_approved_vendors(
                 },
             )
 
-        # Absolute last resort: any approved vendor that passed budget.
+        # Last resort: any approved vendor that passed the budget filter.
         if not fallback_rows:
             for cand in candidates_by_id.values():
                 fallback_rows.append(
@@ -462,7 +462,7 @@ def search_approved_vendors(
                 )
 
     enriched = exact_rows + related_rows + fallback_rows
-    # Lazy import: bookings.reviews → bookings.__init__ → calendar → search (cycle).
+    # Import here to avoid a circular import: bookings.reviews → bookings → calendar → search.
     from app.features.bookings.reviews import merge_review_stats_into_vendor_rows
 
     enriched = merge_review_stats_into_vendor_rows(enriched)
@@ -524,7 +524,7 @@ def search_approved_vendors(
     )
 
 
-# Max inclusive span for multi-day events (abuse guard).
+# Maximum number of days in a multi-day event (guards against abuse).
 _MAX_EVENT_SPAN_DAYS = 366
 
 

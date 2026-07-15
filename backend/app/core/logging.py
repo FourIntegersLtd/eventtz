@@ -1,4 +1,4 @@
-"""Process-wide logging: level from settings; format differs dev vs production; rotating file."""
+"""Sets up app logging: how noisy, what format, and rotating log files on disk."""
 
 import logging
 import sys
@@ -19,8 +19,10 @@ def setup_logging() -> None:
     level = getattr(logging, settings.log_level.upper(), logging.INFO)
 
     if settings.is_production:
+        # Live servers: one compact line per event.
         log_format = "%(asctime)s | %(levelname)-8s | %(message)s"
     else:
+        # Local development: spaced-out blocks that are easier to skim.
         log_format = (
             "\n"
             "═══════════════════════════════════════════\n"
@@ -57,5 +59,6 @@ def setup_logging() -> None:
     file_handler.setFormatter(formatter)
     root.addHandler(file_handler)
 
+    # Quiet noisy HTTP libraries so app logs stay readable.
     logging.getLogger("httpx").setLevel(logging.WARNING)
     logging.getLogger("httpcore").setLevel(logging.WARNING)

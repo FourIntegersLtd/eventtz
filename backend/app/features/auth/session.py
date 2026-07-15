@@ -1,4 +1,4 @@
-"""Session cookies and token validation (Supabase + local dev mode)."""
+"""Session cookies and checking sign-in tokens (Supabase or local development)."""
 
 from __future__ import annotations
 
@@ -68,15 +68,15 @@ def _looks_like_jwt(token: str) -> bool:
 
 
 def get_current_user_or_raise(request: Request, response: Response) -> dict[str, Any]:
-    """Validate session cookie and return Supabase auth user dict (before public.users hydrate)."""
+    """Validate session cookie and return the Supabase auth user (before merging public.users)."""
     access_token = request.cookies.get(ACCESS_COOKIE_NAME)
     if not access_token:
-        raise HTTPException(status_code=401, detail="Unauthorized")
+        raise HTTPException(status_code=401, detail="Please sign in to continue.")
 
     if local_auth_store.enabled():
         user = local_auth_store.user_for_access_token(access_token)
         if not user:
-            raise HTTPException(status_code=401, detail="Unauthorized")
+            raise HTTPException(status_code=401, detail="Please sign in to continue.")
         return user
 
     if not _looks_like_jwt(access_token):
@@ -91,4 +91,4 @@ def get_current_user_or_raise(request: Request, response: Response) -> dict[str,
     if result.get("success"):
         return result["user"]
     clear_session_cookies(response)
-    raise HTTPException(status_code=401, detail=result.get("error", "Unauthorized"))
+    raise HTTPException(status_code=401, detail=result.get("error", "Please sign in to continue."))

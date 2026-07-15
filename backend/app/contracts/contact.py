@@ -1,4 +1,4 @@
-"""Contact form API models."""
+"""Shared types for contact form submissions."""
 
 from __future__ import annotations
 

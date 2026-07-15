@@ -1,4 +1,4 @@
-"""Blog CMS request/response models."""
+"""Shared types for blog posts (admin editing and public pages)."""
 
 from __future__ import annotations
 

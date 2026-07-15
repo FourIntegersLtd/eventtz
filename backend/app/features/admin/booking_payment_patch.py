@@ -1,4 +1,4 @@
-"""Admin booking payment field patches."""
+"""Let admins correct payment fields on a booking."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ logger = get_logger(__name__)
 def patch_booking_payment_fields(booking_id: str, fields: dict[str, Any]) -> bool:
     """
     Update Stripe / payment snapshot columns.
-    payment_amount_gbp is always derived from Stripe when a payment intent is provided.
+    payment_amount_gbp is always worked out from Stripe when a payment intent is provided.
     """
     if get_settings().local_auth_mode:
         return False

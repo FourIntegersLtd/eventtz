@@ -1,4 +1,4 @@
-"""Booking and admin email orchestration (in-app notification + Resend)."""
+"""Send booking and admin emails (in-app notification plus Resend)."""
 
 from __future__ import annotations
 
@@ -79,7 +79,7 @@ def dispatch_booking_notification(
     portal: Portal | None = None,
     event_name: str | None = None,
 ) -> None:
-    """Write in-app notification and send participant email when configured."""
+    """Create the in-app notification and send the participant email when email is configured."""
     if mode == "insert_if_absent":
         insert_booking_notification_if_absent(
             user_id=user_id,

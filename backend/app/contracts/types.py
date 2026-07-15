@@ -1,4 +1,4 @@
-"""Shared backend domain enums and lightweight schema aliases."""
+"""Shared backend enums and type aliases."""
 
 from typing import Literal, TypeAlias
 

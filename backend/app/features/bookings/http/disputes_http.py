@@ -1,4 +1,4 @@
-"""Participant dispute handlers — shared by client and vendor booking routes."""
+"""Shared problem-report handlers for client and vendor booking routes."""
 
 from __future__ import annotations
 

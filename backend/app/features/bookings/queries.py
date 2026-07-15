@@ -1,4 +1,4 @@
-"""Booking list/detail queries and enrichment helpers."""
+"""Booking list and detail queries, with pricing and contact details added."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ logger = get_logger(__name__)
 
 
 def _backfill_notes_chat_on_detail(row: dict[str, Any], out: dict[str, Any]) -> None:
-    """If the booking has client notes, ensure they exist in the DM thread."""
+    """If the booking has client notes, make sure they appear in the message thread."""
     notes = out.get("notes")
     if not isinstance(notes, str) or not notes.strip():
         return
@@ -82,7 +82,7 @@ def _normalize_date_str(value: Any) -> str:
 
 
 def _attach_pricing_fields(row: dict[str, Any]) -> None:
-    """Mutates row in place: vendor_adjustments (normalized), pricing breakdown."""
+    """Add vendor_adjustments (normalised) and a pricing breakdown to the row."""
     line_items = row.get("line_items")
     if not isinstance(line_items, list):
         line_items = []

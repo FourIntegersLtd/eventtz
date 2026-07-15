@@ -1,4 +1,4 @@
-"""Allowed vendor service and event-type keys (aligned with frontend onboarding constants)."""
+"""Allowed vendor service and event-type keys (matches the frontend onboarding options)."""
 
 from __future__ import annotations
 

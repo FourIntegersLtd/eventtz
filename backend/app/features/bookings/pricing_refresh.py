@@ -1,4 +1,4 @@
-"""Recompute booking line items and totals from vendor payload + stored event date."""
+"""Recalculate package prices and booking totals from the vendor profile and event date."""
 
 from __future__ import annotations
 
@@ -23,8 +23,8 @@ def refresh_booking_pricing(
     vendor_payload: dict[str, Any],
 ) -> dict[str, Any]:
     """
-    Reconcile auto-discount lines from vendor payload + event_date, rebuild breakdown.
-    Raises ValueError when pricing is invalid for payment.
+    Update automatic discount lines from the vendor profile and event date, then rebuild totals.
+    Raises ValueError when pricing is not valid for payment.
     """
     line_items = row.get("line_items")
     if not isinstance(line_items, list):

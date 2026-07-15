@@ -1,4 +1,4 @@
-"""Admin team listing, invites, and Supabase role sync."""
+"""Admin team listing, invites, and keeping Supabase roles in sync."""
 
 from __future__ import annotations
 

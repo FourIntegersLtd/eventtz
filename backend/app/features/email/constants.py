@@ -1,4 +1,4 @@
-"""Email defaults — only RESEND_API_KEY comes from env."""
+"""Email defaults — only RESEND_API_KEY is read from the environment."""
 
 from __future__ import annotations
 
@@ -13,13 +13,13 @@ ADMIN_NOTIFY_RECIPIENTS: tuple[str, ...] = (
 
 APP_NAME = "Eventtz"
 
-# Public site shown in emails (always production, not FRONTEND_URL / localhost).
+# Always use the production site in emails, not FRONTEND_URL or localhost.
 EMAIL_PUBLIC_WEBSITE = "https://eventtz.com"
 EMAIL_PUBLIC_WEBSITE_LABEL = "eventtz.com"
 EMAIL_PRIVACY_URL = "https://eventtz.com/compliances/privacy-policy"
 EMAIL_TERMS_URL = "https://eventtz.com/compliances/terms-of-service"
 
-# Hosted on S3 for reliable loading in email clients (not tied to FRONTEND_URL).
+# Images hosted on S3 so they load reliably in email clients (not tied to FRONTEND_URL).
 EMAIL_IMAGE_BASE = "https://osceguide.s3.eu-west-2.amazonaws.com/Four+Integers+Ltd/eventtz"
 EMAIL_IMAGES: dict[str, str] = {
     "logo": f"{EMAIL_IMAGE_BASE}/eventtz-logo.png",
@@ -32,7 +32,7 @@ EMAIL_IMAGES: dict[str, str] = {
     "quote": f"{EMAIL_IMAGE_BASE}/quote.png",
 }
 
-# Kinds that should dedupe email sends per (template, booking, user).
+# Booking email kinds we only send once per person per booking.
 EMAIL_DEDUPE_KINDS: frozenset[str] = frozenset(
     {
         "booking_completed",

@@ -1,4 +1,4 @@
-"""Shared Eventtz email branding tokens and asset URLs."""
+"""Shared Eventtz email branding colours and asset URLs."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from app.features.email.constants import (
     EMAIL_TERMS_URL,
 )
 
-# Match frontend `globals.css` / landing page.
+# Colours match frontend globals.css and the landing page.
 PRIMARY = "#3E1964"
 PRIMARY_SOFT = "#f4f0f8"
 PAGE_BG = "#ffffff"
@@ -60,7 +60,7 @@ def base_email_context(**extra: object) -> dict[str, object]:
 
 
 def transactional_email_context(**extra: object) -> dict[str, object]:
-    """Shared shell for booking + admin transactional emails."""
+    """Shared layout fields for booking and admin emails."""
     return base_email_context(**extra)
 
 

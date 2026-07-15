@@ -1,9 +1,11 @@
-"""Pure helpers for the post-event completion window.
+"""When the vendor gets paid after the event.
 
-Payout releases either when both parties confirm (payments.py) or automatically
-BOOKING_PAYOUT_AUTO_RELEASE_HOURS_AFTER_EVENT hours after the end of the event
-day, provided the client has paid and no dispute is open. Kept free of DB/Stripe
-imports so both payments.py and queries.py can use it without cycles.
+The vendor is paid when both parties confirm completion (see payments.py), or
+automatically BOOKING_PAYOUT_AUTO_RELEASE_HOURS_AFTER_EVENT hours after the
+event ends, if the client has paid and no problem report is open.
+
+No database or Stripe imports here — payments.py and queries.py both use these
+functions without pulling each other in at import time.
 """
 
 from __future__ import annotations

@@ -20,7 +20,7 @@ def search_directory_users_for_admin(
     kinds: list[DirectoryKind] | None = None,
     limit: int = 20,
 ) -> list[dict[str, Any]]:
-    """Server-side typeahead across client and/or vendor accounts (email ilike)."""
+    """Search client and/or vendor accounts by email as the user types."""
     term = (q or "").strip()
     if len(term) < 1:
         return []

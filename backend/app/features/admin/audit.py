@@ -1,4 +1,4 @@
-"""Append-only admin audit log (service role)."""
+"""Write-only admin audit log (uses full database access)."""
 
 from __future__ import annotations
 
@@ -87,7 +87,7 @@ def list_admin_audit_log(
     if get_settings().local_auth_mode:
         return [], 0
     cat = (category or "all").strip().lower()
-    # Prefix filters mirror frontend auditFormatters CATEGORY_BY_ACTION.
+    # Category filters match the frontend auditFormatters CATEGORY_BY_ACTION.
     category_prefixes: dict[str, tuple[str, ...]] = {
         "bookings": ("booking.",),
         "clients": ("client.",),
@@ -105,7 +105,7 @@ def list_admin_audit_log(
         )
         prefixes = category_prefixes.get(cat)
         if prefixes:
-            # PostgREST or_ filter: action.like.booking.*,action.like.client.*
+            # Filter by action prefix, e.g. action.like.booking.*,action.like.client.*
             or_parts = [f"action.like.{p}%" for p in prefixes]
             q = q.or_(",".join(or_parts))
         elif cat not in ("", "all"):

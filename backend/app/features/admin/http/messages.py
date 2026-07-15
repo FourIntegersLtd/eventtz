@@ -1,4 +1,4 @@
-"""Admin support messaging: compose fan-out + support inbox."""
+"""Admin support messaging: send to many recipients and manage the support inbox."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Persist vendor profile (vendors table — JSON payload; files via Storage later)."""
+"""HTTP routes to load and save the vendor profile (JSON in the database; files via Storage later)."""
 
 from fastapi import APIRouter, Query, Request, Response
 

@@ -1,4 +1,4 @@
-"""Chat handler functions — shared by ``/api/v1/chat`` routes."""
+"""Chat handler functions — shared by the /api/v1/chat routes."""
 
 from __future__ import annotations
 
@@ -105,7 +105,7 @@ def post_message(user: dict[str, Any], conversation_id: str, body: MessageCreate
         if peer:
             notify_user(peer, "chat_unread_changed")
     elif kind == "support":
-        # Fan-out to admin accounts so the Messages inbox refreshes live.
+        # Notify admin accounts so the Messages inbox refreshes live.
         try:
             from app.features.admin.team_ops import list_admin_team
 

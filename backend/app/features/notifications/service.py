@@ -1,4 +1,4 @@
-"""In-app booking notifications for clients (email can be layered on later)."""
+"""In-app booking notifications for clients (email can be added later)."""
 
 from __future__ import annotations
 
@@ -42,7 +42,7 @@ def insert_booking_notification_if_absent(
     booking_id: str,
     kind: BookingNotifyKind,
 ) -> None:
-    """Idempotent: one row per (booking_id, kind). Skips in local_auth_mode."""
+    """Safe to call again: one row per (booking_id, kind). Skips in local_auth_mode."""
     if get_settings().local_auth_mode:
         return
     try:
@@ -85,7 +85,7 @@ def upsert_booking_notification(
     body: str | None = None,
 ) -> None:
     """
-    Replace the notification row for (booking_id, kind): new body and unread state.
+    Replace the notification row for (booking_id, kind) with a new body and unread state.
     """
     if get_settings().local_auth_mode:
         return

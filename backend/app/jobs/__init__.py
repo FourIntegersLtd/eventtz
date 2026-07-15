@@ -1,1 +1,1 @@
-"""One-shot CLI jobs for Railway cron and ops scripts."""
+"""Scheduled and one-off command-line tasks for Railway cron and operations."""

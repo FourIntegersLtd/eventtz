@@ -1,4 +1,4 @@
-"""Email delivery log for dedupe on retryable booking lifecycle sends."""
+"""Record sent emails so booking notifications are not sent twice on retry."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ def claim_email_delivery(
     recipient_user_id: str,
     booking_id: str,
 ) -> bool:
-    """Insert a delivery-log row; return False on unique conflict (already sent)."""
+    """Log a send attempt; return False if this email was already logged for this booking."""
     if get_settings().local_auth_mode:
         return False
     try:
@@ -65,7 +65,7 @@ def claim_booking_email_send(
     recipient_user_id: str,
     booking_id: str,
 ) -> bool:
-    """Return True when the send should proceed; False when already logged (dedupe)."""
+    """Return True if we should send; False if we already sent this booking email to this person."""
     if get_settings().local_auth_mode:
         return False
     if not should_dedupe_booking_kind(kind):
@@ -79,7 +79,7 @@ def claim_booking_email_send(
 
 
 def claim_admin_payout_stuck_email(*, booking_id: str, vendor_user_id: str) -> bool:
-    """One ops alert per booking (vendor_user_id keys the unique delivery-log index)."""
+    """At most one ops alert per booking (vendor_user_id is part of the unique log key)."""
     if not vendor_user_id:
         return True
     return claim_email_delivery(

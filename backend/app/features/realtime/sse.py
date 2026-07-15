@@ -1,8 +1,8 @@
-"""In-process SSE broadcaster for live UI refresh signals.
+"""In-process live-update broadcaster for the UI.
 
-This is intentionally lightweight: we don't stream DB rows to the browser. We only emit
-small events (e.g. 'chat_unread_changed') and the frontend refetches via existing
-authenticated endpoints.
+We do not stream database rows to the browser. We only send small events
+(e.g. 'chat_unread_changed') and the frontend refetches via existing
+signed-in endpoints.
 """
 
 from __future__ import annotations
@@ -43,14 +43,14 @@ def unregister_user_queue(user_id: str, q: asyncio.Queue[RealtimeEvent]) -> None
 
 
 def notify_user(user_id: str, event: str, data: dict | None = None) -> None:
-    """Thread-safe emit to all connected SSE clients for a user."""
+    """Thread-safe push to all connected live-update clients for a user."""
     qs = _queues_by_user.get(user_id)
     if not qs:
         return
     payload = RealtimeEvent(event=event, data=data or {})
     loop = _loop
     if loop is None:
-        # No active SSE loop registered yet; nothing to do.
+        # No active live-update loop registered yet; nothing to do.
         return
 
     for q in list(qs):

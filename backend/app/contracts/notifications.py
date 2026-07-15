@@ -1,4 +1,4 @@
-"""Unified updates feed models for dashboards (client + vendor)."""
+"""Shared types for the updates feed on client and vendor dashboards."""
 
 from __future__ import annotations
 
@@ -17,14 +17,14 @@ class NotificationFeedItem(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     body: str | None = Field(default=None, max_length=2000)
 
-    # For booking_update items, this identifies the booking_notifications row.
+    # For booking_update items, the id of the booking_notifications row.
     notification_id: str | None = None
     booking_id: str | None = None
 
-    # Optional deep link
+    # Optional link to open in the app.
     href: str | None = None
 
-    # Optional "unread" semantics (not always meaningful for every item)
+    # Whether the item counts as unread (not used for every item type).
     unread: bool | None = None
 
 

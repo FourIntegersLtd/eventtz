@@ -1,11 +1,11 @@
 """
-FastAPI dependency injection ("Depends").
+Per-request wiring for auth routes.
 
-`SupabaseAuthServiceDep` → one dependency: build `SupabaseAuthService` using a
-dedicated auth Supabase client (not the service-role singleton used for Storage).
+`SupabaseAuthServiceDep` builds a `SupabaseAuthService` using a dedicated
+auth-only Supabase client (not the full-access client used for storage).
 
-You only need a separate `get_supabase_client` dependency if a route must use
-the raw Supabase `Client` without going through a service.
+Add a separate `get_supabase_client` helper only when a route needs the raw
+Supabase `Client` without going through a service.
 """
 
 from typing import Annotated, Any
@@ -18,7 +18,7 @@ from app.core.db import get_supabase_auth_client
 
 
 def get_supabase_auth_service() -> SupabaseAuthService:
-    """Auth service for this request, backed by the auth-only Supabase client."""
+    """Auth service for this request, using the auth-only Supabase client."""
     return SupabaseAuthService(get_supabase_auth_client())
 
 

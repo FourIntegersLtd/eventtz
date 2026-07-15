@@ -1,4 +1,4 @@
-"""Booking notification side-effects and copy helpers."""
+"""Booking notification emails and live-update signals."""
 
 from __future__ import annotations
 
@@ -10,8 +10,8 @@ from app.features.realtime.sse import notify_user
 
 def _notify_booking_changed(*, client_user_id: str | None, vendor_user_id: str | None) -> None:
     """
-    Emit the lightweight SSE signal that booking state changed.
-    Keep this in the service layer so endpoints can't accidentally miss counterpart updates.
+    Tell both users that the booking changed (live update in the app).
+    Kept here so every code path that changes a booking notifies both parties.
     """
     if get_settings().local_auth_mode:
         return
@@ -29,7 +29,7 @@ def _client_booking_pricing_explanation_body(
     total_label: str,
     adjustments: list[dict[str, Any]],
 ) -> str:
-    """Notification copy: lead line, pricing breakdown, optional adjustments."""
+    """Notification text: opening line, pricing breakdown, and any extra costs or discounts."""
     paragraphs = [
         lead_sentence.strip(),
         (

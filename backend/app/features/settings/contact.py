@@ -23,7 +23,7 @@ _DEFAULT_PREFS = {
     "share_address": True,
 }
 
-# Cached after first PostgREST 42703 — avoids log spam when migration 028 is not applied yet.
+# Remember after the first missing-column error — avoids log spam until migration 028 is applied.
 _contact_prefs_columns_ok: bool | None = None
 
 
@@ -165,8 +165,8 @@ def apply_counterparty_contact_visibility(
     detail: dict[str, Any],
 ) -> dict[str, Any]:
     """
-    Mask counterparty contact fields (email/phone) until the client has paid,
-    then honour sharing prefs. Booking event venue is never masked — vendors
+    Hide counterparty contact fields (email/phone) until the client has paid,
+    then apply sharing preferences. Booking event venue is never hidden — vendors
     need it to decide whether to accept. viewer_role: 'vendor' (viewing
     client) or 'client' (viewing vendor).
     """

@@ -103,7 +103,7 @@ def list_clients_for_admin(
 
 
 def list_client_user_ids_for_broadcast() -> list[str]:
-    """All client user IDs — for admin message fan-out (not paginated directory UI)."""
+    """All client user IDs — for sending one support message per client (not the paginated directory UI)."""
     if get_settings().local_auth_mode:
         return []
     try:

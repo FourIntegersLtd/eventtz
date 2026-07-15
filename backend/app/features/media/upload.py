@@ -1,3 +1,5 @@
+"""Save uploaded images and files to storage and return a public link."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -35,7 +37,7 @@ async def _upload_user_object(
     error_hint: str,
 ) -> UploadedImage:
     if not user_id:
-        raise ForbiddenError("Not authenticated.")
+        raise ForbiddenError("Please sign in to upload.")
 
     content_type = (file.content_type or "").strip().lower()
     if not any(content_type.startswith(p) for p in allowed_prefixes):
@@ -46,7 +48,7 @@ async def _upload_user_object(
 
     raw = await file.read()
     if not raw:
-        raise ValidationError("Empty upload.")
+        raise ValidationError("That file looks empty. Choose another file and try again.")
     if max_bytes is not None and len(raw) > max_bytes:
         mb = max(1, round(max_bytes / 1_000_000))
         raise PayloadTooLargeError(f"File is too large (max {mb}MB).")
@@ -103,7 +105,7 @@ async def upload_user_image(*, user_id: str, file: UploadFile) -> UploadedImage:
 
 
 async def upload_user_file(*, user_id: str, file: UploadFile) -> UploadedImage:
-    """Generalised upload for portfolio videos and profile documents/certificates."""
+    """General upload for portfolio videos and profile documents or certificates."""
     settings = get_settings()
     return await _upload_user_object(
         user_id=user_id,

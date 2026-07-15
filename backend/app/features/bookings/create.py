@@ -84,10 +84,11 @@ def ensure_client_booking_notes_in_chat(
     conversation_id: str | None = None,
 ) -> str | None:
     """
-    Ensure client booking notes exist as the first DM in the client↔vendor thread,
-    and that booking_requests.conversation_id points at that thread.
+    Put the client's booking notes into the chat thread as the first message,
+    and link the booking to that thread.
 
-    Safe to call repeatedly (create + detail backfill). Returns conversation id or None.
+    Safe to call more than once (e.g. when creating or opening the booking).
+    Returns the conversation id, or None if none was set up.
     """
     text = (notes or "").strip()
     existing_cid = (conversation_id or "").strip() or None
@@ -146,7 +147,7 @@ def _post_client_booking_notes_to_chat(
     vendor_user_id: str,
     notes: str | None,
 ) -> str | None:
-    """Create path helper — delegates to ensure_client_booking_notes_in_chat."""
+    """Called when creating a booking — see ensure_client_booking_notes_in_chat."""
     return ensure_client_booking_notes_in_chat(
         booking_id=booking_id,
         client_user_id=client_user_id,

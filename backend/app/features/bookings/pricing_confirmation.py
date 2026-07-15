@@ -1,4 +1,4 @@
-"""Helpers for client price confirmation on updated booking requests."""
+"""When the client must accept a new price on a pending booking."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ def normalize_vendor_adjustments_list(raw: Any) -> list[dict[str, Any]]:
 
 
 def client_price_confirmation_required(row: dict[str, Any]) -> bool:
-    """True when a client-initiated pending booking has vendor price changes awaiting client OK."""
+    """True when a client-initiated pending booking has vendor price changes waiting for the client."""
     if str(row.get("status", "")) != "pending":
         return False
     initiator = row.get("initiator")

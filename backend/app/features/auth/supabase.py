@@ -1,4 +1,4 @@
-"""Supabase Auth helpers."""
+"""Sign-in and session helpers for Supabase Auth."""
 
 from typing import Any
 
@@ -47,7 +47,7 @@ class SupabaseAuthService:
             session = response.session
             if not user:
                 logger.warning("sign_up finished without user email=%s", email)
-                return {"success": False, "error": "No user returned"}
+                return {"success": False, "error": "We couldn't create your account. Please try again."}
             if session:
                 logger.info(
                     "sign_up success email=%s user_id=%s has_session=true",
@@ -76,16 +76,21 @@ class SupabaseAuthService:
                 return {
                     "success": False,
                     "error": (
-                        "An account with this email already exists in Supabase Auth. "
-                        "Sign in instead, or delete the user under Authentication → Users "
-                        "if you are resetting a dev database."
+                        "An account with this email already exists. "
+                        "Try signing in instead, or contact support if you need help."
                     ),
                 }
             logger.info("sign_up rejected email=%s error=%s", email, e)
-            return {"success": False, "error": str(e)}
+            return {
+                "success": False,
+                "error": "We couldn't create your account. Please try again.",
+            }
         except Exception as e:
             logger.exception("sign_up failed email=%s", email)
-            return {"success": False, "error": str(e)}
+            return {
+                "success": False,
+                "error": "We couldn't create your account. Please try again.",
+            }
 
     def sign_in_with_password(self, email: str, password: str) -> dict[str, Any]:
         logger.info("sign_in started email=%s", email)
@@ -97,7 +102,7 @@ class SupabaseAuthService:
             session = response.session
             if not session or not user:
                 logger.warning("sign_in failed email=%s (no session or user)", email)
-                return {"success": False, "error": "Invalid credentials"}
+                return {"success": False, "error": "We couldn't sign you in with those details. Check your email and password, then try again."}
             logger.info("sign_in success email=%s user_id=%s", email, user.id)
             return {
                 "success": True,
@@ -108,12 +113,18 @@ class SupabaseAuthService:
             err = str(e).lower()
             if "invalid login credentials" in err or "invalid credentials" in err:
                 logger.info("sign_in rejected email=%s (invalid credentials)", email)
-                return {"success": False, "error": "Invalid credentials"}
+                return {"success": False, "error": "We couldn't sign you in with those details. Check your email and password, then try again."}
             logger.info("sign_in rejected email=%s error=%s", email, e)
-            return {"success": False, "error": str(e)}
+            return {
+                "success": False,
+                "error": "We couldn't sign you in right now. Please try again.",
+            }
         except Exception as e:
             logger.exception("sign_in failed email=%s", email)
-            return {"success": False, "error": str(e)}
+            return {
+                "success": False,
+                "error": "We couldn't sign you in right now. Please try again.",
+            }
 
     def sign_out(self) -> dict[str, Any]:
         logger.info("sign_out started")
@@ -123,7 +134,10 @@ class SupabaseAuthService:
             return {"success": True}
         except Exception as e:
             logger.exception("sign_out failed")
-            return {"success": False, "error": str(e)}
+            return {
+                "success": False,
+                "error": "We couldn't sign you out. Please try again.",
+            }
 
     def refresh_session(self, refresh_token: str) -> dict[str, Any]:
         logger.info("refresh_session started")
@@ -133,7 +147,7 @@ class SupabaseAuthService:
             session = response.session
             if not session or not user:
                 logger.warning("refresh_session failed (no session or user)")
-                return {"success": False, "error": "Refresh failed"}
+                return {"success": False, "error": "Your session has expired. Please sign in again."}
             logger.info("refresh_session success user_id=%s", user.id)
             return {
                 "success": True,
@@ -142,10 +156,13 @@ class SupabaseAuthService:
             }
         except AuthApiError as e:
             logger.debug("refresh_session rejected token: %s", e)
-            return {"success": False, "error": "Refresh failed"}
+            return {"success": False, "error": "Your session has expired. Please sign in again."}
         except Exception as e:
             logger.exception("refresh_session failed")
-            return {"success": False, "error": str(e)}
+            return {
+                "success": False,
+                "error": "Your session has expired. Please sign in again.",
+            }
 
     def get_user_from_access_token(self, access_token: str) -> dict[str, Any]:
         try:
@@ -153,12 +170,12 @@ class SupabaseAuthService:
             user = response.user
             if not user:
                 logger.warning("get_user_from_access_token failed (no user)")
-                return {"success": False, "error": "Unauthorized"}
+                return {"success": False, "error": "Please sign in to continue."}
             return {"success": True, "user": _user_info(user)}
         except AuthApiError as e:
-            # Expired / revoked session (e.g. after sign-out), malformed JWT — routine, not server bugs.
+            # Expired or revoked session (e.g. after sign-out), bad token — routine, not server bugs.
             logger.debug("get_user_from_access_token rejected token: %s", e)
-            return {"success": False, "error": "Unauthorized"}
+            return {"success": False, "error": "Please sign in to continue."}
         except Exception:
             logger.exception("get_user_from_access_token failed")
-            return {"success": False, "error": "Unauthorized"}
+            return {"success": False, "error": "Please sign in to continue."}

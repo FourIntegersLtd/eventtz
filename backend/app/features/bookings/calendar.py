@@ -1,4 +1,4 @@
-"""Vendor calendar availability and chat eligibility."""
+"""Vendor calendar checks and whether a vendor may start a chat with a client."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ BOOKING_CAPACITY_DB_MARKER = "vendor_daily_capacity_exceeded"
 
 
 def booking_capacity_error_from_db(exc: BaseException) -> ValueError | None:
-    """Map Postgres trigger rejection to a client-safe booking error."""
+    """Turn a Postgres capacity rejection into a message the client can understand."""
     msg = str(exc)
     if BOOKING_CAPACITY_DB_MARKER not in msg:
         return None
@@ -65,7 +65,7 @@ def _enforce_vendor_calendar(
     event_date: date,
     event_end_date: date | None,
 ) -> None:
-    """Blocked dates + available weekdays from vendor onboarding (same rules as explore search)."""
+    """Blocked dates and available weekdays from vendor onboarding (same rules as explore search)."""
     if get_settings().local_auth_mode:
         return
     payload = get_approved_vendor_payload(vendor_user_id)

@@ -1,4 +1,4 @@
-"""Persist contact form submissions and alert admins."""
+"""Save contact form submissions and notify admins."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ def submit_contact_message(
     booking_id: str | None = None,
 ) -> dict[str, Any]:
     if get_settings().local_auth_mode:
-        raise ValueError("Contact form is not available in local auth mode.")
+        raise ValueError("Contact form isn't available in this environment.")
 
     body = message.strip()
     if len(body) < 10:
@@ -34,14 +34,14 @@ def submit_contact_message(
 
     subj = subject.strip().lower()
     if subj not in CONTACT_SUBJECT_LABELS:
-        raise ValueError("Invalid subject.")
+        raise ValueError("Please choose a valid topic.")
 
     resolved_booking_id: str | None = None
     if booking_id and booking_id.strip():
         try:
             uuid.UUID(booking_id.strip())
         except ValueError as e:
-            raise ValueError("Invalid booking id.") from e
+            raise ValueError("That booking reference doesn't look right.") from e
         resolved_booking_id = booking_id.strip()
         row = (
             get_client()
@@ -62,7 +62,7 @@ def submit_contact_message(
         if portal == "vendor" and vid != user_id:
             raise ValueError("That booking is not on your account.")
     elif subj in _BOOKING_SUBJECTS:
-        raise ValueError("Please include the booking id for this subject.")
+        raise ValueError("Please include your booking reference for this topic.")
 
     label = CONTACT_SUBJECT_LABELS[subj]
     insert_res = (

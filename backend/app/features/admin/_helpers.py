@@ -1,4 +1,4 @@
-"""Shared helpers for admin service modules."""
+"""Shared helpers used by admin features."""
 
 from __future__ import annotations
 

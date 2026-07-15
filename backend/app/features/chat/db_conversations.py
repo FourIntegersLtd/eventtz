@@ -1,4 +1,4 @@
-"""Conversations table access."""
+"""Read and write conversation rows."""
 
 from __future__ import annotations
 

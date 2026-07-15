@@ -1,4 +1,4 @@
-"""LLM parsing of natural-language marketplace search queries."""
+"""Turn plain-language search text into keywords, location, and service filters."""
 
 from __future__ import annotations
 
@@ -10,8 +10,8 @@ from app.contracts.marketplace_search import MarketplaceQueryParseResult
 from app.core.config import get_settings
 from app.core.constants import OPENAI_SEARCH_MODEL
 from app.core.logging import get_logger
-from app.core.markets import get_market, normalize_country_code
-from app.core.vendor_taxonomy import (
+from app.features.vendors.markets import get_market, normalize_country_code
+from app.features.vendors.taxonomy import (
     VENDOR_EVENT_TYPE_KEYS,
     VENDOR_SERVICE_KEYS,
     filter_event_type_keys,
@@ -23,7 +23,7 @@ logger = get_logger(__name__)
 
 _PARSE_CACHE: dict[str, tuple[float, MarketplaceQueryParseResult]] = {}
 
-# Offline synonym → primary service key (when OpenAI is unavailable).
+# Static synonym map when OpenAI is unavailable.
 _KEYWORD_TO_TYPE: dict[str, str] = {
     "baker": "baking",
     "bakers": "baking",
@@ -72,7 +72,7 @@ def _dedupe_strs(items: list[str], *, limit: int) -> list[str]:
 
 
 def _fallback_parse(raw_q: str) -> MarketplaceQueryParseResult:
-    """Keyword split + static synonym map when the LLM is unavailable."""
+    """Split the query into words and map synonyms when OpenAI is unavailable."""
     normalized = _normalize_query(raw_q)
     if not normalized:
         return MarketplaceQueryParseResult()
@@ -120,7 +120,7 @@ def _sanitize_parse_result(data: dict[str, Any]) -> MarketplaceQueryParseResult:
     related_types = filter_service_keys(
         data.get("related_types") if isinstance(data.get("related_types"), list) else [],
     )
-    # Keep related types that are not already primary.
+    # Drop related types that duplicate a primary type.
     related_types = [t for t in related_types if t not in types]
 
     event_types = filter_event_type_keys(
@@ -264,7 +264,7 @@ def parse_marketplace_query(
     *,
     country_code: str | None = None,
 ) -> MarketplaceQueryParseResult:
-    """Parse free-text search into keywords, location, and taxonomy filters."""
+    """Parse free-text search into keywords, location, and allowed service/event filters."""
     normalized = _normalize_query(raw_q)
     if not normalized:
         return MarketplaceQueryParseResult()

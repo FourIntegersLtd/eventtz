@@ -1,4 +1,4 @@
-"""Public and client booking review models."""
+"""Shared types for booking reviews (public pages and signed-in users)."""
 
 from __future__ import annotations
 

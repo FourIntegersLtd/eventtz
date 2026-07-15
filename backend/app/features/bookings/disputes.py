@@ -1,4 +1,4 @@
-"""Disputes: participants (client/vendor on booking) can open and view cases."""
+"""Problem reports: clients and vendors on a booking can open and view cases."""
 
 from __future__ import annotations
 
@@ -48,7 +48,7 @@ def _lookup_conversation_id_for_pair(client_uid: str, vendor_uid: str) -> str | 
 
 
 def _resolve_conversation_id_for_dispute(booking: dict[str, Any]) -> str | None:
-    """Prefer booking.conversation_id (e.g. quote from chat); else lookup by pair."""
+    """Use booking.conversation_id when set (e.g. quote sent from chat); otherwise look up by pair."""
     raw = booking.get("conversation_id")
     if raw is not None and str(raw).strip():
         return str(raw)
@@ -137,7 +137,7 @@ _BOOKING_PARTY_SELECT = (
 
 
 def _index_booking_rows(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
-    """Index bookings by raw and normalized id so lookups survive UUID formatting differences."""
+    """Index bookings by raw and normalised id so lookups work regardless of UUID formatting."""
     out: dict[str, dict[str, Any]] = {}
     for b in rows:
         if not isinstance(b, dict) or not b.get("id"):

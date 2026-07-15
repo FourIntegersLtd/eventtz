@@ -1,4 +1,4 @@
-"""Booking request API models."""
+"""Shared types for booking requests, quotes, and status changes."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ class BookingLineItemIn(BaseModel):
             s = v.strip()
             if s:
                 return s
-        raise ValueError("heading cannot be empty")
+        raise ValueError("Give this package a name.")
 
     @field_validator("description", mode="before")
     @classmethod
@@ -70,7 +70,7 @@ class BookingLineItemIn(BaseModel):
         if v is None:
             return None
         if v < 0 or v > 1_000_000:
-            raise ValueError("unit_price_gbp out of allowed range")
+            raise ValueError("Enter a price between £0 and £1,000,000.")
         return v
 
 
@@ -242,7 +242,7 @@ class PutVendorBookingAdjustmentsResponse(BaseModel):
 
 
 class VendorBookingStatusBody(BaseModel):
-    #: Completion is a separate mutual-confirmation flow (see confirm-completion endpoints).
+    #: Marking complete is a separate step where both parties must confirm (see confirm-completion routes).
     status: Literal["accepted", "declined", "cancelled"]
 
 

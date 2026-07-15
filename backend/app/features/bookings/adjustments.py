@@ -1,4 +1,4 @@
-"""Vendor pricing adjustments on pending bookings."""
+"""Let vendors add extras or discounts on a booking before it is accepted."""
 
 from __future__ import annotations
 
@@ -59,7 +59,7 @@ def put_vendor_booking_adjustments(
     booking_id: str,
     adjustments_in: list[dict[str, Any]],
 ) -> dict[str, Any] | None:
-    """Replace vendor adjustments while booking is pending (before accept)."""
+    """Replace the vendor's extra costs and discounts while the booking is still pending."""
     if get_settings().local_auth_mode:
         return None
 

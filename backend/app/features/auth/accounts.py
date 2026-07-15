@@ -1,4 +1,4 @@
-"""App user helpers: optional public.users sync + JWT-based role for /me (no required DB round-trip)."""
+"""User account helpers: optionally sync to public.users; read role from the sign-in token for /me without an extra database trip."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ _VALID_USER_TYPES = frozenset({"client", "vendor", "admin"})
 
 
 def resolve_admin_role(profile: dict[str, Any] | None, email: str | None = None) -> str | None:
-    """Effective admin_role for an admin user."""
+    """Which admin_role applies for this admin user."""
     if profile and profile.get("user_type") != "admin":
         return None
     if profile:
@@ -40,10 +40,10 @@ def is_super_admin_user(user: dict[str, Any]) -> bool:
 
 
 def user_type_from_auth_metadatas(user: dict[str, Any]) -> str | None:
-    """Role from Supabase Auth JWT metadata.
+    """Role from the sign-in token's metadata.
 
     Prefer app_metadata over user_metadata so staff-set roles (app_metadata only)
-    win over signup user_metadata, and match Supabase's server-controlled claims.
+    win over signup user_metadata, matching what Supabase stores server-side.
     """
     for key in ("app_metadata", "user_metadata"):
         meta = user.get(key)
@@ -55,7 +55,7 @@ def user_type_from_auth_metadatas(user: dict[str, Any]) -> str | None:
 
 
 def upsert_user_profile(user_id: str, email: str | None, user_type: UserType | str) -> None:
-    """Optional: mirror role into public.users for SQL joins (explore/admin). Never raises."""
+    """Optional: copy role into public.users for database joins (explore/admin). Never raises."""
     if get_settings().local_auth_mode:
         return
     if user_type not in ("client", "vendor", "admin"):
@@ -113,11 +113,11 @@ def fetch_user_profile_by_email(email: str) -> dict[str, Any] | None:
 
 def hydrate_user_from_db(auth_user: dict[str, Any]) -> dict[str, Any]:
     """
-    Build the API-facing user dict: start from Supabase Auth (JWT/session), then overlay
+    Build the API user dict: start from the signed-in Supabase user, then fill in
     fields from public.users when available.
 
-    - user_type: JWT metadata by default; public.users wins when set to admin (staff promotion
-      may update the DB before Supabase app_metadata is synced).
+    - user_type: token metadata by default; public.users wins when set to admin (staff
+      promotion may update the database before Supabase app_metadata catches up).
     - account_suspended, admin_role: from public.users for admin accounts.
     """
     uid = auth_user.get("id")

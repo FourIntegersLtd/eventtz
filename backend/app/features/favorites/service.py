@@ -1,4 +1,4 @@
-"""Client saved vendors (favorites)."""
+"""Saved vendors for clients (favourites)."""
 
 from __future__ import annotations
 
@@ -71,7 +71,7 @@ def remove_saved_vendor(*, client_user_id: str, vendor_user_id: str) -> bool:
 
 
 def merge_saved_vendors(*, client_user_id: str, vendor_user_ids: list[str]) -> int:
-    """Union local IDs into server favorites. Returns count merged."""
+    """Merge local IDs into server favourites. Returns how many were added."""
     if get_settings().local_auth_mode or not vendor_user_ids:
         return 0
     merged = 0

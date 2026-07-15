@@ -1,4 +1,4 @@
-"""Server-Sent Events stream for live UI refresh signals."""
+"""Live update stream so dashboards refresh without a full page reload."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Client-facing vendor explore listing (approved vendors only)."""
+"""Approved vendors for client explore and search."""
 
 import uuid
 
@@ -20,7 +20,7 @@ from app.features.vendors.moderation import (
     get_approved_vendor_for_explore_by_id,
     list_approved_vendors_for_explore,
 )
-from app.core.markets import normalize_country_code
+from app.features.vendors.markets import normalize_country_code
 
 from app.features.vendors.search import search_approved_vendors
 
@@ -51,11 +51,11 @@ def get_explore_vendors(
 
 @router.get("/explore/vendor/{vendor_user_id}", response_model=ExploreVendorSingleResponse)
 def get_explore_vendor_by_id(vendor_user_id: str) -> ExploreVendorSingleResponse:
-    """Single approved vendor for client browse detail (direct lookup)."""
+    """One approved vendor for the client browse detail page (direct lookup)."""
     try:
         uuid.UUID(vendor_user_id)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail="Invalid vendor id.") from e
+        raise HTTPException(status_code=400, detail="We couldn't find that vendor.") from e
 
     row = get_approved_vendor_for_explore_by_id(vendor_user_id)
     if not row:
@@ -138,7 +138,7 @@ def get_vendor_public_reviews(vendor_user_id: str) -> VendorPublicReviewsRespons
     try:
         uuid.UUID(vendor_user_id)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail="Invalid vendor id.") from e
+        raise HTTPException(status_code=400, detail="We couldn't find that vendor.") from e
 
     raw_rows, summary = list_public_reviews_for_vendor(vendor_user_id, limit=50)
     items = [

@@ -1,4 +1,4 @@
-"""Admin review moderation."""
+"""Admin: hide or show reviews."""
 
 from __future__ import annotations
 

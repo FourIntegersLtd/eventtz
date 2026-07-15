@@ -1,4 +1,4 @@
-"""Supported marketplace countries — single source of truth for location and currency defaults."""
+"""Supported countries and their default location and currency settings."""
 
 from __future__ import annotations
 

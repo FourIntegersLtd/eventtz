@@ -1,4 +1,4 @@
-"""Authenticated contact form endpoints for clients and vendors."""
+"""Signed-in contact form endpoints for clients and vendors."""
 
 from __future__ import annotations
 

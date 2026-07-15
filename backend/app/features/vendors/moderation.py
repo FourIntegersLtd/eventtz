@@ -1,4 +1,4 @@
-"""Vendor moderation and explore-list visibility logic."""
+"""Vendor approval, admin lists, and who appears in explore."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.markets import normalize_country_code
+from app.features.vendors.markets import normalize_country_code
 from app.core.db import (
     apply_recent_first_order,
     get_db as get_client,
@@ -21,7 +21,7 @@ logger = get_logger(__name__)
 
 
 def _log_admin_list_zero_probe(client: Any) -> None:
-    """Extra logging when admin vendor list is empty (distinguish empty DB vs no vendor rows)."""
+    """Extra logging when the admin vendor list is empty (empty database vs no vendor rows)."""
     try:
         u_total = client.table("users").select("id", count="exact", head=True).execute()
         logger.warning(
@@ -195,7 +195,7 @@ def list_vendors_for_admin(
 
 
 def list_vendor_user_ids_for_broadcast() -> list[str]:
-    """All vendor user IDs — for admin message fan-out."""
+    """All vendor user IDs — for sending an admin message to every vendor."""
     if get_settings().local_auth_mode:
         return list(local_vendors.keys())
     client = get_client()
@@ -219,7 +219,7 @@ def list_vendor_user_ids_for_broadcast() -> list[str]:
 
 def get_vendor_admin_insights(vendor_user_id: str) -> dict[str, Any]:
     """
-    Aggregates for admin vendor detail: reviews, booking pipeline, open disputes count.
+    Summary counts for the admin vendor detail page: reviews, bookings, open disputes.
     """
     if get_settings().local_auth_mode:
         return {
@@ -447,7 +447,7 @@ def list_approved_vendors_for_explore(
 
 
 def get_approved_vendor_for_explore_by_id(vendor_user_id: str) -> dict[str, Any] | None:
-    """Single approved vendor row for browse detail (no full-list scan)."""
+    """One approved vendor for the browse detail page (direct lookup, not a full list scan)."""
     if get_settings().local_auth_mode:
         row = local_vendors.get(vendor_user_id)
         if not row or row.get("approval_status") != "approved":
@@ -499,7 +499,7 @@ def get_approved_vendor_for_explore_by_id(vendor_user_id: str) -> dict[str, Any]
 
 
 def get_approved_vendor_payload(vendor_user_id: str) -> dict[str, Any] | None:
-    """Onboarding JSON for an approved vendor, or None if not bookable."""
+    """Onboarding profile JSON for an approved vendor, or None if they cannot be booked."""
     if get_settings().local_auth_mode:
         row = local_vendors.get(vendor_user_id)
         if not row or row.get("approval_status") != "approved":
@@ -528,7 +528,7 @@ def get_approved_vendor_payload(vendor_user_id: str) -> dict[str, Any] | None:
 
 
 def vendor_is_bookable_for_explore(vendor_user_id: str) -> bool:
-    """True when vendor is approved and visible for bookings / client chat."""
+    """True when the vendor is approved and clients can book or message them."""
     if get_settings().local_auth_mode:
         row = local_vendors.get(vendor_user_id)
         return bool(row and row.get("approval_status") == "approved")

@@ -1,4 +1,4 @@
-"""Application errors and FastAPI exception mapping."""
+"""Shared error types and how they become API responses."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 
 
 class AppError(Exception):
-    """Base for application errors surfaced to clients."""
+    """Base error we can safely show to the caller as a message."""
 
     def __init__(self, message: str, *, code: str | None = None) -> None:
         super().__init__(message)
@@ -16,27 +16,27 @@ class AppError(Exception):
 
 
 class NotFoundError(AppError):
-    pass
+    """Something the user asked for isn't there."""
 
 
 class ForbiddenError(AppError):
-    pass
+    """Signed in, but not allowed to do this."""
 
 
 class ValidationError(AppError):
-    pass
+    """The request data doesn't look right."""
 
 
 class PayloadTooLargeError(AppError):
-    pass
+    """The upload or body is bigger than we allow."""
 
 
 class ConflictError(AppError):
-    pass
+    """This clashes with something already saved (e.g. already exists)."""
 
 
 class ServiceUnavailableError(AppError):
-    pass
+    """A needed service isn't ready right now."""
 
 
 def _status_for(exc: AppError) -> int:

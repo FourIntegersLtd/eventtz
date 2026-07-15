@@ -1,4 +1,4 @@
-"""Stripe webhook receiver. Public (signature-verified, not user-auth-guarded)."""
+"""Stripe webhook endpoint. Public — verified by signature, not user login."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ async def post_stripe_webhook(
     if not stripe_signature:
         raise HTTPException(status_code=400, detail="Missing Stripe-Signature header.")
 
-    # Local import avoids importing the Stripe SDK path at module load if unconfigured.
+    # Import here so the Stripe SDK is not loaded at startup when Stripe is not configured.
     from app.features.payments.stripe import construct_webhook_event, stripe_object_to_dict
 
     try:
@@ -51,8 +51,8 @@ async def post_stripe_webhook(
         )
     )
 
-    # Always return 200 quickly once verified — correctness comes from the webhook-event
-    # dedupe table + conditional DB updates in the handlers, not from retry semantics.
+    # Always return 200 once the signature is valid — Stripe will retry on other status codes.
+    # Duplicate events are ignored via the webhook-event table; handlers use conditional updates.
     try:
         if event_type == "checkout.session.completed":
             handle_checkout_session_completed(event_id, data_object)

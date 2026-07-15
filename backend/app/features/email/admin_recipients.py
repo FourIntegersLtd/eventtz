@@ -1,4 +1,4 @@
-"""Resolve admin notification email recipients."""
+"""Admin email addresses that receive ops notifications."""
 
 from __future__ import annotations
 

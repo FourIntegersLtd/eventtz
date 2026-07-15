@@ -1,4 +1,4 @@
-"""Admin booking recovery actions (payment sync, payout, cancellation)."""
+"""Admin tools to unstick bookings (re-check payment, release payout, cancel)."""
 
 from __future__ import annotations
 

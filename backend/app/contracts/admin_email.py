@@ -1,4 +1,4 @@
-"""Super-admin email template testing."""
+"""Shared types for testing automated email templates."""
 
 from __future__ import annotations
 

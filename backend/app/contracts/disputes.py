@@ -1,4 +1,4 @@
-"""User-facing dispute API models (participants see a subset of fields)."""
+"""Shared types for disputes that clients and vendors can see."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ class CreateParticipantDisputeBody(BaseModel):
 
 
 class ParticipantDisputePublic(BaseModel):
-    """Fields safe for client/vendor — no internal admin notes."""
+    """Fields shown to clients and vendors; admin-only notes are omitted."""
 
     id: str
     booking_request_id: str
@@ -23,9 +23,9 @@ class ParticipantDisputePublic(BaseModel):
     updated_at: str | None = None
     resolved_at: str | None = None
     resolution_note: str | None = None
-    #: True when an in-app Messages thread was linked for staff review at case open.
+    #: True when a Messages thread was attached for staff to review when the case opened.
     chat_included_for_review: bool = False
-    #: Booking context (detail + list).
+    #: Summary of the related booking (shown on detail and list screens).
     event_name: str | None = None
     event_date: str | None = None
     booking_status: str | None = None

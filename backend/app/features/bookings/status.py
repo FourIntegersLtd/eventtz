@@ -1,4 +1,4 @@
-"""Booking status transitions for client and vendor."""
+"""Booking status changes for clients and vendors (accept, decline, cancel)."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ from app.features.email.dispatch import dispatch_booking_notification
 
 
 def _guard_cancel_money_state(booking_id: str, *, status: str, payment_status: str) -> None:
-    """Shared cancel guards: no cancelling after payout, none mid-dispute."""
+    """Shared checks before cancel: not after payout, not while a problem report is open."""
     if status == "completed":
         raise ValueError(
             "This booking is already complete, so it can't be cancelled. "
@@ -41,7 +41,7 @@ def _guard_cancel_money_state(booking_id: str, *, status: str, payment_status: s
         )
     if payment_status == "refunded" and status != "accepted":
         raise ValueError("This booking has already been refunded.")
-    # Local import: disputes.py imports the bookings package, which imports this module.
+    # Import here to avoid a circular import at module load.
     from app.features.bookings.disputes import has_active_dispute_for_booking
 
     if has_active_dispute_for_booking(booking_id):
@@ -55,7 +55,7 @@ def _refund_paid_booking_for_cancel(booking_id: str, payment_status: str, *, can
     """Full refund before cancelling a paid booking. Returns True if a refund was issued."""
     if payment_status != "paid":
         return False
-    # Local import to avoid a circular import at module load.
+    # Import here to avoid a circular import at module load.
     from app.features.bookings.payments import refund_booking_on_cancel
 
     refund_booking_on_cancel(booking_id, cancelled_by=cancelled_by)

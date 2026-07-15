@@ -1,4 +1,4 @@
-"""Aggregates all `/api/v1` route modules from feature packages."""
+"""Registers every `/api/v1` route from feature packages."""
 
 from fastapi import APIRouter
 

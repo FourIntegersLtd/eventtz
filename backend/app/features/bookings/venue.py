@@ -1,4 +1,4 @@
-"""Client venue updates on accepted, unpaid bookings."""
+"""Let clients set the event venue on accepted bookings that are not yet paid."""
 
 from __future__ import annotations
 

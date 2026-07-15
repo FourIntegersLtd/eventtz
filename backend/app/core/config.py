@@ -1,14 +1,12 @@
-"""Application settings (env / .env).
+"""App settings loaded from environment variables and ``backend/.env``.
 
-Pydantic Settings maps ``snake_case`` fields to ``SCREAMING_SNAKE`` env vars automatically
-(e.g. ``frontend_url`` ← ``FRONTEND_URL``). ``AliasChoices`` is only used when a field
-must accept *more than one* historical env name.
+Field names use snake_case; matching env vars use UPPER_SNAKE
+(e.g. ``frontend_url`` comes from ``FRONTEND_URL``).
 """
 
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _BACKEND_DIR = Path(__file__).resolve().parents[2]
@@ -21,62 +19,67 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    #: Comma-separated browser Origins allowed to call the API (credentials/cookies).
-    #: Production: set via env on Railway — do not hardcode domains here.
-    #: ``FRONTEND_URL`` is merged into the effective list automatically (see ``cors_origins_list``).
+    #: Website addresses allowed to call this API from a browser (comma-separated).
+    #: In production, set this in your host env — don't hardcode live domains here.
+    #: Your ``FRONTEND_URL`` is always included automatically.
     cors_allowed_origins: str = (
         "http://localhost:3000, http://127.0.0.1:3000"
     )
+
+    #: Database / auth project URL and secret key (server-only — never put in the browser).
     supabase_url: str = ""
-    #: Prefer ``SUPABASE_SERVICE_ROLE_KEY``; ``SUPABASE_KEY`` kept as a legacy alias.
-    supabase_service_role_key: str = Field(
-        default="",
-        validation_alias=AliasChoices("SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_KEY"),
-    )
+    supabase_service_role_key: str = ""
+
+    #: When true, skip real login/database setup for local tinkering.
     local_auth_mode: bool = False
+
+    #: How much detail to write to logs (e.g. INFO, WARNING, DEBUG).
     log_level: str = "INFO"
-    # Logging: production uses compact lines; dev uses multi-line blocks (see core/logging.py)
+    #: True on the live server: shorter log lines. False on a laptop: easier-to-read blocks.
     is_production: bool = False
     log_dir: str = "logs"
     log_file_name: str = "eventtz.log"
+    #: Start a new log file after this many bytes (keeps disk use under control).
     log_max_bytes: int = 10_000_000
+    #: How many old log files to keep.
     log_backup_count: int = 3
 
-    booking_max_adjustment_gbp: float = 50_000.0
-    booking_max_adjustment_pct_of_subtotal: float = 200.0
+    #: Largest single extra cost (travel, add-ons, etc.) a vendor can add before the booking is accepted.
+    booking_max_adjustment_gbp: float = 5_000.0
+    #: Largest total of those extras, as a percentage of the quoted package prices (discounts don't count here).
+    booking_max_adjustment_pct_of_subtotal: float = 100.0
 
-    # Media (Supabase Storage)
+    #: Folder name in storage where images are kept.
     media_images_bucket: str = "eventtz-images"
-    #: Cap for video/document uploads (portfolio video, certificates). Images have no app size limit.
+    #: Max size for videos and documents (e.g. certificates). Photos have no size limit in the app.
     media_max_file_upload_bytes: int = 50_000_000
 
-    # OpenAI (vendor onboarding + marketplace search) — key only; model ids in core/constants.py
+    #: Key for AI helpers (vendor bio, search). Which AI models we use lives in ``constants.py``.
     openai_api_key: str = ""
+    #: How long (seconds) to reuse a marketplace search AI result before asking again.
     marketplace_search_ai_cache_ttl_seconds: int = 3600
+    #: Max number of those search results to keep in memory.
     marketplace_search_ai_cache_max_entries: int = 500
 
-    #: UK address lookup — Ordnance Survey **OS Places API** (not OS Maps). See ``uk_address_service``.
-    #: ``OS_DATA_HUB_API_KEY`` accepted as a legacy alias for the same Places key.
-    os_places_api_key: str = Field(
-        default="",
-        validation_alias=AliasChoices("OS_PLACES_API_KEY", "OS_DATA_HUB_API_KEY"),
-    )
-    #: Alternative: getAddress.io when OS Places is not used (``OS_PLACES_API_KEY`` empty).
+    #: Key for looking up UK addresses (Ordnance Survey Places). Leave blank if unused.
+    os_places_api_key: str = ""
+    #: Backup address lookup key (getAddress.io) if the Places key above is empty.
     getaddress_api_key: str = ""
 
-    #: Base URL of the deployed frontend — used to build Stripe return/refresh/success/cancel URLs.
+    #: Public website URL — used for payment “back to site” / success / cancel links.
     frontend_url: str = "http://localhost:3000"
 
-    # Stripe Connect (vendor payouts) + Checkout (client payments)
+    #: Payment provider keys: secret for server calls; webhook secret to verify payment events.
     stripe_secret_key: str = ""
     stripe_webhook_secret: str = ""
 
-    #: Hours after the event (end of event day UTC) before the vendor payout is
-    #: released automatically when the client has paid and no dispute is open.
+    #: Hours after the event day ends before we automatically pay the vendor
+    #: (only if the client has paid and no problem report is open).
     booking_payout_auto_release_hours_after_event: int = 48
 
-    #: Comma-separated emails treated as super_admin when DB admin_role is not set yet.
+    #: Comma-separated emails that count as top-level admins until roles are set in the database.
     super_admin_emails: str = "hello@fourintegers.com"
+    #: Key for sending transactional email.
     resend_api_key: str = ""
 
     @property
@@ -97,7 +100,7 @@ class Settings(BaseSettings):
 
     @property
     def cors_allow_origin_regex(self) -> str | None:
-        """Allow any localhost port (incl. [::1]) — browsers vary Origin on dev machines."""
+        """On a laptop, allow the site on any local port (browsers send slightly different origins)."""
         return r"https?://(localhost|127\.0\.0\.1|\[::1\])(:\d+)?"
 
 

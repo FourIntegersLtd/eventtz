@@ -1,4 +1,4 @@
-"""Admin capability tiers: standard admin (support) vs super_admin (destructive / money)."""
+"""Admin access levels: standard admin (support) vs super_admin (destructive actions and money)."""
 
 from __future__ import annotations
 

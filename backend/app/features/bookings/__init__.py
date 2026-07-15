@@ -1,4 +1,4 @@
-"""Booking feature — public API."""
+"""Functions other parts of the app import for bookings."""
 
 from app.features.bookings.commands import (
     cancel_booking_request_for_client,
@@ -45,7 +45,7 @@ __all__ = [
 
 
 def __getattr__(name: str):
-    # Lazy: calendar imports vendors.search / moderation (cycle via reviews).
+    # Loaded on first use: calendar imports vendors code that would otherwise create a circular import.
     if name == "vendor_can_initiate_chat":
         from app.features.bookings.calendar import vendor_can_initiate_chat
 

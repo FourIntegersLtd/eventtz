@@ -1,4 +1,4 @@
-"""Admin blog CMS HTTP routes."""
+"""Admin routes for managing blog posts."""
 
 from __future__ import annotations
 

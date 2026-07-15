@@ -1,4 +1,4 @@
-"""Jinja2 rendering for transactional email templates."""
+"""Fill in email templates (Jinja2) before sending."""
 
 from __future__ import annotations
 

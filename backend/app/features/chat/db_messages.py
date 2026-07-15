@@ -1,4 +1,4 @@
-"""Messages table access."""
+"""Read and write message rows."""
 
 from __future__ import annotations
 

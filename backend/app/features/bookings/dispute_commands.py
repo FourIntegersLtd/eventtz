@@ -1,4 +1,4 @@
-"""Shared dispute case creation (admin console and participant flows)."""
+"""Shared problem-report creation (admin console and client/vendor flows)."""
 
 from __future__ import annotations
 

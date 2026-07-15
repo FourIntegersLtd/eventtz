@@ -1,4 +1,4 @@
-"""Shared booking list ordering (most recent activity first)."""
+"""Sort booking lists with the most recent activity first."""
 
 from __future__ import annotations
 

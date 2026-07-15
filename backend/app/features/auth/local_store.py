@@ -1,4 +1,4 @@
-"""In-memory auth store for LOCAL_AUTH_MODE development."""
+"""In-memory users and sessions when LOCAL_AUTH_MODE is on (local development only)."""
 
 from __future__ import annotations
 

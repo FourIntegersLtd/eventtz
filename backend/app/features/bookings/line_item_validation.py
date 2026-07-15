@@ -1,4 +1,4 @@
-"""Validate vendor quote and booking line item prices."""
+"""Validate prices on vendor quote packages."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ MAX_QUOTE_LINES = 25
 
 def validate_quote_line_items(line_items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
-    Vendor quotes must have priced lines within bounds.
+    Vendor quotes must have priced packages within set limits.
     Raises ValueError with a client-safe message on failure.
     """
     if not line_items:

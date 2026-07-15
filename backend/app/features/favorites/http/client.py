@@ -1,4 +1,4 @@
-"""Client favorites HTTP routes."""
+"""Client favourites HTTP routes."""
 
 from __future__ import annotations
 

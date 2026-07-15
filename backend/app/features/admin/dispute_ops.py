@@ -1,4 +1,4 @@
-"""Admin dispute case listing and resolution."""
+"""Admin: list and resolve problem reports between clients and vendors."""
 
 from __future__ import annotations
 

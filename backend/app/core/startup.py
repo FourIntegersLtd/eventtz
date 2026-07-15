@@ -1,4 +1,4 @@
-"""Startup configuration validation."""
+"""Checks that important settings look usable when the app starts."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ logger = get_logger(__name__)
 
 
 def validate_settings(settings: Settings) -> None:
-    """Fail fast or warn on missing integration keys."""
+    """Stop early, or warn, if required keys are missing."""
     if not settings.local_auth_mode:
         if not settings.supabase_url.strip():
             raise RuntimeError(
@@ -18,7 +18,7 @@ def validate_settings(settings: Settings) -> None:
             )
         if not settings.supabase_service_role_key.strip():
             raise RuntimeError(
-                "SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_KEY) is required when "
+                "SUPABASE_SERVICE_ROLE_KEY is required when "
                 "LOCAL_AUTH_MODE is false."
             )
 
@@ -32,7 +32,7 @@ def validate_settings(settings: Settings) -> None:
                 "STRIPE_WEBHOOK_SECRET is not set — Stripe webhooks will be rejected."
             )
 
-    # UK address lookup disabled — clients enter venue as free text (see uk_address.py).
+    # Address autocomplete is off for now — people type the venue address themselves.
     # if not settings.os_places_api_key.strip() and not settings.getaddress_api_key.strip():
     #     logger.warning(
     #         "Neither OS_PLACES_API_KEY nor GETADDRESS_API_KEY is set — "

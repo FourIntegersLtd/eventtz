@@ -1,4 +1,4 @@
-"""Shared OpenAI Responses API helpers (JSON extraction, client factory)."""
+"""Shared helpers for calling OpenAI and pulling JSON from replies."""
 
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ def require_openai_client(*, log_context: str = "openai") -> OpenAI:
     )
     raise HTTPException(
         status_code=503,
-        detail="AI features are not configured. Set OPENAI_API_KEY on the server.",
+        detail="This AI feature isn't available right now. Please try again later.",
     )
 
 

@@ -14,7 +14,7 @@ logger = get_logger(__name__)
 
 
 def get_conversation_admin_meta(conversation_id: str) -> dict[str, Any]:
-    """Participants + labels for admin chat viewer (same thread semantics as client/vendor UI)."""
+    """Participants and labels for the admin chat viewer (same threads as the client/vendor UI)."""
     empty: dict[str, Any] = {
         "client_user_id": None,
         "vendor_user_id": None,

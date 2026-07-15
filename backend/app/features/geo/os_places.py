@@ -1,4 +1,4 @@
-"""UK address lookup via Ordnance Survey OS Places API (OS Data Hub)."""
+"""UK address lookup via Ordnance Survey Places API (OS Data Hub)."""
 
 from __future__ import annotations
 
@@ -44,7 +44,7 @@ def _request(path: str, params: dict[str, Any]) -> dict[str, Any] | None:
 
 
 def _iter_dpa_addresses(data: dict[str, Any]) -> list[dict[str, Any]]:
-    """Extract DPA objects from a Places API JSON body."""
+    """Pull address records from a Places API JSON response."""
     results = data.get("results")
     if not isinstance(results, list):
         return []
@@ -70,7 +70,7 @@ def _formatted_line_from_dpa(dpa: dict[str, Any]) -> str:
 
 
 def os_places_autocomplete(term: str) -> list[dict[str, str]]:
-    """Returns [{id: UPRN, address}, ...] for free-text search."""
+    """Return [{id: UPRN, address}, ...] for a free-text search."""
     if len(term.strip()) < 2:
         return []
     data = _request(

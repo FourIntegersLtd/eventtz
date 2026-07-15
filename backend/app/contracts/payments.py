@@ -1,4 +1,4 @@
-"""Stripe Connect (vendor payouts) + Checkout (client payments) API models."""
+"""Shared types for vendor payout setup and client card payments via Stripe."""
 
 from __future__ import annotations
 

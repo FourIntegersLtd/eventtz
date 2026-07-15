@@ -81,7 +81,7 @@ def _count_unread_for_user(conv: dict[str, Any], user_id: str) -> int:
     if not role:
         return 0
     if role == "support_user":
-        # Reuse client_last_read_at as the end-user cursor on support threads.
+        # On support threads, client_last_read_at tracks when the end user last read.
         lr = conv.get("client_last_read_at")
     elif role == "client":
         lr = conv.get("client_last_read_at")
@@ -225,7 +225,7 @@ def get_or_create_conversation(
     require_bookable_vendor: bool = True,
 ) -> dict[str, Any]:
     if client_user_id == vendor_user_id:
-        raise ValueError("Cannot start a chat with yourself.")
+        raise ValueError("You can't start a chat with yourself.")
     _assert_vendor_exists(vendor_user_id)
     if require_bookable_vendor:
         from app.features.vendors.moderation import vendor_is_bookable_for_explore
@@ -320,7 +320,7 @@ def get_or_create_support_conversation(user_id: str) -> dict[str, Any]:
     """One Eventtz Support thread per end user (client or vendor)."""
     uid = (user_id or "").strip()
     if not uid:
-        raise ValueError("User id is required.")
+        raise ValueError("We couldn't start that conversation. Please try again.")
     if get_settings().local_auth_mode:
         return {
             "id": f"00000000-0000-4000-8000-{uid.replace('-', '')[:12].ljust(12, '0')}",
@@ -485,7 +485,7 @@ def get_conversation_for_user(conversation_id: str, user_id: str) -> dict[str, A
 
 
 def _messages_table_select(client: Any, conversation_id: str, *, limit: int) -> list[dict[str, Any]]:
-    """Load message rows; fall back if `metadata` column is not migrated yet (027)."""
+    """Load message rows; fall back if the metadata column is not migrated yet (027)."""
 
     def build(cols: str):
         return (
@@ -572,7 +572,7 @@ def insert_message(
     body: str,
     metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Insert a message and bump conversation last_message_at. No participant checks."""
+    """Insert a message and update conversation last_message_at. No participant checks."""
     text = body.strip()
     if not text:
         raise ValueError("Message cannot be empty.")
@@ -684,7 +684,7 @@ def admin_send_support_message(
     recipient_user_ids: list[str],
     body: str,
 ) -> dict[str, Any]:
-    """Fan-out: one support thread per recipient. Returns sent count + conversation ids."""
+    """Send one support message per recipient. Returns sent count and conversation ids."""
     text = body.strip()
     if not text:
         raise ValueError("Message cannot be empty.")
@@ -857,7 +857,7 @@ def send_quote_message(
     event_name: str,
     total_label: str,
 ) -> None:
-    """Insert a system "quote sent" card into the thread. Best-effort."""
+    """Add a system "quote sent" card to the thread. Best-effort."""
     if get_settings().local_auth_mode:
         return
     fallback_body = f"Sent a custom quote — {event_name} ({total_label})"
@@ -946,8 +946,8 @@ def assert_conversation_matches_pair(
         raise ValueError("Conversation not found.")
     row = data[0]
     if _conversation_kind(row) != "dm":
-        raise ValueError("Conversation does not match this client and vendor.")
+        raise ValueError("That conversation doesn't match this booking. Open Messages and try again.")
     c = _str_id(row.get("client_user_id"))
     v = _str_id(row.get("vendor_user_id"))
     if c != client_user_id or v != vendor_user_id:
-        raise ValueError("Conversation does not match this client and vendor.")
+        raise ValueError("That conversation doesn't match this booking. Open Messages and try again.")

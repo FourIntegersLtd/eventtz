@@ -1,4 +1,4 @@
-"""Admin booking list, detail, and payment field updates."""
+"""Admin list and detail for bookings, plus fixing payment fields."""
 
 from __future__ import annotations
 

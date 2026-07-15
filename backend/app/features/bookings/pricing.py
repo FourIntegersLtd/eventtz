@@ -1,4 +1,4 @@
-"""Pricing breakdown for booking requests (vendor quote + adjustments + platform fee)."""
+"""Work out the booking total: packages, vendor extras/discounts, and the platform fee."""
 
 from __future__ import annotations
 
@@ -89,8 +89,8 @@ def build_pricing_breakdown(
 ) -> dict[str, Any]:
     """
     vendor_portion = sum(line items) + sum(adjustments). Adjustments may be negative (discounts).
-    service_fee = fee_base * (fee_percent/100) where fee_base is line items plus any discounts
-    (negative adjustments). Surcharges (positive adjustments) are not included in the fee base.
+    service_fee = fee_base * (fee_percent/100), where fee_base is line items plus any discounts
+    (negative adjustments). Extra charges (positive adjustments) are not included in the fee base.
     client_total = vendor_portion + service_fee (when no TBC in lines).
     """
     pct = service_fee_percent
@@ -125,8 +125,8 @@ def build_pricing_breakdown(
 
 def persisted_booking_total_label(pb: dict[str, Any]) -> str:
     """
-    Canonical string for booking_requests.total_label: full client-facing amount
-    (vendor portion + Eventtz fee), aligned with build_pricing_breakdown.
+    The string stored in booking_requests.total_label: the full amount the client pays
+    (vendor portion + Eventtz fee), matching build_pricing_breakdown.
     """
     client_l = str(pb.get("client_total_label") or "").strip()
     if pb.get("has_pricing_tbc"):

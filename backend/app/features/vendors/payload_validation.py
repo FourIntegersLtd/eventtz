@@ -1,4 +1,4 @@
-"""Validate and normalize vendor onboarding payload fields (step-scoped + always-on clamp)."""
+"""Check and tidy vendor onboarding fields — per step when advancing, and on every profile save."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.core.errors import ValidationError
-from app.core.markets import DEFAULT_COUNTRY_CODE, is_market_enabled, normalize_country_code
+from app.features.vendors.markets import DEFAULT_COUNTRY_CODE, is_market_enabled, normalize_country_code
 from app.features.vendors.list_pricing import parse_money_gbp
 
 MAX_DISCOUNT_PCT = 100.0
@@ -85,7 +85,7 @@ def _parse_max_bookings(raw: str) -> int:
 
 
 def normalize_payload_fields(payload: dict[str, Any], user_id: str) -> dict[str, Any]:
-    """Clamp/strip dangerous fields on every profile save."""
+    """Limit out-of-range values and drop unsafe upload URLs on every profile save."""
     out = dict(payload)
 
     if not out.get("offerDiscounts"):
@@ -195,7 +195,7 @@ def _validate_step_location(payload: dict[str, Any]) -> None:
 
 
 def validate_step_fields(step: int, payload: dict[str, Any]) -> None:
-    """Strict validation for the given onboarding step (1–8). Raises ValidationError."""
+    """Check the given onboarding step (1–8). Raises ValidationError if anything is invalid."""
     if step == 4:
         _money_in_range(_coerce_str(payload, "hourlyRate"), "Hourly rate")
         _money_in_range(_coerce_str(payload, "dailyRate"), "Daily rate")
@@ -257,10 +257,10 @@ def validate_step_fields(step: int, payload: dict[str, Any]) -> None:
         _validate_step_location(payload)
 
     elif step == 8:
-        pass  # optional docs; URLs normalized on save
+        pass  # optional documents; upload URLs are cleaned on save
 
     elif step in (1, 2, 7):
-        pass  # covered by existing frontend + minimal server checks on submit
+        pass  # frontend checks these steps; server re-checks on submit
 
 
 def validate_payload_for_progress(
@@ -271,8 +271,8 @@ def validate_payload_for_progress(
     status: str | None,
 ) -> None:
     """
-    When advancing steps, validate the step being completed.
-    When submitting, validate steps 1–8.
+    When the vendor moves forward, check the step they just finished.
+    On submit, check every step (1–8).
     """
     st = (status or "").strip().lower()
     if st in ("submitted", "complete"):

@@ -1,4 +1,4 @@
-"""Admin console API models."""
+"""Shared types for the admin console."""
 
 from __future__ import annotations
 
@@ -99,9 +99,9 @@ class AdminFinancialsSummary(BaseModel):
     platform_fee_gbp: float = 0.0
     vendor_portion_gbp: float = 0.0
     service_fee_percent: float = 0.0
-    #: Vendor portion already sent out via Stripe Transfer (payment_status = payout_released).
+    #: Amount already paid out to the vendor via Stripe (payment_status = payout_released).
     payout_released_gbp: float = 0.0
-    #: Vendor portion collected but still sitting in Eventtz's Stripe balance (payment_status = paid).
+    #: Amount collected but not yet paid out; held in Eventtz's Stripe balance (payment_status = paid).
     held_in_platform_balance_gbp: float = 0.0
     daily: list[AdminFinancialsDailyBucket] = Field(default_factory=list)
     disclaimer: str = (
@@ -156,7 +156,7 @@ class AdminDisputeCase(BaseModel):
     updated_at: str | None = None
     resolved_at: str | None = None
     conversation_id: str | None = None
-    #: Money decision recorded when the dispute is resolved (drives a Stripe Transfer or Refund).
+    #: Refund or payout choice when the dispute is resolved (handled via Stripe).
     resolution_action: Literal["release_to_vendor", "refund_client", "partial_refund"] | None = None
     refund_amount_gbp: float | None = None
     event_name: str | None = None
@@ -180,9 +180,9 @@ class AdminDisputePatchBody(BaseModel):
     internal_notes: str | None = Field(default=None, max_length=8000)
     resolution_note: str | None = Field(default=None, max_length=8000)
     assigned_admin_id: str | None = None
-    #: Money decision — only acted on when status is being set to "resolved".
+    #: Refund or payout choice — only applied when status is set to "resolved".
     resolution_action: Literal["release_to_vendor", "refund_client", "partial_refund"] | None = None
-    #: Required (and only used) when resolution_action == "partial_refund".
+    #: Required only when resolution_action is "partial_refund".
     refund_amount_gbp: float | None = Field(default=None, gt=0)
 
 

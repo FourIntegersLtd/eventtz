@@ -1,4 +1,4 @@
-"""Shared display-name and email lookups for users and vendors."""
+"""Look up display names and emails for users and vendors."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from app.features.auth import db_vendors as vendor_repository
 
 logger = get_logger(__name__)
 
-# Cached after first PostgREST 42703 — avoids log spam when migration 035 is not applied yet.
+# Remember after the first missing-column error — avoids log spam when migration 035 is not applied yet.
 _preferred_name_column_ok: bool | None = None
 
 
@@ -67,7 +67,7 @@ def _friendly_name_from_email(email: str | None) -> str | None:
 
 
 def client_display_names_by_id(user_ids: list[str]) -> dict[str, str]:
-    """Friendly, non-PII client names for vendor-facing surfaces.
+    """Friendly client names for vendor-facing screens (no personal email shown).
 
     Prefers users.preferred_name, falls back to a capitalised email
     local-part, then "Client". Never returns the raw email address.
@@ -103,7 +103,7 @@ def client_display_names_by_id(user_ids: list[str]) -> dict[str, str]:
 
 
 def client_emails_by_id(user_ids: list[str]) -> dict[str, str | None]:
-    """Booking list enrichment — returns None when email missing."""
+    """Extra client emails for booking lists — returns None when email is missing."""
     if not user_ids or get_settings().local_auth_mode:
         return {}
     try:

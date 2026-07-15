@@ -1,4 +1,4 @@
-"""Client first-visit onboarding state stored on public.users (migration 035)."""
+"""Client first-visit onboarding state on public.users (needs migration 035)."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ logger = get_logger(__name__)
 
 _DEFAULT_STATE: dict[str, Any] = {"completed": False, "preferred_name": None}
 
-# Cached after first PostgREST 42703 — avoids log spam when migration 035 is not applied yet.
+# Remember after the first missing-column error — avoids log spam until migration 035 is applied.
 _onboarding_columns_ok: bool | None = None
 
 

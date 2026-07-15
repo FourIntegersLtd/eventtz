@@ -1,6 +1,6 @@
 """Market config helpers."""
 
-from app.core.markets import (
+from app.features.vendors.markets import (
     DEFAULT_COUNTRY_CODE,
     default_market,
     enabled_markets,

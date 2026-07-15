@@ -1,4 +1,4 @@
-"""Vendor profile CRUD/upsert logic."""
+"""Load and save vendor profiles."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ def _clamp_bio_words(text: str, max_words: int = _BIO_MAX_WORDS) -> str:
 
 
 def _validate_and_normalize_payload(payload: dict[str, Any]) -> dict[str, Any]:
-    """Normalize payload fields on save (e.g. cap public bio length)."""
+    """Tidy payload fields on save (for example, cap the public bio length)."""
     out = dict(payload)
     raw_bio = out.get("aiBioDraft")
     if isinstance(raw_bio, str) and raw_bio.strip():
@@ -145,7 +145,7 @@ def upsert_vendor_profile(
                 logger.warning("vendor submitted admin email failed user=%s", user_id, exc_info=True)
         return row
 
-    # FK vendors.user_id -> users.id: ensure public.users row exists before vendors insert/update.
+    # vendors.user_id must exist in users — create the user row before insert or update.
     norm_email = (
         user_email.strip().lower()
         if isinstance(user_email, str) and user_email.strip()

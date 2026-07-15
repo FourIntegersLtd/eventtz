@@ -1,4 +1,4 @@
-"""UK address lookup via getAddress.io — DISABLED (see uk_address.py; free-text venues on client)."""
+"""UK address lookup via getAddress.io — DISABLED (see uk_address.py; clients use free-text venues)."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ logger = get_logger(__name__)
 
 _GETADDRESS_BASE = "https://api.getAddress.io"
 
-# Set after first 401/403 so we log once and skip repeat calls until restart.
+# Remember after the first 401/403 so we log once and skip repeat calls until restart.
 _auth_rejected = False
 
 
@@ -102,7 +102,7 @@ def _tidy_find_line(s: str) -> str:
 
 
 def getaddress_find_by_postcode(postcode: str) -> tuple[list[str], bool]:
-    """Return (address lines, credentials_valid) for a UK postcode via getAddress Find API."""
+    """Return (address lines, credentials_valid) for a UK postcode via the getAddress Find API."""
     key = _api_key()
     if not key:
         return [], False
@@ -146,7 +146,7 @@ def getaddress_find_by_postcode(postcode: str) -> tuple[list[str], bool]:
 
 
 def getaddress_get_by_id(address_id: str) -> dict[str, Any] | None:
-    """Returns normalised fields or None."""
+    """Return normalised fields, or None."""
     key = _api_key()
     if not key or not address_id.strip():
         return None

@@ -1,4 +1,4 @@
-"""Booking notifications table access."""
+"""Read and write booking notification rows."""
 
 from __future__ import annotations
 

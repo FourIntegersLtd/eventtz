@@ -1,4 +1,4 @@
-"""AI-assisted vendor onboarding (bio + portfolio image quality)."""
+"""HTTP routes for AI-assisted vendor onboarding (bio and portfolio image checks)."""
 
 from __future__ import annotations
 

@@ -1,8 +1,7 @@
-"""Booking money orchestration: Checkout, webhook capture, mutual-completion payout, refunds.
+"""Booking payments: start checkout, record payment, pay the vendor, and refunds.
 
-`booking_requests.status` (pending/accepted/declined/cancelled/completed) stays the request
-lifecycle exactly as elsewhere in the app. `payment_status` (unpaid/pending/paid/refunded/
-partially_refunded/payout_released) is the independent money lifecycle this module owns.
+The booking status (pending, accepted, and so on) is separate from the payment
+status (unpaid, paid, refunded, payout released). Money-related fields are updated here.
 """
 
 from __future__ import annotations
@@ -195,7 +194,7 @@ def _payment_fields_from_checkout_session(session: dict[str, Any]) -> tuple[str 
 
 
 def _load_full_booking_row(booking_id: str) -> dict[str, Any] | None:
-    """Full booking row for money moves (list APIs omit vendor_amount_gbp)."""
+    """Load the full booking row for payment work (list views omit vendor_amount_gbp)."""
     if not booking_id:
         return None
     res = (
@@ -466,9 +465,9 @@ def _serialize_completion_state(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def _finalize_completion(row: dict[str, Any]) -> dict[str, Any]:
-    """Both parties have confirmed: mark completed and release the vendor payout."""
+    """Both parties have confirmed: mark the booking completed and pay the vendor."""
     booking_id = str(row.get("id") or "")
-    # Always reload: list/dashboard rows omit vendor_amount_gbp and other money fields.
+    # Reload from the database — list and dashboard views omit vendor_amount_gbp and other payment fields.
     full = _load_full_booking_row(booking_id)
     if full is None:
         raise ValueError("Booking not found.")
@@ -650,7 +649,7 @@ def confirm_completion_for_vendor(vendor_user_id: str, booking_id: str) -> dict[
 
 
 def admin_release_payout_for_booking(booking_id: str) -> dict[str, Any] | None:
-    """Dispute resolution: release_to_vendor. Skips the mutual-confirmation requirement."""
+    """Admin problem-report resolution: pay the vendor without waiting for both confirmations."""
     if get_settings().local_auth_mode:
         return None
     res = get_client().table("booking_requests").select("*").eq("id", booking_id).limit(1).execute()
@@ -670,11 +669,11 @@ def _refund_paid_booking_row(
     idempotency_suffix: str,
     refund_body: str,
 ) -> dict[str, Any]:
-    """Issue a Stripe refund for a `paid` booking row and flip payment_status.
+    """Refund a paid booking via Stripe and update payment_status.
 
-    Shared by admin dispute refunds and cancellation refunds. Raises ValueError
-    (with a user-friendly message) when the refund cannot be issued — callers
-    must not proceed with their own state changes in that case.
+    Used for admin refunds and cancellation refunds. Raises ValueError with a
+    user-friendly message when the refund fails — callers must not change booking
+    state if that happens.
     """
     booking_id = str(row.get("id") or "")
     if str(row.get("payment_status") or "") != "paid":
@@ -723,8 +722,8 @@ def _refund_paid_booking_row(
 def refund_booking_on_cancel(booking_id: str, *, cancelled_by: str) -> dict[str, Any] | None:
     """Full refund when a paid booking is cancelled before the vendor is paid.
 
-    Raises ValueError when the refund can't be issued — the caller must NOT
-    cancel the booking in that case (money moves first, status second).
+    Raises ValueError when the refund fails — the caller must not cancel the
+    booking in that case. Refund the money first, then change status.
     """
     if get_settings().local_auth_mode:
         return None
@@ -744,7 +743,7 @@ def refund_booking_on_cancel(booking_id: str, *, cancelled_by: str) -> dict[str,
 
 
 def admin_refund_booking(booking_id: str, *, amount_gbp: float | None) -> dict[str, Any] | None:
-    """Dispute resolution: refund_client (amount_gbp=None) or partial_refund (amount_gbp set)."""
+    """Admin problem-report resolution: full refund (amount_gbp=None) or partial (amount_gbp set)."""
     if get_settings().local_auth_mode:
         return None
     res = get_client().table("booking_requests").select("*").eq("id", booking_id).limit(1).execute()
@@ -759,7 +758,7 @@ def admin_refund_booking(booking_id: str, *, amount_gbp: float | None) -> dict[s
     )
 
 
-# --- Post-event auto-release + reminders (hourly maintenance cron) ---
+# --- Automatic payout after the event and reminder emails (hourly job) ---
 
 LIST_COMPLETION_TOUCH_CAP = 10
 
@@ -812,7 +811,7 @@ def maybe_send_completion_reminder_for_row(row: dict[str, Any]) -> bool:
 
 
 def touch_booking_completion_side_effects(row: dict[str, Any]) -> bool:
-    """Per-booking (detail GET / cron): send post-event reminder, then try auto-release if due."""
+    """For one booking (detail page or hourly job): send a reminder, then pay the vendor if due."""
     try:
         maybe_send_completion_reminder_for_row(row)
     except Exception:
@@ -832,10 +831,10 @@ def touch_completion_side_effects_for_booking_rows(
     *,
     cap: int = LIST_COMPLETION_TOUCH_CAP,
 ) -> None:
-    """Lazy backstop on list/dashboard fetches: reminders only (no Stripe Transfer).
+    """Send completion reminders when a booking list is loaded — reminders only, no payout.
 
-    Payout auto-release runs on booking detail GET, hourly cron, and admin retry —
-    never on list polls, which fire repeatedly from the dashboard.
+    Automatic payout runs on the booking detail page, the hourly job, and admin retry —
+    not on list views, which refresh often from the dashboard.
     """
     if get_settings().local_auth_mode:
         return
@@ -857,12 +856,12 @@ def touch_completion_side_effects_for_booking_rows(
 
 
 def _auto_release_payout_row(row: dict[str, Any]) -> bool:
-    """Release the payout for one booking if the auto-release window has passed.
+    """Pay the vendor for one booking if the automatic payout date has passed.
 
-    Returns True when the payout was released. Raises ValueError when the Stripe
-    transfer fails (propagated from _finalize_completion).
+    Returns True when the payout was sent. Raises ValueError when the Stripe
+    transfer fails (from _finalize_completion).
     """
-    # Local import: disputes.py imports the bookings package which loads this module.
+    # Import here to avoid a circular import at module load.
     from app.features.bookings.disputes import has_active_dispute_for_booking
 
     booking_id = str(row.get("id") or "")
@@ -887,7 +886,7 @@ def _auto_release_payout_row(row: dict[str, Any]) -> bool:
 
 
 def maybe_auto_release_payout_for_booking(booking_id: str) -> bool:
-    """Backstop on booking detail fetch so users never see a stale overdue payout."""
+    """Pay the vendor when opening booking detail if the automatic payout date has passed."""
     if get_settings().local_auth_mode:
         return False
     res = get_client().table("booking_requests").select("*").eq("id", booking_id).limit(1).execute()
@@ -923,7 +922,7 @@ def _due_completion_candidates(limit: int, *, extra_null_col: str) -> list[dict[
 
 
 def process_due_payout_auto_releases(limit: int = 50) -> int:
-    """Hourly cron: pay vendors whose auto-release window has passed. Returns count released."""
+    """Hourly job: pay vendors whose automatic payout date has passed. Returns how many were paid."""
     if get_settings().local_auth_mode:
         return 0
     released = 0
@@ -937,7 +936,7 @@ def process_due_payout_auto_releases(limit: int = 50) -> int:
 
 
 def send_completion_reminders(limit: int = 50) -> int:
-    """Hourly cron: one post-event nudge per booking to whoever hasn't confirmed yet."""
+    """Hourly job: one post-event reminder per booking to whoever has not confirmed yet."""
     if get_settings().local_auth_mode:
         return 0
     sent = 0

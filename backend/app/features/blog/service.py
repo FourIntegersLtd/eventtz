@@ -1,4 +1,4 @@
-"""Blog post CRUD, publish, and public listing."""
+"""Blog posts: create, edit, publish, and public listing."""
 
 from __future__ import annotations
 

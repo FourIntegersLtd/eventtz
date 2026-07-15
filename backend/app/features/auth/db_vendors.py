@@ -1,4 +1,4 @@
-"""Vendors table access."""
+"""Read and write rows in the vendors table."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Client first-visit onboarding endpoints (preferred name + completion flag)."""
+"""Client first-visit onboarding endpoints (preferred name and completion flag)."""
 
 from fastapi import APIRouter, Request, Response
 
