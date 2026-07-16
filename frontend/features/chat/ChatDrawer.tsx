@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Drawer } from "@/components/ui/Drawer";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { CHAT_UNREAD_CLEARED_EVENT, postConversation, postMessage } from "@/lib/chatApi";
+import { chatMessageSchema, parseForm } from "@/lib/validation";
 import { ChatThreadView } from "@/features/chat/ChatThreadView";
 import { MessageComposer } from "@/features/chat/MessageComposer";
 
@@ -49,13 +50,17 @@ export function ChatDrawer({
   const shortName = counterpartyName.trim().split(/\s+/)[0] || counterpartyName || "them";
 
   const startConversation = async () => {
-    const text = draft.trim();
-    if (!text || busy || !counterpartyUserId) return;
+    if (busy || !counterpartyUserId) return;
+    const parsed = parseForm(chatMessageSchema, { body: draft });
+    if (!parsed.ok) {
+      setError(parsed.formError);
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
       const conv = await postConversation(counterpartyUserId);
-      await postMessage(conv.id, text);
+      await postMessage(conv.id, parsed.data.body);
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent(CHAT_UNREAD_CLEARED_EVENT));
       }

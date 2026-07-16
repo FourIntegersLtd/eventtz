@@ -45,6 +45,7 @@ import {
   type AdminBookingSupportMeta,
 } from "@/lib/adminPlatformApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { adminCancelBookingSchema, parseForm } from "@/lib/validation";
 
 type Props = {
   bookingId: string;
@@ -281,8 +282,16 @@ export function AdminBookingDetailView({ bookingId }: Props) {
   const [cancelParty, setCancelParty] = useState<"client" | "vendor">("client");
   const [cancelReason, setCancelReason] = useState("");
 
+  const cancelFormParsed = parseForm(adminCancelBookingSchema, {
+    reason: cancelReason,
+    onBehalfOf: cancelParty,
+  });
+  const cancelFormValid = cancelFormParsed.ok;
+
   const runAction = async (action: SupportAction) => {
-    if (action.id === "cancel" && cancelReason.trim().length < 3) return;
+    if (action.id === "cancel") {
+      if (!cancelFormValid) return;
+    }
     setPendingAction(null);
     setFeedback(null);
     setActionBusy(action.id);
@@ -630,9 +639,7 @@ export function AdminBookingDetailView({ bookingId }: Props) {
             <Button
               variant={pendingAction?.destructive ? "destructive" : "primary"}
               loading={Boolean(actionBusy)}
-              disabled={
-                pendingAction?.id === "cancel" && cancelReason.trim().length < 3
-              }
+              disabled={pendingAction?.id === "cancel" && !cancelFormValid}
               onClick={() => {
                 if (pendingAction) void runAction(pendingAction);
               }}

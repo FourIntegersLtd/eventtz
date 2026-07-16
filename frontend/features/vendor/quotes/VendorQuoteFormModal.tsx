@@ -8,7 +8,8 @@ import { TextField } from "@/components/ui/TextField";
 import { TextArea } from "@/components/ui/TextArea";
 import { Select } from "@/components/ui/Select";
 import { getApiErrorDetail } from "@/lib/api-errors";
-import { todayIsoDate, validateEventDates } from "@/lib/eventDateValidation";
+import { todayIsoDate } from "@/lib/eventDateValidation";
+import { parseForm, vendorQuoteSchema } from "@/lib/validation";
 import { postVendorQuote } from "@/lib/vendorBookingsApi";
 import { fetchVendorProfile } from "@/lib/vendorProfileApi";
 
@@ -119,35 +120,30 @@ export function VendorQuoteFormModal({
 
   const submit = async () => {
     setError(null);
-    const name = eventName.trim();
-    const ed = eventDate.trim();
-    const packageName = heading.trim();
-    const p = parseFloat(price.replace(/,/g, ""));
-    if (!name) {
-      setError("Enter an event name.");
+    const parsed = parseForm(vendorQuoteSchema, {
+      eventName,
+      eventDate,
+      eventEndDate: eventEndDate || null,
+      heading,
+      price,
+      notes,
+      selectedPackageId,
+    });
+    if (!parsed.ok) {
+      let msg = parsed.formError;
+      if (
+        parsed.fieldErrors.heading &&
+        selectedPackageId !== CUSTOM_OPTION_ID &&
+        packages.length > 0
+      ) {
+        msg = 'Choose a package, or switch to "Other" and enter a name.';
+      }
+      setError(msg);
       return;
     }
-    if (!packageName) {
-      setError(
-        selectedPackageId === CUSTOM_OPTION_ID
-          ? "Enter a package name for this quote."
-          : "Choose a package, or switch to \"Other\" and enter a name.",
-      );
-      return;
-    }
-    if (!ed || ed.length < 10) {
-      setError("Choose an event date.");
-      return;
-    }
-    const dateError = validateEventDates(ed, eventEndDate);
-    if (dateError) {
-      setError(dateError);
-      return;
-    }
-    if (Number.isNaN(p) || p < 0) {
-      setError("Enter a valid price in pounds (£).");
-      return;
-    }
+
+    const { eventName: name, eventDate: ed, eventEndDate: end, heading: packageName, price: p, notes: noteText } =
+      parsed.data;
 
     setBusy(true);
     try {
@@ -160,8 +156,8 @@ export function VendorQuoteFormModal({
         conversation_id: conversationId,
         event_name: name,
         event_date: ed.slice(0, 10),
-        event_end_date: eventEndDate.trim() ? eventEndDate.slice(0, 10) : null,
-        notes: notes.trim() || null,
+        event_end_date: end?.trim() ? end.slice(0, 10) : null,
+        notes: noteText || null,
         line_items: [
           {
             id,

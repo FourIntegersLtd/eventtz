@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { postBookingReview } from "@/lib/reviewsApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { parseForm, reviewSchema } from "@/lib/validation";
 import { StarRating } from "@/components/ui/StarRating";
 import { Button } from "@/components/ui/Button";
 import { TextArea } from "@/components/ui/TextArea";
@@ -42,18 +43,14 @@ export function ClientBookingReviewForm({
 
   const submit = async () => {
     setError(null);
-    const t = body.trim();
-    if (rating < 1) {
-      setError("Tap a star to rate your experience.");
-      return;
-    }
-    if (t.length < 10) {
-      setError("Please write at least 10 characters.");
+    const parsed = parseForm(reviewSchema, { rating, body });
+    if (!parsed.ok) {
+      setError(parsed.formError);
       return;
     }
     setBusy(true);
     try {
-      const res = await postBookingReview(bookingId, { rating, body: t });
+      const res = await postBookingReview(bookingId, parsed.data);
       onSubmitted(res.review);
       setBody("");
     } catch (e: unknown) {

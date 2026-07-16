@@ -10,7 +10,8 @@ import {
   type MarketplaceSearchState,
 } from "@/lib/marketplaceSearchParams";
 import { DEFAULT_COUNTRY_CODE } from "@/lib/markets";
-import { EVENT_DATE_PAST_ERROR, isPastIsoDate, todayIsoDate } from "@/lib/eventDateValidation";
+import { eventDatesSchema, parseForm } from "@/lib/validation";
+import { todayIsoDate } from "@/lib/eventDateValidation";
 import { formatEventDate } from "@/lib/dateFormat";
 import { DateInput } from "@/components/ui/DateInput";
 
@@ -149,8 +150,12 @@ export function HeroMarketplaceSearch({
 
   const addDraftDate = () => {
     if (!draftEventDate) return;
-    if (isPastIsoDate(draftEventDate)) {
-      setDatePickerError(EVENT_DATE_PAST_ERROR);
+    const parsed = parseForm(eventDatesSchema({ requireStart: true }), {
+      eventDate: draftEventDate,
+      eventEndDate: null,
+    });
+    if (!parsed.ok) {
+      setDatePickerError(parsed.fieldErrors.eventDate ?? parsed.formError);
       return;
     }
     setDatePickerError(null);

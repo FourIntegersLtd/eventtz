@@ -5,6 +5,7 @@ import { BackLink } from "@/components/ui/BackLink";
 import { Button } from "@/components/ui/Button";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { TextField } from "@/components/ui/TextField";
+import { PasswordField } from "@/components/ui/PasswordField";
 import { adminPageBg, adminCard } from "@/features/admin/adminTheme";
 import { AdminLoginIllustration } from "@/features/admin/auth/AdminLoginIllustration";
 import { useAdminLogin } from "@/features/admin/auth/useAdminLogin";
@@ -16,6 +17,7 @@ export function AdminLoginView() {
     password,
     setPassword,
     error,
+    fieldErrors,
     submitting,
     onSubmit,
     showLoadingShell,
@@ -88,15 +90,16 @@ export function AdminLoginView() {
                 type="email"
                 autoComplete="email"
                 value={email}
+                error={fieldErrors.email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
-              <TextField
+              <PasswordField
                 id="admin-password"
                 label="Password"
-                type="password"
                 autoComplete="current-password"
                 value={password}
+                error={fieldErrors.password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />

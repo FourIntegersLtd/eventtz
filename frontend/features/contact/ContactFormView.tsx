@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/Toast";
 import type { PortalRole } from "@/components/portal-shell/portalNav";
 import { portalRoute } from "@/components/portal-shell/portalNav";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { contactFormSchema, parseForm } from "@/lib/validation";
 import {
   CONTACT_SUBJECT_OPTIONS,
   submitClientContact,
@@ -37,21 +38,19 @@ export function ContactFormView({ role }: Props) {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    const trimmed = message.trim();
-    if (trimmed.length < 10) {
-      setError("Please enter at least 10 characters.");
-      return;
-    }
-    if (showBookingId && !bookingId.trim()) {
-      setError("Please enter your booking reference.");
+    const parsed = parseForm(contactFormSchema, { subject, message, bookingId });
+    if (!parsed.ok) {
+      setError(parsed.formError);
       return;
     }
     setBusy(true);
     try {
       const body = {
-        subject,
-        message: trimmed,
-        booking_id: showBookingId ? bookingId.trim() : null,
+        subject: parsed.data.subject,
+        message: parsed.data.message,
+        booking_id: BOOKING_SUBJECTS.has(parsed.data.subject)
+          ? (parsed.data.bookingId ?? "").trim() || null
+          : null,
       };
       if (role === "client") {
         await submitClientContact(body);

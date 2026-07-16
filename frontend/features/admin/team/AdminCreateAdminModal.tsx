@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { TextField } from "@/components/ui/TextField";
+import { PasswordField } from "@/components/ui/PasswordField";
 import { inviteAdminColleague } from "@/lib/adminTeamApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { adminInviteSchema, parseForm } from "@/lib/validation";
 
 type AdminCreateAdminModalProps = {
   isOpen: boolean;
@@ -18,24 +20,38 @@ export function AdminCreateAdminModal({ isOpen, onClose, onCreated }: AdminCreat
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!isOpen) return;
     setEmail("");
     setPassword("");
     setError(null);
+    setFieldErrors({});
     setBusy(false);
   }, [isOpen]);
 
+  const clearFieldError = (field: string) => {
+    setFieldErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
   const handleSubmit = async () => {
     setError(null);
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
+    setFieldErrors({});
+    const parsed = parseForm(adminInviteSchema, { email: email.trim(), password });
+    if (!parsed.ok) {
+      setFieldErrors(parsed.fieldErrors);
+      setError(parsed.formError);
       return;
     }
     setBusy(true);
     try {
-      const result = await inviteAdminColleague(email.trim(), password);
+      const result = await inviteAdminColleague(parsed.data.email, parsed.data.password);
       onCreated(result.message);
       onClose();
     } catch (err: unknown) {
@@ -75,17 +91,24 @@ export function AdminCreateAdminModal({ isOpen, onClose, onCreated }: AdminCreat
           type="email"
           autoComplete="off"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          error={fieldErrors.email}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            clearFieldError("email");
+          }}
           placeholder="colleague@company.com"
           required
         />
-        <TextField
+        <PasswordField
           id="create-admin-password"
           label="Password"
-          type="password"
           autoComplete="new-password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          error={fieldErrors.password}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            clearFieldError("password");
+          }}
           placeholder="At least 6 characters"
           minLength={6}
           required

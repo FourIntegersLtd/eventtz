@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Select } from "@/components/ui/Select";
 import { TextField } from "@/components/ui/TextField";
+import { PasswordField } from "@/components/ui/PasswordField";
 import { dashboardPathForUserType } from "@/features/auth/authRouting";
 import { useUnifiedRegister } from "@/features/auth/useUnifiedRegister";
 
@@ -18,6 +19,7 @@ export function UnifiedRegisterView() {
     password,
     setPassword,
     error,
+    fieldErrors,
     message,
     submitting,
     onSubmit,
@@ -48,15 +50,16 @@ export function UnifiedRegisterView() {
             required
             autoComplete="email"
             value={email}
+            error={fieldErrors.email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <TextField
+          <PasswordField
             label="Password"
-            type="password"
             required
             minLength={6}
             autoComplete="new-password"
             value={password}
+            error={fieldErrors.password}
             onChange={(e) => setPassword(e.target.value)}
           />
 

@@ -6,6 +6,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { getMe } from "@/lib/auth-api";
 import { LOGIN_CREDENTIALS_MISMATCH, wrongAdminPortalMessage } from "@/lib/auth-messages";
 import { dashboardPathForUserType } from "@/features/auth/authRouting";
+import { loginSchema, parseForm } from "@/lib/validation";
 
 export function useAdminLogin() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export function useAdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
   const next = searchParams.get("next") || "/admin/dashboard";
@@ -30,9 +32,16 @@ export function useAdminLogin() {
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
+    const parsed = parseForm(loginSchema, { email: email.trim(), password });
+    if (!parsed.ok) {
+      setFieldErrors(parsed.fieldErrors);
+      setError(parsed.formError);
+      return;
+    }
     setSubmitting(true);
     try {
-      await signIn(email.trim(), password);
+      await signIn(parsed.data.email, parsed.data.password);
       const u = await getMe();
       if (u.user_type !== "admin") {
         await signOut();
@@ -52,12 +61,28 @@ export function useAdminLogin() {
     (isAuthenticated && user?.user_type === "admin") ||
     (isAuthenticated && user != null && user.user_type !== "admin");
 
+  const clearFieldError = (field: string) => {
+    setFieldErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
   return {
     email,
-    setEmail,
+    setEmail: (value: string) => {
+      setEmail(value);
+      clearFieldError("email");
+    },
     password,
-    setPassword,
+    setPassword: (value: string) => {
+      setPassword(value);
+      clearFieldError("password");
+    },
     error,
+    fieldErrors,
     submitting,
     onSubmit,
     showLoadingShell,

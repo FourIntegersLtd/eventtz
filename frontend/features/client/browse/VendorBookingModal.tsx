@@ -18,7 +18,8 @@ import {
   formatBookingEstimateLabel,
 } from "@/lib/vendorDiscountDisplay";
 import { getBookingServiceFeePercent } from "@/lib/bookingServiceFee";
-import { todayIsoDate, validateEventDates, isPastIsoDate } from "@/lib/eventDateValidation";
+import { todayIsoDate, isPastIsoDate } from "@/lib/eventDateValidation";
+import { clientBookingRequestSchema, parseForm } from "@/lib/validation";
 import {
   type BrowsePricingOption,
   buildBookingLineItems,
@@ -146,21 +147,16 @@ export function VendorBookingModal({
   const minEventDate = todayIsoDate();
 
   const submit = () => {
-    if (!eventName.trim()) {
-      setValidationError("Please enter an event name.");
-      return;
-    }
-    if (!eventDate) {
-      setValidationError("Please choose an event date.");
-      return;
-    }
-    const dateError = validateEventDates(eventDate, eventEndDate);
-    if (dateError) {
-      setValidationError(dateError);
-      return;
-    }
-    if (selectedIds.size === 0) {
-      setValidationError("Close this and select at least one package or rate first.");
+    const parsed = parseForm(clientBookingRequestSchema, {
+      eventName,
+      eventDate,
+      eventEndDate: eventEndDate || null,
+      venueAddress,
+      notes,
+      selectedOptionIds: [...selectedIds],
+    });
+    if (!parsed.ok) {
+      setValidationError(parsed.formError);
       return;
     }
     if (calendarConflict) {
@@ -173,13 +169,13 @@ export function VendorBookingModal({
     setSubmitting(true);
     void postBookingRequest({
       vendor_user_id: vendorUserId,
-      event_name: eventName.trim(),
-      event_date: eventDate,
-      event_end_date: eventEndDate || null,
+      event_name: parsed.data.eventName,
+      event_date: parsed.data.eventDate,
+      event_end_date: parsed.data.eventEndDate?.trim() || null,
       event_postcode: null,
-      event_address: venueAddress.trim() || null,
-      notes: notes.trim() || null,
-      selected_option_ids: [...selectedIds],
+      event_address: (parsed.data.venueAddress ?? "").trim() || null,
+      notes: (parsed.data.notes ?? "").trim() || null,
+      selected_option_ids: parsed.data.selectedOptionIds,
     })
       .then((created) => {
         onSuccess?.(created.id);

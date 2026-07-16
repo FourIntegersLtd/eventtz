@@ -19,6 +19,7 @@ import {
 } from "@/lib/adminBlogApi";
 import { uploadImage } from "@/lib/mediaApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { adminBlogSaveSchema, parseForm } from "@/lib/validation";
 
 type AdminBlogEditorViewProps = {
   postId: string;
@@ -66,8 +67,17 @@ export function AdminBlogEditorView({ postId }: AdminBlogEditorViewProps) {
   }, [load]);
 
   const persistBody = async () => {
-    const titleTrim = title.trim();
-    const subtitleTrim = subtitle.trim();
+    const parsed = parseForm(adminBlogSaveSchema, {
+      title,
+      subtitle,
+      slug,
+      authorName,
+    });
+    if (!parsed.ok) {
+      throw new Error(parsed.formError);
+    }
+    const titleTrim = parsed.data.title;
+    const subtitleTrim = (parsed.data.subtitle ?? "").trim();
     // Avoid storing a subtitle that just repeats the title (shows twice on the public post page).
     const subtitleOut =
       subtitleTrim && subtitleTrim.toLowerCase() !== titleTrim.toLowerCase()
@@ -97,7 +107,7 @@ export function AdminBlogEditorView({ postId }: AdminBlogEditorViewProps) {
       await persistBody();
       setSavedHint("Saved");
     } catch (e: unknown) {
-      setError(getApiErrorDetail(e) ?? "Could not save.");
+      setError(e instanceof Error ? e.message : getApiErrorDetail(e) ?? "Could not save.");
     } finally {
       setSaving(false);
     }
@@ -116,7 +126,7 @@ export function AdminBlogEditorView({ postId }: AdminBlogEditorViewProps) {
       setPost(updated);
       setSavedHint(updated.status === "published" ? "Published" : "Unpublished");
     } catch (e: unknown) {
-      setError(getApiErrorDetail(e) ?? "Could not update publish state.");
+      setError(e instanceof Error ? e.message : getApiErrorDetail(e) ?? "Could not update publish state.");
     } finally {
       setPublishing(false);
     }

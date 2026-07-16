@@ -23,6 +23,7 @@ import {
   type OnboardingIconVisual,
 } from "@/features/client/onboarding/clientOnboardingVisuals";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { parseForm, preferredNameFormSchema } from "@/lib/validation";
 
 function stepIndex(step: ClientOnboardingStep): number {
   return CLIENT_ONBOARDING_STEPS.indexOf(step);
@@ -131,14 +132,14 @@ export function ClientWelcomeOnboardingModal() {
   if (!shouldShow) return null;
 
   const handleNameContinue = async () => {
-    const trimmed = name.trim();
-    if (!trimmed) {
-      setNameError("Please tell us your name, or skip for now.");
+    const parsed = parseForm(preferredNameFormSchema, { preferredName: name });
+    if (!parsed.ok) {
+      setNameError(parsed.formError);
       return;
     }
     setNameError(null);
     try {
-      await savePreferredName(trimmed);
+      await savePreferredName(parsed.data.preferredName);
       goNext();
     } catch {
       setNameError("We couldn't save that just now. Try again or skip.");

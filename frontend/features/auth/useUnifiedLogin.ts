@@ -6,6 +6,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { getMe } from "@/lib/auth-api";
 import { LOGIN_CREDENTIALS_MISMATCH, SESSION_VERIFY_FAILED } from "@/lib/auth-messages";
 import { resolvePostAuthPath } from "@/features/auth/authRouting";
+import { loginSchema, parseForm } from "@/lib/validation";
 
 export function useUnifiedLogin() {
   const router = useRouter();
@@ -15,14 +16,22 @@ export function useUnifiedLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
+    const parsed = parseForm(loginSchema, { email: email.trim(), password });
+    if (!parsed.ok) {
+      setFieldErrors(parsed.fieldErrors);
+      setError(parsed.formError);
+      return;
+    }
     setSubmitting(true);
     try {
-      await signIn(email.trim(), password);
+      await signIn(parsed.data.email, parsed.data.password);
     } catch {
       setError(LOGIN_CREDENTIALS_MISMATCH);
       setSubmitting(false);
@@ -38,12 +47,28 @@ export function useUnifiedLogin() {
     }
   };
 
+  const clearFieldError = (field: string) => {
+    setFieldErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
   return {
     email,
-    setEmail,
+    setEmail: (value: string) => {
+      setEmail(value);
+      clearFieldError("email");
+    },
     password,
-    setPassword,
+    setPassword: (value: string) => {
+      setPassword(value);
+      clearFieldError("password");
+    },
     error,
+    fieldErrors,
     submitting,
     onSubmit,
     postAuthQuery,

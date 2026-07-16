@@ -11,6 +11,7 @@ import {
   type AdminMessageAudience,
 } from "@/lib/adminMessagesApi";
 import { searchAdminDirectoryUsers, type AdminDirectoryUser } from "@/lib/adminPlatformApi";
+import { adminComposeMessageSchema, parseForm } from "@/lib/validation";
 
 type RecipientMode = "selected" | AdminMessageAudience;
 
@@ -81,10 +82,14 @@ export function AdminMessagesComposeView() {
   };
 
   const sendCompose = async () => {
-    const text = draft.trim();
-    if (!text || sending) return;
-    if (mode === "selected" && selected.length === 0) {
-      setError("Search and add at least one recipient, or choose an audience.");
+    if (sending) return;
+    const parsed = parseForm(adminComposeMessageSchema, {
+      body: draft,
+      audience: mode,
+      recipientCount: selected.length,
+    });
+    if (!parsed.ok) {
+      setError(parsed.formError);
       return;
     }
     setSending(true);
@@ -92,7 +97,7 @@ export function AdminMessagesComposeView() {
     setSuccess(null);
     try {
       const result = await sendAdminMessages({
-        body: text,
+        body: parsed.data.body,
         ...(mode === "selected"
           ? { recipient_user_ids: selected.map((u) => u.user_id) }
           : { audience: mode }),

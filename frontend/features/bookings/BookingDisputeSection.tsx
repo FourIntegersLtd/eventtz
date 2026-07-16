@@ -22,6 +22,7 @@ import { ParticipantDisputeStatusBadge } from "@/components/ui/ParticipantDisput
 import type { PortalRole } from "@/components/portal-shell/portalNav";
 import { portalRoute } from "@/components/portal-shell/portalNav";
 import { BOOKING_CONFIRM_COPY } from "@/features/bookings/bookingConfirmCopy";
+import { disputeSummarySchema, parseForm } from "@/lib/validation";
 
 const POLL_MS = 50_000;
 
@@ -92,13 +93,18 @@ export function BookingDisputeSection({
   const canOpenNew = statusAllowsNewDispute && !hasActive;
 
   const submitDispute = async () => {
+    const parsed = parseForm(disputeSummarySchema, { summary });
+    if (!parsed.ok) {
+      setError(parsed.formError);
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
       const created =
         role === "client"
-          ? await postClientBookingDispute(bookingId, summary.trim())
-          : await postVendorBookingDispute(bookingId, summary.trim());
+          ? await postClientBookingDispute(bookingId, parsed.data.summary)
+          : await postVendorBookingDispute(bookingId, parsed.data.summary);
       setDisputes((prev) => [created, ...prev.filter((x) => x.id !== created.id)]);
       setSummary("");
       setSubmitConfirmOpen(false);
@@ -173,8 +179,16 @@ export function BookingDisputeSection({
               </label>
               <button
                 type="button"
-                disabled={busy || summary.trim().length < 10}
-                onClick={() => setSubmitConfirmOpen(true)}
+                disabled={busy || !summary.trim()}
+                onClick={() => {
+                  const parsed = parseForm(disputeSummarySchema, { summary });
+                  if (!parsed.ok) {
+                    setError(parsed.formError);
+                    return;
+                  }
+                  setError(null);
+                  setSubmitConfirmOpen(true);
+                }}
                 className="rounded-xl bg-neutral-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {busy ? "Submitting…" : "Open a dispute"}

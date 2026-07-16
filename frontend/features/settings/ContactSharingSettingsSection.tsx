@@ -8,6 +8,7 @@ import {
   updateContactSharingSettings,
   type ContactSharingSettings,
 } from "@/lib/userSettingsApi";
+import { parseForm, contactPhoneFormSchema } from "@/lib/validation";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { inputClass, labelClass } from "@/components/vendor-onboarding/steps/form-primitives";
 import type { PortalRole } from "@/components/portal-shell/portalNav";
@@ -51,11 +52,18 @@ export function ContactSharingSettingsSection({ role }: ContactSharingSettingsSe
 
   const savePhone = async (phone: string) => {
     if (!settings) return;
+    const parsed = parseForm(contactPhoneFormSchema, { phone });
+    if (!parsed.ok) {
+      setError(parsed.formError);
+      return;
+    }
     setSaving(true);
     setError(null);
     setSaved(false);
     try {
-      const updated = await updateContactSharingSettings({ contact_phone: phone.trim() || null });
+      const updated = await updateContactSharingSettings({
+        contact_phone: parsed.data.phone,
+      });
       setSettings(updated);
       setSaved(true);
     } catch {

@@ -11,6 +11,7 @@ import {
   formatMoney,
   getMarket,
 } from "@/lib/markets";
+import { marketplaceBudgetSchema, parseForm } from "@/lib/validation";
 
 type MarketplaceFiltersBarProps = {
   state: MarketplaceSearchState;
@@ -46,6 +47,7 @@ function BudgetSortControls({ state, onCommit }: MarketplaceFiltersBarProps) {
   const [open, setOpen] = useState(false);
   const [minStr, setMinStr] = useState(() => (state.budgetMin != null ? String(state.budgetMin) : ""));
   const [maxStr, setMaxStr] = useState(() => (state.budgetMax != null ? String(state.budgetMax) : ""));
+  const [budgetError, setBudgetError] = useState<string | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const market = getMarket(state.country);
   const currencySymbol = formatCurrencySymbol(market.currency);
@@ -62,6 +64,12 @@ function BudgetSortControls({ state, onCommit }: MarketplaceFiltersBarProps) {
   const hasBudget = state.budgetMin != null || state.budgetMax != null;
 
   const apply = () => {
+    const parsed = parseForm(marketplaceBudgetSchema, { min: minStr, max: maxStr });
+    if (!parsed.ok) {
+      setBudgetError(parsed.formError);
+      return;
+    }
+    setBudgetError(null);
     onCommit({
       ...state,
       budgetMin: parseBudget(minStr),
@@ -74,6 +82,7 @@ function BudgetSortControls({ state, onCommit }: MarketplaceFiltersBarProps) {
   const clear = () => {
     setMinStr("");
     setMaxStr("");
+    setBudgetError(null);
     onCommit({ ...state, budgetMin: null, budgetMax: null, page: 1 });
     setOpen(false);
   };
@@ -111,7 +120,10 @@ function BudgetSortControls({ state, onCommit }: MarketplaceFiltersBarProps) {
                 step={1}
                 inputMode="decimal"
                 value={minStr}
-                onChange={(e) => setMinStr(e.target.value)}
+                onChange={(e) => {
+                  setMinStr(e.target.value);
+                  setBudgetError(null);
+                }}
                 placeholder={`Min (${currencySymbol})`}
                 aria-label="Minimum budget"
                 className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 outline-none ring-primary/15 focus:border-primary focus:bg-white focus:ring-2"
@@ -123,12 +135,18 @@ function BudgetSortControls({ state, onCommit }: MarketplaceFiltersBarProps) {
                 step={1}
                 inputMode="decimal"
                 value={maxStr}
-                onChange={(e) => setMaxStr(e.target.value)}
+                onChange={(e) => {
+                  setMaxStr(e.target.value);
+                  setBudgetError(null);
+                }}
                 placeholder={`Max (${currencySymbol})`}
                 aria-label="Maximum budget"
                 className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 outline-none ring-primary/15 focus:border-primary focus:bg-white focus:ring-2"
               />
             </div>
+            {budgetError ? (
+              <p className="mt-2 text-xs font-medium text-red-600">{budgetError}</p>
+            ) : null}
             <div className="mt-3 flex items-center justify-between gap-2">
               <button
                 type="button"

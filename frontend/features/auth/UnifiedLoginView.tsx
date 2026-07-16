@@ -5,6 +5,7 @@ import { AuthPageShell } from "@/components/auth/AuthPageShell";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { TextField } from "@/components/ui/TextField";
+import { PasswordField } from "@/components/ui/PasswordField";
 import { dashboardPathForUserType } from "@/features/auth/authRouting";
 import { useUnifiedLogin } from "@/features/auth/useUnifiedLogin";
 
@@ -15,6 +16,7 @@ export function UnifiedLoginView() {
     password,
     setPassword,
     error,
+    fieldErrors,
     submitting,
     onSubmit,
     postAuthQuery,
@@ -35,15 +37,16 @@ export function UnifiedLoginView() {
             required
             autoComplete="email"
             value={email}
+            error={fieldErrors.email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <TextField
+          <PasswordField
             label="Password"
-            type="password"
             required
             minLength={6}
             autoComplete="current-password"
             value={password}
+            error={fieldErrors.password}
             onChange={(e) => setPassword(e.target.value)}
           />
 

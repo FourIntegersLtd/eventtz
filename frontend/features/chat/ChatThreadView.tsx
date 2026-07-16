@@ -24,6 +24,7 @@ import {
 } from "@/lib/chatApi";
 import { fetchVendorBookings } from "@/lib/vendorBookingsApi";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
+import { chatMessageSchema, parseForm } from "@/lib/validation";
 
 type ChatThreadViewProps = {
   portal: "client" | "vendor";
@@ -167,12 +168,16 @@ export function ChatThreadView({
   }, [messages.length]);
 
   const send = async () => {
-    const text = draft.trim();
-    if (!text || sending || !uid) return;
+    if (sending || !uid) return;
+    const parsed = parseForm(chatMessageSchema, { body: draft });
+    if (!parsed.ok) {
+      setError(parsed.formError);
+      return;
+    }
     setSending(true);
     setError(null);
     try {
-      const msg = await postMessage(conversationId, text);
+      const msg = await postMessage(conversationId, parsed.data.body);
       setDraft("");
       setMessages((prev) => [...prev, msg]);
       if (typeof window !== "undefined") {

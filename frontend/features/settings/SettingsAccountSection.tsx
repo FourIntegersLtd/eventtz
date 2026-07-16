@@ -11,6 +11,7 @@ import { TextField } from "@/components/ui/TextField";
 import type { PortalRole } from "@/components/portal-shell/portalNav";
 import { portalRoute } from "@/components/portal-shell/portalNav";
 import { updateClientOnboarding, getClientOnboarding } from "@/lib/clientOnboardingApi";
+import { parseForm, preferredNameFormSchema } from "@/lib/validation";
 
 type Props = {
   role: PortalRole;
@@ -43,20 +44,20 @@ export function SettingsAccountSection({ role }: Props) {
   }, [role, user?.id, user?.preferred_name]);
 
   const savePreferredName = async () => {
-    const trimmed = name.trim();
-    if (!trimmed) {
-      setNameError("Please enter a name.");
+    const parsed = parseForm(preferredNameFormSchema, { preferredName: name });
+    if (!parsed.ok) {
+      setNameError(parsed.formError);
       return;
     }
-    if (trimmed === (savedName ?? "")) return;
+    if (parsed.data.preferredName === (savedName ?? "")) return;
 
     setSaving(true);
     setNameError(null);
     setNameSaved(false);
     try {
-      const updated = await updateClientOnboarding({ preferredName: trimmed });
+      const updated = await updateClientOnboarding({ preferredName: parsed.data.preferredName });
       await refreshUser();
-      const next = updated.preferred_name?.trim() ?? trimmed;
+      const next = updated.preferred_name?.trim() ?? parsed.data.preferredName;
       setName(next);
       setSavedName(next || null);
       setNameSaved(true);

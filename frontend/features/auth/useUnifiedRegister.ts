@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { SIGNUP_GENERIC_ERROR } from "@/lib/auth-messages";
 import { resolvePostAuthPath } from "@/features/auth/authRouting";
+import { parseForm, registerSchema } from "@/lib/validation";
 
 export type RegisterAccountType = "client" | "vendor";
 
@@ -33,20 +34,34 @@ export function useUnifiedRegister() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
     setMessage(null);
+    const parsed = parseForm(registerSchema, {
+      accountType,
+      email: email.trim(),
+      password,
+    });
+    if (!parsed.ok) {
+      setFieldErrors(parsed.fieldErrors);
+      setError(parsed.formError);
+      return;
+    }
     setSubmitting(true);
     try {
-      const result = await signUp(email.trim(), password, { userType: accountType });
+      const result = await signUp(parsed.data.email, parsed.data.password, {
+        userType: parsed.data.accountType,
+      });
       if (result.message) {
         setMessage(result.message);
       } else {
-        router.push(resolvePostAuthPath(searchParams.get("next"), accountType));
+        router.push(resolvePostAuthPath(searchParams.get("next"), parsed.data.accountType));
       }
     } catch {
       setError(SIGNUP_GENERIC_ERROR);
@@ -55,14 +70,33 @@ export function useUnifiedRegister() {
     }
   };
 
+  const clearFieldError = (field: string) => {
+    setFieldErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
   return {
     accountType,
-    setAccountType,
+    setAccountType: (value: RegisterAccountType) => {
+      setAccountType(value);
+      clearFieldError("accountType");
+    },
     email,
-    setEmail,
+    setEmail: (value: string) => {
+      setEmail(value);
+      clearFieldError("email");
+    },
     password,
-    setPassword,
+    setPassword: (value: string) => {
+      setPassword(value);
+      clearFieldError("password");
+    },
     error,
+    fieldErrors,
     message,
     submitting,
     onSubmit,

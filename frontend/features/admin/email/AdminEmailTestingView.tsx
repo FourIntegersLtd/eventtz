@@ -16,6 +16,7 @@ import {
 } from "@/lib/adminEmailApi";
 import { isSuperAdmin } from "@/lib/adminRole";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { adminEmailTestSchema, parseForm } from "@/lib/validation";
 
 function groupTemplates(templates: AdminEmailTemplate[]) {
   const order = ["Marketing", "Account", "Booking", "Admin alerts"];
@@ -85,15 +86,25 @@ export function AdminEmailTestingView() {
   }, [user?.email, emailInitialized]);
 
   const sendTest = async () => {
-    const email = toEmail.trim();
-    if (!templateId || !email || sending) return;
+    if (sending) return;
+    const parsed = parseForm(adminEmailTestSchema, {
+      templateId,
+      toEmail,
+    });
+    if (!parsed.ok) {
+      setError(parsed.formError);
+      return;
+    }
     setSending(true);
     setError(null);
     setSuccess(null);
     try {
-      const result = await sendAdminEmailTest({ template_id: templateId, to_email: email });
+      const result = await sendAdminEmailTest({
+        template_id: parsed.data.templateId,
+        to_email: parsed.data.toEmail,
+      });
       if (result.delivered) {
-        setSuccess(result.message ?? `Sent to ${email}.`);
+        setSuccess(result.message ?? `Sent to ${parsed.data.toEmail}.`);
       } else {
         setError(result.message ?? "Email was not sent.");
       }

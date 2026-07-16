@@ -5,7 +5,13 @@ import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { patchAdminDispute, type AdminDisputeCase } from "@/lib/adminPlatformApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { adminPartialRefundSchema, parseForm } from "@/lib/validation";
+import { z } from "zod";
 import { RESOLUTION_ACTIONS, resolutionActionLabel } from "./disputeFormatters";
+
+const disputeNoteSchema = z.object({
+  note: z.string().trim().max(8000, "Message is too long."),
+});
 
 type DisputeResolveModalProps = {
   dispute: AdminDisputeCase;
@@ -24,10 +30,21 @@ export function DisputeResolveModal({ dispute, onClose, onResolved }: DisputeRes
 
   const submit = async () => {
     setError(null);
+    let refundAmountGbp: number | null = null;
     if (action === "partial_refund") {
-      const amt = Number.parseFloat(refundAmount);
-      if (!Number.isFinite(amt) || amt <= 0) {
-        setError("Enter a valid refund amount greater than £0.");
+      const parsed = parseForm(adminPartialRefundSchema, {
+        amount: refundAmount,
+        note,
+      });
+      if (!parsed.ok) {
+        setError(parsed.formError);
+        return;
+      }
+      refundAmountGbp = parsed.data.amount;
+    } else {
+      const parsed = parseForm(disputeNoteSchema, { note });
+      if (!parsed.ok) {
+        setError(parsed.formError);
         return;
       }
     }
@@ -36,7 +53,7 @@ export function DisputeResolveModal({ dispute, onClose, onResolved }: DisputeRes
       await patchAdminDispute(dispute.id, {
         status: "resolved",
         resolution_action: action,
-        refund_amount_gbp: action === "partial_refund" ? Number.parseFloat(refundAmount) : null,
+        refund_amount_gbp: refundAmountGbp,
         resolution_note: note.trim() || null,
       });
       onResolved();

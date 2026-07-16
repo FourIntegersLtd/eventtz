@@ -9,6 +9,7 @@ import type { BookingPricing } from "@/features/bookings/BookingPricingBreakdown
 import { fetchConversation } from "@/lib/chatApi";
 import type { VendorBookingDetail } from "@/lib/vendorBookingsApi";
 import { getBookingServiceFeePercent } from "@/lib/bookingServiceFee";
+import { parseForm, vendorPriceAdjustmentsSchema } from "@/lib/validation";
 
 type AdjDraftRow = {
   kind: "cost" | "discount";
@@ -153,6 +154,7 @@ export function VendorBookingResponseFlow({
   const [lines, setLines] = useState<AdjDraftRow[]>([]);
   const [amountInput, setAmountInput] = useState("");
   const [reasonInput, setReasonInput] = useState("");
+  const [adjError, setAdjError] = useState<string | null>(null);
 
   const adjustDrafts = lines;
   const previewTotal = previewClientTotalLabel(detail.pricing, adjustDrafts);
@@ -205,6 +207,22 @@ export function VendorBookingResponseFlow({
     if (adjKind === "cost" && amountInput.trim() && !reasonInput.trim()) return true;
     return false;
   }, [adjustDrafts, adjKind, amountInput, reasonInput]);
+
+  const handleSendUpdatedPrice = () => {
+    setAdjError(null);
+    const parsed = parseForm(vendorPriceAdjustmentsSchema, {
+      rows: adjustDrafts.map((row) => ({
+        kind: row.kind,
+        amount: row.amount,
+        reason: row.kind === "cost" ? row.label : "",
+      })),
+    });
+    if (!parsed.ok) {
+      setAdjError(parsed.formError);
+      return;
+    }
+    onSendUpdatedPrice(adjustDrafts);
+  };
 
   const requestDecision = async (kind: PendingDecision) => {
     if (actionBusy || adjSaving || checkingDecision) return;
@@ -325,6 +343,12 @@ export function VendorBookingResponseFlow({
           <p className="text-xs text-amber-700">Add a reason for the extra charge.</p>
         ) : null}
 
+        {adjError ? (
+          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+            {adjError}
+          </p>
+        ) : null}
+
         {previewTotal ? (
           <p className="text-sm text-neutral-600">
             New total for them:{" "}
@@ -346,7 +370,7 @@ export function VendorBookingResponseFlow({
             className="w-full sm:w-auto"
             disabled={adjSaving || actionBusy || sendDisabled}
             loading={adjSaving}
-            onClick={() => onSendUpdatedPrice(adjustDrafts)}
+            onClick={handleSendUpdatedPrice}
           >
             Send new price
           </Button>

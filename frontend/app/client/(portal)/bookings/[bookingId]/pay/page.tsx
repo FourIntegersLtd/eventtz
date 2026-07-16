@@ -11,6 +11,7 @@ import {
   patchClientBookingVenue,
 } from "@/lib/clientBookingsApi";
 import { PAYMENT_FLOW_COPY } from "@/features/bookings/bookingConfirmCopy";
+import { parseForm, payVenueSchema } from "@/lib/validation";
 
 /** Collects venue details if needed, then redirects to Stripe Checkout. */
 export default function ClientBookingPayPage() {
@@ -52,15 +53,15 @@ export default function ClientBookingPayPage() {
 
   const continueToCheckout = async () => {
     if (!bookingId) return;
-    const addr = venueAddress.trim();
-    if (addr.length < 3) {
-      setError("Enter the venue address.");
+    const parsed = parseForm(payVenueSchema, { eventAddress: venueAddress });
+    if (!parsed.ok) {
+      setError(parsed.formError);
       return;
     }
     setBusy(true);
     setError(null);
     try {
-      await patchClientBookingVenue(bookingId, { event_address: addr });
+      await patchClientBookingVenue(bookingId, { event_address: parsed.data.eventAddress });
       const checkoutUrl = await postBookingCheckout(bookingId);
       window.location.href = checkoutUrl;
     } catch (e: unknown) {
