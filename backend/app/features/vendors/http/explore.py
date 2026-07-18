@@ -7,6 +7,9 @@ from fastapi import APIRouter, HTTPException, Query
 from app.core.logging import get_logger
 from app.contracts.reviews import PublicReviewItem, VendorPublicReviewsResponse
 from app.contracts.vendor import (
+    ExplorePlanNeed,
+    ExploreSearchPlan,
+    ExploreSearchSection,
     ExploreVendorRow,
     ExploreVendorSearchResponse,
     ExploreVendorSingleResponse,
@@ -137,13 +140,45 @@ def get_explore_vendors_search(
         offset=offset,
     )
     logger.info(
-        "GET /vendors/explore/search total_count=%s page=%s exact=%s related=%s sort=%s",
+        "GET /vendors/explore/search total_count=%s page=%s mode=%s exact=%s related=%s sort=%s",
         result.total_count,
         len(result.vendors),
+        result.search_mode,
         result.has_exact,
         result.has_related,
         sort,
     )
+    plan_out = None
+    if result.plan is not None:
+        # Checklist keeps ``rationale``; browse sections use ``why`` for the same copy.
+        plan_out = ExploreSearchPlan(
+            title=result.plan.title,
+            event_types=list(result.plan.event_types),
+            needs=[
+                ExplorePlanNeed(
+                    id=n.id,
+                    label=n.label,
+                    service_key=n.service_key,
+                    keywords=list(n.keywords),
+                    optional=n.optional,
+                    rationale=n.rationale,
+                )
+                for n in result.plan.needs
+            ],
+            intent_summary=result.plan.intent_summary,
+        )
+    sections_out = [
+        ExploreSearchSection(
+            need_id=s.need_id,
+            label=s.label,
+            service_key=s.service_key,
+            optional=s.optional,
+            vendors=s.vendors,
+            total_count=s.total_count,
+            why=s.why,
+        )
+        for s in result.sections
+    ]
     return ExploreVendorSearchResponse(
         success=True,
         total_count=result.total_count,
@@ -151,6 +186,10 @@ def get_explore_vendors_search(
         match_notice=result.match_notice,
         has_exact=result.has_exact,
         has_related=result.has_related,
+        search_mode=result.search_mode,
+        intent_summary=result.intent_summary,
+        plan=plan_out,
+        sections=sections_out,
     )
 
 

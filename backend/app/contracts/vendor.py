@@ -100,6 +100,12 @@ class ExploreVendorSingleResponse(BaseModel):
     vendor: ExploreVendorRow
 
 
+class ExploreVendorFeaturedReview(BaseModel):
+    rating: int
+    body_excerpt: str
+    reviewer_display: str
+
+
 class ExploreVendorSearchRow(ExploreVendorRow):
     """Marketplace listing row, including which services matched the search."""
 
@@ -108,6 +114,35 @@ class ExploreVendorSearchRow(ExploreVendorRow):
         default="exact",
         description="exact | related | fallback — how closely the listing matched the search",
     )
+    featured_review: ExploreVendorFeaturedReview | None = None
+    match_hint: str | None = None
+
+
+class ExplorePlanNeed(BaseModel):
+    id: str
+    label: str
+    service_key: str
+    keywords: list[str] = Field(default_factory=list)
+    optional: bool = False
+    rationale: str | None = None
+
+
+class ExploreSearchPlan(BaseModel):
+    title: str
+    event_types: list[str] = Field(default_factory=list)
+    needs: list[ExplorePlanNeed] = Field(default_factory=list)
+    intent_summary: str | None = None
+
+
+class ExploreSearchSection(BaseModel):
+    need_id: str
+    label: str
+    service_key: str
+    optional: bool = False
+    vendors: list[ExploreVendorSearchRow] = Field(default_factory=list)
+    # Full matching pool size (may be larger than len(vendors)).
+    total_count: int = 0
+    why: str | None = None
 
 
 class ExploreVendorSearchResponse(BaseModel):
@@ -117,6 +152,10 @@ class ExploreVendorSearchResponse(BaseModel):
     match_notice: str | None = None
     has_exact: bool = False
     has_related: bool = False
+    search_mode: str = Field(default="simple", description="simple | plan")
+    intent_summary: str | None = None
+    plan: ExploreSearchPlan | None = None
+    sections: list[ExploreSearchSection] = Field(default_factory=list)
 
 
 class AdminVendorApprovalBody(BaseModel):

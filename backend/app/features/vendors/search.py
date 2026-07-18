@@ -1,16 +1,28 @@
-"""Search approved vendors with filters (reads profile JSON)."""
+"""Search approved vendors with filters (reads profile JSON).
+
+Two browse modes after AI parse (see ``search_ai.parse_marketplace_query``):
+
+- **simple** — one ranked list (exact → related → fallback), same as classic search.
+- **plan** — a short checklist of needs (cake, food, photos…). Each need is a
+  section with vendors. A vendor is only shown once (first matching need wins).
+"""
 
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta
 from typing import Any, Literal
 
-from app.contracts.marketplace_search import MarketplaceSearchResult
+from app.contracts.marketplace_search import (
+    MarketplacePlanNeed,
+    MarketplaceSearchPlan,
+    MarketplaceSearchResult,
+    MarketplaceSearchSection,
+)
 from app.core.logging import get_logger
 from app.features.vendors.markets import normalize_country_code
 from app.features.vendors.list_pricing import min_listing_price_gbp
 from app.features.vendors.moderation import list_approved_vendors_for_explore
-from app.features.vendors.search_ai import parse_marketplace_query
+from app.features.vendors.search_ai import parse_marketplace_query, why_for_need
 
 logger = get_logger(__name__)
 
@@ -18,6 +30,30 @@ SortKey = Literal["relevance", "price_asc", "price_desc", "proximity", "rating"]
 MatchTier = Literal["exact", "related", "fallback"]
 
 _TIER_RANK = {"exact": 0, "related": 1, "fallback": 2}
+# Cap how many cards we return per plan section (UI stays scannable).
+_PLAN_SECTION_VENDOR_LIMIT = 8
+# Hard ceiling on checklist length from the AI / canned plans.
+_PLAN_MAX_NEEDS = 6
+# Rank more candidates than we show so earlier sections don't empty later ones.
+_PLAN_RANK_POOL_MULTIPLIER = 4
+_PLAN_RANK_POOL_MIN = 24
+
+_MATCH_HINT_BY_SERVICE: dict[str, str] = {
+    "baking": "Offers cakes and baking",
+    "catering": "Offers catering",
+    "photography": "Offers photography",
+    "makeup": "Offers makeup",
+    "rentals": "Offers decor and hire",
+}
+
+# Help pick review quotes that match the section the vendor was claimed under.
+_REVIEW_PREFER_TERMS: dict[str, list[str]] = {
+    "baking": ["cake", "baker", "baking", "cupcake", "dessert", "icing"],
+    "catering": ["food", "cater", "jollof", "chops", "meal", "rice", "buffet"],
+    "photography": ["photo", "picture", "shot", "album", "camera"],
+    "makeup": ["makeup", "glam", "mua", "bridal"],
+    "rentals": ["decor", "hire", "rental", "table", "chair", "balloon"],
+}
 
 
 def _services_offered(payload: dict[str, Any]) -> list[str]:
@@ -224,80 +260,30 @@ def _build_match_notice(
     return None
 
 
-def search_approved_vendors(
+def _rank_candidates(
+    rows: list[dict[str, Any]],
     *,
-    types: str | None = None,
-    location: str | None = None,
-    q: str | None = None,
-    dates: str | None = None,
-    flexible: bool = False,
-    budget_min: float | None = None,
-    budget_max: float | None = None,
-    sort: str = "relevance",
-    vendor_user_ids: list[str] | None = None,
-    country: str | None = None,
-    limit: int = 200,
-    offset: int = 0,
+    primary_types: list[str],
+    related_types: list[str],
+    keywords: list[str],
+    related_keywords: list[str],
+    location_filter: str,
+    related_locations: list[str],
+    parsed_event_types: list[str],
+    date_parts: list[str],
+    apply_date_availability: bool,
+    budget_min: float | None,
+    budget_max: float | None,
+    sort_key: str,
+    intent_summary: str | None,
+    limit: int,
+    offset: int,
+    service_match_counts_as_exact: bool = False,
 ) -> MarketplaceSearchResult:
-    """
-    Return approved vendors with optional filters, ordered exact → related → fallback.
-
-    When the client sends specific event dates and ``flexible`` is false, exact matches
-    must be free on those dates. A vendor who fits otherwise but is busy can still appear
-    as a related match. If there are no exact or related matches, fallback returns
-    same-type (or all) approved vendors so browse is rarely empty.
-    """
-    chip_types = _parse_types_param(types)
-    date_parts = _parse_dates_param(dates)
-    limit = max(1, min(limit, 200))
-    offset = max(0, offset)
-
-    raw_q = (q or "").strip()
-    market_country = normalize_country_code(country)
-    parsed = parse_marketplace_query(raw_q, country_code=market_country) if raw_q else None
-
-    city_query = (location or "").strip() or None
-    if not city_query and parsed and parsed.location:
-        city_query = parsed.location
-
-    rows = list_approved_vendors_for_explore(
-        vendor_user_ids=vendor_user_ids,
-        budget_min=budget_min,
-        budget_max=budget_max,
-        service_types=chip_types or None,
-        city_query=city_query,
-        country_code=market_country,
-    )
-
-    primary_types = list(chip_types)
-    if not primary_types and parsed and parsed.types:
-        primary_types = list(parsed.types)
-
-    related_types = list(parsed.related_types) if parsed else []
+    """Score and tier a preloaded vendor pool for one filter set."""
     related_types = [t for t in related_types if t not in primary_types]
-
-    location_filter = (location or "").strip()
-    if not location_filter and parsed and parsed.location:
-        location_filter = parsed.location.strip()
-    related_locations = list(parsed.related_locations) if parsed else []
-
-    keywords: list[str] = list(parsed.keywords) if parsed else []
-    if not keywords and raw_q:
-        keywords = [w for w in raw_q.lower().split() if len(w) >= 2][:16]
-    related_keywords: list[str] = list(parsed.related_keywords) if parsed else []
-
-    parsed_event_types = list(parsed.event_types) if parsed else []
-    intent_summary = parsed.intent_summary if parsed else None
-
-    sort_key = sort.strip().lower() if sort else "relevance"
-    if sort_key not in ("relevance", "price_asc", "price_desc", "proximity", "rating"):
-        sort_key = "relevance"
-
-    apply_date_availability = bool(date_parts) and not flexible
-    date_softened = False
-
-    # Fallback pool: ignore text and dates; keep budget and optional service type.
     fallback_type_pool = primary_types or related_types
+    date_softened = False
 
     exact_rows: list[dict[str, Any]] = []
     related_rows: list[dict[str, Any]] = []
@@ -336,7 +322,16 @@ def search_approved_vendors(
         kw_hits = _keyword_hit_count(hay, keywords) if keywords else 0
         rel_kw_hits = _keyword_hit_count(hay, related_keywords) if related_keywords else 0
         keyword_ok_exact = (not keywords) or kw_hits > 0
+        if service_match_counts_as_exact and primary_svc_hits:
+            keyword_ok_exact = True
+        # For plan needs with a service key, matching the service is enough even without keyword hits.
+        if primary_types and not keywords:
+            keyword_ok_exact = True
         keyword_ok_related = kw_hits > 0 or rel_kw_hits > 0 or (not keywords and not related_keywords)
+        if primary_types and primary_svc_hits and not keywords:
+            keyword_ok_related = True
+        if service_match_counts_as_exact and primary_svc_hits:
+            keyword_ok_related = True
 
         loc_l = location_filter.strip().lower()
         city_l = base_city.strip().lower()
@@ -368,7 +363,6 @@ def search_approved_vendors(
             related_keyword_hits=rel_kw_hits,
             event_type_hits=event_type_hits,
         )
-        # Location only affects ranking — never removes a vendor from results.
         if primary_loc_hit:
             score += 0.5
 
@@ -384,34 +378,19 @@ def search_approved_vendors(
             "_ts": _updated_ts(row),
             "_score": score,
         }
-        candidates_by_id[uid] = {
-            **out_row,
-            "_available": available,
-            "_type_ok_exact": type_ok_exact,
-            "_type_ok_related": type_ok_related or type_ok_exact,
-            "_keyword_ok_exact": keyword_ok_exact,
-            "_keyword_ok_related": keyword_ok_related or keyword_ok_exact,
-            "_primary_svc": bool(primary_svc_hits),
-            "_related_or_primary_svc": bool(primary_svc_hits or related_svc_hits) or not (
-                primary_types or related_types
-            ),
-            "_related_loc_hit": related_loc_hit or primary_loc_hit,
-        }
+        candidates_by_id[uid] = out_row
 
-        # --- Exact matches ---
         if type_ok_exact and keyword_ok_exact and available:
             exact_rows.append({**out_row, "match_tier": "exact"})
             continue
 
-        # --- Related matches ---
         related_ok = False
         if type_ok_related and (keyword_ok_related or related_loc_hit or primary_loc_hit):
             related_ok = True
         if type_ok_exact and not available and apply_date_availability:
-            # Right service but busy on the date — still worth showing.
             related_ok = True
             date_softened = True
-        if type_ok_exact and not keyword_ok_exact and (rel_kw_hits > 0 or related_loc_hit):
+        if type_ok_exact and not keyword_ok_exact and (rel_kw_hits > 0 or related_loc_hit or primary_svc_hits):
             related_ok = True
         if related_ok:
             related_rows.append({**out_row, "match_tier": "related"})
@@ -442,7 +421,6 @@ def search_approved_vendors(
                 },
             )
 
-        # Last resort: any approved vendor that passed the budget filter.
         if not fallback_rows:
             for cand in candidates_by_id.values():
                 fallback_rows.append(
@@ -462,7 +440,6 @@ def search_approved_vendors(
                 )
 
     enriched = exact_rows + related_rows + fallback_rows
-    # Import here to avoid a circular import: bookings.reviews → bookings → calendar → search.
     from app.features.bookings.reviews import merge_review_stats_into_vendor_rows
     from app.features.vendors.public_metrics import merge_public_metrics_into_vendor_rows
 
@@ -506,24 +483,301 @@ def search_approved_vendors(
     )
 
     total_count = len(enriched)
-    enriched = enriched[offset : offset + limit]
-
-    logger.info(
-        "search_approved_vendors exact=%s related=%s fallback=%s total=%s q=%r",
-        sum(1 for r in enriched if r.get("match_tier") == "exact"),
-        sum(1 for r in enriched if r.get("match_tier") == "related"),
-        sum(1 for r in enriched if r.get("match_tier") == "fallback"),
-        total_count,
-        raw_q[:80],
-    )
+    page = enriched[offset : offset + limit]
 
     return MarketplaceSearchResult(
-        vendors=enriched,
+        vendors=page,
         match_notice=notice,
         has_exact=has_exact,
         has_related=has_related,
         total_count=total_count,
     )
+
+
+def _match_hint_for_need(*, service_key: str) -> str | None:
+    """Short honest line for plan cards (service the section is about)."""
+    return _MATCH_HINT_BY_SERVICE.get(service_key)
+
+
+def _search_plan_sections(
+    rows: list[dict[str, Any]],
+    *,
+    needs: list[MarketplacePlanNeed],
+    location_filter: str,
+    related_locations: list[str],
+    parsed_event_types: list[str],
+    date_parts: list[str],
+    apply_date_availability: bool,
+    budget_min: float | None,
+    budget_max: float | None,
+    sort_key: str,
+    intent_summary: str | None,
+    plan_title: str | None,
+) -> MarketplaceSearchResult:
+    """
+    Build the plan browse layout.
+
+    For each checklist need we rank vendors that offer that service. A vendor who
+    offers several services (e.g. cake + catering) is assigned to the **first**
+    need that claims them so they do not repeat down the page.
+
+    ``section.why`` is the client-facing sentence (from AI ``rationale`` or canned
+    copy). ``section.total_count`` is how many unclaimed matches exist before we
+    trim to ``_PLAN_SECTION_VENDOR_LIMIT`` cards (so “See more” can work).
+    """
+    sections: list[MarketplaceSearchSection] = []
+    flat: list[dict[str, Any]] = []
+    claimed_ids: set[str] = set()
+    has_exact = False
+    has_related = False
+    pool_limit = max(
+        _PLAN_SECTION_VENDOR_LIMIT * _PLAN_RANK_POOL_MULTIPLIER,
+        _PLAN_RANK_POOL_MIN,
+    )
+
+    for need in needs[:_PLAN_MAX_NEEDS]:
+        ranked = _rank_candidates(
+            rows,
+            primary_types=[need.service_key],
+            related_types=[],
+            keywords=list(need.keywords),
+            related_keywords=[],
+            location_filter=location_filter,
+            related_locations=related_locations,
+            parsed_event_types=parsed_event_types,
+            date_parts=date_parts,
+            apply_date_availability=apply_date_availability,
+            budget_min=budget_min,
+            budget_max=budget_max,
+            sort_key=sort_key,
+            intent_summary=intent_summary,
+            limit=pool_limit,
+            offset=0,
+            # Plan sections care that the vendor offers the service; keywords boost rank.
+            service_match_counts_as_exact=True,
+        )
+        has_exact = has_exact or ranked.has_exact
+        has_related = has_related or ranked.has_related
+
+        unclaimed = [
+            v
+            for v in ranked.vendors
+            if str(v.get("user_id") or "") and str(v.get("user_id") or "") not in claimed_ids
+        ]
+        pool_size = len(unclaimed)
+        section_vendors = unclaimed[:_PLAN_SECTION_VENDOR_LIMIT]
+        for v in section_vendors:
+            claimed_ids.add(str(v.get("user_id") or ""))
+
+        if not section_vendors:
+            continue
+
+        # Display copy lives on the section as ``why`` (UI). Need.rationale is the
+        # AI/canned source field kept on the plan checklist for consistency.
+        why = why_for_need(
+            service_key=need.service_key,
+            event_types=parsed_event_types,
+            rationale=need.rationale,
+        )
+        hint = _match_hint_for_need(service_key=need.service_key)
+        for v in section_vendors:
+            v["match_hint"] = hint
+
+        sections.append(
+            MarketplaceSearchSection(
+                need_id=need.id,
+                label=need.label,
+                service_key=need.service_key,
+                optional=need.optional,
+                vendors=section_vendors,
+                total_count=pool_size,
+                why=why,
+            ),
+        )
+        flat.extend(section_vendors)
+
+    # Real review quotes only — never invent testimonials.
+    # Prefer quotes that mention this section’s service (cake vs food, etc.).
+    try:
+        from app.features.bookings.reviews import featured_snippets_for_vendor_ids
+
+        prefer_terms: dict[str, list[str]] = {}
+        for section in sections:
+            terms = _REVIEW_PREFER_TERMS.get(section.service_key) or []
+            for v in section.vendors:
+                uid = str(v.get("user_id") or "")
+                if uid and terms:
+                    prefer_terms[uid] = terms
+
+        snippets = featured_snippets_for_vendor_ids(
+            [str(v.get("user_id") or "") for v in flat],
+            prefer_terms_by_vendor=prefer_terms,
+        )
+        for v in flat:
+            uid = str(v.get("user_id") or "")
+            snip = snippets.get(uid)
+            if snip:
+                v["featured_review"] = snip
+    except Exception:
+        logger.exception("plan search: featured review snippets failed")
+
+    enriched_needs: list[MarketplacePlanNeed] = []
+    for need in needs[:_PLAN_MAX_NEEDS]:
+        rationale = why_for_need(
+            service_key=need.service_key,
+            event_types=parsed_event_types,
+            rationale=need.rationale,
+        )
+        enriched_needs.append(need.model_copy(update={"rationale": rationale}))
+
+    title = (plan_title or intent_summary or "Ideas for your event").strip()[:160]
+    plan = MarketplaceSearchPlan(
+        title=title,
+        event_types=list(parsed_event_types),
+        needs=enriched_needs,
+        intent_summary=intent_summary,
+    )
+
+    return MarketplaceSearchResult(
+        vendors=flat,
+        match_notice=None,
+        has_exact=has_exact,
+        has_related=has_related,
+        total_count=len(flat),
+        search_mode="plan",
+        intent_summary=intent_summary,
+        plan=plan,
+        sections=sections,
+    )
+
+
+def search_approved_vendors(
+    *,
+    types: str | None = None,
+    location: str | None = None,
+    q: str | None = None,
+    dates: str | None = None,
+    flexible: bool = False,
+    budget_min: float | None = None,
+    budget_max: float | None = None,
+    sort: str = "relevance",
+    vendor_user_ids: list[str] | None = None,
+    country: str | None = None,
+    limit: int = 200,
+    offset: int = 0,
+) -> MarketplaceSearchResult:
+    """
+    Return approved vendors with optional filters, ordered exact → related → fallback.
+
+    Planning-style queries (mode=plan) return need sections with vendors per checklist item.
+    """
+    chip_types = _parse_types_param(types)
+    date_parts = _parse_dates_param(dates)
+    limit = max(1, min(limit, 200))
+    offset = max(0, offset)
+
+    raw_q = (q or "").strip()
+    market_country = normalize_country_code(country)
+    parsed = parse_marketplace_query(raw_q, country_code=market_country) if raw_q else None
+
+    city_query = (location or "").strip() or None
+    if not city_query and parsed and parsed.location:
+        city_query = parsed.location
+
+    # SQL only applies chip filters from the URL. AI-parsed types stay in-memory
+    # for ranking so plan mode can still return bakers + caterers together.
+    plan_mode = bool(parsed and parsed.mode == "plan" and parsed.needs)
+    rows = list_approved_vendors_for_explore(
+        vendor_user_ids=vendor_user_ids,
+        budget_min=budget_min,
+        budget_max=budget_max,
+        service_types=chip_types or None,
+        city_query=city_query,
+        country_code=market_country,
+    )
+
+    primary_types = list(chip_types)
+    if not primary_types and parsed and parsed.types and not plan_mode:
+        primary_types = list(parsed.types)
+
+    related_types = list(parsed.related_types) if parsed else []
+    related_types = [t for t in related_types if t not in primary_types]
+
+    location_filter = (location or "").strip()
+    if not location_filter and parsed and parsed.location:
+        location_filter = parsed.location.strip()
+    related_locations = list(parsed.related_locations) if parsed else []
+
+    keywords: list[str] = list(parsed.keywords) if parsed else []
+    if not keywords and raw_q:
+        keywords = [w for w in raw_q.lower().split() if len(w) >= 2][:16]
+    related_keywords: list[str] = list(parsed.related_keywords) if parsed else []
+
+    parsed_event_types = list(parsed.event_types) if parsed else []
+    intent_summary = parsed.intent_summary if parsed else None
+
+    sort_key = sort.strip().lower() if sort else "relevance"
+    if sort_key not in ("relevance", "price_asc", "price_desc", "proximity", "rating"):
+        sort_key = "relevance"
+
+    apply_date_availability = bool(date_parts) and not flexible
+
+    if plan_mode and parsed:
+        # Optional chip filter: only keep needs matching selected types.
+        needs = list(parsed.needs)
+        if chip_types:
+            needs = [n for n in needs if n.service_key in chip_types] or needs
+        result = _search_plan_sections(
+            rows,
+            needs=needs,
+            location_filter=location_filter,
+            related_locations=related_locations,
+            parsed_event_types=parsed_event_types,
+            date_parts=date_parts,
+            apply_date_availability=apply_date_availability,
+            budget_min=budget_min,
+            budget_max=budget_max,
+            sort_key=sort_key,
+            intent_summary=intent_summary,
+            plan_title=parsed.plan_title,
+        )
+        logger.info(
+            "search_approved_vendors plan needs=%s vendors=%s q=%r",
+            len(result.sections),
+            result.total_count,
+            raw_q[:80],
+        )
+        return result
+
+    result = _rank_candidates(
+        rows,
+        primary_types=primary_types,
+        related_types=related_types,
+        keywords=keywords,
+        related_keywords=related_keywords,
+        location_filter=location_filter,
+        related_locations=related_locations,
+        parsed_event_types=parsed_event_types,
+        date_parts=date_parts,
+        apply_date_availability=apply_date_availability,
+        budget_min=budget_min,
+        budget_max=budget_max,
+        sort_key=sort_key,
+        intent_summary=intent_summary,
+        limit=limit,
+        offset=offset,
+    )
+    result.search_mode = "simple"
+    result.intent_summary = intent_summary
+
+    logger.info(
+        "search_approved_vendors exact=%s related=%s total=%s q=%r",
+        result.has_exact,
+        result.has_related,
+        result.total_count,
+        raw_q[:80],
+    )
+    return result
 
 
 # Maximum number of days in a multi-day event (guards against abuse).

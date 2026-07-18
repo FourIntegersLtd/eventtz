@@ -41,6 +41,88 @@ def merge_review_stats_into_vendor_rows(rows: list[dict[str, Any]]) -> list[dict
     return rows
 
 
+def featured_snippets_for_vendor_ids(
+    vendor_ids: list[str],
+    *,
+    excerpt_max: int = 140,
+    prefer_terms_by_vendor: dict[str, list[str]] | None = None,
+) -> dict[str, dict[str, Any]]:
+    """
+    One public review snippet per vendor for plan cards.
+
+    Prefers higher ratings and (when given) reviews whose body mentions the
+    service the vendor was listed under — so a baker is less likely to show a
+    catering-only quote.
+    Returns { vendor_id: { rating, body_excerpt, reviewer_display } }.
+    """
+    ids = [str(v).strip() for v in vendor_ids if str(v).strip()]
+    if not ids or get_settings().local_auth_mode:
+        return {}
+
+    client = get_client()
+    try:
+        q = apply_recent_first_order(
+            client.table("booking_reviews")
+            .select("rating, body, created_at, client_user_id, vendor_user_id")
+            .in_("vendor_user_id", ids[:80]),
+            column="created_at",
+        ).limit(200)
+        try:
+            res = q.is_("hidden_at", "null").execute()
+        except Exception:
+            res = q.execute()
+        rows = list(getattr(res, "data", None) or [])
+    except Exception:
+        logger.exception("featured_snippets_for_vendor_ids failed")
+        return {}
+
+    prefer = prefer_terms_by_vendor or {}
+    best: dict[str, tuple[float, dict[str, Any]]] = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        uid = str(row.get("vendor_user_id") or "")
+        body = str(row.get("body") or "").strip()
+        if not uid or not body:
+            continue
+        try:
+            rating = int(row.get("rating") or 0)
+        except (TypeError, ValueError):
+            rating = 0
+        if rating < 1:
+            continue
+        low = body.lower()
+        terms = prefer.get(uid) or []
+        term_hits = sum(1 for t in terms if t and t in low)
+        # High rating first, then service-term fit, then a bit of length.
+        score = rating * 10.0 + term_hits * 8.0 + min(len(body), 160) / 40.0
+        prev = best.get(uid)
+        if prev is not None and prev[0] >= score:
+            continue
+        excerpt = body if len(body) <= excerpt_max else body[: excerpt_max - 1].rstrip() + "…"
+        best[uid] = (
+            score,
+            {
+                "rating": rating,
+                "body_excerpt": excerpt,
+                "client_user_id": str(row.get("client_user_id") or ""),
+            },
+        )
+
+    emails = _client_emails_for_review_rows(
+        [{"client_user_id": v[1].get("client_user_id")} for v in best.values()],
+    )
+    out: dict[str, dict[str, Any]] = {}
+    for uid, (_score, item) in best.items():
+        cid = str(item.get("client_user_id") or "")
+        out[uid] = {
+            "rating": item["rating"],
+            "body_excerpt": item["body_excerpt"],
+            "reviewer_display": _reviewer_display_from_email(emails.get(cid)),
+        }
+    return out
+
+
 def get_review_stats_for_vendors(vendor_ids: list[str]) -> dict[str, dict[str, Any]]:
     """Returns { vendor_id: { review_count, average_rating } } for known ids."""
     if get_settings().local_auth_mode or not vendor_ids:
