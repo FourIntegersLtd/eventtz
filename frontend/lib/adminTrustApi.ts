@@ -8,6 +8,8 @@ export type AdminDisputeCase = {
   summary: string;
   internal_notes?: string | null;
   resolution_note?: string | null;
+  client_resolution_note?: string | null;
+  vendor_resolution_note?: string | null;
   assigned_admin_id?: string | null;
   assigned_admin_email?: string | null;
   created_at?: string | null;
@@ -43,6 +45,8 @@ export async function patchAdminDispute(
     status?: AdminDisputeCase["status"];
     internal_notes?: string | null;
     resolution_note?: string | null;
+    client_resolution_note?: string | null;
+    vendor_resolution_note?: string | null;
     assigned_admin_id?: string | null;
     /** Only acted on when status is being set to "resolved". */
     resolution_action?: "release_to_vendor" | "refund_client" | "partial_refund" | null;

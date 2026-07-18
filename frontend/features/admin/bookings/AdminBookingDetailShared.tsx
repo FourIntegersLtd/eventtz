@@ -132,34 +132,34 @@ export function NeedsAttentionBanner({
   const hasCritical = support.needs_attention.some((f) => f.severity === "critical");
   return (
     <div
-      className={`${adminCard} px-5 py-4 text-center ${
+      className={`overflow-hidden rounded-2xl border px-5 py-4 ${
         hasCritical
-          ? "border-red-200/90 bg-red-50/50 ring-1 ring-red-200/50"
-          : "border-amber-200/90 bg-amber-50/60 ring-1 ring-amber-200/50"
+          ? "border-red-200/80 bg-red-50/40"
+          : "border-amber-200/80 bg-amber-50/40"
       }`}
     >
       <p
-        className={`flex items-center justify-center gap-2 text-sm font-semibold ${
+        className={`flex items-center gap-2 text-sm font-semibold ${
           hasCritical ? "text-red-900" : "text-amber-900"
         }`}
       >
         <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
         Needs attention
       </p>
-      <ul className="mx-auto mt-3 max-w-xl space-y-1.5 text-sm text-neutral-800">
+      <ul className="mt-2 space-y-1 text-sm text-neutral-800">
         {support.needs_attention.map((flag) => (
           <li key={flag.code}>{flag.label}</li>
         ))}
       </ul>
       {support.next_action ? (
-        <p className="mt-3 text-sm text-neutral-600">
+        <p className="mt-2 text-[13px] text-neutral-600">
           Try next: <span className="font-medium text-neutral-900">{support.next_action}</span>
         </p>
       ) : null}
       {openDispute ? (
         <Link
           href={`/admin/commerce?tab=disputes&dispute=${openDispute.id}`}
-          className="mt-2 inline-block text-sm font-semibold text-primary hover:underline"
+          className="mt-2 inline-block text-sm font-medium text-primary hover:underline"
         >
           View open dispute
         </Link>

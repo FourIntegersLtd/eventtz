@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { EventtzLogo } from "@/components/branding/EventtzLogo";
 import { BackLink } from "@/components/ui/BackLink";
 import { Button } from "@/components/ui/Button";
@@ -103,6 +104,11 @@ export function AdminLoginView() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
+              <p className="-mt-1 text-right text-sm">
+                <Link href="/forgot-password" className="font-medium text-primary hover:underline">
+                  Forgot password?
+                </Link>
+              </p>
               <Button type="submit" className="w-full" loading={submitting}>
                 {submitting ? "Signing in…" : "Sign in"}
               </Button>

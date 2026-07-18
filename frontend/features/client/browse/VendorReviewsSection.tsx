@@ -39,7 +39,7 @@ function ReviewCard({
   const long = r.body.length > PREVIEW_LEN;
   const shown = expanded || !long ? r.body : `${r.body.slice(0, PREVIEW_LEN).trim()}…`;
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+    <div className="px-5 py-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
           <p className="font-medium text-neutral-900">{r.reviewer_display}</p>
@@ -134,10 +134,10 @@ export function VendorReviewsSection({ vendorUserId }: VendorReviewsSectionProps
   };
 
   return (
-    <section className="rounded-xl border border-dashed border-neutral-200 bg-neutral-50/80 px-4 py-5">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+    <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-4">
         <div>
-          <h4 className="font-heading text-sm font-semibold text-neutral-900">Reviews</h4>
+          <h4 className="text-sm font-semibold text-neutral-900">Reviews</h4>
           {count > 0 && avg != null ? (
             <p className="mt-0.5 flex items-center gap-2 text-xs text-neutral-600">
               <StarRating rating={Math.round(avg)} size="md" />
@@ -161,17 +161,19 @@ export function VendorReviewsSection({ vendorUserId }: VendorReviewsSectionProps
       </div>
 
       {loading ? (
-        <LoadingState label="Loading reviews…" variant="inline" className="mt-3" />
+        <div className="border-t border-neutral-100 px-5 py-4">
+          <LoadingState label="Loading reviews…" variant="inline" />
+        </div>
       ) : loadError ? (
-        <p className="mt-3 text-xs text-red-700">{loadError}</p>
+        <p className="border-t border-neutral-100 px-5 py-4 text-xs text-red-700">{loadError}</p>
       ) : count === 0 ? (
-        <p className="mt-3 text-xs text-neutral-500">
+        <p className="border-t border-neutral-100 px-5 py-4 text-sm text-neutral-500">
           Verified reviews appear here after clients complete bookings on Eventtz.
         </p>
       ) : current ? (
-        <div className="mt-4">
-          <div className="mb-2 flex items-center justify-between gap-3">
-            {reviews.length > 1 ? (
+        <div className="border-t border-neutral-100">
+          {reviews.length > 1 ? (
+            <div className="flex items-center justify-between gap-3 border-b border-neutral-100 px-5 py-2.5">
               <div className="flex flex-wrap items-center gap-1.5">
                 {reviews.map((r, i) => (
                   <button
@@ -188,30 +190,28 @@ export function VendorReviewsSection({ vendorUserId }: VendorReviewsSectionProps
                   />
                 ))}
               </div>
-            ) : (
-              <span />
-            )}
-            <div className="flex shrink-0 items-center gap-1">
-              <button
-                type="button"
-                onClick={goPrev}
-                disabled={!canPrev}
-                className="rounded-full border border-neutral-200 bg-white p-2 text-neutral-700 shadow-sm transition hover:-translate-x-px hover:bg-neutral-50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
-                aria-label="Previous review"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={goNext}
-                disabled={!canNext}
-                className="rounded-full border border-neutral-200 bg-white p-2 text-neutral-700 shadow-sm transition hover:translate-x-px hover:bg-neutral-50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
-                aria-label="Next review"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
+              <div className="flex shrink-0 items-center gap-1">
+                <button
+                  type="button"
+                  onClick={goPrev}
+                  disabled={!canPrev}
+                  className="rounded-lg border border-neutral-100 bg-white p-1.5 text-neutral-700 transition hover:bg-neutral-50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                  aria-label="Previous review"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={goNext}
+                  disabled={!canNext}
+                  className="rounded-lg border border-neutral-100 bg-white p-1.5 text-neutral-700 transition hover:bg-neutral-50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                  aria-label="Next review"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
             </div>
-          </div>
+          ) : null}
           <div className="relative overflow-hidden">
             <div
               key={current.id}
@@ -233,7 +233,7 @@ export function VendorReviewsSection({ vendorUserId }: VendorReviewsSectionProps
             </div>
           </div>
           {reviews.length > 1 ? (
-            <p className="mt-2 text-center text-[11px] text-neutral-400">
+            <p className="border-t border-neutral-100 px-5 py-2 text-center text-[11px] text-neutral-400">
               {index + 1} / {reviews.length}
             </p>
           ) : null}
@@ -246,7 +246,7 @@ export function VendorReviewsSection({ vendorUserId }: VendorReviewsSectionProps
         title="All reviews"
         maxWidthClassName="max-w-lg"
       >
-        <ul className="max-h-[min(60vh,480px)] space-y-4 overflow-y-auto pr-1">
+        <ul className="max-h-[min(60vh,480px)] divide-y divide-neutral-100 overflow-y-auto overflow-hidden rounded-2xl border border-neutral-100 bg-white">
           {reviews.map((r) => (
             <li key={r.id}>
               <ReviewCard

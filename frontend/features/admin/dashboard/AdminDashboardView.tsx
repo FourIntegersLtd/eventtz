@@ -22,15 +22,11 @@ function DashboardSkeleton() {
       <LoadingState label="Loading dashboard…" variant="centered" className="py-2" />
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} className="h-28 rounded-xl" />
+          <Skeleton key={i} className="h-28 rounded-2xl" />
         ))}
       </div>
-      <Skeleton className="h-48 rounded-xl" />
-      <div className="grid gap-4 lg:grid-cols-2">
-        {[1, 2].map((i) => (
-          <Skeleton key={i} className="h-72 rounded-xl" />
-        ))}
-      </div>
+      <Skeleton className="h-48 rounded-2xl" />
+      <Skeleton className="h-72 rounded-2xl" />
     </div>
   );
 }
@@ -95,36 +91,26 @@ export function AdminDashboardView() {
 
   const activeBookings = summary.bookings_pending + summary.bookings_accepted;
   const engagement = summary.conversations_count + summary.reviews_count;
-  const bookingsNeedingSupport = summary.bookings_needing_support ?? 0;
 
   return (
     <div className="space-y-6">
+      {/* Calm status KPIs — actionable alerts live only in Needs attention */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <AdminKpiCard
           label="Pending vendor approvals"
           value={summary.vendors_pending}
           icon={Store}
-          tone="warning"
-          highlight={summary.vendors_pending > 0}
-          href={summary.vendors_pending > 0 ? "/admin/directory?tab=vendors" : undefined}
-          linkLabel={summary.vendors_pending > 0 ? "Review in Directory" : undefined}
+          tone="default"
+          href="/admin/directory?tab=vendors"
+          linkLabel="Directory"
         />
         <AdminKpiCard
           label="Active bookings"
           value={activeBookings}
           icon={CalendarDays}
-          tone={bookingsNeedingSupport > 0 ? "warning" : "info"}
-          highlight={bookingsNeedingSupport > 0}
-          href={
-            bookingsNeedingSupport > 0
-              ? "/admin/commerce?tab=bookings&needs_attention=1"
-              : "/admin/commerce?tab=bookings"
-          }
-          linkLabel={
-            bookingsNeedingSupport > 0
-              ? `${bookingsNeedingSupport} need support`
-              : "View bookings"
-          }
+          tone="info"
+          href="/admin/commerce?tab=bookings"
+          linkLabel="View bookings"
         />
         <AdminKpiCard
           label="Paid bookings"

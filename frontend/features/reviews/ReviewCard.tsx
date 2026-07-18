@@ -17,6 +17,8 @@ export type ReviewCardProps = {
   titleHref?: string | null;
   previewLen?: number;
   compact?: boolean;
+  /** `row` for use inside a divided list surface (no per-item card chrome). */
+  variant?: "card" | "row";
 };
 
 export function ReviewCard({
@@ -30,6 +32,7 @@ export function ReviewCard({
   titleHref,
   previewLen,
   compact = false,
+  variant = "card",
 }: ReviewCardProps) {
   const titleNode =
     titleHref && typeof title === "string" ? (
@@ -40,10 +43,14 @@ export function ReviewCard({
       <p className="font-medium text-neutral-900">{title}</p>
     );
 
+  const padding = compact ? "px-5 py-4 sm:px-6" : "px-5 py-5 sm:px-6 sm:py-6";
+  const shellClass =
+    variant === "row"
+      ? padding
+      : `rounded-xl border border-neutral-100 bg-white ${compact ? "p-4" : "p-5"}`;
+
   return (
-    <article
-      className={`rounded-xl border border-neutral-200/80 bg-neutral-50/40 ${compact ? "p-4" : "p-5"}`}
-    >
+    <article className={shellClass}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           {titleNode}

@@ -1,6 +1,5 @@
 "use client";
 
-import { portalCard, portalCardPadding } from "@/components/portal-shell/portalTheme";
 import Link from "next/link";
 import { ChevronRight, CalendarDays, ShieldAlert, Star, Wallet, type LucideIcon } from "lucide-react";
 import type { PortalRole } from "@/components/portal-shell/portalNav";
@@ -17,8 +16,7 @@ function shortcutsForRole(role: PortalRole): Shortcut[] {
   const bookings = {
     href: portalRoute(role, "bookings"),
     label: role === "client" ? "My bookings" : "Bookings",
-    description:
-      role === "client" ? "Bookings and payments" : "All bookings",
+    description: role === "client" ? "Bookings and payments" : "All bookings",
     icon: CalendarDays,
   };
   const disputes = {
@@ -73,17 +71,19 @@ export function SettingsShortcutsSection({ role }: Props) {
   const shortcuts = shortcutsForRole(role);
 
   return (
-    <section className={`${portalCard} ${portalCardPadding}`}>
-      <h2 className="font-heading text-lg font-semibold text-neutral-900">Shortcuts</h2>
-
-      <ul className="mt-4 divide-y divide-neutral-100">
+    <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+      <div className="px-5 py-4 sm:px-6 sm:py-5">
+        <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">Shortcuts</h2>
+        <p className="mt-0.5 text-[13px] text-neutral-400">Jump to common pages</p>
+      </div>
+      <ul className="divide-y divide-neutral-100 border-t border-neutral-100">
         {shortcuts.map((item) => {
           const Icon = item.icon;
           return (
             <li key={item.href}>
               <Link
                 href={item.href}
-                className="-mx-2 flex items-center gap-3 rounded-xl px-2 py-3 transition hover:bg-neutral-50/80"
+                className="flex items-center gap-3 px-5 py-3.5 transition hover:bg-neutral-50/80 sm:px-6"
               >
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-600">
                   <Icon className="h-4 w-4" aria-hidden />

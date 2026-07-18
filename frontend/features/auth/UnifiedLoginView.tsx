@@ -49,6 +49,11 @@ export function UnifiedLoginView() {
             error={fieldErrors.password}
             onChange={(e) => setPassword(e.target.value)}
           />
+          <p className="-mt-2 text-right text-sm">
+            <Link href="/forgot-password" className="font-medium text-primary hover:underline">
+              Forgot password?
+            </Link>
+          </p>
 
           {error ? (
             <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-red-200/60">

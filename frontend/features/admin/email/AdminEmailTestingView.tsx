@@ -8,7 +8,6 @@ import { Select } from "@/components/ui/Select";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import { AdminPageHeader } from "@/features/admin/components/AdminPageHeader";
-import { adminCard } from "@/features/admin/adminTheme";
 import {
   fetchAdminEmailTemplates,
   sendAdminEmailTest,
@@ -128,78 +127,86 @@ export function AdminEmailTestingView() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="w-full min-w-0 max-w-3xl space-y-6">
       <AdminPageHeader subtitle="Send a sample of any Eventtz email template to an inbox you control." />
 
-      <div className={`${adminCard} max-w-xl space-y-5 p-5`}>
-        {error ? <AdminErrorBanner message={error} /> : null}
-        {success ? (
-          <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
-            {success}
-          </p>
-        ) : null}
+      {error ? <AdminErrorBanner message={error} /> : null}
+      {success ? <p className="text-sm font-medium text-primary">{success}</p> : null}
 
-        <Select
-          label="Template"
-          value={templateId}
-          onChange={(e) => setTemplateId(e.target.value)}
-        >
-          {grouped.map(({ category, templates: items }) => (
-            <optgroup key={category} label={category}>
-              {items.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.label}
-                </option>
-              ))}
-            </optgroup>
-          ))}
-        </Select>
-
-        {selected?.description ? (
-          <p className="text-sm text-neutral-500">{selected.description}</p>
-        ) : null}
-
-        <div className="space-y-1.5">
-          <label htmlFor="admin-email-test-to" className="block text-sm font-medium text-neutral-800">
-            Send to
-          </label>
-          <div className="flex gap-2">
-            <input
-              id="admin-email-test-to"
-              type="text"
-              inputMode="email"
-              autoComplete="off"
-              spellCheck={false}
-              value={toEmail}
-              onChange={(e) => setToEmail(e.target.value)}
-              placeholder="name@example.com"
-              className="min-w-0 flex-1 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-            />
-            {toEmail ? (
-              <button
-                type="button"
-                onClick={() => setToEmail("")}
-                className="shrink-0 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
-              >
-                Clear
-              </button>
-            ) : null}
-          </div>
-          <p className="text-xs text-neutral-500">
-            Any inbox. Replace the address above or clear it and type a new one.
+      <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+        <div className="px-5 py-4 sm:px-6 sm:py-5">
+          <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">Test send</h2>
+          <p className="mt-0.5 text-[13px] text-neutral-400">
+            Pick a template and an inbox you can check.
           </p>
         </div>
 
-        <Button
-          type="button"
-          onClick={() => void sendTest()}
-          loading={sending}
-          disabled={!templateId || !toEmail.trim()}
-          icon={<Mail className="h-4 w-4" aria-hidden />}
-        >
-          Send test email
-        </Button>
-      </div>
+        <div className="divide-y divide-neutral-100 border-t border-neutral-100">
+          <div className="space-y-2 px-5 py-4 sm:px-6">
+            <Select
+              label="Template"
+              value={templateId}
+              onChange={(e) => setTemplateId(e.target.value)}
+            >
+              {grouped.map(({ category, templates: items }) => (
+                <optgroup key={category} label={category}>
+                  {items.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </Select>
+            {selected?.description ? (
+              <p className="text-[13px] text-neutral-400">{selected.description}</p>
+            ) : null}
+          </div>
+
+          <div className="space-y-1.5 px-5 py-4 sm:px-6">
+            <label htmlFor="admin-email-test-to" className="block text-sm font-medium text-neutral-800">
+              Send to
+            </label>
+            <div className="flex gap-2">
+              <input
+                id="admin-email-test-to"
+                type="text"
+                inputMode="email"
+                autoComplete="off"
+                spellCheck={false}
+                value={toEmail}
+                onChange={(e) => setToEmail(e.target.value)}
+                placeholder="name@example.com"
+                className="min-w-0 flex-1 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+              {toEmail ? (
+                <button
+                  type="button"
+                  onClick={() => setToEmail("")}
+                  className="shrink-0 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+                >
+                  Clear
+                </button>
+              ) : null}
+            </div>
+            <p className="text-xs text-neutral-500">
+              Any inbox. Replace the address above or clear it and type a new one.
+            </p>
+          </div>
+
+          <div className="flex justify-end px-5 py-4 sm:px-6">
+            <Button
+              type="button"
+              onClick={() => void sendTest()}
+              loading={sending}
+              disabled={!templateId || !toEmail.trim()}
+              icon={<Mail className="h-4 w-4" aria-hidden />}
+            >
+              Send test email
+            </Button>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { BackLink } from "@/components/ui/BackLink";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PaymentStatusBadge } from "@/components/ui/PaymentStatusBadge";
@@ -27,13 +26,6 @@ export function AdminBookingDetailHeader({
   return (
     <>
       <BackLink href="/admin/commerce?tab=bookings" label="Bookings" icon="chevron" tone="muted" />
-      <nav className="text-[13px] text-neutral-500">
-        <Link href="/admin/commerce?tab=bookings" className="hover:text-neutral-900">
-          Bookings
-        </Link>
-        <span className="mx-1.5 text-neutral-300">/</span>
-        <span className="text-neutral-900">{eventName}</span>
-      </nav>
 
       <header>
         <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">{eventName}</h1>

@@ -1,5 +1,6 @@
 "use client";
 
+import { portalCard } from "@/components/portal-shell/portalTheme";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { ReviewCard } from "@/features/reviews/ReviewCard";
 import { useReviewsQuery } from "@/features/reviews/useReviewsQuery";
@@ -10,6 +11,7 @@ function ClientReviewRow({ review }: { review: ClientOwnerReviewItem }) {
 
   return (
     <ReviewCard
+      variant="row"
       title={review.vendor_display_name}
       titleHref={`/client/browse/${review.vendor_user_id}`}
       subtitle={subtitle}
@@ -31,12 +33,8 @@ export function ClientOwnReviewsSection({ showShell = true }: ClientOwnReviewsSe
   const { data, loading, error } = useReviewsQuery(fetchClientOwnReviews, "Could not load your reviews.");
   const reviews = data?.reviews ?? [];
 
-  const content = (
+  const list = (
     <>
-      {showShell ? (
-        <h2 className="font-heading text-lg font-semibold text-neutral-900">Your reviews</h2>
-      ) : null}
-
       {loading ? (
         <LoadingState label="Loading reviews…" variant="inline" className={showShell ? "mt-4" : ""} />
       ) : error ? (
@@ -47,23 +45,26 @@ export function ClientOwnReviewsSection({ showShell = true }: ClientOwnReviewsSe
         </p>
       ) : reviews.length === 0 ? (
         <p className={showShell ? "mt-3 text-sm text-neutral-600" : "text-sm text-neutral-600"}>
-          You haven't left any reviews yet.
+          You haven&apos;t left any reviews yet.
         </p>
       ) : (
-        <div className={showShell ? "mt-4 space-y-3" : "space-y-3"}>
+        <ul className={`divide-y divide-neutral-100 overflow-hidden ${portalCard} ${showShell ? "mt-4" : ""}`}>
           {reviews.map((review) => (
-            <ClientReviewRow key={review.id} review={review} />
+            <li key={review.id}>
+              <ClientReviewRow review={review} />
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </>
   );
 
-  if (!showShell) return content;
+  if (!showShell) return list;
 
   return (
-    <section className="rounded-2xl border border-neutral-200/80 bg-white p-5 shadow-sm sm:p-6">
-      {content}
+    <section>
+      <h2 className="font-heading text-lg font-semibold text-neutral-900">Your reviews</h2>
+      {list}
     </section>
   );
 }

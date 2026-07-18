@@ -1,6 +1,5 @@
 "use client";
 
-import { portalCard, portalCardPadding } from "@/components/portal-shell/portalTheme";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import {
@@ -75,33 +74,33 @@ export function ContactSharingSettingsSection({ role }: ContactSharingSettingsSe
 
   if (!settings) {
     return (
-      <section className={`${portalCard} ${portalCardPadding}`}>
+      <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white px-5 py-5 sm:px-6">
         <LoadingState label="Loading contact preferences…" variant="inline" />
       </section>
     );
   }
 
   return (
-    <section className={`${portalCard} ${portalCardPadding}`}>
-      <h2 className="font-heading text-lg font-semibold text-neutral-900">
-        {isVendor ? "Contact" : "After you pay"}
-      </h2>
-      <p className="mt-1 text-sm text-neutral-500">
-        {isVendor
-          ? "What clients see once they've paid."
-          : "Email and phone stay hidden until you pay."}
-      </p>
-
-      {error ? (
-        <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-          {error}
+    <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+      <div className="px-5 py-4 sm:px-6 sm:py-5">
+        <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">
+          {isVendor ? "Contact" : "After you pay"}
+        </h2>
+        <p className="mt-0.5 text-[13px] text-neutral-400">
+          {isVendor
+            ? "What clients see once they've paid."
+            : "Email and phone stay hidden until you pay."}
         </p>
-      ) : null}
-      {saved ? (
-        <p className="mt-3 text-xs font-medium text-primary">Saved.</p>
-      ) : null}
+      </div>
 
-      <div className="mt-4 space-y-3">
+      <div className="space-y-3 border-t border-neutral-100 px-5 py-4 sm:px-6">
+        {error ? (
+          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+            {error}
+          </p>
+        ) : null}
+        {saved ? <p className="text-xs font-medium text-primary">Saved.</p> : null}
+
         <label className="flex items-start gap-3 text-sm">
           <input
             type="checkbox"
@@ -134,27 +133,27 @@ export function ContactSharingSettingsSection({ role }: ContactSharingSettingsSe
             )}
           </span>
         </label>
-      </div>
 
-      {!isVendor ? (
-        <div className="mt-5">
-          <label className={labelClass()} htmlFor="settings-contact-phone">
-            Phone (optional)
-          </label>
-          <input
-            id="settings-contact-phone"
-            type="tel"
-            className={inputClass()}
-            defaultValue={settings.contact_phone ?? ""}
-            placeholder="e.g. 07xxx xxxxxx"
-            disabled={saving}
-            onBlur={(e) => {
-              const v = e.target.value.trim();
-              if (v !== (settings.contact_phone ?? "")) void savePhone(v);
-            }}
-          />
-        </div>
-      ) : null}
+        {!isVendor ? (
+          <div className="pt-2">
+            <label className={labelClass()} htmlFor="settings-contact-phone">
+              Phone (optional)
+            </label>
+            <input
+              id="settings-contact-phone"
+              type="tel"
+              className={inputClass()}
+              defaultValue={settings.contact_phone ?? ""}
+              placeholder="e.g. 07xxx xxxxxx"
+              disabled={saving}
+              onBlur={(e) => {
+                const v = e.target.value.trim();
+                if (v !== (settings.contact_phone ?? "")) void savePhone(v);
+              }}
+            />
+          </div>
+        ) : null}
+      </div>
     </section>
   );
 }

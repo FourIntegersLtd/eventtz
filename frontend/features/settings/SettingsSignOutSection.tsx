@@ -1,6 +1,5 @@
 "use client";
 
-import { portalCard, portalCardPadding } from "@/components/portal-shell/portalTheme";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
@@ -27,16 +26,22 @@ export function SettingsSignOutSection() {
 
   return (
     <>
-      <section className={`${portalCard} ${portalCardPadding}`}>
-        <h2 className="font-heading text-lg font-semibold text-neutral-900">Sign out</h2>
-        <Button
-          variant="secondary"
-          className="mt-4"
-          icon={<LogOut className="h-4 w-4" aria-hidden />}
-          onClick={() => setOpen(true)}
-        >
-          Sign out
-        </Button>
+      <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+        <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-5">
+          <div>
+            <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">Sign out</h2>
+            <p className="mt-0.5 text-[13px] text-neutral-400">End this session on this device.</p>
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="shrink-0"
+            icon={<LogOut className="h-4 w-4" aria-hidden />}
+            onClick={() => setOpen(true)}
+          >
+            Sign out
+          </Button>
+        </div>
       </section>
 
       <ConfirmDialog

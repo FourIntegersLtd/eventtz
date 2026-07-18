@@ -65,3 +65,36 @@ export async function getMe(): Promise<AuthUser> {
   const { data } = await api.get<ApiEntityResponse<AuthUser>>("/api/v1/auth/me");
   return data.user;
 }
+
+export async function forgotPassword(email: string): Promise<{ success: boolean; message: string }> {
+  const { data } = await api.post<{ success: boolean; message: string }>(
+    "/api/v1/auth/forgot-password",
+    { email },
+  );
+  return data;
+}
+
+export async function resetPassword(
+  token: string,
+  password: string,
+): Promise<AuthResponse> {
+  const { data } = await api.post<AuthResponse>("/api/v1/auth/reset-password", {
+    token,
+    password,
+  });
+  return data;
+}
+
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string,
+): Promise<{ success: boolean; message: string }> {
+  const { data } = await api.post<{ success: boolean; message: string }>(
+    "/api/v1/auth/change-password",
+    {
+      current_password: currentPassword,
+      new_password: newPassword,
+    },
+  );
+  return data;
+}

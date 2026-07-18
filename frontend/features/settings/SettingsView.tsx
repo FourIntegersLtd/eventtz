@@ -20,19 +20,29 @@ export type SettingsViewProps = {
  */
 export function SettingsView({ role }: SettingsViewProps) {
   return (
-    <div className="w-full min-w-0 max-w-3xl space-y-6">
+    <div className="w-full min-w-0 max-w-6xl space-y-6">
       <header>
-        <p className="text-sm text-neutral-600">Account and privacy.</p>
+        <h1 className="font-heading text-2xl font-semibold tracking-tight text-neutral-900">
+          Settings
+        </h1>
+        <p className="mt-1 text-sm text-neutral-500">Account, privacy, and shortcuts.</p>
       </header>
 
-      <SettingsAccountSection role={role} />
-      <ContactSharingSettingsSection role={role} />
-      <SettingsNotificationsSection role={role} />
-      {role === "client" ? <SettingsClientOnboardingSection /> : null}
-      {role === "vendor" ? <SettingsOnboardingPreviewSection /> : null}
-      <SettingsShortcutsSection role={role} />
-      <SettingsLegalSection />
-      <SettingsSignOutSection />
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        <div className="min-w-0 space-y-6">
+          <SettingsAccountSection role={role} />
+          <ContactSharingSettingsSection role={role} />
+          <SettingsNotificationsSection role={role} />
+          {role === "client" ? <SettingsClientOnboardingSection /> : null}
+          {role === "vendor" ? <SettingsOnboardingPreviewSection /> : null}
+        </div>
+
+        <aside className="min-w-0 space-y-6 lg:sticky lg:top-4">
+          <SettingsShortcutsSection role={role} />
+          <SettingsLegalSection />
+          <SettingsSignOutSection />
+        </aside>
+      </div>
     </div>
   );
 }

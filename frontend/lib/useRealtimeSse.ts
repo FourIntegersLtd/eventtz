@@ -3,11 +3,16 @@
 import { useEffect, useRef } from "react";
 import { realtimeBus } from "@/lib/realtimeBus";
 
-export function useRealtimeSse(enabled: boolean) {
+/**
+ * Open a per-user SSE stream. Pass the signed-in user id (not just a boolean) so
+ * switching accounts reconnects — otherwise events for the previous user keep
+ * firing refresh on the new session's dashboard.
+ */
+export function useRealtimeSse(userId: string | null | undefined) {
   const ref = useRef<EventSource | null>(null);
 
   useEffect(() => {
-    if (!enabled) {
+    if (!userId) {
       if (ref.current) {
         ref.current.close();
         ref.current = null;
@@ -15,7 +20,6 @@ export function useRealtimeSse(enabled: boolean) {
       return;
     }
     if (typeof window === "undefined") return;
-    if (ref.current) return;
 
     const es = new EventSource("/api/realtime/stream");
     ref.current = es;
@@ -51,6 +55,5 @@ export function useRealtimeSse(enabled: boolean) {
       es.close();
       if (ref.current === es) ref.current = null;
     };
-  }, [enabled]);
+  }, [userId]);
 }
-

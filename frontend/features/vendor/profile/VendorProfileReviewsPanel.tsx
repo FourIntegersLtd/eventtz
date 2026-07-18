@@ -1,5 +1,6 @@
 "use client";
 
+import { portalCard } from "@/components/portal-shell/portalTheme";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { ReviewCard } from "@/features/reviews/ReviewCard";
 import { ReviewSummaryHeader } from "@/features/reviews/ReviewSummaryHeader";
@@ -11,6 +12,7 @@ function VendorReviewRow({ review }: { review: VendorOwnerReviewItem }) {
 
   return (
     <ReviewCard
+      variant="row"
       title={review.reviewer_display}
       subtitle={subtitle}
       rating={review.rating}
@@ -47,15 +49,17 @@ export function VendorProfileReviewsPanel() {
           />
 
           {reviews.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-neutral-200 bg-neutral-50/60 px-5 py-10 text-center">
+            <div className={`px-5 py-10 text-center ${portalCard}`}>
               <p className="font-medium text-neutral-900">No reviews yet</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <ul className={`divide-y divide-neutral-100 overflow-hidden ${portalCard}`}>
               {reviews.map((review) => (
-                <VendorReviewRow key={review.id} review={review} />
+                <li key={review.id}>
+                  <VendorReviewRow review={review} />
+                </li>
               ))}
-            </div>
+            </ul>
           )}
         </>
       )}

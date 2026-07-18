@@ -84,6 +84,27 @@ export function formatMarketplacePct(n: number | null | undefined): string {
   return `${(Number(n) * 100).toFixed(1)}%`;
 }
 
+/** Quiet footer lines for the marketplace overview (secondary KPIs, not hero cards). */
+export function marketplaceSecondaryMeta(
+  kpis: ReturnType<typeof marketplaceOverviewKpis>,
+): string[] {
+  const lines: string[] = [];
+  if (kpis.replyWithin1h != null) {
+    lines.push(
+      `Reply <1h ${formatMarketplacePct(kpis.replyWithin1h)} · <6h ${formatMarketplacePct(kpis.replyWithin6h)} · <24h ${formatMarketplacePct(kpis.replyWithin24h)}`,
+    );
+  }
+  if (kpis.vendorReminders > 0 || kpis.clientNudges > 0) {
+    lines.push(
+      `${kpis.vendorReminders} vendor nudges · ${kpis.clientNudges} client nudges`,
+    );
+  }
+  if (kpis.multiBatches > 0) {
+    lines.push(`${kpis.multiBatches} multi-vendor batches`);
+  }
+  return lines;
+}
+
 export function formatMarketplaceSeconds(s: number | null | undefined): string {
   if (s == null || Number.isNaN(s)) return "—";
   if (s < 60) return `${Math.round(s)}s`;

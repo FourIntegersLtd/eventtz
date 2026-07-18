@@ -1,7 +1,6 @@
 "use client";
 
-import { portalCard, portalCardPadding } from "@/components/portal-shell/portalTheme";
-import { ChevronRight } from "lucide-react";
+import { portalCard } from "@/components/portal-shell/portalTheme";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import {
@@ -9,11 +8,10 @@ import {
   fetchVendorDisputes,
   type ParticipantDispute,
 } from "@/lib/bookingDisputesApi";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { ParticipantDisputeStatusBadge } from "@/components/ui/ParticipantDisputeStatusBadge";
-import {
-  participantDisputeBookingLabel,
-} from "@/lib/bookingDisputeHelpers";
+import { participantDisputeBookingLabel } from "@/lib/bookingDisputeHelpers";
 import {
   enrichParticipantDisputes,
   loadParticipantBookingLookup,
@@ -28,6 +26,19 @@ type Props = {
   selectedId?: string | null;
   onSelect: (disputeId: string) => void;
 };
+
+function openedByLabel(d: ParticipantDispute): string {
+  if (d.opened_by_you) return "You";
+  if (d.opened_by_display_name) return d.opened_by_display_name;
+  if (d.opened_by_role === "client") return "Client";
+  if (d.opened_by_role === "vendor") return d.vendor_display_name ?? "Vendor";
+  return "—";
+}
+
+function updatedLabel(d: ParticipantDispute): string {
+  const raw = d.updated_at || d.created_at;
+  return raw ? new Date(raw).toLocaleString("en-GB") : "—";
+}
 
 export function ParticipantDisputesListView({ role, selectedId = null, onSelect }: Props) {
   const { user } = useAuth();
@@ -73,80 +84,54 @@ export function ParticipantDisputesListView({ role, selectedId = null, onSelect 
   return (
     <div className="space-y-4">
       {error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
-        </div>
-      ) : null}
-      {rows.length === 0 ? (
-        <p className={`${portalCard} ${portalCardPadding} text-center text-sm text-neutral-700`}>
-          No disputes yet.
         </p>
-      ) : (
-        <div className={`overflow-x-auto ${portalCard}`}>
-          <table className="min-w-full divide-y divide-neutral-100 text-sm">
-            <thead className="bg-neutral-50/50 text-left text-xs font-medium uppercase tracking-wide text-neutral-500">
-              <tr>
-                <th className="px-5 py-3">Updated</th>
-                <th className="px-5 py-3">Booking</th>
-                <th className="px-5 py-3">Opened by</th>
-                <th className="px-5 py-3">Summary</th>
-                <th className="px-5 py-3">Status</th>
-                <th className="px-5 py-3" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-100">
-              {rows.map((d) => {
-                const isSelected = selectedId === d.id;
-                return (
-                  <tr
-                    key={d.id}
-                    role="button"
-                    tabIndex={0}
+      ) : null}
+
+      <div className={`overflow-hidden ${portalCard}`}>
+        {rows.length === 0 ? (
+          <EmptyState className="border-0 py-14" title="No disputes yet." />
+        ) : (
+          <ul className="divide-y divide-neutral-100">
+            {rows.map((d) => {
+              const sel = selectedId === d.id;
+              return (
+                <li key={d.id}>
+                  <button
+                    type="button"
                     onClick={() => onSelect(d.id)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        onSelect(d.id);
-                      }
-                    }}
-                    className={`cursor-pointer transition hover:bg-neutral-50 ${isSelected ? "bg-primary/5" : ""}`}
+                    aria-current={sel}
+                    className={`relative w-full px-5 py-6 text-left transition duration-150 ease-out sm:px-6 sm:py-7 ${
+                      sel ? "bg-primary/[0.05]" : "hover:bg-neutral-50/90"
+                    }`}
                   >
-                    <td className="whitespace-nowrap px-5 py-4 text-xs text-neutral-600">
-                      {d.updated_at
-                        ? new Date(d.updated_at).toLocaleString("en-GB")
-                        : d.created_at
-                          ? new Date(d.created_at).toLocaleString("en-GB")
-                          : "—"}
-                    </td>
-                    <td className="max-w-[12rem] px-5 py-4 text-xs text-neutral-700">
-                      <span className="line-clamp-2">{participantDisputeBookingLabel(d)}</span>
-                    </td>
-                    <td className="whitespace-nowrap px-5 py-4 text-xs text-neutral-700">
-                      {d.opened_by_you
-                        ? "You"
-                        : d.opened_by_display_name ??
-                          (d.opened_by_role === "client"
-                            ? "Client"
-                            : d.opened_by_role === "vendor"
-                              ? d.vendor_display_name ?? "Vendor"
-                              : "—")}
-                    </td>
-                    <td className="max-w-md px-5 py-4 text-neutral-800">
-                      <span className="line-clamp-2">{d.summary}</span>
-                    </td>
-                    <td className="whitespace-nowrap px-5 py-4">
+                    {sel ? (
+                      <span
+                        className="absolute inset-y-4 left-0 w-[3px] rounded-full bg-primary"
+                        aria-hidden
+                      />
+                    ) : null}
+
+                    <div className="flex items-start justify-between gap-4">
+                      <p className="min-w-0 text-[15px] font-semibold leading-snug tracking-tight text-neutral-900 line-clamp-2">
+                        {participantDisputeBookingLabel(d)}
+                      </p>
                       <ParticipantDisputeStatusBadge status={d.status} />
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <ChevronRight className="ml-auto h-4 w-4 text-neutral-400" aria-hidden />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+                    </div>
+
+                    <div className="mt-4 space-y-1.5">
+                      <p className="line-clamp-2 text-sm text-neutral-600">{d.summary}</p>
+                      <p className="text-sm text-neutral-500">Opened by {openedByLabel(d)}</p>
+                      <p className="text-sm text-neutral-500">{updatedLabel(d)}</p>
+                    </div>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

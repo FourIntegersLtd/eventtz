@@ -1,6 +1,5 @@
 "use client";
 
-import { portalCard, portalCardPadding } from "@/components/portal-shell/portalTheme";
 import Link from "next/link";
 import { Bell, ChevronRight } from "lucide-react";
 import type { PortalRole } from "@/components/portal-shell/portalNav";
@@ -14,13 +13,14 @@ export function SettingsNotificationsSection({ role }: Props) {
   const href = portalRoute(role, "notifications");
 
   return (
-    <section className={`${portalCard} ${portalCardPadding}`}>
-      <h2 className="font-heading text-lg font-semibold text-neutral-900">Notifications</h2>
-      <p className="mt-1 text-sm text-neutral-500">Booking updates and messages.</p>
-
+    <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+      <div className="px-5 py-4 sm:px-6 sm:py-5">
+        <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">Notifications</h2>
+        <p className="mt-0.5 text-[13px] text-neutral-400">Booking updates and messages.</p>
+      </div>
       <Link
         href={href}
-        className="mt-4 flex items-center gap-3 rounded-xl border border-neutral-100 bg-neutral-50/50 px-4 py-3 transition hover:border-neutral-200 hover:bg-neutral-50"
+        className="flex items-center gap-3 border-t border-neutral-100 bg-primary/[0.04] px-5 py-4 transition hover:bg-primary/[0.06] sm:px-6"
       >
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
           <Bell className="h-4 w-4" aria-hidden />

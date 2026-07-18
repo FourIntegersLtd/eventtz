@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   marketplaceOverviewKpis,
+  marketplaceSecondaryMeta,
   toMarketplaceCategoryBars,
   toMarketplaceCompletedSeries,
   toMarketplaceDemandSeries,
@@ -59,5 +60,21 @@ describe("marketplaceAnalyticsModel", () => {
       overallConversion: 0.2,
       unfulfilled: 3,
     });
+  });
+
+  it("builds quiet secondary meta lines", () => {
+    const kpis = marketplaceOverviewKpis({
+      reply_within_1h_rate: 0.5,
+      reply_within_6h_rate: 0.7,
+      reply_within_24h_rate: 0.9,
+      enquiry_vendor_reminders: 2,
+      enquiry_client_nudges: 1,
+      enquiry_multi_batches: 3,
+    });
+    expect(marketplaceSecondaryMeta(kpis)).toEqual([
+      "Reply <1h 50.0% · <6h 70.0% · <24h 90.0%",
+      "2 vendor nudges · 1 client nudges",
+      "3 multi-vendor batches",
+    ]);
   });
 });

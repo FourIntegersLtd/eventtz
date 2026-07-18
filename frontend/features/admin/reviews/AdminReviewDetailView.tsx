@@ -17,7 +17,6 @@ import {
 } from "@/lib/adminPlatformApi";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
-import { adminCard } from "@/features/admin/adminTheme";
 import {
   adminTrustReviewsHref,
   formatReviewEventDate,
@@ -27,24 +26,6 @@ import {
 type Props = {
   reviewId: string;
 };
-
-function DetailSection({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className={`${adminCard} p-5`}>
-      <h2 className="text-sm font-semibold text-neutral-900">{title}</h2>
-      <div className="mt-4">{children}</div>
-    </section>
-  );
-}
-
-function Field({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div>
-      <dt className="text-xs text-neutral-500">{label}</dt>
-      <dd className="mt-0.5 text-sm text-neutral-900">{value}</dd>
-    </div>
-  );
-}
 
 export function AdminReviewDetailView({ reviewId }: Props) {
   const { canModerateReviews } = useAdminPermissions();
@@ -102,13 +83,6 @@ export function AdminReviewDetailView({ reviewId }: Props) {
   return (
     <div className="space-y-6">
       <BackLink href={backHref} label="Reviews" icon="chevron" tone="muted" />
-      <nav className="text-sm text-neutral-600">
-        <Link href={backHref} className="text-primary hover:underline">
-          Reviews
-        </Link>
-        <span className="mx-2 text-neutral-400">/</span>
-        <span className="text-neutral-900">{vendorName}</span>
-      </nav>
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
@@ -131,67 +105,55 @@ export function AdminReviewDetailView({ reviewId }: Props) {
         ) : null}
       </div>
 
-      <DetailSection title="Review">
-        <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-800">
-          {review.body || "—"}
-        </p>
-      </DetailSection>
+      <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+        <div className="px-5 py-4">
+          <p className="text-[13px] font-medium text-neutral-500">Review</p>
+          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-neutral-800">
+            {review.body || "—"}
+          </p>
+        </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <DetailSection title="Vendor">
-          <dl className="space-y-4">
-            <Field label="Business" value={vendorName} />
-            <Field
-              label="All reviews"
-              value={
-                <Link
-                  href={adminTrustReviewsHref({
-                    vendorUserId: review.vendor_user_id,
-                    vendorName,
-                  })}
-                  className="font-medium text-primary hover:underline"
-                >
-                  View vendor reviews
-                </Link>
-              }
-            />
-          </dl>
-        </DetailSection>
+        <dl className="divide-y divide-neutral-100 border-t border-neutral-100">
+          <div className="grid gap-0 sm:grid-cols-2">
+            <div className="px-5 py-4 sm:border-r sm:border-neutral-100">
+              <dt className="text-[13px] text-neutral-500">Client</dt>
+              <dd className="mt-0.5 text-sm font-medium text-neutral-900">
+                {review.client_email ?? "—"}
+              </dd>
+            </div>
+            <div className="border-t border-neutral-100 px-5 py-4 sm:border-t-0">
+              <dt className="text-[13px] text-neutral-500">Event</dt>
+              <dd className="mt-0.5 text-sm font-medium text-neutral-900">
+                {review.booking_event_name ?? "—"}
+              </dd>
+              <p className="mt-0.5 text-xs text-neutral-500">
+                {formatReviewEventDate(review.booking_event_date)}
+              </p>
+            </div>
+          </div>
 
-        <DetailSection title="Client">
-          <dl className="space-y-4">
-            <Field label="Email" value={review.client_email ?? "—"} />
-          </dl>
-        </DetailSection>
-      </div>
-
-      <DetailSection title="Booking">
-        <dl className="grid gap-4 sm:grid-cols-2">
-          <Field label="Event" value={review.booking_event_name ?? "—"} />
-          <Field label="Event date" value={formatReviewEventDate(review.booking_event_date)} />
-          <Field
-            label="Status"
-            value={
-              review.booking_status ? (
-                <StatusBadge status={review.booking_status} />
-              ) : (
-                "—"
-              )
-            }
-          />
-          <Field
-            label="Booking"
-            value={
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-primary/[0.04] px-5 py-4">
+            <div className="flex flex-wrap items-center gap-2">
+              {review.booking_status ? <StatusBadge status={review.booking_status} /> : null}
               <Link
-                href={`/admin/bookings/${review.booking_request_id}`}
-                className="font-medium text-primary hover:underline"
+                href={adminTrustReviewsHref({
+                  vendorUserId: review.vendor_user_id,
+                  vendorName,
+                })}
+                className="text-sm font-medium text-primary hover:underline"
               >
-                Open booking
+                All vendor reviews
               </Link>
-            }
-          />
+            </div>
+            <Link
+              href={`/admin/bookings/${review.booking_request_id}`}
+              className="text-sm font-medium text-primary hover:underline"
+            >
+              Open booking
+            </Link>
+          </div>
         </dl>
-      </DetailSection>
+      </div>
 
       <ConfirmDialog
         isOpen={confirmHide}

@@ -45,11 +45,11 @@ export function AttentionFeedCard({
 
   return (
     <div className={`w-full min-w-0 overflow-hidden ${portalCard}`}>
-      <div className="flex items-center justify-between gap-3 border-b border-neutral-100 px-4 py-4 sm:px-5">
+      <div className="flex items-center justify-between gap-3 border-b border-neutral-100 px-5 py-4">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-neutral-500">To do</p>
+          <p className="text-[15px] font-semibold tracking-tight text-neutral-900">To do</p>
           {!loading && sorted.length > 0 ? (
-            <p className="mt-0.5 text-xs text-neutral-400">
+            <p className="mt-0.5 text-[13px] text-neutral-400">
               {sorted.length} item{sorted.length === 1 ? "" : "s"}
             </p>
           ) : null}
@@ -80,7 +80,7 @@ export function AttentionFeedCard({
           title="You're all caught up"
         />
       ) : (
-        <ul className="space-y-2 p-3">
+        <ul className="divide-y divide-neutral-100">
           {visible.map((item) => {
             const Icon = TONE_ICON[item.tone];
             const iconAndText = (
@@ -106,8 +106,8 @@ export function AttentionFeedCard({
             return (
               <li
                 key={item.id}
-                className={`min-w-0 overflow-hidden rounded-xl border border-neutral-100 bg-white transition duration-150 ease-out hover:border-neutral-200 ${
-                  item.trailing ? "flex items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4" : ""
+                className={`min-w-0 ${
+                  item.trailing ? "flex items-center gap-2 px-4 py-3.5 sm:gap-3 sm:px-5" : ""
                 }`}
               >
                 {item.trailing ? (
@@ -123,7 +123,7 @@ export function AttentionFeedCard({
                 ) : (
                   <Link
                     href={item.href}
-                    className="flex w-full min-w-0 items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4"
+                    className="flex w-full min-w-0 items-center gap-2 px-4 py-3.5 transition hover:bg-neutral-50/80 sm:gap-3 sm:px-5"
                   >
                     {iconAndText}
                     <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" aria-hidden />

@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import type { VendorOnboardingData, VendorOnboardingUpdate } from "./types";
 import type { VendorApprovalStatus } from "@/lib/domain-types";
 import type { PortfolioImageQualityRow } from "./useVendorOnboardingController";
@@ -49,7 +50,17 @@ type Props = {
   uploadingProfileImage?: boolean;
   profileImageError?: string | null;
   onUploadProfileImage: (file: File) => void | Promise<void>;
+  /** Post-approval profile editor — Settings-style sectioned cards, not wizard mega-card. */
+  isLiveEdit?: boolean;
 };
+
+function LiveEditStepShell({ children }: { children: ReactNode }) {
+  return (
+    <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white px-5 py-5 sm:px-6 sm:py-6">
+      {children}
+    </section>
+  );
+}
 
 /** Routes the current step to the matching screen under `steps/`. */
 export function OnboardingStepContent({
@@ -83,27 +94,31 @@ export function OnboardingStepContent({
   uploadingProfileImage,
   profileImageError,
   onUploadProfileImage,
+  isLiveEdit = false,
 }: Props) {
+  const wrapLive = (node: ReactNode) =>
+    isLiveEdit ? <LiveEditStepShell>{node}</LiveEditStepShell> : node;
+
   switch (step) {
     case 1:
-      return <StepAccount data={data} update={update} />;
+      return wrapLive(<StepAccount data={data} update={update} />);
     case 2:
-      return (
+      return wrapLive(
         <StepBusiness
           data={data}
           update={update}
           businessNameError={businessNameError}
           setBusinessNameError={setBusinessNameError}
-        />
+        />,
       );
     case 3:
-      return <StepLocation data={data} update={update} />;
+      return wrapLive(<StepLocation data={data} update={update} />);
     case 4:
-      return <StepPricing data={data} update={update} />;
+      return wrapLive(<StepPricing data={data} update={update} />);
     case 5:
-      return <StepAvailability data={data} update={update} />;
+      return wrapLive(<StepAvailability data={data} update={update} />);
     case 6:
-      return (
+      return wrapLive(
         <StepPortfolio
           data={data}
           update={update}
@@ -116,10 +131,10 @@ export function OnboardingStepContent({
           videoUploadError={videoUploadError}
           onUploadPortfolioVideo={onUploadPortfolioVideo}
           onRemovePortfolioVideo={onRemovePortfolioVideo}
-        />
+        />,
       );
     case 7:
-      return (
+      return wrapLive(
         <StepAdditionalInfo
           data={data}
           update={update}
@@ -127,7 +142,7 @@ export function OnboardingStepContent({
           onUploadAdditionalDoc={onUploadAdditionalDoc}
           onRemoveAdditionalDoc={onRemoveAdditionalDoc}
           onRemoveOtherDoc={onRemoveOtherDoc}
-        />
+        />,
       );
     case 8:
       return (
@@ -141,6 +156,7 @@ export function OnboardingStepContent({
           uploadingProfileImage={uploadingProfileImage}
           profileImageError={profileImageError}
           onUploadProfileImage={onUploadProfileImage}
+          isLiveEdit={isLiveEdit}
         />
       );
     case 9:

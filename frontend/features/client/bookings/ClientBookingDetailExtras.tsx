@@ -61,12 +61,12 @@ export function ClientBookingDetailExtras({
 
       {showCheckoutReturnBanner ? (
         <div
-          className={`mt-4 rounded-xl border px-4 pb-4 pt-5 text-sm ${
+          className={`mt-4 rounded-2xl border px-5 py-4 text-sm ${
             paymentBanner === "cancelled"
-              ? "border-amber-200 bg-amber-50 text-amber-900"
+              ? "border-neutral-100 bg-neutral-50 text-neutral-800"
               : paymentSyncError
                 ? "border-red-200 bg-red-50 text-red-800"
-                : "border-emerald-200 bg-emerald-50 text-emerald-900"
+                : "border-neutral-100 bg-neutral-50 text-neutral-800"
           }`}
         >
           {checkoutReturnMessage}
@@ -86,7 +86,7 @@ export function ClientBookingDetailExtras({
       />
 
       {showCancelledRefunded ? (
-        <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 pb-4 pt-5 text-sm text-emerald-900">
+        <div className="mt-4 rounded-2xl border border-neutral-100 bg-neutral-50 px-5 py-4 text-sm text-neutral-700">
           {PAYMENT_FLOW_COPY.cancelledRefunded}
         </div>
       ) : null}
@@ -94,16 +94,18 @@ export function ClientBookingDetailExtras({
       {paymentDue ? (
         <div
           ref={paymentBannerRef}
-          className="mt-4 flex flex-col gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 pb-4 pt-5 shadow-sm sm:flex-row sm:items-center sm:justify-between"
+          className="mt-4 overflow-hidden rounded-2xl border border-neutral-100 bg-white"
         >
-          <div>
-            <p className="text-sm font-semibold text-amber-950">Payment needed</p>
-            <p className="mt-1 text-sm text-amber-900/90">Pay now to confirm your booking.</p>
-            <p className="mt-1 text-xs text-amber-900/75">{PAYMENT_FLOW_COPY.beforePay}</p>
+          <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-neutral-900">Payment needed</p>
+              <p className="mt-1 text-[13px] text-neutral-600">Pay now to confirm your booking.</p>
+              <p className="mt-1 text-[13px] text-neutral-400">{PAYMENT_FLOW_COPY.beforePay}</p>
+            </div>
+            <Button variant="primary" size="md" className="shrink-0" onClick={onPayNow}>
+              Pay now
+            </Button>
           </div>
-          <Button variant="primary" size="md" className="shrink-0" onClick={onPayNow}>
-            Pay now
-          </Button>
         </div>
       ) : null}
     </>

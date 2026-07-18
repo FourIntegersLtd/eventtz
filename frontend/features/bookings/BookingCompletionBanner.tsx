@@ -42,13 +42,13 @@ export function BookingCompletionBanner({
   const viewerNeedsToConfirm = waitingOn === "both" || waitingOn === viewer;
 
   return (
-    <div className="mt-4 rounded-xl border border-sky-200 bg-sky-50 px-4 pb-4 pt-5 shadow-sm">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-sm font-semibold text-sky-950">{copy.title}</p>
-          <p className="mt-1 text-sm text-sky-900/90">{copy.body}</p>
+    <div className="mt-4 overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+      <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-neutral-900">{copy.title}</p>
+          <p className="mt-1 text-[13px] text-neutral-600">{copy.body}</p>
           {autoReleaseAt ? (
-            <p className="mt-2 text-xs text-sky-900/75">
+            <p className="mt-1.5 text-[13px] text-neutral-400">
               {autoReleaseLine(autoReleaseAt, viewer)}
             </p>
           ) : null}

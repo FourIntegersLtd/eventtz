@@ -23,6 +23,9 @@ type Props = {
 
 const BOOKING_SUBJECTS = new Set<ContactSubject>(["booking_problem", "payments"]);
 
+const fieldClass =
+  "w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20";
+
 export function ContactFormView({ role }: Props) {
   const { user } = useAuth();
   const { showToast } = useToast();
@@ -72,81 +75,87 @@ export function ContactFormView({ role }: Props) {
   };
 
   return (
-    <div className="w-full min-w-0 max-w-xl space-y-6">
-      <header className="space-y-2">
-        <p className="text-sm text-neutral-600">
-          Send a message to the Eventtz team. We usually reply by email within two working days.
-        </p>
-        <p className="text-sm text-neutral-600">
-          For problems on a paid booking, you can also{" "}
-          <Link href={disputesHref} className="font-medium text-primary hover:underline">
-            report a problem
-          </Link>{" "}
-          from the booking page.
-        </p>
-      </header>
-
-      <form onSubmit={onSubmit} className="space-y-4 rounded-xl border border-neutral-200 bg-white p-5">
-        <div className="space-y-1.5">
-          <label htmlFor="contact-email" className="block text-sm font-medium text-neutral-800">
-            Your email
-          </label>
-          <input
-            id="contact-email"
-            readOnly
-            value={user?.email ?? ""}
-            className="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-700"
-          />
+    <div className="w-full min-w-0 max-w-3xl">
+      <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+        <div className="px-5 py-4 sm:px-6 sm:py-5">
+          <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">
+            Message the team
+          </h2>
+          <p className="mt-0.5 text-[13px] text-neutral-400">
+            We usually reply by email within two working days. For problems on a paid booking, you
+            can also{" "}
+            <Link href={disputesHref} className="font-medium text-primary hover:underline">
+              report a problem
+            </Link>{" "}
+            from the booking page.
+          </p>
         </div>
 
-        <div className="space-y-1.5">
-          <label htmlFor="contact-subject" className="block text-sm font-medium text-neutral-800">
-            Subject
-          </label>
-          <select
-            id="contact-subject"
-            value={subject}
-            onChange={(e) => setSubject(e.target.value as ContactSubject)}
-            className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-900"
-          >
-            {CONTACT_SUBJECT_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <form onSubmit={onSubmit} className="divide-y divide-neutral-100 border-t border-neutral-100">
+          <div className="space-y-1.5 px-5 py-4 sm:px-6">
+            <label htmlFor="contact-email" className="block text-sm font-medium text-neutral-800">
+              Your email
+            </label>
+            <input
+              id="contact-email"
+              readOnly
+              value={user?.email ?? ""}
+              className="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-700"
+            />
+          </div>
 
-        {showBookingId ? (
-          <TextField
-            label="Booking reference"
-            value={bookingId}
-            onChange={(e) => setBookingId(e.target.value)}
-            placeholder="Paste your booking reference"
-            hint="You can copy this from your booking details page."
-          />
-        ) : null}
+          <div className="space-y-1.5 px-5 py-4 sm:px-6">
+            <label htmlFor="contact-subject" className="block text-sm font-medium text-neutral-800">
+              Subject
+            </label>
+            <select
+              id="contact-subject"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value as ContactSubject)}
+              className={fieldClass}
+            >
+              {CONTACT_SUBJECT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div className="space-y-1.5">
-          <label htmlFor="contact-message" className="block text-sm font-medium text-neutral-800">
-            Message
-          </label>
-          <textarea
-            id="contact-message"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            rows={6}
-            className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-900"
-            placeholder="How can we help?"
-          />
-        </div>
+          {showBookingId ? (
+            <div className="px-5 py-4 sm:px-6">
+              <TextField
+                label="Booking reference"
+                value={bookingId}
+                onChange={(e) => setBookingId(e.target.value)}
+                placeholder="Paste your booking reference"
+                hint="You can copy this from your booking details page."
+              />
+            </div>
+          ) : null}
 
-        {error ? <p className="text-sm text-red-700">{error}</p> : null}
+          <div className="space-y-1.5 px-5 py-4 sm:px-6">
+            <label htmlFor="contact-message" className="block text-sm font-medium text-neutral-800">
+              Message
+            </label>
+            <textarea
+              id="contact-message"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              rows={6}
+              className={fieldClass}
+              placeholder="How can we help?"
+            />
+          </div>
 
-        <Button type="submit" loading={busy}>
-          Send message
-        </Button>
-      </form>
+          <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            {error ? <p className="text-sm text-red-700">{error}</p> : <span />}
+            <Button type="submit" loading={busy} className="sm:shrink-0">
+              Send message
+            </Button>
+          </div>
+        </form>
+      </section>
     </div>
   );
 }

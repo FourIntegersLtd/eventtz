@@ -1,9 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
-import { adminCard } from "@/features/admin/adminTheme";
 import { MessageComposer } from "@/features/chat/MessageComposer";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import {
@@ -121,125 +120,142 @@ export function AdminMessagesComposeView() {
   };
 
   return (
-    <div className={`${adminCard} space-y-5 p-5`}>
+    <div className="space-y-6">
       {error ? <AdminErrorBanner message={error} /> : null}
       {success ? (
-        <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
-          {success}
-        </p>
+        <p className="text-sm font-medium text-primary">{success}</p>
       ) : null}
 
-      <fieldset className="space-y-2">
-        <legend className="text-sm font-medium text-neutral-800">Recipients</legend>
-        <div className="flex flex-wrap gap-3 text-sm">
-          {(
-            [
-              ["selected", "Selected users"],
-              ["clients", "All clients"],
-              ["vendors", "All vendors"],
-              ["users", "All users"],
-            ] as const
-          ).map(([value, label]) => (
-            <label key={value} className="inline-flex items-center gap-2 text-neutral-700">
-              <input
-                type="radio"
-                name="recipient-mode"
-                checked={mode === value}
-                onChange={() => setMode(value)}
-              />
-              {label}
-            </label>
-          ))}
+      <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+        <div className="px-5 py-4 sm:px-6 sm:py-5">
+          <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">Recipients</h2>
+          <p className="mt-0.5 text-[13px] text-neutral-400">
+            Choose specific users or broadcast to a whole audience.
+          </p>
         </div>
-      </fieldset>
 
-      {mode === "selected" ? (
-        <div className="space-y-3">
-          {selected.length > 0 ? (
-            <ul className="flex flex-wrap gap-2">
-              {selected.map((u) => (
-                <li key={u.user_id}>
-                  <span className="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/10 py-1 pl-2.5 pr-1 text-sm text-neutral-900">
-                    <span className="min-w-0 truncate">{u.label}</span>
-                    <span className="shrink-0 text-[10px] uppercase tracking-wide text-primary/70">
-                      {u.kind}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => removeUser(u.user_id)}
-                      className="rounded-md p-1 text-primary/70 hover:bg-primary/15 hover:text-primary"
-                      aria-label={`Remove ${u.label}`}
-                    >
-                      <X className="h-3.5 w-3.5" aria-hidden />
-                    </button>
-                  </span>
-                </li>
+        <div className="divide-y divide-neutral-100 border-t border-neutral-100">
+          <fieldset className="px-5 py-4 sm:px-6">
+            <legend className="sr-only">Recipient mode</legend>
+            <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+              {(
+                [
+                  ["selected", "Selected users"],
+                  ["clients", "All clients"],
+                  ["vendors", "All vendors"],
+                  ["users", "All users"],
+                ] as const
+              ).map(([value, label]) => (
+                <label key={value} className="inline-flex items-center gap-2 text-neutral-700">
+                  <input
+                    type="radio"
+                    name="recipient-mode"
+                    checked={mode === value}
+                    onChange={() => setMode(value)}
+                  />
+                  {label}
+                </label>
               ))}
-            </ul>
-          ) : null}
-
-          <div ref={searchWrapRef} className="relative max-w-lg">
-            <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-neutral-400">
-              <Search className="h-4 w-4" aria-hidden />
             </div>
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setResultsOpen(true);
-              }}
-              onFocus={() => setResultsOpen(true)}
-              placeholder="Search by email or name…"
-              autoComplete="off"
-              className="w-full rounded-lg border border-neutral-200 bg-white py-2.5 pl-9 pr-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-              aria-label="Search recipients"
-              aria-expanded={resultsOpen && query.trim().length > 0}
-              aria-controls="admin-message-recipient-results"
-            />
-            {resultsOpen && query.trim().length > 0 ? (
-              <ul
-                id="admin-message-recipient-results"
-                role="listbox"
-                className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-neutral-200 bg-white py-1 shadow-md"
-              >
-                {searching ? (
-                  <li className="px-3 py-2.5 text-sm text-neutral-500">Searching…</li>
-                ) : hits.length === 0 ? (
-                  <li className="px-3 py-2.5 text-sm text-neutral-500">No matching users.</li>
-                ) : (
-                  hits.map((u) => (
-                    <li key={`${u.kind}-${u.user_id}`} role="option">
-                      <button
-                        type="button"
-                        className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-neutral-50"
-                        onClick={() => addUser(u)}
-                      >
-                        <span className="min-w-0 flex-1 truncate text-neutral-900">{u.label}</span>
-                        <span className="shrink-0 text-xs uppercase tracking-wide text-neutral-400">
+          </fieldset>
+
+          {mode === "selected" ? (
+            <div className="space-y-3 px-5 py-4 sm:px-6">
+              {selected.length > 0 ? (
+                <ul className="flex flex-wrap gap-2">
+                  {selected.map((u) => (
+                    <li key={u.user_id}>
+                      <span className="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/10 py-1 pl-2.5 pr-1 text-sm text-neutral-900">
+                        <span className="min-w-0 truncate">{u.label}</span>
+                        <span className="shrink-0 text-[10px] uppercase tracking-wide text-primary/70">
                           {u.kind}
                         </span>
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => removeUser(u.user_id)}
+                          className="rounded-md p-1 text-primary/70 hover:bg-primary/15 hover:text-primary"
+                          aria-label={`Remove ${u.label}`}
+                        >
+                          <X className="h-3.5 w-3.5" aria-hidden />
+                        </button>
+                      </span>
                     </li>
-                  ))
-                )}
-              </ul>
-            ) : null}
-          </div>
-        </div>
-      ) : null}
+                  ))}
+                </ul>
+              ) : null}
 
-      <MessageComposer
-        variant="compose"
-        value={draft}
-        onChange={setDraft}
-        onSend={() => void sendCompose()}
-        loading={sending}
-        rows={6}
-        placeholder="Write a support message…"
-        sendLabel="Send"
-        enterToSend={false}
-      />
+              <div ref={searchWrapRef} className="relative max-w-lg">
+                <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-neutral-400">
+                  <Search className="h-4 w-4" aria-hidden />
+                </div>
+                <input
+                  type="search"
+                  value={query}
+                  onChange={(e) => {
+                    setQuery(e.target.value);
+                    setResultsOpen(true);
+                  }}
+                  onFocus={() => setResultsOpen(true)}
+                  placeholder="Search by email or name…"
+                  autoComplete="off"
+                  className="w-full rounded-lg border border-neutral-200 bg-white py-2.5 pl-9 pr-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  aria-label="Search recipients"
+                  aria-expanded={resultsOpen && query.trim().length > 0}
+                  aria-controls="admin-message-recipient-results"
+                />
+                {resultsOpen && query.trim().length > 0 ? (
+                  <ul
+                    id="admin-message-recipient-results"
+                    role="listbox"
+                    className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-neutral-200 bg-white py-1 shadow-md"
+                  >
+                    {searching ? (
+                      <li className="px-3 py-2.5 text-sm text-neutral-500">Searching…</li>
+                    ) : hits.length === 0 ? (
+                      <li className="px-3 py-2.5 text-sm text-neutral-500">No matching users.</li>
+                    ) : (
+                      hits.map((u) => (
+                        <li key={`${u.kind}-${u.user_id}`} role="option">
+                          <button
+                            type="button"
+                            className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-neutral-50"
+                            onClick={() => addUser(u)}
+                          >
+                            <span className="min-w-0 flex-1 truncate text-neutral-900">{u.label}</span>
+                            <span className="shrink-0 text-xs uppercase tracking-wide text-neutral-400">
+                              {u.kind}
+                            </span>
+                          </button>
+                        </li>
+                      ))
+                    )}
+                  </ul>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </section>
+
+      <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+        <div className="px-5 py-4 sm:px-6 sm:py-5">
+          <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">Message</h2>
+          <p className="mt-0.5 text-[13px] text-neutral-400">Sent as Eventtz support.</p>
+        </div>
+        <div className="border-t border-neutral-100 px-5 py-4 sm:px-6">
+          <MessageComposer
+            variant="compose"
+            value={draft}
+            onChange={setDraft}
+            onSend={() => void sendCompose()}
+            loading={sending}
+            rows={6}
+            placeholder="Write a support message…"
+            sendLabel="Send"
+            enterToSend={false}
+          />
+        </div>
+      </section>
     </div>
   );
 }

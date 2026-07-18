@@ -148,13 +148,8 @@ export function VendorBrowseDetailBody({
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_minmax(260px,340px)] lg:items-start lg:gap-10">
       <div className="min-w-0 space-y-6">
-        <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-100 shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
           <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-100">
-            <div className="pointer-events-none absolute left-4 top-4 z-10">
-              <span className="inline-flex rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-neutral-900 shadow-sm ring-1 ring-black/5">
-                {city}
-              </span>
-            </div>
             {activePhotoUrl ? (
               <button
                 type="button"
@@ -179,7 +174,7 @@ export function VendorBrowseDetailBody({
             )}
           </div>
           {portfolioUrls.length > 0 ? (
-            <div className="flex gap-2.5 overflow-x-auto border-t border-neutral-200 bg-neutral-50/70 px-3 py-3">
+            <div className="flex gap-2.5 overflow-x-auto border-t border-neutral-100 px-3 py-3">
               {portfolioUrls.map((url, index) => {
                 const selected = index === activePhotoIndex;
                 return (
@@ -187,7 +182,7 @@ export function VendorBrowseDetailBody({
                     key={url}
                     type="button"
                     onClick={() => setActivePhotoIndex(index)}
-                    className={`h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-white ring-2 transition ${
+                    className={`h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-neutral-50 ring-2 transition ${
                       selected
                         ? "ring-neutral-400"
                         : "ring-transparent hover:ring-neutral-300"
@@ -207,186 +202,172 @@ export function VendorBrowseDetailBody({
               })}
             </div>
           ) : (
-            <div className="flex gap-2.5 border-t border-neutral-200 bg-neutral-50/70 px-3 py-3">
+            <div className="flex gap-2.5 border-t border-neutral-100 px-3 py-3">
               {[0, 1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="h-14 flex-1 rounded-lg bg-neutral-100 ring-1 ring-inset ring-neutral-200/80"
+                  className="h-14 flex-1 rounded-lg bg-neutral-50 ring-1 ring-inset ring-neutral-100"
                 />
               ))}
             </div>
           )}
         </div>
 
-        <section className="space-y-3">
-          <h3 className="font-heading text-base font-semibold text-neutral-900">
-            About this vendor
-          </h3>
-          <VendorMetricsStrip
-            metrics={{
-              review_average: vendor.review_average,
-              review_count: vendor.review_count,
-              completed_bookings: vendor.completed_bookings,
-              avg_response_seconds: vendor.avg_response_seconds,
-              conversion_rate: vendor.conversion_rate,
-            }}
-          />
-          <p className="text-sm leading-relaxed text-neutral-700">{bio}</p>
-          {facts.portfolioVideoUrl ? (
-            <a
-              href={facts.portfolioVideoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-            >
-              <Play className="h-4 w-4" aria-hidden />
-              Watch portfolio video
-              <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-            </a>
+        <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+          <div className="space-y-3 px-5 py-5">
+            <div>
+              <h3 className="font-heading text-base font-semibold text-neutral-900">
+                About this vendor
+              </h3>
+              {city ? (
+                <p className="mt-0.5 text-sm text-neutral-500">{city}</p>
+              ) : null}
+            </div>
+            <VendorMetricsStrip
+              metrics={{
+                review_average: vendor.review_average,
+                review_count: vendor.review_count,
+                completed_bookings: vendor.completed_bookings,
+                avg_response_seconds: vendor.avg_response_seconds,
+                conversion_rate: vendor.conversion_rate,
+              }}
+            />
+            <p className="text-sm leading-relaxed text-neutral-700">{bio}</p>
+            {facts.portfolioVideoUrl ? (
+              <a
+                href={facts.portfolioVideoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+              >
+                <Play className="h-4 w-4" aria-hidden />
+                Watch portfolio video
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+              </a>
+            ) : null}
+          </div>
+
+          <div className="border-t border-neutral-100 px-5 py-5">
+            <h4 className="text-sm font-semibold text-neutral-900">Services &amp; events</h4>
+            <div className="mt-4 space-y-4">
+              <div>
+                <p className="text-[13px] text-neutral-500">Services</p>
+                {serviceLabels.length > 0 ? (
+                  <ul className="mt-2 flex flex-wrap gap-2">
+                    {serviceLabels.map((label, i) => (
+                      <li
+                        key={`svc-${i}-${label}`}
+                        className="inline-flex rounded-full border border-neutral-100 bg-neutral-50 px-3 py-1 text-xs font-medium text-neutral-800"
+                      >
+                        {label}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-1.5 text-sm italic text-neutral-400">Not specified yet</p>
+                )}
+              </div>
+              <div>
+                <p className="text-[13px] text-neutral-500">Event types</p>
+                {eventLabels.length > 0 ? (
+                  <ul className="mt-2 flex flex-wrap gap-2">
+                    {eventLabels.map((label, i) => (
+                      <li
+                        key={`evt-${i}-${label}`}
+                        className="inline-flex rounded-full border border-neutral-100 bg-neutral-50 px-3 py-1 text-xs font-medium text-neutral-800"
+                      >
+                        {label}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-1.5 text-sm italic text-neutral-400">Not specified yet</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {hasCoverage ? (
+            <div className="border-t border-neutral-100">
+              <div className="px-5 pt-4 pb-1">
+                <h4 className="text-sm font-semibold text-neutral-900">Coverage</h4>
+              </div>
+              <dl className="divide-y divide-neutral-100 px-5">
+                {facts.howTheyWork.length > 0 ? (
+                  <div className="flex flex-col gap-1 py-3.5 sm:flex-row sm:gap-6">
+                    <dt className="shrink-0 text-sm text-neutral-500 sm:w-36">How they work</dt>
+                    <dd className="text-sm text-neutral-800">{facts.howTheyWork.join(" · ")}</dd>
+                  </div>
+                ) : null}
+                {facts.travelRadiusLabel ? (
+                  <div className="flex flex-col gap-1 py-3.5 sm:flex-row sm:gap-6">
+                    <dt className="shrink-0 text-sm text-neutral-500 sm:w-36">Travel radius</dt>
+                    <dd className="text-sm text-neutral-800">{facts.travelRadiusLabel}</dd>
+                  </div>
+                ) : null}
+                {facts.travelFeePolicy ? (
+                  <div className="flex flex-col gap-1 py-3.5 sm:flex-row sm:gap-6">
+                    <dt className="shrink-0 text-sm text-neutral-500 sm:w-36">Travel fees</dt>
+                    <dd className="text-sm text-neutral-800">{facts.travelFeePolicy}</dd>
+                  </div>
+                ) : null}
+                {facts.travelCustomNote ? (
+                  <div className="flex flex-col gap-1 py-3.5 sm:flex-row sm:gap-6">
+                    <dt className="shrink-0 text-sm text-neutral-500 sm:w-36">Travel note</dt>
+                    <dd className="text-sm leading-relaxed text-neutral-800">
+                      {facts.travelCustomNote}
+                    </dd>
+                  </div>
+                ) : null}
+              </dl>
+            </div>
+          ) : null}
+
+          {hasGoodToKnow ? (
+            <div className="border-t border-neutral-100">
+              <div className="px-5 pt-4 pb-1">
+                <h4 className="text-sm font-semibold text-neutral-900">Good to know</h4>
+              </div>
+              <dl className="divide-y divide-neutral-100 px-5">
+                {facts.availableDays ? (
+                  <div className="flex flex-col gap-1 py-3.5 sm:flex-row sm:gap-6">
+                    <dt className="shrink-0 text-sm text-neutral-500 sm:w-36">Usually available</dt>
+                    <dd className="text-sm text-neutral-800">{facts.availableDays}</dd>
+                  </div>
+                ) : null}
+                {facts.unavailableDatesLabel ? (
+                  <div className="flex flex-col gap-1 py-3.5 sm:flex-row sm:gap-6">
+                    <dt className="shrink-0 text-sm text-neutral-500 sm:w-36">Not available</dt>
+                    <dd className="text-sm leading-relaxed text-neutral-800">
+                      {facts.unavailableDatesLabel}
+                    </dd>
+                  </div>
+                ) : null}
+                {facts.foodNotes.map((note) => (
+                  <div
+                    key={note.label}
+                    className="flex flex-col gap-1 py-3.5 sm:flex-row sm:gap-6"
+                  >
+                    <dt className="shrink-0 text-sm text-neutral-500 sm:w-36">{note.label}</dt>
+                    <dd className="text-sm leading-relaxed text-neutral-800">{note.value}</dd>
+                  </div>
+                ))}
+                {facts.trustBadges.length > 0 ? (
+                  <div className="flex flex-col gap-1 py-3.5 sm:flex-row sm:gap-6">
+                    <dt className="shrink-0 text-sm text-neutral-500 sm:w-36">On file</dt>
+                    <dd className="text-sm text-neutral-800">{facts.trustBadges.join(" · ")}</dd>
+                  </div>
+                ) : null}
+              </dl>
+            </div>
           ) : null}
         </section>
-
-        <section className="overflow-hidden rounded-2xl border border-neutral-200/90 bg-white shadow-sm">
-          <div className="border-b border-neutral-100 px-4 py-3 sm:px-5">
-            <h3 className="font-heading text-sm font-semibold text-neutral-900">
-              Services &amp; events
-            </h3>
-            <p className="mt-0.5 text-xs text-neutral-500">
-              What they offer and the celebrations they cover.
-            </p>
-          </div>
-          <div className="space-y-5 px-4 py-4 sm:px-5 sm:py-5">
-            <div>
-              <h4 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-500">
-                Services
-              </h4>
-              {serviceLabels.length > 0 ? (
-                <ul className="mt-2.5 flex flex-wrap gap-2">
-                  {serviceLabels.map((label, i) => (
-                    <li
-                      key={`svc-${i}-${label}`}
-                      className="inline-flex rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1 text-xs font-medium text-neutral-800"
-                    >
-                      {label}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="mt-2 text-sm italic text-neutral-400">Not specified yet</p>
-              )}
-            </div>
-            <div>
-              <h4 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-500">
-                Event types
-              </h4>
-              {eventLabels.length > 0 ? (
-                <ul className="mt-2.5 flex flex-wrap gap-2">
-                  {eventLabels.map((label, i) => (
-                    <li
-                      key={`evt-${i}-${label}`}
-                      className="inline-flex rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1 text-xs font-medium text-neutral-800"
-                    >
-                      {label}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="mt-2 text-sm italic text-neutral-400">Not specified yet</p>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {hasCoverage ? (
-          <section className="overflow-hidden rounded-2xl border border-neutral-200/90 bg-white shadow-sm">
-            <div className="border-b border-neutral-100 px-4 py-3 sm:px-5">
-              <h3 className="font-heading text-sm font-semibold text-neutral-900">
-                Coverage
-              </h3>
-              <p className="mt-0.5 text-xs text-neutral-500">
-                How they work with you and how far they travel.
-              </p>
-            </div>
-            <dl className="divide-y divide-neutral-100 px-4 sm:px-5">
-              {facts.howTheyWork.length > 0 ? (
-                <div className="flex flex-col gap-1 py-3.5 sm:flex-row sm:gap-6">
-                  <dt className="shrink-0 text-sm text-neutral-500 sm:w-36">How they work</dt>
-                  <dd className="text-sm text-neutral-800">{facts.howTheyWork.join(" · ")}</dd>
-                </div>
-              ) : null}
-              {facts.travelRadiusLabel ? (
-                <div className="flex flex-col gap-1 py-3.5 sm:flex-row sm:gap-6">
-                  <dt className="shrink-0 text-sm text-neutral-500 sm:w-36">Travel radius</dt>
-                  <dd className="text-sm text-neutral-800">{facts.travelRadiusLabel}</dd>
-                </div>
-              ) : null}
-              {facts.travelFeePolicy ? (
-                <div className="flex flex-col gap-1 py-3.5 sm:flex-row sm:gap-6">
-                  <dt className="shrink-0 text-sm text-neutral-500 sm:w-36">Travel fees</dt>
-                  <dd className="text-sm text-neutral-800">{facts.travelFeePolicy}</dd>
-                </div>
-              ) : null}
-              {facts.travelCustomNote ? (
-                <div className="flex flex-col gap-1 py-3.5 sm:flex-row sm:gap-6">
-                  <dt className="shrink-0 text-sm text-neutral-500 sm:w-36">Travel note</dt>
-                  <dd className="text-sm leading-relaxed text-neutral-800">
-                    {facts.travelCustomNote}
-                  </dd>
-                </div>
-              ) : null}
-            </dl>
-          </section>
-        ) : null}
-
-        {hasGoodToKnow ? (
-          <section className="overflow-hidden rounded-2xl border border-neutral-200/90 bg-white shadow-sm">
-            <div className="border-b border-neutral-100 px-4 py-3 sm:px-5">
-              <h3 className="font-heading text-sm font-semibold text-neutral-900">
-                Good to know
-              </h3>
-              <p className="mt-0.5 text-xs text-neutral-500">
-                Availability, food notes, and trust signals.
-              </p>
-            </div>
-            <dl className="divide-y divide-neutral-100 px-4 sm:px-5">
-              {facts.availableDays ? (
-                <div className="flex flex-col gap-1 py-3.5 sm:flex-row sm:gap-6">
-                  <dt className="shrink-0 text-sm text-neutral-500 sm:w-36">Usually available</dt>
-                  <dd className="text-sm text-neutral-800">{facts.availableDays}</dd>
-                </div>
-              ) : null}
-              {facts.unavailableDatesLabel ? (
-                <div className="flex flex-col gap-1 py-3.5 sm:flex-row sm:gap-6">
-                  <dt className="shrink-0 text-sm text-neutral-500 sm:w-36">Not available</dt>
-                  <dd className="text-sm leading-relaxed text-neutral-800">
-                    {facts.unavailableDatesLabel}
-                  </dd>
-                </div>
-              ) : null}
-              {facts.foodNotes.map((note) => (
-                <div
-                  key={note.label}
-                  className="flex flex-col gap-1 py-3.5 sm:flex-row sm:gap-6"
-                >
-                  <dt className="shrink-0 text-sm text-neutral-500 sm:w-36">{note.label}</dt>
-                  <dd className="text-sm leading-relaxed text-neutral-800">{note.value}</dd>
-                </div>
-              ))}
-              {facts.trustBadges.length > 0 ? (
-                <div className="flex flex-col gap-1 py-3.5 sm:flex-row sm:gap-6">
-                  <dt className="shrink-0 text-sm text-neutral-500 sm:w-36">On file</dt>
-                  <dd className="text-sm text-neutral-800">{facts.trustBadges.join(" · ")}</dd>
-                </div>
-              ) : null}
-            </dl>
-          </section>
-        ) : null}
 
         <VendorReviewsSection vendorUserId={vendor.user_id} />
       </div>
 
       <aside className="lg:sticky lg:top-2">
-        <div className="rounded-2xl bg-white ring-1 ring-black/[0.06]">
+        <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
           <div className="px-5 pt-5 pb-4">
             <h3 className="text-[15px] font-semibold tracking-tight text-neutral-900">
               Pricing &amp; booking

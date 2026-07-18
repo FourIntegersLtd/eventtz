@@ -1,35 +1,22 @@
 "use client";
 
-import {
-  BadgeCheck,
-  Briefcase,
-  Check,
-  Clock,
-  Globe,
-  Heart,
-  MapPin,
-  Star,
-} from "lucide-react";
+import { BadgeCheck, Check, Heart, Star } from "lucide-react";
 import { portalCard } from "@/components/portal-shell/portalTheme";
 import { useRouter } from "next/navigation";
 import { VendorPortfolioCover } from "@/components/vendor/VendorPortfolioCover";
-import { VendorMetricsStrip } from "@/components/vendor/VendorMetricsStrip";
 import { buildBrowsePricingOptions } from "@/features/client/browse/vendorBrowseDetailModel";
 import type { ExpandedSearchCard } from "@/features/marketplace/marketplaceSearchModel";
-import {
-  EVENT_TYPE_OPTIONS,
-  SERVICE_OPTIONS,
-} from "@/features/vendor/onboarding/constants";
+import { SERVICE_OPTIONS } from "@/features/vendor/onboarding/constants";
 import { formatMoney, getMarket, marketLocationFallback } from "@/lib/markets";
 import { radiusOptionsForMarket } from "@/lib/photonLocationAutocomplete";
+import {
+  formatUsualReplyWithin,
+  formatVendorCompletedBookings,
+} from "@/lib/vendorMetrics";
 import { profileImageUrlFromPayload } from "@/lib/vendorPortfolioImages";
 
 function labelForService(value: string): string {
   return SERVICE_OPTIONS.find((o) => o.value === value)?.label ?? value;
-}
-
-function labelForEventType(value: string): string {
-  return EVENT_TYPE_OPTIONS.find((o) => o.value === value)?.label ?? value;
 }
 
 type MarketplaceVendorCardProps = {
@@ -45,21 +32,10 @@ type MarketplaceVendorCardProps = {
   onToggleSelect?: () => void;
 };
 
-function DetailChip({
-  icon,
-  label,
-}: {
-  icon: React.ReactNode;
-  label: string;
-}) {
-  return (
-    <div className="flex min-w-0 items-center gap-2 rounded-xl border border-neutral-200/80 bg-white px-2.5 py-2 text-xs font-medium text-neutral-700 shadow-sm">
-      <span className="shrink-0 text-primary/70">{icon}</span>
-      <span className="truncate">{label}</span>
-    </div>
-  );
-}
-
+/**
+ * Browse card: cover → vendor → package → light meta → price.
+ * Conversion / event-type / timing details stay on the vendor profile.
+ */
 export function MarketplaceVendorCard({
   card,
   vendorDetailHref,
@@ -111,31 +87,19 @@ export function MarketplaceVendorCard({
 
   const travelKey = typeof p.travelRadius === "string" ? p.travelRadius : "";
   const travelLabel =
-    radiusOptionsForMarket(market).find((o) => o.value === travelKey)?.label ??
-    null;
-  const travelChip = travelLabel
+    radiusOptionsForMarket(market).find((o) => o.value === travelKey)?.label ?? null;
+  const travelMeta = travelLabel
     ? travelLabel.toLowerCase().startsWith("under")
       ? `Travels ${travelLabel.toLowerCase()}`
       : `Travels ${travelLabel}`
-    : "Local & travel";
+    : null;
 
-  const durationChip =
-    cheapest?.timelineLine?.trim() ||
-    (cheapest?.id.startsWith("rate-hourly")
-      ? "Hourly"
-      : cheapest?.id.startsWith("rate-daily")
-        ? "Daily"
-        : "Flexible timing");
-
-  const eventTypesRaw = Array.isArray(p.eventTypes)
-    ? p.eventTypes.map((s) => String(s)).filter(Boolean)
-    : [];
-  const eventChip =
-    eventTypesRaw.length === 0
-      ? categoryLabel
-      : eventTypesRaw.includes("all")
-        ? "All events"
-        : labelForEventType(eventTypesRaw[0]!);
+  const completed = Number(v.completed_bookings) || 0;
+  const replyWithin = formatUsualReplyWithin(v.avg_response_seconds);
+  const trustBits = [
+    completed > 0 ? formatVendorCompletedBookings(completed) : null,
+    replyWithin ? `Replies within ${replyWithin}` : null,
+  ].filter(Boolean) as string[];
 
   const avatarUrl = profileImageUrlFromPayload(p);
   const rc = v.review_count ?? 0;
@@ -244,7 +208,9 @@ export function MarketplaceVendorCard({
                 aria-label="Verified vendor"
               />
             </p>
-            <p className="truncate text-xs text-neutral-500">{categoryLabel}</p>
+            <p className="truncate text-xs text-neutral-500">
+              {[city, travelMeta].filter(Boolean).join(" · ")}
+            </p>
           </div>
           {showRating ? (
             <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/15 bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary">
@@ -259,32 +225,11 @@ export function MarketplaceVendorCard({
           {packageTitle}
         </h4>
 
-        <VendorMetricsStrip
-          className="mt-2"
-          variant="compact"
-          includeRating={false}
-          metrics={{
-            completed_bookings: v.completed_bookings,
-            avg_response_seconds: v.avg_response_seconds,
-            conversion_rate: v.conversion_rate,
-          }}
-        />
-
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <DetailChip icon={<MapPin className="h-3.5 w-3.5" strokeWidth={1.75} />} label={city} />
-          <DetailChip
-            icon={<Globe className="h-3.5 w-3.5" strokeWidth={1.75} />}
-            label={travelChip}
-          />
-          <DetailChip
-            icon={<Briefcase className="h-3.5 w-3.5" strokeWidth={1.75} />}
-            label={eventChip}
-          />
-          <DetailChip
-            icon={<Clock className="h-3.5 w-3.5" strokeWidth={1.75} />}
-            label={durationChip}
-          />
-        </div>
+        {trustBits.length > 0 ? (
+          <p className="mt-1.5 truncate text-xs text-neutral-500">
+            {trustBits.join(" · ")}
+          </p>
+        ) : null}
       </div>
 
       <div className="mt-3.5 flex items-center justify-between gap-3 border-t border-primary/10 bg-primary-soft px-4 py-3.5">

@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Drawer } from "@/components/ui/Drawer";
@@ -218,36 +218,29 @@ export function BookingDisputeSection({
         <button
           type="button"
           onClick={() => setDrawerOpen(true)}
-          className="flex w-full items-center justify-between gap-3 rounded-xl border border-amber-200/80 bg-gradient-to-br from-amber-50/80 to-white px-3 py-3 text-left shadow-sm transition hover:border-amber-300 hover:from-amber-50"
+          className="flex w-full items-center justify-between gap-3 rounded-2xl border border-neutral-100 bg-white px-5 py-4 text-left transition hover:bg-neutral-50/80"
         >
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-800">
-              <AlertTriangle className="h-5 w-5" aria-hidden />
-            </span>
-            <div className="min-w-0">
-              <p className="font-heading text-sm font-semibold text-neutral-900">
-                Help &amp; disputes
-              </p>
-              <p className="mt-0.5 text-xs text-neutral-600">
-                {loading ? (
-                  <span className="inline-flex items-center gap-1.5">
-                    <LoadingSpinner size="sm" className="text-neutral-400" />
-                    Loading…
-                  </span>
-                ) : hasActive ? (
-                  "Open dispute"
-                ) : disputes.length > 0 ? (
-                  "View past cases"
-                ) : (
-                  "Report an issue"
-                )}
-              </p>
-            </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-neutral-900">Help &amp; disputes</p>
+            <p className="mt-0.5 text-[13px] text-neutral-500">
+              {loading ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <LoadingSpinner size="sm" className="text-neutral-400" />
+                  Loading…
+                </span>
+              ) : hasActive ? (
+                "Open dispute on this booking"
+              ) : disputes.length > 0 ? (
+                "View past cases"
+              ) : (
+                "Report an issue with this booking"
+              )}
+            </p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {!loading && disputes.length > 0 ? (
-              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-900">
-                {disputes.length} {disputes.length === 1 ? "case" : "cases"}
+              <span className="text-[13px] font-medium tabular-nums text-neutral-600">
+                {disputes.length}
               </span>
             ) : null}
             <ChevronRight className="h-5 w-5 text-neutral-400" aria-hidden />
@@ -274,15 +267,8 @@ export function BookingDisputeSection({
         onCancel={() => setSubmitConfirmOpen(false)}
         onConfirm={() => void submitDispute()}
       />
-      <section className="rounded-2xl border border-amber-200/80 bg-gradient-to-br from-amber-50/90 to-white px-4 py-4 shadow-sm">
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-800">
-            <AlertTriangle className="h-5 w-5" aria-hidden />
-          </div>
-          <div className="min-w-0 flex-1">
-            <h3 className="font-heading text-sm font-semibold text-neutral-900">Help & disputes</h3>
-          </div>
-        </div>
+      <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white px-5 py-4">
+        <h3 className="text-sm font-semibold text-neutral-900">Help &amp; disputes</h3>
         {body}
       </section>
     </>

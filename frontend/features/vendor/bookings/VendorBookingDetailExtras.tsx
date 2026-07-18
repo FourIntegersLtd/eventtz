@@ -18,11 +18,10 @@ export function VendorBookingDetailExtras({
   return (
     <>
       {detail.status === "accepted" && detail.payment_status === "unpaid" ? (
-        <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-4 shadow-sm">
-          <p className="text-sm font-semibold text-amber-950">Waiting on the client&apos;s payment</p>
-          <p className="mt-1 text-sm text-amber-900/90">
-            The client hasn&apos;t paid yet. You&apos;ll be able to confirm the event is complete once
-            their payment goes through.
+        <div className="rounded-2xl border border-neutral-100 bg-neutral-50 px-5 py-4">
+          <p className="text-sm font-semibold text-neutral-900">Waiting on the client&apos;s payment</p>
+          <p className="mt-1 text-[13px] text-neutral-600">
+            You&apos;ll be able to confirm the event is complete once their payment goes through.
           </p>
         </div>
       ) : null}
@@ -41,7 +40,7 @@ export function VendorBookingDetailExtras({
 
       {detail.status === "cancelled" &&
       (detail.payment_status === "refunded" || detail.payment_status === "partially_refunded") ? (
-        <div className="mt-4 rounded-xl border border-neutral-200 bg-neutral-50 px-4 pb-4 pt-5 text-sm text-neutral-700">
+        <div className="mt-4 rounded-2xl border border-neutral-100 bg-neutral-50 px-5 py-4 text-sm text-neutral-700">
           {PAYMENT_FLOW_COPY.cancelledRefundedVendor}
         </div>
       ) : null}

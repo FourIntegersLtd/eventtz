@@ -4,7 +4,6 @@ import {
   Briefcase,
   CalendarDays,
   Clock,
-  Fingerprint,
   Images,
   Mail,
   MapPin,
@@ -23,7 +22,6 @@ import {
   PackageRow,
   ProfileField,
   ProfileSection,
-  RateCard,
   TagPills,
   type VendorProfileData,
 } from "./vendorDetailsShared";
@@ -33,7 +31,7 @@ type Props = {
   profile: VendorProfileData;
 };
 
-export function VendorDetailsOverviewSection({ vendor, profile }: Props) {
+export function VendorDetailsOverviewSection({ profile }: Props) {
   const {
     businessName,
     p,
@@ -51,10 +49,13 @@ export function VendorDetailsOverviewSection({ vendor, profile }: Props) {
     socialLinks,
   } = profile;
 
+  const hourly = payloadStr(p, "hourlyRate");
+  const daily = payloadStr(p, "dailyRate");
+
   return (
-    <div className="space-y-8">
-      <div className="grid gap-8 lg:grid-cols-2">
-        <ProfileSection icon={Fingerprint} title="Account">
+    <div className="space-y-6">
+      <div className="grid gap-6 lg:grid-cols-2">
+        <ProfileSection icon={Building2} title="Account">
           <ProfileField icon={Building2} label="Business name" value={businessName} />
           {contactName ? (
             <ProfileField icon={User} label="Contact name" value={contactName} />
@@ -64,7 +65,6 @@ export function VendorDetailsOverviewSection({ vendor, profile }: Props) {
             <ProfileField icon={Mail} label="Profile email" value={payloadEmail} />
           ) : null}
           <ProfileField icon={Phone} label="Phone" value={phone || "—"} />
-          <ProfileField icon={Fingerprint} label="User id" value={vendor.user_id} mono />
           {socialLinks.length > 0 ? (
             <div>
               <p className="mb-2 text-xs font-medium text-neutral-500">Social</p>
@@ -88,35 +88,30 @@ export function VendorDetailsOverviewSection({ vendor, profile }: Props) {
         </ProfileSection>
       </div>
 
-      <ProfileSection icon={Briefcase} title="Business & services">
-        <div className="space-y-5">
-          <div>
-            <p className="mb-2.5 flex items-center gap-1.5 text-xs font-medium text-neutral-500">
-              <Sparkles className="h-3.5 w-3.5" aria-hidden />
-              Services
-            </p>
-            <TagPills items={services} />
-          </div>
-          <div>
-            <p className="mb-2.5 flex items-center gap-1.5 text-xs font-medium text-neutral-500">
-              <PartyPopper className="h-3.5 w-3.5" aria-hidden />
-              Event types
-            </p>
-            <TagPills items={eventTypes} />
-          </div>
+      <ProfileSection icon={Briefcase} title="Services & rates">
+        <div>
+          <p className="mb-2.5 flex items-center gap-1.5 text-xs font-medium text-neutral-500">
+            <Sparkles className="h-3.5 w-3.5" aria-hidden />
+            Services
+          </p>
+          <TagPills items={services} />
         </div>
-      </ProfileSection>
-
-      <ProfileSection icon={Clock} title="Rates">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <RateCard icon={Clock} label="Hourly" value={payloadStr(p, "hourlyRate")} />
-          <RateCard icon={CalendarDays} label="Daily" value={payloadStr(p, "dailyRate")} />
+        <div>
+          <p className="mb-2.5 flex items-center gap-1.5 text-xs font-medium text-neutral-500">
+            <PartyPopper className="h-3.5 w-3.5" aria-hidden />
+            Event types
+          </p>
+          <TagPills items={eventTypes} />
+        </div>
+        <div className="grid gap-3 border-t border-neutral-100 pt-4 sm:grid-cols-2">
+          <ProfileField icon={Clock} label="Hourly" value={hourly || "—"} />
+          <ProfileField icon={CalendarDays} label="Daily" value={daily || "—"} />
         </div>
       </ProfileSection>
 
       {packages.length > 0 ? (
         <ProfileSection icon={Package} title={`Packages (${packages.length})`}>
-          <ul className="rounded-xl border border-neutral-200/80 bg-neutral-50/40 px-5 py-2">
+          <ul className="divide-y divide-neutral-100 rounded-xl border border-neutral-100 px-4">
             {packages.map((pkg, i) => {
               const row =
                 typeof pkg === "object" && pkg !== null ? (pkg as Record<string, unknown>) : {};

@@ -7,7 +7,7 @@ import {
 } from "@/components/portal-shell/portalTheme";
 
 /** Keep in sync with `features/admin/adminTheme.adminCard` — duplicated so ui/ does not import features/. */
-const ADMIN_CARD = "rounded-xl border border-neutral-200/80 bg-white shadow-sm";
+const ADMIN_CARD = "rounded-2xl border border-neutral-100 bg-white";
 
 export type CardVariant = "portal" | "portal-inset" | "admin";
 export type CardPadding = "none" | "md" | "lg";

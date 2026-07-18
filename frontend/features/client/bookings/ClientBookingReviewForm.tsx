@@ -61,11 +61,11 @@ export function ClientBookingReviewForm({
   };
 
   return (
-    <div className="rounded-xl border border-primary/25 bg-primary/[0.06] px-4 py-4">
+    <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white px-5 py-4">
       <p className="text-sm font-semibold text-neutral-900">
         How was your experience with {vendorName}?
       </p>
-      <p className="mt-1 text-xs text-neutral-600">Tap a star to leave a review.</p>
+      <p className="mt-1 text-xs text-neutral-500">Tap a star to leave a review.</p>
       <div className="mt-3">
         <StarRating
           rating={rating}

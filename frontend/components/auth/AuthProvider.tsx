@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshUser().finally(() => setLoading(false));
   }, []);
 
-  useRealtimeSse(Boolean(user?.id));
+  useRealtimeSse(user?.id);
 
   const value = useMemo<AuthContextValue>(
     () => ({

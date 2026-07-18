@@ -95,7 +95,7 @@ export function ParticipantDisputesPortalView({ role, selectedDisputeId = null }
         onClose={() => router.push(disputesBase)}
         title="Dispute"
         subtitle={dispute ? participantDisputeBookingLabel(dispute) : undefined}
-        widthClassName="max-w-lg"
+        widthClassName="max-w-xl"
       >
         <BackLink
           href={disputesBase}

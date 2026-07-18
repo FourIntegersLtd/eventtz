@@ -8,6 +8,7 @@ type BookingReviewPanelProps = {
   review: BookingReviewDisplay | null | undefined;
   emptyLabel?: string;
   showReviewer?: boolean;
+  /** @deprecated Amber callout retired — kept for call-site compatibility. */
   variant?: "default" | "amber";
 };
 
@@ -16,15 +17,9 @@ export function BookingReviewPanel({
   review,
   emptyLabel = "No review yet.",
   showReviewer = false,
-  variant = "default",
 }: BookingReviewPanelProps) {
-  const shellClass =
-    variant === "amber"
-      ? "rounded-xl border border-amber-200/80 bg-gradient-to-b from-amber-50/80 to-white px-4 py-3"
-      : "rounded-xl border border-neutral-200 bg-white px-4 py-3";
-
   return (
-    <section className={shellClass}>
+    <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white px-5 py-4">
       <h3 className="font-heading text-sm font-semibold text-neutral-900">{title}</h3>
       {review ? (
         <div className="mt-2">

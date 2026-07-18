@@ -55,6 +55,8 @@ export function DisputeResolveModal({ dispute, onClose, onResolved }: DisputeRes
         resolution_action: action,
         refund_amount_gbp: refundAmountGbp,
         resolution_note: note.trim() || null,
+        client_resolution_note: note.trim() || null,
+        vendor_resolution_note: note.trim() || null,
       });
       onResolved();
     } catch (e: unknown) {
@@ -117,7 +119,12 @@ export function DisputeResolveModal({ dispute, onClose, onResolved }: DisputeRes
           </div>
         ) : null}
         <div>
-          <label className="text-sm font-medium text-neutral-700">Message for both parties</label>
+          <label className="text-sm font-medium text-neutral-700">
+            Outcome message (client and vendor)
+          </label>
+          <p className="mt-0.5 text-xs text-neutral-500">
+            Shown to both parties on their dispute page.
+          </p>
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}

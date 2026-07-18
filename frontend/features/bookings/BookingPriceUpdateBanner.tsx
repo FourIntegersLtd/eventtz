@@ -34,38 +34,41 @@ export function BookingPriceUpdateBanner({
   const adjustments = pricing?.vendor_adjustments ?? [];
 
   return (
-    <div className="rounded-2xl border border-primary-border bg-primary-soft/30 px-5 py-5 shadow-sm">
-      <p className="font-heading text-lg font-semibold text-primary">New price from your vendor</p>
+    <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+      <div className="px-5 py-4">
+        <p className="text-[15px] font-semibold tracking-tight text-neutral-900">
+          New price from your vendor
+        </p>
+        <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <span className="text-sm text-neutral-500">
+            Was:{" "}
+            <span className="font-medium text-neutral-600 line-through">{wasTotalLabel}</span>
+          </span>
+          <span className="text-sm font-semibold text-neutral-400" aria-hidden>
+            →
+          </span>
+          <span className="text-sm font-semibold text-neutral-900">Now: {nowTotalLabel}</span>
+        </div>
 
-      <div className="mt-4 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <span className="text-sm text-neutral-500">
-          Was:{" "}
-          <span className="font-medium text-neutral-600 line-through">{wasTotalLabel}</span>
-        </span>
-        <span className="text-sm font-semibold text-neutral-400" aria-hidden>
-          →
-        </span>
-        <span className="text-sm font-semibold text-neutral-900">Now: {nowTotalLabel}</span>
+        {adjustments.length > 0 ? (
+          <ul className="mt-3 space-y-1.5 text-[13px] text-neutral-600">
+            {adjustments.map((a) => (
+              <li key={a.id} className="flex items-start gap-2">
+                <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-neutral-400" aria-hidden />
+                <span>
+                  {a.label}: {formatAdjustmentAmount(a.amount_gbp)}
+                </span>
+              </li>
+            ))}
+            <li className="flex items-start gap-2 text-neutral-400">
+              <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-neutral-300" aria-hidden />
+              <span>Eventtz fee included</span>
+            </li>
+          </ul>
+        ) : null}
       </div>
 
-      {adjustments.length > 0 ? (
-        <ul className="mt-4 space-y-1.5 text-sm text-neutral-700">
-          {adjustments.map((a) => (
-            <li key={a.id} className="flex items-start gap-2">
-              <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-neutral-400" aria-hidden />
-              <span>
-                {a.label}: {formatAdjustmentAmount(a.amount_gbp)}
-              </span>
-            </li>
-          ))}
-          <li className="flex items-start gap-2 text-neutral-500">
-            <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-neutral-300" aria-hidden />
-            <span>Eventtz fee included</span>
-          </li>
-        </ul>
-      ) : null}
-
-      <div className="mt-5 flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-end">
+      <div className="flex flex-col gap-2 border-t border-neutral-100 bg-primary/[0.04] px-5 py-4 sm:flex-row sm:justify-end">
         <Button
           variant="primary"
           size="sm"
