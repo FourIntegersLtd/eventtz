@@ -2,7 +2,7 @@ import {
   EVENT_TYPE_IDS_ALL,
   EVENT_TYPE_OPTIONS,
   SERVICE_OPTIONS,
-} from "@/components/vendor-onboarding/constants";
+} from "@/features/vendor/onboarding/constants";
 
 /** Normalize legacy / alternate stored keys to canonical option values. */
 const EVENT_TYPE_ALIASES: Record<string, string> = {

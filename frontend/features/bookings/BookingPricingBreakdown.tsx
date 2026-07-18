@@ -1,6 +1,5 @@
 "use client";
 
-import { portalCard } from "@/components/portal-shell/portalTheme";
 import { ChevronDown } from "lucide-react";
 
 export type BookingPricing = {
@@ -58,6 +57,10 @@ type BookingPricingBreakdownProps = {
   compareTotalLabel?: string | null;
 };
 
+/**
+ * Flat pricing list (same spirit as browse vendor pricing) —
+ * one surface, divided rows, no nested package cards.
+ */
 export function BookingPricingBreakdown({
   quoteTotalLabel,
   pricing,
@@ -67,155 +70,169 @@ export function BookingPricingBreakdown({
 }: BookingPricingBreakdownProps) {
   if (!pricing) {
     return (
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-          Estimated total
+      <div className="rounded-2xl border border-neutral-100 bg-white px-5 py-5">
+        <p className="text-[13px] font-medium text-neutral-500">Estimated total</p>
+        <p className="mt-1 text-2xl font-semibold tabular-nums tracking-tight text-neutral-900">
+          {quoteTotalLabel}
         </p>
-        <p className="mt-1 font-heading text-2xl font-bold text-neutral-900">{quoteTotalLabel}</p>
       </div>
     );
   }
 
+  const totalLabel =
+    variant === "vendor" ? "Your payout" : "Total due";
+  const totalValue =
+    variant === "vendor" ? pricing.vendor_portion_label : pricing.client_total_label;
+
   return (
-    <div className={`overflow-hidden ${portalCard}`}>
-      <p className="px-5 pt-5 text-xs font-semibold uppercase tracking-wide text-neutral-500">
-        {variant === "client" ? "Pricing breakdown" : "Client-facing total"}
-      </p>
-      <div className="space-y-4 px-5 pb-5 pt-3 text-sm">
-        {lineItems && lineItems.length > 0 ? (
-          <details className="group -mx-5 border-y border-neutral-200/50" open>
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-5 py-4 text-neutral-700 transition hover:bg-neutral-50 [&::-webkit-details-marker]:hidden">
-              <span className="flex min-w-0 items-center gap-3">
-                <span className="font-medium text-neutral-900">What&apos;s included</span>
-                <ChevronDown
-                  className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open:rotate-180"
-                  aria-hidden
-                />
-              </span>
-              <span className="font-semibold tabular-nums text-neutral-900">
-                {pricing.line_items_subtotal_label}
-              </span>
-            </summary>
-            <div className="border-t border-neutral-200/50 bg-neutral-50/40 px-5 py-5">
-              <ul className="space-y-5">
-                {lineItems.map((li, idx) => {
-                  const isDiscount = isAutoDiscountLine(li.id, li.unit_price_gbp);
-                  return (
-                  <li key={li.id} className={idx > 0 ? "border-t border-neutral-200/50 pt-5" : ""}>
-                    <div className="flex justify-between gap-3">
-                      <span
-                        className={`min-w-0 font-medium ${
-                          isDiscount ? "text-emerald-800" : "text-neutral-900"
-                        }`}
-                      >
-                        {li.heading}
-                      </span>
-                      <span
-                        className={`shrink-0 font-semibold tabular-nums ${
-                          isDiscount ? "text-emerald-700" : "text-neutral-900"
-                        }`}
-                      >
-                        {formatLineUnitPrice(li.unit_price_gbp, li.id)}
-                      </span>
-                    </div>
-                    {li.timeline_line ? (
-                      <p className="mt-1 text-sm text-neutral-500">{li.timeline_line}</p>
-                    ) : null}
-                    {li.description ? (
-                      <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-neutral-600">
-                        {li.description}
-                      </p>
-                    ) : null}
-                    {li.feature_lines && li.feature_lines.length > 0 ? (
-                      <ul className="mt-3 space-y-1.5">
-                        {li.feature_lines.map((line, fIdx) => (
-                          <li key={`${li.id}-f-${fIdx}`} className="flex items-start gap-2 text-sm text-neutral-600">
-                            <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-neutral-300" />
-                            <span>{line}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : null}
-                  </li>
-                  );
-                })}
-              </ul>
-            </div>
-          </details>
-        ) : (
-          <div className="flex justify-between gap-2 px-1 text-neutral-700">
-            <span>What&apos;s included</span>
-            <span className="font-medium tabular-nums text-neutral-900">
+    <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+      <div className="flex items-baseline justify-between gap-3 px-5 py-4">
+        <div>
+          <h3 className="text-[15px] font-semibold tracking-tight text-neutral-900">
+            {variant === "client" ? "Pricing" : "Client-facing total"}
+          </h3>
+          <p className="mt-0.5 text-[13px] text-neutral-400">
+            {variant === "vendor"
+              ? "What the client sees and what you earn"
+              : "What’s included and what you’ll pay"}
+          </p>
+        </div>
+      </div>
+
+      {lineItems && lineItems.length > 0 ? (
+        <details className="group border-t border-neutral-100" open>
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-3.5 transition hover:bg-neutral-50/80 [&::-webkit-details-marker]:hidden">
+            <span className="flex min-w-0 items-center gap-2 text-sm font-medium text-neutral-800">
+              What&apos;s included
+              <ChevronDown
+                className="h-3.5 w-3.5 shrink-0 text-neutral-400 transition-transform group-open:rotate-180"
+                aria-hidden
+              />
+            </span>
+            <span className="text-sm font-semibold tabular-nums text-neutral-900">
               {pricing.line_items_subtotal_label}
             </span>
-          </div>
-        )}
-        {pricing.vendor_adjustments.length > 0 ? (
-          <div className="border-t border-neutral-200/50 px-1 pt-5">
-            <p className="text-xs font-medium text-neutral-500">Additions and discounts</p>
-            <ul className="mt-3 space-y-2.5">
-              {pricing.vendor_adjustments.map((a) => {
-                const isDiscount = a.amount_gbp < 0;
-                const display = isDiscount
-                  ? `-£${Math.abs(a.amount_gbp).toFixed(2)}`
-                  : `£${a.amount_gbp.toFixed(2)}`;
-                return (
-                  <li key={a.id} className="flex justify-between gap-2 text-neutral-800">
-                    <span className="flex items-center gap-2">
-                      <span className="rounded-md bg-neutral-200/50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-neutral-600">
-                        {a.tag}
-                      </span>
-                      {a.label}
-                      {isDiscount && a.tag !== "discount" ? (
-                        <span className="text-[10px] font-medium text-emerald-700">
-                          (discount)
-                        </span>
-                      ) : null}
+          </summary>
+          <ul className="divide-y divide-neutral-100 border-t border-neutral-100">
+            {lineItems.map((li) => {
+              const isDiscount = isAutoDiscountLine(li.id, li.unit_price_gbp);
+              return (
+                <li key={li.id} className="px-5 py-3.5">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span
+                      className={`min-w-0 text-sm font-medium ${
+                        isDiscount ? "text-emerald-800" : "text-neutral-900"
+                      }`}
+                    >
+                      {li.heading}
                     </span>
                     <span
-                      className={`shrink-0 font-medium tabular-nums ${isDiscount ? "text-emerald-700" : ""}`}
+                      className={`shrink-0 text-sm font-semibold tabular-nums ${
+                        isDiscount ? "text-emerald-700" : "text-neutral-900"
+                      }`}
                     >
-                      {display}
+                      {formatLineUnitPrice(li.unit_price_gbp, li.id)}
                     </span>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ) : null}
-        {variant === "vendor" ? (
-          <div className="flex justify-between gap-2 border-t border-neutral-200/50 px-1 pt-5 font-heading text-xl font-bold text-neutral-900">
-            <span className="flex items-center gap-2 font-heading">Your payout</span>
-            <span className="tabular-nums text-neutral-900">{pricing.vendor_portion_label}</span>
-          </div>
-        ) : (
-          <>
-            <div className="flex justify-between gap-2 border-t border-neutral-200/50 px-1 pt-5 font-medium text-neutral-900">
-              <span>Vendor portion</span>
-              <span className="font-semibold tabular-nums text-neutral-900">{pricing.vendor_portion_label}</span>
-            </div>
-            <div className="flex justify-between gap-2 px-1 pt-3 text-neutral-600">
-              <span className="flex items-center gap-2">
-                Eventtz service fee
-                <span className="text-xs text-neutral-500">({pricing.service_fee_percent}%)</span>
-              </span>
-              <span className="font-semibold tabular-nums text-neutral-900">{pricing.service_fee_label}</span>
-            </div>
-            <div className="flex justify-between gap-2 border-t border-neutral-200/50 px-1 pt-5 font-heading text-xl font-bold text-neutral-900">
-              <span>Total due</span>
-              <span className="text-right tabular-nums text-neutral-900">
-                {compareTotalLabel ? (
-                  <span className="mr-2 text-sm font-normal text-neutral-500 line-through">
-                    {compareTotalLabel}
+                  </div>
+                  {li.timeline_line ? (
+                    <p className="mt-1 text-[13px] text-neutral-500">{li.timeline_line}</p>
+                  ) : null}
+                  {li.description ? (
+                    <p className="mt-1.5 whitespace-pre-wrap text-[13px] leading-relaxed text-neutral-500">
+                      {li.description}
+                    </p>
+                  ) : null}
+                  {li.feature_lines && li.feature_lines.length > 0 ? (
+                    <ul className="mt-2 space-y-1">
+                      {li.feature_lines.map((line, fIdx) => (
+                        <li
+                          key={`${li.id}-f-${fIdx}`}
+                          className="flex items-start gap-2 text-[13px] text-neutral-500"
+                        >
+                          <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-neutral-300" />
+                          <span>{line}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        </details>
+      ) : (
+        <div className="flex justify-between gap-3 border-t border-neutral-100 px-5 py-3.5 text-sm">
+          <span className="text-neutral-600">What&apos;s included</span>
+          <span className="font-semibold tabular-nums text-neutral-900">
+            {pricing.line_items_subtotal_label}
+          </span>
+        </div>
+      )}
+
+      {pricing.vendor_adjustments.length > 0 ? (
+        <div className="border-t border-neutral-100 px-5 py-4">
+          <p className="text-[13px] font-medium text-neutral-500">Additions and discounts</p>
+          <ul className="mt-2.5 space-y-2">
+            {pricing.vendor_adjustments.map((a) => {
+              const isDiscount = a.amount_gbp < 0;
+              const display = isDiscount
+                ? `-£${Math.abs(a.amount_gbp).toFixed(2)}`
+                : `£${a.amount_gbp.toFixed(2)}`;
+              return (
+                <li key={a.id} className="flex justify-between gap-2 text-sm text-neutral-800">
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span className="rounded-md bg-neutral-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-neutral-600">
+                      {a.tag}
+                    </span>
+                    <span className="truncate">{a.label}</span>
                   </span>
-                ) : null}
-                {pricing.client_total_label}
+                  <span
+                    className={`shrink-0 font-medium tabular-nums ${isDiscount ? "text-emerald-700" : ""}`}
+                  >
+                    {display}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ) : null}
+
+      {variant === "client" ? (
+        <div className="space-y-2 border-t border-neutral-100 px-5 py-3.5 text-sm">
+          <div className="flex justify-between gap-2 text-neutral-600">
+            <span>Vendor portion</span>
+            <span className="font-medium tabular-nums text-neutral-900">
+              {pricing.vendor_portion_label}
+            </span>
+          </div>
+          <div className="flex justify-between gap-2 text-neutral-600">
+            <span>
+              Eventtz fee
+              <span className="text-neutral-400"> ({pricing.service_fee_percent}%)</span>
+            </span>
+            <span className="font-medium tabular-nums text-neutral-900">
+              {pricing.service_fee_label}
+            </span>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Highlighted total — pops without nested cards */}
+      <div className="border-t border-neutral-100 bg-neutral-50 px-5 py-4">
+        <div className="flex items-baseline justify-between gap-3">
+          <p className="text-sm font-medium text-neutral-700">{totalLabel}</p>
+          <p className="text-right text-lg font-semibold tabular-nums tracking-tight text-neutral-900">
+            {compareTotalLabel && variant === "client" ? (
+              <span className="mr-2 text-sm font-normal text-neutral-400 line-through">
+                {compareTotalLabel}
               </span>
-            </div>
-          </>
-        )}
+            ) : null}
+            {totalValue}
+          </p>
+        </div>
         {pricing.has_pricing_tbc ? (
-          <p className="pt-2 text-xs text-amber-700">
+          <p className="mt-1.5 text-[12px] text-amber-700">
             Some items are TBC and may change the total.
           </p>
         ) : null}

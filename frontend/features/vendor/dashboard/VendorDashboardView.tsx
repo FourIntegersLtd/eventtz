@@ -12,6 +12,7 @@ import type { AttentionItem } from "@/features/dashboard/attentionTypes";
 import { eventDayOver } from "@/features/bookings/eventDay";
 import { useVendorDashboard } from "./useVendorDashboard";
 import { VendorBookingsCalendarCard } from "./VendorBookingsCalendarCard";
+import { VendorPayoutSetupBanner } from "./VendorPayoutSetupBanner";
 
 function daysUntil(iso: string): number {
   const start = new Date(`${iso.slice(0, 10)}T00:00:00`);
@@ -127,6 +128,8 @@ export function VendorDashboardView() {
           {errorMessage}
         </div>
       )}
+
+      <VendorPayoutSetupBanner />
 
       <div className="grid w-full min-w-0 grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
         <div className="min-w-0 space-y-6 lg:col-span-2">

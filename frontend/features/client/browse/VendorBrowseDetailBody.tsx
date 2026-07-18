@@ -2,11 +2,20 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, CalendarCheck, Check, Clock, Info, MessageCircle } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarCheck,
+  Check,
+  Clock,
+  ExternalLink,
+  MessageCircle,
+  Play,
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import type { ExploreVendor } from "@/lib/clientExploreApi";
 import { displayEventTypes, displayServicesOffered } from "./browseLabels";
+import { buildBrowseVendorProfileFacts } from "./browseVendorFacts";
 import {
   buildBookingLineItems,
   buildBrowsePricingOptions,
@@ -15,16 +24,7 @@ import {
 } from "./vendorBrowseDetailModel";
 import { VendorReviewsSection } from "./VendorReviewsSection";
 import { PortfolioLightbox } from "./PortfolioLightbox";
-import { getMarket, marketLocationFallback } from "@/lib/markets";
-
-const TRAVEL_DELIVERY_LABELS: Record<string, string> = {
-  fee_included: "Travel/delivery fee included",
-  free_within_base_city:
-    "Free delivery within base city (extra charges may apply outside this area)",
-  fee_after_booking_request:
-    "Travel/delivery fee will be provided after booking request",
-  not_applicable: "Not applicable",
-};
+import { marketLocationFallback } from "@/lib/markets";
 
 type VendorBrowseDetailBodyProps = {
   vendor: ExploreVendor;
@@ -60,8 +60,9 @@ export function VendorBrowseDetailBody({
   const p = vendor.payload ?? {};
   const businessName =
     payloadStr(p, "businessName").trim() || "Vendor";
+  const facts = useMemo(() => buildBrowseVendorProfileFacts(p), [p]);
   const city =
-    payloadStr(p, "baseCity").trim() ||
+    facts.locationLine ||
     marketLocationFallback(payloadStr(p, "countryCode") || undefined);
   const bio =
     payloadStr(p, "aiBioDraft").trim() ||
@@ -74,10 +75,16 @@ export function VendorBrowseDetailBody({
     : [];
   const serviceLabels = displayServicesOffered(services);
   const eventLabels = displayEventTypes(events);
-  const travelRaw = payloadStr(p, "travelDeliveryPolicy").trim();
-  const travel = travelRaw
-    ? TRAVEL_DELIVERY_LABELS[travelRaw] ?? travelRaw
-    : "";
+  const hasCoverage =
+    facts.howTheyWork.length > 0 ||
+    Boolean(facts.travelRadiusLabel) ||
+    Boolean(facts.travelFeePolicy) ||
+    Boolean(facts.travelCustomNote);
+  const hasGoodToKnow =
+    Boolean(facts.availableDays) ||
+    Boolean(facts.unavailableDatesLabel) ||
+    facts.foodNotes.length > 0 ||
+    facts.trustBadges.length > 0;
 
   const portfolioUrls = useMemo(
     () => portfolioImageUrlsFromPayload(p),
@@ -214,15 +221,27 @@ export function VendorBrowseDetailBody({
             About this vendor
           </h3>
           <p className="mt-2 text-sm leading-relaxed text-neutral-700">{bio}</p>
+          {facts.portfolioVideoUrl ? (
+            <a
+              href={facts.portfolioVideoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+            >
+              <Play className="h-4 w-4" aria-hidden />
+              Watch portfolio video
+              <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+            </a>
+          ) : null}
         </section>
 
         <section className="overflow-hidden rounded-2xl border border-neutral-200/90 bg-white shadow-sm">
           <div className="border-b border-neutral-100 px-4 py-3 sm:px-5">
             <h3 className="font-heading text-sm font-semibold text-neutral-900">
-              Services &amp; event fit
+              Services &amp; events
             </h3>
             <p className="mt-0.5 text-xs text-neutral-500">
-              What this vendor offers and the celebrations they cover.
+              What they offer and the celebrations they cover.
             </p>
           </div>
           <div className="space-y-5 px-4 py-4 sm:px-5 sm:py-5">
@@ -264,48 +283,121 @@ export function VendorBrowseDetailBody({
                 <p className="mt-2 text-sm italic text-neutral-400">Not specified yet</p>
               )}
             </div>
-            {travel ? (
-              <div className="rounded-xl border border-dashed border-neutral-200/90 bg-neutral-50/70 px-3 py-3 sm:px-4">
-                <h4 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-500">
-                  Travel &amp; delivery
-                </h4>
-                <p className="mt-2 text-sm leading-relaxed text-neutral-700">{travel}</p>
-              </div>
-            ) : null}
           </div>
         </section>
+
+        {hasCoverage ? (
+          <section className="overflow-hidden rounded-2xl border border-neutral-200/90 bg-white shadow-sm">
+            <div className="border-b border-neutral-100 px-4 py-3 sm:px-5">
+              <h3 className="font-heading text-sm font-semibold text-neutral-900">
+                Coverage
+              </h3>
+              <p className="mt-0.5 text-xs text-neutral-500">
+                How they work with you and how far they travel.
+              </p>
+            </div>
+            <dl className="divide-y divide-neutral-100 px-4 sm:px-5">
+              {facts.howTheyWork.length > 0 ? (
+                <div className="flex flex-col gap-1 py-3.5 sm:flex-row sm:gap-6">
+                  <dt className="shrink-0 text-sm text-neutral-500 sm:w-36">How they work</dt>
+                  <dd className="text-sm text-neutral-800">{facts.howTheyWork.join(" · ")}</dd>
+                </div>
+              ) : null}
+              {facts.travelRadiusLabel ? (
+                <div className="flex flex-col gap-1 py-3.5 sm:flex-row sm:gap-6">
+                  <dt className="shrink-0 text-sm text-neutral-500 sm:w-36">Travel radius</dt>
+                  <dd className="text-sm text-neutral-800">{facts.travelRadiusLabel}</dd>
+                </div>
+              ) : null}
+              {facts.travelFeePolicy ? (
+                <div className="flex flex-col gap-1 py-3.5 sm:flex-row sm:gap-6">
+                  <dt className="shrink-0 text-sm text-neutral-500 sm:w-36">Travel fees</dt>
+                  <dd className="text-sm text-neutral-800">{facts.travelFeePolicy}</dd>
+                </div>
+              ) : null}
+              {facts.travelCustomNote ? (
+                <div className="flex flex-col gap-1 py-3.5 sm:flex-row sm:gap-6">
+                  <dt className="shrink-0 text-sm text-neutral-500 sm:w-36">Travel note</dt>
+                  <dd className="text-sm leading-relaxed text-neutral-800">
+                    {facts.travelCustomNote}
+                  </dd>
+                </div>
+              ) : null}
+            </dl>
+          </section>
+        ) : null}
+
+        {hasGoodToKnow ? (
+          <section className="overflow-hidden rounded-2xl border border-neutral-200/90 bg-white shadow-sm">
+            <div className="border-b border-neutral-100 px-4 py-3 sm:px-5">
+              <h3 className="font-heading text-sm font-semibold text-neutral-900">
+                Good to know
+              </h3>
+              <p className="mt-0.5 text-xs text-neutral-500">
+                Availability, food notes, and trust signals.
+              </p>
+            </div>
+            <dl className="divide-y divide-neutral-100 px-4 sm:px-5">
+              {facts.availableDays ? (
+                <div className="flex flex-col gap-1 py-3.5 sm:flex-row sm:gap-6">
+                  <dt className="shrink-0 text-sm text-neutral-500 sm:w-36">Usually available</dt>
+                  <dd className="text-sm text-neutral-800">{facts.availableDays}</dd>
+                </div>
+              ) : null}
+              {facts.unavailableDatesLabel ? (
+                <div className="flex flex-col gap-1 py-3.5 sm:flex-row sm:gap-6">
+                  <dt className="shrink-0 text-sm text-neutral-500 sm:w-36">Not available</dt>
+                  <dd className="text-sm leading-relaxed text-neutral-800">
+                    {facts.unavailableDatesLabel}
+                  </dd>
+                </div>
+              ) : null}
+              {facts.foodNotes.map((note) => (
+                <div
+                  key={note.label}
+                  className="flex flex-col gap-1 py-3.5 sm:flex-row sm:gap-6"
+                >
+                  <dt className="shrink-0 text-sm text-neutral-500 sm:w-36">{note.label}</dt>
+                  <dd className="text-sm leading-relaxed text-neutral-800">{note.value}</dd>
+                </div>
+              ))}
+              {facts.trustBadges.length > 0 ? (
+                <div className="flex flex-col gap-1 py-3.5 sm:flex-row sm:gap-6">
+                  <dt className="shrink-0 text-sm text-neutral-500 sm:w-36">On file</dt>
+                  <dd className="text-sm text-neutral-800">{facts.trustBadges.join(" · ")}</dd>
+                </div>
+              ) : null}
+            </dl>
+          </section>
+        ) : null}
 
         <VendorReviewsSection vendorUserId={vendor.user_id} />
       </div>
 
       <aside className="lg:sticky lg:top-2">
-        <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
-          <div className="border-b border-neutral-200 bg-neutral-50/80 px-4 py-3.5">
-            <h3 className="font-heading text-sm font-semibold text-neutral-900">
+        <div className="rounded-2xl bg-white ring-1 ring-black/[0.06]">
+          <div className="px-5 pt-5 pb-4">
+            <h3 className="text-[15px] font-semibold tracking-tight text-neutral-900">
               Pricing &amp; booking
             </h3>
-            <p className="mt-0.5 text-xs text-neutral-500">
+            <p className="mt-1 text-[13px] text-neutral-400">
               {onRequestBooking
-                ? "Select packages to see your estimate."
+                ? "Select what you need, then request a booking."
                 : "Sign in to book or message this vendor."}
             </p>
           </div>
 
-          <div className="max-h-[min(65vh,520px)] space-y-3 overflow-y-auto overscroll-contain bg-neutral-50/60 p-3 sm:p-3.5">
+          <ul className="max-h-[min(65vh,520px)] divide-y divide-neutral-100 overflow-y-auto overscroll-contain border-t border-neutral-100">
             {pricingOptions.map((opt) => {
               const isOpen = detailOpenId === opt.id;
               const showCheckbox = Boolean(onRequestBooking);
               const selected = selectedPackageIds.has(opt.id);
               return (
-                <div
+                <li
                   key={opt.id}
-                  className={`overflow-hidden rounded-xl border bg-white transition ${
-                    selected
-                      ? "border-neutral-300 shadow-sm"
-                      : "border-neutral-200/90 hover:border-neutral-300"
-                  }`}
+                  className={`px-5 py-4 transition ${selected ? "bg-neutral-50/80" : ""}`}
                 >
-                  <div className="flex gap-3 px-3.5 pt-3.5 sm:px-4 sm:pt-4">
+                  <div className="flex gap-3">
                     {showCheckbox ? (
                       <input
                         type="checkbox"
@@ -315,71 +407,68 @@ export function VendorBrowseDetailBody({
                         aria-label={`Include ${opt.heading}`}
                       />
                     ) : null}
-                    <div className="min-w-0 flex-1 pb-3.5 sm:pb-4">
-                      <div className="flex flex-wrap items-baseline justify-between gap-2">
-                        <p className="text-sm font-semibold text-neutral-900">
-                          {opt.heading}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <p className="text-sm font-medium text-neutral-900">{opt.heading}</p>
+                        <p className="shrink-0 text-sm font-semibold tabular-nums text-neutral-900">
+                          {opt.priceDisplay != null ? (
+                            <>
+                              {opt.compareAtDisplay ? (
+                                <span className="mr-1.5 text-xs font-normal text-neutral-400 line-through">
+                                  £{opt.compareAtDisplay}
+                                </span>
+                              ) : null}
+                              £{opt.priceDisplay}
+                            </>
+                          ) : (
+                            <span className="font-medium text-neutral-500">Quote</span>
+                          )}
                         </p>
-                        {opt.priceDisplay != null && opt.compareAtDisplay ? (
-                          <p className="text-xs text-neutral-500 line-through">
-                            GBP {opt.compareAtDisplay}
-                          </p>
-                        ) : null}
                       </div>
-                      <p
-                        className={`mt-1.5 text-sm leading-relaxed text-neutral-600 ${
-                          isOpen ? "hidden" : "line-clamp-2"
-                        }`}
-                      >
-                        {opt.description}
-                      </p>
+                      {opt.discountBadge ? (
+                        <p className="mt-1 text-xs text-emerald-700">{opt.discountBadge}</p>
+                      ) : null}
                       {opt.timelineLine ? (
-                        <div className="mt-2 flex items-start gap-2 text-sm text-neutral-700">
-                          <Clock
-                            className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400"
-                            strokeWidth={2}
-                            aria-hidden
-                          />
-                          <span>{opt.timelineLine}</span>
-                        </div>
+                        <p className="mt-1.5 flex items-center gap-1.5 text-[13px] text-neutral-500">
+                          <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                          {opt.timelineLine}
+                        </p>
+                      ) : null}
+                      {!isOpen && opt.description?.trim() ? (
+                        <p className="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-neutral-500">
+                          {opt.description}
+                        </p>
                       ) : null}
                       {opt.promoLines.length > 0 ? (
-                        <ul className="mt-2 space-y-1">
-                          {opt.promoLines.map((line) => (
-                            <li
-                              key={line}
-                              className="text-xs font-medium text-amber-800"
-                            >
-                              {line}
-                            </li>
-                          ))}
-                        </ul>
+                        <p className="mt-1.5 text-[12px] text-neutral-500">
+                          {opt.promoLines.join(" · ")}
+                        </p>
                       ) : null}
-                      {(opt.description?.trim() || opt.featureLines.length > 0) ? (
+                      {opt.description?.trim() || opt.featureLines.length > 0 ? (
                         <button
                           type="button"
-                          onClick={() =>
-                            setDetailOpenId(isOpen ? null : opt.id)
-                          }
-                          className="mt-2 text-xs font-medium text-neutral-700 underline-offset-2 hover:underline"
+                          onClick={() => setDetailOpenId(isOpen ? null : opt.id)}
+                          className="mt-2 text-[13px] font-medium text-neutral-700 underline-offset-2 hover:underline"
                         >
-                          {isOpen ? "Hide details" : "See what's included"}
+                          {isOpen ? "Hide details" : "What's included"}
                         </button>
                       ) : null}
                       {isOpen ? (
-                        <div className="mt-2 space-y-2 border-t border-neutral-100 pt-2">
+                        <div className="mt-2 space-y-2">
                           {opt.description?.trim() ? (
-                            <p className="text-sm text-neutral-700">{opt.description}</p>
+                            <p className="text-[13px] leading-relaxed text-neutral-600">
+                              {opt.description}
+                            </p>
                           ) : null}
                           {opt.featureLines.length > 0 ? (
                             <ul className="space-y-1.5">
                               {opt.featureLines.map((line) => (
                                 <li
                                   key={line}
-                                  className="flex items-start gap-2 text-sm text-neutral-800"
+                                  className="flex items-start gap-2 text-[13px] text-neutral-700"
                                 >
                                   <Check
-                                    className="mt-0.5 h-4 w-4 shrink-0 text-neutral-500"
+                                    className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neutral-400"
                                     strokeWidth={2.5}
                                     aria-hidden
                                   />
@@ -392,67 +481,34 @@ export function VendorBrowseDetailBody({
                       ) : null}
                     </div>
                   </div>
-                  <div className="flex items-center justify-between gap-3 border-t border-neutral-100 bg-neutral-50 px-3.5 py-2.5 sm:px-4">
-                    <p className="font-heading text-base font-semibold text-neutral-900">
-                      {opt.priceDisplay != null ? (
-                        <>
-                          <span className="text-xs font-medium text-neutral-500">From </span>
-                          GBP {opt.priceDisplay}
-                        </>
-                      ) : (
-                        <span className="text-sm font-semibold text-neutral-700">Quote</span>
-                      )}
-                    </p>
-                    {opt.discountBadge ? (
-                      <span className="text-[11px] font-semibold tracking-wide text-green-700 uppercase">
-                        {opt.discountBadge}
-                      </span>
-                    ) : (
-                      <span className="text-[11px] font-semibold tracking-[0.12em] text-neutral-500 uppercase">
-                        Package
-                      </span>
-                    )}
-                  </div>
-                </div>
+                </li>
               );
             })}
-          </div>
+          </ul>
 
           {onRequestBooking && selectedPackageIds.size > 0 ? (
-            <div className="border-t border-neutral-200 bg-neutral-50 px-4 py-3.5">
-              <p className="text-xs font-medium uppercase tracking-wide text-neutral-600">
-                Estimated total
-              </p>
-              <p className="mt-0.5 font-heading text-xl font-semibold text-neutral-900">
-                {selectedTotal.label}
-              </p>
+            <div className="border-t border-neutral-100 px-5 py-4">
+              <div className="flex items-baseline justify-between gap-3">
+                <p className="text-[13px] text-neutral-500">Estimated total</p>
+                <p className="text-base font-semibold tabular-nums text-neutral-900">
+                  {selectedTotal.label.replace(/^GBP\s/, "£")}
+                </p>
+              </div>
               {selectedTotal.hasTbc ? (
-                <p className="mt-1 text-xs text-neutral-600">
-                  Includes items that need a custom quote from the vendor.
+                <p className="mt-1 text-[12px] text-neutral-400">
+                  Includes items that need a custom quote.
                 </p>
               ) : null}
             </div>
           ) : null}
 
-          <div className="space-y-3 border-t border-neutral-200 bg-white p-4">
+          <div className="space-y-3 border-t border-neutral-100 px-5 py-4">
             {requireLoginForActions ? (
               <>
-                <div
-                  className="flex gap-2.5 rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2.5"
-                  role="status"
-                >
-                  <Info
-                    className="mt-0.5 h-4 w-4 shrink-0 text-neutral-500"
-                    strokeWidth={2}
-                    aria-hidden
-                  />
-                  <p className="text-sm leading-snug text-neutral-800">
-                    <span className="font-semibold text-neutral-900">
-                      Sign in to contact this vendor.
-                    </span>{" "}
-                    Create a free client account below.
-                  </p>
-                </div>
+                <p className="text-[13px] leading-snug text-neutral-500">
+                  <span className="font-medium text-neutral-800">Sign in to contact this vendor.</span>{" "}
+                  Create a free client account to continue.
+                </p>
                 <ButtonLink href={buildRegisterLink()} className="w-full">
                   Create account
                   <ArrowRight className="h-4 w-4" strokeWidth={2.5} aria-hidden />
@@ -468,9 +524,9 @@ export function VendorBrowseDetailBody({
                 </p>
               </>
             ) : onRequestBooking ? (
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {bookingSelectError ? (
-                  <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                  <p className="text-[13px] text-amber-800">
                     Select at least one package or rate to continue.
                   </p>
                 ) : null}

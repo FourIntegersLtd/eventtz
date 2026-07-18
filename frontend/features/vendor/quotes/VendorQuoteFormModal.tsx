@@ -193,8 +193,10 @@ export function VendorQuoteFormModal({
       }
     >
       <div className="space-y-4">
-        <p className="text-sm text-neutral-600">
-          They can accept or decline from Bookings.
+        <p className="text-sm leading-relaxed text-neutral-600">
+          A custom quote is a priced offer you send from chat — for a package you already
+          list, or a one-off price that isn&apos;t on your profile. It creates a booking
+          request the client can accept or decline from Bookings.
         </p>
         {error ? (
           <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">

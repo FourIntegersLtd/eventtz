@@ -6,15 +6,12 @@ import {
   MessageCircle,
   Store,
   Wallet,
-  RefreshCw,
 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { AdminAttentionList, type AdminAttentionItem } from "@/features/admin/components/AdminAttentionList";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminKpiCard } from "@/features/admin/components/AdminKpiCard";
-import { AdminPageHeader } from "@/features/admin/components/AdminPageHeader";
 import { AdminDashboardCharts } from "@/features/admin/dashboard/AdminDashboardCharts";
 import { useAdminDashboard } from "@/features/admin/dashboard/useAdminDashboard";
 import { useAdminDashboardMetrics } from "@/features/admin/dashboard/useAdminDashboardMetrics";
@@ -23,9 +20,6 @@ function DashboardSkeleton() {
   return (
     <div className="space-y-6">
       <LoadingState label="Loading dashboard…" variant="centered" className="py-2" />
-      <div className="flex justify-end">
-        <Skeleton className="h-9 w-24 rounded-lg" />
-      </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[1, 2, 3, 4].map((i) => (
           <Skeleton key={i} className="h-28 rounded-xl" />
@@ -33,7 +27,7 @@ function DashboardSkeleton() {
       </div>
       <Skeleton className="h-48 rounded-xl" />
       <div className="grid gap-4 lg:grid-cols-2">
-        {[1, 2, 3, 4].map((i) => (
+        {[1, 2].map((i) => (
           <Skeleton key={i} className="h-72 rounded-xl" />
         ))}
       </div>
@@ -42,7 +36,7 @@ function DashboardSkeleton() {
 }
 
 export function AdminDashboardView() {
-  const { summary, loading, error, reload } = useAdminDashboard();
+  const { summary, loading, error } = useAdminDashboard();
   const { metrics: metricsForAttention } = useAdminDashboardMetrics(30);
 
   const attentionItems = useMemo((): AdminAttentionItem[] => {
@@ -105,19 +99,6 @@ export function AdminDashboardView() {
 
   return (
     <div className="space-y-6">
-      <AdminPageHeader
-        actions={
-          <Button
-            variant="secondary"
-            size="sm"
-            icon={<RefreshCw className="h-4 w-4 text-neutral-500" aria-hidden />}
-            onClick={() => void reload()}
-          >
-            Refresh
-          </Button>
-        }
-      />
-
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <AdminKpiCard
           label="Pending vendor approvals"

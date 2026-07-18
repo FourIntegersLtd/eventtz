@@ -10,7 +10,7 @@ import {
 } from "@/lib/userSettingsApi";
 import { parseForm, contactPhoneFormSchema } from "@/lib/validation";
 import { LoadingState } from "@/components/ui/LoadingState";
-import { inputClass, labelClass } from "@/components/vendor-onboarding/steps/form-primitives";
+import { inputClass, labelClass } from "@/features/vendor/onboarding/steps/form-primitives";
 import type { PortalRole } from "@/components/portal-shell/portalNav";
 
 export type ContactSharingSettingsSectionProps = {

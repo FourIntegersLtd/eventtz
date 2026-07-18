@@ -6,7 +6,7 @@ import { CheckCircle2, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { FOCUS_RING, TOUCH_TARGET } from "@/components/ui/tokens";
-import { AnimatedStepItem } from "@/components/vendor-onboarding/ui/AnimatedStepItem";
+import { AnimatedStepItem } from "@/features/vendor/onboarding/ui/AnimatedStepItem";
 import { useClientOnboarding } from "@/features/client/onboarding/ClientOnboardingProvider";
 import { OnboardingIconBadge } from "@/features/client/onboarding/OnboardingIconBadge";
 import {

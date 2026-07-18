@@ -5,4 +5,3 @@ export * from "@/lib/validation/auth";
 export * from "@/lib/validation/contact";
 export * from "@/lib/validation/bookings";
 export * from "@/lib/validation/settingsAdmin";
-export * from "@/lib/validation/vendorOnboarding";

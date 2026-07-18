@@ -5,10 +5,8 @@ import { AlertCircle, CalendarRange, Pencil, X } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { DateInput } from "@/components/ui/DateInput";
-import {
-  getBookingRequestErrorMessage,
-  postBookingRequest,
-} from "@/lib/clientBookingApi";
+import { getApiErrorDetail } from "@/lib/api-errors";
+import { postBookingRequest } from "@/lib/clientBookingsApi";
 import {
   isoDatesInEventRange,
   vendorPayloadAllowsEventDates,
@@ -181,7 +179,7 @@ export function VendorBookingModal({
         onSuccess?.(created.id);
       })
       .catch((err: unknown) => {
-        setSubmitResult({ type: "error", message: getBookingRequestErrorMessage(err) });
+        setSubmitResult({ type: "error", message: getApiErrorDetail(err) ?? "Request failed. Try again." });
         setSubmitting(false);
       });
   };

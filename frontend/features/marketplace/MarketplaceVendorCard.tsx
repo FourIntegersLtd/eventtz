@@ -17,7 +17,7 @@ import type { ExpandedSearchCard } from "@/features/marketplace/marketplaceSearc
 import {
   EVENT_TYPE_OPTIONS,
   SERVICE_OPTIONS,
-} from "@/components/vendor-onboarding/constants";
+} from "@/features/vendor/onboarding/constants";
 import { formatMoney, getMarket, marketLocationFallback } from "@/lib/markets";
 import { radiusOptionsForMarket } from "@/lib/photonLocationAutocomplete";
 import { profileImageUrlFromPayload } from "@/lib/vendorPortfolioImages";

@@ -124,100 +124,101 @@ export function BookingDetailPanel({
         </p>
       ) : null}
 
-      <div className="scroll-pane min-h-0 flex-1 space-y-8 pb-6 pr-1">
+      <div className="scroll-pane mt-6 min-h-0 flex-1 space-y-8 px-1 pb-6 sm:mt-8">
         {slots.beforeSections}
         <section>
-          <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-neutral-500">Event &amp; contact</h3>
-          <div className="mt-3 grid gap-px overflow-hidden rounded-2xl bg-neutral-200/50 ring-1 ring-neutral-200/50 sm:grid-cols-2">
-            <div className="flex gap-4 bg-white px-5 py-4 transition hover:bg-neutral-50">
-              <Calendar className="mt-0.5 h-5 w-5 shrink-0 text-neutral-400" aria-hidden />
-              <div className="min-w-0">
-                <p className="text-xs font-medium text-neutral-500">Event date</p>
-                <p className="mt-0.5 text-sm font-medium text-neutral-900">{booking.eventDateLabel}</p>
-                {booking.eventEndDateLabel ? (
-                  <p className="mt-0.5 text-xs text-neutral-600">to {booking.eventEndDateLabel}</p>
-                ) : null}
-              </div>
-            </div>
-            <div className="flex gap-4 bg-white px-5 py-4 transition hover:bg-neutral-50">
-              <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-neutral-400" aria-hidden />
-              <div className="min-w-0">
-                <p className="text-xs font-medium text-neutral-500">Location</p>
-                <p
-                  className={`mt-0.5 text-sm font-medium ${
-                    location.primary === "Not added yet" ? "text-neutral-500" : "text-neutral-900"
-                  }`}
-                >
-                  {location.primary}
-                </p>
-                {location.secondary ? (
-                  <p className="mt-0.5 text-xs text-neutral-600">{location.secondary}</p>
-                ) : null}
-              </div>
-            </div>
-            <div className="flex gap-4 bg-white px-5 py-4 transition hover:bg-neutral-50 sm:col-span-2">
-              <ExternalLink className="mt-0.5 h-5 w-5 shrink-0 text-neutral-400" aria-hidden />
-              <div className="min-w-0">
-                <p className="text-xs font-medium text-neutral-500">{booking.counterpartyRoleLabel}</p>
-                {booking.counterpartyHref ? (
-                  <Link
-                    href={booking.counterpartyHref}
-                    className="mt-0.5 block truncate text-sm font-medium text-primary hover:underline"
-                  >
-                    {booking.counterpartyName}
-                  </Link>
-                ) : (
-                  <p className="mt-0.5 truncate text-sm font-medium text-neutral-900">
-                    {booking.counterpartyName}
-                  </p>
-                )}
-                {booking.counterpartyPhone ? (
-                  <p className="mt-0.5 text-xs text-neutral-600">{booking.counterpartyPhone}</p>
-                ) : null}
-              </div>
-            </div>
-            <div className="flex flex-col gap-3 bg-white px-5 py-4 transition hover:bg-neutral-50 sm:flex-row sm:items-center sm:justify-between sm:col-span-2">
-              <div className="flex min-w-0 flex-1 items-start gap-4">
-                <MessageCircle className="mt-0.5 h-5 w-5 shrink-0 text-neutral-400" aria-hidden />
-                <div>
-                  <p className="text-xs font-medium text-neutral-500">Messages</p>
-                  <p className="mt-0.5 text-sm text-neutral-700">
-                    {booking.messagesHint}
-                  </p>
+          <h3 className="text-[15px] font-semibold tracking-tight text-neutral-900">
+            Event &amp; contact
+          </h3>
+          <dl className="mt-3 divide-y divide-neutral-100 overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+            <div className="grid gap-0 sm:grid-cols-2">
+              <div className="flex gap-3 px-5 py-4 sm:border-r sm:border-neutral-100">
+                <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" aria-hidden />
+                <div className="min-w-0">
+                  <dt className="text-[13px] text-neutral-500">Event date</dt>
+                  <dd className="mt-0.5 text-sm font-medium text-neutral-900">
+                    {booking.eventDateLabel}
+                  </dd>
+                  {booking.eventEndDateLabel ? (
+                    <p className="mt-0.5 text-xs text-neutral-500">to {booking.eventEndDateLabel}</p>
+                  ) : null}
                 </div>
               </div>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={booking.onOpenChat}
-              >
+              <div className="flex gap-3 border-t border-neutral-100 px-5 py-4 sm:border-t-0">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" aria-hidden />
+                <div className="min-w-0">
+                  <dt className="text-[13px] text-neutral-500">Location</dt>
+                  <dd
+                    className={`mt-0.5 text-sm font-medium ${
+                      location.primary === "Not added yet" ? "text-neutral-500" : "text-neutral-900"
+                    }`}
+                  >
+                    {location.primary}
+                  </dd>
+                  {location.secondary ? (
+                    <p className="mt-0.5 text-xs text-neutral-500">{location.secondary}</p>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3 px-5 py-4">
+              <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" aria-hidden />
+              <div className="min-w-0">
+                <dt className="text-[13px] text-neutral-500">{booking.counterpartyRoleLabel}</dt>
+                <dd className="mt-0.5">
+                  {booking.counterpartyHref ? (
+                    <Link
+                      href={booking.counterpartyHref}
+                      className="block truncate text-sm font-medium text-primary hover:underline"
+                    >
+                      {booking.counterpartyName}
+                    </Link>
+                  ) : (
+                    <p className="truncate text-sm font-medium text-neutral-900">
+                      {booking.counterpartyName}
+                    </p>
+                  )}
+                </dd>
+                {booking.counterpartyPhone ? (
+                  <p className="mt-0.5 text-xs text-neutral-500">{booking.counterpartyPhone}</p>
+                ) : null}
+              </div>
+            </div>
+            {/* Soft tint so messages / CTA stands out */}
+            <div className="flex flex-col gap-3 bg-primary/[0.04] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 flex-1 items-start gap-3">
+                <MessageCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary/70" aria-hidden />
+                <div>
+                  <dt className="text-[13px] text-neutral-500">Messages</dt>
+                  <dd className="mt-0.5 text-sm text-neutral-700">{booking.messagesHint}</dd>
+                </div>
+              </div>
+              <Button variant="secondary" size="sm" onClick={booking.onOpenChat}>
                 {booking.messagesActionLabel}
               </Button>
             </div>
-          </div>
+          </dl>
         </section>
 
         <section>
-          <div className="mt-3">
-            <BookingPricingBreakdown
-              quoteTotalLabel={booking.totalLabel}
-              pricing={booking.pricing ?? undefined}
-              variant={booking.pricingVariant}
-              lineItems={booking.lineItems}
-              compareTotalLabel={booking.compareTotalLabel}
-            />
-            {booking.paidAtLabel ? (
-              <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl bg-emerald-50/50 px-5 py-4 text-sm ring-1 ring-emerald-200/80">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-200/50 text-emerald-700">
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                </span>
-                <span className="font-semibold text-emerald-900">Paid</span>
-                <span className="text-neutral-600">recorded {booking.paidAtLabel}</span>
-              </div>
-            ) : null}
-          </div>
+          <BookingPricingBreakdown
+            quoteTotalLabel={booking.totalLabel}
+            pricing={booking.pricing ?? undefined}
+            variant={booking.pricingVariant}
+            lineItems={booking.lineItems}
+            compareTotalLabel={booking.compareTotalLabel}
+          />
+          {booking.paidAtLabel ? (
+            <div className="mt-3 flex flex-wrap items-center gap-3 rounded-2xl bg-emerald-50/70 px-5 py-3.5 text-sm ring-1 ring-emerald-200/70">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-200/50 text-emerald-700">
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </span>
+              <span className="font-semibold text-emerald-900">Paid</span>
+              <span className="text-neutral-600">recorded {booking.paidAtLabel}</span>
+            </div>
+          ) : null}
         </section>
 
         {booking.notes ? (

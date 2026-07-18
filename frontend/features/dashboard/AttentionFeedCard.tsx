@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { AlertCircle, ChevronRight, Info, Sparkles } from "lucide-react";
-import { RADIUS } from "@/components/ui/tokens";
+import { useState } from "react";
+import { AlertCircle, ChevronDown, ChevronRight, Info, Sparkles } from "lucide-react";
+import { portalCard } from "@/components/portal-shell/portalTheme";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SkeletonListRows } from "@/components/ui/Skeleton";
 import { sortAttentionItems, type AttentionItem, type AttentionTone } from "./attentionTypes";
@@ -19,29 +20,58 @@ const TONE_ICON_CLASS: Record<AttentionTone, string> = {
   positive: "bg-primary/10 text-primary",
 };
 
+const DEFAULT_PREVIEW = 3;
+
 type AttentionFeedCardProps = {
   items: AttentionItem[];
   loading: boolean;
+  /** How many items to show when collapsed. Default 3. */
+  previewCount?: number;
 };
 
 /**
- * The dashboard's single prioritized "what needs my attention" feed —
- * replaces the old combination of a stat-tile grid, a separate updates
- * banner, and a recent-activity list with one ranked list of concrete next
- * actions. Each portal is responsible for building its own `items` from data
- * it already fetches; this component only renders and sorts.
+ * Dashboard “what needs my attention” feed.
+ * Shows the top items by default; expands to the full list when there are more.
  */
-export function AttentionFeedCard({ items, loading }: AttentionFeedCardProps) {
+export function AttentionFeedCard({
+  items,
+  loading,
+  previewCount = DEFAULT_PREVIEW,
+}: AttentionFeedCardProps) {
+  const [expanded, setExpanded] = useState(false);
   const sorted = sortAttentionItems(items);
+  const canCollapse = sorted.length > previewCount;
+  const visible = expanded || !canCollapse ? sorted : sorted.slice(0, previewCount);
 
   return (
-    <div className={`w-full min-w-0 overflow-hidden bg-white shadow-sm ring-1 ring-neutral-200/50 ${RADIUS.lg}`}>
-      <div className="border-b border-neutral-100 px-4 py-4 sm:px-5">
-        <p className="text-sm font-semibold uppercase tracking-wide text-neutral-500">To do</p>
+    <div className={`w-full min-w-0 overflow-hidden ${portalCard}`}>
+      <div className="flex items-center justify-between gap-3 border-b border-neutral-100 px-4 py-4 sm:px-5">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-wide text-neutral-500">To do</p>
+          {!loading && sorted.length > 0 ? (
+            <p className="mt-0.5 text-xs text-neutral-400">
+              {sorted.length} item{sorted.length === 1 ? "" : "s"}
+            </p>
+          ) : null}
+        </div>
+        {canCollapse ? (
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-neutral-600 transition hover:bg-neutral-50 hover:text-neutral-900"
+            aria-expanded={expanded}
+          >
+            {expanded ? "Show less" : `Show all ${sorted.length}`}
+            <ChevronDown
+              className={`h-3.5 w-3.5 transition ${expanded ? "rotate-180" : ""}`}
+              aria-hidden
+            />
+          </button>
+        ) : null}
       </div>
       {loading ? (
         <div className="p-3">
-          <SkeletonListRows rows={4} />
+          <SkeletonListRows rows={Math.min(previewCount, 4)} />
         </div>
       ) : sorted.length === 0 ? (
         <EmptyState
@@ -51,7 +81,7 @@ export function AttentionFeedCard({ items, loading }: AttentionFeedCardProps) {
         />
       ) : (
         <ul className="space-y-2 p-3">
-          {sorted.map((item) => {
+          {visible.map((item) => {
             const Icon = TONE_ICON[item.tone];
             const iconAndText = (
               <>
@@ -76,7 +106,7 @@ export function AttentionFeedCard({ items, loading }: AttentionFeedCardProps) {
             return (
               <li
                 key={item.id}
-                className={`min-w-0 overflow-hidden rounded-xl shadow-sm ring-1 ring-neutral-100 transition duration-150 ease-out hover:shadow-md ${
+                className={`min-w-0 overflow-hidden rounded-xl border border-neutral-100 bg-white transition duration-150 ease-out hover:border-neutral-200 ${
                   item.trailing ? "flex items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4" : ""
                 }`}
               >

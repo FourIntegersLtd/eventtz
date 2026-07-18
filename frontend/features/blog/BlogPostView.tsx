@@ -70,7 +70,8 @@ export function BlogPostView({ slug }: BlogPostViewProps) {
 
   return (
     <article>
-      <div className="mx-auto max-w-[42rem] px-4 pb-20 pt-10 sm:px-6 sm:pt-14">
+      {/* ~Substack reading column: ~768px with larger body type */}
+      <div className="mx-auto max-w-3xl px-4 pb-20 pt-10 sm:px-6 sm:pt-14 lg:px-8">
         <Link
           href="/blog"
           className="mb-8 inline-flex items-center gap-1.5 text-sm text-neutral-600 transition hover:text-primary"

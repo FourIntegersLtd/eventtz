@@ -273,11 +273,11 @@ body {
   margin-top: 2.5rem;
 }
 
-/* Public blog reading surface */
+/* Public blog reading surface — Substack-like measure + body size */
 .blog-prose {
   color: rgb(38 38 38);
-  font-size: 1.125rem;
-  line-height: 1.8;
+  font-size: 1.25rem;
+  line-height: 1.7;
   text-align: left;
 }
 
@@ -594,7 +594,8 @@ body {
   text-align: left;
 }
 
-/* Portal master-detail pages lock to viewport; cards scroll inside .scroll-pane */
+/* Portal master-detail pages lock to viewport; cards scroll inside .scroll-pane.
+ * Slight bottom padding keeps card borders visible against the overflow clip. */
 .portal-fill-height {
   display: flex;
   height: 100%;
@@ -602,6 +603,7 @@ body {
   min-height: 0;
   flex-direction: column;
   overflow: hidden;
+  padding-bottom: 2px;
 }
 
 .portal-content:has(> .portal-fill-height) {

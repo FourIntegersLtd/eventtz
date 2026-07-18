@@ -20,6 +20,8 @@ export type BookingListRowViewModel = {
   reviewLine?: string | null;
   /** Shown under the pending badge — role-aware copy from `bookingListPendingSubtext`. */
   pendingSubtext?: string | null;
+  /** Vendor view: payout setup still required before Accept. */
+  warningBadge?: string | null;
 };
 
 export type BookingDetailAction = {

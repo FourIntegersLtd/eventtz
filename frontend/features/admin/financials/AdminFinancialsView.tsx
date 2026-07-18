@@ -1,56 +1,49 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Receipt, ShoppingBag } from "lucide-react";
+import { PoundSterling, Receipt, ShoppingBag } from "lucide-react";
 import {
-  downloadAdminFinancialsCsv,
   fetchAdminFinancials,
   type AdminFinancialsSummary,
 } from "@/lib/adminPlatformApi";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminKpiCard } from "@/features/admin/components/AdminKpiCard";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
+import { AdminCommercePeriodFilter } from "@/features/admin/components/AdminCommercePeriodFilter";
 import { AdminFinancialsCharts } from "@/features/admin/financials/AdminFinancialsCharts";
 import {
-  AdminFinancialsPeriodControl,
-  financialsPeriodRange,
-  type FinancialsPeriod,
-} from "@/features/admin/financials/AdminFinancialsToolbar";
-import { useAdminPermissions } from "@/features/admin/useAdminPermissions";
+  commercePeriodRange,
+  type CommercePeriodDays,
+} from "@/features/admin/commerce/commercePeriod";
 
 function formatGbp(value: number): string {
   return `£${value.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 export function AdminFinancialsView() {
-  const { canExportFinancials } = useAdminPermissions();
-  const [period, setPeriod] = useState<FinancialsPeriod>("30d");
-  const [from, setFrom] = useState(() => financialsPeriodRange("30d").from);
-  const [to, setTo] = useState(() => financialsPeriodRange("30d").to);
+  const [period, setPeriod] = useState<CommercePeriodDays>(30);
+  const [range, setRange] = useState(() => commercePeriodRange(30));
   const [summary, setSummary] = useState<AdminFinancialsSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [csvBusy, setCsvBusy] = useState(false);
 
-  const handlePeriodChange = useCallback((next: FinancialsPeriod) => {
+  const handlePeriodChange = useCallback((next: CommercePeriodDays) => {
     setPeriod(next);
-    const range = financialsPeriodRange(next);
-    setFrom(range.from);
-    setTo(range.to);
+    setRange(commercePeriodRange(next));
   }, []);
 
   const load = useCallback(async () => {
     setError(null);
     setLoading(true);
     try {
-      const s = await fetchAdminFinancials(from || undefined, to || undefined);
+      const s = await fetchAdminFinancials(range.from, range.to);
       setSummary(s);
     } catch {
       setError("Could not load financials.");
     } finally {
       setLoading(false);
     }
-  }, [from, to]);
+  }, [range.from, range.to]);
 
   useEffect(() => {
     void load();
@@ -61,25 +54,21 @@ export function AdminFinancialsView() {
       {error ? <AdminErrorBanner message={error} /> : null}
 
       <div className="flex justify-end">
-        <AdminFinancialsPeriodControl
-          period={period}
-          csvBusy={csvBusy}
-          showExport={canExportFinancials}
-          onPeriodChange={handlePeriodChange}
-          onExportCsv={() => {
-            setCsvBusy(true);
-            void downloadAdminFinancialsCsv(from || undefined, to || undefined).finally(() => {
-              setCsvBusy(false);
-            });
-          }}
-        />
+        <AdminCommercePeriodFilter period={period} onPeriodChange={handlePeriodChange} />
       </div>
 
       {loading ? (
         <AdminLoadingState />
       ) : summary ? (
         <>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <AdminKpiCard
+              label="Client spend"
+              value={formatGbp(summary.gmv_gbp)}
+              hint="Total paid by clients"
+              icon={PoundSterling}
+              tone="primary"
+            />
             <AdminKpiCard
               label="Platform fee"
               value={formatGbp(summary.platform_fee_gbp)}

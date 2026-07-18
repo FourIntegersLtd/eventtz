@@ -4,19 +4,16 @@ import { useState } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { AdminAreaChart } from "@/features/admin/components/AdminAreaChart";
-import { AdminBarChart } from "@/features/admin/components/AdminBarChart";
 import { AdminChartCard } from "@/features/admin/components/AdminChartCard";
+import { AdminCommercePeriodFilter } from "@/features/admin/components/AdminCommercePeriodFilter";
 import { AdminDonutChart } from "@/features/admin/components/AdminDonutChart";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminGroupedBarChart } from "@/features/admin/components/AdminGroupedBarChart";
-import { AdminPeriodToggle } from "@/features/admin/components/AdminPeriodToggle";
+import { DASHBOARD_CHART_INFO } from "@/features/admin/components/adminChartInfoCopy";
 import { chartHasData } from "@/features/admin/components/chartUtils";
+import type { AdminPeriodDays } from "@/features/admin/commerce/commercePeriod";
 import type { AdminDashboardSummary } from "@/lib/adminPlatformApi";
-import {
-  useAdminDashboardMetrics,
-  type DashboardMetricsPeriod,
-} from "@/features/admin/dashboard/useAdminDashboardMetrics";
+import { useAdminDashboardMetrics } from "@/features/admin/dashboard/useAdminDashboardMetrics";
 
 type AdminDashboardChartsProps = {
   summary: AdminDashboardSummary;
@@ -34,7 +31,7 @@ function ChartSkeleton() {
 }
 
 export function AdminDashboardCharts({ summary }: AdminDashboardChartsProps) {
-  const [period, setPeriod] = useState<DashboardMetricsPeriod>(30);
+  const [period, setPeriod] = useState<AdminPeriodDays>(30);
   const { metrics, loading, error } = useAdminDashboardMetrics(period);
 
   const pipelineData = [
@@ -45,52 +42,22 @@ export function AdminDashboardCharts({ summary }: AdminDashboardChartsProps) {
     { name: "Cancelled", value: summary.bookings_cancelled },
   ];
 
-  const createdData =
-    metrics?.bookings_created.map((b) => ({ date: b.date, value: b.count })) ?? [];
-  const paidSpendData =
-    metrics?.bookings_paid.map((b) => ({ date: b.date, value: b.gmv_gbp })) ?? [];
   const signupData = metrics?.signups ?? [];
 
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold text-neutral-900">Platform metrics</h2>
-        <AdminPeriodToggle value={period} onChange={setPeriod} />
+        <h2 className="text-sm font-semibold text-neutral-900">Platform overview</h2>
+        <AdminCommercePeriodFilter period={period} onPeriodChange={setPeriod} />
       </div>
 
       {error ? <AdminErrorBanner message={error} /> : null}
 
       <div className="grid gap-4 overflow-x-auto lg:grid-cols-2">
-        <AdminChartCard title="Booking volume">
+        <AdminChartCard title="Signups" info={DASHBOARD_CHART_INFO.signups}>
           {loading ? (
             <ChartSkeleton />
-          ) : chartHasData(createdData.map((d) => d.value)) ? (
-            <AdminBarChart data={createdData} valueLabel="Bookings" />
-          ) : (
-            <EmptyState className="border-0 py-8" title="No bookings in this period" />
-          )}
-        </AdminChartCard>
-
-        <AdminChartCard
-          title="Client spend (paid)"
-          footerHref="/admin/commerce?tab=financials"
-          footerLabel="View Financials →"
-        >
-          {loading ? (
-            <ChartSkeleton />
-          ) : chartHasData(paidSpendData.map((d) => d.value)) ? (
-            <AdminAreaChart data={paidSpendData} valueLabel="Client spend (GBP)" />
-          ) : (
-            <EmptyState className="border-0 py-8" title="No paid bookings in this period" />
-          )}
-        </AdminChartCard>
-
-        <AdminChartCard title="Signups">
-          {loading ? (
-            <ChartSkeleton />
-          ) : chartHasData(
-              signupData.flatMap((d) => [d.clients, d.vendors]),
-            ) ? (
+          ) : chartHasData(signupData.flatMap((d) => [d.clients, d.vendors])) ? (
             <AdminGroupedBarChart data={signupData} />
           ) : (
             <EmptyState className="border-0 py-8" title="No signups in this period" />
@@ -99,6 +66,7 @@ export function AdminDashboardCharts({ summary }: AdminDashboardChartsProps) {
 
         <AdminChartCard
           title="Booking pipeline"
+          info={DASHBOARD_CHART_INFO.pipeline}
           footerHref="/admin/commerce?tab=bookings"
           footerLabel="View all bookings →"
         >

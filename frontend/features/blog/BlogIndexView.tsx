@@ -45,7 +45,6 @@ export function BlogIndexView() {
   return (
     <div className="mx-auto max-w-3xl px-4 pb-16 pt-10 sm:px-6 sm:pt-14 lg:px-8">
       <header className="mb-12 space-y-3 text-left sm:mb-16">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Eventtz</p>
         <h1 className="font-heading text-4xl font-semibold tracking-tight text-neutral-900 sm:text-5xl">
           Blog
         </h1>

@@ -8,6 +8,33 @@ import type {
   BookingLineItem,
 } from "@/lib/domain-types";
 
+export type CreateBookingRequestPayload = {
+  vendor_user_id: string;
+  event_name: string;
+  event_date: string;
+  event_end_date: string | null;
+  /** Venue / event location postcode (optional at request; required before pay). */
+  event_postcode?: string | null;
+  /** Free-text venue address line(s). */
+  event_address?: string | null;
+  notes: string | null;
+  selected_option_ids: string[];
+};
+
+export type BookingRequestCreated = {
+  success: boolean;
+  id: string;
+  status: string;
+  created_at: string | null;
+};
+
+export async function postBookingRequest(
+  payload: CreateBookingRequestPayload,
+): Promise<BookingRequestCreated> {
+  const { data } = await api.post<BookingRequestCreated>("/api/v1/client/booking-requests", payload);
+  return data;
+}
+
 export type {
   BookingInitiator,
   BookingPricingBreakdown,

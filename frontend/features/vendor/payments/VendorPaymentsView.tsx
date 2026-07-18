@@ -14,8 +14,7 @@ import {
 
 /**
  * Standalone payout status + Stripe Connect entry point, reachable from the
- * portal nav at any time (not just during onboarding) — mirrors the copy and
- * flow of `StepVerification` but doesn't depend on onboarding form state.
+ * portal nav at any time (and from Accept booking when payouts are not ready).
  */
 export function VendorPaymentsView() {
   const router = useRouter();

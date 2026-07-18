@@ -5,7 +5,7 @@ import type {
   BookingListRowViewModel,
 } from "@/features/bookings/bookingViewModel";
 import type { BookingLineItemRow, BookingPricing } from "@/features/bookings/BookingPricingBreakdown";
-import { clientTotalBeforeVendorAdjustments } from "@/lib/bookingPriceLabels";
+import { clientTotalBeforeVendorAdjustments } from "@/features/bookings/bookingPriceLabels";
 import { bookingListPendingSubtext } from "@/features/bookings/bookingPendingLabels";
 
 type ParticipantBookingDetailSource = {

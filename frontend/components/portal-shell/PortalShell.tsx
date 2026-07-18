@@ -20,7 +20,7 @@ import {
 import { CHAT_UNREAD_CLEARED_EVENT, fetchChatUnreadCount } from "@/lib/chatApi";
 import { fetchVendorBookings } from "@/lib/vendorBookingsApi";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
-import { NotificationBell } from "@/components/ui/NotificationBell";
+import { NotificationBell } from "@/features/notifications/NotificationBell";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   isPortalNavActive,

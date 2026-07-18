@@ -1,4 +1,4 @@
-import { SERVICE_OPTIONS } from "@/components/vendor-onboarding/constants";
+import { SERVICE_OPTIONS } from "@/features/vendor/onboarding/constants";
 import type { ExploreVendorSearchRow } from "@/lib/clientExploreApi";
 import type { MarketplaceSearchState } from "@/lib/marketplaceSearchParams";
 

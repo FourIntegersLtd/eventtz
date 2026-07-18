@@ -4,7 +4,7 @@ import { Calendar, ChevronDown, Search, Tags } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
-import { SERVICE_OPTIONS, VENDOR_WAITLIST_URL } from "@/components/vendor-onboarding/constants";
+import { SERVICE_OPTIONS, VENDOR_WAITLIST_URL } from "@/features/vendor/onboarding/constants";
 import {
   buildMarketplaceSearchUrl,
   type MarketplaceSearchState,

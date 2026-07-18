@@ -1,4 +1,5 @@
 import {
+  BarChart3,
   CalendarDays,
   Compass,
   Heart,
@@ -33,6 +34,7 @@ const CLIENT_NAV: readonly PortalNavItem[] = [
 
 const VENDOR_NAV: readonly PortalNavItem[] = [
   { href: "/vendor/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/vendor/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/vendor/bookings", label: "Bookings", icon: CalendarDays },
   { href: "/vendor/messages", label: "Messages", icon: MessageSquare },
   { href: "/vendor/profile", label: "Profile", icon: UserCircle2 },
@@ -115,6 +117,7 @@ const PAGE_TITLE_RULES: Record<PortalRole, readonly { prefix: string; title: str
   vendor: [
     { prefix: "/vendor/messages", title: "Messages" },
     { prefix: "/vendor/bookings", title: "Bookings" },
+    { prefix: "/vendor/analytics", title: "Analytics" },
     { prefix: "/vendor/payments", title: "Payments" },
     { prefix: "/vendor/disputes", title: "Disputes" },
     { prefix: "/vendor/contact", title: "Contact us" },

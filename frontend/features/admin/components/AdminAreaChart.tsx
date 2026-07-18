@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import {
   Area,
   AreaChart,
@@ -21,6 +22,7 @@ function formatGbp(value: number): string {
 }
 
 export function AdminAreaChart({ data, valueLabel = "Value" }: AdminAreaChartProps) {
+  const fillId = useId().replace(/:/g, "");
   const chartData = data.map((d) => ({
     ...d,
     label: formatAxisDate(d.date),
@@ -30,9 +32,9 @@ export function AdminAreaChart({ data, valueLabel = "Value" }: AdminAreaChartPro
     <ResponsiveContainer width="100%" height={220}>
       <AreaChart data={chartData} margin={{ top: 4, right: 4, left: -8, bottom: 0 }}>
         <defs>
-          <linearGradient id="adminGmvFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#7c3aed" stopOpacity={0.25} />
-            <stop offset="100%" stopColor="#7c3aed" stopOpacity={0.02} />
+          <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--color-primary, #3e1964)" stopOpacity={0.22} />
+            <stop offset="100%" stopColor="var(--color-primary, #3e1964)" stopOpacity={0.02} />
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e5e5" />
@@ -58,9 +60,9 @@ export function AdminAreaChart({ data, valueLabel = "Value" }: AdminAreaChartPro
         <Area
           type="monotone"
           dataKey="value"
-          stroke="#7c3aed"
+          stroke="var(--color-primary, #3e1964)"
           strokeWidth={2}
-          fill="url(#adminGmvFill)"
+          fill={`url(#${fillId})`}
         />
       </AreaChart>
     </ResponsiveContainer>
