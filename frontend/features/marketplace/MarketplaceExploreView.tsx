@@ -6,8 +6,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { EventtzLogo } from "@/components/branding/EventtzLogo";
 import { PortalShell } from "@/components/portal-shell/PortalShell";
+import { Button } from "@/components/ui/Button";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { getButtonClassName } from "@/components/ui/buttonStyles";
+import { useToast } from "@/components/ui/Toast";
 import {
   fetchExploreVendorsSearch,
   type ExploreVendorSearchRow,
@@ -17,6 +19,7 @@ import {
   buildMarketplaceSearchUrl,
   marketplaceStateFromSearchParams,
   MARKETPLACE_PAGE_SIZE,
+  toClientSearchContext,
   type MarketplaceSearchState,
 } from "@/lib/marketplaceSearchParams";
 import { HeroMarketplaceSearch } from "@/features/marketplace/HeroMarketplaceSearch";
@@ -25,6 +28,7 @@ import { MarketplacePagination } from "@/features/marketplace/MarketplacePaginat
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { MarketplaceVendorCard } from "@/features/marketplace/MarketplaceVendorCard";
+import { MultiVendorEnquireModal } from "@/features/marketplace/MultiVendorEnquireModal";
 import {
   buildMarketplaceResultsHeadline,
   expandVendorsForSearchResults,
@@ -46,6 +50,7 @@ export function MarketplaceExploreView({
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useAuth();
+  const { showToast } = useToast();
 
   const state = useMemo(() => marketplaceStateFromSearchParams(sp), [sp]);
   const fetchKey = sp.toString();
@@ -55,6 +60,10 @@ export function MarketplaceExploreView({
   const [vendors, setVendors] = useState<ExploreVendorSearchRow[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [matchNotice, setMatchNotice] = useState<string | null>(null);
+  const [selectedById, setSelectedById] = useState<Record<string, ExploreVendorSearchRow>>(
+    {},
+  );
+  const [multiEnquireOpen, setMultiEnquireOpen] = useState(false);
 
   const { isSaved, toggle, savedIds, ready: bookmarksReady } = useMarketplaceBookmarks();
   const savedOnly = mode === "favorites";
@@ -62,6 +71,24 @@ export function MarketplaceExploreView({
     () => (savedOnly && savedIds.size > 0 ? [...savedIds] : undefined),
     [savedOnly, savedIds],
   );
+
+  const isClient = user?.user_type === "client";
+  const selectedVendors = useMemo(() => Object.values(selectedById), [selectedById]);
+  const selectedCount = selectedVendors.length;
+
+  const toggleSelect = useCallback((vendor: ExploreVendorSearchRow) => {
+    setSelectedById((prev) => {
+      const next = { ...prev };
+      if (next[vendor.user_id]) {
+        delete next[vendor.user_id];
+      } else {
+        next[vendor.user_id] = vendor;
+      }
+      return next;
+    });
+  }, []);
+
+  const clearSelection = useCallback(() => setSelectedById({}), []);
 
   useEffect(() => {
     if (savedOnly && !bookmarksReady) return;
@@ -116,6 +143,20 @@ export function MarketplaceExploreView({
 
   const headline = buildMarketplaceResultsHeadline(state);
 
+  const searchPrefill = useMemo(() => {
+    const d = state.dates;
+    const first = d[0];
+    let eventEndDate: string | undefined;
+    if (d.length === 2 && first && d[1] && d[1] >= first) {
+      eventEndDate = d[1];
+    }
+    return {
+      eventDate: first ?? "",
+      eventEndDate,
+      datesFlexible: state.dateFlexible,
+    };
+  }, [state.dates, state.dateFlexible]);
+
   const commit = useCallback(
     (next: MarketplaceSearchState) => {
       router.replace(buildMarketplaceSearchUrl(pathname, next));
@@ -152,6 +193,15 @@ export function MarketplaceExploreView({
     [visibleCards],
   );
 
+  const cardSelectProps = (vendor: ExploreVendorSearchRow) =>
+    isClient
+      ? {
+          selectable: true as const,
+          selected: Boolean(selectedById[vendor.user_id]),
+          onToggleSelect: () => toggleSelect(vendor),
+        }
+      : {};
+
   const pagination = !loading && !error && totalCount > MARKETPLACE_PAGE_SIZE ? (
     <MarketplacePagination
       page={state.page}
@@ -160,6 +210,33 @@ export function MarketplaceExploreView({
       onPageChange={goToPage}
     />
   ) : null;
+
+  const selectionBar =
+    isClient && selectedCount > 0 ? (
+      <div className="sticky bottom-4 z-30 mx-auto mt-6 flex max-w-xl flex-wrap items-center justify-between gap-3 rounded-2xl border border-neutral-200 bg-white px-4 py-3 shadow-lg">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-neutral-900">
+            {selectedCount} vendor{selectedCount === 1 ? "" : "s"} selected
+          </p>
+          <p className="text-xs text-neutral-500">
+            Request several — first to accept isn&apos;t exclusive until you pay.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="secondary" size="sm" onClick={clearSelection}>
+            Clear
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setMultiEnquireOpen(true)}
+            disabled={selectedCount < 1}
+          >
+            Request from {selectedCount}
+          </Button>
+        </div>
+      </div>
+    ) : null;
 
   const filtersAndResults = (
     <div className="w-full min-w-0">
@@ -186,6 +263,11 @@ export function MarketplaceExploreView({
           </p>
           {!savedOnly && headline ? (
             <p className="mt-1 text-sm text-neutral-600">{headline}</p>
+          ) : null}
+          {isClient && !savedOnly ? (
+            <p className="mt-1 text-xs text-neutral-500">
+              Select vendors to request the same event details from several at once.
+            </p>
           ) : null}
         </div>
         <MarketplaceFiltersBar state={state} onCommit={commit} />
@@ -218,10 +300,12 @@ export function MarketplaceExploreView({
                 vendorDetailHref={buildClientBrowseVendorUrl(card.vendor.user_id, state)}
                 bookmarked={isSaved(card.vendor.user_id)}
                 onToggleBookmark={() => toggle(card.vendor.user_id)}
+                {...cardSelectProps(card.vendor)}
               />
             ))}
           </div>
           {pagination}
+          {selectionBar}
         </>
       ) : (
         <div className="mt-6 space-y-8">
@@ -240,6 +324,7 @@ export function MarketplaceExploreView({
                   vendorDetailHref={buildClientBrowseVendorUrl(card.vendor.user_id, state)}
                   bookmarked={isSaved(card.vendor.user_id)}
                   onToggleBookmark={() => toggle(card.vendor.user_id)}
+                  {...cardSelectProps(card.vendor)}
                 />
               ))}
             </div>
@@ -261,6 +346,7 @@ export function MarketplaceExploreView({
                     vendorDetailHref={buildClientBrowseVendorUrl(card.vendor.user_id, state)}
                     bookmarked={isSaved(card.vendor.user_id)}
                     onToggleBookmark={() => toggle(card.vendor.user_id)}
+                    {...cardSelectProps(card.vendor)}
                   />
                 ))}
               </div>
@@ -268,8 +354,36 @@ export function MarketplaceExploreView({
           ) : null}
 
           {pagination}
+          {selectionBar}
         </div>
       )}
+
+      {multiEnquireOpen && selectedCount > 0 ? (
+        <MultiVendorEnquireModal
+          vendors={selectedVendors}
+          clientSearchContext={toClientSearchContext(state)}
+          searchPrefill={searchPrefill}
+          onClose={() => setMultiEnquireOpen(false)}
+          onSuccess={(createdIds) => {
+            setMultiEnquireOpen(false);
+            clearSelection();
+            showToast({
+              title:
+                createdIds.length === 1
+                  ? "Request sent"
+                  : `${createdIds.length} requests sent`,
+              description:
+                "Vendors will be notified. First to accept isn't exclusive until you pay.",
+              tone: "success",
+            });
+            router.push(
+              createdIds.length === 1
+                ? `/client/bookings/${createdIds[0]}`
+                : "/client/bookings",
+            );
+          }}
+        />
+      ) : null}
     </div>
   );
 

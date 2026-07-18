@@ -3,6 +3,7 @@
 import {
   BadgeCheck,
   Briefcase,
+  Check,
   Clock,
   Globe,
   Heart,
@@ -12,6 +13,7 @@ import {
 import { portalCard } from "@/components/portal-shell/portalTheme";
 import { useRouter } from "next/navigation";
 import { VendorPortfolioCover } from "@/components/vendor/VendorPortfolioCover";
+import { VendorMetricsStrip } from "@/components/vendor/VendorMetricsStrip";
 import { buildBrowsePricingOptions } from "@/features/client/browse/vendorBrowseDetailModel";
 import type { ExpandedSearchCard } from "@/features/marketplace/marketplaceSearchModel";
 import {
@@ -37,6 +39,10 @@ type MarketplaceVendorCardProps = {
   bookmarked?: boolean;
   onToggleBookmark?: () => void;
   showBookmark?: boolean;
+  /** Multi-enquire: show select checkbox (signed-in clients). */
+  selectable?: boolean;
+  selected?: boolean;
+  onToggleSelect?: () => void;
 };
 
 function DetailChip({
@@ -60,6 +66,9 @@ export function MarketplaceVendorCard({
   bookmarked = false,
   onToggleBookmark,
   showBookmark = true,
+  selectable = false,
+  selected = false,
+  onToggleSelect,
 }: MarketplaceVendorCardProps) {
   const router = useRouter();
   const v = card.vendor;
@@ -148,8 +157,34 @@ export function MarketplaceVendorCard({
           openDetail();
         }
       }}
-      className={`group relative isolate mx-auto flex w-full max-w-[22rem] cursor-pointer flex-col overflow-hidden ${portalCard} text-left transition hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30`}
+      className={`group relative isolate mx-auto flex w-full max-w-[22rem] cursor-pointer flex-col overflow-hidden ${portalCard} text-left transition hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${selected ? "ring-2 ring-primary/40 border-primary/30" : ""}`}
     >
+      {selectable ? (
+        <button
+          type="button"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleSelect?.();
+          }}
+          className={`absolute left-3 top-3 z-20 flex h-11 w-11 touch-manipulation items-center justify-center rounded-full border shadow-sm transition ${
+            selected
+              ? "border-primary bg-primary text-white"
+              : "border-neutral-200 bg-white/95 text-neutral-600 hover:border-primary hover:text-primary"
+          }`}
+          aria-label={selected ? "Deselect vendor" : "Select vendor"}
+          aria-pressed={selected}
+        >
+          {selected ? (
+            <Check className="pointer-events-none h-4 w-4" strokeWidth={2.5} />
+          ) : (
+            <span
+              className="pointer-events-none h-4 w-4 rounded-sm border-2 border-current"
+              aria-hidden
+            />
+          )}
+        </button>
+      ) : null}
       {showBookmark ? (
         <button
           type="button"
@@ -223,6 +258,17 @@ export function MarketplaceVendorCard({
         <h4 className="font-heading mt-3 line-clamp-2 text-lg font-semibold leading-snug text-neutral-900 group-hover:text-primary">
           {packageTitle}
         </h4>
+
+        <VendorMetricsStrip
+          className="mt-2"
+          variant="compact"
+          includeRating={false}
+          metrics={{
+            completed_bookings: v.completed_bookings,
+            avg_response_seconds: v.avg_response_seconds,
+            conversion_rate: v.conversion_rate,
+          }}
+        />
 
         <div className="mt-3 grid grid-cols-2 gap-2">
           <DetailChip icon={<MapPin className="h-3.5 w-3.5" strokeWidth={1.75} />} label={city} />

@@ -19,7 +19,7 @@ export function bookingListPendingSubtext(
   if (role === "client") {
     if (isVendorQuote) return null;
     if (row.hasPriceUpdate) return "New price. Your response needed";
-    return "Waiting for vendor";
+    return "Waiting for vendor — most reply within a day";
   }
 
   if (isVendorQuote) return "Waiting for client";

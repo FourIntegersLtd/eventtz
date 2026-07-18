@@ -132,6 +132,30 @@ export function AdminMarketplaceAnalyticsView() {
         />
       </div>
 
+      <div className="grid gap-3 sm:grid-cols-3">
+        <AdminKpiCard
+          label="Reply under 1h"
+          value={formatMarketplacePct(kpis.replyWithin1h)}
+          hint={`${formatMarketplacePct(kpis.replyWithin6h)} within 6h · ${formatMarketplacePct(kpis.replyWithin24h)} within 24h`}
+          icon={Percent}
+          tone="info"
+        />
+        <AdminKpiCard
+          label="Vendor nudges"
+          value={kpis.vendorReminders}
+          hint={`${kpis.clientNudges} client “try others” emails`}
+          icon={Inbox}
+          tone="primary"
+        />
+        <AdminKpiCard
+          label="Multi-enquire"
+          value={kpis.multiBatches}
+          hint="Batches of 2+ vendors in one send"
+          icon={Users}
+          tone="success"
+        />
+      </div>
+
       {hasRecruitHints ? (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-950">
           <p className="font-semibold">Recruit more vendors</p>

@@ -6,7 +6,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { DateInput } from "@/components/ui/DateInput";
 import { getApiErrorDetail } from "@/lib/api-errors";
-import { postBookingRequest } from "@/lib/clientBookingsApi";
+import { postBookingRequest, type ClientSearchContext } from "@/lib/clientBookingsApi";
 import {
   isoDatesInEventRange,
   vendorPayloadAllowsEventDates,
@@ -43,6 +43,8 @@ type VendorBookingModalProps = {
   vendorPayload?: Record<string, unknown>;
   /** Dates/types from marketplace URL on `/client/browse/[id]?…`. */
   searchPrefill?: VendorBookingSearchPrefill;
+  /** Marketplace filters to store on the booking for alternative-vendor nudges. */
+  clientSearchContext?: ClientSearchContext | null;
 };
 
 export function VendorBookingModal({
@@ -54,6 +56,7 @@ export function VendorBookingModal({
   initialSelectedIds,
   vendorPayload,
   searchPrefill,
+  clientSearchContext,
 }: VendorBookingModalProps) {
   // Selection happens once, on the profile sidebar — this modal only confirms dates/venue/notes.
   const selectedIds = useMemo(() => new Set(initialSelectedIds), [initialSelectedIds]);
@@ -174,6 +177,7 @@ export function VendorBookingModal({
       event_address: (parsed.data.venueAddress ?? "").trim() || null,
       notes: (parsed.data.notes ?? "").trim() || null,
       selected_option_ids: parsed.data.selectedOptionIds,
+      client_search_context: clientSearchContext ?? undefined,
     })
       .then((created) => {
         onSuccess?.(created.id);

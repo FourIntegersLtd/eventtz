@@ -17,8 +17,9 @@ import { VendorBrowseDetailBody } from "@/features/client/browse/VendorBrowseDet
 import { ChatDrawer } from "@/features/chat/ChatDrawer";
 import { buildBrowsePricingOptions } from "@/features/client/browse/vendorBrowseDetailModel";
 import { useExploreVendor } from "@/features/client/browse/useExploreVendor";
-import { marketplaceStateFromSearchParams } from "@/lib/marketplaceSearchParams";
+import { marketplaceStateFromSearchParams, toClientSearchContext } from "@/lib/marketplaceSearchParams";
 import { vendorMatchesMarketplaceSearch } from "@/lib/marketplaceVendorMatch";
+import { usualReplyExpectation } from "@/lib/vendorMetrics";
 
 function payloadStr(p: Record<string, unknown>, key: string): string {
   const v = p[key];
@@ -173,7 +174,7 @@ export function ClientVendorBrowseDetailView() {
               setBookingOpen(false);
               showToast({
                 title: "Request sent",
-                description: `${businessName} will be notified.`,
+                description: `${businessName} will be notified. ${usualReplyExpectation(vendor.avg_response_seconds)}`,
                 tone: "success",
               });
               router.push(`/client/bookings/${bookingId}`);
@@ -184,6 +185,7 @@ export function ClientVendorBrowseDetailView() {
             initialSelectedIds={bookingSelectionIds}
             vendorPayload={vendorPayload}
             searchPrefill={bookingSearchPrefill}
+            clientSearchContext={toClientSearchContext(marketplaceSearch)}
           />
         ) : null}
         {user ? (

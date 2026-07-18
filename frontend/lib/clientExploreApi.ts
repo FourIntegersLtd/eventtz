@@ -12,6 +12,12 @@ export type ExploreVendor = {
   /** Average star rating (1–5), when reviews exist. */
   review_average?: number | null;
   review_count?: number;
+  /** All-time completed bookings. */
+  completed_bookings?: number;
+  /** Average first-response time in seconds. */
+  avg_response_seconds?: number | null;
+  /** Completed / client enquiries (0–1). */
+  conversion_rate?: number | null;
 };
 
 export type ExploreVendorSearchRow = ExploreVendor & {

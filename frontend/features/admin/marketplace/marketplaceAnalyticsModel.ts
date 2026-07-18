@@ -49,9 +49,17 @@ export function marketplaceOverviewKpis(overview: AdminMarketplaceAnalytics["ove
   avgBookingValue: number;
   avgResponseSeconds: number | null;
   avgRating: number | null;
+  replyWithin1h: number | null;
+  replyWithin6h: number | null;
+  replyWithin24h: number | null;
+  vendorReminders: number;
+  clientNudges: number;
+  multiBatches: number;
 } {
   const avgResponse = overview.avg_vendor_response_seconds;
   const avgRating = overview.avg_customer_rating;
+  const rateOrNull = (v: number | null | undefined) =>
+    v == null || Number.isNaN(Number(v)) ? null : Number(v);
   return {
     enquiries: Number(overview.enquiries ?? 0) || 0,
     completed: Number(overview.completed ?? 0) || 0,
@@ -62,6 +70,12 @@ export function marketplaceOverviewKpis(overview: AdminMarketplaceAnalytics["ove
     avgResponseSeconds:
       avgResponse == null || Number.isNaN(Number(avgResponse)) ? null : Number(avgResponse),
     avgRating: avgRating == null || Number.isNaN(Number(avgRating)) ? null : Number(avgRating),
+    replyWithin1h: rateOrNull(overview.reply_within_1h_rate as number | null | undefined),
+    replyWithin6h: rateOrNull(overview.reply_within_6h_rate as number | null | undefined),
+    replyWithin24h: rateOrNull(overview.reply_within_24h_rate as number | null | undefined),
+    vendorReminders: Number(overview.enquiry_vendor_reminders ?? 0) || 0,
+    clientNudges: Number(overview.enquiry_client_nudges ?? 0) || 0,
+    multiBatches: Number(overview.enquiry_multi_batches ?? 0) || 0,
   };
 }
 

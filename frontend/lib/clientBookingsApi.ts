@@ -8,6 +8,18 @@ import type {
   BookingLineItem,
 } from "@/lib/domain-types";
 
+export type ClientSearchContext = {
+  q?: string;
+  types?: string[];
+  location?: string;
+  country?: string;
+  dates?: string[];
+  dateFlexible?: boolean;
+  /** Set when sending the same brief to several vendors (analytics). */
+  batchSize?: number;
+  batchIndex?: number;
+};
+
 export type CreateBookingRequestPayload = {
   vendor_user_id: string;
   event_name: string;
@@ -19,6 +31,8 @@ export type CreateBookingRequestPayload = {
   event_address?: string | null;
   notes: string | null;
   selected_option_ids: string[];
+  /** Marketplace filters at enquire time (for alternative-vendor nudges). */
+  client_search_context?: ClientSearchContext | null;
 };
 
 export type BookingRequestCreated = {

@@ -13,7 +13,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ButtonLink } from "@/components/ui/ButtonLink";
+import { VendorMetricsStrip } from "@/components/vendor/VendorMetricsStrip";
 import type { ExploreVendor } from "@/lib/clientExploreApi";
+import { usualReplyExpectation } from "@/lib/vendorMetrics";
 import { displayEventTypes, displayServicesOffered } from "./browseLabels";
 import { buildBrowseVendorProfileFacts } from "./browseVendorFacts";
 import {
@@ -216,17 +218,26 @@ export function VendorBrowseDetailBody({
           )}
         </div>
 
-        <section>
+        <section className="space-y-3">
           <h3 className="font-heading text-base font-semibold text-neutral-900">
             About this vendor
           </h3>
-          <p className="mt-2 text-sm leading-relaxed text-neutral-700">{bio}</p>
+          <VendorMetricsStrip
+            metrics={{
+              review_average: vendor.review_average,
+              review_count: vendor.review_count,
+              completed_bookings: vendor.completed_bookings,
+              avg_response_seconds: vendor.avg_response_seconds,
+              conversion_rate: vendor.conversion_rate,
+            }}
+          />
+          <p className="text-sm leading-relaxed text-neutral-700">{bio}</p>
           {facts.portfolioVideoUrl ? (
             <a
               href={facts.portfolioVideoUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+              className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
             >
               <Play className="h-4 w-4" aria-hidden />
               Watch portfolio video
@@ -385,6 +396,11 @@ export function VendorBrowseDetailBody({
                 ? "Select what you need, then request a booking."
                 : "Sign in to book or message this vendor."}
             </p>
+            {usualReplyExpectation(vendor.avg_response_seconds) ? (
+              <p className="mt-2 text-[13px] text-neutral-600">
+                {usualReplyExpectation(vendor.avg_response_seconds)}
+              </p>
+            ) : null}
           </div>
 
           <ul className="max-h-[min(65vh,520px)] divide-y divide-neutral-100 overflow-y-auto overscroll-contain border-t border-neutral-100">

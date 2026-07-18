@@ -1,4 +1,5 @@
 import type { MarketplaceSort } from "@/lib/clientExploreApi";
+import type { ClientSearchContext } from "@/lib/clientBookingsApi";
 import { DEFAULT_COUNTRY_CODE, normalizeCountryCode } from "@/lib/markets";
 
 export type MarketplaceSearchState = {
@@ -113,4 +114,16 @@ export function buildClientBrowseVendorUrl(
   state: MarketplaceSearchState,
 ): string {
   return buildMarketplaceSearchUrl(`/client/browse/${vendorUserId}`, state);
+}
+
+/** Persist on booking create for 24h alternative-vendor nudges. */
+export function toClientSearchContext(state: MarketplaceSearchState): ClientSearchContext {
+  return {
+    q: state.query.trim() || undefined,
+    types: state.types.length ? state.types : undefined,
+    location: state.location.trim() || undefined,
+    country: state.country || undefined,
+    dates: state.dates.length ? state.dates : undefined,
+    dateFlexible: state.dateFlexible || undefined,
+  };
 }
