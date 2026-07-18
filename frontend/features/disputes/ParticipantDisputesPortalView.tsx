@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import type { PortalRole } from "@/components/portal-shell/portalNav";
 import { portalRoute } from "@/components/portal-shell/portalNav";
@@ -21,6 +21,7 @@ import {
   participantDisputeNeedsHydration,
 } from "@/lib/participantDisputeEnrichment";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 type Props = {
   role: PortalRole;
@@ -35,6 +36,7 @@ export function ParticipantDisputesPortalView({ role, selectedDisputeId = null }
   const [dispute, setDispute] = useState<ParticipantDispute | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
+  const detailViewedRef = useRef<string | null>(null);
 
   const loadDetail = useCallback(async () => {
     if (!selectedDisputeId) {
@@ -68,6 +70,15 @@ export function ParticipantDisputesPortalView({ role, selectedDisputeId = null }
       }
 
       setDispute(hydrated);
+      if (detailViewedRef.current !== hydrated.id) {
+        detailViewedRef.current = hydrated.id;
+        track(MixpanelEvents.dispute_detail_viewed, {
+          dispute_id: hydrated.id,
+          booking_id: hydrated.booking_request_id,
+          role,
+          status: hydrated.status,
+        });
+      }
     } catch {
       setDispute(null);
       setDetailError("Could not load this dispute.");

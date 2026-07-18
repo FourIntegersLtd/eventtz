@@ -26,6 +26,7 @@ import {
   BOOKING_CONFIRM_COPY,
   PAYMENT_FLOW_COPY,
 } from "@/features/bookings/bookingConfirmCopy";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 type UseClientBookingsControllerArgs = {
   selectedBookingId?: string;
@@ -87,9 +88,21 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
   const paymentBannerRef = useRef<HTMLDivElement>(null);
   const pendingPaymentSyncRef = useRef<string | null>(null);
   const checkoutReturnSyncRef = useRef<string | null>(null);
+  const detailViewedRef = useRef<string | null>(null);
+  const paymentTrackedRef = useRef<string | null>(null);
   const paymentDue =
     detail?.status === "accepted" &&
     (detail?.payment_status === "unpaid" || detail?.payment_status === "pending");
+
+  useEffect(() => {
+    if (!detail?.id || detailLoading) return;
+    if (detailViewedRef.current === detail.id) return;
+    detailViewedRef.current = detail.id;
+    track(MixpanelEvents.booking_detail_viewed, {
+      booking_id: detail.id,
+      status: detail.status,
+    });
+  }, [detail?.id, detail?.status, detailLoading]);
 
   useEffect(() => {
     if (paymentDue) {
@@ -100,6 +113,7 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
   useEffect(() => {
     pendingPaymentSyncRef.current = null;
     checkoutReturnSyncRef.current = null;
+    paymentTrackedRef.current = null;
   }, [selectedBookingId]);
 
   useEffect(() => {
@@ -133,10 +147,12 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
 
   const confirmCancelBooking = async () => {
     if (!detail?.id) return;
+    const bookingId = detail.id;
     setActionError(null);
     setActionBusy(true);
     try {
-      await postCancelClientBooking(detail.id);
+      await postCancelClientBooking(bookingId);
+      track(MixpanelEvents.booking_cancelled, { booking_id: bookingId });
       setCancelOpen(false);
       bumpDetail();
     } catch (e: unknown) {
@@ -155,6 +171,12 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
     setPendingQuoteAction(next === "accepted" ? "accept" : "decline");
     try {
       await patchClientBookingStatus(bookingId, next);
+      track(
+        next === "accepted"
+          ? MixpanelEvents.booking_quote_accepted
+          : MixpanelEvents.booking_quote_declined,
+        { booking_id: bookingId },
+      );
       bumpDetail();
     } catch (e: unknown) {
       setActionError(getApiErrorDetail(e) ?? "Could not update this quote.");
@@ -174,6 +196,12 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
     setPendingPriceAction(next === "accepted" ? "accept" : "decline");
     try {
       await patchClientBookingStatus(bookingId, next);
+      track(
+        next === "accepted"
+          ? MixpanelEvents.booking_price_update_accepted
+          : MixpanelEvents.booking_price_update_declined,
+        { booking_id: bookingId },
+      );
       bumpDetail();
     } catch (e: unknown) {
       setActionError(getApiErrorDetail(e) ?? "Could not update this booking.");
@@ -187,10 +215,12 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
   const [confirmCompleteOpen, setConfirmCompleteOpen] = useState(false);
   const confirmCompletion = async () => {
     if (!detail?.id) return;
+    const bookingId = detail.id;
     setActionError(null);
     setConfirmingCompletion(true);
     try {
-      await postClientConfirmCompletion(detail.id);
+      await postClientConfirmCompletion(bookingId);
+      track(MixpanelEvents.booking_completed, { booking_id: bookingId });
       setConfirmCompleteOpen(false);
       bumpDetail();
     } catch (e: unknown) {
@@ -206,6 +236,21 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
 
   const paymentConfirmed =
     detail?.payment_status === "paid" || detail?.payment_status === "payout_released";
+
+  useEffect(() => {
+    if (!selectedBookingId || !paymentBanner) return;
+    const key = `${selectedBookingId}:${paymentBanner}`;
+    if (paymentTrackedRef.current === key) return;
+    if (paymentBanner === "cancelled") {
+      paymentTrackedRef.current = key;
+      track(MixpanelEvents.booking_payment_cancelled, { booking_id: selectedBookingId });
+      return;
+    }
+    if (paymentBanner === "success" && paymentConfirmed) {
+      paymentTrackedRef.current = key;
+      track(MixpanelEvents.booking_payment_succeeded, { booking_id: selectedBookingId });
+    }
+  }, [selectedBookingId, paymentBanner, paymentConfirmed]);
 
   useEffect(() => {
     if (!selectedBookingId || paymentBanner !== "success") return;

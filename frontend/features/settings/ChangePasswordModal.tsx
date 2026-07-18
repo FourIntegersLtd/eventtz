@@ -7,6 +7,7 @@ import { PasswordField } from "@/components/ui/PasswordField";
 import { useToast } from "@/components/ui/Toast";
 import { changePassword } from "@/lib/auth-api";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { changePasswordSchema, parseForm } from "@/lib/validation";
 
 type Props = {
@@ -53,6 +54,7 @@ export function ChangePasswordModal({ isOpen, onClose }: Props) {
     setSaving(true);
     try {
       await changePassword(parsed.data.currentPassword, parsed.data.newPassword);
+      track(MixpanelEvents.password_changed);
       reset();
       onClose();
       showToast({

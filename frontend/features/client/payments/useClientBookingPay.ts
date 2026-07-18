@@ -6,6 +6,7 @@ import {
   fetchClientBookingDetail,
   patchClientBookingVenue,
 } from "@/lib/clientBookingsApi";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { parseForm, payVenueSchema } from "@/lib/validation";
 import { bookingNeedsVenue } from "@/features/client/payments/bookingPayHelpers";
 
@@ -25,6 +26,7 @@ export function useClientBookingPay(bookingId: string | undefined) {
         const booking = await fetchClientBookingDetail(bookingId);
         if (cancelled) return;
         if (!bookingNeedsVenue(booking.event_address)) {
+          track(MixpanelEvents.booking_checkout_started, { booking_id: bookingId });
           const checkoutUrl = await postBookingCheckout(bookingId);
           if (!cancelled) window.location.href = checkoutUrl;
           return;
@@ -33,6 +35,7 @@ export function useClientBookingPay(bookingId: string | undefined) {
         setVenueAddress(booking.event_address ?? "");
       } catch (e: unknown) {
         if (!cancelled) {
+          track(MixpanelEvents.booking_checkout_failed, { booking_id: bookingId });
           setError(getApiErrorDetail(e) ?? "Could not load this booking.");
         }
       } finally {
@@ -55,9 +58,11 @@ export function useClientBookingPay(bookingId: string | undefined) {
     setError(null);
     try {
       await patchClientBookingVenue(bookingId, { event_address: parsed.data.eventAddress });
+      track(MixpanelEvents.booking_checkout_started, { booking_id: bookingId });
       const checkoutUrl = await postBookingCheckout(bookingId);
       window.location.href = checkoutUrl;
     } catch (e: unknown) {
+      track(MixpanelEvents.booking_checkout_failed, { booking_id: bookingId });
       setError(getApiErrorDetail(e) ?? "We couldn't start payment. Please try again.");
       setBusy(false);
     }

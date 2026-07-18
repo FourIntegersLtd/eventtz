@@ -12,6 +12,7 @@ import { todayIsoDate } from "@/lib/eventDateValidation";
 import { parseForm, vendorQuoteSchema } from "@/lib/validation";
 import { postVendorQuote } from "@/lib/vendorBookingsApi";
 import { fetchVendorProfile } from "@/lib/vendorProfileApi";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 type VendorQuoteFormModalProps = {
   isOpen: boolean;
@@ -165,6 +166,11 @@ export function VendorQuoteFormModal({
             unit_price_gbp: p,
           },
         ],
+      });
+      track(MixpanelEvents.vendor_quote_sent, {
+        booking_id: out.id,
+        conversation_id: conversationId,
+        price_gbp: p,
       });
       reset();
       onClose();

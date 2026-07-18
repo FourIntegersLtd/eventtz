@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { postBookingReview } from "@/lib/reviewsApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { parseForm, reviewSchema } from "@/lib/validation";
 import { StarRating } from "@/components/ui/StarRating";
 import { Button } from "@/components/ui/Button";
@@ -51,6 +52,10 @@ export function ClientBookingReviewForm({
     setBusy(true);
     try {
       const res = await postBookingReview(bookingId, parsed.data);
+      track(MixpanelEvents.review_submitted, {
+        booking_id: bookingId,
+        rating: parsed.data.rating,
+      });
       onSubmitted(res.review);
       setBody("");
     } catch (e: unknown) {

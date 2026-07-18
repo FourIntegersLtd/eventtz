@@ -16,6 +16,7 @@ import {
   LANDING_SECTION_CONTENT_MT,
   landingSectionClass,
 } from "@/features/landing/landingSectionStyles";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 export function LandingFeaturedVendors() {
   const [vendors, setVendors] = useState<ExploreVendorSearchRow[]>([]);
@@ -82,7 +83,16 @@ export function LandingFeaturedVendors() {
       ) : (
         <div className={`${LANDING_SECTION_CONTENT_MT} grid justify-items-center gap-6 sm:grid-cols-2 sm:gap-7 lg:grid-cols-3 lg:gap-8`}>
           {cards.map((card) => (
-            <MarketplaceVendorCard key={card.cardKey} card={card} showBookmark={false} />
+            <MarketplaceVendorCard
+              key={card.cardKey}
+              card={card}
+              showBookmark={false}
+              onNavigate={(vendorUserId) =>
+                track(MixpanelEvents.landing_featured_vendor_clicked, {
+                  vendor_user_id: vendorUserId,
+                })
+              }
+            />
           ))}
         </div>
       )}

@@ -24,6 +24,7 @@ import {
 } from "@/lib/chatApi";
 import { fetchVendorBookings } from "@/lib/vendorBookingsApi";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { chatMessageSchema, parseForm } from "@/lib/validation";
 
 type ChatThreadViewProps = {
@@ -178,6 +179,10 @@ export function ChatThreadView({
     setError(null);
     try {
       const msg = await postMessage(conversationId, parsed.data.body);
+      track(MixpanelEvents.chat_message_sent, {
+        conversation_id: conversationId,
+        portal,
+      });
       setDraft("");
       setMessages((prev) => [...prev, msg]);
       if (typeof window !== "undefined") {

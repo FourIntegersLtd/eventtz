@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { SIGNUP_GENERIC_ERROR } from "@/lib/auth-messages";
 import { resolvePostAuthPath } from "@/features/auth/authRouting";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { parseForm, registerSchema } from "@/lib/validation";
 
 export type RegisterAccountType = "client" | "vendor";
@@ -64,6 +65,7 @@ export function useUnifiedRegister() {
         router.push(resolvePostAuthPath(searchParams.get("next"), parsed.data.accountType));
       }
     } catch {
+      track(MixpanelEvents.register_failed, { user_type: accountType });
       setError(SIGNUP_GENERIC_ERROR);
     } finally {
       setSubmitting(false);

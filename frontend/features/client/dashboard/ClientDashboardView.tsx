@@ -15,6 +15,7 @@ import type { AttentionItem } from "@/features/dashboard/attentionTypes";
 import { eventDayOver } from "@/features/bookings/eventDay";
 import { useClientDashboard } from "./useClientDashboard";
 import { ClientBookingsCalendarCard } from "./ClientBookingsCalendarCard";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 function daysUntil(iso: string): number {
   const start = new Date(`${iso.slice(0, 10)}T00:00:00`);
@@ -194,7 +195,16 @@ export function ClientDashboardView() {
 
       <div className="grid w-full min-w-0 grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
         <div className="min-w-0 lg:col-span-2">
-          <AttentionFeedCard items={attentionItems} loading={loadStatus === "loading"} />
+          <AttentionFeedCard
+            items={attentionItems}
+            loading={loadStatus === "loading"}
+            onItemClick={(item) => {
+              track(MixpanelEvents.dashboard_attention_clicked, {
+                attention_id: item.id,
+                tone: item.tone,
+              });
+            }}
+          />
         </div>
 
         <div className="min-w-0 lg:col-span-1">

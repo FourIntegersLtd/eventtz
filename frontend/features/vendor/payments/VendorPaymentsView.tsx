@@ -11,6 +11,7 @@ import {
   postConnectStripeAccount,
   type VendorPaymentsStatus,
 } from "@/lib/vendorPaymentsApi";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 /**
  * Standalone payout status + Stripe Connect entry point, reachable from the
@@ -47,7 +48,19 @@ export function VendorPaymentsView() {
     params.delete("stripe");
     const next = params.toString();
     router.replace(next ? `/vendor/payments?${next}` : "/vendor/payments");
-    void refresh();
+    void (async () => {
+      await refresh();
+      if (stripeParam === "return") {
+        try {
+          const res = await fetchStripePaymentsStatus();
+          if (res.charges_enabled && res.payouts_enabled) {
+            track(MixpanelEvents.vendor_payouts_ready, { source: "payments" });
+          }
+        } catch {
+          /* refresh already set error */
+        }
+      }
+    })();
   }, [searchParams, router, refresh]);
 
   const started = Boolean(status?.stripe_account_id);
@@ -57,6 +70,10 @@ export function VendorPaymentsView() {
     setConnecting(true);
     setError(null);
     try {
+      track(MixpanelEvents.vendor_payout_setup_started, {
+        source: "payments",
+        return_path: "/vendor/payments",
+      });
       const { onboarding_url } = await postConnectStripeAccount("/vendor/payments");
       window.location.href = onboarding_url;
     } catch {

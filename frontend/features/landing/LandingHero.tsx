@@ -12,6 +12,7 @@ import {
 } from "@/features/landing/landingData";
 import { HeroRotatingWord } from "@/features/landing/HeroRotatingWord";
 import { LANDING_HERO_CONTAINER_CLASS } from "@/features/landing/landingSectionStyles";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 const HERO_IMAGE_SRC = "/images/landing-images/hero.png";
 
@@ -53,7 +54,16 @@ export function LandingHero() {
               {HERO_SUBHEADLINE.tail}
             </p>
 
-            <Link href={HERO_CTA.href} className={ctaClass}>
+            <Link
+              href={HERO_CTA.href}
+              className={ctaClass}
+              onClick={() =>
+                track(MixpanelEvents.landing_cta_clicked, {
+                  cta: "browse",
+                  location: "hero",
+                })
+              }
+            >
               {HERO_CTA.label}
             </Link>
           </div>

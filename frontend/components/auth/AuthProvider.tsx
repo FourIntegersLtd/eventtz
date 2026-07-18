@@ -11,6 +11,12 @@ import {
   type AuthUser,
 } from "@/lib/auth-api";
 import type { UserType } from "@/lib/domain-types";
+import {
+  identifyMixpanelUser,
+  initMixpanel,
+  resetMixpanel,
+} from "@/lib/mixpanelClient";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { useRealtimeSse } from "@/lib/useRealtimeSse";
 
 type AuthContextValue = {
@@ -43,6 +49,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  useEffect(() => {
+    initMixpanel();
+  }, []);
+
   const refreshUser = async () => {
     try {
       const nextUser = await getMe();
@@ -56,6 +66,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshUser().finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    if (!user?.id) return;
+    identifyMixpanelUser(user.id, {
+      email: user.email,
+      user_type: user.user_type ?? null,
+      admin_role: user.admin_role ?? null,
+    });
+  }, [user]);
+
   useRealtimeSse(user?.id);
 
   const value = useMemo<AuthContextValue>(
@@ -66,17 +85,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signIn: async (email, password) => {
         await apiSignIn(email, password);
         await refreshUser();
+        track(MixpanelEvents.user_signed_in);
       },
       signUp: async (email, password, opts) => {
         const result = await apiSignUp(email, password, opts);
         await refreshUser();
+        track(MixpanelEvents.user_signed_up, {
+          user_type: opts?.userType ?? "client",
+        });
         return { message: result.message };
       },
       signOut: async () => {
         try {
+          track(MixpanelEvents.user_signed_out);
           await apiSignOut();
         } finally {
           setUser(null);
+          resetMixpanel();
         }
       },
       refreshUser,

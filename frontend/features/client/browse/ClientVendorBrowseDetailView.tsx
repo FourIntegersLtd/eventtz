@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { EventtzLogo } from "@/components/branding/EventtzLogo";
 import { PortalShell } from "@/components/portal-shell/PortalShell";
 import { BackLink } from "@/components/ui/BackLink";
@@ -87,6 +88,15 @@ export function ClientVendorBrowseDetailView() {
       : undefined;
   }, [vendor]);
 
+  useEffect(() => {
+    if (!vendor?.user_id) return;
+    track(MixpanelEvents.vendor_profile_viewed, {
+      vendor_user_id: vendor.user_id,
+      authenticated: Boolean(user?.id),
+      user_type: user?.user_type ?? "anonymous",
+    });
+  }, [vendor?.user_id, user?.id, user?.user_type]);
+
   const isClient = user?.user_type === "client";
   const logoHref = isClient ? "/client/dashboard" : "/";
 
@@ -161,6 +171,7 @@ export function ClientVendorBrowseDetailView() {
               ? (ids) => {
                   setBookingSelectionIds(ids);
                   setBookingOpen(true);
+                  track(MixpanelEvents.enquiry_started, { vendor_user_id: userId });
                 }
               : undefined
           }

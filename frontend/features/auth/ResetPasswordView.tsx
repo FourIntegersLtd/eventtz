@@ -11,6 +11,7 @@ import { PasswordField } from "@/components/ui/PasswordField";
 import { dashboardPathForUserType } from "@/features/auth/authRouting";
 import { getMe, resetPassword } from "@/lib/auth-api";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { parseForm, resetPasswordSchema } from "@/lib/validation";
 
 export function ResetPasswordView() {
@@ -60,6 +61,7 @@ export function ResetPasswordView() {
     setSubmitting(true);
     try {
       await resetPassword(token, parsed.data.password);
+      track(MixpanelEvents.password_reset_completed);
       await refreshUser();
       const me = await getMe();
       router.replace(dashboardPathForUserType(me.user_type));

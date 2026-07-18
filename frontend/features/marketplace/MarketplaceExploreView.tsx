@@ -35,6 +35,7 @@ import {
 } from "@/features/marketplace/marketplaceSearchModel";
 import { useMarketplaceBookmarks } from "@/features/marketplace/useMarketplaceBookmarks";
 import { ScrollToTopButton } from "@/components/ui/ScrollToTopButton";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 const CARD_GRID =
   "grid justify-items-center gap-6 sm:grid-cols-2 sm:gap-7 lg:grid-cols-3 lg:gap-8";
@@ -124,6 +125,11 @@ export function MarketplaceExploreView({
           setVendors(rows);
           setTotalCount(total);
           setMatchNotice(notice);
+          track(MixpanelEvents.marketplace_results_viewed, {
+            result_count: total,
+            page: state.page,
+            saved_only: savedOnly,
+          });
         }
       } catch {
         if (!cancelled) setError("Could not load vendors right now.");
@@ -163,6 +169,30 @@ export function MarketplaceExploreView({
     },
     [pathname, router],
   );
+
+  const commitFilters = useCallback(
+    (next: MarketplaceSearchState) => {
+      track(MixpanelEvents.marketplace_filters_applied, {
+        has_budget: next.budgetMin != null || next.budgetMax != null,
+        sort: next.sort,
+      });
+      commit(next);
+    },
+    [commit],
+  );
+
+  const onVendorNavigate = useCallback((vendorUserId: string) => {
+    track(MixpanelEvents.marketplace_vendor_clicked, {
+      vendor_user_id: vendorUserId,
+    });
+  }, []);
+
+  const openMultiEnquire = useCallback(() => {
+    track(MixpanelEvents.multi_enquire_opened, {
+      vendor_count: selectedCount,
+    });
+    setMultiEnquireOpen(true);
+  }, [selectedCount]);
 
   const goToPage = useCallback(
     (page: number) => {
@@ -229,7 +259,7 @@ export function MarketplaceExploreView({
           <Button
             variant="primary"
             size="sm"
-            onClick={() => setMultiEnquireOpen(true)}
+            onClick={openMultiEnquire}
             disabled={selectedCount < 1}
           >
             Request from {selectedCount}
@@ -270,7 +300,7 @@ export function MarketplaceExploreView({
             </p>
           ) : null}
         </div>
-        <MarketplaceFiltersBar state={state} onCommit={commit} />
+        <MarketplaceFiltersBar state={state} onCommit={commitFilters} />
       </div>
 
       {loading ? (
@@ -300,6 +330,7 @@ export function MarketplaceExploreView({
                 vendorDetailHref={buildClientBrowseVendorUrl(card.vendor.user_id, state)}
                 bookmarked={isSaved(card.vendor.user_id)}
                 onToggleBookmark={() => toggle(card.vendor.user_id)}
+                onNavigate={onVendorNavigate}
                 {...cardSelectProps(card.vendor)}
               />
             ))}
@@ -324,6 +355,7 @@ export function MarketplaceExploreView({
                   vendorDetailHref={buildClientBrowseVendorUrl(card.vendor.user_id, state)}
                   bookmarked={isSaved(card.vendor.user_id)}
                   onToggleBookmark={() => toggle(card.vendor.user_id)}
+                  onNavigate={onVendorNavigate}
                   {...cardSelectProps(card.vendor)}
                 />
               ))}
@@ -346,6 +378,7 @@ export function MarketplaceExploreView({
                     vendorDetailHref={buildClientBrowseVendorUrl(card.vendor.user_id, state)}
                     bookmarked={isSaved(card.vendor.user_id)}
                     onToggleBookmark={() => toggle(card.vendor.user_id)}
+                    onNavigate={onVendorNavigate}
                     {...cardSelectProps(card.vendor)}
                   />
                 ))}

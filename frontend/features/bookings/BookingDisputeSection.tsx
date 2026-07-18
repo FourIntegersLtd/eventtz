@@ -22,6 +22,7 @@ import { ParticipantDisputeStatusBadge } from "@/components/ui/ParticipantDisput
 import type { PortalRole } from "@/components/portal-shell/portalNav";
 import { portalRoute } from "@/components/portal-shell/portalNav";
 import { BOOKING_CONFIRM_COPY } from "@/features/bookings/bookingConfirmCopy";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { disputeSummarySchema, parseForm } from "@/lib/validation";
 
 const POLL_MS = 50_000;
@@ -105,6 +106,11 @@ export function BookingDisputeSection({
         role === "client"
           ? await postClientBookingDispute(bookingId, parsed.data.summary)
           : await postVendorBookingDispute(bookingId, parsed.data.summary);
+      track(MixpanelEvents.dispute_opened, {
+        role,
+        booking_id: bookingId,
+        dispute_id: created.id,
+      });
       setDisputes((prev) => [created, ...prev.filter((x) => x.id !== created.id)]);
       setSummary("");
       setSubmitConfirmOpen(false);

@@ -30,6 +30,11 @@ const ROWS = [
     location: "USA",
   },
   {
+    service: "Mixpanel",
+    purpose: "Product analytics (page views, sign-in, marketplace funnel)",
+    location: "USA",
+  },
+  {
     service: "Amazon Web Services (S3)",
     purpose: "Email template image hosting",
     location: "United Kingdom (eu-west-2)",

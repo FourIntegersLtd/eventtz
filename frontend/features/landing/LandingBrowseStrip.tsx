@@ -9,6 +9,7 @@ import {
   LANDING_SECTION_CONTENT_MT,
   LANDING_SECTION_SHELL,
 } from "@/features/landing/landingSectionStyles";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 const TRUST_ITEMS = [
   { icon: BadgeCheck, label: "Vetted vendors" },
@@ -53,6 +54,12 @@ export function LandingBrowseStrip() {
               key={value}
               href={`/client/browse?types=${value}`}
               className="group flex w-[5.75rem] flex-col items-center gap-2.5 text-center sm:w-[7.25rem] sm:gap-3"
+              onClick={() =>
+                track(MixpanelEvents.landing_category_clicked, {
+                  vendor_type: value,
+                  source: "browse_strip",
+                })
+              }
             >
               <span
                 className={`flex h-16 w-16 items-center justify-center rounded-full transition duration-300 group-hover:scale-105 group-hover:shadow-md sm:h-[5.25rem] sm:w-[5.25rem] ${iconBg}`}
@@ -74,6 +81,12 @@ export function LandingBrowseStrip() {
           <Link
             href="/client/browse"
             className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary transition hover:gap-2.5 hover:opacity-90"
+            onClick={() =>
+              track(MixpanelEvents.landing_cta_clicked, {
+                cta: "view_all",
+                location: "browse_strip",
+              })
+            }
           >
             View all vendors
             <ArrowRight className="h-4 w-4" aria-hidden />

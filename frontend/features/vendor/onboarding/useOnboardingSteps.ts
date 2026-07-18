@@ -5,6 +5,7 @@ import type { Dispatch, SetStateAction } from "react";
 import { useRouter } from "next/navigation";
 import { getApiErrorDetail, saveVendorProfile } from "@/lib/vendorProfileApi";
 import { isHttpStatus } from "@/lib/api-errors";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import type { useToast } from "@/components/ui/Toast";
 import { buildDraftBio, validateStep } from "./onboardingLogic";
 import { vendorDataToPayload } from "./serializeVendorPayload";
@@ -159,8 +160,12 @@ export function useOnboardingSteps({
         return;
       }
       if (isLive && !isWalkthrough) {
+        track(MixpanelEvents.vendor_profile_saved, { step });
         showToast({ title: "Changes saved", tone: "success" });
       } else {
+        if (step === 8 && !walkthroughFinish) {
+          track(MixpanelEvents.vendor_onboarding_submitted);
+        }
         setStep(nextStep);
       }
     } catch (e) {

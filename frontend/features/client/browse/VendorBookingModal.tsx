@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { DateInput } from "@/components/ui/DateInput";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { postBookingRequest, type ClientSearchContext } from "@/lib/clientBookingsApi";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import {
   isoDatesInEventRange,
   vendorPayloadAllowsEventDates,
@@ -180,9 +181,19 @@ export function VendorBookingModal({
       client_search_context: clientSearchContext ?? undefined,
     })
       .then((created) => {
+        track(MixpanelEvents.enquiry_created, {
+          booking_id: created.id,
+          vendor_user_id: vendorUserId,
+          option_count: parsed.data.selectedOptionIds.length,
+          source: "single",
+        });
         onSuccess?.(created.id);
       })
       .catch((err: unknown) => {
+        track(MixpanelEvents.enquiry_failed, {
+          vendor_user_id: vendorUserId,
+          source: "single",
+        });
         setSubmitResult({ type: "error", message: getApiErrorDetail(err) ?? "Request failed. Try again." });
         setSubmitting(false);
       });

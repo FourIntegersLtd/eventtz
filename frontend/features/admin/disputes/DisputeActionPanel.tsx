@@ -20,6 +20,7 @@ import {
 } from "./disputeFormatters";
 import { participantDisputeStatusLabel } from "@/lib/bookingDisputeHelpers";
 import { AdminChatThread } from "@/features/admin/chat/AdminChatThread";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 type DisputeActionPanelProps = {
   dispute: AdminDisputeCase;
@@ -120,6 +121,10 @@ export function DisputeActionPanel({
       setStatus(next);
       setPendingStatus(null);
       setConfirmClose(false);
+      track(MixpanelEvents.admin_dispute_status_changed, {
+        dispute_id: dispute.id,
+        status: next,
+      });
       await onUpdated();
     } catch (e: unknown) {
       setError(getApiErrorDetail(e) ?? "Could not update status.");

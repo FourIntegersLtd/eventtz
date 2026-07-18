@@ -30,6 +30,8 @@ type MarketplaceVendorCardProps = {
   selectable?: boolean;
   selected?: boolean;
   onToggleSelect?: () => void;
+  /** Fires before navigating to the vendor detail page. */
+  onNavigate?: (vendorUserId: string) => void;
 };
 
 /**
@@ -45,6 +47,7 @@ export function MarketplaceVendorCard({
   selectable = false,
   selected = false,
   onToggleSelect,
+  onNavigate,
 }: MarketplaceVendorCardProps) {
   const router = useRouter();
   const v = card.vendor;
@@ -107,6 +110,7 @@ export function MarketplaceVendorCard({
   const showRating = rc > 0 && ra != null;
 
   const openDetail = () => {
+    onNavigate?.(v.user_id);
     router.push(detailHref);
   };
 

@@ -17,6 +17,7 @@ import {
   isVendorPayoutsReady,
   useVendorPayoutsReady,
 } from "@/features/vendor/payments/useVendorPayoutsReady";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import {
   fetchVendorBookingDetail,
   fetchVendorBookings,
@@ -123,6 +124,12 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
         await patchVendorBookingStatus(id, next);
         clearPendingAcceptBookingId();
         setPayoutModalOpen(false);
+        track(
+          next === "accepted"
+            ? MixpanelEvents.vendor_booking_accepted
+            : MixpanelEvents.vendor_booking_declined,
+          { booking_id: id },
+        );
         bumpDetail();
       } catch (e: unknown) {
         const msg = getApiErrorDetail(e) ?? "Could not update this booking.";
@@ -174,6 +181,9 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
       const status = await refreshPayouts();
       const pendingId = getPendingAcceptBookingId();
       const ready = isVendorPayoutsReady(status);
+      if (stripeParam === "return" && ready) {
+        track(MixpanelEvents.vendor_payouts_ready, { source: "bookings" });
+      }
       if (stripeParam === "return" && pendingId === selectedBookingId && ready) {
         await applyBookingStatus("accepted", selectedBookingId);
         return;
@@ -203,6 +213,7 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
     setPendingAction("withdraw");
     try {
       await patchVendorBookingStatus(detail.id, "cancelled");
+      track(MixpanelEvents.vendor_quote_withdrawn, { booking_id: detail.id });
       bumpDetail();
     } catch (e: unknown) {
       setActionError(getApiErrorDetail(e) ?? "Could not withdraw this quote.");
@@ -219,6 +230,7 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
     setPendingAction("vendor_cancel");
     try {
       await patchVendorBookingStatus(detail.id, "cancelled");
+      track(MixpanelEvents.vendor_booking_cancelled, { booking_id: detail.id });
       bumpDetail();
     } catch (e: unknown) {
       setActionError(getApiErrorDetail(e) ?? "Could not cancel this booking.");
@@ -235,6 +247,7 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
     setPendingAction("complete");
     try {
       await postVendorConfirmCompletion(detail.id);
+      track(MixpanelEvents.vendor_booking_completed, { booking_id: detail.id });
       bumpDetail();
     } catch (e: unknown) {
       setActionError(getApiErrorDetail(e) ?? "Could not confirm completion.");
@@ -273,6 +286,10 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
     try {
       const updated = await putVendorBookingAdjustments(detail.id, parsed);
       setDetail(updated);
+      track(MixpanelEvents.vendor_booking_price_updated, {
+        booking_id: detail.id,
+        line_count: parsed.length,
+      });
     } catch (e: unknown) {
       setActionError(getApiErrorDetail(e) ?? "Could not send the updated price.");
     } finally {

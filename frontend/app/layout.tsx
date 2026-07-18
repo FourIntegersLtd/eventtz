@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { MixpanelPageViews } from "@/components/analytics/MixpanelPageViews";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ToastProvider } from "@/components/ui/Toast";
 
@@ -41,6 +42,7 @@ export default function RootLayout({
         className={`${fraunces.variable} ${jakarta.variable} min-h-dvh overflow-x-hidden bg-page-bg antialiased`}
       >
         <AuthProvider>
+          <MixpanelPageViews />
           <ToastProvider>{children}</ToastProvider>
         </AuthProvider>
       </body>

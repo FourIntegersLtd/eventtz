@@ -27,6 +27,7 @@ type AttentionFeedCardProps = {
   loading: boolean;
   /** How many items to show when collapsed. Default 3. */
   previewCount?: number;
+  onItemClick?: (item: AttentionItem) => void;
 };
 
 /**
@@ -37,6 +38,7 @@ export function AttentionFeedCard({
   items,
   loading,
   previewCount = DEFAULT_PREVIEW,
+  onItemClick,
 }: AttentionFeedCardProps) {
   const [expanded, setExpanded] = useState(false);
   const sorted = sortAttentionItems(items);
@@ -114,6 +116,7 @@ export function AttentionFeedCard({
                   <>
                     <Link
                       href={item.href}
+                      onClick={() => onItemClick?.(item)}
                       className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3"
                     >
                       {iconAndText}
@@ -123,6 +126,7 @@ export function AttentionFeedCard({
                 ) : (
                   <Link
                     href={item.href}
+                    onClick={() => onItemClick?.(item)}
                     className="flex w-full min-w-0 items-center gap-2 px-4 py-3.5 transition hover:bg-neutral-50/80 sm:gap-3 sm:px-5"
                   >
                     {iconAndText}

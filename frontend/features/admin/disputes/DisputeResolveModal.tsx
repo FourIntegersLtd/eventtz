@@ -8,6 +8,7 @@ import { getApiErrorDetail } from "@/lib/api-errors";
 import { adminPartialRefundSchema, parseForm } from "@/lib/validation";
 import { z } from "zod";
 import { RESOLUTION_ACTIONS, resolutionActionLabel } from "./disputeFormatters";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 const disputeNoteSchema = z.object({
   note: z.string().trim().max(8000, "Message is too long."),
@@ -57,6 +58,11 @@ export function DisputeResolveModal({ dispute, onClose, onResolved }: DisputeRes
         resolution_note: note.trim() || null,
         client_resolution_note: note.trim() || null,
         vendor_resolution_note: note.trim() || null,
+      });
+      track(MixpanelEvents.admin_dispute_resolved, {
+        dispute_id: dispute.id,
+        resolution_action: action,
+        refund_amount_gbp: refundAmountGbp ?? undefined,
       });
       onResolved();
     } catch (e: unknown) {

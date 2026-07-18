@@ -6,6 +6,7 @@ import {
   postConnectStripeAccount,
   type VendorPaymentsStatus,
 } from "@/lib/vendorPaymentsApi";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 export function isVendorPayoutsReady(status: VendorPaymentsStatus | null | undefined): boolean {
   return Boolean(status?.charges_enabled && status?.payouts_enabled);
@@ -46,6 +47,10 @@ export function useVendorPayoutsReady(enabled = true) {
     setConnecting(true);
     setError(null);
     try {
+      track(MixpanelEvents.vendor_payout_setup_started, {
+        source: returnPath.includes("/bookings") ? "bookings" : "payments",
+        return_path: returnPath,
+      });
       const { onboarding_url } = await postConnectStripeAccount(returnPath);
       window.location.href = onboarding_url;
     } catch {

@@ -8,6 +8,7 @@ import {
   type AdminVendorsQuery,
 } from "@/lib/adminVendorsApi";
 import type { VendorApprovalStatus } from "@/lib/domain-types";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 export function useAdminVendors() {
   const [rows, setRows] = useState<AdminVendorRow[]>([]);
@@ -54,6 +55,10 @@ export function useAdminVendors() {
       setBusyId(userId);
       try {
         await patchVendorApproval(userId, approval_status);
+        track(MixpanelEvents.admin_vendor_approval_set, {
+          vendor_user_id: userId,
+          approval_status,
+        });
         await load();
       } catch {
         setError("Could not update approval.");

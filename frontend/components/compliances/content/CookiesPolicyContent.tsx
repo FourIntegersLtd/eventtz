@@ -41,8 +41,9 @@ export function CookiesPolicyContent() {
         </p>
         <h3>Analytics</h3>
         <p>
-          Help us understand traffic patterns and improve performance. Where
-          used, analytics cookies are deployed in a privacy-conscious manner
+          Help us understand traffic patterns and improve the marketplace. We use
+          Mixpanel for product analytics (page views and key funnel events). Where
+          required, analytics cookies are deployed in a privacy-conscious manner
           and may be subject to consent depending on your jurisdiction.
         </p>
       </section>

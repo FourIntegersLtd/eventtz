@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchClientBookings, type ClientBookingListItem } from "@/lib/clientBookingsApi";
 import { BOOKING_NOTIFICATIONS_REFRESH_EVENT, fetchClientBookingNotificationsUnreadCount } from "@/lib/clientNotificationsApi";
 import { CHAT_UNREAD_CLEARED_EVENT, fetchChatUnreadCount } from "@/lib/chatApi";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { installVisibilityRefresh } from "@/lib/useVisibilityRefresh";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 import { fetchClientNotificationsFeed, type NotificationFeedItem } from "@/lib/notificationsFeedApi";
@@ -87,6 +88,7 @@ function pickNextUpcoming(active: ClientBookingListItem[]): ClientBookingListIte
 
 export function useClientDashboard(enabled: boolean) {
   const [state, setState] = useState<ClientDashboardState>(initial);
+  const dashboardViewedRef = useRef(false);
 
   const load = useCallback(async () => {
     if (!enabled) return;
@@ -142,6 +144,15 @@ export function useClientDashboard(enabled: boolean) {
       const awaitingClientCount = active.filter(
         (b) => b.status === "pending" && b.initiator === "vendor",
       ).length;
+
+      if (!dashboardViewedRef.current) {
+        dashboardViewedRef.current = true;
+        track(MixpanelEvents.client_dashboard_viewed, {
+          active_count: active.length,
+          awaiting_vendor_count: awaitingVendorCount,
+          awaiting_client_count: awaitingClientCount,
+        });
+      }
 
       setState({
         loadStatus: "ready",

@@ -14,6 +14,7 @@ import { eventDatesSchema, parseForm } from "@/lib/validation";
 import { todayIsoDate } from "@/lib/eventDateValidation";
 import { formatEventDate } from "@/lib/dateFormat";
 import { DateInput } from "@/components/ui/DateInput";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 const OTHER_TOOLTIP =
   "We’re expanding categories. Join the waitlist to hear when your vendor type goes live.";
@@ -142,6 +143,15 @@ export function HeroMarketplaceSearch({
       state.budgetMin != null ||
       state.budgetMax != null;
     if (!hasCriteria) return;
+    track(MixpanelEvents.marketplace_search_submitted, {
+      source: landing ? "landing" : "browse",
+      has_query: state.query.trim().length > 0,
+      has_location: state.location.trim().length > 0,
+      type_count: state.types.length,
+      date_count: state.dates.length,
+      date_flexible: state.dateFlexible,
+      has_budget: state.budgetMin != null || state.budgetMax != null,
+    });
     const url = buildMarketplaceSearchUrl(submitToPath, { ...state, page: 1 });
 
     if (submitMode === "replace") router.replace(url);

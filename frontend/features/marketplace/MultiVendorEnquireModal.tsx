@@ -13,6 +13,7 @@ import {
 import { buildBrowsePricingOptions } from "@/features/client/browse/vendorBrowseDetailModel";
 import type { ExploreVendorSearchRow } from "@/lib/clientExploreApi";
 import { todayIsoDate } from "@/lib/eventDateValidation";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { clientBookingRequestSchema, parseForm } from "@/lib/validation";
 
 type MultiVendorEnquireModalProps = {
@@ -121,7 +122,17 @@ export function MultiVendorEnquireModal({
             },
           });
           createdIds.push(created.id);
+          track(MixpanelEvents.enquiry_created, {
+            booking_id: created.id,
+            vendor_user_id: vendor.user_id,
+            option_count: 1,
+            source: "multi",
+          });
         } catch (err: unknown) {
+          track(MixpanelEvents.enquiry_failed, {
+            vendor_user_id: vendor.user_id,
+            source: "multi",
+          });
           failures.push(
             `${vendorLabel(vendor)}: ${getApiErrorDetail(err) ?? "failed"}`,
           );
@@ -132,6 +143,10 @@ export function MultiVendorEnquireModal({
         setError(failures.join("\n") || "Could not send any requests.");
         return;
       }
+      track(MixpanelEvents.multi_enquiry_created, {
+        created_count: createdIds.length,
+        requested_count: optionIdsByVendor.length,
+      });
       onSuccess(createdIds);
     })();
   };

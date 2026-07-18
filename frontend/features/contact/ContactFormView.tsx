@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/Toast";
 import type { PortalRole } from "@/components/portal-shell/portalNav";
 import { portalRoute } from "@/components/portal-shell/portalNav";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { contactFormSchema, parseForm } from "@/lib/validation";
 import {
   CONTACT_SUBJECT_OPTIONS,
@@ -60,6 +61,10 @@ export function ContactFormView({ role }: Props) {
       } else {
         await submitVendorContact(body);
       }
+      track(MixpanelEvents.contact_form_submitted, {
+        role,
+        subject: parsed.data.subject,
+      });
       setMessage("");
       setBookingId("");
       showToast({

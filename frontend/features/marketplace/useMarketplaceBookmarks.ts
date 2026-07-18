@@ -8,6 +8,7 @@ import {
   mergeClientFavorites,
   removeClientFavorite,
 } from "@/lib/clientFavoritesApi";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 const STORAGE_KEY = "eventtz_saved_vendor_ids";
 const MERGED_KEY = "eventtz_favorites_merged";
@@ -90,6 +91,12 @@ export function useMarketplaceBookmarks() {
           try {
             if (wasSaved) await removeClientFavorite(vendorUserId);
             else await addClientFavorite(vendorUserId);
+            track(
+              wasSaved
+                ? MixpanelEvents.vendor_unfavorited
+                : MixpanelEvents.vendor_favorited,
+              { vendor_user_id: vendorUserId },
+            );
           } catch {
             setSaved((prev) => {
               const next = new Set(prev);
@@ -99,6 +106,13 @@ export function useMarketplaceBookmarks() {
             });
           }
         })();
+      } else {
+        track(
+          wasSaved
+            ? MixpanelEvents.vendor_unfavorited
+            : MixpanelEvents.vendor_favorited,
+          { vendor_user_id: vendorUserId },
+        );
       }
     },
     [saved, isClient, clientId],

@@ -73,8 +73,8 @@ export function PrivacyPolicyContent() {
         <h3>Technical and usage data</h3>
         <p>
           We automatically collect device and browser information, IP address,
-          log data, cookies, and usage analytics needed to operate, secure, and
-          improve the Platform.
+          log data, cookies, and usage analytics (including Mixpanel product
+          analytics) needed to operate, secure, and improve the Platform.
         </p>
       </section>
 

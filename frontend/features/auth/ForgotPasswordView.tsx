@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/Card";
 import { TextField } from "@/components/ui/TextField";
 import { forgotPassword } from "@/lib/auth-api";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { forgotPasswordSchema, parseForm } from "@/lib/validation";
 
 export function ForgotPasswordView() {
@@ -30,6 +31,7 @@ export function ForgotPasswordView() {
     setSubmitting(true);
     try {
       const res = await forgotPassword(parsed.data.email);
+      track(MixpanelEvents.password_reset_requested);
       setSentMessage(res.message);
     } catch (err: unknown) {
       setError(getApiErrorDetail(err) ?? "Could not send a reset email. Try again.");

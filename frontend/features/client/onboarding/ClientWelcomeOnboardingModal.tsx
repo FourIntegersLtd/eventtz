@@ -23,6 +23,7 @@ import {
   type OnboardingIconVisual,
 } from "@/features/client/onboarding/clientOnboardingVisuals";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { parseForm, preferredNameFormSchema } from "@/lib/validation";
 
 function stepIndex(step: ClientOnboardingStep): number {
@@ -110,6 +111,7 @@ export function ClientWelcomeOnboardingModal() {
 
   const finish = useCallback(
     (destination?: string) => {
+      track(MixpanelEvents.client_onboarding_completed);
       void complete();
       if (destination) router.push(destination);
     },
@@ -117,8 +119,9 @@ export function ClientWelcomeOnboardingModal() {
   );
 
   const close = useCallback(() => {
+    track(MixpanelEvents.client_onboarding_dismissed, { step });
     dismiss();
-  }, [dismiss]);
+  }, [dismiss, step]);
 
   useEffect(() => {
     if (!shouldShow) return;

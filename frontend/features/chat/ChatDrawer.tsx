@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Drawer } from "@/components/ui/Drawer";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { CHAT_UNREAD_CLEARED_EVENT, postConversation, postMessage } from "@/lib/chatApi";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { chatMessageSchema, parseForm } from "@/lib/validation";
 import { ChatThreadView } from "@/features/chat/ChatThreadView";
 import { MessageComposer } from "@/features/chat/MessageComposer";
@@ -61,6 +62,10 @@ export function ChatDrawer({
     try {
       const conv = await postConversation(counterpartyUserId);
       await postMessage(conv.id, parsed.data.body);
+      track(MixpanelEvents.chat_conversation_started, {
+        conversation_id: conv.id,
+        portal,
+      });
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent(CHAT_UNREAD_CLEARED_EVENT));
       }
