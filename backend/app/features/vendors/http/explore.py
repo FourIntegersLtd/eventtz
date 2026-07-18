@@ -16,6 +16,7 @@ from app.features.bookings.reviews import (
     list_public_reviews_for_vendor,
     merge_review_stats_into_vendor_rows,
 )
+from app.features.vendors.public_metrics import merge_public_metrics_into_vendor_rows
 from app.features.vendors.moderation import (
     get_approved_vendor_for_explore_by_id,
     list_approved_vendors_for_explore,
@@ -45,6 +46,7 @@ def get_explore_vendors(
 ) -> ExploreVendorsResponse:
     rows = list_approved_vendors_for_explore(country_code=normalize_country_code(country))
     rows = merge_review_stats_into_vendor_rows(rows)
+    rows = merge_public_metrics_into_vendor_rows(rows)
     logger.info("GET /vendors/explore approved_vendors_count=%s", len(rows))
     return ExploreVendorsResponse(success=True, vendors=rows)
 
@@ -63,6 +65,7 @@ def get_explore_vendor_by_id(vendor_user_id: str) -> ExploreVendorSingleResponse
         raise HTTPException(status_code=404, detail="Vendor not found or not listed.")
 
     merged = merge_review_stats_into_vendor_rows([row])
+    merged = merge_public_metrics_into_vendor_rows(merged)
     if not merged:
         raise HTTPException(status_code=404, detail="Vendor not found or not listed.")
     r0 = merged[0]
@@ -90,6 +93,9 @@ def get_explore_vendor_by_id(vendor_user_id: str) -> ExploreVendorSingleResponse
         updated_at=str(r0.get("updated_at")) if r0.get("updated_at") else None,
         review_average=r0.get("review_average"),
         review_count=int(r0.get("review_count") or 0),
+        completed_bookings=int(r0.get("completed_bookings") or 0),
+        avg_response_seconds=r0.get("avg_response_seconds"),
+        conversion_rate=r0.get("conversion_rate"),
     )
     logger.info("GET /vendors/explore/vendor/%s found", vendor_user_id)
     return ExploreVendorSingleResponse(vendor=vendor)

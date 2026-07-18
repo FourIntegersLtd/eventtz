@@ -168,6 +168,7 @@ def create_booking_request(
     event_address: str | None = None,
     notes: str | None,
     selected_option_ids: list[str],
+    client_search_context: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     if client_user_id == vendor_user_id:
         raise ValueError("Cannot book your own account as vendor.")
@@ -211,6 +212,11 @@ def create_booking_request(
     if float(pb.get("vendor_portion_gbp") or 0) <= 0 and not pb.get("has_pricing_tbc"):
         raise ValueError("This booking has no valid price.")
     client_total = str(pb.get("client_total_label") or persisted_booking_total_label(pb))
+    search_ctx = (
+        client_search_context
+        if isinstance(client_search_context, dict) and client_search_context
+        else None
+    )
     row_out: dict[str, Any] = {
         "client_user_id": client_user_id,
         "vendor_user_id": vendor_user_id,
@@ -228,6 +234,8 @@ def create_booking_request(
         "vendor_adjustments": [],
         "initiator": "client",
     }
+    if search_ctx is not None:
+        row_out["client_search_context"] = search_ctx
 
     try:
         res = get_client().table("booking_requests").insert(row_out).execute()
@@ -256,12 +264,35 @@ def create_booking_request(
         try:
             from app.features.analytics.events import record_marketplace_event
 
+            batch_size = None
+            batch_index = None
+            if isinstance(search_ctx, dict):
+                try:
+                    if search_ctx.get("batchSize") is not None:
+                        batch_size = int(search_ctx["batchSize"])
+                    if search_ctx.get("batchIndex") is not None:
+                        batch_index = int(search_ctx["batchIndex"])
+                except (TypeError, ValueError):
+                    batch_size = None
+                    batch_index = None
             record_marketplace_event(
                 "enquiry_created",
                 actor_user_id=client_user_id,
                 vendor_user_id=vendor_user_id,
                 booking_request_id=bid,
+                payload={
+                    "has_search_context": bool(search_ctx),
+                    "batch_size": batch_size,
+                },
             )
+            if batch_size is not None and batch_size > 1 and (batch_index or 0) == 0:
+                record_marketplace_event(
+                    "enquiry_multi_created",
+                    actor_user_id=client_user_id,
+                    vendor_user_id=vendor_user_id,
+                    booking_request_id=bid,
+                    payload={"vendor_count": batch_size},
+                )
             record_marketplace_event(
                 "vendor_notified",
                 actor_user_id=client_user_id,
@@ -270,6 +301,14 @@ def create_booking_request(
             )
         except Exception:
             pass
+    # Client confirmation (in-app + email).
+    dispatch_booking_notification(
+        user_id=client_user_id,
+        booking_id=bid,
+        kind="booking_request_sent",
+        mode="insert_if_absent",
+        portal="client",
+    )
     _notify_booking_changed(client_user_id=client_user_id, vendor_user_id=vendor_user_id)
     return {
         "id": bid,

@@ -1,4 +1,4 @@
-"""Hourly booking maintenance: post-event reminders and overdue payout release.
+"""Hourly booking maintenance: post-event reminders, payout release, enquiry nudges.
 
 Run from the backend directory (same environment as the API):
 
@@ -19,6 +19,7 @@ from app.features.bookings.payments import (
     send_completion_reminders,
 )
 from app.features.bookings.funnel import mark_stale_enquiries_no_response
+from app.features.bookings.enquiry_reminders import process_enquiry_response_maintenance
 
 logger = get_logger(__name__)
 
@@ -32,11 +33,15 @@ def main() -> int:
     payouts_released = process_due_payout_auto_releases()
     sla_hours = get_settings().enquiry_response_sla_hours
     stale_marked = mark_stale_enquiries_no_response(sla_hours=sla_hours)
+    enquiry = process_enquiry_response_maintenance()
     logger.info(
-        "booking maintenance run: reminders=%d payouts_released=%d stale_enquiries=%d",
+        "booking maintenance run: reminders=%d payouts_released=%d stale_enquiries=%d "
+        "enquiry_vendor_reminders=%d enquiry_client_nudges=%d",
         reminders_sent,
         payouts_released,
         stale_marked,
+        enquiry.get("vendor_reminders", 0),
+        enquiry.get("client_nudges", 0),
     )
     return 0
 

@@ -36,11 +36,16 @@ EMAIL_IMAGES: dict[str, str] = {
 EMAIL_DEDUPE_KINDS: frozenset[str] = frozenset(
     {
         "booking_completed",
+        "booking_request_sent",
         "payment_received",
         "vendor_payment_received",
         "vendor_payout_released",
         "payment_refunded",
         "completion_reminder",
         "vendor_completion_reminder",
+        "enquiry_reminder_1h",
+        "enquiry_reminder_6h",
+        "enquiry_reminder_24h",
+        "client_vendor_no_response",
     }
 )

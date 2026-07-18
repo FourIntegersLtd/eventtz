@@ -76,6 +76,18 @@ class ExploreVendorRow(BaseModel):
     updated_at: str | None = None
     review_average: float | None = None
     review_count: int = 0
+    completed_bookings: int = Field(
+        default=0,
+        description="All-time completed bookings (public trust signal).",
+    )
+    avg_response_seconds: float | None = Field(
+        default=None,
+        description="Average first-response time in seconds, when known.",
+    )
+    conversion_rate: float | None = Field(
+        default=None,
+        description="Completed / client enquiries (0–1), when enquiries exist.",
+    )
 
 
 class ExploreVendorsResponse(BaseModel):

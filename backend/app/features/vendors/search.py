@@ -464,8 +464,10 @@ def search_approved_vendors(
     enriched = exact_rows + related_rows + fallback_rows
     # Import here to avoid a circular import: bookings.reviews → bookings → calendar → search.
     from app.features.bookings.reviews import merge_review_stats_into_vendor_rows
+    from app.features.vendors.public_metrics import merge_public_metrics_into_vendor_rows
 
     enriched = merge_review_stats_into_vendor_rows(enriched)
+    enriched = merge_public_metrics_into_vendor_rows(enriched)
 
     def sort_key_fn(r: dict[str, Any]) -> tuple[Any, ...]:
         tier = _TIER_RANK.get(str(r.get("match_tier") or "exact"), 0)

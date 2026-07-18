@@ -118,6 +118,8 @@ class CreateBookingRequestBody(BaseModel):
     event_address: str | None = Field(default=None, max_length=500)
     notes: str | None = Field(default=None, max_length=4000)
     selected_option_ids: list[str] = Field(min_length=1)
+    #: Marketplace search filters at enquire time (for alternative-vendor nudges).
+    client_search_context: dict[str, Any] | None = None
 
     @field_validator("event_postcode", mode="before")
     @classmethod

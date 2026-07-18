@@ -293,6 +293,44 @@ _COPY: dict[str, dict[Portal, tuple[str, str]]] = {
             "If the client does not respond, payment is released automatically unless they report a problem.",
         ),
     },
+    "enquiry_reminder_1h": {
+        "vendor": (
+            "Reminder: booking request waiting",
+            "A client is still waiting for your reply on Eventtz.\n\n"
+            "Please open the booking to accept, decline, or send a message. "
+            "Quick replies help you win more work.",
+        ),
+    },
+    "enquiry_reminder_6h": {
+        "vendor": (
+            "Still waiting for your reply",
+            "This booking request has been waiting for several hours.\n\n"
+            "Please respond when you can — clients often look elsewhere if they do not hear back.",
+        ),
+    },
+    "enquiry_reminder_24h": {
+        "vendor": (
+            "Last reminder: client waiting 24 hours",
+            "A client has been waiting a full day for your reply.\n\n"
+            "Please accept, decline, or message them now. After this, we may suggest other vendors to the client.",
+        ),
+    },
+    "client_vendor_no_response": {
+        "client": (
+            "Vendor has not replied yet",
+            "Your booking request is still waiting for a vendor reply.\n\n"
+            "You can message them from the booking, or browse other vendors for the same search. "
+            "Requesting more than one vendor is fine until you pay.",
+        ),
+    },
+    "booking_request_sent": {
+        "client": (
+            "Request sent",
+            "Your booking request is with the vendor.\n\n"
+            "We have notified them and will nudge them if they are slow to reply. "
+            "Most vendors reply within a day — you can follow everything from your bookings page.",
+        ),
+    },
 }
 
 

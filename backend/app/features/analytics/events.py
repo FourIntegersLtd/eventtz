@@ -24,6 +24,9 @@ ALLOWED_EVENTS = frozenset(
         "booking_cancelled",
         "review_submitted",
         "enquiry_unfulfilled",
+        "enquiry_vendor_reminded",
+        "enquiry_client_no_response_nudge",
+        "enquiry_multi_created",
     },
 )
 

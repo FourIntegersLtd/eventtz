@@ -205,7 +205,18 @@ def get_marketplace_analytics(
         if e.get("vendor_response_time_seconds") is not None
     ]
     avg_response = round(sum(response_times) / len(response_times), 1) if response_times else None
+    responded = len(response_times)
+    reply_within_1h = sum(1 for s in response_times if s <= 3600)
+    reply_within_6h = sum(1 for s in response_times if s <= 6 * 3600)
+    reply_within_24h = sum(1 for s in response_times if s <= 24 * 3600)
+    pct = lambda n: round(n / responded, 4) if responded else None
 
+    nudge_counts = _count_enquiry_nudge_events(from_iso[:10], to_iso)
+    multi_batches = _count_marketplace_events(
+        "enquiry_multi_created",
+        from_iso[:10],
+        to_iso,
+    )
     values = [_safe_float(e.get("payment_amount_gbp")) for e in completed_paid if _safe_float(e.get("payment_amount_gbp")) > 0]
     avg_booking_value = round(sum(values) / len(values), 2) if values else 0.0
 
@@ -378,6 +389,12 @@ def get_marketplace_analytics(
             "overall_conversion_rate": overall_conversion,
             "avg_booking_value_gbp": avg_booking_value,
             "avg_vendor_response_seconds": avg_response,
+            "reply_within_1h_rate": pct(reply_within_1h),
+            "reply_within_6h_rate": pct(reply_within_6h),
+            "reply_within_24h_rate": pct(reply_within_24h),
+            "enquiry_vendor_reminders": nudge_counts["vendor_reminders"],
+            "enquiry_client_nudges": nudge_counts["client_nudges"],
+            "enquiry_multi_batches": multi_batches,
             "avg_customer_rating": avg_rating,
             "review_count": review_count,
             "profile_views": profile_views,
@@ -399,6 +416,10 @@ def get_marketplace_analytics(
 
 
 def _count_profile_views(from_day: str, to_iso: str) -> int:
+    return _count_marketplace_events("vendor_profile_viewed", from_day, to_iso)
+
+
+def _count_marketplace_events(event_name: str, from_day: str, to_iso: str) -> int:
     if get_settings().local_auth_mode:
         return 0
     try:
@@ -406,7 +427,7 @@ def _count_profile_views(from_day: str, to_iso: str) -> int:
             get_client()
             .table("marketplace_events")
             .select("id", count="exact")
-            .eq("event_name", "vendor_profile_viewed")
+            .eq("event_name", event_name)
             .gte("created_at", from_day)
             .lte("created_at", to_iso)
             .execute()
@@ -414,3 +435,18 @@ def _count_profile_views(from_day: str, to_iso: str) -> int:
         return int(getattr(res, "count", 0) or 0)
     except Exception:
         return 0
+
+
+def _count_enquiry_nudge_events(from_day: str, to_iso: str) -> dict[str, int]:
+    return {
+        "vendor_reminders": _count_marketplace_events(
+            "enquiry_vendor_reminded",
+            from_day,
+            to_iso,
+        ),
+        "client_nudges": _count_marketplace_events(
+            "enquiry_client_no_response_nudge",
+            from_day,
+            to_iso,
+        ),
+    }

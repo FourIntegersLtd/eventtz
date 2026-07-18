@@ -394,6 +394,60 @@ class EmailService:
         text = render_template("marketing/welcome.txt", ctx)
         return resend_send(to=[to_email], subject=subject, html=html, text=text)
 
+    def send_client_vendor_no_response(
+        self,
+        *,
+        to_email: str,
+        recipient_user_id: str,
+        booking_id: str,
+        vendor_name: str,
+        event_name: str,
+        alternatives: list[dict[str, str]],
+        browse_url: str,
+        booking_url: str,
+    ) -> bool:
+        from app.features.email.delivery_log import claim_booking_email_send
+
+        kind = "client_vendor_no_response"
+        if not claim_booking_email_send(
+            kind=kind,
+            recipient_email=to_email,
+            recipient_user_id=recipient_user_id,
+            booking_id=booking_id,
+        ):
+            return False
+
+        lines = [
+            f"{vendor_name} has not replied to your request for {event_name} yet.",
+            "",
+            "You can still message them from your booking, or try other vendors from a similar search.",
+        ]
+        if alternatives:
+            lines.append("")
+            lines.append("Here are a few other options:")
+            for alt in alternatives:
+                name = alt.get("name") or "Vendor"
+                reply = alt.get("reply") or ""
+                href = alt.get("href") or browse_url
+                lines.append(f"• {name} — {reply}\n  {href}")
+        lines.append("")
+        lines.append("Requesting more than one vendor is fine until you pay.")
+        body = "\n".join(lines)
+        headline = "Vendor has not replied yet"
+        ctx = transactional_email_context(
+            subject=headline,
+            headline=headline,
+            subtitle=None,
+            body=body,
+            action_url=booking_url,
+            action_label="View booking",
+        )
+        # Extra CTA for browse is inlined in body links.
+        html = render_template("booking/notification.html", ctx)
+        text = render_template("booking/notification.txt", ctx)
+        subject = f"{headline} | {APP_NAME}"
+        return resend_send(to=[to_email], subject=subject, html=html, text=text)
+
 
 _email_service: EmailService | None = None
 

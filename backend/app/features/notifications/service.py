@@ -17,6 +17,7 @@ BookingNotifyKind = Literal[
     "booking_completed",
     "booking_declined_by_vendor",
     "booking_request_received",
+    "booking_request_sent",
     "booking_cancelled_by_client",
     "booking_cancelled_by_vendor",
     "booking_pricing_updated",
@@ -33,6 +34,10 @@ BookingNotifyKind = Literal[
     "completion_confirmed_awaiting_other_party",
     "completion_reminder",
     "vendor_completion_reminder",
+    "enquiry_reminder_1h",
+    "enquiry_reminder_6h",
+    "enquiry_reminder_24h",
+    "client_vendor_no_response",
 ]
 
 

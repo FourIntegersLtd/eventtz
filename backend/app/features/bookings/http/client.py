@@ -429,6 +429,7 @@ def post_booking_request(
             event_address=body.event_address,
             notes=body.notes,
             selected_option_ids=body.selected_option_ids,
+            client_search_context=body.client_search_context,
         )
     except ValueError as e:
         logger.info("booking_request rejected: %s", e)
