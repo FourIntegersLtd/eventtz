@@ -30,6 +30,7 @@ import { resolveAdminRole, isSuperAdmin } from "@/lib/adminRole";
 import { fetchAdminSupportConversations } from "@/lib/adminMessagesApi";
 import { CHAT_UNREAD_CLEARED_EVENT } from "@/lib/chatApi";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
+import { HelpWidget } from "@/features/help/HelpWidget";
 
 type AdminNavItem = {
   href: string;
@@ -309,6 +310,8 @@ export function AdminShell({ title, children }: AdminShellProps) {
           <div className="app-viewport-shell__main-scroll scroll-pane mt-4 min-w-0 sm:mt-5">{children}</div>
         </main>
       </div>
+
+      <HelpWidget audience="admin" />
     </div>
   );
 }

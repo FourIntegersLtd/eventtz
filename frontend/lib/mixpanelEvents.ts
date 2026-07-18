@@ -71,6 +71,12 @@ export const MixpanelEvents = {
   dashboard_attention_clicked: "dashboard_attention_clicked",
   contact_form_submitted: "contact_form_submitted",
 
+  // Help Center
+  help_opened: "help_opened",
+  help_article_viewed: "help_article_viewed",
+  help_ask_submitted: "help_ask_submitted",
+  help_escalated: "help_escalated",
+
   // Vendor
   vendor_onboarding_submitted: "vendor_onboarding_submitted",
   vendor_profile_saved: "vendor_profile_saved",

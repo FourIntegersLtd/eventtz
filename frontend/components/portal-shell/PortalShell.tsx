@@ -21,6 +21,7 @@ import { CHAT_UNREAD_CLEARED_EVENT, fetchChatUnreadCount } from "@/lib/chatApi";
 import { fetchVendorBookings } from "@/lib/vendorBookingsApi";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 import { NotificationBell } from "@/features/notifications/NotificationBell";
+import { HelpWidget } from "@/features/help/HelpWidget";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   isPortalNavActive,
@@ -407,6 +408,8 @@ export function PortalShell({
           </div>
         </main>
       </div>
+
+      <HelpWidget audience={portal} />
     </div>
   );
 }
