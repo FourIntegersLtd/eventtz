@@ -127,10 +127,28 @@ def _create_connect_express_account(vendor_user_id: str, row: dict[str, Any] | N
     return account_id
 
 
-def create_connect_onboarding_link(vendor_user_id: str, return_path: str = "/vendor/onboarding") -> str:
+def _safe_connect_return_path(return_path: str) -> str:
+    """Allowlist frontend paths for Stripe Connect return/refresh URLs.
+
+    Why: Stripe redirect URLs must not become an open redirect; only Payments and
+    Accept resume (`/vendor/bookings/{id}`) are valid post-Connect destinations.
+    """
+    path = (return_path or "").strip() or "/vendor/payments"
+    if path == "/vendor/payments" or path == "/vendor/onboarding":
+        # /vendor/onboarding redirects to profile; send vendors to Payments instead.
+        return "/vendor/payments"
+    # Accept-time Connect: /vendor/bookings/{uuid}
+    if path.startswith("/vendor/bookings/"):
+        booking_id = path[len("/vendor/bookings/") :].split("?", 1)[0].strip("/")
+        if booking_id and "/" not in booking_id and len(booking_id) <= 64:
+            return f"/vendor/bookings/{booking_id}"
+    return "/vendor/payments"
+
+
+def create_connect_onboarding_link(vendor_user_id: str, return_path: str = "/vendor/payments") -> str:
     """Create a Stripe Express account for this vendor if needed, then return an onboarding URL.
 
-    `return_path` is where the vendor lands after Stripe (onboarding or the Payments page).
+    `return_path` is where the vendor lands after Stripe (Payments page or a booking detail).
     """
     row = _get_vendor_row(vendor_user_id)
     account_id = row.get("stripe_account_id") if row else None
@@ -154,7 +172,7 @@ def create_connect_onboarding_link(vendor_user_id: str, return_path: str = "/ven
         account_id = _create_connect_express_account(vendor_user_id, row)
 
     settings = get_settings()
-    safe_path = return_path if return_path in {"/vendor/onboarding", "/vendor/payments"} else "/vendor/onboarding"
+    safe_path = _safe_connect_return_path(return_path)
     try:
         link = _stripe().AccountLink.create(
             account=account_id,

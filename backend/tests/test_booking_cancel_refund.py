@@ -162,11 +162,11 @@ def test_paid_vendor_cancel_refunds_client(
     assert update_payload["cancelled_by"] == "vendor"
 
 
-@patch("app.features.bookings.payments._notify_pair")
-@patch("app.features.bookings.payments.dispatch_booking_notification")
-@patch("app.features.bookings.payments.stripe_service.create_refund")
-@patch("app.features.bookings.payments.get_settings")
-@patch("app.features.bookings.payments.get_client")
+@patch("app.features.bookings.payment_refunds._notify_pair")
+@patch("app.features.bookings.payment_refunds.dispatch_booking_notification")
+@patch("app.features.bookings.payment_refunds.stripe_service.create_refund")
+@patch("app.features.bookings.payment_refunds.get_settings")
+@patch("app.features.bookings.payment_refunds.get_client")
 def test_refund_on_cancel_issues_full_stripe_refund(
     mock_get_client, mock_settings, mock_create_refund, _upsert, _notify,
 ):
@@ -194,9 +194,9 @@ def test_refund_on_cancel_issues_full_stripe_refund(
     assert kwargs["idempotency_suffix"] == "cancel-client"
 
 
-@patch("app.features.bookings.payments.stripe_service.create_refund", side_effect=RuntimeError("stripe down"))
-@patch("app.features.bookings.payments.get_settings")
-@patch("app.features.bookings.payments.get_client")
+@patch("app.features.bookings.payment_refunds.stripe_service.create_refund", side_effect=RuntimeError("stripe down"))
+@patch("app.features.bookings.payment_refunds.get_settings")
+@patch("app.features.bookings.payment_refunds.get_client")
 def test_refund_on_cancel_raises_when_stripe_fails(
     mock_get_client, mock_settings, _create_refund,
 ):
@@ -255,7 +255,7 @@ def test_cancel_retry_after_refund_skips_stripe(
     assert update_payload["status"] == "cancelled"
 
 
-@patch("app.features.bookings.payments.get_client")
+@patch("app.features.bookings.payment_finalize.get_client")
 def test_finalize_skips_cancelled_booking(mock_get_client):
     mock_table = MagicMock()
     mock_get_client.return_value.table.return_value = mock_table
@@ -284,9 +284,9 @@ def test_finalize_skips_cancelled_booking(mock_get_client):
     mock_table.update.assert_not_called()
 
 
-@patch("app.features.bookings.payments._finalize_booking_payment_from_checkout_session")
-@patch("app.features.bookings.payments.get_booking_request_for_client")
-@patch("app.features.bookings.payments.get_settings")
+@patch("app.features.bookings.payment_finalize._finalize_booking_payment_from_checkout_session")
+@patch("app.features.bookings.payment_finalize.get_booking_request_for_client")
+@patch("app.features.bookings.payment_finalize.get_settings")
 def test_sync_rejects_cancelled_booking(
     mock_settings, mock_get_booking, mock_finalize,
 ):

@@ -14,7 +14,7 @@ from app.features.bookings import _paid_at_iso
 
 logger = get_logger(__name__)
 
-_ALLOWED_DAYS = frozenset({7, 30, 90})
+_ALLOWED_DAYS = frozenset({7, 30, 60, 90})
 
 
 def _parse_day(iso: str | None) -> str | None:

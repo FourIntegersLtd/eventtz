@@ -502,6 +502,18 @@ def create_booking_review(
         raise ValueError("Could not save review.")
 
     created = ins_data[0]
+    try:
+        from app.features.analytics.events import record_marketplace_event
+
+        record_marketplace_event(
+            "review_submitted",
+            actor_user_id=client_user_id,
+            vendor_user_id=vendor_id,
+            booking_request_id=booking_id,
+            payload={"rating": rating},
+        )
+    except Exception:
+        pass
     return {
         "id": str(created.get("id", "")),
         "rating": int(created.get("rating") or rating),

@@ -19,6 +19,11 @@ from app.features.bookings.queries import (
     get_booking_request_for_client,
     get_booking_request_for_vendor,
 )
+from app.features.bookings.funnel import (
+    apply_accept_update,
+    apply_decline_update,
+    mark_customer_cancelled_failure,
+)
 from app.features.email.dispatch import dispatch_booking_notification
 
 
@@ -67,6 +72,30 @@ def _cancel_audit_fields(cancelled_by: str) -> dict[str, str]:
         "cancelled_by": cancelled_by,
         "cancelled_at": datetime.now(timezone.utc).isoformat(),
     }
+
+
+def _vendor_payouts_ready(vendor_user_id: str) -> bool:
+    """True when Stripe Connect can charge and pay out (required before accept).
+
+    Why gate here: marketplace visibility only needs admin approval; Accept is when
+    Eventtz must be able to Collect + Transfer, so customers never wait on Connect mid-pay.
+    """
+    res = (
+        get_client()
+        .table("vendors")
+        .select("stripe_account_id,stripe_charges_enabled,stripe_payouts_enabled")
+        .eq("user_id", vendor_user_id)
+        .limit(1)
+        .execute()
+    )
+    row = one_row(res)
+    if row is None:
+        return False
+    return bool(
+        row.get("stripe_account_id")
+        and row.get("stripe_charges_enabled")
+        and row.get("stripe_payouts_enabled")
+    )
 
 
 def update_booking_request_status_for_vendor(
@@ -166,6 +195,8 @@ def update_booking_request_status_for_vendor(
     if new_status == "accepted":
         if initiator == "vendor":
             raise ValueError("The client must accept a vendor quote.")
+        if not _vendor_payouts_ready(vendor_user_id):
+            raise ValueError("Complete payout setup before accepting bookings.")
         if current == "pending":
             if client_price_confirmation_required(row0):
                 raise ValueError(
@@ -173,7 +204,7 @@ def update_booking_request_status_for_vendor(
                 )
             upd = (
                 client.table("booking_requests")
-                .update({"status": "accepted"})
+                .update(apply_accept_update(booking_id, created_at=row0.get("created_at")))
                 .eq("id", booking_id)
                 .eq("vendor_user_id", vendor_user_id)
                 .eq("status", "pending")
@@ -184,11 +215,22 @@ def update_booking_request_status_for_vendor(
             if client_uid:
                 _notify_client_booking_accepted(client_uid, booking_id)
             _notify_booking_changed(client_user_id=client_uid, vendor_user_id=vendor_user_id)
+            try:
+                from app.features.analytics.events import record_marketplace_event
+
+                record_marketplace_event(
+                    "vendor_accepted_booking",
+                    actor_user_id=vendor_user_id,
+                    vendor_user_id=vendor_user_id,
+                    booking_request_id=booking_id,
+                )
+            except Exception:
+                pass
             return {"id": booking_id, "status": "accepted"}
         if current == "declined":
             upd = (
                 client.table("booking_requests")
-                .update({"status": "accepted"})
+                .update(apply_accept_update(booking_id, created_at=row0.get("created_at")))
                 .eq("id", booking_id)
                 .eq("vendor_user_id", vendor_user_id)
                 .eq("status", "declined")
@@ -211,7 +253,7 @@ def update_booking_request_status_for_vendor(
             raise ValueError("Only pending requests can be declined.")
         upd = (
             client.table("booking_requests")
-            .update({"status": "declined"})
+            .update(apply_decline_update(booking_id, created_at=row0.get("created_at")))
             .eq("id", booking_id)
             .eq("vendor_user_id", vendor_user_id)
             .eq("status", "pending")
@@ -231,6 +273,17 @@ def update_booking_request_status_for_vendor(
                     ),
             )
         _notify_booking_changed(client_user_id=client_uid, vendor_user_id=vendor_user_id)
+        try:
+            from app.features.analytics.events import record_marketplace_event
+
+            record_marketplace_event(
+                "vendor_declined_booking",
+                actor_user_id=vendor_user_id,
+                vendor_user_id=vendor_user_id,
+                booking_request_id=booking_id,
+            )
+        except Exception:
+            pass
         return {"id": booking_id, "status": "declined"}
 
     raise ValueError("Unsupported status transition.")
@@ -314,6 +367,18 @@ def cancel_booking_request_for_client(
             ),
         )
     _notify_booking_changed(client_user_id=client_user_id, vendor_user_id=vendor_uid)
+    mark_customer_cancelled_failure(booking_id)
+    try:
+        from app.features.analytics.events import record_marketplace_event
+
+        record_marketplace_event(
+            "booking_cancelled",
+            actor_user_id=client_user_id,
+            vendor_user_id=vendor_uid or None,
+            booking_request_id=booking_id,
+        )
+    except Exception:
+        pass
     return {"id": booking_id, "status": "cancelled"}
 
 

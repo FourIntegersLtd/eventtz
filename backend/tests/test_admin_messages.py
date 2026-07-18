@@ -18,7 +18,7 @@ from app.features.chat.service import (
 )
 
 
-@patch("app.features.chat.service.get_settings")
+@patch("app.features.chat.support_admin.get_settings")
 def test_get_or_create_support_conversation_local(mock_settings):
     mock_settings.return_value.local_auth_mode = True
     row = get_or_create_support_conversation("user-abc")
@@ -27,10 +27,10 @@ def test_get_or_create_support_conversation_local(mock_settings):
     assert row["peer_display_name"] == SUPPORT_PEER_DISPLAY
 
 
-@patch("app.features.chat.service.notify_user")
-@patch("app.features.chat.service.insert_message")
-@patch("app.features.chat.service.get_or_create_support_conversation")
-@patch("app.features.chat.service.get_settings")
+@patch("app.features.chat.support_admin.notify_user")
+@patch("app.features.chat.support_admin.insert_message")
+@patch("app.features.chat.support_admin.get_or_create_support_conversation")
+@patch("app.features.chat.support_admin.get_settings")
 def test_admin_send_fan_out(mock_settings, mock_get_conv, mock_insert, _notify):
     mock_settings.return_value.local_auth_mode = False
     mock_get_conv.side_effect = lambda uid: {"id": f"conv-{uid}", "support_user_id": uid}
@@ -47,7 +47,7 @@ def test_admin_send_fan_out(mock_settings, mock_get_conv, mock_insert, _notify):
     assert mock_insert.call_args.kwargs["metadata"] == {"kind": "admin"}
 
 
-@patch("app.features.chat.service.get_settings")
+@patch("app.features.chat.dm.get_settings")
 def test_send_message_rejects_non_participant_support(mock_settings):
     mock_settings.return_value.local_auth_mode = True
     with pytest.raises(ValueError, match="Conversation not found"):
@@ -101,7 +101,7 @@ def test_admin_send_requires_admin(mock_require):
     mock_require.assert_called_once()
 
 
-@patch("app.features.chat.service.get_settings")
+@patch("app.features.chat.dm.get_settings")
 def test_list_conversations_local_empty(mock_settings):
     mock_settings.return_value.local_auth_mode = True
     assert list_conversations_for_user("u1", role="client") == []

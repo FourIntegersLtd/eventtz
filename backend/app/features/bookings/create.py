@@ -250,6 +250,26 @@ def create_booking_request(
             booking_id=bid,
             kind="booking_request_received",
         )
+        from app.features.bookings.funnel import mark_vendor_notified
+
+        mark_vendor_notified(bid)
+        try:
+            from app.features.analytics.events import record_marketplace_event
+
+            record_marketplace_event(
+                "enquiry_created",
+                actor_user_id=client_user_id,
+                vendor_user_id=vendor_user_id,
+                booking_request_id=bid,
+            )
+            record_marketplace_event(
+                "vendor_notified",
+                actor_user_id=client_user_id,
+                vendor_user_id=vendor_user_id,
+                booking_request_id=bid,
+            )
+        except Exception:
+            pass
     _notify_booking_changed(client_user_id=client_user_id, vendor_user_id=vendor_user_id)
     return {
         "id": bid,

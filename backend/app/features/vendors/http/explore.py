@@ -66,6 +66,21 @@ def get_explore_vendor_by_id(vendor_user_id: str) -> ExploreVendorSingleResponse
     if not merged:
         raise HTTPException(status_code=404, detail="Vendor not found or not listed.")
     r0 = merged[0]
+    try:
+        from app.features.analytics.events import record_marketplace_event
+
+        payload = r0.get("payload") if isinstance(r0.get("payload"), dict) else {}
+        services = payload.get("servicesOffered") if isinstance(payload.get("servicesOffered"), list) else []
+        category = str(services[0]) if services else None
+        location = str(payload.get("baseCity") or r0.get("base_city_normalized") or "") or None
+        record_marketplace_event(
+            "vendor_profile_viewed",
+            vendor_user_id=vendor_user_id,
+            category=category,
+            location=location,
+        )
+    except Exception:
+        pass
     vendor = ExploreVendorRow(
         user_id=str(r0.get("user_id") or ""),
         email=r0.get("email"),

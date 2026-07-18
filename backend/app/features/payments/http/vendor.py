@@ -17,7 +17,7 @@ logger = get_logger(__name__)
 def post_connect_account(
     request: Request,
     response: Response,
-    return_path: str = "/vendor/onboarding",
+    return_path: str = "/vendor/payments",
 ) -> VendorPaymentsConnectResponse:
     user = require_vendor(request, response)
     uid = str(user.get("id") or "")

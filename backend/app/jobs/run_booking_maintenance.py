@@ -18,6 +18,7 @@ from app.features.bookings.payments import (
     process_due_payout_auto_releases,
     send_completion_reminders,
 )
+from app.features.bookings.funnel import mark_stale_enquiries_no_response
 
 logger = get_logger(__name__)
 
@@ -29,10 +30,13 @@ def main() -> int:
 
     reminders_sent = send_completion_reminders()
     payouts_released = process_due_payout_auto_releases()
+    sla_hours = get_settings().enquiry_response_sla_hours
+    stale_marked = mark_stale_enquiries_no_response(sla_hours=sla_hours)
     logger.info(
-        "booking maintenance run: reminders=%d payouts_released=%d",
+        "booking maintenance run: reminders=%d payouts_released=%d stale_enquiries=%d",
         reminders_sent,
         payouts_released,
+        stale_marked,
     )
     return 0
 

@@ -77,6 +77,10 @@ class Settings(BaseSettings):
     #: (only if the client has paid and no problem report is open).
     booking_payout_auto_release_hours_after_event: int = 48
 
+    #: Hours after a client enquiry is created before we mark analytics failure
+    #: ``VENDOR_NO_RESPONSE`` (does not auto-decline the booking).
+    enquiry_response_sla_hours: int = 72
+
     #: Comma-separated emails that count as top-level admins until roles are set in the database.
     super_admin_emails: str = "hello@fourintegers.com"
     #: Key for sending transactional email.

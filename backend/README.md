@@ -84,7 +84,7 @@ Guards in `app/api/authz.py` / `deps.py` resolve role from `public.users`, then 
 
 ## Payments (Stripe Connect)
 
-Vendor onboarding, client Checkout, held funds, and payouts are implemented in `app/services/stripe_service.py` (thin Stripe SDK wrapper) and `app/services/booking_payment_service.py` (business logic: checkout sessions, webhook handlers, mutual-completion payout, admin refund/release). See the **Payments (Stripe Connect)** section in [`cursor.md`](../cursor.md) for the full design (held-funds model, `payment_status` vs `status`, idempotency).
+Vendor Connect Express + client Checkout, held funds, and payouts live in `app/features/payments/stripe.py` (thin Stripe SDK wrapper) and `app/features/bookings/payments.py` (checkout sessions, webhook finalize, mutual-completion payout, admin refund/release). Connect is **not** part of vendor profile onboarding — it runs at Accept / Payments. See the **Payments (Stripe Connect)** section in [`cursor.md`](../cursor.md) for the full design (held-funds model, `payment_status` vs `status`, idempotency).
 
 **Setup:**
 

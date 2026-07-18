@@ -307,3 +307,17 @@ class AdminConfirmCompletionBody(BaseModel):
 
 class AdminSupportHoldBody(BaseModel):
     hold: bool
+
+
+class AdminMarketplaceAnalyticsResponse(BaseModel):
+    success: bool = True
+    from_date: str
+    to_date: str
+    overview: dict[str, Any] = Field(default_factory=dict)
+    enquiries_by_month: list[dict[str, Any]] = Field(default_factory=list)
+    completed_by_month: list[dict[str, Any]] = Field(default_factory=list)
+    by_category: list[dict[str, Any]] = Field(default_factory=list)
+    by_location: list[dict[str, Any]] = Field(default_factory=list)
+    failure_reasons: list[dict[str, Any]] = Field(default_factory=list)
+    top_vendors: list[dict[str, Any]] = Field(default_factory=list)
+    recruitment_hints: dict[str, Any] = Field(default_factory=dict)

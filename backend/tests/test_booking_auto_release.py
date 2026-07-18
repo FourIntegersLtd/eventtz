@@ -58,8 +58,8 @@ def test_completion_waiting_on():
 
 
 @patch("app.features.bookings.disputes.has_active_dispute_for_booking", return_value=False)
-@patch("app.features.bookings.payments._finalize_completion")
-@patch("app.features.bookings.payments.get_client")
+@patch("app.features.bookings.payment_maintenance._finalize_completion")
+@patch("app.features.bookings.payment_maintenance.get_client")
 def test_due_booking_auto_releases_payout(mock_get_client, mock_finalize, _dispute):
     mock_finalize.return_value = {"payment_status": "payout_released"}
     mock_table = MagicMock()
@@ -73,7 +73,7 @@ def test_due_booking_auto_releases_payout(mock_get_client, mock_finalize, _dispu
     assert update_payload["payout_auto_released_at"]
 
 
-@patch("app.features.bookings.payments._finalize_completion")
+@patch("app.features.bookings.payment_maintenance._finalize_completion")
 def test_auto_release_waits_until_window_passes(mock_finalize):
     # Event was today: the 48h window hasn't started, let alone passed.
     assert payments._auto_release_payout_row(_paid_row(0)) is False
@@ -81,24 +81,24 @@ def test_auto_release_waits_until_window_passes(mock_finalize):
 
 
 @patch("app.features.bookings.disputes.has_active_dispute_for_booking", return_value=True)
-@patch("app.features.bookings.payments._finalize_completion")
+@patch("app.features.bookings.payment_maintenance._finalize_completion")
 def test_auto_release_blocked_by_open_dispute(mock_finalize, _dispute):
     assert payments._auto_release_payout_row(_paid_row(5)) is False
     mock_finalize.assert_not_called()
 
 
 @patch("app.features.bookings.disputes.has_active_dispute_for_booking", return_value=False)
-@patch("app.features.bookings.payments._finalize_completion")
+@patch("app.features.bookings.payment_maintenance._finalize_completion")
 def test_auto_release_not_marked_when_payout_not_released(mock_finalize, _dispute):
     # e.g. vendor Stripe account not ready — booking stays eligible for a later run.
     mock_finalize.return_value = {"payment_status": "paid"}
     assert payments._auto_release_payout_row(_paid_row(5)) is False
 
 
-@patch("app.features.bookings.payments._finalize_completion")
-@patch("app.features.bookings.payments.dispatch_booking_notification")
-@patch("app.features.bookings.payments.get_settings")
-@patch("app.features.bookings.payments.get_client")
+@patch("app.features.bookings.payment_completion._finalize_completion")
+@patch("app.features.bookings.payment_completion.dispatch_booking_notification")
+@patch("app.features.bookings.payment_completion.get_settings")
+@patch("app.features.bookings.payment_completion.get_client")
 def test_mutual_confirm_still_releases_immediately(
     mock_get_client, mock_settings, _upsert, mock_finalize,
 ):
@@ -116,11 +116,11 @@ def test_mutual_confirm_still_releases_immediately(
     mock_finalize.assert_called_once()
 
 
-@patch("app.features.bookings.payments._notify_pair")
-@patch("app.features.bookings.payments.dispatch_booking_notification")
-@patch("app.features.bookings.payments.get_client")
-@patch("app.features.bookings.payments._due_completion_candidates")
-@patch("app.features.bookings.payments.get_settings")
+@patch("app.features.bookings.payment_shared._notify_pair")
+@patch("app.features.bookings.payment_maintenance.dispatch_booking_notification")
+@patch("app.features.bookings.payment_maintenance.get_client")
+@patch("app.features.bookings.payment_maintenance._due_completion_candidates")
+@patch("app.features.bookings.payment_maintenance.get_settings")
 def test_reminder_targets_only_unconfirmed_party(
     mock_settings, mock_candidates, mock_get_client, mock_upsert, _notify,
 ):
@@ -141,9 +141,9 @@ def test_reminder_targets_only_unconfirmed_party(
     assert update_payload["completion_reminder_sent_at"]
 
 
-@patch("app.features.bookings.payments.dispatch_booking_notification")
-@patch("app.features.bookings.payments._due_completion_candidates")
-@patch("app.features.bookings.payments.get_settings")
+@patch("app.features.bookings.payment_maintenance.dispatch_booking_notification")
+@patch("app.features.bookings.payment_maintenance._due_completion_candidates")
+@patch("app.features.bookings.payment_maintenance.get_settings")
 def test_no_reminder_while_event_day_still_running(mock_settings, mock_candidates, mock_upsert):
     mock_settings.return_value.local_auth_mode = False
     mock_candidates.return_value = [_paid_row(0)]
@@ -152,7 +152,7 @@ def test_no_reminder_while_event_day_still_running(mock_settings, mock_candidate
     mock_upsert.assert_not_called()
 
 
-@patch("app.features.bookings.payments.get_client")
+@patch("app.features.bookings.payment_maintenance.get_client")
 def test_due_candidates_skip_multi_day_event_before_end(mock_get_client):
     tomorrow = (datetime.now(timezone.utc) + timedelta(days=1)).date().isoformat()
     row = _paid_row(1, event_end_date=tomorrow)
@@ -166,8 +166,8 @@ def test_due_candidates_skip_multi_day_event_before_end(mock_get_client):
     assert candidates == []
 
 
-@patch("app.features.bookings.payments._auto_release_payout_row", return_value=True)
-@patch("app.features.bookings.payments.maybe_send_completion_reminder_for_row", return_value=True)
+@patch("app.features.bookings.payment_maintenance._auto_release_payout_row", return_value=True)
+@patch("app.features.bookings.payment_maintenance.maybe_send_completion_reminder_for_row", return_value=True)
 def test_touch_booking_completion_side_effects_runs_both(mock_reminder, mock_release):
     row = _paid_row(5)
     assert payments.touch_booking_completion_side_effects(row) is True
@@ -175,12 +175,12 @@ def test_touch_booking_completion_side_effects_runs_both(mock_reminder, mock_rel
     mock_release.assert_called_once_with(row)
 
 
-@patch("app.features.bookings.payments.maybe_send_completion_reminder_for_row", return_value=True)
-@patch("app.features.bookings.payments.get_settings")
+@patch("app.features.bookings.payment_maintenance.maybe_send_completion_reminder_for_row", return_value=True)
+@patch("app.features.bookings.payment_maintenance.get_settings")
 def test_list_touch_reminders_only_no_payout(mock_settings, mock_reminder):
     mock_settings.return_value.local_auth_mode = False
     rows = [_paid_row(5, id=f"b{i}") for i in range(15)]
-    with patch("app.features.bookings.payments._auto_release_payout_row") as mock_release:
+    with patch("app.features.bookings.payment_maintenance._auto_release_payout_row") as mock_release:
         payments.touch_completion_side_effects_for_booking_rows(rows, cap=10)
         assert mock_reminder.call_count == 10
         mock_release.assert_not_called()

@@ -256,10 +256,10 @@ def validate_step_fields(step: int, payload: dict[str, Any]) -> None:
     elif step == 3:
         _validate_step_location(payload)
 
-    elif step == 8:
+    elif step == 7:
         pass  # optional documents; upload URLs are cleaned on save
 
-    elif step in (1, 2, 7):
+    elif step in (1, 2, 8):
         pass  # frontend checks these steps; server re-checks on submit
 
 
