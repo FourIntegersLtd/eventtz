@@ -16,6 +16,7 @@ from app.features.contact.http.routes import client_router as contact_client_rou
 from app.features.contact.http.routes import vendor_router as contact_vendor_router
 from app.features.chat.http import routes as chat
 from app.features.geo.http import routes as client_geo
+from app.features.help.http import routes as help_routes
 from app.features.media.http import routes as media
 from app.features.notifications.http import client as client_notifications
 from app.features.notifications.http import vendor as vendor_notifications
@@ -51,6 +52,7 @@ api_router.include_router(public_blog.router)
 api_router.include_router(vendors_explore.router)
 api_router.include_router(client_booking_requests.router)
 api_router.include_router(client_geo.router)
+api_router.include_router(help_routes.router)
 api_router.include_router(client_notifications.router)
 api_router.include_router(vendor_notifications.router)
 api_router.include_router(vendor_payments.router)
