@@ -18,7 +18,7 @@ import { VendorBrowseDetailBody } from "@/features/client/browse/VendorBrowseDet
 import { ChatDrawer } from "@/features/chat/ChatDrawer";
 import { buildBrowsePricingOptions } from "@/features/client/browse/vendorBrowseDetailModel";
 import { useExploreVendor } from "@/features/client/browse/useExploreVendor";
-import { marketplaceStateFromSearchParams, toClientSearchContext } from "@/lib/marketplaceSearchParams";
+import { marketplaceStateFromSearchParams, buildMarketplaceSearchUrl, toClientSearchContext } from "@/lib/marketplaceSearchParams";
 import { vendorMatchesMarketplaceSearch } from "@/lib/marketplaceVendorMatch";
 import { usualReplyExpectation } from "@/lib/vendorMetrics";
 
@@ -40,9 +40,23 @@ export function ClientVendorBrowseDetailView() {
   const [bookingOpen, setBookingOpen] = useState(false);
   const [bookingSelectionIds, setBookingSelectionIds] = useState<string[]>([]);
 
+  const marketplaceSearch = useMemo(
+    () => marketplaceStateFromSearchParams(searchParams),
+    [searchParams],
+  );
+
+  /** Keep plan/simple search filters when returning to the list. */
+  const browseListHref = useMemo(
+    () => buildMarketplaceSearchUrl("/client/browse", marketplaceSearch),
+    [marketplaceSearch],
+  );
+
   const detailPath = useMemo(
-    () => (userId ? `/client/browse/${userId}` : "/client/browse"),
-    [userId],
+    () =>
+      userId
+        ? buildMarketplaceSearchUrl(`/client/browse/${userId}`, marketplaceSearch)
+        : browseListHref,
+    [userId, marketplaceSearch, browseListHref],
   );
 
   const businessName = useMemo(() => {
@@ -53,11 +67,6 @@ export function ClientVendorBrowseDetailView() {
   const pricingOptions = useMemo(
     () => (vendor ? buildBrowsePricingOptions(vendor) : []),
     [vendor],
-  );
-
-  const marketplaceSearch = useMemo(
-    () => marketplaceStateFromSearchParams(searchParams),
-    [searchParams],
   );
 
   const bookingSearchPrefill = useMemo((): VendorBookingSearchPrefill => {
@@ -102,7 +111,7 @@ export function ClientVendorBrowseDetailView() {
 
   const headerBar = (
     <div className="mb-6 flex flex-wrap items-center gap-3">
-      <BackLink href="/client/browse" label="Back to browse" tone="muted" />
+      <BackLink href={browseListHref} label="Back to browse" tone="muted" />
       {!user ? (
         <Link
           href="/"
@@ -139,7 +148,7 @@ export function ClientVendorBrowseDetailView() {
           <p className="text-sm text-neutral-700">
             This vendor could not be found or is no longer listed.
           </p>
-          <BackLink href="/client/browse" label="Back to browse" />
+          <BackLink href={browseListHref} label="Back to browse" />
         </div>
       );
     }
@@ -165,7 +174,7 @@ export function ClientVendorBrowseDetailView() {
           loginHref="/login"
           registerHref="/register?type=client"
           detailReturnPath={detailPath}
-          onContinue={() => router.push("/client/browse")}
+          onContinue={() => router.push(browseListHref)}
           onRequestBooking={
             isClient
               ? (ids) => {

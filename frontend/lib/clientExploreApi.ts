@@ -128,6 +128,13 @@ export type ExploreVendorsSearchResult = {
   sections: ExploreSearchSection[];
 };
 
+/** Short in-tab cache so back from vendor detail does not re-hit search. */
+const _SEARCH_CACHE_TTL_MS = 90_000;
+const _searchResultCache = new Map<
+  string,
+  { at: number; result: ExploreVendorsSearchResult }
+>();
+
 export async function fetchExploreVendorsSearch(
   q: ExploreSearchQuery,
 ): Promise<ExploreVendorsSearchResult> {
@@ -152,11 +159,16 @@ export async function fetchExploreVendorsSearch(
   if (q.offset != null && q.offset > 0) sp.set("offset", String(q.offset));
 
   const qs = sp.toString();
+  const cached = _searchResultCache.get(qs);
+  if (cached && Date.now() - cached.at < _SEARCH_CACHE_TTL_MS) {
+    return cached.result;
+  }
+
   const url = qs
     ? `/api/v1/vendors/explore/search?${qs}`
     : "/api/v1/vendors/explore/search";
   const { data } = await api.get<ExploreVendorSearchApiResponse>(url);
-  return {
+  const result: ExploreVendorsSearchResult = {
     totalCount: data.total_count ?? 0,
     vendors: data.vendors ?? [],
     matchNotice: data.match_notice ?? null,
@@ -167,4 +179,10 @@ export async function fetchExploreVendorsSearch(
     plan: data.plan ?? null,
     sections: data.sections ?? [],
   };
+  _searchResultCache.set(qs, { at: Date.now(), result });
+  if (_searchResultCache.size > 24) {
+    const oldest = _searchResultCache.keys().next().value;
+    if (oldest != null) _searchResultCache.delete(oldest);
+  }
+  return result;
 }

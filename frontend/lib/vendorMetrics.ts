@@ -91,9 +91,10 @@ export type VendorMetricItem = {
 /** Build display items from public metrics — omit empty / unknown values. */
 export function buildVendorMetricItems(
   metrics: VendorPublicMetrics,
-  options?: { includeRating?: boolean },
+  options?: { includeRating?: boolean; includeConversion?: boolean },
 ): VendorMetricItem[] {
   const includeRating = options?.includeRating !== false;
+  const includeConversion = options?.includeConversion === true;
   const items: VendorMetricItem[] = [];
 
   if (includeRating) {
@@ -121,9 +122,11 @@ export function buildVendorMetricItems(
     });
   }
 
-  const conversion = formatVendorConversionRate(metrics.conversion_rate);
-  if (conversion) {
-    items.push({ key: "conversion", label: "Conversion", value: conversion });
+  if (includeConversion) {
+    const conversion = formatVendorConversionRate(metrics.conversion_rate);
+    if (conversion) {
+      items.push({ key: "conversion", label: "Conversion", value: conversion });
+    }
   }
 
   return items;

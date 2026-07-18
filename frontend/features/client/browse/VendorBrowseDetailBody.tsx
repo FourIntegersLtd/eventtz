@@ -148,6 +148,15 @@ export function VendorBrowseDetailBody({
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_minmax(260px,340px)] lg:items-start lg:gap-10">
       <div className="min-w-0 space-y-6">
+        <header className="space-y-1.5">
+          <h1 className="font-heading text-3xl font-semibold tracking-tight text-neutral-900 sm:text-4xl">
+            {businessName}
+          </h1>
+          {city ? (
+            <p className="text-base text-neutral-600">{city}</p>
+          ) : null}
+        </header>
+
         <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
           <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-100">
             {activePhotoUrl ? (
@@ -215,21 +224,15 @@ export function VendorBrowseDetailBody({
 
         <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
           <div className="space-y-3 px-5 py-5">
-            <div>
-              <h3 className="font-heading text-base font-semibold text-neutral-900">
-                About this vendor
-              </h3>
-              {city ? (
-                <p className="mt-0.5 text-sm text-neutral-500">{city}</p>
-              ) : null}
-            </div>
+            <h3 className="font-heading text-base font-semibold text-neutral-900">
+              About
+            </h3>
             <VendorMetricsStrip
               metrics={{
                 review_average: vendor.review_average,
                 review_count: vendor.review_count,
                 completed_bookings: vendor.completed_bookings,
                 avg_response_seconds: vendor.avg_response_seconds,
-                conversion_rate: vendor.conversion_rate,
               }}
             />
             <p className="text-sm leading-relaxed text-neutral-700">{bio}</p>
