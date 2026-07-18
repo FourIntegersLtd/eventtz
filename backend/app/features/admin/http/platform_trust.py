@@ -58,6 +58,8 @@ def _dispute_row_to_model(row: dict[str, Any]) -> AdminDisputeCase:
         summary=str(row.get("summary", "")),
         internal_notes=row.get("internal_notes"),
         resolution_note=row.get("resolution_note"),
+        client_resolution_note=row.get("client_resolution_note"),
+        vendor_resolution_note=row.get("vendor_resolution_note"),
         assigned_admin_id=str(row["assigned_admin_id"])
         if row.get("assigned_admin_id")
         else None,
@@ -121,6 +123,10 @@ def admin_patch_dispute(
             assigned_admin_id=body.assigned_admin_id,
             resolution_action=body.resolution_action,
             refund_amount_gbp=body.refund_amount_gbp,
+            client_resolution_note=body.client_resolution_note,
+            vendor_resolution_note=body.vendor_resolution_note,
+            set_client_resolution_note="client_resolution_note" in patch_fields,
+            set_vendor_resolution_note="vendor_resolution_note" in patch_fields,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e

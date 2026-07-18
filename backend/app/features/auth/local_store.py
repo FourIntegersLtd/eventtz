@@ -17,6 +17,7 @@ def enabled() -> bool:
 _local_users_by_email: dict[str, dict[str, Any]] = {}
 _local_access_tokens: dict[str, str] = {}
 _local_refresh_tokens: dict[str, str] = {}
+_local_password_reset_tokens: dict[str, dict[str, Any]] = {}
 
 
 def normalize_email(email: str) -> str:
@@ -92,3 +93,65 @@ def revoke_access_token(access_token: str) -> None:
 def user_record_for_email(email: str) -> dict[str, Any] | None:
     record = _local_users_by_email.get(normalize_email(email))
     return record["user"] if record else None
+
+
+def email_for_user_id(user_id: str) -> str | None:
+    for email, record in _local_users_by_email.items():
+        if str(record["user"].get("id")) == user_id:
+            return email
+    return None
+
+
+def set_password(email: str, password: str) -> None:
+    email = normalize_email(email)
+    record = _local_users_by_email.get(email)
+    if not record:
+        raise ValueError("User not found")
+    record["password_hash"] = password_hash(password)
+
+
+def invalidate_password_reset_tokens(user_id: str) -> None:
+    now = datetime_utc_now_iso()
+    for row in _local_password_reset_tokens.values():
+        if row.get("user_id") == user_id and row.get("used_at") is None:
+            row["used_at"] = now
+
+
+def insert_password_reset_token(
+    *,
+    user_id: str,
+    token_hash: str,
+    expires_at: Any,
+) -> None:
+    from datetime import datetime, timezone
+
+    token_id = str(uuid4())
+    exp = expires_at
+    if isinstance(exp, datetime) and exp.tzinfo is None:
+        exp = exp.replace(tzinfo=timezone.utc)
+    _local_password_reset_tokens[token_hash] = {
+        "id": token_id,
+        "user_id": user_id,
+        "token_hash": token_hash,
+        "expires_at": exp.isoformat() if hasattr(exp, "isoformat") else str(exp),
+        "used_at": None,
+    }
+
+
+def find_password_reset_token(token_hash: str) -> dict[str, Any] | None:
+    row = _local_password_reset_tokens.get(token_hash)
+    return dict(row) if row else None
+
+
+def mark_password_reset_token_used(token_id: str) -> None:
+    now = datetime_utc_now_iso()
+    for row in _local_password_reset_tokens.values():
+        if row.get("id") == token_id:
+            row["used_at"] = now
+            return
+
+
+def datetime_utc_now_iso() -> str:
+    from datetime import datetime, timezone
+
+    return datetime.now(timezone.utc).isoformat()

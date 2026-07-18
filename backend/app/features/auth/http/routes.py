@@ -63,6 +63,36 @@ class MeResponse(BaseModel):
     user: dict[str, Any]
 
 
+class ForgotPasswordRequest(BaseModel):
+    email: str = Field(min_length=3)
+
+
+class ForgotPasswordResponse(BaseModel):
+    success: bool = True
+    message: str
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str = Field(min_length=20)
+    password: str = Field(min_length=6)
+
+
+class ResetPasswordResponse(BaseModel):
+    success: bool = True
+    user: dict[str, Any]
+    session: dict[str, Any]
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str = Field(min_length=1)
+    new_password: str = Field(min_length=6)
+
+
+class ChangePasswordResponse(BaseModel):
+    success: bool = True
+    message: str = "Password updated."
+
+
 # --- Routes ---
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -248,3 +278,74 @@ async def me(
     """Return the signed-in user from the cookie access token."""
     user = get_current_user_or_raise(request, response)
     return MeResponse(user=hydrate_user_from_db(user))
+
+
+def _client_ip(request: Request) -> str | None:
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip() or None
+    if request.client:
+        return request.client.host
+    return None
+
+
+@router.post("/forgot-password", response_model=ForgotPasswordResponse)
+async def forgot_password(body: ForgotPasswordRequest, request: Request):
+    """Send a one-click reset link when the email exists. Always returns the same message."""
+    from app.features.auth.password_reset import request_password_reset
+
+    try:
+        message = request_password_reset(email=body.email, client_ip=_client_ip(request))
+    except ValueError as e:
+        raise HTTPException(status_code=429, detail=str(e)) from e
+    return ForgotPasswordResponse(message=message)
+
+
+@router.post("/reset-password", response_model=ResetPasswordResponse)
+async def reset_password(
+    body: ResetPasswordRequest,
+    request: Request,
+    response: Response,
+):
+    """Consume a one-click reset token and set a new password; signs the user in."""
+    from app.features.auth.password_reset import reset_password_with_token
+
+    try:
+        result = reset_password_with_token(
+            token=body.token,
+            password=body.password,
+            client_ip=_client_ip(request),
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    set_session_cookies(response, result["session"])
+    return ResetPasswordResponse(
+        user=hydrate_user_from_db(result["user"]),
+        session=result["session"],
+    )
+
+
+@router.post("/change-password", response_model=ChangePasswordResponse)
+async def change_password_route(
+    body: ChangePasswordRequest,
+    request: Request,
+    response: Response,
+):
+    """Signed-in user changes password (current + new)."""
+    from app.features.auth.password_reset import change_password
+
+    user = get_current_user_or_raise(request, response)
+    email = str(user.get("email") or "").strip()
+    user_id = str(user.get("id") or "")
+    if not email or not user_id:
+        raise HTTPException(status_code=400, detail="Could not update password. Try again.")
+    try:
+        change_password(
+            user_id=user_id,
+            email=email,
+            current_password=body.current_password,
+            new_password=body.new_password,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    return ChangePasswordResponse()

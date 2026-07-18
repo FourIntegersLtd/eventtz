@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any
+from typing import Any, Literal
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
@@ -105,11 +105,33 @@ def _ts(v: Any) -> str | None:
     return v if isinstance(v, str) else str(v)
 
 
-def _serialize_public(row: dict[str, Any]) -> dict[str, Any]:
+def _serialize_public(
+    row: dict[str, Any],
+    *,
+    viewer_role: Literal["client", "vendor"] | None = None,
+) -> dict[str, Any]:
     st = str(row.get("status") or "open")
     if st not in ("open", "under_review", "resolved", "closed"):
         st = "open"
-    rn = row.get("resolution_note")
+    legacy = row.get("resolution_note")
+    client_note = row.get("client_resolution_note")
+    vendor_note = row.get("vendor_resolution_note")
+    if viewer_role == "client":
+        rn = client_note if client_note not in (None, "") else legacy
+    elif viewer_role == "vendor":
+        rn = vendor_note if vendor_note not in (None, "") else legacy
+    else:
+        # Unknown viewer: prefer party notes if identical, else legacy.
+        c = str(client_note).strip() if client_note else ""
+        v = str(vendor_note).strip() if vendor_note else ""
+        if c and c == v:
+            rn = c
+        elif c and not v:
+            rn = c
+        elif v and not c:
+            rn = v
+        else:
+            rn = legacy
     conv = row.get("conversation_id")
     return {
         "id": str(row.get("id", "")),
@@ -120,7 +142,7 @@ def _serialize_public(row: dict[str, Any]) -> dict[str, Any]:
         "created_at": _ts(row.get("created_at")),
         "updated_at": _ts(row.get("updated_at")),
         "resolved_at": _ts(row.get("resolved_at")),
-        "resolution_note": str(rn) if rn else None,
+        "resolution_note": str(rn).strip() if rn and str(rn).strip() else None,
         "chat_included_for_review": bool(conv and str(conv).strip()),
     }
 
@@ -234,11 +256,20 @@ def _enrich_participant_disputes(
 
     out: list[dict[str, Any]] = []
     for row in rows:
-        base = _serialize_public(row) if "summary" in row else dict(row)
-        bid = str(base.get("booking_request_id") or row.get("booking_request_id") or "")
+        bid = str(row.get("booking_request_id") or "")
         booking = _lookup_booking(bookings, bid)
         cid = str(booking.get("client_user_id") or "")
         vid = str(booking.get("vendor_user_id") or "")
+        viewer_role: str | None = None
+        if _same_user_id(viewer_user_id, cid):
+            viewer_role = "client"
+        elif _same_user_id(viewer_user_id, vid):
+            viewer_role = "vendor"
+        base = (
+            _serialize_public(row, viewer_role=viewer_role)  # type: ignore[arg-type]
+            if "summary" in row
+            else dict(row)
+        )
         oid = str(base.get("opened_by_user_id") or row.get("opened_by_user_id") or "")
 
         opened_role: str | None = None

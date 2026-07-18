@@ -27,6 +27,31 @@ def _format_release_date(release_at: datetime) -> str:
     return release_at.strftime("%A %d %B").replace(" 0", " ")
 
 
+def _claim_completion_reminder_sent(booking_id: str) -> bool:
+    """Atomically mark the reminder as sent. Returns False if another request already claimed it.
+
+    List endpoints can call this concurrently (dashboard Promise.all, Strict Mode, realtime
+    refresh). Claiming before notify prevents an infinite upsert → SSE → refetch loop.
+    """
+    if not booking_id:
+        return False
+    try:
+        res = (
+            get_client()
+            .table("booking_requests")
+            .update({"completion_reminder_sent_at": _now_iso()})
+            .eq("id", booking_id)
+            .is_("completion_reminder_sent_at", "null")
+            .select("id")
+            .execute()
+        )
+    except Exception:
+        logger.exception("completion reminder claim failed booking=%s", booking_id)
+        return False
+    rows = getattr(res, "data", None) or []
+    return bool(rows)
+
+
 def maybe_send_completion_reminder_for_row(row: dict[str, Any]) -> bool:
     """Send one post-event nudge per booking to whoever hasn't confirmed yet."""
     if row.get("completion_reminder_sent_at"):
@@ -34,6 +59,8 @@ def maybe_send_completion_reminder_for_row(row: dict[str, Any]) -> bool:
     if not event_day_over(row):
         return False
     booking_id = str(row.get("id") or "")
+    if not _claim_completion_reminder_sent(booking_id):
+        return False
     client_id = str(row.get("client_user_id") or "")
     vendor_id = str(row.get("vendor_user_id") or "")
     release_at = compute_payout_auto_release_at(row)
@@ -62,9 +89,6 @@ def maybe_send_completion_reminder_for_row(row: dict[str, Any]) -> bool:
                 "unless they have reported a problem."
             ),
         )
-    get_client().table("booking_requests").update(
-        {"completion_reminder_sent_at": _now_iso()},
-    ).eq("id", booking_id).execute()
     _notify_pair(client_id, vendor_id)
     return True
 

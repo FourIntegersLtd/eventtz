@@ -162,7 +162,7 @@ def list_booking_requests_for_vendor(
         get_client()
         .table("booking_requests")
         .select(
-            "id,status,event_name,event_date,event_end_date,total_label,client_user_id,created_at,updated_at,line_items,vendor_adjustments,initiator,conversation_id,payment_status,client_completion_confirmed_at,vendor_completion_confirmed_at",
+            "id,status,event_name,event_date,event_end_date,total_label,client_user_id,created_at,updated_at,line_items,vendor_adjustments,initiator,conversation_id,payment_status,client_completion_confirmed_at,vendor_completion_confirmed_at,completion_reminder_sent_at",
         )
         .eq("vendor_user_id", vendor_user_id)
     )
@@ -219,6 +219,10 @@ def list_booking_requests_for_vendor(
                 "has_price_update": _has_price_update(row),
                 "completion_waiting_on": completion_waiting_on(row),
                 "vendor_completion_confirmed_at": _opt_ts(row.get("vendor_completion_confirmed_at")),
+                # Used by list-touch completion reminders; stripped by response models.
+                "client_user_id": cid,
+                "vendor_user_id": vendor_user_id,
+                "completion_reminder_sent_at": _opt_ts(row.get("completion_reminder_sent_at")),
             },
         )
     rev_map = get_vendor_reviews_for_bookings(vendor_user_id, [o["id"] for o in out])
@@ -325,7 +329,7 @@ def list_booking_requests_for_client(
         get_client()
         .table("booking_requests")
         .select(
-            "id,status,event_name,event_date,event_end_date,total_label,vendor_user_id,created_at,updated_at,line_items,vendor_adjustments,initiator,conversation_id,payment_status,client_completion_confirmed_at,vendor_completion_confirmed_at",
+            "id,status,event_name,event_date,event_end_date,total_label,vendor_user_id,created_at,updated_at,line_items,vendor_adjustments,initiator,conversation_id,payment_status,client_completion_confirmed_at,vendor_completion_confirmed_at,completion_reminder_sent_at",
         )
         .eq("client_user_id", client_user_id)
     )
@@ -385,6 +389,9 @@ def list_booking_requests_for_client(
                 "has_price_update": _has_price_update(row),
                 "completion_waiting_on": completion_waiting_on(row),
                 "client_completion_confirmed_at": _opt_ts(row.get("client_completion_confirmed_at")),
+                # Used by list-touch completion reminders; stripped by response models.
+                "client_user_id": client_user_id,
+                "completion_reminder_sent_at": _opt_ts(row.get("completion_reminder_sent_at")),
             },
         )
     return out

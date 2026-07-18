@@ -150,6 +150,8 @@ class AdminDisputeCase(BaseModel):
     summary: str
     internal_notes: str | None = None
     resolution_note: str | None = None
+    client_resolution_note: str | None = None
+    vendor_resolution_note: str | None = None
     assigned_admin_id: str | None = None
     assigned_admin_email: str | None = None
     created_at: str | None = None
@@ -179,6 +181,8 @@ class AdminDisputePatchBody(BaseModel):
     status: Literal["open", "under_review", "resolved", "closed"] | None = None
     internal_notes: str | None = Field(default=None, max_length=8000)
     resolution_note: str | None = Field(default=None, max_length=8000)
+    client_resolution_note: str | None = Field(default=None, max_length=8000)
+    vendor_resolution_note: str | None = Field(default=None, max_length=8000)
     assigned_admin_id: str | None = None
     #: Refund or payout choice — only applied when status is set to "resolved".
     resolution_action: Literal["release_to_vendor", "refund_client", "partial_refund"] | None = None

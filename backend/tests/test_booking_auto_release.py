@@ -129,6 +129,9 @@ def test_reminder_targets_only_unconfirmed_party(
     mock_get_client.return_value.table.return_value = mock_table
     mock_table.update.return_value = mock_table
     mock_table.eq.return_value = mock_table
+    mock_table.is_.return_value = mock_table
+    mock_table.select.return_value = mock_table
+    mock_table.execute.return_value = MagicMock(data=[{"id": "b1"}])
     mock_candidates.return_value = [
         _paid_row(2, vendor_completion_confirmed_at="2026-01-01T00:00:00Z"),
     ]
@@ -139,6 +142,7 @@ def test_reminder_targets_only_unconfirmed_party(
     # Marks the booking so the next maintenance run skips it (dedupe).
     update_payload = mock_table.update.call_args[0][0]
     assert update_payload["completion_reminder_sent_at"]
+    mock_table.is_.assert_called_with("completion_reminder_sent_at", "null")
 
 
 @patch("app.features.bookings.payment_maintenance.dispatch_booking_notification")

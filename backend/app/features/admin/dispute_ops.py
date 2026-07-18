@@ -151,6 +151,8 @@ def list_disputes_for_admin(*, status: str | None = None) -> list[dict[str, Any]
                 "summary": str(r.get("summary", "")),
                 "internal_notes": r.get("internal_notes"),
                 "resolution_note": r.get("resolution_note"),
+                "client_resolution_note": r.get("client_resolution_note"),
+                "vendor_resolution_note": r.get("vendor_resolution_note"),
                 "assigned_admin_id": str(r["assigned_admin_id"])
                 if r.get("assigned_admin_id")
                 else None,
@@ -176,6 +178,11 @@ def patch_dispute_case(
     assigned_admin_id: str | None,
     resolution_action: str | None = None,
     refund_amount_gbp: float | None = None,
+    client_resolution_note: str | None = None,
+    vendor_resolution_note: str | None = None,
+    # True when the patch body explicitly set these fields (including null to clear).
+    set_client_resolution_note: bool = False,
+    set_vendor_resolution_note: bool = False,
 ) -> dict[str, Any] | None:
     if get_settings().local_auth_mode:
         return None
@@ -188,6 +195,10 @@ def patch_dispute_case(
         patch["internal_notes"] = internal_notes
     if resolution_note is not None:
         patch["resolution_note"] = resolution_note
+    if set_client_resolution_note:
+        patch["client_resolution_note"] = client_resolution_note
+    if set_vendor_resolution_note:
+        patch["vendor_resolution_note"] = vendor_resolution_note
     if assigned_admin_id is not None:
         if assigned_admin_id:
             assert_active_admin_assignee(assigned_admin_id)
@@ -287,10 +298,26 @@ def patch_dispute_case(
                 if rows and isinstance(rows[0], dict):
                     cid = str(rows[0].get("client_user_id") or "")
                     vid = str(rows[0].get("vendor_user_id") or "")
-                    if cid:
-                        notify_user(cid, "dispute_changed")
-                    if vid:
-                        notify_user(vid, "dispute_changed")
+                    notify_client = set_client_resolution_note or (
+                        not set_client_resolution_note and not set_vendor_resolution_note
+                    )
+                    notify_vendor = set_vendor_resolution_note or (
+                        not set_client_resolution_note and not set_vendor_resolution_note
+                    )
+                    # Always notify both on status/money changes; note-only patches notify audience.
+                    note_only = (
+                        set_client_resolution_note or set_vendor_resolution_note
+                    ) and not status and resolution_action is None
+                    if note_only:
+                        if cid and notify_client and set_client_resolution_note:
+                            notify_user(cid, "dispute_changed")
+                        if vid and notify_vendor and set_vendor_resolution_note:
+                            notify_user(vid, "dispute_changed")
+                    else:
+                        if cid:
+                            notify_user(cid, "dispute_changed")
+                        if vid:
+                            notify_user(vid, "dispute_changed")
         except Exception:
             logger.warning("admin patch_dispute_case notify failed id=%s", dispute_id, exc_info=True)
         return out

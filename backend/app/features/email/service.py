@@ -448,6 +448,32 @@ class EmailService:
         subject = f"{headline} | {APP_NAME}"
         return resend_send(to=[to_email], subject=subject, html=html, text=text)
 
+    def send_password_reset(
+        self,
+        *,
+        to_email: str,
+        reset_url: str,
+        expires_minutes: int = 60,
+    ) -> bool:
+        headline = "Reset your password"
+        body = (
+            "We received a request to reset your Eventtz password.\n\n"
+            f"This link expires in {expires_minutes} minutes and can only be used once. "
+            "If you did not ask for a reset, you can ignore this email."
+        )
+        ctx = transactional_email_context(
+            subject=headline,
+            headline=headline,
+            subtitle="One-click secure link",
+            body=body,
+            action_url=reset_url,
+            action_label="Reset password",
+        )
+        html = render_template("auth/password_reset.html", ctx)
+        text = render_template("auth/password_reset.txt", ctx)
+        subject = f"{headline} | {APP_NAME}"
+        return resend_send(to=[to_email], subject=subject, html=html, text=text)
+
 
 _email_service: EmailService | None = None
 

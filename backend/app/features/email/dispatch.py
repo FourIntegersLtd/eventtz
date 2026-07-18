@@ -273,3 +273,25 @@ def send_welcome_email(*, email: str, user_type: str) -> bool:
     except Exception:
         logger.exception("send_welcome_email failed email=%s user_type=%s", normalized, user_type)
         return False
+
+
+def send_password_reset_email(
+    *,
+    email: str,
+    reset_url: str,
+    expires_minutes: int = 60,
+) -> bool:
+    if get_settings().local_auth_mode:
+        return False
+    normalized = email.strip().lower()
+    if not normalized or "@" not in normalized or not reset_url.strip():
+        return False
+    try:
+        return get_email_service().send_password_reset(
+            to_email=normalized,
+            reset_url=reset_url.strip(),
+            expires_minutes=expires_minutes,
+        )
+    except Exception:
+        logger.exception("send_password_reset_email failed email=%s", normalized)
+        return False
