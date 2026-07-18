@@ -15,6 +15,11 @@ import {
 } from "@/lib/vendorMetrics";
 import { profileImageUrlFromPayload } from "@/lib/vendorPortfolioImages";
 
+/** Conversion rate above which plan cards show “Often booked”. */
+const OFTEN_BOOKED_CONVERSION_MIN = 0.35;
+/** Hide reply chips when average response is slower than this (noisy / unhelpful). */
+const REPLY_CHIP_MAX_SECONDS = 48 * 3600;
+
 function labelForService(value: string): string {
   return SERVICE_OPTIONS.find((o) => o.value === value)?.label ?? value;
 }
@@ -26,17 +31,18 @@ type MarketplaceVendorCardProps = {
   bookmarked?: boolean;
   onToggleBookmark?: () => void;
   showBookmark?: boolean;
-  /** Multi-enquire: show select checkbox (signed-in clients). */
+  /** Multi-enquire: show select control (signed-in clients). */
   selectable?: boolean;
   selected?: boolean;
   onToggleSelect?: () => void;
   /** Fires before navigating to the vendor detail page. */
   onNavigate?: (vendorUserId: string) => void;
+  /** Plan-mode evidence (quote + trust). */
+  showPlanEvidence?: boolean;
 };
 
 /**
- * Browse card: cover → vendor → package → light meta → price.
- * Conversion / event-type / timing details stay on the vendor profile.
+ * Browse card: cover → vendor → package → evidence → price / add-to-request.
  */
 export function MarketplaceVendorCard({
   card,
@@ -48,6 +54,7 @@ export function MarketplaceVendorCard({
   selected = false,
   onToggleSelect,
   onNavigate,
+  showPlanEvidence = false,
 }: MarketplaceVendorCardProps) {
   const router = useRouter();
   const v = card.vendor;
@@ -98,16 +105,29 @@ export function MarketplaceVendorCard({
     : null;
 
   const completed = Number(v.completed_bookings) || 0;
-  const replyWithin = formatUsualReplyWithin(v.avg_response_seconds);
-  const trustBits = [
-    completed > 0 ? formatVendorCompletedBookings(completed) : null,
-    replyWithin ? `Replies within ${replyWithin}` : null,
-  ].filter(Boolean) as string[];
+  const avgReplySeconds =
+    v.avg_response_seconds != null ? Number(v.avg_response_seconds) : NaN;
+  const replyWithin =
+    Number.isFinite(avgReplySeconds) && avgReplySeconds <= REPLY_CHIP_MAX_SECONDS
+      ? formatUsualReplyWithin(avgReplySeconds)
+      : null;
+  const conversion = Number(v.conversion_rate);
+  const oftenBooked =
+    showPlanEvidence &&
+    Number.isFinite(conversion) &&
+    conversion >= OFTEN_BOOKED_CONVERSION_MIN;
+  const completedLabel = completed > 0 ? formatVendorCompletedBookings(completed) : null;
+  const replyLabel = replyWithin ? `Replies in ${replyWithin}` : null;
 
   const avatarUrl = profileImageUrlFromPayload(p);
   const rc = v.review_count ?? 0;
   const ra = v.review_average;
   const showRating = rc > 0 && ra != null;
+  const featured = showPlanEvidence ? v.featured_review : null;
+  const featuredRating = featured?.rating != null ? Number(featured.rating) : 0;
+  const trustLine = [oftenBooked ? "Often booked" : null, completedLabel, replyLabel]
+    .filter(Boolean)
+    .join(" · ");
 
   const openDetail = () => {
     onNavigate?.(v.user_id);
@@ -125,34 +145,8 @@ export function MarketplaceVendorCard({
           openDetail();
         }
       }}
-      className={`group relative isolate mx-auto flex w-full max-w-[22rem] cursor-pointer flex-col overflow-hidden ${portalCard} text-left transition hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${selected ? "ring-2 ring-primary/40 border-primary/30" : ""}`}
+      className={`group relative isolate mx-auto flex w-full max-w-[22rem] cursor-pointer flex-col overflow-hidden ${portalCard} text-left transition hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${selected ? "border-primary ring-2 ring-primary/35" : ""}`}
     >
-      {selectable ? (
-        <button
-          type="button"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleSelect?.();
-          }}
-          className={`absolute left-3 top-3 z-20 flex h-11 w-11 touch-manipulation items-center justify-center rounded-full border shadow-sm transition ${
-            selected
-              ? "border-primary bg-primary text-white"
-              : "border-neutral-200 bg-white/95 text-neutral-600 hover:border-primary hover:text-primary"
-          }`}
-          aria-label={selected ? "Deselect vendor" : "Select vendor"}
-          aria-pressed={selected}
-        >
-          {selected ? (
-            <Check className="pointer-events-none h-4 w-4" strokeWidth={2.5} />
-          ) : (
-            <span
-              className="pointer-events-none h-4 w-4 rounded-sm border-2 border-current"
-              aria-hidden
-            />
-          )}
-        </button>
-      ) : null}
       {showBookmark ? (
         <button
           type="button"
@@ -229,27 +223,88 @@ export function MarketplaceVendorCard({
           {packageTitle}
         </h4>
 
-        {trustBits.length > 0 ? (
+        {!showPlanEvidence && (completedLabel || replyLabel) ? (
           <p className="mt-1.5 truncate text-xs text-neutral-500">
-            {trustBits.join(" · ")}
+            {[completedLabel, replyLabel].filter(Boolean).join(" · ")}
           </p>
+        ) : null}
+
+        {showPlanEvidence && trustLine ? (
+          <p className="mt-1.5 text-xs font-medium text-neutral-600">{trustLine}</p>
+        ) : null}
+
+        {showPlanEvidence && featured?.body_excerpt ? (
+          <figure className="mt-2.5">
+            {featuredRating >= 1 ? (
+              <div
+                className="mb-1 flex items-center gap-0.5 text-primary"
+                aria-label={`${featuredRating} out of 5 stars`}
+              >
+                {Array.from({ length: 5 }, (_, i) => (
+                  <Star
+                    key={i}
+                    className={`h-3 w-3 ${i < featuredRating ? "fill-current" : "text-neutral-200"}`}
+                    aria-hidden
+                  />
+                ))}
+              </div>
+            ) : null}
+            <blockquote className="text-sm leading-snug text-neutral-700">
+              <span className="line-clamp-3">“{featured.body_excerpt}”</span>
+            </blockquote>
+            {featured.reviewer_display ? (
+              <figcaption className="mt-1 text-xs font-medium text-neutral-500">
+                — {featured.reviewer_display}
+              </figcaption>
+            ) : null}
+          </figure>
         ) : null}
       </div>
 
-      <div className="mt-3.5 flex items-center justify-between gap-3 border-t border-primary/10 bg-primary-soft px-4 py-3.5">
-        <p className="font-heading text-lg font-semibold text-primary">
-          {minGbp != null ? (
-            <>
-              <span className="text-sm font-medium text-primary/65">From </span>
-              {priceLabel}
-            </>
-          ) : (
-            priceLabel
-          )}
-        </p>
-        <span className="text-[11px] font-semibold tracking-[0.12em] text-primary/80 uppercase">
-          View profile
-        </span>
+      <div className="mt-3.5 space-y-2 border-t border-primary/10 bg-primary-soft px-3.5 py-3">
+        <div className="flex items-center justify-between gap-3">
+          <p className="font-heading text-lg font-semibold text-primary">
+            {minGbp != null ? (
+              <>
+                <span className="text-sm font-medium text-primary/65">From </span>
+                {priceLabel}
+              </>
+            ) : (
+              priceLabel
+            )}
+          </p>
+          {!selectable ? (
+            <span className="text-[11px] font-semibold tracking-[0.12em] text-primary/80 uppercase">
+              View profile
+            </span>
+          ) : null}
+        </div>
+
+        {selectable ? (
+          <button
+            type="button"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleSelect?.();
+            }}
+            className={`flex w-full touch-manipulation items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
+              selected
+                ? "bg-primary text-white shadow-sm"
+                : "border border-primary/30 bg-white text-primary hover:border-primary hover:bg-white"
+            }`}
+            aria-pressed={selected}
+          >
+            {selected ? (
+              <>
+                <Check className="h-4 w-4" strokeWidth={2.5} aria-hidden />
+                Added — message together
+              </>
+            ) : (
+              "Add to message"
+            )}
+          </button>
+        ) : null}
       </div>
     </div>
   );

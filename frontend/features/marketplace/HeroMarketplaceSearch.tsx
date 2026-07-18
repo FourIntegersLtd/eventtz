@@ -15,6 +15,7 @@ import { todayIsoDate } from "@/lib/eventDateValidation";
 import { formatEventDate } from "@/lib/dateFormat";
 import { DateInput } from "@/components/ui/DateInput";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
+import { RotatingSearchPlaceholder } from "@/features/marketplace/RotatingSearchPlaceholder";
 
 const OTHER_TOOLTIP =
   "We’re expanding categories. Join the waitlist to hear when your vendor type goes live.";
@@ -268,10 +269,14 @@ export function HeroMarketplaceSearch({
         {/* Free-text search — vendor name, city, or services (not place autocomplete) */}
         <div className={`relative ${fieldClassName}`}>
           <Search
-            className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${
+            className={`pointer-events-none absolute left-3 top-1/2 z-[1] h-4 w-4 -translate-y-1/2 ${
               landing ? "text-primary" : "text-neutral-400"
             }`}
             aria-hidden
+          />
+          <RotatingSearchPlaceholder
+            visible={!state.query.trim()}
+            compact={!landing}
           />
           <input
             id="hero-query"
@@ -281,11 +286,11 @@ export function HeroMarketplaceSearch({
             aria-label="Search vendors"
             value={state.query}
             onChange={(e) => setState((s) => ({ ...s, query: e.target.value }))}
-            placeholder={landing ? "e.g. puff-puff vendor in Leeds" : "Search vendors or city"}
+            placeholder=""
             className={
               landing
-                ? "h-12 w-full rounded-xl border-0 bg-transparent py-3 pl-11 pr-4 text-base text-neutral-900 placeholder:text-neutral-400 focus:border-0 focus:outline-none focus:ring-0 lg:rounded-none"
-                : "h-12 w-full rounded-xl border border-neutral-200 bg-white py-2 pl-10 pr-4 text-sm text-neutral-900 outline-none ring-primary/15 focus:border-primary focus:ring-2"
+                ? "relative z-[1] h-12 w-full rounded-xl border-0 bg-transparent py-3 pl-11 pr-4 text-base text-neutral-900 caret-neutral-900 focus:border-0 focus:outline-none focus:ring-0 lg:rounded-none"
+                : "relative z-[1] h-12 w-full rounded-xl border border-neutral-200 bg-transparent py-2 pl-10 pr-4 text-sm text-neutral-900 caret-neutral-900 outline-none ring-primary/15 focus:border-primary focus:ring-2"
             }
           />
         </div>

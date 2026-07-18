@@ -20,10 +20,44 @@ export type ExploreVendor = {
   conversion_rate?: number | null;
 };
 
+export type ExploreVendorFeaturedReview = {
+  rating: number;
+  body_excerpt: string;
+  reviewer_display: string;
+};
+
 export type ExploreVendorSearchRow = ExploreVendor & {
   matched_services: string[];
   /** exact | related | fallback — close-enough search tier */
   match_tier?: "exact" | "related" | "fallback";
+  featured_review?: ExploreVendorFeaturedReview | null;
+  match_hint?: string | null;
+};
+
+export type ExplorePlanNeed = {
+  id: string;
+  label: string;
+  service_key: string;
+  keywords: string[];
+  optional: boolean;
+  rationale?: string | null;
+};
+
+export type ExploreSearchPlan = {
+  title: string;
+  event_types: string[];
+  needs: ExplorePlanNeed[];
+  intent_summary?: string | null;
+};
+
+export type ExploreSearchSection = {
+  need_id: string;
+  label: string;
+  service_key: string;
+  optional: boolean;
+  vendors: ExploreVendorSearchRow[];
+  total_count: number;
+  why?: string | null;
 };
 
 export type MarketplaceSort =
@@ -55,6 +89,10 @@ type ExploreVendorSearchApiResponse = {
   match_notice?: string | null;
   has_exact?: boolean;
   has_related?: boolean;
+  search_mode?: "simple" | "plan";
+  intent_summary?: string | null;
+  plan?: ExploreSearchPlan | null;
+  sections?: ExploreSearchSection[];
 };
 
 export async function fetchExploreVendors(): Promise<ExploreVendor[]> {
@@ -78,15 +116,21 @@ export async function fetchExploreVendorById(
   }
 }
 
-export async function fetchExploreVendorsSearch(
-  q: ExploreSearchQuery,
-): Promise<{
+export type ExploreVendorsSearchResult = {
   totalCount: number;
   vendors: ExploreVendorSearchRow[];
   matchNotice: string | null;
   hasExact: boolean;
   hasRelated: boolean;
-}> {
+  searchMode: "simple" | "plan";
+  intentSummary: string | null;
+  plan: ExploreSearchPlan | null;
+  sections: ExploreSearchSection[];
+};
+
+export async function fetchExploreVendorsSearch(
+  q: ExploreSearchQuery,
+): Promise<ExploreVendorsSearchResult> {
   const sp = new URLSearchParams();
   const searchText = (q.query?.trim() || q.location?.trim()) ?? "";
   if (searchText) sp.set("q", searchText);
@@ -118,5 +162,9 @@ export async function fetchExploreVendorsSearch(
     matchNotice: data.match_notice ?? null,
     hasExact: Boolean(data.has_exact),
     hasRelated: Boolean(data.has_related),
+    searchMode: data.search_mode === "plan" ? "plan" : "simple",
+    intentSummary: data.intent_summary ?? null,
+    plan: data.plan ?? null,
+    sections: data.sections ?? [],
   };
 }

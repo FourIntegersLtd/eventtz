@@ -171,10 +171,6 @@ export function MultiVendorEnquireModal({
       }
     >
       <div className="space-y-4">
-        <p className="text-sm leading-relaxed text-neutral-600">
-          We&apos;ll send the same event details to each vendor below. First to accept
-          isn&apos;t exclusive until you pay. You can request several vendors while you wait.
-        </p>
         <ul className="rounded-xl border border-neutral-100 bg-neutral-50/80 px-4 py-3 text-sm text-neutral-800">
           {namedVendors.map((n) => (
             <li key={n.id} className="py-0.5">

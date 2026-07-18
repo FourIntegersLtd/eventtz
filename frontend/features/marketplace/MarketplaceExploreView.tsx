@@ -12,6 +12,8 @@ import { getButtonClassName } from "@/components/ui/buttonStyles";
 import { useToast } from "@/components/ui/Toast";
 import {
   fetchExploreVendorsSearch,
+  type ExploreSearchPlan,
+  type ExploreSearchSection,
   type ExploreVendorSearchRow,
 } from "@/lib/clientExploreApi";
 import {
@@ -33,12 +35,30 @@ import {
   buildMarketplaceResultsHeadline,
   expandVendorsForSearchResults,
 } from "@/features/marketplace/marketplaceSearchModel";
+import {
+  planOptionsLabel,
+} from "@/features/marketplace/marketplacePlanCopy";
 import { useMarketplaceBookmarks } from "@/features/marketplace/useMarketplaceBookmarks";
 import { ScrollToTopButton } from "@/components/ui/ScrollToTopButton";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 const CARD_GRID =
   "grid justify-items-center gap-6 sm:grid-cols-2 sm:gap-7 lg:grid-cols-3 lg:gap-8";
+
+function planSeeMoreHref(
+  pathname: string,
+  state: MarketplaceSearchState,
+  section: ExploreSearchSection,
+): string {
+  // Types-only: keep simple mode. Do not reuse the plan query or section label
+  // (e.g. "Birthday cake") or the AI may re-enter plan mode.
+  return buildMarketplaceSearchUrl(pathname, {
+    ...state,
+    query: "",
+    types: [section.service_key],
+    page: 1,
+  });
+}
 
 export function MarketplaceExploreView({
   mode = "browse",
@@ -61,6 +81,9 @@ export function MarketplaceExploreView({
   const [vendors, setVendors] = useState<ExploreVendorSearchRow[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [matchNotice, setMatchNotice] = useState<string | null>(null);
+  const [searchMode, setSearchMode] = useState<"simple" | "plan">("simple");
+  const [plan, setPlan] = useState<ExploreSearchPlan | null>(null);
+  const [sections, setSections] = useState<ExploreSearchSection[]>([]);
   const [selectedById, setSelectedById] = useState<Record<string, ExploreVendorSearchRow>>(
     {},
   );
@@ -97,6 +120,9 @@ export function MarketplaceExploreView({
       setVendors([]);
       setTotalCount(0);
       setMatchNotice(null);
+      setSearchMode("simple");
+      setPlan(null);
+      setSections([]);
       setLoading(false);
       return;
     }
@@ -106,8 +132,7 @@ export function MarketplaceExploreView({
       setError(null);
       try {
         const page = state.page;
-        const { vendors: rows, matchNotice: notice, totalCount: total } =
-          await fetchExploreVendorsSearch({
+        const result = await fetchExploreVendorsSearch({
             query: state.query || undefined,
             types: state.types.length ? state.types : undefined,
             location: state.location || undefined,
@@ -122,13 +147,17 @@ export function MarketplaceExploreView({
             offset: (page - 1) * MARKETPLACE_PAGE_SIZE,
           });
         if (!cancelled) {
-          setVendors(rows);
-          setTotalCount(total);
-          setMatchNotice(notice);
+          setVendors(result.vendors);
+          setTotalCount(result.totalCount);
+          setMatchNotice(result.matchNotice);
+          setSearchMode(result.searchMode);
+          setPlan(result.plan);
+          setSections(result.sections);
           track(MixpanelEvents.marketplace_results_viewed, {
-            result_count: total,
+            result_count: result.totalCount,
             page: state.page,
             saved_only: savedOnly,
+            search_mode: result.searchMode,
           });
         }
       } catch {
@@ -147,7 +176,12 @@ export function MarketplaceExploreView({
     [vendors, state.types],
   );
 
-  const headline = buildMarketplaceResultsHeadline(state);
+  const headline =
+    searchMode === "plan" && plan?.title
+      ? plan.title
+      : buildMarketplaceResultsHeadline(state);
+
+  const isPlanMode = searchMode === "plan" && sections.length > 0 && !savedOnly;
 
   const searchPrefill = useMemo(() => {
     const d = state.dates;
@@ -232,7 +266,8 @@ export function MarketplaceExploreView({
         }
       : {};
 
-  const pagination = !loading && !error && totalCount > MARKETPLACE_PAGE_SIZE ? (
+  const pagination =
+    !loading && !error && !isPlanMode && totalCount > MARKETPLACE_PAGE_SIZE ? (
     <MarketplacePagination
       page={state.page}
       totalCount={totalCount}
@@ -243,13 +278,10 @@ export function MarketplaceExploreView({
 
   const selectionBar =
     isClient && selectedCount > 0 ? (
-      <div className="sticky bottom-4 z-30 mx-auto mt-6 flex max-w-xl flex-wrap items-center justify-between gap-3 rounded-2xl border border-neutral-200 bg-white px-4 py-3 shadow-lg">
+      <div className="sticky bottom-4 z-30 mx-auto mt-6 flex max-w-xl flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/25 bg-white px-4 py-3 shadow-lg ring-1 ring-primary/10">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-neutral-900">
-            {selectedCount} vendor{selectedCount === 1 ? "" : "s"} selected
-          </p>
-          <p className="text-xs text-neutral-500">
-            Request several — first to accept isn&apos;t exclusive until you pay.
+            {selectedCount} selected
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -262,7 +294,7 @@ export function MarketplaceExploreView({
             onClick={openMultiEnquire}
             disabled={selectedCount < 1}
           >
-            Request from {selectedCount}
+            Message {selectedCount} together
           </Button>
         </div>
       </div>
@@ -287,6 +319,8 @@ export function MarketplaceExploreView({
                 <LoadingSpinner size="sm" className="text-neutral-400" />
                 Loading…
               </span>
+            ) : isPlanMode ? (
+              `${displayCount} vendor${displayCount === 1 ? "" : "s"}`
             ) : (
               `${displayCount} result${displayCount === 1 ? "" : "s"}`
             )}
@@ -294,10 +328,21 @@ export function MarketplaceExploreView({
           {!savedOnly && headline ? (
             <p className="mt-1 text-sm text-neutral-600">{headline}</p>
           ) : null}
-          {isClient && !savedOnly ? (
-            <p className="mt-1 text-xs text-neutral-500">
-              Select vendors to request the same event details from several at once.
-            </p>
+          {isPlanMode && plan?.needs?.length ? (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {plan.needs.map((need) => (
+                <a
+                  key={need.id}
+                  href={`#plan-need-${need.id}`}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs font-medium text-neutral-700 hover:border-primary/40 hover:text-primary"
+                >
+                  {need.label}
+                  {need.optional ? (
+                    <span className="text-neutral-400">optional</span>
+                  ) : null}
+                </a>
+              ))}
+            </div>
           ) : null}
         </div>
         <MarketplaceFiltersBar state={state} onCommit={commitFilters} />
@@ -309,16 +354,9 @@ export function MarketplaceExploreView({
         <p className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
         </p>
-      ) : visibleCards.length === 0 ? (
+      ) : visibleCards.length === 0 && !isPlanMode ? (
         <p className="mt-6 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-600">
-          {savedOnly
-            ? "No saved vendors yet. Tap the heart on a vendor to save them."
-            : "No vendors match these filters. Try clearing filters"}
-          {!savedOnly && state.dates.length > 0 && !state.dateFlexible
-            ? " or different dates."
-            : savedOnly
-              ? ""
-              : " or widening your search."}
+          {savedOnly ? "No saved vendors yet." : "No vendors match these filters."}
         </p>
       ) : savedOnly ? (
         <>
@@ -338,6 +376,70 @@ export function MarketplaceExploreView({
           {pagination}
           {selectionBar}
         </>
+      ) : isPlanMode ? (
+        <div className="mt-6 space-y-10">
+          {sections.map((section) => {
+            const sectionCards = expandVendorsForSearchResults(
+              section.vendors,
+              [section.service_key],
+            );
+            return (
+              <section
+                key={section.need_id}
+                id={`plan-need-${section.need_id}`}
+                className="scroll-mt-24"
+              >
+                <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+                  <div className="min-w-0">
+                    <h2 className="font-heading text-lg font-semibold tracking-tight text-neutral-900">
+                      {section.label}
+                      {section.optional ? (
+                        <span className="ml-2 text-sm font-medium text-neutral-500">
+                          Optional
+                        </span>
+                      ) : null}
+                    </h2>
+                    <p className="mt-0.5 text-xs font-medium text-neutral-500">
+                      {planOptionsLabel(section.total_count)}
+                    </p>
+                  </div>
+                  {section.total_count > section.vendors.length ? (
+                    <Link
+                      href={planSeeMoreHref(pathname, state, section)}
+                      className="text-sm font-semibold text-primary hover:underline"
+                    >
+                      See more
+                    </Link>
+                  ) : null}
+                </div>
+                {sectionCards.length === 0 ? (
+                  <p className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-600">
+                    No vendors for this yet.
+                  </p>
+                ) : (
+                  <div className={CARD_GRID}>
+                    {sectionCards.map((card) => (
+                      <MarketplaceVendorCard
+                        key={`${section.need_id}-${card.cardKey}`}
+                        card={card}
+                        vendorDetailHref={buildClientBrowseVendorUrl(
+                          card.vendor.user_id,
+                          state,
+                        )}
+                        bookmarked={isSaved(card.vendor.user_id)}
+                        onToggleBookmark={() => toggle(card.vendor.user_id)}
+                        onNavigate={onVendorNavigate}
+                        showPlanEvidence
+                        {...cardSelectProps(card.vendor)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+            );
+          })}
+          {selectionBar}
+        </div>
       ) : (
         <div className="mt-6 space-y-8">
           {matchNotice ? (
@@ -366,9 +468,6 @@ export function MarketplaceExploreView({
             <div>
               <div className="mb-4 border-t border-neutral-200 pt-6">
                 <p className="text-sm font-semibold text-neutral-900">Also consider</p>
-                <p className="mt-1 text-sm text-neutral-600">
-                  Close matches by service, area, or availability.
-                </p>
               </div>
               <div className={CARD_GRID}>
                 {alsoConsiderCards.map((card) => (
@@ -405,8 +504,6 @@ export function MarketplaceExploreView({
                 createdIds.length === 1
                   ? "Request sent"
                   : `${createdIds.length} requests sent`,
-              description:
-                "Vendors will be notified. First to accept isn't exclusive until you pay.",
               tone: "success",
             });
             router.push(

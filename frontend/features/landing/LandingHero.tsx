@@ -87,7 +87,7 @@ export function LandingHero() {
             <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold tracking-wide text-primary">
               AI-powered
             </span>
-            <span>Search vendors in plain English.</span>
+            <span>Plan an event or search vendors in plain English.</span>
           </p>
           <HeroMarketplaceSearch variant="landing" submitToPath="/client/browse" />
         </div>

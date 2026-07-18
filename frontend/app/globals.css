@@ -190,11 +190,31 @@ body {
   animation: ui-slide-up 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+@keyframes search-caret-blink {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.animate-search-caret {
+  animation: search-caret-blink 0.9s steps(1, end) infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-ui-fade-in,
   .animate-ui-slide-in-right,
   .animate-ui-slide-up {
     animation: none;
+  }
+
+  .animate-search-caret {
+    animation: none;
+    opacity: 1;
   }
 }
 
