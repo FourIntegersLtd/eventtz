@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getBookingServiceFeePercent } from "@/lib/bookingServiceFee";
 import {
   FOOTER_ADDRESS_LINES,
+  FOOTER_COMPANY_NAME,
   FOOTER_CONTACT_EMAIL,
 } from "@/lib/footerLinks";
 
@@ -18,7 +19,7 @@ export function TermsOfServiceContent() {
       </p>
       <p>
         These Terms of Service (&quot;Terms&quot;) govern your access to and use
-        of Eventtz, operated by Four Integers Ltd (&quot;Four Integers&quot;,
+        of Eventtz, operated by {FOOTER_COMPANY_NAME} (&quot;Eventtz&quot;,
         &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;). By creating an
         account or using the Platform, you agree to these Terms.
       </p>
@@ -27,7 +28,7 @@ export function TermsOfServiceContent() {
         <h2>1. The Platform</h2>
         <p>
           Eventtz is an online marketplace that helps clients discover, message,
-          and book African event vendors in the UK. Four Integers provides the
+          and book African event vendors in the UK. Eventtz provides the
           technology and payment infrastructure; vendors remain independent
           service providers responsible for delivering their services.
         </p>
@@ -142,7 +143,7 @@ export function TermsOfServiceContent() {
       <section id="content">
         <h2>8. Content and intellectual property</h2>
         <p>
-          You retain ownership of content you upload but grant Four Integers a
+          You retain ownership of content you upload but grant Eventtz a
           non-exclusive licence to host, display, and promote that content on
           Eventtz. Platform branding, software, and design remain our property.
         </p>
@@ -186,7 +187,7 @@ export function TermsOfServiceContent() {
       <section id="liability">
         <h2>12. Limitation of liability</h2>
         <p>
-          To the fullest extent permitted by law, Four Integers is not liable
+          To the fullest extent permitted by law, Eventtz is not liable
           for indirect, incidental, or consequential losses arising from your
           use of Eventtz or vendor services. Nothing in these Terms limits
           liability that cannot be limited under applicable law.
@@ -214,7 +215,7 @@ export function TermsOfServiceContent() {
       <section id="contact">
         <h2>15. Contact</h2>
         <p>
-          Four Integers Ltd, {FOOTER_ADDRESS_LINES.join(", ")}.
+          {FOOTER_COMPANY_NAME}, {FOOTER_ADDRESS_LINES.join(", ")}.
           <br />
           Email:{" "}
           <a href={`mailto:${FOOTER_CONTACT_EMAIL}`}>{FOOTER_CONTACT_EMAIL}</a>

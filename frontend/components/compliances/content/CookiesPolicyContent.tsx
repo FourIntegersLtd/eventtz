@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ThirdPartyServicesTable } from "@/components/compliances/content/ThirdPartyServicesTable";
-import { FOOTER_CONTACT_EMAIL } from "@/lib/footerLinks";
+import { FOOTER_COMPANY_NAME, FOOTER_CONTACT_EMAIL } from "@/lib/footerLinks";
 
 export function CookiesPolicyContent() {
   return (
@@ -12,7 +12,7 @@ export function CookiesPolicyContent() {
         Last updated: 14 July 2026
       </p>
       <p>
-        This Cookie Policy explains how Eventtz, operated by Four Integers Ltd,
+        This Cookie Policy explains how Eventtz, operated by {FOOTER_COMPANY_NAME},
         uses cookies and similar technologies when you visit eventtz.com and
         related pages.
       </p>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FOOTER_CONTACT_EMAIL } from "@/lib/footerLinks";
+import { FOOTER_COMPANY_NAME, FOOTER_CONTACT_EMAIL } from "@/lib/footerLinks";
 
 export function ReferralsPolicyContent() {
   return (
@@ -12,7 +12,7 @@ export function ReferralsPolicyContent() {
       </p>
       <p>
         This Referral Policy describes how referral or invite programmes may
-        operate on Eventtz when offered by Four Integers Ltd. Programmes may be
+        operate on Eventtz when offered by {FOOTER_COMPANY_NAME}. Programmes may be
         limited, paused, or changed at any time.
       </p>
 

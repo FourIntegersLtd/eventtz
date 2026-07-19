@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ThirdPartyServicesTable } from "@/components/compliances/content/ThirdPartyServicesTable";
 import {
   FOOTER_ADDRESS_LINES,
+  FOOTER_COMPANY_NAME,
   FOOTER_CONTACT_EMAIL,
   FOOTER_PRIVACY_EMAIL,
 } from "@/lib/footerLinks";
@@ -18,8 +19,8 @@ export function PrivacyPolicyContent() {
       <p>
         Eventtz (&quot;Eventtz&quot;, &quot;we&quot;, &quot;us&quot;, or
         &quot;our&quot;) is a UK marketplace that connects clients with African
-        event vendors. This Privacy Policy explains how Four Integers Ltd
-        (&quot;Four Integers&quot;), the operator of Eventtz, collects, uses,
+        event vendors. This Privacy Policy explains how {FOOTER_COMPANY_NAME}{" "}
+        (&quot;Eventtz&quot;), the operator of the Eventtz platform, collects, uses,
         stores, and protects personal data when you use our website, mobile
         experiences, and related services (collectively, the &quot;Platform&quot;).
       </p>
@@ -27,12 +28,12 @@ export function PrivacyPolicyContent() {
       <section id="data-controller">
         <h2>1. Data controller</h2>
         <p>
-          Four Integers Ltd is the data controller for personal data processed
+          {FOOTER_COMPANY_NAME} is the data controller for personal data processed
           through Eventtz.
         </p>
         <ul>
           <li>
-            <strong>Company:</strong> Four Integers Ltd
+            <strong>Company:</strong> {FOOTER_COMPANY_NAME}
           </li>
           <li>
             <strong>Address:</strong> {FOOTER_ADDRESS_LINES.join(", ")}

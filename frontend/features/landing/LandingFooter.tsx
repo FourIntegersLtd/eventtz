@@ -11,6 +11,7 @@ import {
 } from "@/features/landing/landingData";
 import {
   FOOTER_ADDRESS_LINES,
+  FOOTER_COMPANY_NAME,
   FOOTER_CONTACT_EMAIL,
   FOOTER_LEGAL_LINKS,
 } from "@/lib/footerLinks";
@@ -202,7 +203,7 @@ export function LandingFooter({
 
         <div className="mt-12 pt-4 sm:mt-16">
           <p className="text-center text-sm text-neutral-600">
-            © {new Date().getFullYear()} Four Integers Ltd. All rights reserved.
+            © {new Date().getFullYear()} {FOOTER_COMPANY_NAME}. All rights reserved.
           </p>
         </div>
       </div>

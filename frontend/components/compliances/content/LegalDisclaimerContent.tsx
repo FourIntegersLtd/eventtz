@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FOOTER_CONTACT_EMAIL } from "@/lib/footerLinks";
+import { FOOTER_COMPANY_NAME, FOOTER_CONTACT_EMAIL } from "@/lib/footerLinks";
 
 export function LegalDisclaimerContent() {
   return (
@@ -18,7 +18,7 @@ export function LegalDisclaimerContent() {
       <section id="marketplace-role">
         <h2>1. Marketplace role</h2>
         <p>
-          Four Integers Ltd operates Eventtz as a technology platform connecting
+          {FOOTER_COMPANY_NAME} operates Eventtz as a technology platform connecting
           clients and independent vendors. We are not the employer of vendors and
           are not a party to the service contract formed when a booking is
           confirmed between a client and a vendor.
@@ -32,7 +32,7 @@ export function LegalDisclaimerContent() {
           delivery of their services, including food handling, staffing,
           equipment, and compliance with local regulations. Listings, reviews,
           and badges are informational and do not constitute endorsements or
-          guarantees by Four Integers.
+          guarantees by Eventtz.
         </p>
       </section>
 
@@ -76,7 +76,7 @@ export function LegalDisclaimerContent() {
       <section id="limitation">
         <h2>7. Limitation of liability</h2>
         <p>
-          To the maximum extent permitted by law, Four Integers Ltd excludes
+          To the maximum extent permitted by law, {FOOTER_COMPANY_NAME} excludes
           liability for losses arising from vendor services, event outcomes, or
           reliance on Platform content. Nothing in this disclaimer limits
           liability that cannot be excluded under applicable law.

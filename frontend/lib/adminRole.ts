@@ -1,7 +1,7 @@
 import type { AuthUser } from "@/lib/auth-api";
 
 /** Matches backend SUPER_ADMIN_EMAILS bootstrap until /me always returns admin_role. */
-const BOOTSTRAP_SUPER_ADMIN_EMAILS = new Set(["hello@fourintegers.com"]);
+const BOOTSTRAP_SUPER_ADMIN_EMAILS = new Set(["hello@eventtz.com"]);
 
 function metaAdminRole(user: AuthUser): string | null {
   const fromApp = user.app_metadata?.admin_role;
