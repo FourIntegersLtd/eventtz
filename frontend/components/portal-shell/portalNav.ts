@@ -8,6 +8,7 @@ import {
   MessageSquare,
   Settings,
   ShieldAlert,
+  Sparkles,
   UserCircle2,
   Wallet,
   type LucideIcon,
@@ -23,6 +24,7 @@ export type PortalNavItem = {
 
 const CLIENT_NAV: readonly PortalNavItem[] = [
   { href: "/client/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/client/planner", label: "Plan my event", icon: Sparkles },
   { href: "/client/browse", label: "Browse", icon: Compass },
   { href: "/client/favorites", label: "Favorites", icon: Heart },
   { href: "/client/bookings", label: "Bookings", icon: CalendarDays },
@@ -56,6 +58,7 @@ export function isPortalNavActive(pathname: string, href: string): boolean {
 
 type PortalRouteKey =
   | "dashboard"
+  | "planner"
   | "bookings"
   | "messages"
   | "disputes"
@@ -70,6 +73,7 @@ type PortalRouteKey =
 const PORTAL_ROUTES: Record<PortalRole, Record<PortalRouteKey, string>> = {
   client: {
     dashboard: "/client/dashboard",
+    planner: "/client/planner",
     bookings: "/client/bookings",
     messages: "/client/messages",
     disputes: "/client/disputes",
@@ -83,6 +87,7 @@ const PORTAL_ROUTES: Record<PortalRole, Record<PortalRouteKey, string>> = {
   },
   vendor: {
     dashboard: "/vendor/dashboard",
+    planner: "/vendor/dashboard",
     bookings: "/vendor/bookings",
     messages: "/vendor/messages",
     disputes: "/vendor/disputes",
@@ -111,6 +116,7 @@ const PAGE_TITLE_RULES: Record<PortalRole, readonly { prefix: string; title: str
     { prefix: "/client/settings", title: "Settings" },
     { prefix: "/client/notifications", title: "Notifications" },
     { prefix: "/client/favorites", title: "Favorites" },
+    { prefix: "/client/planner", title: "Plan my celebration" },
     { prefix: "/client/browse", title: "Browse vendors" },
     { prefix: "/client/dashboard", title: "Dashboard" },
   ],

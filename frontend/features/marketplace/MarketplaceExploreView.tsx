@@ -378,6 +378,19 @@ export function MarketplaceExploreView({
         </>
       ) : isPlanMode ? (
         <div className="mt-6 space-y-10">
+          {state.query.trim() ? (
+            <div className="rounded-xl border border-primary/15 bg-[#faf8fc] px-4 py-3 sm:flex sm:items-center sm:justify-between sm:gap-4">
+              <p className="text-sm text-neutral-700">
+                Want a full celebration plan with budget and ranked picks?
+              </p>
+              <Link
+                href={`/client/planner?q=${encodeURIComponent(state.query.trim())}`}
+                className="mt-2 inline-flex text-sm font-semibold text-primary hover:underline sm:mt-0"
+              >
+                Open full celebration plan
+              </Link>
+            </div>
+          ) : null}
           {sections.map((section) => {
             const sectionCards = expandVendorsForSearchResults(
               section.vendors,

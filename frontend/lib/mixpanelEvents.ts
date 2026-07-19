@@ -77,6 +77,14 @@ export const MixpanelEvents = {
   help_ask_submitted: "help_ask_submitted",
   help_escalated: "help_escalated",
 
+  // AI Event Planner
+  planner_opened: "planner_opened",
+  planner_plan_generated: "planner_plan_generated",
+  planner_plan_viewed: "planner_plan_viewed",
+  planner_recommendation_replaced: "planner_recommendation_replaced",
+  planner_simple_intent_redirect: "planner_simple_intent_redirect",
+  planner_generate_failed: "planner_generate_failed",
+
   // Vendor
   vendor_onboarding_submitted: "vendor_onboarding_submitted",
   vendor_profile_saved: "vendor_profile_saved",
