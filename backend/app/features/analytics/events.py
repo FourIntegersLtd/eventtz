@@ -27,6 +27,8 @@ ALLOWED_EVENTS = frozenset(
         "enquiry_vendor_reminded",
         "enquiry_client_no_response_nudge",
         "enquiry_multi_created",
+        "celebration_plan_generated",
+        "celebration_plan_recommendation_replaced",
     },
 )
 

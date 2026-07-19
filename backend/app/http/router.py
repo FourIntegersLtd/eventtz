@@ -22,6 +22,7 @@ from app.features.notifications.http import client as client_notifications
 from app.features.notifications.http import vendor as vendor_notifications
 from app.features.payments.http import vendor as vendor_payments
 from app.features.payments.http import webhooks as stripe_webhooks
+from app.features.planner.http import routes as client_planner
 from app.features.realtime.http import routes as realtime
 from app.features.settings.http import client_onboarding as client_onboarding_settings
 from app.features.settings.http import routes as user_settings
@@ -53,6 +54,7 @@ api_router.include_router(vendors_explore.router)
 api_router.include_router(client_booking_requests.router)
 api_router.include_router(client_geo.router)
 api_router.include_router(help_routes.router)
+api_router.include_router(client_planner.router)
 api_router.include_router(client_notifications.router)
 api_router.include_router(vendor_notifications.router)
 api_router.include_router(vendor_payments.router)

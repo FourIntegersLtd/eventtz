@@ -58,4 +58,7 @@ def _status_for(exc: AppError) -> int:
 def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(AppError)
     async def app_error_handler(_request: Request, exc: AppError) -> JSONResponse:
-        return JSONResponse(status_code=_status_for(exc), content={"detail": exc.message})
+        content: dict[str, str] = {"detail": exc.message}
+        if exc.code:
+            content["code"] = exc.code
+        return JSONResponse(status_code=_status_for(exc), content=content)
