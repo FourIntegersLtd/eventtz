@@ -14,8 +14,8 @@ from app.features.email.service import EmailService
 
 
 def test_constants_hardcoded_admin_recipients():
-    assert "hello@fourintegers.com" in ADMIN_NOTIFY_RECIPIENTS
-    assert EMAIL_FROM == "Eventtz <hello@fourintegers.com>"
+    assert "hello@eventtz.com" in ADMIN_NOTIFY_RECIPIENTS
+    assert EMAIL_FROM == "Eventtz <hello@eventtz.com>"
 
 
 def test_should_dedupe_booking_kind():
@@ -156,7 +156,7 @@ def test_welcome_template_renders_client_showcase(mock_svc_settings):
     assert "Hello Yemi" in html
     assert "Instagram comments and DMs" in html
     assert "eventtz.com/compliances/privacy-policy" in html
-    assert "Four+Integers+Ltd/eventtz/pricing.png" in html
+    assert "Eventtz Ltd" in html
     assert "eventtz.com" in html
     assert "localhost" not in html
     assert "#3e1964" in html

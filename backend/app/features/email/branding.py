@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from app.features.email.constants import (
     APP_NAME,
+    COMPANY_LEGAL_NAME,
     EMAIL_IMAGES,
     EMAIL_PRIVACY_URL,
     EMAIL_PUBLIC_WEBSITE,
     EMAIL_PUBLIC_WEBSITE_LABEL,
+    EMAIL_SUPPORT_ADDRESS,
     EMAIL_TERMS_URL,
 )
 
@@ -44,6 +46,8 @@ def base_email_context(**extra: object) -> dict[str, object]:
         "browse_url": f"{base}/client/browse",
         "terms_url": EMAIL_TERMS_URL,
         "privacy_url": EMAIL_PRIVACY_URL,
+        "company_legal_name": COMPANY_LEGAL_NAME,
+        "support_email": EMAIL_SUPPORT_ADDRESS,
         "footer_logo_url": EMAIL_IMAGES["logo"],
         "hero_image_url": EMAIL_IMAGES["hero"],
         "primary_color": PRIMARY,

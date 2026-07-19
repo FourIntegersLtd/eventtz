@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-EMAIL_FROM = "Eventtz <hello@fourintegers.com>"
+COMPANY_LEGAL_NAME = "Eventtz Ltd"
+EMAIL_SUPPORT_ADDRESS = "hello@eventtz.com"
+EMAIL_FROM = f"Eventtz <{EMAIL_SUPPORT_ADDRESS}>"
 EMAIL_ENABLED = True
 
 ADMIN_NOTIFY_RECIPIENTS: tuple[str, ...] = (
-    "hello@fourintegers.com",
+    EMAIL_SUPPORT_ADDRESS,
     "y.hkehinde@yahoo.com",
     "sheinat03@gmail.com",
 )

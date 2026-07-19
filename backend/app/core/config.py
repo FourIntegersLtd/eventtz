@@ -82,7 +82,7 @@ class Settings(BaseSettings):
     enquiry_response_sla_hours: int = 72
 
     #: Comma-separated emails that count as top-level admins until roles are set in the database.
-    super_admin_emails: str = "hello@fourintegers.com"
+    super_admin_emails: str = "hello@eventtz.com"
     #: Key for sending transactional email.
     resend_api_key: str = ""
 

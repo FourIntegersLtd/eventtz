@@ -17,7 +17,7 @@ Hello {{ display_name }},
 
 Kind regards,
 The {{ app_name }} team
-Four Integers Ltd
+{{ company_legal_name }}
 
 {{ website_url }}
 Privacy: {{ privacy_url }}

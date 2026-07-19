@@ -18,7 +18,7 @@ UPDATE public.users
 SET
   user_type = 'admin',
   admin_role = 'super_admin'
-WHERE lower(email) = lower('hello@fourintegers.com');
+WHERE lower(email) = lower('hello@eventtz.com');
 
 -- Default role for any other admins missing admin_role.
 UPDATE public.users

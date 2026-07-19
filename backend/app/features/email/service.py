@@ -6,7 +6,7 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.features.email.constants import APP_NAME, EMAIL_IMAGES
+from app.features.email.constants import APP_NAME, EMAIL_IMAGES, EMAIL_SUPPORT_ADDRESS
 from app.features.email.delivery_log import booking_template_id, claim_booking_email_send
 from app.features.email.branding import (
     base_email_context,
@@ -347,7 +347,7 @@ class EmailService:
             welcome_cta_label = "Go to your dashboard"
             welcome_cta_url = f"{base}/vendor/dashboard"
             welcome_support_line = (
-                "Questions? Reply to this email or write us at hello@fourintegers.com. "
+                f"Questions? Reply to this email or write us at {EMAIL_SUPPORT_ADDRESS}. "
                 "We are glad you are here."
             )
             showcase_sections = vendor_welcome_showcase()
@@ -370,7 +370,7 @@ class EmailService:
             welcome_cta_label = "Find vendors"
             welcome_cta_url = f"{base}/client/browse"
             welcome_support_line = (
-                "Got questions? Reply to this email or write us at hello@fourintegers.com. "
+                f"Got questions? Reply to this email or write us at {EMAIL_SUPPORT_ADDRESS}. "
                 "We are happy to help."
             )
             showcase_sections = client_welcome_showcase()
