@@ -53,7 +53,7 @@ export function AuthPageShell({
       <div
         className={`relative z-10 flex flex-1 items-center justify-center overflow-y-auto px-4 pt-10 sm:pt-14 pb-[max(4rem,env(safe-area-inset-bottom,0px))] sm:pb-24 ${contentClassName}`.trim()}
       >
-        <div className="my-auto w-full py-2">{children}</div>
+        <div className="my-auto flex w-full flex-col items-center py-2">{children}</div>
       </div>
     </main>
   );
