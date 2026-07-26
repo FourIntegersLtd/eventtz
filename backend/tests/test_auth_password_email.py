@@ -2,11 +2,85 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
-from app.features.auth.password_reset import _reset_url
+import pytest
+
+from app.features.auth.password_reset import _reset_url, _set_supabase_password, change_password
 from app.features.email.branding import ensure_public_email_url, public_email_url
 from app.features.email.service import EmailService
+
+
+def test_set_supabase_password_uses_service_client() -> None:
+    mock_client = MagicMock()
+    with patch("app.features.auth.password_reset.get_client", return_value=mock_client):
+        _set_supabase_password("user-abc", "NewPassword1!")
+    mock_client.auth.admin.update_user_by_id.assert_called_once_with(
+        "user-abc",
+        {"password": "NewPassword1!"},
+    )
+
+
+@patch("app.features.auth.password_reset.send_password_changed_email")
+@patch("app.features.auth.password_reset.invalidate_all_sessions")
+@patch("app.features.auth.password_reset._log_password_audit")
+@patch("app.features.auth.password_reset._user_type_for_id", return_value="admin")
+@patch("app.features.auth.password_reset.validate_password_for_user")
+@patch("app.features.auth.rate_limit.assert_change_password_rate")
+@patch("app.features.auth.password_reset.local_auth_store.enabled", return_value=False)
+@patch("app.features.auth.password_reset.SupabaseAuthService")
+@patch("app.features.auth.password_reset.get_client")
+def test_change_password_uses_service_client_for_supabase_update(
+    mock_get_client: MagicMock,
+    mock_auth_service_cls: MagicMock,
+    _mock_local: MagicMock,
+    _mock_rate: MagicMock,
+    _mock_validate: MagicMock,
+    _mock_user_type: MagicMock,
+    _mock_audit: MagicMock,
+    _mock_invalidate: MagicMock,
+    _mock_email: MagicMock,
+) -> None:
+    mock_service = MagicMock()
+    mock_auth_service_cls.return_value = mock_service
+    mock_service.sign_in_with_password.return_value = {"success": True}
+    mock_client = MagicMock()
+    mock_get_client.return_value = mock_client
+
+    change_password(
+        user_id="user-abc",
+        email="admin@test.com",
+        current_password="OldPassword1!",
+        new_password="NewPassword2!",
+    )
+
+    mock_service.sign_in_with_password.assert_called_once_with(
+        email="admin@test.com",
+        password="OldPassword1!",
+    )
+    mock_client.auth.admin.update_user_by_id.assert_called_once_with(
+        "user-abc",
+        {"password": "NewPassword2!"},
+    )
+
+
+@patch("app.features.auth.password_reset.local_auth_store.enabled", return_value=False)
+@patch("app.features.auth.password_reset.SupabaseAuthService")
+def test_change_password_rejects_wrong_current_password(
+    mock_auth_service_cls: MagicMock,
+    _mock_local: MagicMock,
+) -> None:
+    mock_service = MagicMock()
+    mock_auth_service_cls.return_value = mock_service
+    mock_service.sign_in_with_password.return_value = {"success": False}
+
+    with pytest.raises(ValueError, match="Current password is incorrect"):
+        change_password(
+            user_id="user-abc",
+            email="admin@test.com",
+            current_password="WrongPassword1!",
+            new_password="NewPassword2!",
+        )
 
 
 def test_reset_url_uses_public_website() -> None:

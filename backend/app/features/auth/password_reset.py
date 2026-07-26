@@ -217,9 +217,10 @@ def _parse_expires(value: Any) -> datetime | None:
 
 
 def _set_supabase_password(user_id: str, password: str) -> None:
-    from app.core.db import get_supabase_auth_client
-
-    get_supabase_auth_client().auth.admin.update_user_by_id(
+    # Admin API must use the DB/service client only. get_supabase_auth_client() is shared
+    # with sign-in and /me token validation; a user session on that client overrides the
+    # service-role Authorization header and Supabase returns 403 "User not allowed".
+    get_client().auth.admin.update_user_by_id(
         user_id,
         {"password": password},
     )

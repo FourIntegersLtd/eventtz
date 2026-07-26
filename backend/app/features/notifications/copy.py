@@ -6,6 +6,24 @@ from typing import Literal
 
 Portal = Literal["client", "vendor"]
 
+PAYMENT_RECEIVED_CLIENT_BODY = (
+    "Thank you so much, your payment went through successfully.\n\n"
+    "Your money is held safely with Eventtz until your event is complete. "
+    "After your event, please confirm that everything went well so we can pay your vendor.\n\n"
+    "If anything did not go to plan, you have 48 hours after the event to report a problem "
+    "from your booking page and we will be here to help. When all is well, we will release "
+    "payment to your vendor automatically after 48 hours.\n\n"
+    "Thank you for booking with Eventtz."
+)
+
+VENDOR_PAYMENT_RECEIVED_BODY = (
+    "Great news, the client has paid for this booking.\n\n"
+    "Please confirm when the event is complete to receive your payout sooner. "
+    "If neither of you confirms, payment is released automatically 48 hours after the event "
+    "unless a problem is reported.\n\n"
+    "Thank you for your patience and for delivering through Eventtz."
+)
+
 # Kinds whose stored body is booking-specific (pricing, quotes, refunds, deadlines) —
 # keep it in the feed and emails when present.
 _USE_STORED_BODY: frozenset[str] = frozenset(
@@ -142,7 +160,7 @@ _COPY: dict[str, dict[Portal, tuple[str, str]]] = {
             "Price confirmed",
             "You accepted the updated price.\n\n"
             "When you are ready, you can pay from your bookings page. "
-            "Your funds are held safely until the event is complete.",
+            "Your payment stays safely with Eventtz until the event is complete.",
         ),
     },
     "client_declined_updated_price": {
@@ -212,30 +230,25 @@ _COPY: dict[str, dict[Portal, tuple[str, str]]] = {
     "payment_received": {
         "client": (
             "Payment received",
-            "Thank you. Your payment went through successfully.\n\n"
-            "We will hold the funds safely until the event is complete. "
-            "Afterwards, please confirm that everything went well so the vendor can be paid.",
+            PAYMENT_RECEIVED_CLIENT_BODY,
         ),
         "vendor": (
             "Payment received",
             "The client has paid for this booking.\n\n"
             "Your payout is released after the event is confirmed complete. "
-            "We will keep you updated every step of the way.",
+            "We will keep you updated every step of the way. Thank you for your patience.",
         ),
     },
     "vendor_payment_received": {
         "vendor": (
             "Payment received",
-            "The client has paid for this booking. Thank you for waiting patiently.\n\n"
-            "Confirm when the event is done to receive your payout sooner. "
-            "If neither of you confirms, payment is released automatically 48 hours after the event "
-            "unless a problem is reported.",
+            VENDOR_PAYMENT_RECEIVED_BODY,
         ),
         "client": (
             "Payment sent",
             "Your payment has been sent and the vendor has been notified.\n\n"
-            "We are looking after the funds until the event is complete. "
-            "You can still message the vendor on Eventtz if you need to.",
+            "We are looking after your funds safely until the event is complete. "
+            "Please message the vendor on Eventtz if you need anything in the meantime.",
         ),
     },
     "vendor_payout_released": {
@@ -281,9 +294,9 @@ _COPY: dict[str, dict[Portal, tuple[str, str]]] = {
     "completion_reminder": {
         "client": (
             "How did your event go?",
-            "We hope your event went well.\n\n"
-            "If everything was as expected, please confirm the booking is complete. "
-            "If something went wrong, report a problem before the automatic payout date so we can help.",
+            "We hope your event went beautifully.\n\n"
+            "If everything was as expected, please confirm the booking is complete so we can pay your vendor. "
+            "If something did not go to plan, report a problem before the automatic payout date and we will be here to help.",
         ),
     },
     "vendor_completion_reminder": {
@@ -291,7 +304,8 @@ _COPY: dict[str, dict[Portal, tuple[str, str]]] = {
             "Confirm to get paid",
             "Your event date has passed.\n\n"
             "Please confirm the booking is complete to receive your payout sooner. "
-            "If the client does not respond, payment is released automatically unless they report a problem.",
+            "If the client does not respond, payment is released automatically unless they report a problem. "
+            "Thank you for wrapping this one up.",
         ),
     },
     "enquiry_reminder_1h": {
@@ -306,7 +320,7 @@ _COPY: dict[str, dict[Portal, tuple[str, str]]] = {
         "vendor": (
             "Still waiting for your reply",
             "This booking request has been waiting for several hours.\n\n"
-            "Please respond when you can — clients often look elsewhere if they do not hear back.",
+            "Please respond when you can. Clients often look elsewhere if they do not hear back.",
         ),
     },
     "enquiry_reminder_24h": {
@@ -329,7 +343,7 @@ _COPY: dict[str, dict[Portal, tuple[str, str]]] = {
             "Request sent",
             "Your booking request is with the vendor.\n\n"
             "We have notified them and will nudge them if they are slow to reply. "
-            "Most vendors reply within a day — you can follow everything from your bookings page.",
+            "Most vendors reply within a day. You can follow everything from your bookings page.",
         ),
     },
 }

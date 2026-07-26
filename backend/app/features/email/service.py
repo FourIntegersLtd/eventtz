@@ -430,7 +430,7 @@ class EmailService:
                 name = alt.get("name") or "Vendor"
                 reply = alt.get("reply") or ""
                 href = alt.get("href") or browse_url
-                lines.append(f"• {name} — {reply}\n  {href}")
+                lines.append(f"• {name}: {reply}\n  {href}")
         lines.append("")
         lines.append("Requesting more than one vendor is fine until you pay.")
         body = "\n".join(lines)
@@ -508,7 +508,7 @@ class EmailService:
         headline = "Your password was changed"
         body = (
             "Your Eventtz password was changed successfully.\n\n"
-            "If you did not make this change, contact support immediately."
+            "If you did not make this change, please contact support right away and we will help."
         )
         ctx = transactional_email_context(
             subject=headline,

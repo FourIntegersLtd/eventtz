@@ -15,6 +15,7 @@ from app.features.bookings.payment_shared import (
 )
 from app.features.bookings.queries import get_booking_request_for_client
 from app.features.email.dispatch import dispatch_booking_notification
+from app.features.notifications.copy import PAYMENT_RECEIVED_CLIENT_BODY, VENDOR_PAYMENT_RECEIVED_BODY
 from app.features.payments import stripe as stripe_service
 
 
@@ -189,23 +190,14 @@ def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> 
             user_id=client_id,
             booking_id=booking_id,
             kind="payment_received",
-            body=(
-                "Your payment was successful. Thank you.\n\n"
-                "We will hold the funds safely until the event is complete. "
-                "Afterwards, please confirm that everything went well so the vendor can be paid."
-            ),
+            body=PAYMENT_RECEIVED_CLIENT_BODY,
         )
     if vendor_id:
         dispatch_booking_notification(
             user_id=vendor_id,
             booking_id=booking_id,
             kind="vendor_payment_received",
-            body=(
-                "The client has paid for this booking.\n\n"
-                "Confirm when the event is done to receive your payout sooner. "
-                "If you do not confirm, payment is released automatically 48 hours after the event "
-                "unless a problem is reported. Thank you for your patience."
-            ),
+            body=VENDOR_PAYMENT_RECEIVED_BODY,
         )
     _notify_pair(client_id, vendor_id)
     try:

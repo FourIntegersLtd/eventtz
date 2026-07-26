@@ -18,6 +18,16 @@ def test_constants_hardcoded_admin_recipients():
     assert EMAIL_FROM == "Eventtz <hello@eventtz.com>"
 
 
+def test_payment_received_client_body_mentions_dispute_window() -> None:
+    from app.features.notifications.copy import PAYMENT_RECEIVED_CLIENT_BODY
+
+    assert "48 hours" in PAYMENT_RECEIVED_CLIENT_BODY
+    assert "report a problem" in PAYMENT_RECEIVED_CLIENT_BODY
+    assert "Thank you for booking with Eventtz" in PAYMENT_RECEIVED_CLIENT_BODY
+    assert "—" not in PAYMENT_RECEIVED_CLIENT_BODY
+    assert "–" not in PAYMENT_RECEIVED_CLIENT_BODY
+
+
 def test_should_dedupe_booking_kind():
     assert should_dedupe_booking_kind("payment_received") is True
     assert should_dedupe_booking_kind("booking_request_received") is False

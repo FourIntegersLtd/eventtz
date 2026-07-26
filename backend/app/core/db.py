@@ -58,10 +58,29 @@ def get_supabase() -> Client:
 
 
 def get_supabase_auth_client() -> Client:
-    """Separate client for sign-in / session calls so they don't clash with DB use."""
+    """Sign-in / token validation only — never call ``auth.admin`` on this client.
+
+    User sessions replace the service-role Authorization header on the shared instance.
+    Admin APIs (password reset, team invites) must use ``get_db()`` / ``get_supabase()``.
+    """
     global _auth_client
     if _auth_client is None:
-        _auth_client = _create_supabase_client()
+        settings = get_settings()
+        httpx_client = httpx.Client(
+            http2=False,
+            timeout=httpx.Timeout(30.0),
+            limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
+        )
+        options = SyncClientOptions(
+            httpx_client=httpx_client,
+            persist_session=False,
+            auto_refresh_token=False,
+        )
+        _auth_client = create_client(
+            settings.supabase_url,
+            settings.supabase_service_role_key.strip(),
+            options=options,
+        )
     return _auth_client
 
 
