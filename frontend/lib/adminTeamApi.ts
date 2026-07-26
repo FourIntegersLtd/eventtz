@@ -17,6 +17,7 @@ export type AdminTeamInviteResult = {
   email: string;
   admin_role: "super_admin" | "admin";
   created: boolean;
+  invite_link_sent: boolean;
   message: string;
 };
 
@@ -27,12 +28,44 @@ export async function fetchAdminTeam(): Promise<AdminTeamMember[]> {
 
 export async function inviteAdminColleague(
   email: string,
-  password: string,
+  password?: string,
 ): Promise<AdminTeamInviteResult> {
-  const { data } = await api.post<AdminTeamInviteResult>("/api/v1/admin/team/invite", {
-    email,
-    password,
-  });
+  const body: { email: string; password?: string } = { email };
+  if (password?.trim()) {
+    body.password = password.trim();
+  }
+  const { data } = await api.post<AdminTeamInviteResult>("/api/v1/admin/team/invite", body);
+  return data;
+}
+
+export async function sendAdminPasswordResetLink(
+  userId: string,
+): Promise<{ success: boolean; user_id: string; email: string; message: string }> {
+  const { data } = await api.post<{ success: boolean; user_id: string; email: string; message: string }>(
+    `/api/v1/admin/team/${userId}/send-reset-link`,
+    {},
+  );
+  return data;
+}
+
+export async function deleteAdminTeamMember(
+  userId: string,
+): Promise<{
+  success: boolean;
+  user_id: string;
+  email: string | null;
+  deleted: boolean;
+  demoted_to: "client" | "vendor" | null;
+  message: string;
+}> {
+  const { data } = await api.delete<{
+    success: boolean;
+    user_id: string;
+    email: string | null;
+    deleted: boolean;
+    demoted_to: "client" | "vendor" | null;
+    message: string;
+  }>(`/api/v1/admin/team/${userId}`);
   return data;
 }
 

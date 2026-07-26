@@ -22,6 +22,20 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: "/admin/reset-password",
+        destination: "/reset-password?portal=admin",
+        permanent: false,
+      },
+      {
+        source: "/admin/forgot-password",
+        destination: "/forgot-password?portal=admin",
+        permanent: false,
+      },
+    ];
+  },
   async headers() {
     return [
       {

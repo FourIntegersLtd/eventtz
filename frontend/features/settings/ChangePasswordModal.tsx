@@ -1,6 +1,8 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { PasswordField } from "@/components/ui/PasswordField";
@@ -8,14 +10,40 @@ import { useToast } from "@/components/ui/Toast";
 import { changePassword } from "@/lib/auth-api";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
-import { changePasswordSchema, parseForm } from "@/lib/validation";
+import { adminPasswordSchema, changePasswordSchema, parseForm } from "@/lib/validation";
+import { z } from "zod";
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
+  /** Use stricter admin password rules when changing an admin account password. */
+  passwordSchema?: "default" | "admin";
+  /** Where to send the user after a successful change (sessions are revoked server-side). */
+  signInPath?: string;
 };
 
-export function ChangePasswordModal({ isOpen, onClose }: Props) {
+function buildSchema(mode: "default" | "admin") {
+  const newPasswordSchema = mode === "admin" ? adminPasswordSchema : z.string().min(6, "Password must be at least 6 characters.");
+  return z
+    .object({
+      currentPassword: z.string().min(1, "Enter your current password."),
+      newPassword: newPasswordSchema,
+      confirmPassword: newPasswordSchema,
+    })
+    .refine((v) => v.newPassword === v.confirmPassword, {
+      message: "Passwords do not match.",
+      path: ["confirmPassword"],
+    });
+}
+
+export function ChangePasswordModal({
+  isOpen,
+  onClose,
+  passwordSchema = "default",
+  signInPath = "/login",
+}: Props) {
+  const router = useRouter();
+  const { signOut } = useAuth();
   const { showToast } = useToast();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -23,6 +51,9 @@ export function ChangePasswordModal({ isOpen, onClose }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+
+  const minLength = passwordSchema === "admin" ? 12 : 6;
+  const schema = passwordSchema === "admin" ? buildSchema("admin") : changePasswordSchema;
 
   const reset = () => {
     setCurrentPassword("");
@@ -41,7 +72,7 @@ export function ChangePasswordModal({ isOpen, onClose }: Props) {
   const save = async () => {
     setError(null);
     setFieldErrors({});
-    const parsed = parseForm(changePasswordSchema, {
+    const parsed = parseForm(schema, {
       currentPassword,
       newPassword,
       confirmPassword,
@@ -59,9 +90,11 @@ export function ChangePasswordModal({ isOpen, onClose }: Props) {
       onClose();
       showToast({
         title: "Password updated",
-        description: "Use your new password the next time you sign in.",
+        description: "Sign in again with your new password.",
         tone: "success",
       });
+      await signOut();
+      router.replace(signInPath);
     } catch (err: unknown) {
       setError(getApiErrorDetail(err) ?? "Could not update password. Try again.");
     } finally {
@@ -92,6 +125,9 @@ export function ChangePasswordModal({ isOpen, onClose }: Props) {
     >
       <p className="text-sm text-neutral-600">
         Enter your current password, then choose a new one.
+        {passwordSchema === "admin"
+          ? " Admin passwords must be at least 12 characters with mixed case and a number."
+          : null}
       </p>
       {error ? (
         <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
@@ -109,7 +145,7 @@ export function ChangePasswordModal({ isOpen, onClose }: Props) {
         <PasswordField
           label="New password"
           autoComplete="new-password"
-          minLength={6}
+          minLength={minLength}
           value={newPassword}
           error={fieldErrors.newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
@@ -117,7 +153,7 @@ export function ChangePasswordModal({ isOpen, onClose }: Props) {
         <PasswordField
           label="Confirm new password"
           autoComplete="new-password"
-          minLength={6}
+          minLength={minLength}
           value={confirmPassword}
           error={fieldErrors.confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}

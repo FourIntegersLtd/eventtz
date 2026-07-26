@@ -10,6 +10,7 @@ import {
   MessageSquare,
   Receipt,
   ScrollText,
+  Settings,
   Shield,
   UserCog,
   Users,
@@ -47,6 +48,7 @@ const ADMIN_NAV: readonly AdminNavItem[] = [
   { href: "/admin/messages?tab=inbox", label: "Messages", icon: MessageSquare, id: "messages" },
   { href: "/admin/blog", label: "Blog", icon: BookOpen },
   { href: "/admin/trust?tab=disputes", label: "Trust & safety", icon: Shield },
+  { href: "/admin/settings", label: "Settings", icon: Settings },
   { href: "/admin/team", label: "Team", icon: UserCog },
   { href: "/admin/audit", label: "Activity log", icon: ScrollText },
   { href: "/admin/email", label: "Email testing", icon: Mail, superAdminOnly: true },
@@ -72,6 +74,9 @@ function navItemActive(pathname: string, itemHref: string): boolean {
   }
   if (itemHref.startsWith("/admin/audit")) {
     return pathname === "/admin/audit" || pathname.startsWith("/admin/audit/");
+  }
+  if (itemHref.startsWith("/admin/settings")) {
+    return pathname === "/admin/settings" || pathname.startsWith("/admin/settings/");
   }
   if (itemHref.startsWith("/admin/team")) {
     return pathname === "/admin/team" || pathname.startsWith("/admin/team/");

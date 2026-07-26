@@ -18,10 +18,13 @@ import {
   AdminTableRow,
 } from "@/features/admin/components/AdminTable";
 import { AdminCreateAdminModal } from "@/features/admin/team/AdminCreateAdminModal";
+import { AdminTeamMemberActionsMenu } from "@/features/admin/team/AdminTeamMemberActionsMenu";
 import {
   fetchAdminTeam,
   isSuperAdmin,
   patchAdminTeamMember,
+  sendAdminPasswordResetLink,
+  deleteAdminTeamMember,
   type AdminTeamMember,
 } from "@/lib/adminTeamApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
@@ -160,28 +163,47 @@ export function AdminTeamView() {
                     {canManage ? (
                       <AdminTableCell className="text-right">
                         {!isSelf ? (
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            loading={rowBusy === m.user_id}
-                            onClick={() => {
-                              void (async () => {
-                                setRowBusy(m.user_id);
-                                try {
-                                  await patchAdminTeamMember(m.user_id, {
-                                    account_suspended: !m.account_suspended,
-                                  });
-                                  await load();
-                                } catch (err: unknown) {
-                                  setError(getApiErrorDetail(err) ?? "Could not update status.");
-                                } finally {
-                                  setRowBusy(null);
-                                }
-                              })();
+                          <AdminTeamMemberActionsMenu
+                            memberEmail={m.email}
+                            suspended={m.account_suspended}
+                            busy={Boolean(rowBusy?.startsWith(m.user_id))}
+                            onSendResetLink={async () => {
+                              setRowBusy(`${m.user_id}:reset`);
+                              try {
+                                const result = await sendAdminPasswordResetLink(m.user_id);
+                                setSuccessMessage(result.message);
+                              } catch (err: unknown) {
+                                setError(getApiErrorDetail(err) ?? "Could not send reset link.");
+                              } finally {
+                                setRowBusy(null);
+                              }
                             }}
-                          >
-                            {m.account_suspended ? "Reactivate" : "Suspend"}
-                          </Button>
+                            onToggleSuspend={async () => {
+                              setRowBusy(m.user_id);
+                              try {
+                                await patchAdminTeamMember(m.user_id, {
+                                  account_suspended: !m.account_suspended,
+                                });
+                                await load();
+                              } catch (err: unknown) {
+                                setError(getApiErrorDetail(err) ?? "Could not update status.");
+                              } finally {
+                                setRowBusy(null);
+                              }
+                            }}
+                            onDelete={async () => {
+                              setRowBusy(`${m.user_id}:delete`);
+                              try {
+                                const result = await deleteAdminTeamMember(m.user_id);
+                                setSuccessMessage(result.message);
+                                await load();
+                              } catch (err: unknown) {
+                                setError(getApiErrorDetail(err) ?? "Could not delete admin.");
+                              } finally {
+                                setRowBusy(null);
+                              }
+                            }}
+                          />
                         ) : (
                           <span className="text-xs text-neutral-400">—</span>
                         )}

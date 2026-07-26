@@ -8,17 +8,24 @@ import { AuthPageShell } from "@/components/auth/AuthPageShell";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { PasswordField } from "@/components/ui/PasswordField";
+import { adminPageBg, adminCard } from "@/features/admin/adminTheme";
 import { dashboardPathForUserType } from "@/features/auth/authRouting";
 import { getMe, resetPassword } from "@/lib/auth-api";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
-import { parseForm, resetPasswordSchema } from "@/lib/validation";
+import { adminResetPasswordSchema, parseForm, resetPasswordSchema } from "@/lib/validation";
 
-export function ResetPasswordView() {
+type ResetPasswordViewProps = {
+  variant?: "default" | "admin";
+};
+
+export function ResetPasswordView({ variant = "default" }: ResetPasswordViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { refreshUser } = useAuth();
   const token = useMemo(() => (searchParams.get("token") ?? "").trim(), [searchParams]);
+  const isAdmin =
+    variant === "admin" || (searchParams.get("portal") ?? "").trim().toLowerCase() === "admin";
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -26,10 +33,23 @@ export function ResetPasswordView() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
+  const forgotHref = isAdmin ? "/forgot-password?portal=admin" : "/forgot-password";
+  const shellClassName = isAdmin ? adminPageBg : undefined;
+  const cardClassName = isAdmin
+    ? `${adminCard} w-full max-w-md p-6 pb-8 sm:p-8 sm:pb-10`
+    : "w-full max-w-md";
+  const schema = isAdmin ? adminResetPasswordSchema : resetPasswordSchema;
+  const minLength = isAdmin ? 12 : 6;
+
   if (!token) {
     return (
-      <AuthPageShell logoHref="/">
-        <Card padding="lg" className="w-full max-w-md">
+      <AuthPageShell
+        logoHref={isAdmin ? "/admin/login" : "/"}
+        className={shellClassName}
+        backHref={isAdmin ? "/admin/login" : "/"}
+        backLabel={isAdmin ? "Back to sign in" : "Back to home"}
+      >
+        <Card padding={isAdmin ? "none" : "lg"} className={cardClassName}>
           <h1 className="font-heading text-2xl font-semibold text-neutral-900">
             Reset password
           </h1>
@@ -38,7 +58,7 @@ export function ResetPasswordView() {
             password page.
           </p>
           <Link
-            href="/forgot-password"
+            href={forgotHref}
             className="mt-6 inline-block text-sm font-medium text-primary hover:underline"
           >
             Forgot password
@@ -52,7 +72,7 @@ export function ResetPasswordView() {
     e.preventDefault();
     setError(null);
     setFieldErrors({});
-    const parsed = parseForm(resetPasswordSchema, { password, confirmPassword });
+    const parsed = parseForm(schema, { password, confirmPassword });
     if (!parsed.ok) {
       setFieldErrors(parsed.fieldErrors);
       setError(parsed.formError);
@@ -75,19 +95,26 @@ export function ResetPasswordView() {
   };
 
   return (
-    <AuthPageShell logoHref="/">
-      <Card padding="lg" className="w-full max-w-md">
+    <AuthPageShell
+      logoHref={isAdmin ? "/admin/login" : "/"}
+      className={shellClassName}
+      backHref={isAdmin ? "/admin/login" : "/"}
+      backLabel={isAdmin ? "Back to sign in" : "Back to home"}
+    >
+      <Card padding={isAdmin ? "none" : "lg"} className={cardClassName}>
         <h1 className="font-heading text-2xl font-semibold text-neutral-900">
           Choose a new password
         </h1>
         <p className="mt-1 text-sm text-neutral-500">
-          Enter a new password for your Eventtz account.
+          {isAdmin
+            ? "Enter a strong password for your admin account (12+ characters)."
+            : "Enter a new password for your Eventtz account."}
         </p>
         <form onSubmit={(e) => void onSubmit(e)} className="mt-6 space-y-4">
           <PasswordField
             label="New password"
             required
-            minLength={6}
+            minLength={minLength}
             autoComplete="new-password"
             value={password}
             error={fieldErrors.password}
@@ -96,7 +123,7 @@ export function ResetPasswordView() {
           <PasswordField
             label="Confirm password"
             required
-            minLength={6}
+            minLength={minLength}
             autoComplete="new-password"
             value={confirmPassword}
             error={fieldErrors.confirmPassword}

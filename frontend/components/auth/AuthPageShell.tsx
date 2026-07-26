@@ -6,6 +6,10 @@ import { BackLink } from "@/components/ui/BackLink";
 type AuthPageShellProps = {
   children: ReactNode;
   logoHref: string;
+  /** Override default auth page background (e.g. admin theme). */
+  className?: string;
+  /** Extra classes on the main content region (below the header). */
+  contentClassName?: string;
   /** Shown in the header when the user may want to leave auth without signing in. */
   backHref?: string;
   backLabel?: string;
@@ -14,11 +18,14 @@ type AuthPageShellProps = {
 export function AuthPageShell({
   children,
   logoHref,
+  className,
+  contentClassName = "",
   backHref = "/",
   backLabel = "Back to home",
 }: AuthPageShellProps) {
+  const mainBg = className ?? authPageBg;
   return (
-    <main className={`relative min-h-dvh overflow-x-hidden ${authPageBg}`}>
+    <main className={`relative flex min-h-dvh flex-col overflow-x-hidden ${mainBg}`}>
       {/* Soft branded gradient + blurred blobs so the auth pages don't read as a bare form on a flat tint. */}
       <div
         className={`pointer-events-none absolute inset-0 ${authPageGradient}`}
@@ -43,8 +50,10 @@ export function AuthPageShell({
           <BackLink href={backHref} label={backLabel} tone="muted" />
         </div>
       </header>
-      <div className="relative z-10 flex items-center justify-center px-4 py-10 sm:py-14">
-        {children}
+      <div
+        className={`relative z-10 flex flex-1 items-center justify-center overflow-y-auto px-4 pt-10 sm:pt-14 pb-[max(4rem,env(safe-area-inset-bottom,0px))] sm:pb-24 ${contentClassName}`.trim()}
+      >
+        <div className="my-auto w-full py-2">{children}</div>
       </div>
     </main>
   );

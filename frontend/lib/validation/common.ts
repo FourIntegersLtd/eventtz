@@ -17,6 +17,14 @@ export const passwordSchema = z
   .string()
   .min(6, "Password must be at least 6 characters.");
 
+/** Admin console passwords — stricter policy matching backend. */
+export const adminPasswordSchema = z
+  .string()
+  .min(12, "Admin password must be at least 12 characters.")
+  .regex(/[A-Z]/, "Include an uppercase letter.")
+  .regex(/[a-z]/, "Include a lowercase letter.")
+  .regex(/[0-9]/, "Include a number.");
+
 export const accountTypeSchema = z.enum(["client", "vendor"]);
 
 export const preferredNameSchema = z

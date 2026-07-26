@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { accountTypeSchema, emailSchema, passwordSchema } from "@/lib/validation/common";
+import { accountTypeSchema, adminPasswordSchema, emailSchema, passwordSchema } from "@/lib/validation/common";
 
 export const loginSchema = z.object({
   email: emailSchema,
@@ -12,10 +12,24 @@ export const registerSchema = z.object({
   password: passwordSchema,
 });
 
-export const adminInviteSchema = z.object({
+export const adminInviteManualSchema = z.object({
   email: emailSchema,
-  password: passwordSchema,
+  password: adminPasswordSchema,
 });
+
+export const adminInviteLinkSchema = z.object({
+  email: emailSchema,
+});
+
+export const adminResetPasswordSchema = z
+  .object({
+    password: adminPasswordSchema,
+    confirmPassword: adminPasswordSchema,
+  })
+  .refine((v) => v.password === v.confirmPassword, {
+    message: "Passwords do not match.",
+    path: ["confirmPassword"],
+  });
 
 export const forgotPasswordSchema = z.object({
   email: emailSchema,

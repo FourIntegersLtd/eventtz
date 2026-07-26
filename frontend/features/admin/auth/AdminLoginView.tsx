@@ -105,7 +105,7 @@ export function AdminLoginView() {
                 required
               />
               <p className="-mt-1 text-right text-sm">
-                <Link href="/forgot-password" className="font-medium text-primary hover:underline">
+                <Link href="/admin/forgot-password" className="font-medium text-primary hover:underline">
                   Forgot password?
                 </Link>
               </p>
