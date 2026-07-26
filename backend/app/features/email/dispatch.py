@@ -9,7 +9,7 @@ from app.core.db import get_db as get_client
 from app.core.logging import get_logger
 from app.features.auth.lookup import user_emails_by_id
 from app.features.email.admin_recipients import admin_notify_recipients
-from app.features.email.branding import email_public_base
+from app.features.email.branding import email_public_base, ensure_public_email_url, public_email_url
 from app.features.email.service import get_email_service
 from app.features.notifications.copy import Portal, format_booking_notification
 from app.features.notifications.service import (
@@ -25,10 +25,6 @@ NotifyMode = Literal["upsert", "insert_if_absent"]
 
 def _email_base() -> str:
     return email_public_base()
-
-
-def _frontend_base() -> str:
-    return get_settings().frontend_url.strip().rstrip("/")
 
 
 def _booking_portal_path(portal: Portal, booking_id: str) -> str:
@@ -248,7 +244,7 @@ def send_vendor_approval_email(
 
 
 def send_team_invite_email(*, email: str) -> bool:
-    login_url = f"{_email_base()}/signin"
+    login_url = public_email_url("/admin/login")
     return get_email_service().send_team_invite(to_email=email.strip().lower(), login_url=login_url)
 
 
@@ -263,9 +259,11 @@ def send_welcome_email(*, email: str, user_type: str) -> bool:
     normalized = email.strip().lower()
     if not normalized or "@" not in normalized:
         return False
-    if user_type not in {"client", "vendor"}:
+    if user_type not in {"client", "vendor", "admin"}:
         return False
     try:
+        if user_type == "admin":
+            return send_admin_welcome_email(email=normalized)
         return get_email_service().send_welcome(
             to_email=normalized,
             user_type=user_type,
@@ -275,11 +273,42 @@ def send_welcome_email(*, email: str, user_type: str) -> bool:
         return False
 
 
+def send_admin_welcome_email(*, email: str) -> bool:
+    if get_settings().local_auth_mode:
+        return False
+    normalized = email.strip().lower()
+    if not normalized or "@" not in normalized:
+        return False
+    try:
+        login_url = public_email_url("/admin/login")
+        return get_email_service().send_admin_welcome(to_email=normalized, login_url=login_url)
+    except Exception:
+        logger.exception("send_admin_welcome_email failed email=%s", normalized)
+        return False
+
+
+def send_password_changed_email(*, email: str, user_type: str | None = None) -> bool:
+    if get_settings().local_auth_mode:
+        return False
+    normalized = email.strip().lower()
+    if not normalized or "@" not in normalized:
+        return False
+    login_path = "/admin/login" if user_type == "admin" else "/login"
+    login_url = public_email_url(login_path)
+    try:
+        return get_email_service().send_password_changed(to_email=normalized, login_url=login_url)
+    except Exception:
+        logger.exception("send_password_changed_email failed email=%s", normalized)
+        return False
+
+
 def send_password_reset_email(
     *,
     email: str,
     reset_url: str,
     expires_minutes: int = 60,
+    user_type: str | None = None,
+    purpose: Literal["reset", "setup"] = "reset",
 ) -> bool:
     if get_settings().local_auth_mode:
         return False
@@ -289,8 +318,10 @@ def send_password_reset_email(
     try:
         return get_email_service().send_password_reset(
             to_email=normalized,
-            reset_url=reset_url.strip(),
+            reset_url=ensure_public_email_url(reset_url.strip()),
             expires_minutes=expires_minutes,
+            user_type=user_type,
+            purpose=purpose,
         )
     except Exception:
         logger.exception("send_password_reset_email failed email=%s", normalized)

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
@@ -13,6 +13,7 @@ from app.features.email.branding import (
     client_welcome_showcase,
     display_name_from_email,
     email_public_base,
+    ensure_public_email_url,
     transactional_email_context,
     vendor_welcome_showcase,
 )
@@ -454,25 +455,99 @@ class EmailService:
         to_email: str,
         reset_url: str,
         expires_minutes: int = 60,
+        user_type: str | None = None,
+        purpose: Literal["reset", "setup"] = "reset",
     ) -> bool:
-        headline = "Reset your password"
+        is_admin = user_type == "admin"
+        if is_admin and purpose == "setup":
+            headline = "Welcome to the admin team"
+            intro = (
+                "An administrator added you to Eventtz. "
+                "Use the link below to set your password, then sign in with this email address."
+            )
+            action_label = "Set up password"
+            subtitle = None
+        elif is_admin:
+            headline = "Reset your admin password"
+            intro = "We received a request to reset your Eventtz admin console password."
+            action_label = "Reset password"
+            subtitle = "One-click secure link"
+        else:
+            headline = "Reset your password"
+            intro = "We received a request to reset your Eventtz password."
+            action_label = "Reset password"
+            subtitle = "One-click secure link"
         body = (
-            "We received a request to reset your Eventtz password.\n\n"
+            f"{intro}\n\n"
             f"This link expires in {expires_minutes} minutes and can only be used once. "
-            "If you did not ask for a reset, you can ignore this email."
+            + (
+                "If you were not expecting this invite, contact a colleague or reply to this email."
+                if is_admin and purpose == "setup"
+                else "If you did not ask for a reset, you can ignore this email."
+            )
         )
         ctx = transactional_email_context(
             subject=headline,
             headline=headline,
-            subtitle="One-click secure link",
+            subtitle=subtitle,
             body=body,
-            action_url=reset_url,
-            action_label="Reset password",
+            action_url=ensure_public_email_url(reset_url),
+            action_label=action_label,
         )
         html = render_template("auth/password_reset.html", ctx)
         text = render_template("auth/password_reset.txt", ctx)
         subject = f"{headline} | {APP_NAME}"
         return resend_send(to=[to_email], subject=subject, html=html, text=text)
+
+    def send_password_changed(
+        self,
+        *,
+        to_email: str,
+        login_url: str,
+    ) -> bool:
+        headline = "Your password was changed"
+        body = (
+            "Your Eventtz password was changed successfully.\n\n"
+            "If you did not make this change, contact support immediately."
+        )
+        ctx = transactional_email_context(
+            subject=headline,
+            headline=headline,
+            subtitle="Security notice",
+            body=body,
+            action_url=ensure_public_email_url(login_url),
+            action_label="Sign in",
+        )
+        html = render_template("auth/password_reset.html", ctx)
+        text = render_template("auth/password_reset.txt", ctx)
+        subject = f"{headline} | {APP_NAME}"
+        return resend_send(to=[to_email], subject=subject, html=html, text=text)
+
+    def send_admin_welcome(
+        self,
+        *,
+        to_email: str,
+        login_url: str,
+    ) -> bool:
+        ctx = transactional_email_context(
+            subject="Welcome to Eventtz admin",
+            headline="Welcome to the admin team",
+            subtitle=None,
+            body=(
+                "An administrator added you to Eventtz. "
+                "Sign in with the email address this message was sent to."
+            ),
+            action_url=ensure_public_email_url(login_url),
+            action_label="Sign in",
+        )
+        html = render_template("booking/notification.html", ctx)
+        text = render_template("booking/notification.txt", ctx)
+        return resend_send(
+            to=[to_email],
+            subject=f"Welcome to Eventtz admin | {APP_NAME}",
+            html=html,
+            text=text,
+        )
 
 
 _email_service: EmailService | None = None

@@ -9,14 +9,22 @@ from app.contracts.admin import (
     AdminAuditLogDetailResponse,
     AdminAuditLogItem,
     AdminAuditLogResponse,
+    AdminTeamDeleteResponse,
     AdminTeamInviteBody,
     AdminTeamInviteResponse,
     AdminTeamListResponse,
     AdminTeamMember,
     AdminTeamPatchBody,
+    AdminTeamSendResetLinkResponse,
 )
 from app.features.admin.audit import get_admin_audit_log_entry, insert_admin_audit_log, list_admin_audit_log
-from app.features.admin.team_ops import invite_admin_colleague, list_admin_team, patch_admin_team_member
+from app.features.admin.team_ops import (
+    delete_admin_team_member,
+    invite_admin_colleague,
+    list_admin_team,
+    patch_admin_team_member,
+    send_admin_password_reset_link,
+)
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -44,9 +52,55 @@ def admin_invite_team_member(
         action="admin.invite",
         entity_type="user",
         entity_id=result.get("user_id"),
-        payload={"email": result.get("email"), "created": result.get("created")},
+        payload={
+            "email": result.get("email"),
+            "created": result.get("created"),
+            "invite_link_sent": result.get("invite_link_sent"),
+        },
     )
     return AdminTeamInviteResponse(**result)
+
+
+@router.post("/team/{user_id}/send-reset-link", response_model=AdminTeamSendResetLinkResponse)
+def admin_send_team_reset_link(
+    user_id: str,
+    request: Request,
+    response: Response,
+) -> AdminTeamSendResetLinkResponse:
+    actor = require_super_admin(request, response)
+    try:
+        result = send_admin_password_reset_link(user_id, actor_user_id=str(actor.get("id") or ""))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    insert_admin_audit_log(
+        admin_user_id=str(actor.get("id") or ""),
+        action="admin.password_reset_sent",
+        entity_type="user",
+        entity_id=user_id,
+        payload={"email": result.get("email")},
+    )
+    return AdminTeamSendResetLinkResponse(**result)
+
+
+@router.delete("/team/{user_id}", response_model=AdminTeamDeleteResponse)
+def admin_delete_team_member(
+    user_id: str,
+    request: Request,
+    response: Response,
+) -> AdminTeamDeleteResponse:
+    actor = require_super_admin(request, response)
+    try:
+        result = delete_admin_team_member(user_id, actor_user_id=str(actor.get("id") or ""))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    insert_admin_audit_log(
+        admin_user_id=str(actor.get("id") or ""),
+        action="admin.team_delete",
+        entity_type="user",
+        entity_id=user_id,
+        payload={"email": result.get("email"), "deleted": result.get("deleted"), "demoted_to": result.get("demoted_to")},
+    )
+    return AdminTeamDeleteResponse(**result)
 
 
 @router.patch("/team/{user_id}", response_model=AdminTeamMember)

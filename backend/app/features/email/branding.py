@@ -28,6 +28,38 @@ def email_public_base() -> str:
     return EMAIL_PUBLIC_WEBSITE.rstrip("/")
 
 
+def public_email_url(path: str) -> str:
+    """Absolute URL for links in outbound email — always the public site."""
+    base = email_public_base()
+    normalized = (path or "").strip()
+    if not normalized:
+        return base
+    if normalized.startswith("http://") or normalized.startswith("https://"):
+        return ensure_public_email_url(normalized)
+    return f"{base}{normalized if normalized.startswith('/') else f'/{normalized}'}"
+
+
+def ensure_public_email_url(url: str) -> str:
+    """Rewrite dev or alternate production origins to EMAIL_PUBLIC_WEBSITE."""
+    from urllib.parse import urlparse
+
+    raw = (url or "").strip()
+    if not raw:
+        return raw
+    parsed = urlparse(raw)
+    host = (parsed.hostname or "").lower()
+    public = email_public_base()
+    path = parsed.path or ""
+    suffix = f"?{parsed.query}" if parsed.query else ""
+    if parsed.fragment:
+        suffix += f"#{parsed.fragment}"
+    if host in {"localhost", "127.0.0.1", "::1"} or host.endswith(".local"):
+        return f"{public}{path}{suffix}"
+    if host in {"eventtz.com", "www.eventtz.com"}:
+        return f"{public}{path}{suffix}"
+    return raw
+
+
 def display_name_from_email(email: str) -> str:
     local = (email or "").split("@", 1)[0].strip()
     if not local:

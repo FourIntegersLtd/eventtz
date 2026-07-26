@@ -16,7 +16,7 @@ ADMIN_NOTIFY_RECIPIENTS: tuple[str, ...] = (
 APP_NAME = "Eventtz"
 
 # Always use the production site in emails, not FRONTEND_URL or localhost.
-EMAIL_PUBLIC_WEBSITE = "https://eventtz.com"
+EMAIL_PUBLIC_WEBSITE = "https://www.eventtz.com"
 EMAIL_PUBLIC_WEBSITE_LABEL = "eventtz.com"
 EMAIL_PRIVACY_URL = "https://eventtz.com/compliances/privacy-policy"
 EMAIL_TERMS_URL = "https://eventtz.com/compliances/terms-of-service"

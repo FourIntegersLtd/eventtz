@@ -277,7 +277,7 @@ class AdminTeamListResponse(BaseModel):
 
 class AdminTeamInviteBody(BaseModel):
     email: str = Field(min_length=3, max_length=320)
-    password: str = Field(min_length=6, max_length=128)
+    password: str | None = Field(default=None, min_length=6, max_length=128)
 
 
 class AdminTeamInviteResponse(BaseModel):
@@ -286,6 +286,23 @@ class AdminTeamInviteResponse(BaseModel):
     email: str
     admin_role: Literal["super_admin", "admin"] = "admin"
     created: bool = False
+    invite_link_sent: bool = False
+    message: str
+
+
+class AdminTeamSendResetLinkResponse(BaseModel):
+    success: bool = True
+    user_id: str
+    email: str
+    message: str
+
+
+class AdminTeamDeleteResponse(BaseModel):
+    success: bool = True
+    user_id: str
+    email: str | None = None
+    deleted: bool = False
+    demoted_to: Literal["client", "vendor"] | None = None
     message: str
 
 

@@ -13,7 +13,7 @@ from app.features.auth.session import (
     get_current_user_or_raise,
     set_session_cookies,
 )
-from app.features.auth.accounts import hydrate_user_from_db, upsert_user_profile
+from app.features.auth.accounts import hydrate_user_from_db, upsert_user_profile, assert_user_not_suspended
 from app.features.email.dispatch import send_welcome_email
 
 # --- Schemas  ---
@@ -91,6 +91,7 @@ class ChangePasswordRequest(BaseModel):
 class ChangePasswordResponse(BaseModel):
     success: bool = True
     message: str = "Password updated."
+    requires_sign_in: bool = True
 
 
 # --- Routes ---
@@ -164,13 +165,26 @@ async def signup(
 @router.post("/signin", response_model=SignInResponse)
 async def sign_in(
     body: SignInRequest,
+    request: Request,
     response: Response,
 ):
     """Sign in with email and password."""
+    from app.features.auth.rate_limit import assert_sign_in_rate
+
+    client_ip = _client_ip(request)
+    try:
+        assert_sign_in_rate(body.email, client_ip)
+    except ValueError as e:
+        raise HTTPException(status_code=429, detail=str(e)) from e
+
     if local_auth_store.enabled():
         user = local_auth_store.authenticate(body.email, body.password)
         if not user:
             raise HTTPException(status_code=401, detail="We couldn't sign you in with those details. Check your email and password, then try again.")
+        try:
+            assert_user_not_suspended(str(user.get("id") or ""))
+        except ValueError as e:
+            raise HTTPException(status_code=403, detail=str(e)) from e
         session = local_auth_store.create_session(body.email)
         set_session_cookies(response, session)
         return SignInResponse(
@@ -185,10 +199,22 @@ async def sign_in(
         password=body.password,
     )
     if result.get("success"):
+        hydrated = hydrate_user_from_db(result["user"])
+        if hydrated.get("account_suspended"):
+            clear_session_cookies(response)
+            raise HTTPException(
+                status_code=403,
+                detail="This account is suspended. Contact a super admin if you need access.",
+            )
+        try:
+            assert_user_not_suspended(str(hydrated.get("id") or ""))
+        except ValueError as e:
+            clear_session_cookies(response)
+            raise HTTPException(status_code=403, detail=str(e)) from e
         set_session_cookies(response, result["session"])
         return SignInResponse(
             success=True,
-            user=hydrate_user_from_db(result["user"]),
+            user=hydrated,
             session=result["session"],
         )
     raise HTTPException(
@@ -345,7 +371,12 @@ async def change_password_route(
             email=email,
             current_password=body.current_password,
             new_password=body.new_password,
+            client_ip=_client_ip(request),
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
-    return ChangePasswordResponse()
+    clear_session_cookies(response)
+    return ChangePasswordResponse(
+        message="Password updated. Sign in again with your new password.",
+        requires_sign_in=True,
+    )

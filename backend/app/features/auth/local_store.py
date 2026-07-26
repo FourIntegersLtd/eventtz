@@ -90,6 +90,18 @@ def revoke_access_token(access_token: str) -> None:
     _local_access_tokens.pop(access_token, None)
 
 
+def revoke_all_sessions_for_user(user_id: str) -> None:
+    email = email_for_user_id(user_id)
+    if not email:
+        return
+    for token, mapped_email in list(_local_access_tokens.items()):
+        if mapped_email == email:
+            _local_access_tokens.pop(token, None)
+    for token, mapped_email in list(_local_refresh_tokens.items()):
+        if mapped_email == email:
+            _local_refresh_tokens.pop(token, None)
+
+
 def user_record_for_email(email: str) -> dict[str, Any] | None:
     record = _local_users_by_email.get(normalize_email(email))
     return record["user"] if record else None
