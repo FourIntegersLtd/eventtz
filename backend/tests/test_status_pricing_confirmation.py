@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from app.features.bookings.pricing import build_pricing_breakdown, persisted_booking_total_label
 from app.features.bookings.pricing_confirmation import client_price_confirmation_required
 from app.features.bookings.status import (
     update_booking_request_status_for_client,
@@ -98,3 +99,97 @@ def test_client_can_accept_updated_price(
     result = update_booking_request_status_for_client("c1", "b1", new_status="accepted")
     assert result == {"id": "b1", "status": "accepted"}
     mock_notify.assert_called_once()
+
+
+@patch("app.features.bookings.status._notify_booking_changed")
+@patch("app.features.bookings.status.dispatch_booking_notification")
+@patch("app.features.bookings.status.get_settings")
+@patch("app.features.bookings.status.get_client")
+def test_client_declining_updated_price_reverts_and_stays_pending(
+    mock_get_client,
+    mock_settings,
+    mock_notify,
+    _mock_sse,
+):
+    mock_settings.return_value.local_auth_mode = False
+    mock_client = MagicMock()
+    mock_get_client.return_value = mock_client
+    mock_table = MagicMock()
+    mock_client.table.return_value = mock_table
+    mock_table.select.return_value = mock_table
+    mock_table.eq.return_value = mock_table
+    mock_table.limit.return_value = mock_table
+    mock_table.update.return_value = mock_table
+    line_items = [{"unit_price_gbp": 500.0, "label": "Package"}]
+    expected_total = persisted_booking_total_label(
+        build_pricing_breakdown(line_items=line_items, vendor_adjustments=[]),
+    )
+    mock_table.execute.side_effect = [
+        MagicMock(
+            data=[
+                {
+                    "id": "b1",
+                    "status": "pending",
+                    "vendor_user_id": "v1",
+                    "initiator": "client",
+                    "vendor_adjustments": [{"amount_gbp": 10.0, "label": "Extra hour"}],
+                    "line_items": line_items,
+                    "initial_client_total_label": expected_total,
+                },
+            ],
+        ),
+        MagicMock(data=[{"id": "b1"}]),
+    ]
+
+    result = update_booking_request_status_for_client("c1", "b1", new_status="declined")
+
+    assert result == {"id": "b1", "status": "pending"}
+    update_payload = mock_table.update.call_args[0][0]
+    assert update_payload["vendor_adjustments"] == []
+    assert update_payload["total_label"] == expected_total
+    assert "status" not in update_payload
+    mock_notify.assert_called_once()
+    assert mock_notify.call_args.kwargs["kind"] == "client_declined_updated_price"
+
+
+@patch("app.features.bookings.status._notify_booking_changed")
+@patch("app.features.bookings.status.dispatch_booking_notification")
+@patch("app.features.bookings.status.get_settings")
+@patch("app.features.bookings.status.get_client")
+def test_client_declining_vendor_quote_closes_booking(
+    mock_get_client,
+    mock_settings,
+    mock_notify,
+    _mock_sse,
+):
+    mock_settings.return_value.local_auth_mode = False
+    mock_client = MagicMock()
+    mock_get_client.return_value = mock_client
+    mock_table = MagicMock()
+    mock_client.table.return_value = mock_table
+    mock_table.select.return_value = mock_table
+    mock_table.eq.return_value = mock_table
+    mock_table.limit.return_value = mock_table
+    mock_table.update.return_value = mock_table
+    mock_table.execute.side_effect = [
+        MagicMock(
+            data=[
+                {
+                    "id": "b1",
+                    "status": "pending",
+                    "vendor_user_id": "v1",
+                    "initiator": "vendor",
+                    "vendor_adjustments": [],
+                },
+            ],
+        ),
+        MagicMock(data=[{"id": "b1"}]),
+    ]
+
+    result = update_booking_request_status_for_client("c1", "b1", new_status="declined")
+
+    assert result == {"id": "b1", "status": "declined"}
+    update_payload = mock_table.update.call_args[0][0]
+    assert update_payload == {"status": "declined"}
+    mock_notify.assert_called_once()
+    assert mock_notify.call_args.kwargs["kind"] == "vendor_quote_declined"

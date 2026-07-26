@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Body, Request, Response
+from fastapi import APIRouter, Body, HTTPException, Request, Response
 
 from app.contracts.planner import (
     ArchivePlanResponse,
     CelebrationPlanListResponse,
     CelebrationPlanResponse,
     CreateCelebrationPlanRequest,
+    EnsurePlanEventResponse,
     ReplacePlanItemRequest,
 )
 from app.features.auth.http.guards import require_client
 from app.features.planner import plan_service
+from app.features.planner import event_link as planner_event_link
 
 router = APIRouter(prefix="/client/planner", tags=["client-planner"])
 
@@ -60,6 +62,28 @@ def post_replace_plan_item(
         plan_id,
         need_id,
         exclude_vendor_user_id=body.exclude_vendor_user_id,
+    )
+
+
+@router.post("/plans/{plan_id}/ensure-event", response_model=EnsurePlanEventResponse)
+def post_ensure_plan_event(
+    plan_id: str,
+    request: Request,
+    response: Response,
+) -> EnsurePlanEventResponse:
+    user = require_client(request, response)
+    client_id = str(user.get("id") or "")
+    try:
+        summary = planner_event_link.ensure_client_event_for_plan(client_id, plan_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    return EnsurePlanEventResponse(
+        plan_id=plan_id,
+        event_id=str(summary.get("id") or ""),
+        title=str(summary.get("title") or ""),
+        event_date=str(summary.get("event_date") or ""),
+        event_address=summary.get("event_address"),
+        event_postcode=summary.get("event_postcode"),
     )
 
 

@@ -27,7 +27,7 @@ from app.features.chat.service import (
 )
 from app.features.realtime.sse import notify_user
 from app.features.email.dispatch import dispatch_booking_notification
-from app.features.vendors.moderation import get_approved_vendor_payload
+from app.features.client_events.events import resolve_event_for_booking, touch_client_event_updated_at
 from app.features.vendors.list_pricing import (
     compute_automatic_discount_lines,
     resolve_line_items,
@@ -169,6 +169,7 @@ def create_booking_request(
     notes: str | None,
     selected_option_ids: list[str],
     client_search_context: dict[str, Any] | None = None,
+    event_id: str | None = None,
 ) -> dict[str, Any]:
     if client_user_id == vendor_user_id:
         raise ValueError("Cannot book your own account as vendor.")
@@ -217,14 +218,19 @@ def create_booking_request(
         if isinstance(client_search_context, dict) and client_search_context
         else None
     )
+    resolved_event_id, event_fields = resolve_event_for_booking(
+        client_user_id,
+        event_id=event_id,
+        event_name=event_name,
+        event_date=event_date,
+        event_end_date=event_end_date,
+        event_address=event_address,
+        event_postcode=event_postcode,
+    )
     row_out: dict[str, Any] = {
         "client_user_id": client_user_id,
         "vendor_user_id": vendor_user_id,
-        "event_name": event_name.strip(),
-        "event_date": event_date.isoformat(),
-        "event_end_date": event_end_date.isoformat() if event_end_date else None,
-        "event_postcode": event_postcode.strip() if event_postcode else None,
-        "event_address": (event_address.strip() if event_address else None),
+        **event_fields,
         "notes": (notes.strip() if notes else None),
         "status": "pending",
         "selected_option_ids": selected_option_ids,
@@ -310,11 +316,13 @@ def create_booking_request(
         portal="client",
     )
     _notify_booking_changed(client_user_id=client_user_id, vendor_user_id=vendor_user_id)
+    touch_client_event_updated_at(resolved_event_id)
     return {
         "id": bid,
         "status": str(created.get("status", "pending")),
         "created_at": created.get("created_at"),
         "conversation_id": conversation_id,
+        "event_id": resolved_event_id,
     }
 
 

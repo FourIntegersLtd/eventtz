@@ -137,6 +137,22 @@ def _vendor_display_names_by_id(vendor_ids: list[str]) -> dict[str, str]:
     return vendor_display_names_by_id(vendor_ids)
 
 
+def _client_event_titles_by_id(event_ids: list[str]) -> dict[str, str]:
+    ids = [e for e in event_ids if e]
+    if not ids or get_settings().local_auth_mode:
+        return {}
+    try:
+        res = get_client().table("client_events").select("id,title").in_("id", ids).execute()
+    except Exception as e:
+        logger.warning("_client_event_titles_by_id failed: %s", e)
+        return {}
+    out: dict[str, str] = {}
+    for row in getattr(res, "data", None) or []:
+        if isinstance(row, dict) and row.get("id"):
+            out[str(row["id"])] = str(row.get("title") or "")
+    return out
+
+
 def _client_emails_by_id(user_ids: list[str]) -> dict[str, str | None]:
     return client_emails_by_id(user_ids)
 
@@ -329,7 +345,7 @@ def list_booking_requests_for_client(
         get_client()
         .table("booking_requests")
         .select(
-            "id,status,event_name,event_date,event_end_date,total_label,vendor_user_id,created_at,updated_at,line_items,vendor_adjustments,initiator,conversation_id,payment_status,client_completion_confirmed_at,vendor_completion_confirmed_at,completion_reminder_sent_at",
+            "id,status,event_name,event_date,event_end_date,total_label,vendor_user_id,created_at,updated_at,line_items,vendor_adjustments,initiator,conversation_id,payment_status,client_completion_confirmed_at,vendor_completion_confirmed_at,completion_reminder_sent_at,event_id",
         )
         .eq("client_user_id", client_user_id)
     )
@@ -358,6 +374,15 @@ def list_booking_requests_for_client(
         get_client_reviewed_booking_ids(client_user_id, completed_ids) if completed_ids else set()
     )
 
+    event_ids = list(
+        {
+            str(r.get("event_id") or "")
+            for r in rows
+            if isinstance(r, dict) and r.get("event_id")
+        },
+    )
+    event_titles = _client_event_titles_by_id(event_ids)
+
     out: list[dict[str, Any]] = []
     for row in rows:
         vid = str(row.get("vendor_user_id") or "")
@@ -370,6 +395,7 @@ def list_booking_requests_for_client(
             vendor_adjustments=row.get("vendor_adjustments"),
         )
         conv = row.get("conversation_id")
+        eid = str(row.get("event_id") or "") or None
         out.append(
             {
                 "id": str(row.get("id", "")),
@@ -384,6 +410,8 @@ def list_booking_requests_for_client(
                 "created_at": row.get("created_at"),
                 "initiator": _row_initiator(row),
                 "conversation_id": str(conv) if conv else None,
+                "event_id": eid,
+                "event_title": event_titles.get(eid) if eid else None,
                 "has_review": str(row.get("id", "")) in reviewed_ids,
                 "payment_status": str(row.get("payment_status") or "unpaid"),
                 "has_price_update": _has_price_update(row),
@@ -432,6 +460,8 @@ def get_booking_request_for_client(client_user_id: str, booking_id: str) -> dict
     conv = row.get("conversation_id")
     ep = row.get("event_postcode")
     ea = row.get("event_address")
+    eid = str(row.get("event_id") or "") or None
+    event_titles = _client_event_titles_by_id([eid] if eid else [])
     out = {
         "id": str(row.get("id", "")),
         "status": str(row.get("status", "pending")),
@@ -456,6 +486,8 @@ def get_booking_request_for_client(client_user_id: str, booking_id: str) -> dict
         "completion_waiting_on": completion_waiting_on(row),
         "initiator": _row_initiator(row),
         "conversation_id": str(conv) if conv else None,
+        "event_id": eid,
+        "event_title": event_titles.get(eid) if eid else None,
     }
     _attach_pricing_fields(out)
     out["initial_client_total_label"] = _initial_client_total_label(row, out.get("pricing"))

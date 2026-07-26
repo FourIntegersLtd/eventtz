@@ -250,11 +250,13 @@ def _response_from_parts(
     recommendations: list[PlannerRecommendation],
     created_at: str | None = None,
     updated_at: str | None = None,
+    client_event_id: str | None = None,
 ) -> CelebrationPlanResponse:
     return CelebrationPlanResponse(
         success=True,
         plan_id=plan_id,
         status=status,
+        client_event_id=client_event_id,
         celebration=CelebrationSummary(
             title=title,
             event_type=brief.event_type,
@@ -568,6 +570,7 @@ def get_plan(client_user_id: str, plan_id: str) -> CelebrationPlanResponse:
         recommendations=recommendations,
         created_at=str(row["created_at"]) if row.get("created_at") else None,
         updated_at=str(row["updated_at"]) if row.get("updated_at") else None,
+        client_event_id=str(row["client_event_id"]) if row.get("client_event_id") else None,
     )
 
 

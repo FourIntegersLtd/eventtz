@@ -14,6 +14,7 @@ from app.features.bookings.notifications import (
     _notify_booking_changed,
 )
 from app.features.bookings.pricing_confirmation import client_price_confirmation_required
+from app.features.bookings.pricing import build_pricing_breakdown, persisted_booking_total_label
 from app.features.bookings.queries import (
     _row_initiator,
     get_booking_request_for_client,
@@ -399,7 +400,7 @@ def update_booking_request_status_for_client(
     db = get_client()
     res = (
         db.table("booking_requests")
-        .select("id,status,vendor_user_id,initiator,vendor_adjustments")
+        .select("id,status,vendor_user_id,initiator,vendor_adjustments,line_items")
         .eq("id", booking_id)
         .eq("client_user_id", client_user_id)
         .limit(1)
@@ -422,6 +423,39 @@ def update_booking_request_status_for_client(
         )
 
     if new_status == "declined":
+        if is_updated_price:
+            line_items = row0.get("line_items")
+            if not isinstance(line_items, list):
+                line_items = []
+            pb = build_pricing_breakdown(line_items=line_items, vendor_adjustments=[])
+            revert_payload: dict[str, Any] = {
+                "vendor_adjustments": [],
+                "total_label": persisted_booking_total_label(pb),
+            }
+            upd = (
+                db.table("booking_requests")
+                .update(revert_payload)
+                .eq("id", booking_id)
+                .eq("client_user_id", client_user_id)
+                .eq("status", "pending")
+                .execute()
+            )
+            if not rows(upd):
+                return None
+            if vendor_uid:
+                dispatch_booking_notification(
+                    user_id=vendor_uid,
+                    booking_id=booking_id,
+                    kind="client_declined_updated_price",
+                    body=(
+                        "The client declined the updated price.\n\n"
+                        "The booking is still open at the original price. You can message them "
+                        "or send a new price if needed."
+                    ),
+                )
+            _notify_booking_changed(client_user_id=client_user_id, vendor_user_id=vendor_uid)
+            return {"id": booking_id, "status": "pending"}
+
         upd = (
             db.table("booking_requests")
             .update({"status": "declined"})
@@ -433,26 +467,15 @@ def update_booking_request_status_for_client(
         if not rows(upd):
             return None
         if vendor_uid:
-            if is_vendor_quote:
-                dispatch_booking_notification(
-                    user_id=vendor_uid,
-                    booking_id=booking_id,
-                    kind="vendor_quote_declined",
-                    body=(
-                        "The client declined your quote.\n\n"
-                        "The booking has been closed. You can still message them on Eventtz."
-                    ),
-                )
-            else:
-                dispatch_booking_notification(
-                    user_id=vendor_uid,
-                    booking_id=booking_id,
-                    kind="client_declined_updated_price",
-                    body=(
-                        "The client declined the updated price.\n\n"
-                        "This booking has been closed. No further action is needed."
-                    ),
-                )
+            dispatch_booking_notification(
+                user_id=vendor_uid,
+                booking_id=booking_id,
+                kind="vendor_quote_declined",
+                body=(
+                    "The client declined your quote.\n\n"
+                    "The booking has been closed. You can still message them on Eventtz."
+                ),
+            )
         _notify_booking_changed(client_user_id=client_user_id, vendor_user_id=vendor_uid)
         return {"id": booking_id, "status": "declined"}
 

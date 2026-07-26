@@ -147,15 +147,16 @@ _COPY: dict[str, dict[Portal, tuple[str, str]]] = {
     },
     "client_declined_updated_price": {
         "vendor": (
-            "Booking declined",
+            "Price update declined",
             "The client declined the updated price.\n\n"
-            "This booking has been closed. No further action is needed, though you are welcome "
-            "to stay in touch on Eventtz if another date comes up.",
+            "The booking is still open at the original price. You can message them "
+            "or send a new price if needed.",
         ),
         "client": (
-            "Booking declined",
-            "You declined the updated price, so this booking is now closed.\n\n"
-            "You can send a new request or browse other vendors whenever you like.",
+            "Price update declined",
+            "You declined the updated price.\n\n"
+            "The original price is restored and the booking stays open. "
+            "Keep chatting with the vendor or cancel if you are done.",
         ),
     },
     "vendor_quote_received": {

@@ -105,6 +105,7 @@ class CelebrationPlanResponse(BaseModel):
     success: bool = True
     plan_id: str
     status: str = "active"
+    client_event_id: str | None = None
     celebration: CelebrationSummary
     brief: CelebrationBrief
     confidence: ConfidenceBlock
@@ -139,3 +140,13 @@ class ArchivePlanResponse(BaseModel):
     success: bool = True
     plan_id: str
     status: str = "archived"
+
+
+class EnsurePlanEventResponse(BaseModel):
+    success: bool = True
+    plan_id: str
+    event_id: str
+    title: str
+    event_date: str
+    event_address: str | None = None
+    event_postcode: str | None = None

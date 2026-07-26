@@ -120,6 +120,7 @@ class CreateBookingRequestBody(BaseModel):
     selected_option_ids: list[str] = Field(min_length=1)
     #: Marketplace search filters at enquire time (for alternative-vendor nudges).
     client_search_context: dict[str, Any] | None = None
+    event_id: str | None = Field(default=None, max_length=36)
 
     @field_validator("event_postcode", mode="before")
     @classmethod
@@ -175,6 +176,7 @@ class BookingRequestCreated(BaseModel):
     id: str
     status: Literal["pending", "accepted", "declined", "cancelled"] = "pending"
     created_at: str | None = None
+    event_id: str | None = None
 
 
 class VendorBookingListItem(BaseModel):
@@ -272,6 +274,8 @@ class ClientBookingListItem(BaseModel):
     has_price_update: bool = False
     completion_waiting_on: Literal["client", "vendor", "both"] | None = None
     client_completion_confirmed_at: str | None = None
+    event_id: str | None = None
+    event_title: str | None = None
 
 
 class ClientBookingsListResponse(BaseModel):
@@ -306,6 +310,8 @@ class ClientBookingDetail(BaseModel):
     review: ClientReviewSummary | None = None
     initiator: Literal["client", "vendor"] = "client"
     conversation_id: str | None = None
+    event_id: str | None = None
+    event_title: str | None = None
     counterparty_phone: str | None = None
 
 
