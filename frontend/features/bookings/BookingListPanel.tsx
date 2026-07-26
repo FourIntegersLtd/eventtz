@@ -4,6 +4,7 @@ import { SkeletonListRows } from "@/components/ui/Skeleton";
 import { SegmentedControl, type SegmentedControlOption } from "@/components/ui/SegmentedControl";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { BookingListRowViewModel } from "@/features/bookings/bookingViewModel";
+import type { BookingEventGroup } from "@/features/bookings/groupBookingsByEvent";
 
 /** `closed` covers every booking that's no longer active — completed, declined, and
  * cancelled — with per-row status badges distinguishing the outcome. */
@@ -23,6 +24,8 @@ type BookingListPanelProps = {
   selectedId: string | null;
   onSelect: (id: string) => void;
   emptyTitle: string;
+  /** When set, rows render under event section headers (client bookings). */
+  eventGroups?: BookingEventGroup[] | null;
 };
 
 /**
@@ -38,7 +41,61 @@ export function BookingListPanel({
   selectedId,
   onSelect,
   emptyTitle,
+  eventGroups,
 }: BookingListPanelProps) {
+  const renderRow = (row: BookingListRowViewModel) => {
+    const sel = selectedId === row.id;
+    const hint =
+      row.warningBadge ||
+      row.pendingSubtext ||
+      (row.initiatorBadgeLabel && row.status !== "pending" ? row.initiatorBadgeLabel : null);
+
+    return (
+      <li key={row.id}>
+        <button
+          type="button"
+          onClick={() => onSelect(row.id)}
+          aria-current={sel}
+          className={`relative w-full px-5 py-6 text-left transition duration-150 ease-out sm:px-6 sm:py-7 ${
+            sel ? "bg-primary/[0.05]" : "hover:bg-neutral-50/90"
+          }`}
+        >
+          {sel ? (
+            <span
+              className="absolute inset-y-4 left-0 w-[3px] rounded-full bg-primary"
+              aria-hidden
+            />
+          ) : null}
+
+          <div className="flex items-start justify-between gap-4">
+            <p className="min-w-0 text-[15px] font-semibold leading-snug tracking-tight text-neutral-900 line-clamp-2">
+              {row.eventName}
+            </p>
+            <StatusBadge status={row.status} />
+          </div>
+
+          <div className="mt-4 space-y-1.5">
+            <p className="truncate text-sm text-neutral-600">{row.counterpartyLine}</p>
+            <p className="text-sm text-neutral-500">{row.dateLabel}</p>
+            <p className="pt-1 text-sm font-semibold tabular-nums text-neutral-900">
+              {row.totalLabel}
+            </p>
+          </div>
+
+          {hint ? (
+            <p
+              className={`mt-4 text-[13px] leading-snug ${
+                row.warningBadge ? "font-medium text-amber-700" : "text-neutral-500"
+              }`}
+            >
+              {hint}
+            </p>
+          ) : null}
+        </button>
+      </li>
+    );
+  };
+
   return (
     <div className="flex h-full min-h-0 flex-col">
       <SegmentedControl
@@ -65,63 +122,24 @@ export function BookingListPanel({
             icon={<CalendarClock className="h-8 w-8" strokeWidth={1.5} />}
             title={emptyTitle}
           />
+        ) : eventGroups && eventGroups.length > 0 ? (
+          <div className="divide-y divide-neutral-100">
+            {eventGroups.map((group) => (
+              <section key={group.key}>
+                <div className="border-b border-neutral-100 bg-neutral-50/90 px-5 py-3 sm:px-6">
+                  <p className="text-sm font-semibold text-neutral-900">{group.title}</p>
+                  <p className="mt-0.5 text-xs text-neutral-500">
+                    {[group.dateLabel, `${group.bookingCount} vendor${group.bookingCount === 1 ? "" : "s"}`]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                </div>
+                <ul className="divide-y divide-neutral-100">{group.rows.map(renderRow)}</ul>
+              </section>
+            ))}
+          </div>
         ) : (
-          <ul className="divide-y divide-neutral-100">
-            {rows.map((row) => {
-              const sel = selectedId === row.id;
-              const hint =
-                row.warningBadge ||
-                row.pendingSubtext ||
-                (row.initiatorBadgeLabel && row.status !== "pending"
-                  ? row.initiatorBadgeLabel
-                  : null);
-
-              return (
-                <li key={row.id}>
-                  <button
-                    type="button"
-                    onClick={() => onSelect(row.id)}
-                    aria-current={sel}
-                    className={`relative w-full px-5 py-6 text-left transition duration-150 ease-out sm:px-6 sm:py-7 ${
-                      sel ? "bg-primary/[0.05]" : "hover:bg-neutral-50/90"
-                    }`}
-                  >
-                    {sel ? (
-                      <span
-                        className="absolute inset-y-4 left-0 w-[3px] rounded-full bg-primary"
-                        aria-hidden
-                      />
-                    ) : null}
-
-                    <div className="flex items-start justify-between gap-4">
-                      <p className="min-w-0 text-[15px] font-semibold leading-snug tracking-tight text-neutral-900 line-clamp-2">
-                        {row.eventName}
-                      </p>
-                      <StatusBadge status={row.status} />
-                    </div>
-
-                    <div className="mt-4 space-y-1.5">
-                      <p className="truncate text-sm text-neutral-600">{row.counterpartyLine}</p>
-                      <p className="text-sm text-neutral-500">{row.dateLabel}</p>
-                      <p className="pt-1 text-sm font-semibold tabular-nums text-neutral-900">
-                        {row.totalLabel}
-                      </p>
-                    </div>
-
-                    {hint ? (
-                      <p
-                        className={`mt-4 text-[13px] leading-snug ${
-                          row.warningBadge ? "font-medium text-amber-700" : "text-neutral-500"
-                        }`}
-                      >
-                        {hint}
-                      </p>
-                    ) : null}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+          <ul className="divide-y divide-neutral-100">{rows.map(renderRow)}</ul>
         )}
       </div>
     </div>

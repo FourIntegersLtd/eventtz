@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useEffectEvent, useState } from "react";
+import { useEffect, useEffectEvent, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { Button } from "@/components/ui/Button";
 import { ButtonLink } from "@/components/ui/ButtonLink";
+import { getApiErrorDetail } from "@/lib/api-errors";
+import { ensurePlanClientEvent } from "@/lib/clientPlannerApi";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { BudgetBreakdown } from "./BudgetBreakdown";
 import { CelebrationSummary } from "./CelebrationSummary";
@@ -13,6 +16,7 @@ import { PlannerNextSteps } from "./PlannerNextSteps";
 import { PlannerPromptHero } from "./PlannerPromptHero";
 import { RecommendationSection } from "./RecommendationSection";
 import { PLANNER_COPY } from "./plannerCopy";
+import { buildPlannerBrowseUrl, primaryVendorsFromPlan } from "./plannerModel";
 import { useGeneratePlan } from "./useGeneratePlan";
 
 export function AiPlannerView({ initialPlanId }: { initialPlanId?: string }) {
@@ -21,6 +25,8 @@ export function AiPlannerView({ initialPlanId }: { initialPlanId?: string }) {
   const qFromUrl = searchParams.get("q")?.trim() || "";
   const [prompt, setPrompt] = useState(qFromUrl);
   const [loadingTick, setLoadingTick] = useState(0);
+  const [browseHandoffBusy, setBrowseHandoffBusy] = useState(false);
+  const [browseHandoffError, setBrowseHandoffError] = useState<string | null>(null);
 
   const {
     loading,
@@ -72,6 +78,33 @@ export function AiPlannerView({ initialPlanId }: { initialPlanId?: string }) {
     }
   }, [plan?.plan_id, initialPlanId, router]);
 
+  const hasBrowseHandoff = useMemo(
+    () => (plan ? primaryVendorsFromPlan(plan).length > 0 : false),
+    [plan],
+  );
+
+  const handleBrowseHandoff = () => {
+    if (!plan) return;
+    setBrowseHandoffError(null);
+    setBrowseHandoffBusy(true);
+    void (async () => {
+      try {
+        const ensured = plan.client_event_id
+          ? { event_id: plan.client_event_id }
+          : await ensurePlanClientEvent(plan.plan_id);
+        track(MixpanelEvents.planner_plan_viewed, {
+          action: "browse_handoff",
+          plan_id: plan.plan_id,
+          event_id: ensured.event_id,
+        });
+        router.push(buildPlannerBrowseUrl(plan, ensured.event_id));
+      } catch (err: unknown) {
+        setBrowseHandoffError(getApiErrorDetail(err) ?? "Could not open marketplace.");
+        setBrowseHandoffBusy(false);
+      }
+    })();
+  };
+
   return (
     <div className="w-full max-w-5xl space-y-8">
       <PlannerPromptHero
@@ -119,6 +152,26 @@ export function AiPlannerView({ initialPlanId }: { initialPlanId?: string }) {
             />
           </div>
 
+          {hasBrowseHandoff ? (
+            <div className="rounded-2xl border border-primary/15 bg-[#faf8fc] px-5 py-4">
+              <p className="text-sm text-neutral-800">{PLANNER_COPY.browseRecommendationsHint}</p>
+              {browseHandoffError ? (
+                <p className="mt-2 text-sm text-red-800">{browseHandoffError}</p>
+              ) : null}
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                className="mt-3"
+                loading={browseHandoffBusy}
+                disabled={browseHandoffBusy}
+                onClick={handleBrowseHandoff}
+              >
+                {PLANNER_COPY.browseRecommendationsLabel}
+              </Button>
+            </div>
+          ) : null}
+
           <div className="grid gap-6 lg:grid-cols-[1fr_280px] lg:items-start">
             <div className="space-y-5">
               <h3 className="font-heading text-xl font-semibold text-neutral-900">
@@ -127,6 +180,7 @@ export function AiPlannerView({ initialPlanId }: { initialPlanId?: string }) {
               {plan.recommendations.map((rec) => (
                 <RecommendationSection
                   key={rec.need_id}
+                  plan={plan}
                   recommendation={rec}
                   replacing={replacingNeedId === rec.need_id}
                   onReplace={() => void replaceNeed(rec.need_id)}

@@ -45,6 +45,12 @@ const emptyState = (): MarketplaceSearchState => ({
   budgetMax: null,
   sort: "relevance",
   page: 1,
+  vendorIds: [],
+  fromPlannerPlanId: null,
+  eventName: "",
+  venue: "",
+  planNotes: "",
+  linkedEventId: null,
 });
 
 export function HeroMarketplaceSearch({

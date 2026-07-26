@@ -1,4 +1,10 @@
 import type { CelebrationPlanResponse, PlannerVendorCard } from "@/lib/clientPlannerApi";
+import { eventPrefillFromCelebrationPlan } from "@/features/bookings/eventEnquirePrefill";
+import {
+  buildMarketplaceSearchUrl,
+  type MarketplaceSearchState,
+} from "@/lib/marketplaceSearchParams";
+import { DEFAULT_COUNTRY_CODE } from "@/lib/markets";
 
 export function formatGbp(amount: number | null | undefined): string {
   if (amount == null || Number.isNaN(amount)) return "—";
@@ -33,4 +39,39 @@ export function celebrationMetaLine(plan: CelebrationPlanResponse): string {
 
 export function vendorProfileHref(userId: string): string {
   return `/client/browse/${encodeURIComponent(userId)}`;
+}
+
+/** Primary recommended vendors that can receive a shared enquiry. */
+export function primaryVendorsFromPlan(plan: CelebrationPlanResponse): PlannerVendorCard[] {
+  return plan.recommendations
+    .map((rec) => rec.primary)
+    .filter((v): v is PlannerVendorCard => v != null && !v.unavailable);
+}
+
+/** Hand off to client browse — same multi-select + message flow as non-AI users. */
+export function buildPlannerBrowseUrl(
+  plan: CelebrationPlanResponse,
+  linkedEventId: string,
+): string {
+  const prefill = eventPrefillFromCelebrationPlan(plan);
+  const vendorIds = primaryVendorsFromPlan(plan).map((v) => v.user_id);
+  const state: MarketplaceSearchState = {
+    query: plan.brief.raw_prompt?.trim() || plan.celebration.title?.trim() || "",
+    types: [],
+    location: plan.celebration.location?.trim() || plan.brief.location?.trim() || "",
+    country: DEFAULT_COUNTRY_CODE,
+    dates: prefill.eventDate ? [prefill.eventDate] : [],
+    dateFlexible: false,
+    budgetMin: null,
+    budgetMax: null,
+    sort: "relevance",
+    page: 1,
+    vendorIds,
+    fromPlannerPlanId: plan.plan_id,
+    eventName: prefill.eventName,
+    venue: prefill.venueAddress,
+    planNotes: prefill.notes,
+    linkedEventId,
+  };
+  return buildMarketplaceSearchUrl("/client/browse", state);
 }

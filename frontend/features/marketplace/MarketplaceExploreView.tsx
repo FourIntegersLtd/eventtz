@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { EventtzLogo } from "@/components/branding/EventtzLogo";
 import { PortalShell } from "@/components/portal-shell/PortalShell";
@@ -31,6 +31,8 @@ import { LoadingState } from "@/components/ui/LoadingState";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { MarketplaceVendorCard } from "@/features/marketplace/MarketplaceVendorCard";
 import { MultiVendorEnquireModal } from "@/features/marketplace/MultiVendorEnquireModal";
+import type { EventEnquirePrefill } from "@/features/bookings/eventEnquirePrefill";
+import { eventEnquirePrefillFromSearchParams } from "@/features/bookings/eventEnquirePrefill";
 import {
   buildMarketplaceResultsHeadline,
   expandVendorsForSearchResults,
@@ -88,12 +90,17 @@ export function MarketplaceExploreView({
     {},
   );
   const [multiEnquireOpen, setMultiEnquireOpen] = useState(false);
+  const plannerAutoSelectDone = useRef(false);
 
   const { isSaved, toggle, savedIds, ready: bookmarksReady } = useMarketplaceBookmarks();
   const savedOnly = mode === "favorites";
   const favoriteVendorIds = useMemo(
     () => (savedOnly && savedIds.size > 0 ? [...savedIds] : undefined),
     [savedOnly, savedIds],
+  );
+  const searchVendorIds = useMemo(
+    () => (state.vendorIds.length > 0 ? state.vendorIds : undefined),
+    [state.vendorIds],
   );
 
   const isClient = user?.user_type === "client";
@@ -142,7 +149,7 @@ export function MarketplaceExploreView({
             budgetMin: state.budgetMin,
             budgetMax: state.budgetMax,
             sort: state.sort,
-            vendorIds: favoriteVendorIds,
+            vendorIds: savedOnly ? favoriteVendorIds : searchVendorIds,
             limit: MARKETPLACE_PAGE_SIZE,
             offset: (page - 1) * MARKETPLACE_PAGE_SIZE,
           });
@@ -169,7 +176,43 @@ export function MarketplaceExploreView({
     return () => {
       cancelled = true;
     };
-  }, [fetchKey, state, savedOnly, bookmarksReady, favoriteVendorIds, savedIds.size]);
+  }, [fetchKey, state, savedOnly, bookmarksReady, favoriteVendorIds, searchVendorIds, savedIds.size]);
+
+  useEffect(() => {
+    plannerAutoSelectDone.current = false;
+  }, [fetchKey]);
+
+  useEffect(() => {
+    if (
+      plannerAutoSelectDone.current ||
+      !state.fromPlannerPlanId ||
+      state.vendorIds.length === 0 ||
+      loading
+    ) {
+      return;
+    }
+    const idSet = new Set(state.vendorIds);
+    const rows: ExploreVendorSearchRow[] = [...vendors];
+    for (const section of sections) {
+      rows.push(...section.vendors);
+    }
+    const matches = rows.filter((v) => idSet.has(v.user_id));
+    if (matches.length === 0) return;
+    setSelectedById((prev) => {
+      const next = { ...prev };
+      for (const v of matches) {
+        next[v.user_id] = v;
+      }
+      return next;
+    });
+    plannerAutoSelectDone.current = true;
+  }, [
+    state.fromPlannerPlanId,
+    state.vendorIds,
+    loading,
+    vendors,
+    sections,
+  ]);
 
   const expanded = useMemo(
     () => expandVendorsForSearchResults(vendors, state.types),
@@ -196,6 +239,49 @@ export function MarketplaceExploreView({
       datesFlexible: state.dateFlexible,
     };
   }, [state.dates, state.dateFlexible]);
+
+  const planEventPrefill = useMemo((): EventEnquirePrefill | undefined => {
+    if (state.eventName.trim() || state.venue.trim() || state.planNotes.trim()) {
+      return {
+        eventName: state.eventName,
+        eventDate: searchPrefill.eventDate || "",
+        eventEndDate: searchPrefill.eventEndDate || "",
+        venueAddress: state.venue,
+        notes: state.planNotes,
+      };
+    }
+    const fromPlannerParams = eventEnquirePrefillFromSearchParams(sp);
+    if (fromPlannerParams) return fromPlannerParams;
+    if (searchMode !== "plan" || !plan?.title?.trim()) return undefined;
+    return {
+      eventName: plan.title.trim(),
+      eventDate: searchPrefill.eventDate || "",
+      eventEndDate: searchPrefill.eventEndDate || "",
+      venueAddress: state.location.trim(),
+      notes: "",
+    };
+  }, [
+    state.eventName,
+    state.venue,
+    state.planNotes,
+    sp,
+    searchMode,
+    plan?.title,
+    searchPrefill,
+    state.location,
+  ]);
+
+  const multiEnquireContext = useMemo(() => {
+    const base = toClientSearchContext(state);
+    if (state.fromPlannerPlanId) {
+      return {
+        ...base,
+        source: "planner" as const,
+        plannerPlanId: state.fromPlannerPlanId,
+      };
+    }
+    return base;
+  }, [state]);
 
   const commit = useCallback(
     (next: MarketplaceSearchState) => {
@@ -310,6 +396,13 @@ export function MarketplaceExploreView({
         submitMode="replace"
         showTypesField={false}
       />
+
+      {state.fromPlannerPlanId && !loading ? (
+        <div className="mt-4 rounded-xl border border-primary/15 bg-[#faf8fc] px-4 py-3 text-sm text-neutral-800">
+          From your celebration plan — open a vendor to pick packages, or select several and
+          message them together.
+        </div>
+      ) : null}
 
       <div className="mt-6 flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
@@ -506,8 +599,10 @@ export function MarketplaceExploreView({
       {multiEnquireOpen && selectedCount > 0 ? (
         <MultiVendorEnquireModal
           vendors={selectedVendors}
-          clientSearchContext={toClientSearchContext(state)}
+          clientSearchContext={multiEnquireContext}
           searchPrefill={searchPrefill}
+          initialPrefill={planEventPrefill}
+          linkedEventId={state.linkedEventId}
           onClose={() => setMultiEnquireOpen(false)}
           onSuccess={(createdIds) => {
             setMultiEnquireOpen(false);

@@ -13,7 +13,12 @@ import { dashboardPathForUserType } from "@/features/auth/authRouting";
 import { getMe, resetPassword } from "@/lib/auth-api";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
-import { adminResetPasswordSchema, parseForm, resetPasswordSchema } from "@/lib/validation";
+import {
+  ADMIN_PASSWORD_REQUIREMENTS,
+  adminResetPasswordSchema,
+  parseForm,
+  resetPasswordSchema,
+} from "@/lib/validation";
 
 type ResetPasswordViewProps = {
   variant?: "default" | "admin";
@@ -39,7 +44,7 @@ export function ResetPasswordView({ variant = "default" }: ResetPasswordViewProp
     ? `${adminCard} w-full max-w-md p-6 pb-8 sm:p-8 sm:pb-10`
     : "w-full max-w-md";
   const schema = isAdmin ? adminResetPasswordSchema : resetPasswordSchema;
-  const minLength = isAdmin ? 12 : 6;
+  const minLength = 6;
 
   if (!token) {
     return (
@@ -107,7 +112,7 @@ export function ResetPasswordView({ variant = "default" }: ResetPasswordViewProp
         </h1>
         <p className="mt-1 text-sm text-neutral-500">
           {isAdmin
-            ? "Enter a strong password for your admin account (12+ characters)."
+            ? "Enter a strong password for your admin account."
             : "Enter a new password for your Eventtz account."}
         </p>
         <form onSubmit={(e) => void onSubmit(e)} className="mt-6 space-y-4">
@@ -138,6 +143,21 @@ export function ResetPasswordView({ variant = "default" }: ResetPasswordViewProp
             {submitting ? "Saving…" : "Update password"}
           </Button>
         </form>
+        {isAdmin ? (
+          <div
+            className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+            aria-live="polite"
+          >
+            <p className="font-medium">Password requirements</p>
+            <ul className="mt-2 list-outside list-disc space-y-1.5 pl-5 marker:text-red-600">
+              {ADMIN_PASSWORD_REQUIREMENTS.map((requirement) => (
+                <li key={requirement} className="pl-1">
+                  {requirement}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
       </Card>
     </AuthPageShell>
   );

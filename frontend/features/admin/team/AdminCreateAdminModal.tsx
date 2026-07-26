@@ -146,8 +146,8 @@ export function AdminCreateAdminModal({ isOpen, onClose, onCreated }: AdminCreat
               setPassword(e.target.value);
               clearFieldError("password");
             }}
-            placeholder="At least 12 characters"
-            minLength={12}
+            placeholder="At least 6 characters"
+            minLength={6}
             required
           />
         )}

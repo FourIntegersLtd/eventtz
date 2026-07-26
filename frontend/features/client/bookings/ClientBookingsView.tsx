@@ -104,6 +104,7 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
             tab={c.tab}
             onTabChange={c.setTab}
             rows={c.rows}
+            eventGroups={c.eventGroups}
             loading={c.listLoading}
             error={c.listError}
             selectedId={selectedBookingId ?? null}

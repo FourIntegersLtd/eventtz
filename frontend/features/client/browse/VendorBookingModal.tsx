@@ -23,6 +23,13 @@ import {
   type BrowsePricingOption,
   buildBookingLineItems,
 } from "./vendorBrowseDetailModel";
+import { ActiveEventPrefillBanner } from "@/features/bookings/ActiveEventPrefillBanner";
+import type { EventEnquirePrefill } from "@/features/bookings/eventEnquirePrefill";
+import {
+  applyPrefillToFields,
+  applyLinkedPrefillToForm,
+  useActiveEventPrefill,
+} from "@/features/bookings/useActiveEventPrefill";
 
 export type VendorBookingSearchPrefill = {
   /** YYYY-MM-DD from marketplace search (first selected day). */
@@ -44,6 +51,9 @@ type VendorBookingModalProps = {
   vendorPayload?: Record<string, unknown>;
   /** Dates/types from marketplace URL on `/client/browse/[id]?…`. */
   searchPrefill?: VendorBookingSearchPrefill;
+  /** Event fields from AI planner (or other deep links) — applied when no active client event. */
+  initialPrefill?: EventEnquirePrefill | null;
+  linkedEventId?: string | null;
   /** Marketplace filters to store on the booking for alternative-vendor nudges. */
   clientSearchContext?: ClientSearchContext | null;
 };
@@ -57,22 +67,36 @@ export function VendorBookingModal({
   initialSelectedIds,
   vendorPayload,
   searchPrefill,
+  initialPrefill,
+  linkedEventId,
   clientSearchContext,
 }: VendorBookingModalProps) {
   // Selection happens once, on the profile sidebar — this modal only confirms dates/venue/notes.
   const selectedIds = useMemo(() => new Set(initialSelectedIds), [initialSelectedIds]);
-  const [eventName, setEventName] = useState("");
+  const [eventName, setEventName] = useState(initialPrefill?.eventName ?? "");
   const [eventDate, setEventDate] = useState(
-    searchPrefill?.eventDate?.trim() ? searchPrefill.eventDate : todayIsoDate(),
+    searchPrefill?.eventDate?.trim() ||
+      initialPrefill?.eventDate?.trim() ||
+      todayIsoDate(),
   );
-  const [eventEndDate, setEventEndDate] = useState(searchPrefill?.eventEndDate ?? "");
-  const [venueAddress, setVenueAddress] = useState("");
-  const [notes, setNotes] = useState("");
+  const [eventEndDate, setEventEndDate] = useState(
+    searchPrefill?.eventEndDate ?? initialPrefill?.eventEndDate ?? "",
+  );
+  const [venueAddress, setVenueAddress] = useState(initialPrefill?.venueAddress ?? "");
+  const [notes, setNotes] = useState(initialPrefill?.notes ?? "");
   const [validationError, setValidationError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitResult, setSubmitResult] = useState<null | { type: "error"; message: string }>(
     null,
   );
+  const {
+    pendingPrefill,
+    linkedPrefill,
+    selectedEventId,
+    bannerVisible,
+    applyPrefill,
+    dismissForNewEvent,
+  } = useActiveEventPrefill({ linkedEventId });
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -92,6 +116,24 @@ export function VendorBookingModal({
       setEventEndDate(end && isPastIsoDate(end) ? "" : end);
     }
   }, [searchPrefill?.eventDate, searchPrefill?.eventEndDate]);
+
+  useEffect(() => {
+    if (selectedEventId || bannerVisible || linkedPrefill || !initialPrefill) return;
+    if (initialPrefill.eventName) setEventName(initialPrefill.eventName);
+    if (initialPrefill.eventDate) setEventDate(initialPrefill.eventDate);
+    if (initialPrefill.eventEndDate) setEventEndDate(initialPrefill.eventEndDate);
+    if (initialPrefill.venueAddress) setVenueAddress(initialPrefill.venueAddress);
+    if (initialPrefill.notes) setNotes(initialPrefill.notes);
+  }, [initialPrefill, selectedEventId, bannerVisible, linkedPrefill]);
+
+  useEffect(() => {
+    applyLinkedPrefillToForm(linkedPrefill, {
+      setEventName,
+      setEventDate,
+      setEventEndDate,
+      setVenueAddress,
+    });
+  }, [linkedPrefill]);
 
   const calendarConflict = useMemo(() => {
     if (!vendorPayload || !eventDate.trim()) return false;
@@ -179,6 +221,7 @@ export function VendorBookingModal({
       notes: (parsed.data.notes ?? "").trim() || null,
       selected_option_ids: parsed.data.selectedOptionIds,
       client_search_context: clientSearchContext ?? undefined,
+      event_id: selectedEventId,
     })
       .then((created) => {
         track(MixpanelEvents.enquiry_created, {
@@ -282,6 +325,20 @@ export function VendorBookingModal({
               <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
                 These dates may not work for this vendor. Pick new dates or message them.
               </div>
+            ) : null}
+            {bannerVisible && pendingPrefill ? (
+              <ActiveEventPrefillBanner
+                prefill={pendingPrefill}
+                onUse={() => {
+                  const fields = applyPrefillToFields(applyPrefill(pendingPrefill));
+                  setEventName(fields.eventName);
+                  setEventDate(fields.eventDate);
+                  setEventEndDate(fields.eventEndDate);
+                  setVenueAddress(fields.venueAddress);
+                  setValidationError(null);
+                }}
+                onNewEvent={dismissForNewEvent}
+              />
             ) : null}
             <div>
               <label

@@ -51,6 +51,7 @@ export type CelebrationPlanResponse = {
   success: boolean;
   plan_id: string;
   status: string;
+  client_event_id?: string | null;
   celebration: {
     title: string;
     event_type: string | null;
@@ -128,4 +129,22 @@ export async function replacePlanRecommendation(
 
 export async function archiveCelebrationPlan(planId: string): Promise<void> {
   await api.post(`/api/v1/client/planner/plans/${encodeURIComponent(planId)}/archive`);
+}
+
+export type EnsurePlanEventResponse = {
+  success: boolean;
+  plan_id: string;
+  event_id: string;
+  title: string;
+  event_date: string;
+  event_address: string | null;
+  event_postcode: string | null;
+};
+
+/** Create or return the client_events row for this plan (before first booking). */
+export async function ensurePlanClientEvent(planId: string): Promise<EnsurePlanEventResponse> {
+  const { data } = await api.post<EnsurePlanEventResponse>(
+    `/api/v1/client/planner/plans/${encodeURIComponent(planId)}/ensure-event`,
+  );
+  return data;
 }

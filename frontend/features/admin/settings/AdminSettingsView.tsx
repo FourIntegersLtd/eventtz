@@ -54,7 +54,7 @@ export function AdminSettingsView() {
                 <div>
                   <p className="text-sm font-medium text-neutral-900">Password</p>
                   <p className="mt-0.5 text-[13px] text-neutral-600">
-                    Admin passwords require at least 12 characters with mixed case and a number.
+                    Admin passwords require at least 6 characters with an uppercase letter, a number, and a symbol.
                   </p>
                 </div>
               </div>

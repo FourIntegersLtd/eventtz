@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { AlertCircle } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
@@ -10,11 +10,24 @@ import {
   postBookingRequest,
   type ClientSearchContext,
 } from "@/lib/clientBookingsApi";
-import { buildBrowsePricingOptions } from "@/features/client/browse/vendorBrowseDetailModel";
 import type { ExploreVendorSearchRow } from "@/lib/clientExploreApi";
+import {
+  initialOptionSelections,
+  vendorDisplayName,
+} from "@/features/bookings/multiVendorPackageSelection";
+import {
+  MultiVendorPackagePicker,
+} from "@/features/bookings/MultiVendorPackagePicker";
 import { todayIsoDate } from "@/lib/eventDateValidation";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { clientBookingRequestSchema, parseForm } from "@/lib/validation";
+import { ActiveEventPrefillBanner } from "@/features/bookings/ActiveEventPrefillBanner";
+import type { EventEnquirePrefill } from "@/features/bookings/eventEnquirePrefill";
+import {
+  applyPrefillToFields,
+  applyLinkedPrefillToForm,
+  useActiveEventPrefill,
+} from "@/features/bookings/useActiveEventPrefill";
 
 type MultiVendorEnquireModalProps = {
   vendors: ExploreVendorSearchRow[];
@@ -24,57 +37,89 @@ type MultiVendorEnquireModalProps = {
     eventEndDate?: string;
     datesFlexible: boolean;
   };
+  /** Pre-fill event fields (e.g. from AI planner) when no active client event exists. */
+  initialPrefill?: EventEnquirePrefill;
+  enquirySource?: "multi" | "planner";
+  /** Non-blocking warning shown above the form (e.g. some vendors skipped). */
+  loadWarning?: string | null;
+  /** Optional category labels per vendor (planner need names). */
+  vendorCategoryLabels?: Record<string, string>;
+  linkedEventId?: string | null;
   onClose: () => void;
   onSuccess: (createdIds: string[]) => void;
 };
 
-function cheapestOptionId(vendor: ExploreVendorSearchRow): string | null {
-  const options = buildBrowsePricingOptions(vendor);
-  const priced = options.filter(
-    (o) => o.unitPriceGbp != null && Number.isFinite(o.unitPriceGbp),
-  );
-  if (priced.length === 0) return options[0]?.id ?? null;
-  return priced.reduce((best, o) =>
-    (o.unitPriceGbp ?? Infinity) < (best.unitPriceGbp ?? Infinity) ? o : best,
-  ).id;
-}
-
 function vendorLabel(v: ExploreVendorSearchRow): string {
-  const p = v.payload ?? {};
-  const name = typeof p.businessName === "string" ? p.businessName.trim() : "";
-  return name || "Vendor";
+  return vendorDisplayName(v);
 }
 
 /**
  * Shared brief for contacting several vendors at once (one booking request each).
- * Uses each vendor’s cheapest (or first) package as the selected option.
+ * Client picks one package per vendor before sending.
  */
 export function MultiVendorEnquireModal({
   vendors,
   clientSearchContext,
   searchPrefill,
+  initialPrefill,
+  enquirySource = "multi",
+  loadWarning,
+  vendorCategoryLabels,
+  linkedEventId,
   onClose,
   onSuccess,
 }: MultiVendorEnquireModalProps) {
-  const [eventName, setEventName] = useState("");
+  const [eventName, setEventName] = useState(initialPrefill?.eventName ?? "");
   const [eventDate, setEventDate] = useState(
-    searchPrefill?.eventDate?.trim() ? searchPrefill.eventDate : todayIsoDate(),
+    searchPrefill?.eventDate?.trim() ||
+      initialPrefill?.eventDate?.trim() ||
+      todayIsoDate(),
   );
-  const [eventEndDate, setEventEndDate] = useState(searchPrefill?.eventEndDate ?? "");
-  const [venueAddress, setVenueAddress] = useState("");
-  const [notes, setNotes] = useState("");
+  const [eventEndDate, setEventEndDate] = useState(
+    searchPrefill?.eventEndDate ?? initialPrefill?.eventEndDate ?? "",
+  );
+  const [venueAddress, setVenueAddress] = useState(initialPrefill?.venueAddress ?? "");
+  const [notes, setNotes] = useState(initialPrefill?.notes ?? "");
+  const [selectedOptionByVendorId, setSelectedOptionByVendorId] = useState<
+    Record<string, string>
+  >(() => initialOptionSelections(vendors));
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const {
+    pendingPrefill,
+    linkedPrefill,
+    selectedEventId,
+    bannerVisible,
+    applyPrefill,
+    dismissForNewEvent,
+  } = useActiveEventPrefill({ linkedEventId });
 
-  const namedVendors = useMemo(
-    () => vendors.map((v) => ({ id: v.user_id, label: vendorLabel(v) })),
-    [vendors],
-  );
+  useEffect(() => {
+    if (selectedEventId || bannerVisible || linkedPrefill || !initialPrefill) return;
+    if (initialPrefill.eventName) setEventName(initialPrefill.eventName);
+    if (initialPrefill.eventDate) setEventDate(initialPrefill.eventDate);
+    if (initialPrefill.eventEndDate) setEventEndDate(initialPrefill.eventEndDate);
+    if (initialPrefill.venueAddress) setVenueAddress(initialPrefill.venueAddress);
+    if (initialPrefill.notes) setNotes(initialPrefill.notes);
+  }, [initialPrefill, selectedEventId, bannerVisible, linkedPrefill]);
+
+  useEffect(() => {
+    applyLinkedPrefillToForm(linkedPrefill, {
+      setEventName,
+      setEventDate,
+      setEventEndDate,
+      setVenueAddress,
+    });
+  }, [linkedPrefill]);
+
+  useEffect(() => {
+    setSelectedOptionByVendorId(initialOptionSelections(vendors));
+  }, [vendors]);
 
   const submit = () => {
     const optionIdsByVendor = vendors.map((v) => ({
       vendor: v,
-      optionId: cheapestOptionId(v),
+      optionId: selectedOptionByVendorId[v.user_id] ?? null,
     }));
     const missing = optionIdsByVendor.filter((x) => !x.optionId);
     if (missing.length > 0) {
@@ -103,6 +148,7 @@ export function MultiVendorEnquireModal({
       const createdIds: string[] = [];
       const failures: string[] = [];
       const batchSize = optionIdsByVendor.length;
+      let linkedEventId = selectedEventId;
       for (let i = 0; i < optionIdsByVendor.length; i += 1) {
         const { vendor, optionId } = optionIdsByVendor[i]!;
         try {
@@ -119,19 +165,24 @@ export function MultiVendorEnquireModal({
               ...clientSearchContext,
               batchSize,
               batchIndex: i,
+              source: enquirySource,
             },
+            event_id: linkedEventId,
           });
           createdIds.push(created.id);
+          if (created.event_id && !linkedEventId) {
+            linkedEventId = created.event_id;
+          }
           track(MixpanelEvents.enquiry_created, {
             booking_id: created.id,
             vendor_user_id: vendor.user_id,
             option_count: 1,
-            source: "multi",
+            source: enquirySource,
           });
         } catch (err: unknown) {
           track(MixpanelEvents.enquiry_failed, {
             vendor_user_id: vendor.user_id,
-            source: "multi",
+            source: enquirySource,
           });
           failures.push(
             `${vendorLabel(vendor)}: ${getApiErrorDetail(err) ?? "failed"}`,
@@ -146,6 +197,7 @@ export function MultiVendorEnquireModal({
       track(MixpanelEvents.multi_enquiry_created, {
         created_count: createdIds.length,
         requested_count: optionIdsByVendor.length,
+        source: enquirySource,
       });
       onSuccess(createdIds);
     })();
@@ -158,7 +210,7 @@ export function MultiVendorEnquireModal({
         if (!submitting) onClose();
       }}
       title={`Request from ${vendors.length} vendors`}
-      maxWidthClassName="max-w-lg"
+      maxWidthClassName="max-w-xl"
       footer={
         <div className="flex flex-wrap justify-end gap-2">
           <Button variant="secondary" onClick={onClose} disabled={submitting}>
@@ -171,18 +223,39 @@ export function MultiVendorEnquireModal({
       }
     >
       <div className="space-y-4">
-        <ul className="rounded-xl border border-neutral-100 bg-neutral-50/80 px-4 py-3 text-sm text-neutral-800">
-          {namedVendors.map((n) => (
-            <li key={n.id} className="py-0.5">
-              {n.label}
-            </li>
-          ))}
-        </ul>
+        <MultiVendorPackagePicker
+          vendors={vendors}
+          selectedOptionByVendorId={selectedOptionByVendorId}
+          onSelectOption={(vendorUserId, optionId) => {
+            setSelectedOptionByVendorId((prev) => ({ ...prev, [vendorUserId]: optionId }));
+            setError(null);
+          }}
+          vendorCategoryLabels={vendorCategoryLabels}
+        />
         {error ? (
           <div className="flex gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
             <p className="whitespace-pre-wrap">{error}</p>
           </div>
+        ) : null}
+        {loadWarning ? (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 whitespace-pre-wrap">
+            {loadWarning}
+          </div>
+        ) : null}
+        {bannerVisible && pendingPrefill ? (
+          <ActiveEventPrefillBanner
+            prefill={pendingPrefill}
+            onUse={() => {
+              const fields = applyPrefillToFields(applyPrefill(pendingPrefill));
+              setEventName(fields.eventName);
+              setEventDate(fields.eventDate);
+              setEventEndDate(fields.eventEndDate);
+              setVenueAddress(fields.venueAddress);
+              setError(null);
+            }}
+            onNewEvent={dismissForNewEvent}
+          />
         ) : null}
         <label className="block text-sm">
           <span className="font-medium text-neutral-800">Event name</span>

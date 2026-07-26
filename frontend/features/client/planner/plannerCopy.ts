@@ -20,6 +20,9 @@ export const PLANNER_COPY = {
   replaceLabel: "Replace",
   viewProfileLabel: "View profile",
   bookNowLabel: "Book now",
+  browseRecommendationsLabel: "Browse these vendors",
+  browseRecommendationsHint:
+    "Continue in the marketplace to pick packages and message vendors — the same flow as browsing without AI.",
   priceOnRequest: "Price on request",
   unavailable: "No longer available — try Replace",
   overBudget: "Estimated total is over your budget",

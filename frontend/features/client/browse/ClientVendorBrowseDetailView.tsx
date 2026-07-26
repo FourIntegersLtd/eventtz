@@ -19,6 +19,7 @@ import { ChatDrawer } from "@/features/chat/ChatDrawer";
 import { buildBrowsePricingOptions } from "@/features/client/browse/vendorBrowseDetailModel";
 import { useExploreVendor } from "@/features/client/browse/useExploreVendor";
 import { marketplaceStateFromSearchParams, buildMarketplaceSearchUrl, toClientSearchContext } from "@/lib/marketplaceSearchParams";
+import { eventEnquirePrefillFromSearchParams } from "@/features/bookings/eventEnquirePrefill";
 import { vendorMatchesMarketplaceSearch } from "@/lib/marketplaceVendorMatch";
 import { usualReplyExpectation } from "@/lib/vendorMetrics";
 
@@ -82,6 +83,20 @@ export function ClientVendorBrowseDetailView() {
       datesFlexible: marketplaceSearch.dateFlexible,
     };
   }, [marketplaceSearch]);
+
+  const plannerEventPrefill = useMemo(
+    () => eventEnquirePrefillFromSearchParams(searchParams),
+    [searchParams],
+  );
+
+  const linkedEventId = searchParams.get("event_id")?.trim() || null;
+
+  const bookingClientSearchContext = useMemo(() => {
+    const base = toClientSearchContext(marketplaceSearch);
+    const planId = searchParams.get("fromPlanner")?.trim();
+    if (!planId) return base;
+    return { ...base, source: "planner" as const, plannerPlanId: planId };
+  }, [marketplaceSearch, searchParams]);
 
   const marketplaceSearchMismatchReasons = useMemo(() => {
     if (!vendor) return null;
@@ -205,7 +220,9 @@ export function ClientVendorBrowseDetailView() {
             initialSelectedIds={bookingSelectionIds}
             vendorPayload={vendorPayload}
             searchPrefill={bookingSearchPrefill}
-            clientSearchContext={toClientSearchContext(marketplaceSearch)}
+            initialPrefill={plannerEventPrefill}
+            linkedEventId={linkedEventId}
+            clientSearchContext={bookingClientSearchContext}
           />
         ) : null}
         {user ? (

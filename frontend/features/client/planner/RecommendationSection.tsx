@@ -5,9 +5,13 @@ import { Button } from "@/components/ui/Button";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import type { PlannerRecommendation, PlannerVendorCard } from "@/lib/clientPlannerApi";
 import { PLANNER_COPY } from "./plannerCopy";
-import { formatGbp, formatRating, formatVendorPrice, vendorProfileHref } from "./plannerModel";
+import { formatGbp, formatRating, formatVendorPrice } from "./plannerModel";
+import { buildPlannerVendorBookUrl } from "@/features/bookings/eventEnquirePrefill";
+import type { CelebrationPlanResponse } from "@/lib/clientPlannerApi";
+import { PlannerBookNowButton } from "./PlannerBookNowButton";
 
 type RecommendationSectionProps = {
+  plan: CelebrationPlanResponse;
   recommendation: PlannerRecommendation;
   replacing: boolean;
   onReplace: () => void;
@@ -64,11 +68,13 @@ function VendorRow({
 }
 
 export function RecommendationSection({
+  plan,
   recommendation,
   replacing,
   onReplace,
 }: RecommendationSectionProps) {
   const primary = recommendation.primary;
+  const linkedEventId = plan.client_event_id ?? null;
 
   return (
     <section
@@ -101,7 +107,7 @@ export function RecommendationSection({
           />
           <div className="flex flex-wrap gap-2">
             <ButtonLink
-              href={vendorProfileHref(primary.user_id)}
+              href={buildPlannerVendorBookUrl(primary.user_id, plan, linkedEventId)}
               variant="secondary"
               size="sm"
             >
@@ -117,13 +123,7 @@ export function RecommendationSection({
             >
               {PLANNER_COPY.replaceLabel}
             </Button>
-            <ButtonLink
-              href={vendorProfileHref(primary.user_id)}
-              variant="primary"
-              size="sm"
-            >
-              {PLANNER_COPY.bookNowLabel}
-            </ButtonLink>
+            <PlannerBookNowButton plan={plan} vendorUserId={primary.user_id} />
           </div>
           {recommendation.alternatives.length ? (
             <div className="pt-2">
@@ -134,7 +134,7 @@ export function RecommendationSection({
                 {recommendation.alternatives.map((alt) => (
                   <li key={alt.user_id}>
                     <Link
-                      href={vendorProfileHref(alt.user_id)}
+                      href={buildPlannerVendorBookUrl(alt.user_id, plan, linkedEventId)}
                       className="block transition hover:opacity-90"
                     >
                       <VendorRow vendor={alt} />

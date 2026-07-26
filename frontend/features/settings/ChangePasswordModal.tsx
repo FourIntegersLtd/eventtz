@@ -126,7 +126,7 @@ export function ChangePasswordModal({
       <p className="text-sm text-neutral-600">
         Enter your current password, then choose a new one.
         {passwordSchema === "admin"
-          ? " Admin passwords must be at least 12 characters with mixed case and a number."
+          ? " Admin passwords must be at least 6 characters with an uppercase letter, a number, and a symbol."
           : null}
       </p>
       {error ? (

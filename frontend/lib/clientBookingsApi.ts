@@ -18,6 +18,10 @@ export type ClientSearchContext = {
   /** Set when sending the same brief to several vendors (analytics). */
   batchSize?: number;
   batchIndex?: number;
+  /** Where the enquiry originated. */
+  source?: "browse" | "multi" | "planner";
+  /** AI planner plan id when source is planner. */
+  plannerPlanId?: string;
 };
 
 export type CreateBookingRequestPayload = {
@@ -33,6 +37,7 @@ export type CreateBookingRequestPayload = {
   selected_option_ids: string[];
   /** Marketplace filters at enquire time (for alternative-vendor nudges). */
   client_search_context?: ClientSearchContext | null;
+  event_id?: string | null;
 };
 
 export type BookingRequestCreated = {
@@ -40,6 +45,7 @@ export type BookingRequestCreated = {
   id: string;
   status: string;
   created_at: string | null;
+  event_id?: string | null;
 };
 
 export async function postBookingRequest(
@@ -88,6 +94,8 @@ export type ClientBookingListItem = {
   /** Who still needs to confirm the event went well (accepted + paid bookings). */
   completion_waiting_on?: "client" | "vendor" | "both" | null;
   client_completion_confirmed_at?: string | null;
+  event_id?: string | null;
+  event_title?: string | null;
 };
 
 export type ClientBookingsListResponse = {

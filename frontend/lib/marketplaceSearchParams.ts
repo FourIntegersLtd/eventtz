@@ -14,6 +14,16 @@ export type MarketplaceSearchState = {
   sort: MarketplaceSort;
   /** 1-based page; browse search pages 6 vendors from the API. */
   page: number;
+  /** Limit results to these vendor user ids (planner handoff). */
+  vendorIds: string[];
+  /** Celebration plan id when arriving from AI planner. */
+  fromPlannerPlanId: string | null;
+  /** Event prefill from planner handoff (survives filter changes). */
+  eventName: string;
+  venue: string;
+  planNotes: string;
+  /** Linked client_events id — bookings attach to this celebration. */
+  linkedEventId: string | null;
 };
 
 /** Vendors requested per browse page (backend `limit`). */
@@ -70,6 +80,14 @@ export function marketplaceStateFromSearchParams(
   const pageRaw = Number.parseInt(sp.get("page") ?? "1", 10);
   const page = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 1;
 
+  const vendorIdsRaw = sp.get("vendor_ids");
+  const vendorIds = vendorIdsRaw
+    ? vendorIdsRaw
+        .split(",")
+        .map((id) => id.trim())
+        .filter(Boolean)
+    : [];
+
   return {
     query: q || legacyLocation,
     types,
@@ -81,6 +99,12 @@ export function marketplaceStateFromSearchParams(
     budgetMax: parseNum(sp.get("budget_max")),
     sort: parseSort(sp.get("sort")),
     page,
+    vendorIds,
+    fromPlannerPlanId: sp.get("fromPlanner")?.trim() || null,
+    eventName: sp.get("eventName")?.trim() ?? "",
+    venue: sp.get("venue")?.trim() ?? "",
+    planNotes: sp.get("planNotes")?.trim() ?? "",
+    linkedEventId: sp.get("event_id")?.trim() || null,
   };
 }
 
@@ -104,6 +128,12 @@ export function buildMarketplaceSearchUrl(
   if (state.budgetMax != null) sp.set("budget_max", String(state.budgetMax));
   if (state.sort !== "relevance") sp.set("sort", state.sort);
   if (state.page > 1) sp.set("page", String(state.page));
+  if (state.vendorIds.length > 0) sp.set("vendor_ids", state.vendorIds.join(","));
+  if (state.fromPlannerPlanId) sp.set("fromPlanner", state.fromPlannerPlanId);
+  if (state.eventName.trim()) sp.set("eventName", state.eventName.trim());
+  if (state.venue.trim()) sp.set("venue", state.venue.trim());
+  if (state.planNotes.trim()) sp.set("planNotes", state.planNotes.trim());
+  if (state.linkedEventId) sp.set("event_id", state.linkedEventId);
   const queryString = sp.toString();
   return queryString ? `${path}?${queryString}` : path;
 }
