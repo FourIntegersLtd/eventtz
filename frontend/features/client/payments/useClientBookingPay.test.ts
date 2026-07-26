@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
+import { PAYMENT_SAFETY_COPY } from "@/features/bookings/bookingConfirmCopy";
 import { bookingNeedsVenue } from "@/features/client/payments/bookingPayHelpers";
 import { parseForm, payVenueSchema } from "@/lib/validation";
+
+describe("PAYMENT_SAFETY_COPY", () => {
+  it("explains fund protection and the 48-hour dispute window in a reassuring tone", () => {
+    expect(PAYMENT_SAFETY_COPY.points).toHaveLength(4);
+    expect(PAYMENT_SAFETY_COPY.points.join(" ")).toContain("48 hours");
+    expect(PAYMENT_SAFETY_COPY.points.join(" ")).toContain("safely");
+    expect(PAYMENT_SAFETY_COPY.points.join(" ")).not.toMatch(/—|–/);
+  });
+});
 
 describe("bookingNeedsVenue", () => {
   it("requires venue when address missing or blank", () => {

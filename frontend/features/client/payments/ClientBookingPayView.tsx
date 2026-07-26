@@ -4,29 +4,41 @@ import { BackLink } from "@/components/ui/BackLink";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { LoadingState } from "@/components/ui/LoadingState";
-import { PAYMENT_FLOW_COPY } from "@/features/bookings/bookingConfirmCopy";
 import { useClientBookingPay } from "@/features/client/payments/useClientBookingPay";
+import { PaymentSafetyModal } from "@/features/client/payments/PaymentSafetyModal";
 
 type ClientBookingPayViewProps = {
   bookingId: string;
 };
 
-/** Collects venue details if needed, then redirects to Stripe Checkout. */
+/** Collects venue details if needed, shows payment protection modal, then Stripe Checkout. */
 export function ClientBookingPayView({ bookingId }: ClientBookingPayViewProps) {
   const router = useRouter();
   const {
-    loading,
+    phase,
     error,
     venueAddress,
     setVenueAddress,
-    needsVenue,
     busy,
-    continueToCheckout,
+    continueFromVenue,
+    confirmSafetyAndPay,
   } = useClientBookingPay(bookingId);
 
   const bookingHref = `/client/bookings/${encodeURIComponent(bookingId)}`;
 
-  if (loading) {
+  if (phase === "error") {
+    return (
+      <div className="w-full max-w-3xl space-y-6">
+        <BackLink href={bookingHref} label="Back to booking" />
+        <p className="text-sm text-red-700">{error ?? "Could not load this booking."}</p>
+        <Button variant="secondary" onClick={() => router.push(bookingHref)}>
+          Back to booking
+        </Button>
+      </div>
+    );
+  }
+
+  if (phase === "loading") {
     return (
       <div className="w-full max-w-3xl space-y-6">
         <BackLink href={bookingHref} label="Back to booking" />
@@ -35,17 +47,17 @@ export function ClientBookingPayView({ bookingId }: ClientBookingPayViewProps) {
     );
   }
 
-  if (needsVenue) {
+  if (phase === "venue") {
     return (
       <div className="w-full max-w-3xl space-y-6">
         <BackLink href={bookingHref} label="Back to booking" />
         <header>
           <h1 className="font-heading text-xl font-semibold text-neutral-900">Event location</h1>
-          <p className="mt-2 text-sm text-neutral-600">Where is the event?</p>
+          <p className="mt-2 text-sm text-neutral-600">
+            We need your event address before you pay. You will see how we protect your payment on
+            the next step.
+          </p>
         </header>
-        <p className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-600">
-          {PAYMENT_FLOW_COPY.beforePay}
-        </p>
         {error ? (
           <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
             {error}
@@ -69,8 +81,8 @@ export function ClientBookingPayView({ bookingId }: ClientBookingPayViewProps) {
           />
         </div>
         <div className="flex flex-wrap gap-3">
-          <Button variant="primary" loading={busy} onClick={() => void continueToCheckout()}>
-            Continue to payment
+          <Button variant="primary" loading={busy} onClick={() => void continueFromVenue()}>
+            Continue
           </Button>
           <Button
             variant="secondary"
@@ -86,24 +98,27 @@ export function ClientBookingPayView({ bookingId }: ClientBookingPayViewProps) {
 
   return (
     <div className="w-full max-w-3xl space-y-6">
-      {error ? (
-        <>
-          <BackLink href={bookingHref} label="Back to booking" />
-          <p className="text-sm text-red-700">{error}</p>
-          <Button variant="secondary" onClick={() => router.push(bookingHref)}>
-            Back to booking
-          </Button>
-        </>
+      <BackLink href={bookingHref} label="Back to booking" />
+      {error && phase !== "redirecting" ? (
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+          {error}
+        </p>
+      ) : null}
+      {phase === "redirecting" ? (
+        <LoadingState
+          label="Redirecting you to secure checkout…"
+          variant="centered"
+          className="py-16"
+        />
       ) : (
-        <>
-          <BackLink href={bookingHref} label="Back to booking" />
-          <LoadingState
-            label="Redirecting you to secure checkout…"
-            variant="centered"
-            className="py-16"
-          />
-        </>
+        <p className="text-sm text-neutral-600">Review how we protect your payment, then continue.</p>
       )}
+      <PaymentSafetyModal
+        isOpen={phase === "safety" || phase === "redirecting"}
+        loading={busy || phase === "redirecting"}
+        onConfirm={confirmSafetyAndPay}
+        onCancel={() => router.push(bookingHref)}
+      />
     </div>
   );
 }

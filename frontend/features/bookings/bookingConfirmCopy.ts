@@ -101,16 +101,30 @@ export const BOOKING_CONFIRM_COPY = {
 export const PAYMENT_FLOW_COPY = {
   /** Shown before/at checkout so the client knows where their money goes. */
   beforePay:
-    "We keep your payment safe until the event is done. The vendor is paid once you both confirm it went well — or automatically 48 hours after the event if there's no problem.",
+    "Your payment stays safely with Eventtz until your event is done. We pay your vendor once you both confirm everything went well, or automatically 48 hours after the event when all is well.",
   /** Payment success banner (client). */
   paymentSuccess:
-    "Payment received — we'll keep it safe until the event is done. After the event, confirm it went well and the vendor gets paid.",
+    "Thank you, your payment is received. We are holding it safely until your event is complete. After your event, please confirm everything went well so your vendor can be paid. If anything was not right, you have 48 hours to report a problem and we will help.",
   /** Cancelled + refunded booking state (client). */
   cancelledRefunded:
     "This booking was cancelled and your payment was refunded in full. Refunds usually take 5-10 working days to reach your card.",
   /** Cancelled + refunded booking state (vendor). */
   cancelledRefundedVendor:
     "This booking was cancelled. The client's payment was refunded in full.",
+} as const;
+
+/** Pre-checkout modal and post-payment email: how client funds are protected. */
+export const PAYMENT_SAFETY_COPY = {
+  modalTitle: "Your payment is in safe hands",
+  intro: "Before you continue, here is how we look after you and your money:",
+  points: [
+    "Your payment stays safely with Eventtz until your event is complete.",
+    "After your event, please confirm everything went well so we can pay your vendor with confidence.",
+    "If anything did not go to plan, you have 48 hours after the event to report a problem and we will be here to help.",
+    "When all is well, we will release payment to your vendor automatically after 48 hours.",
+  ],
+  confirmLabel: "Continue to secure payment",
+  cancelLabel: "Go back",
 } as const;
 
 /** Post-event banner copy: who we're waiting on, tailored to the viewer. */
@@ -147,8 +161,8 @@ export function autoReleaseLine(
     ? "soon"
     : date.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
   return viewer === "client"
-    ? `If we don't hear from you, we'll pay the vendor automatically on ${label} — unless you've reported a problem.`
-    : `If the client doesn't respond, you'll be paid automatically on ${label} unless they've reported a problem.`;
+    ? `If we do not hear from you, we will pay your vendor automatically on ${label}, unless you have reported a problem. We are here if you need us.`
+    : `If the client does not respond, you will be paid automatically on ${label} unless they have reported a problem.`;
 }
 
 export const ADMIN_CONFIRM_COPY = {
