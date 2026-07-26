@@ -35,7 +35,7 @@ export const BOOKING_CONFIRM_COPY = {
   declineUpdatedPrice: {
     title: "Decline the new price?",
     description:
-      "This ends the booking. The vendor will be notified and you won't be charged the updated amount.",
+      "We'll restore the original price. The booking stays open so you can keep chatting with the vendor, or cancel if you're done.",
     cancelLabel: "Go back",
     confirmLabel: "Yes, decline",
     confirmLoadingLabel: "Declining…",
