@@ -13,7 +13,7 @@ export function toVendorBookingRowViewModel(row: VendorBookingListItem): Booking
     counterpartyLine: row.client_display_name ?? row.client_email ?? "Client",
     initiatorBadgeLabel: row.initiator === "vendor" ? "Your quote" : null,
     reviewLine: row.review
-      ? `${row.review.rating}/5 — ${row.review.reviewer_display}`
+      ? `${row.review.rating}/5 - ${row.review.reviewer_display}`
       : null,
     portal: "vendor",
   });

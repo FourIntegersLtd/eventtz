@@ -16,9 +16,9 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Eventtz — African event vendors in the UK",
+  title: "Eventtz - African event vendors in the UK",
   description:
-    "Find and book UK-based African vendors for weddings, parties, and corporate events — baking, catering, photography, makeup, and rentals. Prices in GBP.",
+    "Find and book UK-based African vendors for weddings, parties, and corporate events - baking, catering, photography, makeup, and rentals. Prices in GBP.",
   // app/favicon.ico is used automatically for the tab icon. Optional: add apple for home screen.
   icons: {
     apple: [

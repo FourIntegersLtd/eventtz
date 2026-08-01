@@ -7,7 +7,7 @@ type LottieFailureInlineProps = {
   className?: string;
 };
 
-/** Compact inline error row — form errors, fetch failures in panels. */
+/** Compact inline error row - form errors, fetch failures in panels. */
 export function LottieFailureInline({ message, className = "" }: LottieFailureInlineProps) {
   return (
     <div

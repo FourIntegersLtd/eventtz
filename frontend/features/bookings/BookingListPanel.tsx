@@ -6,8 +6,8 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { BookingListRowViewModel } from "@/features/bookings/bookingViewModel";
 import type { BookingEventGroup } from "@/features/bookings/groupBookingsByEvent";
 
-/** `closed` covers every booking that's no longer active — completed, declined, and
- * cancelled — with per-row status badges distinguishing the outcome. */
+/** `closed` covers every booking that's no longer active - completed, declined, and
+ * cancelled - with per-row status badges distinguishing the outcome. */
 export type BookingListTab = "active" | "closed";
 
 const TAB_OPTIONS: readonly SegmentedControlOption<BookingListTab>[] = [
@@ -29,7 +29,7 @@ type BookingListPanelProps = {
 };
 
 /**
- * Pure list pane — client and vendor feature folders own data fetching and
+ * Pure list pane - client and vendor feature folders own data fetching and
  * pass in rows already mapped to `BookingListRowViewModel`.
  */
 export function BookingListPanel({

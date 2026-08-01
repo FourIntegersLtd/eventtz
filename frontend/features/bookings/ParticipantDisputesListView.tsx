@@ -33,12 +33,12 @@ function openedByLabel(d: ParticipantDispute): string {
   if (d.opened_by_display_name) return d.opened_by_display_name;
   if (d.opened_by_role === "client") return "Client";
   if (d.opened_by_role === "vendor") return d.vendor_display_name ?? "Vendor";
-  return "—";
+  return "-";
 }
 
 function updatedLabel(d: ParticipantDispute): string {
   const raw = d.updated_at || d.created_at;
-  return raw ? new Date(raw).toLocaleString("en-GB") : "—";
+  return raw ? new Date(raw).toLocaleString("en-GB") : "-";
 }
 
 export function ParticipantDisputesListView({ role, selectedId = null, onSelect }: Props) {

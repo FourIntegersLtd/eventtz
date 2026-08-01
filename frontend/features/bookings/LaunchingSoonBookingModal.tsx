@@ -10,7 +10,7 @@ type LaunchingSoonBookingModalProps = {
   onClose: () => void;
 };
 
-/** Pre-launch booking guard — uses shared `Modal` motion; no feature-local motion wrappers. */
+/** Pre-launch booking guard - uses shared `Modal` motion; no feature-local motion wrappers. */
 export function LaunchingSoonBookingModal({ isOpen, onClose }: LaunchingSoonBookingModalProps) {
   return (
     <Modal
@@ -50,7 +50,7 @@ export function LaunchingSoonBookingModal({ isOpen, onClose }: LaunchingSoonBook
           }
         />
         <p className="mt-2 text-sm leading-relaxed text-neutral-700">
-          Booking isn&apos;t open yet — we&apos;re putting the finishing touches on Eventtz. You
+          Booking isn&apos;t open yet. We&apos;re putting the finishing touches on Eventtz. You
           can still browse vendors and save favourites.
         </p>
         <p className="mt-3 text-sm text-neutral-600">

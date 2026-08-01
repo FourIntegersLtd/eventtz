@@ -12,7 +12,7 @@ export type AdminSectionTab = {
 type AdminSectionTabsProps = {
   tabs: readonly AdminSectionTab[];
   activeId: string;
-  /** e.g. `/admin/commerce` — tab query is appended as `?tab=` */
+  /** e.g. `/admin/commerce` - tab query is appended as `?tab=` */
   basePath: string;
 };
 

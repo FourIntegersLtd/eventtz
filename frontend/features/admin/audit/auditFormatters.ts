@@ -90,7 +90,7 @@ function resolutionLabel(action: string): string {
 function formatPayloadDetails(action: string, payload: Record<string, unknown> | null | undefined): string {
   if (!payload || Object.keys(payload).length === 0) {
     if (action === "booking.view" || action === "chat.view") {
-      return "Support / compliance lookup — access is recorded.";
+      return "Support / compliance lookup - access is recorded.";
     }
     return "";
   }
@@ -160,7 +160,7 @@ function formatPayloadDetails(action: string, payload: Record<string, unknown> |
 }
 
 export function formatAuditActionLabel(action: string): string {
-  return ACTION_LABELS[action] ?? capitalize(action.replace(/\./g, " — "));
+  return ACTION_LABELS[action] ?? capitalize(action.replace(/\./g, " - "));
 }
 
 export function getAuditCategory(action: string): AuditCategory {
@@ -176,7 +176,7 @@ export function getAuditCategoryMeta(action: string): { label: string; badgeClas
 }
 
 export function formatAuditWhen(iso: string | null | undefined): string {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return String(iso).slice(0, 16);
   return d.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });

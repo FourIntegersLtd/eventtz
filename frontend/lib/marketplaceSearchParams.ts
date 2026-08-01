@@ -22,7 +22,7 @@ export type MarketplaceSearchState = {
   eventName: string;
   venue: string;
   planNotes: string;
-  /** Linked client_events id — bookings attach to this celebration. */
+  /** Linked client_events id - bookings attach to this celebration. */
   linkedEventId: string | null;
 };
 

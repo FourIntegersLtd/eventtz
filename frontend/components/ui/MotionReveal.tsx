@@ -15,7 +15,7 @@ type MotionRevealProps = {
   amount?: number;
 };
 
-/** One-shot fade-up when scrolled into view — landing sections, feature splits. */
+/** One-shot fade-up when scrolled into view - landing sections, feature splits. */
 export function MotionReveal({
   children,
   className = "",

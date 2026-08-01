@@ -1,35 +1,37 @@
 /**
  * Local Lottie/dotLottie files under `public/animations/`.
- * Swap files freely — keep keys/paths stable so features don't hardcode URLs.
+ * Swap files freely - keep keys stable; prefer new filenames when replacing
+ * artwork so browsers don't keep serving a cached wrong JSON.
  *
  * Which component to use? See **Motion & Lottie** decision guide in `cursor.md`.
+ * Comments describe the **actual** artwork (verify when replacing files).
  */
 export const LOTTIE_ASSETS = {
-  /** Rocket — launching soon, waitlist, pre-launch booking guard. */
+  /** Rocket + fireworks - launching soon / waitlist only. */
   launchingSoon: "/animations/launching-soon.json",
-  /** Checkmark burst — success, confirmation, payment complete. */
+  /** Payment-style check burst - success confirms, paid, request sent. */
   successCheck: "/animations/success-check.json",
-  /** Trophy / celebration — all caught up, onboarding complete. */
+  /** Trophy - all caught up, celebration, onboarding finish. */
   allCaughtUp: "/animations/all-caught-up.json",
-  /** Compact loop — generic empty inbox / select-item prompts. */
-  emptyInbox: "/animations/empty-inbox.json",
-  /** Astronaut — 404 / not found. */
+  /** Mail / paper-plane - empty lists, select prompts, no bookings. */
+  emptyInbox: "/animations/empty-mail.json",
+  /** Astronaut - 404 / not found. */
   notFound: "/animations/not-found.json",
-  /** Branded loader — page/panel loading shells. */
-  loading: "/animations/loading.json",
-  /** Rocket — AI planner thinking / generating a plan. */
+  /** Geometric loading rings - branded page/panel loaders ONLY (never empty states). */
+  loading: "/animations/loading-rings.json",
+  /** Brain - AI planner generating. */
   aiThinking: "/animations/ai-thinking.json",
-  /** Shield / registered — payment safety, payout setup. */
-  paymentSecure: "/animations/payment-secure.json",
-  /** Hourglass-style — profile under review, pending states. */
+  /** Shield + check (LottieFiles) - payment safety, payout setup. */
+  paymentSecure: "/animations/payment-secure-shield.json",
+  /** Soft waiting loop - under review, waiting on confirm, dispute open. */
   pendingReview: "/animations/pending-review.json",
-  /** Friendly intro — welcome modals, auth accent. */
+  /** Friendly mascot - auth welcome / soft empty hero (not for destructive confirms). */
   welcome: "/animations/welcome.json",
-  /** First message / empty thread. */
-  emptyMessages: "/animations/empty-messages.json",
-  /** Search / filter no results, empty marketplace. */
-  searchNoResults: "/animations/search-no-results.json",
-  /** Payment failed, booking declined, checkout cancelled, sync errors. */
+  /** Mail / paper-plane - empty chat thread, “read messages first” gate. */
+  emptyMessages: "/animations/empty-chat.json",
+  /** Search character + magnifier - filter / search no results. */
+  searchNoResults: "/animations/search-empty.json",
+  /** Failed X - payment/booking/sync errors and destructive confirms. */
   failure: "/animations/failure.json",
 } as const;
 

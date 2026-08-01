@@ -19,7 +19,7 @@ export type SegmentedControlProps<T extends string> = {
 };
 
 /**
- * A single flat filter row — replaces nested tab-in-tab patterns (e.g. a
+ * A single flat filter row - replaces nested tab-in-tab patterns (e.g. a
  * top-level Bookings/Disputes tab stacked with an inner Active/Completed/
  * Closed tab). Full arrow-key operability per the craft bar.
  */

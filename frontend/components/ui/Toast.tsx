@@ -38,7 +38,7 @@ const TONE_ICON: Record<ToastTone, ReactNode> = {
 
 /**
  * App-wide toast host. Mount once near the root of each portal layout, then
- * call `useToast().showToast(...)` from anywhere — used for "Request sent",
+ * call `useToast().showToast(...)` from anywhere - used for "Request sent",
  * "Review submitted", booking status changes, etc. instead of blocking
  * success modals.
  */

@@ -52,7 +52,7 @@ export const RADIUS_OPTIONS: { value: string; label: string; context: string }[]
   { value: "under_50", label: "Under 50 miles", context: "About a 1-hour drive" },
   { value: "from_50_to_100", label: "50-100 miles", context: "Roughly 1-2 hours' drive" },
   { value: "from_100_to_200", label: "100-200 miles", context: "Roughly 2-4 hours' drive" },
-  { value: "over_200", label: "Over 200 miles", context: "Long-distance — nationwide reach" },
+  { value: "over_200", label: "Over 200 miles", context: "Long-distance - nationwide reach" },
 ];
 
 export const WEEKDAY_LABELS = [

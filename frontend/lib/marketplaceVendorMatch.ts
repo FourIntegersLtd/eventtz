@@ -51,7 +51,7 @@ function servicesOffered(payload: Record<string, unknown>): string[] {
   return raw.map(String).map((s) => s.trim()).filter(Boolean);
 }
 
-/** Substring match against city, business name, services, email — mirrors backend search. */
+/** Substring match against city, business name, services, email - mirrors backend search. */
 function locationMatchesVendor(
   locationQuery: string,
   vendor: ExploreVendor,
@@ -69,7 +69,7 @@ function locationMatchesVendor(
 
 export type MarketplaceVendorMatchResult = {
   matches: boolean;
-  /** Non-empty when matches is false — for UI banner. */
+  /** Non-empty when matches is false - for UI banner. */
   reasons: string[];
 };
 

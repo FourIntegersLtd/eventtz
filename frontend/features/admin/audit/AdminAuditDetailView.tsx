@@ -78,7 +78,7 @@ export function AdminAuditDetailView({ entryId }: Props) {
             <div className="px-5 py-4 sm:border-r sm:border-neutral-100">
               <dt className="text-[13px] text-neutral-500">Admin</dt>
               <dd className="mt-0.5 text-sm font-medium text-neutral-900">
-                {entry.admin_email ?? entry.admin_user_id ?? "—"}
+                {entry.admin_email ?? entry.admin_user_id ?? "-"}
               </dd>
             </div>
             <div className="border-t border-neutral-100 px-5 py-4 sm:border-t-0">

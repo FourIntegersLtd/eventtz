@@ -3,7 +3,7 @@
 /** Horizontal gutters shared across landing nav, hero, and sections. */
 export const LANDING_HORIZONTAL_PADDING = "px-4 sm:px-6 lg:px-12";
 
-/** Primary landing content width — keep nav, hero, and sections on the same vertical grid. */
+/** Primary landing content width - keep nav, hero, and sections on the same vertical grid. */
 export const LANDING_PAGE_MAX_WIDTH = "max-w-[90rem]";
 
 /** Horizontal alignment for nav, hero, and primary landing content. */
@@ -18,9 +18,9 @@ export const LANDING_SECTION_BORDER = "border-t border-primary-border/50";
 
 /**
  * Viewport-tiered section shells (prefer `min-h-dvh`, never force exact `h-dvh`):
- * - **full** — one story per screen (hero, discover)
- * - **near** — story sections on desktop; natural height on mobile
- * - **content** — dense blocks (grids, FAQ); generous padding only
+ * - **full** - one story per screen (hero, discover)
+ * - **near** - story sections on desktop; natural height on mobile
+ * - **content** - dense blocks (grids, FAQ); generous padding only
  */
 export type LandingSectionShell = "full" | "near" | "content";
 
@@ -30,7 +30,7 @@ export const LANDING_SECTION_SHELL = {
   content: "relative",
 } as const;
 
-/** Padding inside shells — content is the most common. */
+/** Padding inside shells - content is the most common. */
 export const LANDING_SECTION_SHELL_PY = {
   full: "py-16 sm:py-20 lg:py-24",
   near: "py-20 sm:py-24 lg:py-28",
@@ -40,7 +40,7 @@ export const LANDING_SECTION_SHELL_PY = {
 /** @deprecated Prefer `LANDING_SECTION_SHELL_PY.content` via `landingSectionClass`. */
 export const LANDING_SECTION_PY = LANDING_SECTION_SHELL_PY.content;
 
-/** Screenshot / feature sections — same vertical scale as standard sections. */
+/** Screenshot / feature sections - same vertical scale as standard sections. */
 export const LANDING_FEATURE_PY = LANDING_SECTION_SHELL_PY.content;
 
 /** Compact strip below hero (categories browse). */
@@ -87,7 +87,7 @@ export function landingSectionClass(
 }
 
 export function landingFeatureSectionClass(tone: LandingSectionTone, extra = ""): string {
-  /** Scroll/feature showcases grow past one screen — use content shell, not near. */
+  /** Scroll/feature showcases grow past one screen - use content shell, not near. */
   return landingSectionClass(tone, { shell: "content", extra });
 }
 

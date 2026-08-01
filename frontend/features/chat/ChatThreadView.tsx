@@ -36,7 +36,7 @@ type ChatThreadViewProps = {
   conversationId: string;
   backHref?: string;
   backLabel?: string;
-  /** "page" (default) or "drawer" (no back link — Drawer chrome already has close). */
+  /** "page" (default) or "drawer" (no back link - Drawer chrome already has close). */
   variant?: "page" | "drawer";
 };
 
@@ -100,7 +100,7 @@ export function ChatThreadView({
           window.dispatchEvent(new CustomEvent(CHAT_UNREAD_CLEARED_EVENT));
         }
       } catch {
-        /* Mark-read is best-effort — still show the thread if Supabase hiccups. */
+        /* Mark-read is best-effort - still show the thread if Supabase hiccups. */
       }
     } catch (e: unknown) {
       setError(getApiErrorDetail(e) ?? "Could not load conversation.");

@@ -7,7 +7,7 @@ type BackLinkProps = {
   icon?: "arrow" | "chevron";
   /** Primary brand link (default) or neutral text for master-detail chrome. */
   tone?: "primary" | "muted";
-  /** Hide on large screens — use with master-detail layouts that show list + detail side by side. */
+  /** Hide on large screens - use with master-detail layouts that show list + detail side by side. */
   mobileOnly?: boolean;
   className?: string;
 };
@@ -18,7 +18,7 @@ const toneClass: Record<NonNullable<BackLinkProps["tone"]>, string> = {
 };
 
 /**
- * Consistent back navigation — arrow/chevron + label. Prefer this over ad-hoc `←` text links.
+ * Consistent back navigation - arrow/chevron + label. Prefer this over ad-hoc `←` text links.
  */
 export function BackLink({
   href,

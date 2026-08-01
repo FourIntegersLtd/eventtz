@@ -42,18 +42,18 @@ export type VendorBookingSearchPrefill = {
 
 type VendorBookingModalProps = {
   onClose: () => void;
-  /** Called once the request is created — the caller owns navigation to the new booking's detail page. */
+  /** Called once the request is created - the caller owns navigation to the new booking's detail page. */
   onSuccess?: (bookingId: string) => void;
   vendorDisplayName: string;
   vendorUserId: string;
   pricingOptions: BrowsePricingOption[];
-  /** Package / rate ids selected on the profile sidebar — fixed for this modal; change selection by closing and re-picking there. */
+  /** Package / rate ids selected on the profile sidebar - fixed for this modal; change selection by closing and re-picking there. */
   initialSelectedIds: string[];
-  /** Vendor onboarding payload — used to warn if chosen dates conflict with calendar. */
+  /** Vendor onboarding payload - used to warn if chosen dates conflict with calendar. */
   vendorPayload?: Record<string, unknown>;
   /** Dates/types from marketplace URL on `/client/browse/[id]?…`. */
   searchPrefill?: VendorBookingSearchPrefill;
-  /** Event fields from AI planner (or other deep links) — applied when no active client event. */
+  /** Event fields from AI planner (or other deep links) - applied when no active client event. */
   initialPrefill?: EventEnquirePrefill | null;
   linkedEventId?: string | null;
   /** Marketplace filters to store on the booking for alternative-vendor nudges. */
@@ -73,7 +73,7 @@ export function VendorBookingModal({
   linkedEventId,
   clientSearchContext,
 }: VendorBookingModalProps) {
-  // Selection happens once, on the profile sidebar — this modal only confirms dates/venue/notes.
+  // Selection happens once, on the profile sidebar - this modal only confirms dates/venue/notes.
   const selectedIds = useMemo(() => new Set(initialSelectedIds), [initialSelectedIds]);
   const [eventName, setEventName] = useState(initialPrefill?.eventName ?? "");
   const [eventDate, setEventDate] = useState(
@@ -378,7 +378,7 @@ export function VendorBookingModal({
                   setEventName(e.target.value);
                   setValidationError(null);
                 }}
-                placeholder="e.g. Ade and Kemi — wedding reception"
+                placeholder="e.g. Ade and Kemi - wedding reception"
                 className="mt-1.5 w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>

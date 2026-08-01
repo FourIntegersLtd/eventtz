@@ -91,7 +91,7 @@ function withSectionPrefix(href: string, sectionLinkPrefix: "" | "/") {
 type LandingNavProps = {
   /** Transparent over hero on home; always solid on inner pages (e.g. compliance). */
   variant?: "hero" | "solid";
-  /** Prefix landing section anchors when not on `/` — e.g. `"/"` → `/#faq`. */
+  /** Prefix landing section anchors when not on `/` - e.g. `"/"` → `/#faq`. */
   sectionLinkPrefix?: "" | "/";
 };
 

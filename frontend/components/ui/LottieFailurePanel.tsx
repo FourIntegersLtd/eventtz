@@ -11,7 +11,7 @@ type LottieFailurePanelProps = {
   className?: string;
 };
 
-/** Error / failure moment — failed payment, declined booking, sync errors. */
+/** Error / failure moment - failed payment, declined booking, sync errors. */
 export function LottieFailurePanel({
   title,
   description,

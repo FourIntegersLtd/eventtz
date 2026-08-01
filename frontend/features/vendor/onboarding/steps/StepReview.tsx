@@ -47,7 +47,7 @@ function labelsFromValues(
   values: string[],
   options: { value: string; label: string }[],
 ): string {
-  if (values.length === 0) return "—";
+  if (values.length === 0) return "-";
   return values
     .map((v) => options.find((o) => o.value === v)?.label ?? v)
     .join(", ");
@@ -171,9 +171,9 @@ export function StepReview({
   const radiusLabel =
     radiusOptionsForMarket(getMarket(data.countryCode)).find(
       (o) => o.value === data.travelRadius,
-    )?.label ?? "—";
+    )?.label ?? "-";
   const deliveryLabel = (() => {
-    if (data.deliveryModes.length === 0) return "—";
+    if (data.deliveryModes.length === 0) return "-";
     const hasBoth =
       data.deliveryModes.includes("travel_both") ||
       (data.deliveryModes.includes("travel_to_client") &&
@@ -315,11 +315,11 @@ export function StepReview({
           <Field
             label="Full name"
             value={
-              [data.firstName, data.lastName].filter(Boolean).join(" ") || "—"
+              [data.firstName, data.lastName].filter(Boolean).join(" ") || "-"
             }
           />
-          <Field label="Email" value={data.email || "—"} />
-          <Field label="Phone" value={data.phone || "—"} />
+          <Field label="Email" value={data.email || "-"} />
+          <Field label="Phone" value={data.phone || "-"} />
         </FieldList>
       </ReviewSection>
 
@@ -330,7 +330,7 @@ export function StepReview({
         isLiveEdit={isLiveEdit}
       >
         <FieldList compact={!isLiveEdit}>
-          <Field label="Business name" value={data.businessName || "—"} />
+          <Field label="Business name" value={data.businessName || "-"} />
           <Field
             label="Services"
             value={labelsFromValues(data.servicesOffered, SERVICE_OPTIONS)}
@@ -350,7 +350,7 @@ export function StepReview({
       >
         <FieldList compact={!isLiveEdit}>
           <Field label="Country" value={getMarket(data.countryCode).label} />
-          <Field label="Base city" value={data.baseCity || "—"} />
+          <Field label="Base city" value={data.baseCity || "-"} />
           {data.region ? <Field label="Region" value={data.region} /> : null}
           {data.postalCode ? (
             <Field label="Postcode" value={data.postalCode} />
@@ -364,7 +364,7 @@ export function StepReview({
                 ? data.travelDeliveryPolicy === "custom"
                   ? data.travelDeliveryPolicyCustomText || "Custom rule"
                   : TRAVEL_DELIVERY_POLICY_LABELS[data.travelDeliveryPolicy]
-                : "—"
+                : "-"
             }
           />
         </FieldList>
@@ -377,8 +377,8 @@ export function StepReview({
         isLiveEdit={isLiveEdit}
       >
         <FieldList compact={!isLiveEdit}>
-          <Field label="Hourly rate" value={`£${data.hourlyRate || "—"}`} />
-          <Field label="Daily rate" value={`£${data.dailyRate || "—"}`} />
+          <Field label="Hourly rate" value={`£${data.hourlyRate || "-"}`} />
+          <Field label="Daily rate" value={`£${data.dailyRate || "-"}`} />
         </FieldList>
         <div className="border-t border-neutral-100">
           <p className="px-5 pt-4 text-[13px] font-medium text-neutral-500 sm:px-6">
@@ -395,7 +395,7 @@ export function StepReview({
                     {p.title.trim() || "Untitled package"}
                   </span>
                   {p.price.trim() ? (
-                    <span className="text-neutral-600"> — £{p.price}</span>
+                    <span className="text-neutral-600"> - £{p.price}</span>
                   ) : null}
                   {p.duration.trim() ? (
                     <span className="text-neutral-500"> · {p.duration}</span>
@@ -423,7 +423,7 @@ export function StepReview({
               <p>
                 {data.discountPercentage.trim()}% off
                 {data.discountLabel.trim()
-                  ? ` — ${data.discountLabel.trim()}`
+                  ? ` - ${data.discountLabel.trim()}`
                   : ""}{" "}
                 on listed prices
               </p>
@@ -454,12 +454,12 @@ export function StepReview({
             value={
               data.availableWeekdays.length
                 ? data.availableWeekdays.map((i) => WEEKDAY_LABELS[i]).join(", ")
-                : "—"
+                : "-"
             }
           />
           <Field
             label="Max bookings / day"
-            value={data.maxBookingsPerDay || "—"}
+            value={data.maxBookingsPerDay || "-"}
           />
         </FieldList>
       </ReviewSection>
@@ -481,7 +481,7 @@ export function StepReview({
           />
           <Field
             label="Video"
-            value={data.portfolioVideoNamePersisted ? "Uploaded" : "—"}
+            value={data.portfolioVideoNamePersisted ? "Uploaded" : "-"}
           />
           <Field
             label="Social links"
@@ -492,10 +492,10 @@ export function StepReview({
                       const platform =
                         SOCIAL_PLATFORM_OPTIONS.find((o) => o.value === s.platform)
                           ?.label ?? s.platform;
-                      return `${platform}: ${s.handle || "—"}`;
+                      return `${platform}: ${s.handle || "-"}`;
                     })
                     .join(", ")
-                : "—"
+                : "-"
             }
           />
         </FieldList>
@@ -531,7 +531,7 @@ export function StepReview({
             }
           />
           <Field label="Halal" value={data.isHalal ? "Yes" : "Not specified"} />
-          <Field label="Allergen info" value={data.allergenInfo || "—"} />
+          <Field label="Allergen info" value={data.allergenInfo || "-"} />
         </FieldList>
       </ReviewSection>
     </>

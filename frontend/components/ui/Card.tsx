@@ -6,7 +6,7 @@ import {
   portalInsetCard,
 } from "@/components/portal-shell/portalTheme";
 
-/** Keep in sync with `features/admin/adminTheme.adminCard` — duplicated so ui/ does not import features/. */
+/** Keep in sync with `features/admin/adminTheme.adminCard` - duplicated so ui/ does not import features/. */
 const ADMIN_CARD = "rounded-2xl border border-neutral-100 bg-white";
 
 export type CardVariant = "portal" | "portal-inset" | "admin";
@@ -33,7 +33,7 @@ const PADDING_CLASSES: Record<CardPadding, string> = {
 };
 
 /**
- * Shared surface container — portal cards, admin cards, and nested inset panels.
+ * Shared surface container - portal cards, admin cards, and nested inset panels.
  */
 export function Card<T extends ElementType = "div">({
   as,

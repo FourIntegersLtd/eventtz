@@ -46,7 +46,7 @@ export function PayoutSetupRequiredModal({
         <p>
           To receive secure payments through Eventzz, you need to complete payout setup.
         </p>
-        <p>This usually takes 2–3 minutes.</p>
+        <p>This usually takes 2-3 minutes.</p>
         {error ? <p className="font-medium text-red-700">{error}</p> : null}
       </div>
     </Modal>

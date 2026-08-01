@@ -15,7 +15,7 @@ import { ChatDrawer } from "@/features/chat/ChatDrawer";
 import { BookingReviewPanel } from "@/features/reviews/BookingReviewPanel";
 
 type ClientBookingsViewProps = {
-  /** Present on `/client/bookings/[bookingId]` — absent on the `/client/bookings` index. */
+  /** Present on `/client/bookings/[bookingId]` - absent on the `/client/bookings` index. */
   selectedBookingId?: string;
 };
 
@@ -130,7 +130,7 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
             <div className="min-h-0 flex-1 overflow-hidden">
               <BookingDetailPanel
                 booking={c.viewModel}
-                loading={c.detailLoading}
+                loading={c.detailLoading || (c.listLoading && !selectedBookingId)}
                 error={c.detailError}
                 actionError={c.actionError}
                 headerActions={c.headerActions}

@@ -296,7 +296,7 @@ export function DisputeActionPanel({
             <div className="border-t border-neutral-100 bg-neutral-50/60 px-5 py-4">
               <p className="text-[13px] font-medium text-neutral-500">Message to parties</p>
               <p className="mt-1 text-[13px] text-neutral-400">
-                Shown on their dispute page — not as a chat message.
+                Shown on their dispute page - not as a chat message.
               </p>
               <fieldset className="mt-3">
                 <legend className="sr-only">Message audience</legend>

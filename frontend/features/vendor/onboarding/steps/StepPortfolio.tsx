@@ -151,7 +151,7 @@ export function StepPortfolio({
           ? `"${skippedDuplicates[0]}"`
           : `${skippedDuplicates.length} images`;
       setDuplicateNotice(
-        `${label} already in your portfolio — duplicate${skippedDuplicates.length === 1 ? "" : "s"} skipped.`,
+        `${label} already in your portfolio - duplicate${skippedDuplicates.length === 1 ? "" : "s"} skipped.`,
       );
     } else {
       setDuplicateNotice(null);
@@ -248,9 +248,9 @@ export function StepPortfolio({
                 q.skipped ? (
                   "Check skipped"
                 ) : q.ok ? (
-                  `OK · ${q.score ?? "—"}/5`
+                  `OK · ${q.score ?? "-"}/5`
                 ) : accepted ? (
-                  `Kept anyway · ${q.score ?? "—"}/5`
+                  `Kept anyway · ${q.score ?? "-"}/5`
                 ) : (
                   <button
                     type="button"

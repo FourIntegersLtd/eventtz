@@ -5,7 +5,7 @@ type LandingSectionProps = {
   id?: string;
   children: ReactNode;
   className?: string;
-  /** default: max-w-7xl — matches nav/hero shell */
+  /** default: max-w-7xl - matches nav/hero shell */
   width?: "6xl" | "7xl" | "4xl" | "3xl";
 };
 

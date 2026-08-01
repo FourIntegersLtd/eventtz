@@ -8,7 +8,7 @@ type AdminConsolePageProps = {
   children: ReactNode;
 };
 
-/** Thin wrapper — use inside `(console)` layout after auth guards. */
+/** Thin wrapper - use inside `(console)` layout after auth guards. */
 export function AdminConsolePage({ title, children }: AdminConsolePageProps) {
   return <AdminShell title={title}>{children}</AdminShell>;
 }

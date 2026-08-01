@@ -1,7 +1,7 @@
 import { getBookingStatusMeta } from "@/lib/domain-types";
 
 export type StatusBadgeProps = {
-  /** Raw status string from the API — narrowed internally via `getBookingStatusMeta`. */
+  /** Raw status string from the API - narrowed internally via `getBookingStatusMeta`. */
   status: string;
   className?: string;
 };

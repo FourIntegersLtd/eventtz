@@ -1,4 +1,4 @@
-# Eventtz — frontend
+# Eventtz - frontend
 
 Next.js App Router UI for [Eventtz](https://eventtz.com): a UK marketplace connecting clients with African event vendors. Clients browse, enquire, book, and pay; vendors manage profiles, bookings, quotes, and Stripe payouts; admins operate the console (vendors, disputes, support, blog, email testing).
 
@@ -12,7 +12,7 @@ This package talks to the FastAPI backend under **`/api/v1`**. Full-stack archit
 |-------|--------|
 | Framework | Next.js 16 (App Router), React 19, TypeScript |
 | Styling | Tailwind CSS 4 (`app/globals.css` brand tokens) |
-| HTTP | Axios via `lib/axios.ts` — cookie session (`withCredentials: true`) |
+| HTTP | Axios via `lib/axios.ts` - cookie session (`withCredentials: true`) |
 | Forms / validation | Zod + helpers in `lib/validation/` |
 | Rich text (admin blog) | TipTap |
 | Charts (admin) | Recharts |
@@ -35,7 +35,7 @@ This package talks to the FastAPI backend under **`/api/v1`**. Full-stack archit
 
 ```bash
 cd frontend
-cp .env.example .env.local   # or .env — Next.js loads both
+cp .env.example .env.local   # or .env - Next.js loads both
 npm install
 npm run dev
 ```
@@ -56,7 +56,7 @@ Health check: `GET http://127.0.0.1:8000/health`.
 
 Browser requests use **same-origin** paths (`/api/v1/...`). Next.js rewrites them to the FastAPI server (`next.config.ts` → `BACKEND_URL`). That keeps auth cookies first-party, which matters on mobile Safari/Chrome.
 
-Do **not** set `NEXT_PUBLIC_API_URL` in production — cross-origin cookies break mobile login.
+Do **not** set `NEXT_PUBLIC_API_URL` in production - cross-origin cookies break mobile login.
 
 ---
 
@@ -69,7 +69,7 @@ Copy **`frontend/.env.example`** to **`.env.local`** (or `.env`).
 | `BACKEND_URL` | Local dev | FastAPI origin for Next.js rewrites (default `http://localhost:8000`) |
 | `NEXT_PUBLIC_API_URL` | No | Direct browser → API calls (debug only; omit in prod) |
 | `NEXT_PUBLIC_MIXPANEL_TOKEN` | No | Mixpanel project token; leave empty to disable tracking locally |
-| `NEXT_PUBLIC_MIXPANEL_API_HOST` | EU projects | e.g. `https://api-eu.mixpanel.com` — restart dev server after change |
+| `NEXT_PUBLIC_MIXPANEL_API_HOST` | EU projects | e.g. `https://api-eu.mixpanel.com` - restart dev server after change |
 
 Backend secrets (Supabase, Stripe, Resend, OpenAI) belong in **`backend/.env`**, not here.
 
@@ -140,10 +140,10 @@ frontend/
 
 Notable flows:
 
-- **Bookings & payments** — `features/bookings/*`, `lib/clientBookingsApi.ts`, Stripe Checkout via `lib/bookingCheckoutApi.ts`
-- **AI Event Planner** — `/client/planner`, `features/client/planner/`, `lib/clientPlannerApi.ts`
-- **Help Center** — `/client/help`, `/vendor/help`, `lib/helpApi.ts`
-- **Support chat** — `/client/messages` (DM + “Eventtz Support”); admin inbox at `/admin/messages`
+- **Bookings & payments** - `features/bookings/*`, `lib/clientBookingsApi.ts`, Stripe Checkout via `lib/bookingCheckoutApi.ts`
+- **AI Event Planner** - `/client/planner`, `features/client/planner/`, `lib/clientPlannerApi.ts`
+- **Help Center** - `/client/help`, `/vendor/help`, `lib/helpApi.ts`
+- **Support chat** - `/client/messages` (DM + “Eventtz Support”); admin inbox at `/admin/messages`
 
 Admin roles (`super_admin` vs `admin`) are enforced in UI via `lib/adminPermissions.ts` and `lib/adminRole.ts`; backend is authoritative.
 

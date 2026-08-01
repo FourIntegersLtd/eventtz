@@ -7,7 +7,7 @@ import {
 import { DEFAULT_COUNTRY_CODE } from "@/lib/markets";
 
 export function formatGbp(amount: number | null | undefined): string {
-  if (amount == null || Number.isNaN(amount)) return "—";
+  if (amount == null || Number.isNaN(amount)) return "-";
   return new Intl.NumberFormat("en-GB", {
     style: "currency",
     currency: "GBP",
@@ -48,7 +48,7 @@ export function primaryVendorsFromPlan(plan: CelebrationPlanResponse): PlannerVe
     .filter((v): v is PlannerVendorCard => v != null && !v.unavailable);
 }
 
-/** Hand off to client browse — same multi-select + message flow as non-AI users. */
+/** Hand off to client browse - same multi-select + message flow as non-AI users. */
 export function buildPlannerBrowseUrl(
   plan: CelebrationPlanResponse,
   linkedEventId: string,

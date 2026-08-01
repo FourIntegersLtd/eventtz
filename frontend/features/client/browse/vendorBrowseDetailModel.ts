@@ -6,7 +6,7 @@ import {
   parseVendorDiscountConfig,
 } from "@/lib/vendorDiscountDisplay";
 
-/** One selectable pricing block — mirrors onboarding packages and/or fixed hourly & daily rates. */
+/** One selectable pricing block - mirrors onboarding packages and/or fixed hourly & daily rates. */
 export type BrowsePricingOption = {
   id: string;
   /** Short label for tab buttons */
@@ -17,12 +17,12 @@ export type BrowsePricingOption = {
   compareAtDisplay: string | null;
   /** Parsed GBP amount for sums (null = custom quote / TBC). */
   unitPriceGbp: number | null;
-  /** e.g. "10% off — Easter discount" */
+  /** e.g. "10% off - Easter discount" */
   discountBadge: string | null;
   /** Bulk / off-peak promos (informational). */
   promoLines: string[];
   description: string;
-  /** Shown with clock icon — package duration text or inferred line for fixed rates */
+  /** Shown with clock icon - package duration text or inferred line for fixed rates */
   timelineLine: string | null;
   /** Extra bullets (details lines, services, etc.) */
   featureLines: string[];

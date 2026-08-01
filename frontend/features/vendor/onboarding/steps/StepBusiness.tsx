@@ -25,7 +25,7 @@ export type StepBusinessProps = {
   setBusinessNameError: (v: string | null) => void;
 };
 
-/** Single service selection — tap again to clear. Other opens the waitlist modal instead. */
+/** Single service selection - tap again to clear. Other opens the waitlist modal instead. */
 function selectService(current: string[], value: string): string[] {
   if (value === "other") return current;
   return current[0] === value ? [] : [value];

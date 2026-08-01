@@ -75,7 +75,7 @@ export function VendorDetailsInsightsSection({
                     {insights.review_average.toFixed(2)}
                   </span>
                 ) : (
-                  "—"
+                  "-"
                 )
               }
               sub={
@@ -100,7 +100,7 @@ export function VendorDetailsInsightsSection({
             <div className="border-t border-neutral-100">
               <MetricRow
                 label="Onboarding"
-                value={`Step ${vendor.current_step ?? "—"}`}
+                value={`Step ${vendor.current_step ?? "-"}`}
                 sub={<VendorProfileStatusBadge status={vendor.status} />}
               />
             </div>

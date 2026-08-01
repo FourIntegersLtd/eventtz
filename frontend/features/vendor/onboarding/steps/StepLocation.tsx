@@ -53,7 +53,7 @@ const TRAVEL_DELIVERY_POLICY_OPTIONS: {
   },
   {
     value: "custom",
-    label: "Custom — I'll describe my own rule",
+    label: "Custom - I'll describe my own rule",
   },
 ];
 
@@ -138,7 +138,7 @@ export function StepLocation({ data, update }: StepLocationProps) {
               ? "e.g. London, Manchester, Birmingham"
               : `e.g. a city in ${market.label}`
           }
-          helpText={`Suggestions are places in ${market.label} — pick one or keep typing your own area.`}
+          helpText={`Suggestions are places in ${market.label} - pick one or keep typing your own area.`}
         />
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div>

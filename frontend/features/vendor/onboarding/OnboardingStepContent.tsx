@@ -50,7 +50,7 @@ type Props = {
   uploadingProfileImage?: boolean;
   profileImageError?: string | null;
   onUploadProfileImage: (file: File) => void | Promise<void>;
-  /** Post-approval profile editor — Settings-style sectioned cards, not wizard mega-card. */
+  /** Post-approval profile editor - Settings-style sectioned cards, not wizard mega-card. */
   isLiveEdit?: boolean;
 };
 

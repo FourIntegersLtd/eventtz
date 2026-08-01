@@ -8,7 +8,7 @@ export type PaymentStatusBadgeProps = {
   className?: string;
 };
 
-/** Money lifecycle badge — independent of booking request `status`. */
+/** Money lifecycle badge - independent of booking request `status`. */
 export function PaymentStatusBadge({ status, className = "" }: PaymentStatusBadgeProps) {
   return (
     <span

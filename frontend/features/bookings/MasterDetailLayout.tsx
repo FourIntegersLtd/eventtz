@@ -5,7 +5,7 @@ export type MasterDetailLayoutProps = {
   detail: ReactNode;
   /**
    * When a row is selected, mobile shows only the detail pane (full-screen,
-   * with its own back link) instead of squeezing both into view — desktop
+   * with its own back link) instead of squeezing both into view - desktop
    * always shows both side by side.
    */
   hasSelection: boolean;

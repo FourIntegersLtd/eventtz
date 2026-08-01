@@ -169,7 +169,7 @@ export function useOnboardingPersistence({
     }
   }, [data, lockedPendingReview, step, applyVendorProfileResponse]);
 
-  /** Uploads any additional-info files still pending as raw `File`s (defensive — files are
+  /** Uploads any additional-info files still pending as raw `File`s (defensive - files are
    * normally uploaded immediately on selection via `onUploadAdditionalDoc`). */
   const persistAdditionalInfoFiles = useCallback(
     async (d: VendorOnboardingData): Promise<VendorOnboardingData> => {

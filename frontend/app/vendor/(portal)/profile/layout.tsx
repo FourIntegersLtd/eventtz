@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Vendor profile — Eventtz",
+  title: "Vendor profile - Eventtz",
   description:
     "Complete your Eventtz vendor profile: business details, pricing, portfolio, and verification.",
 };

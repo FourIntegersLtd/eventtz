@@ -109,7 +109,7 @@ export interface VendorOnboardingData {
   availableWeekdays: number[];
   blockedDates: string[];
   maxBookingsPerDay: string;
-  // Step 6 — File objects are client-only; portfolioFileNamesPersisted comes from API after save
+  // Step 6 - File objects are client-only; portfolioFileNamesPersisted comes from API after save
   portfolioFiles: File[];
   /** Filenames last saved to the server (File objects cannot be restored from JSON). */
   portfolioFileNamesPersisted: string[];
@@ -120,9 +120,9 @@ export interface VendorOnboardingData {
   portfolioWarnings: string[];
   /** Kept for backward-compatible payloads; no longer collected in onboarding. */
   stripeConnectStarted: boolean;
-  /** 2+ = post–Stripe-removal step numbering (8 form steps). */
+  /** 2+ = post-Stripe-removal step numbering (8 form steps). */
   onboardingFlowVersion: number;
-  // Step 7 — Additional info (optional certifications / dietary disclosures)
+  // Step 7 - Additional info (optional certifications / dietary disclosures)
   foodHygieneCertFile: File | null;
   foodHygieneCertNamePersisted: string;
   indemnityCertFile: File | null;
@@ -131,9 +131,9 @@ export interface VendorOnboardingData {
   otherDocsNamesPersisted: string[];
   isHalal: boolean;
   allergenInfo: string;
-  // Step 8 — Review
+  // Step 8 - Review
   aiBioDraft: string;
-  /** Public profile / cover photo — shown first on marketplace listings. */
+  /** Public profile / cover photo - shown first on marketplace listings. */
   profileImageUrl: string;
   confirmTruthful: boolean;
   confirmTerms: boolean;

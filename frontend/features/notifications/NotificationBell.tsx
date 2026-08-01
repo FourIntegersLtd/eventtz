@@ -16,7 +16,7 @@ import { SkeletonListRows } from "@/components/ui/Skeleton";
 
 export type NotificationBellProps = {
   portal: "client" | "vendor";
-  /** Total unread count shown on the bell badge — computed once by PortalShell so it never disagrees with the sidebar badges. */
+  /** Total unread count shown on the bell badge - computed once by PortalShell so it never disagrees with the sidebar badges. */
   unreadCount: number;
   /** Called after the dropdown marks booking notifications read, so PortalShell can refresh its own badge state. */
   onMarkedRead?: () => void;
@@ -29,7 +29,7 @@ const NOTIFICATIONS_HREF: Record<"client" | "vendor", string> = {
 
 /**
  * Top-bar bell + dropdown. Opening the dropdown is the explicit, visible
- * "mark as read" action for booking notifications — replacing the previous
+ * "mark as read" action for booking notifications - replacing the previous
  * silent auto-mark-read-on-page-visit side effect.
  */
 export function NotificationBell({ portal, unreadCount, onMarkedRead }: NotificationBellProps) {
@@ -76,7 +76,7 @@ export function NotificationBell({ portal, unreadCount, onMarkedRead }: Notifica
         await markAllRead();
         onMarkedRead?.();
       } catch {
-        // best-effort — dropdown already showed the items either way
+        // best-effort - dropdown already showed the items either way
       }
     })();
     return () => {

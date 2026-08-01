@@ -194,7 +194,7 @@ export function VendorBookingResponseFlow({
         confirmLabel={acceptCopy.confirmLabel}
         confirmLoadingLabel={acceptCopy.confirmLoadingLabel}
         confirmVariant="primary"
-        lottie="paymentSecure"
+        lottie="successCheck"
         loading={actionBusy}
         onCancel={() => setPendingDecision(null)}
         onConfirm={() => {

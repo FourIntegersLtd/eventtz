@@ -35,7 +35,7 @@ export function canSuspendClients(user: AdminUser): boolean {
   return isAdminUser(user);
 }
 
-/** Resolve dispute with refund / payout — super admin only. */
+/** Resolve dispute with refund / payout - super admin only. */
 export function canResolveDisputesFinancially(user: AdminUser): boolean {
   return isSuperAdmin(user);
 }

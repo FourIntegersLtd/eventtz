@@ -120,7 +120,7 @@ export function AdminTeamView() {
                 return (
                   <AdminTableRow key={m.user_id}>
                     <AdminTableCell className="font-medium text-neutral-900">
-                      {m.email ?? "—"}
+                      {m.email ?? "-"}
                       {isSelf ? (
                         <span className="ml-2 text-xs font-normal text-neutral-500">(you)</span>
                       ) : null}
@@ -205,7 +205,7 @@ export function AdminTeamView() {
                             }}
                           />
                         ) : (
-                          <span className="text-xs text-neutral-400">—</span>
+                          <span className="text-xs text-neutral-400">-</span>
                         )}
                       </AdminTableCell>
                     ) : null}

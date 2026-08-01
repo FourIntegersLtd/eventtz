@@ -1,6 +1,6 @@
 /**
  * Shared Tailwind class strings for client/vendor portal UI.
- * Mirror of `features/admin/adminTheme.ts` — use these instead of copying card shells.
+ * Mirror of `features/admin/adminTheme.ts` - use these instead of copying card shells.
  */
 
 /** Standard portal card surface (settings sections, dashboard tiles, list panels).
@@ -16,13 +16,13 @@ export const portalCardPaddingLg = "p-6 sm:p-8";
 /** Full-height master-detail panel shell (bookings, messages). */
 export const portalPanelShell = `flex h-full max-h-full min-h-0 flex-1 flex-col overflow-hidden ${portalCard} ${portalCardPadding}`;
 
-/** Nested / collapsible sections — slightly smaller radius, light gray border. */
+/** Nested / collapsible sections - slightly smaller radius, light gray border. */
 export const portalInsetCard = "rounded-xl border border-neutral-100 bg-white";
 
-/** Page background — matches `--page-bg` in globals.css. */
+/** Page background - matches `--page-bg` in globals.css. */
 export const portalPageBg = "bg-page-bg";
 
-/** Auth/marketing shell background — matches `--auth-bg` in globals.css. */
+/** Auth/marketing shell background - matches `--auth-bg` in globals.css. */
 export const authPageBg = "bg-auth-bg";
 
 /** Soft branded gradient used on sign-in/register shells. */

@@ -6,7 +6,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 VIDEOS_DIR="$ROOT/public/videos"
 
-# filename:max_width — keep in sync with landingData.ts (HERO_VIDEO_SRC + GALLERY_VIDEOS)
+# filename:max_width - keep in sync with landingData.ts (HERO_VIDEO_SRC + GALLERY_VIDEOS)
 LANDING_VIDEOS=(
   "hero.mp4:1920"
   "hero2.mp4:1280"

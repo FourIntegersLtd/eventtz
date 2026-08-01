@@ -1,4 +1,4 @@
-/** Split `YYYY-MM-DD` into numeric parts (month is 1–12). */
+/** Split `YYYY-MM-DD` into numeric parts (month is 1-12). */
 export function isoToParts(iso: string): { year: number; month: number; day: number } | null {
   const normalized = iso.trim().slice(0, 10);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized)) return null;

@@ -72,7 +72,7 @@ export function ParticipantDisputeDetailPanel({ role, dispute, loading, error }:
             <div className="px-5 py-4 sm:border-r sm:border-neutral-100">
               <dt className="text-[13px] text-neutral-500">Event</dt>
               <dd className="mt-0.5 text-sm font-medium text-neutral-900">
-                {dispute.event_name ?? "—"}
+                {dispute.event_name ?? "-"}
               </dd>
               {dispute.event_date ? (
                 <p className="mt-0.5 text-xs text-neutral-500">
@@ -85,7 +85,7 @@ export function ParticipantDisputeDetailPanel({ role, dispute, loading, error }:
                 {role === "client" ? "Vendor" : "Client"}
               </dt>
               <dd className="mt-0.5 text-sm font-medium text-neutral-900">
-                {counterparty ?? "—"}
+                {counterparty ?? "-"}
               </dd>
             </div>
           </div>

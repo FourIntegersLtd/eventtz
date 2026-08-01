@@ -9,7 +9,7 @@ import { PortalShell } from "@/components/portal-shell/PortalShell";
 import { portalPageTitle } from "@/components/portal-shell/portalNav";
 
 /**
- * Every authenticated vendor route shares this shell — new routes under
+ * Every authenticated vendor route shares this shell - new routes under
  * `/vendor/(portal)/*` get RequireAuth + PortalShell for free instead of
  * repeating the wiring per page.tsx.
  */

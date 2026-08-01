@@ -14,7 +14,7 @@ type MotionStaggerItemProps = {
   stagger?: boolean;
 };
 
-/** Staggered entrance for list/grid items — dashboards, cards, feeds. */
+/** Staggered entrance for list/grid items - dashboards, cards, feeds. */
 export function MotionStaggerItem({
   index = 0,
   children,

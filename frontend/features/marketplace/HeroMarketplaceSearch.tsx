@@ -22,13 +22,13 @@ const OTHER_TOOLTIP =
 
 type HeroMarketplaceSearchProps = {
   variant?: "landing" | "default";
-  /** Path for search submit — always `/client/browse`, the one canonical marketplace route. */
+  /** Path for search submit - always `/client/browse`, the one canonical marketplace route. */
   submitToPath: string;
   className?: string;
   /** Initial values when the parent remounts this component (e.g. `key={urlQuery}`). */
   initialState?: MarketplaceSearchState;
   submitMode?: "push" | "replace";
-  /** Hide the vendor-type dropdown — category chips / popular searches cover this. */
+  /** Hide the vendor-type dropdown - category chips / popular searches cover this. */
   showTypesField?: boolean;
   /** Show event-date picker (optional filter for availability). */
   showDatesField?: boolean;
@@ -272,7 +272,7 @@ export function HeroMarketplaceSearch({
         </div>
         )}
 
-        {/* Free-text search — vendor name, city, or services (not place autocomplete) */}
+        {/* Free-text search - vendor name, city, or services (not place autocomplete) */}
         <div className={`relative ${fieldClassName}`}>
           <Search
             className={`pointer-events-none absolute left-3 top-1/2 z-[1] h-4 w-4 -translate-y-1/2 ${

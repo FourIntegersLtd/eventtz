@@ -1,16 +1,15 @@
 "use client";
 
-import { EmptyState } from "@/components/ui/EmptyState";
-import type { LottieAssetKey } from "@/lib/lottieAssets";
+import { EmptyState, type EmptyLottieAssetKey } from "@/components/ui/EmptyState";
 
 type LottieEmptyPanelProps = {
   title: string;
   description?: string;
-  lottie: LottieAssetKey;
+  lottie: EmptyLottieAssetKey;
   className?: string;
 };
 
-/** Compact empty message with Lottie — for inline search/no-results blocks. */
+/** Compact empty message with Lottie - for inline search/no-results blocks. */
 export function LottieEmptyPanel({ title, description, lottie, className = "" }: LottieEmptyPanelProps) {
   return (
     <EmptyState

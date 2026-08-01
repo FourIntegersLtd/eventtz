@@ -25,7 +25,7 @@ export function VendorDetailsApprovalSection({ vendor, busyId, onSetApproval }: 
                 dateStyle: "medium",
                 timeStyle: "short",
               })
-            : "—"}
+            : "-"}
           {vendor.current_step != null ? ` · Onboarding step ${vendor.current_step}` : null}
         </p>
       </div>

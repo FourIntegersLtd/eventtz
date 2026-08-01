@@ -8,7 +8,7 @@ type LottieIllustrationProps = {
   asset: LottieAssetKey;
   /**
    * Includes size. Default is modal/empty-state scale.
-   * Pass a full size class (e.g. `h-10 w-10`) to override — do not mix with the default.
+   * Pass a full size class (e.g. `h-10 w-10`) to override - do not mix with the default.
    */
   className?: string;
   ariaLabel?: string;

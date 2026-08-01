@@ -37,7 +37,7 @@ export type VendorBookingListItem = {
   event_end_date: string | null;
   total_label: string;
   client_email: string | null;
-  /** Friendly client name (preferred name or derived) — safe to show pre-payment. */
+  /** Friendly client name (preferred name or derived) - safe to show pre-payment. */
   client_display_name: string | null;
   created_at: string | null;
   /** Full amount incl. vendor additions + Eventtz fee (when quote is all priced). */
@@ -73,7 +73,7 @@ export type VendorBookingDetail = {
   pricing: BookingPricingBreakdown | null;
   client_user_id: string | null;
   client_email: string | null;
-  /** Friendly client name (preferred name or derived) — safe to show pre-payment. */
+  /** Friendly client name (preferred name or derived) - safe to show pre-payment. */
   client_display_name: string | null;
   created_at: string | null;
   /** Set automatically when payment succeeds (e.g. Stripe webhook). */

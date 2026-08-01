@@ -25,7 +25,7 @@ export function shortDateLabel(iso: string | null | undefined): string {
 
 /** Formats a full ISO timestamp as e.g. "12 Jul 2026, 14:03". */
 export function formatDateTime(iso: string | null | undefined): string {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
   return d.toLocaleString("en-GB", {

@@ -56,7 +56,7 @@ type BookingDetailPanelProps = {
 };
 
 /**
- * Pure UI booking detail — client and vendor pages own data fetching,
+ * Pure UI booking detail - client and vendor pages own data fetching,
  * actions, and role-specific slots (quote adjustments, review form). This
  * component only knows how to render a `BookingDetailViewModel`.
  */

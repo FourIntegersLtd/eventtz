@@ -73,7 +73,7 @@ export function toBookingDetailViewModel(
   } else if (hasNotes) {
     messagesHint =
       config.role === "vendor"
-        ? "Client left a note — open chat to reply"
+        ? "Client left a note - open chat to reply"
         : "Your note started this chat";
     messagesActionLabel = "Open chat";
   }

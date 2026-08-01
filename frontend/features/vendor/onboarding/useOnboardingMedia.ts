@@ -77,7 +77,7 @@ export function useOnboardingMedia({
           [k]: {
             ok: true,
             score: 3,
-            summary: "Automatic image check is turned off — you can continue.",
+            summary: "Automatic image check is turned off - you can continue.",
             loading: false,
             skipped: true,
           },
@@ -106,7 +106,7 @@ export function useOnboardingMedia({
             [k]: {
               ok: true,
               score: 3,
-              summary: "Could not verify automatically — you can still continue.",
+              summary: "Could not verify automatically - you can still continue.",
               loading: false,
               skipped: true,
             },

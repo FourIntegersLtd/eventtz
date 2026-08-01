@@ -27,13 +27,13 @@ export function CelebrationSummary({ plan }: CelebrationSummaryProps) {
       ) : null}
       {plan.brief.preferred_date_invalid ? (
         <p className="mt-2 text-xs text-amber-800">
-          The date in your prompt looks past or invalid — confirm dates when you enquire.
+          The date in your prompt looks past or invalid - confirm dates when you enquire.
         </p>
       ) : null}
       {plan.brief.unsupported_categories_mentioned?.length ? (
         <p className="mt-2 text-xs text-neutral-500">
           We don’t list {plan.brief.unsupported_categories_mentioned.join(", ")} as dedicated
-          categories yet — recommendations use catering, cake, photos, makeup, and rentals.
+          categories yet - recommendations use catering, cake, photos, makeup, and rentals.
         </p>
       ) : null}
     </header>

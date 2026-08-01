@@ -15,7 +15,7 @@ export type ButtonLinkProps = Omit<ComponentProps<typeof Link>, "className"> & {
 };
 
 /**
- * Next.js Link styled as a Button — use for navigation CTAs instead of
+ * Next.js Link styled as a Button - use for navigation CTAs instead of
  * hand-rolled `rounded-full bg-primary` class strings.
  */
 export function ButtonLink({

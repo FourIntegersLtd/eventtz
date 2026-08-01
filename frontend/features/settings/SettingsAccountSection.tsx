@@ -88,7 +88,7 @@ export function SettingsAccountSection({ role }: Props) {
             <div className="min-w-0">
               <dt className="text-[13px] text-neutral-500">Email</dt>
               <dd className="truncate text-sm font-medium text-neutral-900">
-                {user?.email ?? "—"}
+                {user?.email ?? "-"}
               </dd>
             </div>
           </div>

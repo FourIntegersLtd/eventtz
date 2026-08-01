@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { fetchExploreVendors } from "@/lib/clientExploreApi";
 import { CATEGORIES } from "@/features/landing/landingData";
 
-/** How many approved vendors list each category — a vendor counts once per category it offers. */
+/** How many approved vendors list each category - a vendor counts once per category it offers. */
 export function useCategoryVendorCounts() {
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);

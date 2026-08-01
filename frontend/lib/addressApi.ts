@@ -1,5 +1,5 @@
 /**
- * UK address lookup API — DISABLED (getAddress.io / OS Places commented out).
+ * UK address lookup API - DISABLED (getAddress.io / OS Places commented out).
  * Venue addresses use free text via VenueAddressFields instead.
  */
 
@@ -13,7 +13,7 @@ export type AddressAutocompleteResult = {
 export async function fetchAddressAutocomplete(
   _term: string,
 ): Promise<AddressAutocompleteResult> {
-  // getAddress.io / OS Places lookup disabled — use VenueAddressFields free text.
+  // getAddress.io / OS Places lookup disabled - use VenueAddressFields free text.
   return { suggestions: [], providerConfigured: false };
 }
 
@@ -23,7 +23,7 @@ export type AddressResolveResult = {
 };
 
 export async function fetchAddressResolve(_addressId: string): Promise<AddressResolveResult> {
-  // getAddress.io / OS Places lookup disabled — use VenueAddressFields free text.
+  // getAddress.io / OS Places lookup disabled - use VenueAddressFields free text.
   throw new Error("Address lookup is disabled.");
 }
 
@@ -33,7 +33,7 @@ export type AddressFindResult = {
 };
 
 export async function fetchAddressFindByPostcode(_postcode: string): Promise<AddressFindResult> {
-  // getAddress.io / OS Places lookup disabled — use VenueAddressFields free text.
+  // getAddress.io / OS Places lookup disabled - use VenueAddressFields free text.
   return { addresses: [], providerConfigured: false };
 }
 

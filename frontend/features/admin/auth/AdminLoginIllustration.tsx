@@ -26,7 +26,7 @@ export function AdminLoginIllustration({ className = "" }: { className?: string 
       {/* Soft backdrop */}
       <ellipse cx="240" cy="200" rx="190" ry="170" fill="url(#adminPanelGrad)" />
 
-      {/* Floating dashboard card — back */}
+      {/* Floating dashboard card - back */}
       <g transform="translate(72 118) rotate(-6)">
         <rect width="148" height="108" rx="16" fill="url(#adminCardGrad)" stroke="#3e1964" strokeOpacity="0.12" strokeWidth="1.5" />
         <rect x="16" y="18" width="56" height="8" rx="4" fill="#3e1964" fillOpacity="0.15" />
@@ -36,7 +36,7 @@ export function AdminLoginIllustration({ className = "" }: { className?: string 
         <rect x="72" y="72" width="48" height="22" rx="8" fill="#c4a05a" fillOpacity="0.2" />
       </g>
 
-      {/* Floating dashboard card — front */}
+      {/* Floating dashboard card - front */}
       <g transform="translate(248 136) rotate(5)">
         <rect width="160" height="120" rx="16" fill="white" stroke="#3e1964" strokeOpacity="0.14" strokeWidth="1.5" />
         <rect x="18" y="20" width="72" height="10" rx="5" fill="#3e1964" fillOpacity="0.85" />
@@ -54,7 +54,7 @@ export function AdminLoginIllustration({ className = "" }: { className?: string 
         <circle cx="98" cy="48" r="4" fill="#c4a05a" />
       </g>
 
-      {/* Shield — centre hero */}
+      {/* Shield - centre hero */}
       <path
         d="M240 72 L300 98 V168 C300 214 274 244 240 256 C206 244 180 214 180 168 V98 L240 72Z"
         fill="url(#adminShieldGrad)"

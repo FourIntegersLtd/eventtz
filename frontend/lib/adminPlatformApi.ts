@@ -1,4 +1,4 @@
-/** Re-export facade — prefer domain modules for new imports; this file keeps existing call sites stable. */
+/** Re-export facade - prefer domain modules for new imports; this file keeps existing call sites stable. */
 export {
   type AdminDashboardSummary,
   type AdminDashboardTimeBucket,

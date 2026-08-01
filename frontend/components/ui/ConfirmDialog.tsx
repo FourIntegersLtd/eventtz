@@ -24,7 +24,7 @@ export type ConfirmDialogProps = {
 
 /**
  * Shared "are you sure?" dialog for destructive/irreversible portal actions
- * (withdraw quote, cancel booking, mark complete, sign out) — built on the
+ * (withdraw quote, cancel booking, mark complete, sign out) - built on the
  * base `Modal` primitive so every confirmation looks and behaves the same.
  */
 export function ConfirmDialog({

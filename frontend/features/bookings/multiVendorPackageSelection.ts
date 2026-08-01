@@ -42,5 +42,5 @@ export function optionLabel(option: BrowsePricingOption): string {
     option.priceDisplay != null && option.priceDisplay !== ""
       ? `£${option.priceDisplay}`
       : "Quote on request";
-  return `${option.heading} — ${price}`;
+  return `${option.heading} - ${price}`;
 }

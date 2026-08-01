@@ -109,7 +109,7 @@ export function AdminReviewDetailView({ reviewId }: Props) {
         <div className="px-5 py-4">
           <p className="text-[13px] font-medium text-neutral-500">Review</p>
           <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-neutral-800">
-            {review.body || "—"}
+            {review.body || "-"}
           </p>
         </div>
 
@@ -118,13 +118,13 @@ export function AdminReviewDetailView({ reviewId }: Props) {
             <div className="px-5 py-4 sm:border-r sm:border-neutral-100">
               <dt className="text-[13px] text-neutral-500">Client</dt>
               <dd className="mt-0.5 text-sm font-medium text-neutral-900">
-                {review.client_email ?? "—"}
+                {review.client_email ?? "-"}
               </dd>
             </div>
             <div className="border-t border-neutral-100 px-5 py-4 sm:border-t-0">
               <dt className="text-[13px] text-neutral-500">Event</dt>
               <dd className="mt-0.5 text-sm font-medium text-neutral-900">
-                {review.booking_event_name ?? "—"}
+                {review.booking_event_name ?? "-"}
               </dd>
               <p className="mt-0.5 text-xs text-neutral-500">
                 {formatReviewEventDate(review.booking_event_date)}

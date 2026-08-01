@@ -32,17 +32,17 @@ export function AdminBookingDetailMainContent({
         <dl className="mt-3 divide-y divide-neutral-100 overflow-hidden rounded-2xl border border-neutral-100 bg-white">
           <div className="grid gap-0 sm:grid-cols-2">
             <div className="space-y-3 px-5 py-4 sm:border-r sm:border-neutral-100">
-              <Field label="Event date" value={String(booking.event_date ?? "—")} />
+              <Field label="Event date" value={String(booking.event_date ?? "-")} />
               <Field
                 label="Postcode"
-                value={booking.event_postcode != null ? String(booking.event_postcode) : "—"}
+                value={booking.event_postcode != null ? String(booking.event_postcode) : "-"}
               />
               <Field label="Paid" value={formatTs(booking.paid_at)} />
             </div>
             <div className="space-y-3 border-t border-neutral-100 px-5 py-4 sm:border-t-0">
-              <Field label="Client" value={String(booking.client_email ?? "—")} />
-              <Field label="Vendor" value={String(booking.vendor_display_name ?? "—")} />
-              <Field label="Vendor email" value={String(booking.vendor_email ?? "—")} />
+              <Field label="Client" value={String(booking.client_email ?? "-")} />
+              <Field label="Vendor" value={String(booking.vendor_display_name ?? "-")} />
+              <Field label="Vendor email" value={String(booking.vendor_email ?? "-")} />
             </div>
           </div>
 
@@ -53,7 +53,7 @@ export function AdminBookingDetailMainContent({
                 value={
                   booking.payment_amount_gbp != null
                     ? `£${Number(booking.payment_amount_gbp).toFixed(2)}`
-                    : "—"
+                    : "-"
                 }
               />
               <Field label="Client confirmed" value={formatTs(booking.client_completion_confirmed_at)} />

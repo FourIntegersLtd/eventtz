@@ -9,7 +9,7 @@ export function dashboardPathForUserType(userType: UserType | undefined): string
 
 /**
  * Role-gated path prefixes. A `?next=` redirect target under one of these is only safe to
- * honor if the signed-in user's resolved role matches — otherwise the target's page just
+ * honor if the signed-in user's resolved role matches - otherwise the target's page just
  * renders a broken shell (RequireAuth checks session only, not role) with every data call
  * 403ing. This matters most when a user's role changes between sessions (e.g. a vendor
  * account promoted to admin still has an old `/login?next=/vendor/dashboard` link from a

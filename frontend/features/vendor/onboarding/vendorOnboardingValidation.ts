@@ -128,7 +128,7 @@ const step5Schema = vendorDataSchema.superRefine((d, ctx) => {
     ) {
       addIssue(
         ctx,
-        `Max bookings per day (${MIN_MAX_BOOKINGS_PER_DAY}–${MAX_MAX_BOOKINGS_PER_DAY})`,
+        `Max bookings per day (${MIN_MAX_BOOKINGS_PER_DAY}-${MAX_MAX_BOOKINGS_PER_DAY})`,
       );
     }
   }
@@ -162,7 +162,7 @@ const STEP_SCHEMAS: Partial<Record<number, z.ZodType<VendorOnboardingData>>> = {
   8: step8Schema,
 };
 
-/** Step-banner error labels/messages for vendor onboarding (steps 1–8). */
+/** Step-banner error labels/messages for vendor onboarding (steps 1-8). */
 export function vendorOnboardingStepErrors(step: number, d: VendorOnboardingData): string[] {
   const schema = STEP_SCHEMAS[step];
   if (!schema) return [];

@@ -2,7 +2,7 @@ import type { AdminDisputeCase } from "@/lib/adminPlatformApi";
 import { participantDisputeBookingLabel, participantDisputeStatusBadgeClass } from "@/lib/bookingDisputeHelpers";
 
 export function formatWhen(iso: string | null | undefined): string {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return String(iso);
   return d.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });
@@ -25,7 +25,7 @@ export function resolutionActionLabel(a: AdminDisputeCase["resolution_action"]):
     case "partial_refund":
       return "Partial refund to client";
     default:
-      return "—";
+      return "-";
   }
 }
 
@@ -43,7 +43,7 @@ export const RESOLUTION_ACTIONS: NonNullable<AdminDisputeCase["resolution_action
 ];
 
 export function formatEventDate(iso: string | null | undefined): string {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return String(iso);
   return d.toLocaleDateString("en-GB", { dateStyle: "medium" });
@@ -59,7 +59,7 @@ export function openedByLabel(
 }
 
 export function bookingStatusLabel(status: string | null | undefined): string {
-  if (!status) return "—";
+  if (!status) return "-";
   return status.replace(/_/g, " ");
 }
 

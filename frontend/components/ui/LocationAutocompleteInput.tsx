@@ -39,7 +39,7 @@ export type LocationAutocompleteInputProps = {
   icon?: LucideIcon;
   /** Override the icon's classes (e.g. to recolor for a dark search bar). */
   iconClassName?: string;
-  /** Override the input's classes entirely — use this to embed the field in a custom bar/pill. */
+  /** Override the input's classes entirely - use this to embed the field in a custom bar/pill. */
   inputClassName?: string;
   /** Outer wrapper classes (defaults to `relative`). */
   className?: string;
@@ -48,7 +48,7 @@ export type LocationAutocompleteInputProps = {
   /**
    * Place suggestions via Photon.
    * - `true` (default): always
-   * - `"lg"`: desktop only — mobile stays a plain text input (avoids dropdown interrupting typing)
+   * - `"lg"`: desktop only - mobile stays a plain text input (avoids dropdown interrupting typing)
    * - `false`: never (free-text only)
    */
   enableSuggestions?: boolean | "lg";
@@ -57,7 +57,7 @@ export type LocationAutocompleteInputProps = {
 };
 
 /**
- * City/area autocomplete (Photon/OSM place search) — reusable for vendor onboarding and search.
+ * City/area autocomplete (Photon/OSM place search) - reusable for vendor onboarding and search.
  * Free text is always accepted; suggestions help pick a recognised place in the selected country.
  */
 export function LocationAutocompleteInput({

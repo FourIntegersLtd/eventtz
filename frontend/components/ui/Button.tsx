@@ -23,7 +23,7 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 /**
  * Base button primitive for the signed-in portal. Every variant carries a
  * press state (active:scale) and, when `loading`, replaces its label with an
- * inline spinner rather than blocking behind a separate overlay — async
+ * inline spinner rather than blocking behind a separate overlay - async
  * actions (accept/decline/pay/submit) should always use this so the button
  * itself communicates progress.
  */

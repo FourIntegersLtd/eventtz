@@ -28,7 +28,7 @@ export function Field({ label, value }: { label: string; value: React.ReactNode 
 export function ExpandableId({ value }: { value: unknown; label: string }) {
   const full = value != null ? String(value).trim() : "";
   const [open, setOpen] = useState(false);
-  if (!full) return <span className="text-neutral-400">—</span>;
+  if (!full) return <span className="text-neutral-400">-</span>;
   const compact = shortId(full);
   return (
     <div className="text-left">
@@ -54,7 +54,7 @@ export function ExpandableId({ value }: { value: unknown; label: string }) {
 }
 
 export function formatTs(v: unknown): React.ReactNode {
-  if (v == null) return <span className="text-neutral-400">—</span>;
+  if (v == null) return <span className="text-neutral-400">-</span>;
   const d = new Date(String(v));
   if (Number.isNaN(d.getTime())) return String(v);
   return d.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });

@@ -406,7 +406,7 @@ export function MarketplaceExploreView({
 
       {state.fromPlannerPlanId && !loading ? (
         <div className="mt-4 rounded-xl border border-primary/15 bg-[#faf8fc] px-4 py-3 text-sm text-neutral-800">
-          From your celebration plan — open a vendor to pick packages, or select several and
+          From your celebration plan - open a vendor to pick packages, or select several and
           message them together.
         </div>
       ) : null}
@@ -533,7 +533,7 @@ export function MarketplaceExploreView({
                 </div>
                 {sectionCards.length === 0 ? (
                   <LottieEmptyPanel
-                    lottie="searchNoResults"
+                    lottie="emptyInbox"
                     title="No vendors for this yet"
                     description="Try another category or check back as we add more vendors."
                   />

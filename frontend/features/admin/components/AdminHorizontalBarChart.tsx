@@ -19,7 +19,7 @@ type AdminHorizontalBarChartProps = {
 };
 
 /**
- * Category / ranking bars — labels on the Y axis so long names are not date-truncated
+ * Category / ranking bars - labels on the Y axis so long names are not date-truncated
  * or clipped the way vertical X-axis ticks are.
  */
 export function AdminHorizontalBarChart({

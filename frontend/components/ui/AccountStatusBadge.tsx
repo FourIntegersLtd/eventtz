@@ -3,7 +3,7 @@ export type AccountStatusBadgeProps = {
   className?: string;
 };
 
-/** Admin client account — active vs suspended. */
+/** Admin client account - active vs suspended. */
 export function AccountStatusBadge({ suspended, className = "" }: AccountStatusBadgeProps) {
   const tone = suspended
     ? "bg-neutral-200 text-neutral-700"

@@ -6,7 +6,7 @@ export type VendorProfileStatusBadgeProps = {
   className?: string;
 };
 
-/** Vendor onboarding form lifecycle — draft, submitted, complete. */
+/** Vendor onboarding form lifecycle - draft, submitted, complete. */
 export function VendorProfileStatusBadge({
   status,
   className = "",

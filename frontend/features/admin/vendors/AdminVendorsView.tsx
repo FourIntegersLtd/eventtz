@@ -99,7 +99,7 @@ export function AdminVendorsView() {
           <AdminVendorsTable rows={rows} onSelect={setSelectedUserId} />
           <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-neutral-600">
             <span>
-              Showing {rows.length ? offset + 1 : 0}–{offset + rows.length} of {total}
+              Showing {rows.length ? offset + 1 : 0}-{offset + rows.length} of {total}
             </span>
             <div className="flex gap-2">
               <button

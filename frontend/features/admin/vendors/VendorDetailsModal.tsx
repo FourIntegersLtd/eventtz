@@ -115,7 +115,7 @@ export function VendorDetailsModal({
               <div className="min-w-0">
                 <p className="flex items-center gap-1.5 truncate text-sm text-neutral-600">
                   <Mail className="h-3.5 w-3.5 shrink-0 opacity-60" aria-hidden />
-                  {vendor.email ?? "—"}
+                  {vendor.email ?? "-"}
                 </p>
                 <div className="mt-1.5 flex flex-wrap gap-2">
                   <VendorApprovalStatusBadge status={vendor.approval_status} />

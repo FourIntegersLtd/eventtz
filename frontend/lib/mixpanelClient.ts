@@ -1,6 +1,6 @@
 /**
  * Browser Mixpanel client (OSCE Guide pattern).
- * No-ops when `NEXT_PUBLIC_MIXPANEL_TOKEN` is unset — safe for local/dev.
+ * No-ops when `NEXT_PUBLIC_MIXPANEL_TOKEN` is unset - safe for local/dev.
  *
  * Local debugging: set NEXT_PUBLIC_MIXPANEL_DEBUG=true (or leave unset in
  * development) to log [mixpanel] lines and enable the SDK debug flag.
@@ -56,7 +56,7 @@ export function initMixpanel(): void {
   }
   if (!enabled()) {
     warn(
-      "init skipped — NEXT_PUBLIC_MIXPANEL_TOKEN is empty. Add it to frontend/.env and restart `npm run dev`.",
+      "init skipped - NEXT_PUBLIC_MIXPANEL_TOKEN is empty. Add it to frontend/.env and restart `npm run dev`.",
     );
     return;
   }

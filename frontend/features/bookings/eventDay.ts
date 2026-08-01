@@ -1,4 +1,4 @@
-/** True once the event day (UTC) has fully passed — post-event nudges start then.
+/** True once the event day (UTC) has fully passed - post-event nudges start then.
  *  Mirrors backend `event_day_over` in completion_rules.py for banner gating. */
 export function eventDayOver(eventDate: string, eventEndDate?: string | null): boolean {
   const dayStr = (eventEndDate || eventDate || "").slice(0, 10);

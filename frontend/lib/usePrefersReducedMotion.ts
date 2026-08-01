@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-/** Syncs with `prefers-reduced-motion: reduce` — use to skip decorative motion/Lottie. */
+/** Syncs with `prefers-reduced-motion: reduce` - use to skip decorative motion/Lottie. */
 export function usePrefersReducedMotion(): boolean {
   const [reduceMotion, setReduceMotion] = useState(false);
 

@@ -45,18 +45,18 @@ export function vendorFunnelDonut(funnel: VendorAnalytics["funnel"]): { name: st
 }
 
 export function formatVendorPct(n: number | null | undefined): string {
-  if (n == null || Number.isNaN(n)) return "—";
+  if (n == null || Number.isNaN(n)) return "-";
   return `${(Number(n) * 100).toFixed(1)}%`;
 }
 
 export function formatVendorSeconds(s: number | null | undefined): string {
-  if (s == null || Number.isNaN(s)) return "—";
+  if (s == null || Number.isNaN(s)) return "-";
   if (s < 60) return `${Math.round(s)}s`;
   if (s < 3600) return `${Math.round(s / 60)} min`;
   return `${(s / 3600).toFixed(1)} h`;
 }
 
 export function formatVendorMoney(n: number | null | undefined): string {
-  if (n == null || Number.isNaN(n)) return "—";
+  if (n == null || Number.isNaN(n)) return "-";
   return `£${Number(n).toLocaleString("en-GB", { maximumFractionDigits: 0 })}`;
 }

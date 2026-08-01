@@ -34,7 +34,7 @@ type VendorPackageOption = {
   price: string;
 };
 
-/** A package's `price` field is free text (e.g. "£1,200" or "1200") — pull out
+/** A package's `price` field is free text (e.g. "£1,200" or "1200") - pull out
  * the leading number so it's usable to prefill the quote's price field. */
 function numericPricePrefill(raw: string): string {
   const match = raw.match(/[\d,]+(\.\d+)?/);
@@ -44,7 +44,7 @@ function numericPricePrefill(raw: string): string {
 
 const CUSTOM_OPTION_ID = "__custom__";
 
-/** Slide-over — sending a custom quote is a step inside the chat, not a separate flow. */
+/** Slide-over - sending a custom quote is a step inside the chat, not a separate flow. */
 export function VendorQuoteFormModal({
   isOpen,
   onClose,
@@ -90,7 +90,7 @@ export function VendorQuoteFormModal({
         }
       })
       .catch(() => {
-        /* no packages on file — falls back to the free-text option */
+        /* no packages on file - falls back to the free-text option */
       });
 
     if (quotePrefill) {
@@ -201,7 +201,7 @@ export function VendorQuoteFormModal({
     >
       <div className="space-y-4">
         <p className="text-sm leading-relaxed text-neutral-600">
-          A custom quote is a priced offer you send from chat — for a package you already
+          A custom quote is a priced offer you send from chat - for a package you already
           list, or a one-off price that isn&apos;t on your profile. It creates a booking
           request the client can accept or decline from Bookings.
         </p>
@@ -210,7 +210,7 @@ export function VendorQuoteFormModal({
           label="Event name"
           value={eventName}
           onChange={(e) => setEventName(e.target.value)}
-          placeholder="e.g. Sarah & James — wedding reception"
+          placeholder="e.g. Sarah & James - wedding reception"
           maxLength={500}
         />
         <div className="grid min-w-0 gap-3 sm:grid-cols-2">

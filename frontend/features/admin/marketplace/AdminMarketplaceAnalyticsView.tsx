@@ -104,7 +104,7 @@ export function AdminMarketplaceAnalyticsView() {
         <AdminCommercePeriodFilter period={period} onPeriodChange={handlePeriodChange} />
       </div>
 
-      {/* One overview surface — hero metrics + quiet secondary strip */}
+      {/* One overview surface - hero metrics + quiet secondary strip */}
       <section className={`${adminCard} overflow-hidden`}>
         <div className="flex items-start justify-between gap-2 border-b border-neutral-100 px-5 py-3.5">
           <div>

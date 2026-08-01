@@ -17,7 +17,7 @@ export const passwordSchema = z
   .string()
   .min(6, "Password must be at least 6 characters.");
 
-/** Admin console passwords — stricter policy matching backend. */
+/** Admin console passwords - stricter policy matching backend. */
 export const ADMIN_PASSWORD_REQUIREMENTS = [
   "At least 6 characters",
   "One uppercase letter",

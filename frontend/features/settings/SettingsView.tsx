@@ -15,7 +15,7 @@ export type SettingsViewProps = {
 };
 
 /**
- * Account preferences — separate from vendor Profile (public listing) and from
+ * Account preferences - separate from vendor Profile (public listing) and from
  * operational pages (bookings, payments, disputes).
  */
 export function SettingsView({ role }: SettingsViewProps) {

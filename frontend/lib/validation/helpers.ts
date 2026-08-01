@@ -16,7 +16,7 @@ export type ParseFormOk<T> = { ok: true; data: T };
 export type ParseFormFail = {
   ok: false;
   fieldErrors: Record<string, string>;
-  /** First error — useful for a single banner when the UI has one error slot. */
+  /** First error - useful for a single banner when the UI has one error slot. */
   formError: string;
 };
 

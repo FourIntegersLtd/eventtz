@@ -3,7 +3,7 @@ export const PLANNER_COPY = {
   heroEyebrow: "AI Event Planner",
   heroHeadline: "Eventtz",
   heroSupport:
-    "Describe your celebration once — we’ll assemble vendors, a budget, and next steps.",
+    "Describe your celebration once - we’ll assemble vendors, a budget, and next steps.",
   promptPlaceholder:
     "Help me plan my 30th birthday in London for about 120 guests with a budget of £5,000.",
   submitLabel: "Plan my event",
@@ -14,7 +14,7 @@ export const PLANNER_COPY = {
     "Building your budget…",
   ],
   simpleIntentHint:
-    "That looks like a simple vendor search. Browse the marketplace instead — or describe a full celebration to plan.",
+    "That looks like a simple vendor search. Browse the marketplace instead - or describe a full celebration to plan.",
   browseCta: "Browse vendors",
   emptyPlans: "No saved plans yet. Describe a celebration above to get started.",
   replaceLabel: "Replace",
@@ -22,8 +22,8 @@ export const PLANNER_COPY = {
   bookNowLabel: "Book now",
   browseRecommendationsLabel: "Browse these vendors",
   browseRecommendationsHint:
-    "Continue in the marketplace to pick packages and message vendors — the same flow as browsing without AI.",
+    "Continue in the marketplace to pick packages and message vendors - the same flow as browsing without AI.",
   priceOnRequest: "Price on request",
-  unavailable: "No longer available — try Replace",
+  unavailable: "No longer available - try Replace",
   overBudget: "Estimated total is over your budget",
 } as const;

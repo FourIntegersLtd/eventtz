@@ -8,7 +8,7 @@ type LandingSectionHeadingProps = {
   className?: string;
 };
 
-/** Consistent eyebrow + heading pattern used across landing sections — one accent color, no per-section gradients. */
+/** Consistent eyebrow + heading pattern used across landing sections - one accent color, no per-section gradients. */
 export function LandingSectionHeading({
   eyebrow,
   title,

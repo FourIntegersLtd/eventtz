@@ -23,7 +23,7 @@ export function Skeleton({ className = "" }: SkeletonProps) {
   );
 }
 
-/** Placeholder for a list of booking/notification rows while data is in flight — never a bare spinner. */
+/** Placeholder for a list of booking/notification rows while data is in flight - never a bare spinner. */
 export function SkeletonListRows({ rows = 4, showSpinner = true }: { rows?: number; showSpinner?: boolean }) {
   return (
     <div className="space-y-2" role="status" aria-label="Loading">

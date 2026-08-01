@@ -41,9 +41,9 @@ export function AdminVendorsTable({ rows, onSelect }: AdminVendorsTableProps) {
         <AdminTableBody>
           {rows.map((r) => {
             const p = r.payload ?? {};
-            const biz = payloadStr(p, "businessName") || "—";
-            const email = r.email ?? "—";
-            const updated = r.updated_at ? new Date(r.updated_at).toLocaleString() : "—";
+            const biz = payloadStr(p, "businessName") || "-";
+            const email = r.email ?? "-";
+            const updated = r.updated_at ? new Date(r.updated_at).toLocaleString() : "-";
             const pending = r.approval_status === "pending";
             return (
               <AdminTableRow

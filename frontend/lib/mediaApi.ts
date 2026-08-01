@@ -16,7 +16,7 @@ export async function uploadImage(file: File): Promise<ImageUploadResult> {
   return res.data;
 }
 
-/** Images, PDFs, or videos — used for portfolio video and profile certificates. */
+/** Images, PDFs, or videos - used for portfolio video and profile certificates. */
 export async function uploadFile(file: File): Promise<ImageUploadResult> {
   const fd = new FormData();
   fd.append("file", file, file.name);

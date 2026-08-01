@@ -154,20 +154,20 @@ export function AdminBookingsView() {
                 {rows.map((r) => (
                   <AdminTableRow key={r.id} className={supportRowClass(r.support)}>
                     <AdminTableCell>
-                      <div className="font-medium text-neutral-900">{r.event_name || "—"}</div>
+                      <div className="font-medium text-neutral-900">{r.event_name || "-"}</div>
                       <div className="text-xs text-neutral-500">{r.event_date}</div>
                     </AdminTableCell>
                     <AdminTableCell>
                       <StatusBadge status={r.status} />
                     </AdminTableCell>
                     <AdminTableCell className="max-w-[10rem] truncate text-neutral-700">
-                      {r.client_email ?? "—"}
+                      {r.client_email ?? "-"}
                     </AdminTableCell>
                     <AdminTableCell>
                       <div className="font-medium text-neutral-800">{r.vendor_display_name}</div>
                       <div className="text-xs text-neutral-500">{r.vendor_email ?? ""}</div>
                     </AdminTableCell>
-                    <AdminTableCell className="text-neutral-700">{r.client_total_label ?? "—"}</AdminTableCell>
+                    <AdminTableCell className="text-neutral-700">{r.client_total_label ?? "-"}</AdminTableCell>
                     <AdminTableCell>
                       <PaymentStatusBadge status={r.payment_status} />
                     </AdminTableCell>
@@ -191,7 +191,7 @@ export function AdminBookingsView() {
                           ) : null}
                         </div>
                       ) : (
-                        <span className="text-xs text-neutral-400">—</span>
+                        <span className="text-xs text-neutral-400">-</span>
                       )}
                     </AdminTableCell>
                     <AdminTableCell className="text-right">
@@ -210,7 +210,7 @@ export function AdminBookingsView() {
           </AdminTable>
           <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-neutral-600">
             <span>
-              Showing {rows.length ? offset + 1 : 0}–{offset + rows.length} of {total}
+              Showing {rows.length ? offset + 1 : 0}-{offset + rows.length} of {total}
             </span>
             <div className="flex gap-2">
               <button

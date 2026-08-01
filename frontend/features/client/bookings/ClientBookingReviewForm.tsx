@@ -19,7 +19,7 @@ type ClientBookingReviewFormProps = {
 
 /**
  * One-tap nudge: tapping a star sets the rating and reveals the (required)
- * write-up immediately, auto-focused — the client never has to hunt for a
+ * write-up immediately, auto-focused - the client never has to hunt for a
  * separate "leave a review" action after a booking completes.
  */
 export function ClientBookingReviewForm({

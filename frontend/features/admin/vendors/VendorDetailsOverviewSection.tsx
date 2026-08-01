@@ -64,7 +64,7 @@ export function VendorDetailsOverviewSection({ profile }: Props) {
           {payloadEmail && payloadEmail !== loginEmail ? (
             <ProfileField icon={Mail} label="Profile email" value={payloadEmail} />
           ) : null}
-          <ProfileField icon={Phone} label="Phone" value={phone || "—"} />
+          <ProfileField icon={Phone} label="Phone" value={phone || "-"} />
           {socialLinks.length > 0 ? (
             <div>
               <p className="mb-2 text-xs font-medium text-neutral-500">Social</p>
@@ -78,7 +78,7 @@ export function VendorDetailsOverviewSection({ profile }: Props) {
         </ProfileSection>
 
         <ProfileSection icon={MapPin} title="Location">
-          <ProfileField icon={MapPin} label="Base city" value={payloadStr(p, "baseCity") || "—"} />
+          <ProfileField icon={MapPin} label="Base city" value={payloadStr(p, "baseCity") || "-"} />
           <ProfileField icon={Truck} label="Travel radius" value={travelRadiusLabel} />
           <div>
             <p className="mb-2 text-xs font-medium text-neutral-500">Delivery modes</p>
@@ -104,8 +104,8 @@ export function VendorDetailsOverviewSection({ profile }: Props) {
           <TagPills items={eventTypes} />
         </div>
         <div className="grid gap-3 border-t border-neutral-100 pt-4 sm:grid-cols-2">
-          <ProfileField icon={Clock} label="Hourly" value={hourly || "—"} />
-          <ProfileField icon={CalendarDays} label="Daily" value={daily || "—"} />
+          <ProfileField icon={Clock} label="Hourly" value={hourly || "-"} />
+          <ProfileField icon={CalendarDays} label="Daily" value={daily || "-"} />
         </div>
       </ProfileSection>
 
@@ -117,7 +117,7 @@ export function VendorDetailsOverviewSection({ profile }: Props) {
                 typeof pkg === "object" && pkg !== null ? (pkg as Record<string, unknown>) : {};
               const title = payloadStr(row, "title") || `Package ${i + 1}`;
               const price = formatMoneyLabel(payloadStr(row, "price"));
-              const duration = payloadStr(row, "duration") || "—";
+              const duration = payloadStr(row, "duration") || "-";
               return (
                 <PackageRow
                   key={`${String(row.id ?? i)}`}

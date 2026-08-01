@@ -9,7 +9,7 @@ type Props = {
   subtext?: string;
   supporting?: string;
   children?: ReactNode;
-  /** Index offset when nesting inside a step that already used indices 0–n */
+  /** Index offset when nesting inside a step that already used indices 0-n */
   indexOffset?: number;
 };
 
@@ -54,7 +54,7 @@ export function OnboardingQuestionLayout({
   );
 }
 
-/** Sub-question within a step — animated headline + content block. */
+/** Sub-question within a step - animated headline + content block. */
 export function OnboardingSubQuestion({
   headline,
   subtext,

@@ -8,7 +8,7 @@ export type VendorPublicMetrics = {
   completed_bookings?: number;
   /** Average first-response time in seconds. */
   avg_response_seconds?: number | null;
-  /** Completed / client enquiries (0–1). */
+  /** Completed / client enquiries (0-1). */
   conversion_rate?: number | null;
   review_average?: number | null;
   review_count?: number;
@@ -88,7 +88,7 @@ export type VendorMetricItem = {
   value: string;
 };
 
-/** Build display items from public metrics — omit empty / unknown values. */
+/** Build display items from public metrics - omit empty / unknown values. */
 export function buildVendorMetricItems(
   metrics: VendorPublicMetrics,
   options?: { includeRating?: boolean; includeConversion?: boolean },

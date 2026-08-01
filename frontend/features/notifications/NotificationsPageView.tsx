@@ -27,7 +27,7 @@ const KIND_ICON: Record<NotificationFeedItem["kind"], typeof Bell> = {
 };
 
 /**
- * Full notification history for one portal — the destination behind the bell
+ * Full notification history for one portal - the destination behind the bell
  * dropdown's "View all" link. Opening this page marks booking notifications
  * read, mirroring the dropdown's behaviour.
  */
@@ -52,7 +52,7 @@ export function NotificationsPageView({ portal }: NotificationsPageViewProps) {
   useEffect(() => {
     load();
     void markAllRead().catch(() => {
-      /* best-effort — the feed still renders either way */
+      /* best-effort - the feed still renders either way */
     });
     // Runs once per mount; `load`/`markAllRead` are stable for a given portal.
     // eslint-disable-next-line react-hooks/exhaustive-deps

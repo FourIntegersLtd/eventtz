@@ -21,7 +21,7 @@ export type DrawerProps = {
 /**
  * Slide-over panel used for the inline chat drawer, quote form, and dispute
  * form. Focus-trapped, Escape-to-close, restores focus to the trigger on
- * close — the interaction contract every consumer inherits for free instead
+ * close - the interaction contract every consumer inherits for free instead
  * of re-implementing it per feature.
  */
 export function Drawer({

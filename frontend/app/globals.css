@@ -86,7 +86,7 @@ body {
   color: var(--accent-violet);
 }
 
-/* Vendor reviews carousel — directional enter (VendorReviewsSection) */
+/* Vendor reviews carousel - directional enter (VendorReviewsSection) */
 @keyframes review-enter-next {
   from {
     opacity: 0;
@@ -124,7 +124,7 @@ body {
   }
 }
 
-/* Vendor onboarding wizard — staggered step item entrance */
+/* Vendor onboarding wizard - staggered step item entrance */
 @keyframes onboarding-step-in {
   from {
     opacity: 0;
@@ -146,7 +146,7 @@ body {
   }
 }
 
-/* Shared overlay/panel motion tokens — used by Drawer, Modal, Toast (components/ui). */
+/* Shared overlay/panel motion tokens - used by Drawer, Modal, Toast (components/ui). */
 @keyframes ui-fade-in {
   from {
     opacity: 0;
@@ -293,7 +293,7 @@ body {
   margin-top: 2.5rem;
 }
 
-/* Public blog reading surface — Substack-like measure + body size */
+/* Public blog reading surface - Substack-like measure + body size */
 .blog-prose {
   color: rgb(38 38 38);
   font-size: 1.25rem;
@@ -388,7 +388,7 @@ body {
   border-radius: 0.5rem;
 }
 
-/* TipTap admin editor — same structural styles (Tailwind preflight removes list markers) */
+/* TipTap admin editor - same structural styles (Tailwind preflight removes list markers) */
 .prose-blog {
   text-align: left;
   color: rgb(23 23 23);
@@ -567,7 +567,7 @@ body {
   height: 0;
 }
 
-/* Custom day/month/year picker — avoids iOS native date input overflow */
+/* Custom day/month/year picker - avoids iOS native date input overflow */
 .date-picker-shell {
   width: 100%;
   max-width: 100%;
@@ -592,7 +592,7 @@ body {
   appearance: none;
 }
 
-/* Native date input width containment (desktop only — visibility via Tailwind in DateInput). */
+/* Native date input width containment (desktop only - visibility via Tailwind in DateInput). */
 .date-input-shell {
   grid-template-columns: minmax(0, 1fr);
   width: 100%;
@@ -642,7 +642,7 @@ body {
   border-radius: 0.75rem;
 }
 
-/* Mobile — hide horizontal scrollbar tracks app-wide; swipe scroll still works */
+/* Mobile - hide horizontal scrollbar tracks app-wide; swipe scroll still works */
 @media (max-width: 767px) {
   *::-webkit-scrollbar:horizontal {
     display: none;

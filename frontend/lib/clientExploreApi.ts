@@ -9,14 +9,14 @@ export type ExploreVendor = {
   approval_status?: VendorApprovalStatus | string;
   payload: Record<string, unknown>;
   updated_at?: string;
-  /** Average star rating (1–5), when reviews exist. */
+  /** Average star rating (1-5), when reviews exist. */
   review_average?: number | null;
   review_count?: number;
   /** All-time completed bookings. */
   completed_bookings?: number;
   /** Average first-response time in seconds. */
   avg_response_seconds?: number | null;
-  /** Completed / client enquiries (0–1). */
+  /** Completed / client enquiries (0-1). */
   conversion_rate?: number | null;
 };
 
@@ -28,7 +28,7 @@ export type ExploreVendorFeaturedReview = {
 
 export type ExploreVendorSearchRow = ExploreVendor & {
   matched_services: string[];
-  /** exact | related | fallback — close-enough search tier */
+  /** exact | related | fallback - close-enough search tier */
   match_tier?: "exact" | "related" | "fallback";
   featured_review?: ExploreVendorFeaturedReview | null;
   match_hint?: string | null;
@@ -100,7 +100,7 @@ export async function fetchExploreVendors(): Promise<ExploreVendor[]> {
   return data.vendors ?? [];
 }
 
-/** Single listed vendor — use on `/client/browse/[id]` instead of loading the full explore list. */
+/** Single listed vendor - use on `/client/browse/[id]` instead of loading the full explore list. */
 export async function fetchExploreVendorById(
   vendorUserId: string,
 ): Promise<ExploreVendor | null> {
@@ -143,7 +143,7 @@ export async function fetchExploreVendorsSearch(
   if (searchText) sp.set("q", searchText);
   if (q.types?.length) sp.set("types", q.types.join(","));
   if (q.location?.trim() && q.query?.trim()) {
-    // Dedicated location (when distinct from q) — backend treats as soft signal.
+    // Dedicated location (when distinct from q) - backend treats as soft signal.
     sp.set("location", q.location.trim());
   }
   if (q.dates?.length && !q.flexible) {

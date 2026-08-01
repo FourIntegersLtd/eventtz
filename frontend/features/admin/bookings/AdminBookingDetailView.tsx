@@ -85,7 +85,7 @@ export function AdminBookingDetailView({ bookingId }: Props) {
   const pricing = asPricing(booking.pricing);
   const support = asSupport(booking.support);
   const eventName = String(booking.event_name ?? "Booking");
-  const quoteTotalLabel = String(booking.total_label ?? booking.client_total_label ?? "—");
+  const quoteTotalLabel = String(booking.total_label ?? booking.client_total_label ?? "-");
   const openDispute = support?.open_dispute;
   const holdActive = Boolean(support?.support_hold);
 

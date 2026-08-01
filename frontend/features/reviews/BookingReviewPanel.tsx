@@ -8,7 +8,7 @@ type BookingReviewPanelProps = {
   review: BookingReviewDisplay | null | undefined;
   emptyLabel?: string;
   showReviewer?: boolean;
-  /** @deprecated Amber callout retired — kept for call-site compatibility. */
+  /** @deprecated Amber callout retired - kept for call-site compatibility. */
   variant?: "default" | "amber";
 };
 

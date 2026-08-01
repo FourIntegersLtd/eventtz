@@ -12,7 +12,7 @@ export function payloadStrArr(p: Record<string, unknown>, key: string): string[]
 }
 
 export function displayValue(v: unknown): string {
-  if (v == null) return "—";
+  if (v == null) return "-";
   if (Array.isArray(v)) return v.map((x) => String(x)).join(", ");
   if (typeof v === "object") return JSON.stringify(v);
   return String(v);
@@ -31,7 +31,7 @@ const DELIVERY_MODE_LABELS: Record<string, string> = {
 
 /** Turn snake_case API values into readable labels. */
 export function formatPayloadLabel(value: string): string {
-  if (!value.trim()) return "—";
+  if (!value.trim()) return "-";
   const known = DELIVERY_MODE_LABELS[value.trim()];
   if (known) return known;
   return value
@@ -41,12 +41,12 @@ export function formatPayloadLabel(value: string): string {
 }
 
 export function formatPayloadLabels(values: string[]): string[] {
-  return values.map((v) => formatPayloadLabel(v)).filter((v) => v !== "—");
+  return values.map((v) => formatPayloadLabel(v)).filter((v) => v !== "-");
 }
 
 export function formatMoneyLabel(value: string): string {
   const trimmed = value.trim();
-  if (!trimmed || trimmed === "—") return "—";
+  if (!trimmed || trimmed === "-") return "-";
   if (/^£/.test(trimmed)) return trimmed;
   if (/^\d/.test(trimmed)) return `£${trimmed}`;
   return trimmed;

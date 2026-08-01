@@ -33,7 +33,7 @@ import {
 export type PortalShellProps = {
   title: string;
   children: ReactNode;
-  /** Client accounts use client routes only — no vendor onboarding/profile in the sidebar. */
+  /** Client accounts use client routes only - no vendor onboarding/profile in the sidebar. */
   portal?: PortalRole;
 };
 
@@ -310,13 +310,12 @@ export function PortalShell({
         confirmLabel="Sign out"
         confirmLoadingLabel="Signing out…"
         confirmVariant="destructive"
-        lottie="welcome"
         loading={signingOut}
         onCancel={() => setSignOutOpen(false)}
         onConfirm={() => void handleSignOut()}
       />
 
-      {/* Mobile top bar — fixed height; page scroll is in main only */}
+      {/* Mobile top bar - fixed height; page scroll is in main only */}
       <header className="app-viewport-shell__mobile-nav z-30 flex items-center justify-between gap-3 border-b border-neutral-200/60 bg-white/80 px-4 backdrop-blur-xl md:hidden">
         <EventtzLogo variant="sidebar" priority href={logoHref} className="min-w-0 shrink" />
         <div className="flex shrink-0 items-center gap-1.5">
@@ -372,7 +371,7 @@ export function PortalShell({
       ) : null}
 
       <div className="app-viewport-shell__body w-full min-w-0 md:grid-cols-[248px_minmax(0,1fr)]">
-        {/* Desktop sidebar — fixed column height; nav scrolls inside */}
+        {/* Desktop sidebar - fixed column height; nav scrolls inside */}
         <aside className="app-viewport-shell__sidebar border-r border-neutral-200/60 bg-white/70 px-4 py-5 backdrop-blur-xl md:px-5">
           <div className="shrink-0 px-1">
             <EventtzLogo variant="sidebar" priority href={logoHref} />

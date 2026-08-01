@@ -242,7 +242,7 @@ export function ClientVendorBrowseDetailView() {
     );
   })();
 
-  // Signed-in clients keep the portal shell (sidebar, notification bell, sign-out) throughout —
+  // Signed-in clients keep the portal shell (sidebar, notification bell, sign-out) throughout -
   // it should never disappear just because they navigated into a vendor's profile.
   if (isClient) {
     return (

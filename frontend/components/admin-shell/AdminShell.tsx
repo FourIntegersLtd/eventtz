@@ -164,7 +164,7 @@ function AdminUserFooter({
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-200 text-xs font-semibold text-neutral-700">
           {userInitial(email)}
         </span>
-        <p className="min-w-0 flex-1 truncate text-xs text-neutral-600">{email ?? "—"}</p>
+        <p className="min-w-0 flex-1 truncate text-xs text-neutral-600">{email ?? "-"}</p>
       </div>
       <Button
         variant="ghost"

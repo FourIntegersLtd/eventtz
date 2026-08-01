@@ -8,7 +8,7 @@ export type ParticipantDisputeStatusBadgeProps = {
   className?: string;
 };
 
-/** Color-coded dispute case status — use on list rows, detail headers, and booking panels. */
+/** Color-coded dispute case status - use on list rows, detail headers, and booking panels. */
 export function ParticipantDisputeStatusBadge({
   status,
   className = "",

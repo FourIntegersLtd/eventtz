@@ -37,7 +37,7 @@ export type ClientDashboardState = {
   completedCount: number;
   /** Client-initiated requests still waiting on the vendor to accept/decline/quote. */
   awaitingVendorCount: number;
-  /** Vendor-sent quotes waiting on the client to accept — a distinct, more urgent bucket. */
+  /** Vendor-sent quotes waiting on the client to accept - a distinct, more urgent bucket. */
   awaitingClientCount: number;
   bookingNotificationsUnread: number;
   chatUnread: number;
@@ -47,7 +47,7 @@ export type ClientDashboardState = {
   acceptedUpcoming: ClientBookingListItem[];
   upcomingAgenda: ClientBookingListItem[];
   bookingsByDate: ClientBookingsByDate;
-  /** Completed bookings with no review yet — powers the one-tap review nudge. */
+  /** Completed bookings with no review yet - powers the one-tap review nudge. */
   needsReview: ClientBookingListItem[];
   errorMessage: string | null;
 };

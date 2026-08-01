@@ -31,7 +31,7 @@ const POLL_MS = 50_000;
 type Props = {
   bookingId: string;
   role: PortalRole;
-  /** Current booking row status — gates “open new dispute” to match backend rules. */
+  /** Current booking row status - gates “open new dispute” to match backend rules. */
   bookingStatus: string;
   /** Inline card (default) or compact row + slide-over drawer (booking detail panels). */
   presentation?: "inline" | "drawer";

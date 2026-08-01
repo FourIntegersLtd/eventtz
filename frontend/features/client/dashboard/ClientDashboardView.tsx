@@ -83,7 +83,7 @@ export function ClientDashboardView() {
           priority: 2,
           tone: "info",
           title: `Waiting for ${b.vendor_display_name} to confirm`,
-          subtitle: `${b.event_name} · you've confirmed — the vendor is paid once they confirm too`,
+          subtitle: `${b.event_name} · you've confirmed - the vendor is paid once they confirm too`,
           href: `/client/bookings/${b.id}`,
           ctaLabel: "View",
         });

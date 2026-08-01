@@ -1,6 +1,6 @@
 /**
  * Country-scoped place suggestions via Photon (Komoot).
- * https://photon.komoot.io — public; respect fair use (debounce, don't hammer).
+ * https://photon.komoot.io - public; respect fair use (debounce, don't hammer).
  */
 
 import {
@@ -103,18 +103,18 @@ export function radiusOptionsForMarket(market: MarketConfig): {
     { value: "under_50", label: `Under 50 ${unit}`, context: `About a 1-hour ${drive}` },
     {
       value: "from_50_to_100",
-      label: `50–100 ${unit}`,
-      context: `Roughly 1–2 hours' ${drive}`,
+      label: `50-100 ${unit}`,
+      context: `Roughly 1-2 hours' ${drive}`,
     },
     {
       value: "from_100_to_200",
-      label: `100–200 ${unit}`,
-      context: `Roughly 2–4 hours' ${drive}`,
+      label: `100-200 ${unit}`,
+      context: `Roughly 2-4 hours' ${drive}`,
     },
     {
       value: "over_200",
       label: `Over 200 ${unit}`,
-      context: "Long-distance — nationwide reach",
+      context: "Long-distance - nationwide reach",
     },
   ];
 }

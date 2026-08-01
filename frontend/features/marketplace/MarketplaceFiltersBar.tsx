@@ -33,7 +33,7 @@ function parseBudget(raw: string): number | null {
   return Number.isFinite(n) && n >= 0 ? n : null;
 }
 
-/** Compact "Budget" popover + slim sort dropdown — replaces the old always-open budget/sort box. */
+/** Compact "Budget" popover + slim sort dropdown - replaces the old always-open budget/sort box. */
 export function MarketplaceFiltersBar(props: MarketplaceFiltersBarProps) {
   return (
     <BudgetSortControls
@@ -103,7 +103,7 @@ function BudgetSortControls({ state, onCommit }: MarketplaceFiltersBarProps) {
         >
           <SlidersHorizontal className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
           {hasBudget
-            ? `Budget: ${state.budgetMin != null ? formatMoney(state.budgetMin, market.currency) : "any"}–${
+            ? `Budget: ${state.budgetMin != null ? formatMoney(state.budgetMin, market.currency) : "any"}-${
                 state.budgetMax != null ? formatMoney(state.budgetMax, market.currency) : "any"
               }`
             : "Budget"}
@@ -128,7 +128,7 @@ function BudgetSortControls({ state, onCommit }: MarketplaceFiltersBarProps) {
                 aria-label="Minimum budget"
                 className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 outline-none ring-primary/15 focus:border-primary focus:bg-white focus:ring-2"
               />
-              <span className="text-neutral-400">–</span>
+              <span className="text-neutral-400">-</span>
               <input
                 type="number"
                 min={0}

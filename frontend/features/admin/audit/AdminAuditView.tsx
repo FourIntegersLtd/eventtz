@@ -136,7 +136,7 @@ export function AdminAuditView() {
                         ) : null}
                       </AdminTableCell>
                       <AdminTableCell className="text-sm text-neutral-700">
-                        {e.admin_email ?? "—"}
+                        {e.admin_email ?? "-"}
                       </AdminTableCell>
                       <AdminTableCell className="text-sm">
                         {href && e.entity_id ? (
@@ -165,7 +165,7 @@ export function AdminAuditView() {
 
           <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-neutral-600">
             <p>
-              Showing {pageStart}–{pageEnd} of {total}
+              Showing {pageStart}-{pageEnd} of {total}
             </p>
             <div className="flex gap-2">
               <Button

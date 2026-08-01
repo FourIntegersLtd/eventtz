@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Address lookup (getAddress.io / OS Places) is disabled — free-text venue fields only.
+ * Address lookup (getAddress.io / OS Places) is disabled - free-text venue fields only.
  * Kept as a thin wrapper so older imports still work.
  */
 import {

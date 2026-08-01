@@ -277,7 +277,7 @@ export function ProfileField({
 
 export function TagPills({ items }: { items: string[] }) {
   if (items.length === 0) {
-    return <span className="text-sm text-neutral-500">—</span>;
+    return <span className="text-sm text-neutral-500">-</span>;
   }
   return (
     <ul className="flex flex-wrap gap-1.5">
@@ -303,7 +303,7 @@ export function RateCard({
   value: string;
 }) {
   const display = formatMoneyLabel(value);
-  const empty = display === "—";
+  const empty = display === "-";
   return (
     <div className="rounded-xl border border-neutral-200/80 bg-neutral-50/50 px-5 py-4">
       <div className="flex items-center gap-2 text-neutral-500">
@@ -330,7 +330,7 @@ export function PackageRow({
     <li className="flex items-start justify-between gap-4 border-b border-neutral-100 py-3.5 last:border-0 last:pb-0 first:pt-0">
       <div className="min-w-0">
         <p className="font-medium text-neutral-900">{title}</p>
-        {duration !== "—" ? <p className="mt-0.5 text-xs text-neutral-500">{duration}</p> : null}
+        {duration !== "-" ? <p className="mt-0.5 text-xs text-neutral-500">{duration}</p> : null}
       </div>
       <p className="shrink-0 font-semibold tabular-nums text-neutral-900">{price}</p>
     </li>
@@ -366,9 +366,9 @@ export function buildVendorProfileData(vendor: AdminVendorRow): VendorProfileDat
   const phone = payloadStr(p, "phone");
   const contactName = [payloadStr(p, "firstName"), payloadStr(p, "lastName")].filter(Boolean).join(" ");
   const payloadEmail = payloadStr(p, "email");
-  const loginEmail = vendor.email || payloadEmail || "—";
+  const loginEmail = vendor.email || payloadEmail || "-";
   const travelRadius = payloadStr(p, "travelRadius");
-  const travelRadiusLabel = travelRadius ? `${travelRadius} miles` : "—";
+  const travelRadiusLabel = travelRadius ? `${travelRadius} miles` : "-";
   const socialLinks = Array.isArray(p.socialLinks)
     ? p.socialLinks
         .map((row) => {

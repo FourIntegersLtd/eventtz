@@ -1,6 +1,6 @@
 /**
  * Shared design tokens for `components/ui/*`. This is the single place the
- * "Apple-level craft bar" from the UX overhaul plan is encoded as values —
+ * "Apple-level craft bar" from the UX overhaul plan is encoded as values -
  * every primitive imports from here instead of re-declaring its own
  * spacing/motion/shadow/radius choices.
  *
@@ -42,8 +42,8 @@ export const FOCUS_RING =
 /** Mobile: 44px minimum touch target (Apple HIG / WCAG 2.5.5). */
 export const TOUCH_TARGET = "min-h-11 min-w-11";
 
-/** Full-page shells — dvh accounts for mobile browser chrome. */
+/** Full-page shells - dvh accounts for mobile browser chrome. */
 export const VIEWPORT_MIN = "min-h-dvh";
 
-/** Modal panel base width — max width comes from Modal's `maxWidthClassName`. */
+/** Modal panel base width - max width comes from Modal's `maxWidthClassName`. */
 export const MODAL_PANEL = "w-full";

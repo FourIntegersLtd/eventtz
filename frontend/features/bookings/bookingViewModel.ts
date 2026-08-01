@@ -3,7 +3,7 @@ import type { BookingLineItemRow, BookingPricing } from "@/features/bookings/Boo
 
 /**
  * Role-agnostic row shape for `BookingListPanel`. Client and vendor feature
- * folders map their own API response types down to this before rendering —
+ * folders map their own API response types down to this before rendering -
  * the panel itself never imports `clientBookingsApi`/`vendorBookingsApi`.
  */
 export type BookingListRowViewModel = {
@@ -18,7 +18,7 @@ export type BookingListRowViewModel = {
   initiatorBadgeLabel?: string | null;
   /** Vendor view only: the review left once a booking completes. */
   reviewLine?: string | null;
-  /** Shown under the pending badge — role-aware copy from `bookingListPendingSubtext`. */
+  /** Shown under the pending badge - role-aware copy from `bookingListPendingSubtext`. */
   pendingSubtext?: string | null;
   /** Vendor view: payout setup still required before Accept. */
   warningBadge?: string | null;
@@ -37,7 +37,7 @@ export type BookingDetailAction = {
 /**
  * Role-agnostic shape for `BookingDetailPanel`. Everything the panel itself
  * renders (header, event & contact grid, pricing, notes) reads only from
- * this — role-specific bits (vendor quote adjustments, client review form,
+ * this - role-specific bits (vendor quote adjustments, client review form,
  * accept/decline actions) are passed in as actions/slots by the caller.
  */
 export type BookingDetailViewModel = {
@@ -57,7 +57,7 @@ export type BookingDetailViewModel = {
   counterpartyPhone?: string | null;
   counterpartyHref?: string;
   conversationId: string | null;
-  /** Opens the chat Drawer with this counterparty — always available from booking detail. */
+  /** Opens the chat Drawer with this counterparty - always available from booking detail. */
   onOpenChat: () => void;
   /** Short line under Messages (accounts for booking notes starting the thread). */
   messagesHint: string;
@@ -69,10 +69,10 @@ export type BookingDetailViewModel = {
   pricing: BookingPricing | null;
   lineItems: BookingLineItemRow[];
   pricingVariant: "client" | "vendor";
-  /** Which portal is viewing this booking — used to build the "open conversation" link. */
+  /** Which portal is viewing this booking - used to build the "open conversation" link. */
   portal: "client" | "vendor";
   paidAtLabel: string | null;
-  /** Money lifecycle badge, independent of `status` — e.g. "Paid", "Paid out", "Refunded". */
+  /** Money lifecycle badge, independent of `status` - e.g. "Paid", "Paid out", "Refunded". */
   paymentStatus: string | null;
   /** Strikethrough "was" total when the vendor updated pricing after the request. */
   compareTotalLabel?: string | null;
@@ -83,7 +83,7 @@ export type BookingDetailSlots = {
   beforeSections?: ReactNode;
   /** Rendered after the standard sections, before the dispute section (e.g. review form/summary). */
   afterSections?: ReactNode;
-  /** Pinned below the scroll area — primary actions for this booking (e.g. accept / decline). */
+  /** Pinned below the scroll area - primary actions for this booking (e.g. accept / decline). */
   footerSection?: ReactNode;
   /** Always rendered last. */
   disputeSection: ReactNode;

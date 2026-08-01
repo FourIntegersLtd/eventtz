@@ -59,7 +59,7 @@ export function buildPrimaryDiscountBadge(config: VendorDiscountConfig): string 
   if (!hasActiveListDiscount(config)) return null;
   const pctLabel = `${formatDiscountPercent(config.discountPct)} off`;
   if (config.discountLabel) {
-    return `${pctLabel} — ${config.discountLabel}`;
+    return `${pctLabel} - ${config.discountLabel}`;
   }
   return pctLabel;
 }
@@ -69,7 +69,7 @@ function formatDiscountPercent(pct: number): string {
   return rounded % 1 === 0 ? `${rounded}%` : `${rounded}%`;
 }
 
-/** Extra promos shown on listings (bulk / off-peak — applied at booking when eligible). */
+/** Extra promos shown on listings (bulk / off-peak - applied at booking when eligible). */
 export function buildDiscountPromoLines(config: VendorDiscountConfig): string[] {
   if (!config.offerDiscounts) return [];
   const lines: string[] = [];
@@ -85,7 +85,7 @@ export function buildDiscountPromoLines(config: VendorDiscountConfig): string[] 
   }
   if (config.offPeakPct != null && config.offPeakPct > 0) {
     lines.push(
-      `${formatDiscountPercent(config.offPeakPct)} off off-peak dates (Nov–Feb, applied automatically if eligible)`,
+      `${formatDiscountPercent(config.offPeakPct)} off off-peak dates (Nov-Feb, applied automatically if eligible)`,
     );
   }
   return lines;
@@ -94,7 +94,7 @@ export function buildDiscountPromoLines(config: VendorDiscountConfig): string[] 
 const AUTO_BULK_LINE_ID = "auto-bulk";
 const AUTO_OFF_PEAK_LINE_ID = "auto-off-peak";
 
-/** Platform off-peak: 1 Nov – last day of Feb (matches backend). */
+/** Platform off-peak: 1 Nov - last day of Feb (matches backend). */
 export function isOffPeakDate(isoDate: string): boolean {
   const s = isoDate.trim().slice(0, 10);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
@@ -187,7 +187,7 @@ export function formatBookingEstimateLabel(sumNumeric: number, hasTbc: boolean):
 export type ListPriceDisplay = {
   /** Sale price shown prominently (after main discount, if any). */
   priceDisplay: string;
-  /** Original list price — show crossed out when a main discount applies. */
+  /** Original list price - show crossed out when a main discount applies. */
   compareAtDisplay: string | null;
   /** Amount used for booking estimates. */
   unitPriceGbp: number;

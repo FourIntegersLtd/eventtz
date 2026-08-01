@@ -87,7 +87,7 @@ export type ClientBookingListItem = {
   created_at: string | null;
   initiator?: BookingInitiator;
   conversation_id: string | null;
-  /** Only meaningful for `group: "completed"` rows — powers the review nudge. */
+  /** Only meaningful for `group: "completed"` rows - powers the review nudge. */
   has_review: boolean;
   payment_status: string;
   has_price_update?: boolean;

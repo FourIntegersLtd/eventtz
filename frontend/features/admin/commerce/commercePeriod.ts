@@ -33,7 +33,7 @@ export function adminPeriodRange(
 /** @deprecated Use adminPeriodRange */
 export const commercePeriodRange = adminPeriodRange;
 
-/** Human range (e.g. "19 Jun 2026 – 18 Jul 2026"). */
+/** Human range (e.g. "19 Jun 2026 - 18 Jul 2026"). */
 export function formatCommerceDateRange(fromIso: string, toIso: string): string {
   const fmt = (iso: string) => {
     const d = new Date(`${iso.slice(0, 10)}T12:00:00Z`);
@@ -45,5 +45,5 @@ export function formatCommerceDateRange(fromIso: string, toIso: string): string 
       timeZone: "UTC",
     });
   };
-  return `${fmt(fromIso)} – ${fmt(toIso)}`;
+  return `${fmt(fromIso)} - ${fmt(toIso)}`;
 }

@@ -142,7 +142,7 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
         }
       })
       .catch(() => {
-        /* ignore — sidebar badge will refresh on nav/focus/SSE */
+        /* ignore - sidebar badge will refresh on nav/focus/SSE */
       });
   }, []);
 

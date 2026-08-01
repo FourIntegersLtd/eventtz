@@ -15,7 +15,7 @@ function PartyRow({ role, primary, secondary, isOpener }: PartyRowProps) {
     <div className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
       <span className="w-12 shrink-0 pt-0.5 text-xs font-medium text-neutral-500">{role}</span>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-neutral-900">{primary ?? "—"}</p>
+        <p className="text-sm font-medium text-neutral-900">{primary ?? "-"}</p>
         {secondary ? <p className="mt-0.5 text-xs text-neutral-500">{secondary}</p> : null}
       </div>
       {isOpener ? (
@@ -70,10 +70,10 @@ export function DisputeOpenedByCompact({ dispute }: { dispute: AdminDisputeCase 
 
   const name =
     role === "client"
-      ? dispute.opened_by_display_name ?? dispute.client_email ?? "—"
+      ? dispute.opened_by_display_name ?? dispute.client_email ?? "-"
       : role === "vendor"
-        ? dispute.opened_by_display_name ?? dispute.vendor_display_name ?? "—"
-        : dispute.opened_by_display_name ?? dispute.opened_by_email ?? "—";
+        ? dispute.opened_by_display_name ?? dispute.vendor_display_name ?? "-"
+        : dispute.opened_by_display_name ?? dispute.opened_by_email ?? "-";
 
   return (
     <p className="text-sm text-neutral-700">

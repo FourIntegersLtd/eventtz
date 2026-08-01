@@ -13,7 +13,7 @@ import { ChatThreadView } from "@/features/chat/ChatThreadView";
 
 type ChatPortalViewProps = {
   portal: "client" | "vendor";
-  /** Present on `/{portal}/messages/[conversationId]` — absent on the index route. */
+  /** Present on `/{portal}/messages/[conversationId]` - absent on the index route. */
   selectedConversationId?: string;
 };
 
@@ -41,7 +41,7 @@ function formatActivity(iso: string | null | undefined): string {
 }
 
 /**
- * Master-detail messages view — conversation list on the left, active thread on
+ * Master-detail messages view - conversation list on the left, active thread on
  * the right (desktop); mobile shows one pane at a time via `MasterDetailLayout`.
  */
 export function ChatPortalView({ portal, selectedConversationId }: ChatPortalViewProps) {
@@ -89,7 +89,7 @@ export function ChatPortalView({ portal, selectedConversationId }: ChatPortalVie
             <div className="scroll-pane min-h-0 flex-1">
               {loading ? (
                 <div className="p-5">
-                  <LoadingState label="Loading conversations…" variant="inline" branded />
+                  <LoadingState label="Loading conversations…" variant="centered" branded />
                 </div>
               ) : error ? (
                 <div className="m-5">
@@ -200,13 +200,19 @@ export function ChatPortalView({ portal, selectedConversationId }: ChatPortalVie
               backLabel="Messages"
             />
           </div>
+        ) : loading ? (
+          <div
+            className={`flex h-full min-h-0 flex-1 items-center justify-center overflow-hidden ${portalCard}`}
+          >
+            <LoadingState label="Loading conversations…" variant="centered" branded />
+          </div>
         ) : (
           <div
             className={`flex h-full min-h-0 flex-1 items-center justify-center overflow-hidden ${portalCard}`}
           >
             <EmptyState
               className="border-0"
-              lottie="emptyInbox"
+              lottie="emptyMessages"
               title={rows.length === 0 ? "No conversations yet" : "Select a conversation"}
             />
           </div>

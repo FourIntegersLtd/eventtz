@@ -58,7 +58,7 @@ type BookingPricingBreakdownProps = {
 };
 
 /**
- * Flat pricing list (same spirit as browse vendor pricing) —
+ * Flat pricing list (same spirit as browse vendor pricing) -
  * one surface, divided rows, no nested package cards.
  */
 export function BookingPricingBreakdown({
@@ -218,7 +218,7 @@ export function BookingPricingBreakdown({
         </div>
       ) : null}
 
-      {/* Highlighted total — pops without nested cards */}
+      {/* Highlighted total - pops without nested cards */}
       <div className="border-t border-neutral-100 bg-neutral-50 px-5 py-4">
         <div className="flex items-baseline justify-between gap-3">
           <p className="text-sm font-medium text-neutral-700">{totalLabel}</p>

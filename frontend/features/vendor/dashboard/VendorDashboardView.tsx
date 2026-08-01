@@ -206,7 +206,7 @@ export function VendorDashboardView() {
                     <p className="mt-0.5 text-sm text-neutral-600">
                       {b.client_email ? b.client_email : "Client"}
                     </p>
-                    {/* The modal title already states the selected date — only show
+                    {/* The modal title already states the selected date - only show
                         an end date here, for events that span more than one day. */}
                     {b.event_end_date ? (
                       <p className="mt-0.5 text-xs text-neutral-500">

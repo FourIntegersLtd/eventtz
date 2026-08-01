@@ -15,7 +15,7 @@ import { useVendorBookingsController } from "@/features/vendor/bookings/useVendo
 import { PayoutSetupRequiredModal } from "@/features/vendor/payments/PayoutSetupRequiredModal";
 
 type VendorBookingsViewProps = {
-  /** Present on `/vendor/bookings/[bookingId]` — absent on the `/vendor/bookings` index. */
+  /** Present on `/vendor/bookings/[bookingId]` - absent on the `/vendor/bookings` index. */
   selectedBookingId?: string;
 };
 
@@ -92,7 +92,7 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
             <div className="min-h-0 flex-1 overflow-hidden">
               <BookingDetailPanel
                 booking={v.viewModel}
-                loading={v.detailLoading}
+                loading={v.detailLoading || (v.listLoading && !selectedBookingId)}
                 error={v.detailError}
                 actionError={v.actionError}
                 headerActions={v.headerActions}

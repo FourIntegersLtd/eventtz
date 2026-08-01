@@ -16,16 +16,16 @@ type ChatDrawerProps = {
   portal: "client" | "vendor";
   /** The other party's display name, used as the drawer title. */
   counterpartyName: string;
-  /** Existing conversation — opens straight into the thread. */
+  /** Existing conversation - opens straight into the thread. */
   conversationId?: string | null;
-  /** No conversation yet — the drawer composes the first message, then flips into the thread. */
+  /** No conversation yet - the drawer composes the first message, then flips into the thread. */
   counterpartyUserId?: string;
   /** Fires once a conversation is created from the first-message composer. */
   onConversationCreated?: (conversationId: string) => void;
 };
 
 /**
- * Chat as a slide-over, launched from booking detail or a vendor's profile —
+ * Chat as a slide-over, launched from booking detail or a vendor's profile -
  * replaces the old modal-then-navigate-to-/messages flow so the user never
  * loses their place on the page they were on.
  */

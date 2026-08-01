@@ -1,4 +1,4 @@
-/** Local calendar date as `YYYY-MM-DD` — used for event date min/validation. */
+/** Local calendar date as `YYYY-MM-DD` - used for event date min/validation. */
 export function todayIsoDate(): string {
   const now = new Date();
   const y = now.getFullYear();

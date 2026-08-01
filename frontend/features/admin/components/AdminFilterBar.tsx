@@ -7,7 +7,7 @@ type AdminFilterBarProps = {
   className?: string;
 };
 
-/** Filter row — stacks full-width on mobile/tablet; wraps horizontally from lg up. */
+/** Filter row - stacks full-width on mobile/tablet; wraps horizontally from lg up. */
 export function AdminFilterBar({ children, className = "" }: AdminFilterBarProps) {
   return (
     <div

@@ -43,7 +43,7 @@ type LandingFeatureSplitProps = {
   ctaLabel?: string;
   /** Side-by-side or copy above full-width image. */
   variant?: "split" | "stacked";
-  /** Intrinsic screenshot dimensions — defaults to 1920×1200 landing assets. */
+  /** Intrinsic screenshot dimensions - defaults to 1920×1200 landing assets. */
   imageWidth?: number;
   imageHeight?: number;
   /** Image column first on large screens (split only). */

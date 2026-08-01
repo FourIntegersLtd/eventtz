@@ -59,7 +59,7 @@ export function HeroRotatingWord() {
         <span className="sr-only">{word}</span>
       </span>
 
-      {/* Inverted-C arch underline — matches the word width */}
+      {/* Inverted-C arch underline - matches the word width */}
       <svg
         className="pointer-events-none absolute inset-x-0 bottom-0 h-[0.38em] w-full text-primary"
         viewBox="0 0 120 12"

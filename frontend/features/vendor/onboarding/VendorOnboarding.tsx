@@ -150,7 +150,7 @@ export function VendorOnboarding() {
             href="/login"
             className="inline-flex items-center justify-center text-sm font-medium text-primary underline-offset-2 hover:underline"
           >
-            I&apos;m a client — sign in instead
+            I&apos;m a client - sign in instead
           </Link>
         </div>
       </div>
@@ -164,7 +164,7 @@ export function VendorOnboarding() {
       {isWalkthrough && (
         <div className="mb-6 rounded-2xl bg-primary/5 p-4 text-sm text-neutral-800 shadow-sm ring-1 ring-primary/15">
           <strong className="font-semibold text-neutral-900">Preview mode</strong>
-          {" — "}
+          {" - "}
           Changes save, but your profile won&apos;t be resubmitted.{" "}
           <Link
             href="/vendor/settings"
@@ -182,7 +182,7 @@ export function VendorOnboarding() {
               <strong className="font-semibold">
                 {approvalStatus === "banned"
                   ? "Your profile isn’t visible to clients right now."
-                  : "Thanks — we’re reviewing your profile."}
+                  : "Thanks - we’re reviewing your profile."}
               </strong>{" "}
               {approvalStatus === "banned"
                 ? "An admin has restricted this profile. You can’t edit it until that changes."

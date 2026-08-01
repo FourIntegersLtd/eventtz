@@ -8,7 +8,7 @@ describe("PAYMENT_SAFETY_COPY", () => {
     expect(PAYMENT_SAFETY_COPY.points).toHaveLength(4);
     expect(PAYMENT_SAFETY_COPY.points.join(" ")).toContain("48 hours");
     expect(PAYMENT_SAFETY_COPY.points.join(" ")).toContain("safely");
-    expect(PAYMENT_SAFETY_COPY.points.join(" ")).not.toMatch(/—|–/);
+    expect(PAYMENT_SAFETY_COPY.points.join(" ")).not.toMatch(/-|-/);
   });
 });
 

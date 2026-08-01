@@ -114,7 +114,7 @@ export function AdminReviewsView() {
                         <StarRating rating={r.rating} size="sm" />
                         {r.hidden_at ? <ReviewVisibilityBadge hidden /> : null}
                       </div>
-                      <p className="mt-1.5 line-clamp-2 text-sm text-neutral-800">{r.body || "—"}</p>
+                      <p className="mt-1.5 line-clamp-2 text-sm text-neutral-800">{r.body || "-"}</p>
                       <p className="mt-1 text-xs text-neutral-500">{formatReviewWhen(r.created_at)}</p>
                     </AdminTableCell>
                     <AdminTableCell className="text-right align-top">

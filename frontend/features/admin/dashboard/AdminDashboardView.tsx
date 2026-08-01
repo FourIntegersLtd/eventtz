@@ -94,7 +94,7 @@ export function AdminDashboardView() {
 
   return (
     <div className="space-y-6">
-      {/* Calm status KPIs — actionable alerts live only in Needs attention */}
+      {/* Calm status KPIs - actionable alerts live only in Needs attention */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <AdminKpiCard
           label="Pending vendor approvals"

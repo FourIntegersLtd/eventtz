@@ -29,7 +29,7 @@ const SERVICE_FEE_PERCENT_LABEL = `${getBookingServiceFeePercent()}%`;
 
 export type LandingCategory = {
   name: string;
-  /** Matches SERVICE_OPTIONS values in vendor-onboarding/constants.ts — used for `?types=` filtering and count lookups. */
+  /** Matches SERVICE_OPTIONS values in vendor-onboarding/constants.ts - used for `?types=` filtering and count lookups. */
   value: string;
   Icon: LucideIcon;
   description: string;
@@ -95,7 +95,7 @@ export const INSPIRATION_SECTION = {
 } as const;
 
 /**
- * Celebrations carousel — one entry per clip in `public/videos/`.
+ * Celebrations carousel - one entry per clip in `public/videos/`.
  * Hero background uses `HERO_VIDEO_SRC` (hero.mp4 is shared with Weddings below).
  * After adding a new file here, run: npm run optimize-videos
  */
@@ -253,13 +253,13 @@ export const NAV_DROPDOWN_LINK_CLASS =
   "block rounded-lg px-3 py-2.5 text-sm text-neutral-700 transition hover:bg-neutral-100 hover:text-primary";
 
 /**
- * Hero background — Pexels #3045163 (food/catering prep, free licence).
+ * Hero background - Pexels #3045163 (food/catering prep, free licence).
  * https://www.pexels.com/video/a-person-preparing-food-3045163/
  * Hosted locally because direct hotlinks intermittently return 403.
  */
 export const HERO_VIDEO_SRC = "/videos/hero.mp4";
 
-/** Light marketing hero — left copy column. Right column reserved for hero image. */
+/** Light marketing hero - left copy column. Right column reserved for hero image. */
 export const HERO_EYEBROW = "Trusted event vendors";
 
 export const HERO_HEADLINE = {
@@ -531,7 +531,7 @@ export const EXPLORE_NAV_LINKS = [
   { href: "#faq", label: "FAQ" },
 ] as const;
 
-/** One login, one register — the account-type dropdown on `/register` replaces separate client/vendor forms. */
+/** One login, one register - the account-type dropdown on `/register` replaces separate client/vendor forms. */
 export const SIGN_IN_LINK = { href: "/login", label: "Sign in" } as const;
 export const BROWSE_LINK = { href: "/client/browse", label: "Browse" } as const;
 export const BLOG_LINK = { href: "/blog", label: "Blog" } as const;
@@ -545,7 +545,7 @@ export type MobileNavLink = {
   label: string;
 };
 
-/** Short list for the mobile drawer — desktop keeps the full Explore dropdown. */
+/** Short list for the mobile drawer - desktop keeps the full Explore dropdown. */
 export const MOBILE_NAV_SECTION_LINKS: MobileNavLink[] = [
   { href: "/blog", label: "Blog" },
   { href: "#booking-journey", label: "How booking works" },

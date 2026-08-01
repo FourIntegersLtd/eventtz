@@ -48,7 +48,7 @@ export function ClientBookingPayView({ bookingId }: ClientBookingPayViewProps) {
     return (
       <div className="w-full max-w-3xl space-y-6">
         <BackLink href={bookingHref} label="Back to booking" />
-        <LoadingState label="Preparing secure checkout…" variant="centered" className="py-16" lottie="paymentSecure" />
+        <LoadingState label="Preparing secure checkout…" variant="centered" className="py-16" branded />
       </div>
     );
   }
@@ -119,7 +119,7 @@ export function ClientBookingPayView({ bookingId }: ClientBookingPayViewProps) {
           label="Redirecting you to secure checkout…"
           variant="centered"
           className="py-16"
-          lottie="paymentSecure"
+          branded
         />
       ) : (
         <p className="text-sm text-neutral-600">Review how we protect your payment, then continue.</p>

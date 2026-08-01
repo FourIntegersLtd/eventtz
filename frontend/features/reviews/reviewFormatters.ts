@@ -1,7 +1,7 @@
 import { formatDateTime, formatEventDate } from "@/lib/dateFormat";
 
 export function formatReviewEventDate(iso?: string | null): string {
-  if (!iso) return "—";
+  if (!iso) return "-";
   return formatEventDate(iso);
 }
 

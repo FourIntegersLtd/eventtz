@@ -66,7 +66,7 @@ export function getVendorProfileStatusMeta(raw: string): VendorProfileStatusMeta
 }
 
 // ---------------------------------------------------------------------------
-// Booking domain — shared between client and vendor portals so status colors,
+// Booking domain - shared between client and vendor portals so status colors,
 // labels, and cross-role shapes are defined exactly once. See cursor.md /
 // the "Signed-in UX overhaul" plan for why this file, not each *BookingsApi,
 // owns this vocabulary.
@@ -103,7 +103,7 @@ export type BookingPricingBreakdown = {
  * should narrow through this union via `toBookingStatus` so unrecognized
  * values fail safe instead of silently rendering as unstyled text.
  *
- * "disputed" is not a raw booking status the backend returns — a booking
+ * "disputed" is not a raw booking status the backend returns - a booking
  * keeps its underlying status (pending/accepted/completed) while a dispute
  * is open against it (see `bookingDisputeHelpers.ts`). View-model mappers
  * that combine booking + dispute state use this entry to badge that
@@ -124,7 +124,7 @@ export type BookingStatusMeta = {
   label: string;
   /** Longer label for status headers on the detail page. */
   headline: string;
-  /** Tailwind classes for the StatusBadge pill — the only place status color is declared. */
+  /** Tailwind classes for the StatusBadge pill - the only place status color is declared. */
   badgeClassName: string;
   /** Which top-level attention group this status belongs to for dashboards/filters. */
   group: "needsAction" | "upcoming" | "completed" | "closed";

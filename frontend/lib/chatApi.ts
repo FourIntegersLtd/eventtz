@@ -25,7 +25,7 @@ export type ChatMessage = {
   sender_user_id: string;
   body: string;
   created_at: string | null;
-  /** Present for system cards (e.g. a sent quote) — render a rich card instead of plain text. */
+  /** Present for system cards (e.g. a sent quote) - render a rich card instead of plain text. */
   metadata: ChatQuoteMetadata | Record<string, unknown> | null;
 };
 

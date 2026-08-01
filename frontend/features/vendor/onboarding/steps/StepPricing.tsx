@@ -137,7 +137,7 @@ export function StepPricing({ data, update }: StepPricingProps) {
                         (hasPartial && !pkg.price.trim() ? (
                           <span className="text-amber-700">Price required</span>
                         ) : (
-                          <span className="text-neutral-400">—</span>
+                          <span className="text-neutral-400">-</span>
                         ))}
                       {durationPart ? (
                         <span className="text-neutral-500"> · {durationPart}</span>

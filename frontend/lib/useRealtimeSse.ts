@@ -5,7 +5,7 @@ import { realtimeBus } from "@/lib/realtimeBus";
 
 /**
  * Open a per-user SSE stream. Pass the signed-in user id (not just a boolean) so
- * switching accounts reconnects — otherwise events for the previous user keep
+ * switching accounts reconnects - otherwise events for the previous user keep
  * firing refresh on the new session's dashboard.
  */
 export function useRealtimeSse(userId: string | null | undefined) {

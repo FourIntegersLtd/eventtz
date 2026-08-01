@@ -2,7 +2,7 @@ type StarRatingProps = {
   rating: number;
   max?: number;
   size?: "sm" | "md" | "lg";
-  /** When set, stars become tappable buttons — used for one-tap review nudges. */
+  /** When set, stars become tappable buttons - used for one-tap review nudges. */
   onRate?: (value: number) => void;
 };
 

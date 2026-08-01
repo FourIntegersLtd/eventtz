@@ -115,12 +115,12 @@ export function AdminClientsView() {
                   >
                     <AdminTableCell className="min-w-[11rem] max-w-[14rem]">
                       <span className="block truncate" title={r.email ?? undefined}>
-                        {r.email ?? "—"}
+                        {r.email ?? "-"}
                       </span>
                     </AdminTableCell>
                     <AdminTableCell className="tabular-nums">{r.booking_count}</AdminTableCell>
                     <AdminTableCell className="text-neutral-600">
-                      {r.created_at ? String(r.created_at).slice(0, 10) : "—"}
+                      {r.created_at ? String(r.created_at).slice(0, 10) : "-"}
                     </AdminTableCell>
                     <AdminTableCell>
                       <AccountStatusBadge suspended={r.account_suspended} />
@@ -140,7 +140,7 @@ export function AdminClientsView() {
                           {r.account_suspended ? "Unsuspend" : "Suspend"}
                         </button>
                       ) : (
-                        <span className="text-xs text-neutral-400">—</span>
+                        <span className="text-xs text-neutral-400">-</span>
                       )}
                     </AdminTableCell>
                   </AdminTableRow>
@@ -150,7 +150,7 @@ export function AdminClientsView() {
           </AdminTable>
           <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-neutral-600">
             <span>
-              Showing {rows.length ? offset + 1 : 0}–{offset + rows.length} of {total}
+              Showing {rows.length ? offset + 1 : 0}-{offset + rows.length} of {total}
             </span>
             <div className="flex gap-2">
               <button

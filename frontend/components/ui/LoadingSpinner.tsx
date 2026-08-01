@@ -15,7 +15,7 @@ type LoadingSpinnerProps = {
   className?: string;
 };
 
-/** Shared inline spinner — use inside buttons, inputs, and compact rows. */
+/** Shared inline spinner - use inside buttons, inputs, and compact rows. */
 export function LoadingSpinner({ size = "md", className = "" }: LoadingSpinnerProps) {
   return (
     <Loader2

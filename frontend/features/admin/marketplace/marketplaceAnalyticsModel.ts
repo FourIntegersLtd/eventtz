@@ -28,7 +28,7 @@ export function toMarketplaceCompletedSeries(
   }));
 }
 
-/** Horizontal bar rows for category performance (raw labels — never date-format). */
+/** Horizontal bar rows for category performance (raw labels - never date-format). */
 export function toMarketplaceCategoryBars(
   rows: AdminMarketplaceAnalytics["by_category"],
   limit = 6,
@@ -80,7 +80,7 @@ export function marketplaceOverviewKpis(overview: AdminMarketplaceAnalytics["ove
 }
 
 export function formatMarketplacePct(n: number | null | undefined): string {
-  if (n == null || Number.isNaN(n)) return "—";
+  if (n == null || Number.isNaN(n)) return "-";
   return `${(Number(n) * 100).toFixed(1)}%`;
 }
 
@@ -106,13 +106,13 @@ export function marketplaceSecondaryMeta(
 }
 
 export function formatMarketplaceSeconds(s: number | null | undefined): string {
-  if (s == null || Number.isNaN(s)) return "—";
+  if (s == null || Number.isNaN(s)) return "-";
   if (s < 60) return `${Math.round(s)}s`;
   if (s < 3600) return `${Math.round(s / 60)} min`;
   return `${(s / 3600).toFixed(1)} h`;
 }
 
 export function formatMarketplaceMoney(n: number | null | undefined): string {
-  if (n == null || Number.isNaN(n)) return "—";
+  if (n == null || Number.isNaN(n)) return "-";
   return `£${Number(n).toFixed(0)}`;
 }

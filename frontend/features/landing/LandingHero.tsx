@@ -72,7 +72,7 @@ export function LandingHero() {
             <div className="relative overflow-hidden rounded-[1.75rem] border border-primary-border/70 bg-white/60 p-1.5 shadow-primary-soft sm:rounded-[2.5rem] sm:p-2.5">
               <Image
                 src={HERO_IMAGE_SRC}
-                alt="Featured Eventtz vendors — photographer and makeup artist"
+                alt="Featured Eventtz vendors - photographer and makeup artist"
                 width={900}
                 height={900}
                 priority

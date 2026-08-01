@@ -5,10 +5,13 @@ import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { RADIUS } from "@/components/ui/tokens";
 import type { LottieAssetKey } from "@/lib/lottieAssets";
 
+/** Empty-state illustrations only - never the branded loader. */
+export type EmptyLottieAssetKey = Exclude<LottieAssetKey, "loading" | "failure">;
+
 export type EmptyStateProps = {
   icon?: ReactNode;
-  /** Decorative Lottie illustration — preferred over `icon` when both are set. */
-  lottie?: LottieAssetKey;
+  /** Decorative Lottie illustration - preferred over `icon` when both are set. */
+  lottie?: EmptyLottieAssetKey;
   title: string;
   description?: string;
   action?: ReactNode;
@@ -16,7 +19,7 @@ export type EmptyStateProps = {
 };
 
 /**
- * Consistent empty-list treatment (bookings, messages, notifications) — a
+ * Consistent empty-list treatment (bookings, messages, notifications) - a
  * short human sentence plus exactly one next action. Never render a bare
  * "No data" message; every consumer should pass at least a title.
  */

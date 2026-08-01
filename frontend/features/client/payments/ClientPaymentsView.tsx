@@ -36,7 +36,7 @@ export function ClientPaymentsView() {
   if (rows.length === 0) {
     return (
       <LottieEmptyPanel
-        lottie="paymentSecure"
+        lottie="emptyInbox"
         title="No paid bookings yet"
         description="When you pay for a booking, it will show up here."
       />

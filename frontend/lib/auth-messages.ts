@@ -23,10 +23,10 @@ export function wrongAdminPortalMessage(actual: UserType | undefined): string {
     return "We couldn't confirm your account type. Please try again, or contact support if this keeps happening.";
   }
   if (actual === "vendor") {
-    return "This sign-in is for Eventtz team admins only. Your account is a vendor account — use vendor sign-in to open your dashboard.";
+    return "This sign-in is for Eventtz team admins only. Your account is a vendor account - use vendor sign-in to open your dashboard.";
   }
   if (actual === "client") {
-    return "This sign-in is for Eventtz team admins only. Your account is a client account — use client sign-in instead.";
+    return "This sign-in is for Eventtz team admins only. Your account is a client account - use client sign-in instead.";
   }
   return ADMIN_ACCOUNT_REQUIRED;
 }

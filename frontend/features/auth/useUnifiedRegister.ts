@@ -28,7 +28,7 @@ export function useUnifiedRegister() {
   );
   // `/register` and `/register?type=vendor` are the same route segment, so nav
   // links between them (e.g. "Become a vendor" <-> "Create account") don't
-  // remount this hook — re-sync the dropdown whenever the `type` param itself changes.
+  // remount this hook - re-sync the dropdown whenever the `type` param itself changes.
   useEffect(() => {
     setAccountType(accountTypeFromQuery(typeParam));
   }, [typeParam]);

@@ -20,7 +20,7 @@ export function ReviewBodyText({
   const shown = expanded || !long ? body : `${body.slice(0, previewLen).trim()}…`;
 
   if (!body) {
-    return <p className={`whitespace-pre-wrap ${className}`}>—</p>;
+    return <p className={`whitespace-pre-wrap ${className}`}>-</p>;
   }
 
   return (

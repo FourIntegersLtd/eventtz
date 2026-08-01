@@ -36,7 +36,7 @@ type VendorBrowseDetailBodyProps = {
   /** New visitors: create a client account before continuing. */
   registerHref: string;
   onContinue: () => void;
-  /** Logged-in clients: opens booking with selected package/rate ids. Omit for non-clients — only contact is shown. */
+  /** Logged-in clients: opens booking with selected package/rate ids. Omit for non-clients - only contact is shown. */
   onRequestBooking?: (selectedOptionIds: string[]) => void;
   /** Logged-in only: opens in-app chat with this vendor (no email). */
   onContactVendor?: () => void;

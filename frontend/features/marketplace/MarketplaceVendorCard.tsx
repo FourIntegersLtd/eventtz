@@ -258,7 +258,7 @@ export function MarketplaceVendorCard({
             </blockquote>
             {featured.reviewer_display ? (
               <figcaption className="mt-1 text-xs font-medium text-neutral-500">
-                — {featured.reviewer_display}
+                - {featured.reviewer_display}
               </figcaption>
             ) : null}
           </figure>
@@ -302,7 +302,7 @@ export function MarketplaceVendorCard({
             {selected ? (
               <>
                 <Check className="h-4 w-4" strokeWidth={2.5} aria-hidden />
-                Added — message together
+                Added - message together
               </>
             ) : (
               "Add to message"

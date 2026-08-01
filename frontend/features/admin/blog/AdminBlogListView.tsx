@@ -121,7 +121,7 @@ export function AdminBlogListView() {
                     </span>
                   </AdminTableCell>
                   <AdminTableCell className="text-sm text-neutral-600">
-                    {p.updated_at ? formatDateTime(p.updated_at) : "—"}
+                    {p.updated_at ? formatDateTime(p.updated_at) : "-"}
                   </AdminTableCell>
                   <AdminTableCell className="text-right">
                     <Link
