@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
+import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import type { BookingPricing } from "@/features/bookings/BookingPricingBreakdown";
 
 type BookingPriceUpdateBannerProps = {
@@ -34,11 +35,14 @@ export function BookingPriceUpdateBanner({
   const adjustments = pricing?.vendor_adjustments ?? [];
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+    <div className="overflow-hidden rounded-2xl border border-amber-200/80 bg-amber-50/40">
       <div className="px-5 py-4">
-        <p className="text-[15px] font-semibold tracking-tight text-neutral-900">
-          New price from your vendor
-        </p>
+        <div className="flex items-start gap-3">
+          <LottieIllustration asset="pendingReview" className="h-14 w-14 shrink-0" ariaLabel="" />
+          <p className="pt-1 text-[15px] font-semibold tracking-tight text-neutral-900">
+            New price from your vendor
+          </p>
+        </div>
         <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <span className="text-sm text-neutral-500">
             Was:{" "}

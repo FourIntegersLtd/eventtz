@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { patchAdminDispute, type AdminDisputeCase } from "@/lib/adminPlatformApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { adminPartialRefundSchema, parseForm } from "@/lib/validation";
@@ -93,9 +94,7 @@ export function DisputeResolveModal({ dispute, onClose, onResolved }: DisputeRes
       }
     >
       <div className="space-y-4 text-sm">
-        {error ? (
-          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-red-800">{error}</p>
-        ) : null}
+        {error ? <LottieFailureInline message={error} /> : null}
         <div>
           <label className="text-sm font-medium text-neutral-700">Decision</label>
           <select

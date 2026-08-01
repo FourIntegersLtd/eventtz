@@ -29,7 +29,7 @@ export function AdminFinancialsCharts({ summary }: AdminFinancialsChartsProps) {
         {chartHasData(spendData.map((d) => d.value)) ? (
           <AdminAreaChart data={spendData} valueLabel="Client spend (GBP)" />
         ) : (
-          <EmptyState className="border-0 py-8" title="No client spend in this period" />
+          <EmptyState className="border-0 py-8" title="No client spend in this period" lottie="searchNoResults" />
         )}
       </AdminChartCard>
 
@@ -44,7 +44,7 @@ export function AdminFinancialsCharts({ summary }: AdminFinancialsChartsProps) {
             {hasFee ? (
               <AdminAreaChart data={feeData} valueLabel="Platform fee (GBP)" />
             ) : (
-              <EmptyState className="border-0 py-8" title="No platform fees" />
+              <EmptyState className="border-0 py-8" title="No platform fees" lottie="searchNoResults" />
             )}
           </div>
           <div className="min-w-0">
@@ -52,7 +52,7 @@ export function AdminFinancialsCharts({ summary }: AdminFinancialsChartsProps) {
             {hasCounts ? (
               <AdminBarChart data={countData} valueLabel="Bookings" color="#0ea5e9" />
             ) : (
-              <EmptyState className="border-0 py-8" title="No paid bookings" />
+              <EmptyState className="border-0 py-8" title="No paid bookings" lottie="searchNoResults" />
             )}
           </div>
         </div>

@@ -15,6 +15,7 @@ import {
 } from "../ui/OnboardingQuestionLayout";
 import { checkBusinessNameAvailable } from "@/lib/vendorProfileApi";
 import { Modal } from "@/components/ui/Modal";
+import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { inputClass, labelClass, ToggleChip } from "./form-primitives";
 
 export type StepBusinessProps = {
@@ -190,6 +191,7 @@ export function StepBusiness({
           </div>
         }
       >
+        <LottieIllustration asset="launchingSoon" className="mb-4 h-28 w-28" />
         <p className="text-sm leading-relaxed text-neutral-700">
           We&apos;re not onboarding vendors in unlisted categories yet. Join the waitlist and
           we&apos;ll be in touch.

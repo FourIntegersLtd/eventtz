@@ -6,7 +6,7 @@ import { ClientBookingsView } from "@/features/client/bookings/ClientBookingsVie
 
 export function ClientBookingsPortal() {
   return (
-    <Suspense fallback={<LoadingState label="Loading bookings…" variant="centered" />}>
+    <Suspense fallback={<LoadingState label="Loading bookings…" variant="centered" branded />}>
       <ClientBookingsView />
     </Suspense>
   );

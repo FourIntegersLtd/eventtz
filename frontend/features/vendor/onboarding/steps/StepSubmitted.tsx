@@ -1,4 +1,8 @@
+"use client";
+
 import type { VendorApprovalStatus } from "@/lib/domain-types";
+import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
+import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 type StepSubmittedProps = {
@@ -22,9 +26,11 @@ export function StepSubmitted({
 
   return (
     <div className="space-y-6 py-4 text-center">
-      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/15 text-2xl text-primary">
-        ✓
-      </div>
+      <LottieIllustration
+        asset={approved ? "successCheck" : banned ? "failure" : "pendingReview"}
+        className="mx-auto h-28 w-28"
+        ariaLabel=""
+      />
       <h2 className="font-heading text-2xl font-semibold text-neutral-900">
         Thank you for signing up
       </h2>
@@ -44,9 +50,10 @@ export function StepSubmitted({
           </button>
         </div>
       ) : banned ? (
-        <p className="mx-auto max-w-md rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm leading-relaxed text-red-800">
-          Your profile isn&apos;t visible to clients.
-        </p>
+        <LottieFailureInline
+          message="Your profile isn't visible to clients."
+          className="mx-auto max-w-md text-left"
+        />
       ) : (
         <>
           <p className="mx-auto max-w-md text-sm leading-relaxed text-neutral-600">

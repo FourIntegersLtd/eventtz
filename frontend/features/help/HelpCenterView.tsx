@@ -5,6 +5,7 @@ import { ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { portalCard, portalCardPadding } from "@/components/portal-shell/portalTheme";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { LottieEmptyPanel } from "@/components/ui/LottieEmptyPanel";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import {
   fetchHelpCategories,
@@ -61,7 +62,11 @@ export function HelpCenterView({ audience }: Props) {
         ) : error ? (
           <p className="px-5 py-4 text-sm text-red-700">{error}</p>
         ) : categories.length === 0 ? (
-          <p className="px-5 py-4 text-sm text-neutral-600">No help topics yet.</p>
+          <LottieEmptyPanel
+            className="mx-5 border-0 bg-transparent py-6"
+            lottie="searchNoResults"
+            title="No help topics yet"
+          />
         ) : (
           <ul className="divide-y divide-neutral-100">
             {categories.map((cat) => {

@@ -1,5 +1,6 @@
 "use client";
 
+import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { BookingCompletionBanner } from "@/features/bookings/BookingCompletionBanner";
 import { PAYMENT_FLOW_COPY } from "@/features/bookings/bookingConfirmCopy";
 import type { VendorBookingDetail } from "@/lib/vendorBookingsApi";
@@ -40,7 +41,8 @@ export function VendorBookingDetailExtras({
 
       {detail.status === "cancelled" &&
       (detail.payment_status === "refunded" || detail.payment_status === "partially_refunded") ? (
-        <div className="mt-4 rounded-2xl border border-neutral-100 bg-neutral-50 px-5 py-4 text-sm text-neutral-700">
+        <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-950">
+          <LottieIllustration asset="failure" className="mb-2 h-20 w-20" ariaLabel="" />
           {PAYMENT_FLOW_COPY.cancelledRefundedVendor}
         </div>
       ) : null}

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { MotionReveal } from "@/components/ui/MotionReveal";
 import { LandingSection } from "@/features/landing/LandingSection";
 import {
   LANDING_FEATURE_BODY_CLASS,
@@ -154,7 +155,7 @@ export function LandingFeatureSplit({
   if (isStacked) {
     return (
       <LandingSection id={id} className={resolvedSectionClass} width="7xl">
-        <div className={`flex flex-col gap-6 sm:gap-8 lg:gap-12`}>
+        <MotionReveal className={`flex flex-col gap-6 sm:gap-8 lg:gap-12`}>
           {copyBlock}
           <div
             className="mx-auto w-full min-w-0"
@@ -172,7 +173,7 @@ export function LandingFeatureSplit({
               imageHeight={imageHeight}
             />
           </div>
-        </div>
+        </MotionReveal>
       </LandingSection>
     );
   }
@@ -209,14 +210,14 @@ export function LandingFeatureSplit({
 
   return (
     <LandingSection id={id} className={resolvedSectionClass} width="7xl">
-      <div
+      <MotionReveal
         className={`grid items-center ${gridColsClass} ${LANDING_FEATURE_GAP} ${
           imagePosition === "right" ? "lg:[&>*:first-child]:order-2" : ""
         }`}
       >
         {imageBlock}
         {copyWithPadding}
-      </div>
+      </MotionReveal>
     </LandingSection>
   );
 }

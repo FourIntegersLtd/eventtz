@@ -127,6 +127,7 @@ export function NotificationBell({ portal, unreadCount, onMarkedRead }: Notifica
               <EmptyState
                 title="You're all caught up"
                 className="border-none py-6"
+                lottie="allCaughtUp"
               />
             ) : (
               <ul className="space-y-1">

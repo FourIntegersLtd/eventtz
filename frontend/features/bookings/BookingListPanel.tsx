@@ -1,5 +1,5 @@
-import { CalendarClock } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { LottieFailurePanel } from "@/components/ui/LottieFailurePanel";
 import { SkeletonListRows } from "@/components/ui/Skeleton";
 import { SegmentedControl, type SegmentedControlOption } from "@/components/ui/SegmentedControl";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -106,9 +106,11 @@ export function BookingListPanel({
       />
 
       {error ? (
-        <p className="mt-4 shrink-0 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-          {error}
-        </p>
+        <LottieFailurePanel
+          className="mt-4 shrink-0 py-5"
+          title="Couldn't load bookings"
+          description={error}
+        />
       ) : null}
 
       <div className="scroll-pane mt-4 min-h-0 flex-1 overflow-hidden rounded-2xl border border-neutral-100 bg-white">
@@ -119,7 +121,7 @@ export function BookingListPanel({
         ) : rows.length === 0 ? (
           <EmptyState
             className="border-0 py-14"
-            icon={<CalendarClock className="h-8 w-8" strokeWidth={1.5} />}
+            lottie="emptyInbox"
             title={emptyTitle}
           />
         ) : eventGroups && eventGroups.length > 0 ? (

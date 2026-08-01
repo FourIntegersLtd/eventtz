@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { MessageSquare } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
@@ -137,7 +136,7 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
           </div>
         ) : conversations.length === 0 ? (
           <EmptyState
-            icon={<MessageSquare className="h-8 w-8" aria-hidden />}
+            lottie="emptyInbox"
             title="No support threads yet"
             description="Compose a message to open threads with clients or vendors."
             className="m-4"

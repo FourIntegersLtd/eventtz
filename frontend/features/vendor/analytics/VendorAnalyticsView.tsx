@@ -126,7 +126,7 @@ export function VendorAnalyticsView() {
                 color="var(--color-primary, #3e1964)"
               />
             ) : (
-              <EmptyState className="border-0 py-8" title="No enquiries in this period" />
+              <EmptyState className="border-0 py-8" title="No enquiries in this period" lottie="searchNoResults" />
             )}
           </AdminChartCard>
 
@@ -140,7 +140,7 @@ export function VendorAnalyticsView() {
             {chartHasData(revenueSeries.map((d) => d.value)) ? (
               <AdminAreaChart data={revenueSeries} valueLabel="Revenue" />
             ) : (
-              <EmptyState className="border-0 py-8" title="No revenue in this period" />
+              <EmptyState className="border-0 py-8" title="No revenue in this period" lottie="searchNoResults" />
             )}
           </AdminChartCard>
 
@@ -156,7 +156,7 @@ export function VendorAnalyticsView() {
                 color="#10b981"
               />
             ) : (
-              <EmptyState className="border-0 py-8" title="No ratings yet" />
+              <EmptyState className="border-0 py-8" title="No ratings yet" lottie="searchNoResults" />
             )}
           </AdminChartCard>
         </div>
@@ -170,7 +170,7 @@ export function VendorAnalyticsView() {
             {funnelTotal > 0 ? (
               <AdminDonutChart data={funnel} />
             ) : (
-              <EmptyState className="border-0 py-8" title="No funnel activity yet" />
+              <EmptyState className="border-0 py-8" title="No funnel activity yet" lottie="searchNoResults" />
             )}
           </AdminChartCard>
 
@@ -186,7 +186,7 @@ export function VendorAnalyticsView() {
                 color="#f59e0b"
               />
             ) : (
-              <EmptyState className="border-0 py-8" title="No response data yet" />
+              <EmptyState className="border-0 py-8" title="No response data yet" lottie="searchNoResults" />
             )}
           </AdminChartCard>
         </div>

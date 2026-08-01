@@ -1,6 +1,8 @@
 "use client";
 
 import { getButtonClassName } from "@/components/ui/buttonStyles";
+import { LottieIllustration } from "@/components/ui/LottieIllustration";
+import { MotionReveal } from "@/components/ui/MotionReveal";
 import { WAITLIST_URL } from "@/features/landing/landingData";
 import { LandingSectionHeading } from "@/features/landing/LandingSectionHeading";
 
@@ -10,8 +12,9 @@ export function LandingWaitlistCta() {
       id="contact"
       className="border-t border-neutral-200 bg-neutral-50 py-14 sm:py-20 md:py-24 lg:py-32"
     >
-      <div className="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-16">
+      <MotionReveal className="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-16">
         <LandingSectionHeading eyebrow="Coming soon" title="Built for African vendors in the UK" />
+        <LottieIllustration asset="launchingSoon" className="mx-auto mt-6 h-32 w-32 sm:h-36 sm:w-36" />
         <a
           href={WAITLIST_URL}
           target="_blank"
@@ -23,7 +26,7 @@ export function LandingWaitlistCta() {
         >
           Join the waitlist
         </a>
-      </div>
+      </MotionReveal>
     </section>
   );
 }

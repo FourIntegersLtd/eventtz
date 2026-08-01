@@ -23,7 +23,7 @@ type AdminVendorsTableProps = {
 export function AdminVendorsTable({ rows, onSelect }: AdminVendorsTableProps) {
   if (rows.length === 0) {
     return (
-      <EmptyState title="No vendor profiles yet" />
+      <EmptyState title="No vendor profiles yet" lottie="searchNoResults" />
     );
   }
 

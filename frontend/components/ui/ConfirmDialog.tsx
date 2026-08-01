@@ -2,6 +2,8 @@
 
 import { Modal } from "@/components/ui/Modal";
 import { Button, type ButtonVariant } from "@/components/ui/Button";
+import { LottieIllustration } from "@/components/ui/LottieIllustration";
+import type { LottieAssetKey } from "@/lib/lottieAssets";
 
 export type ConfirmDialogProps = {
   isOpen: boolean;
@@ -13,6 +15,8 @@ export type ConfirmDialogProps = {
   cancelLabel?: string;
   /** Matches the destructive/primary tone of the action being confirmed. */
   confirmVariant?: ButtonVariant;
+  /** Optional illustration above the description. */
+  lottie?: LottieAssetKey;
   loading?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
@@ -31,6 +35,7 @@ export function ConfirmDialog({
   confirmLoadingLabel,
   cancelLabel = "Cancel",
   confirmVariant = "destructive",
+  lottie,
   loading = false,
   onConfirm,
   onCancel,
@@ -55,6 +60,9 @@ export function ConfirmDialog({
         </div>
       }
     >
+      {lottie ? (
+        <LottieIllustration asset={lottie} className="mb-3 h-24 w-24 sm:h-28 sm:w-28" />
+      ) : null}
       {description ? <p className="text-sm text-neutral-700">{description}</p> : null}
     </Modal>
   );

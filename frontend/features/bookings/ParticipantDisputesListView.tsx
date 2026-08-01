@@ -10,6 +10,7 @@ import {
 } from "@/lib/bookingDisputesApi";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { ParticipantDisputeStatusBadge } from "@/components/ui/ParticipantDisputeStatusBadge";
 import { participantDisputeBookingLabel } from "@/lib/bookingDisputeHelpers";
 import {
@@ -78,20 +79,16 @@ export function ParticipantDisputesListView({ role, selectedId = null, onSelect 
   useRealtimeRefresh("disputes:refresh", () => void load(), [role, load]);
 
   if (loading) {
-    return <LoadingState label="Loading disputes…" variant="inline" />;
+    return <LoadingState label="Loading disputes…" variant="centered" branded className="py-12" />;
   }
 
   return (
     <div className="space-y-4">
-      {error ? (
-        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-          {error}
-        </p>
-      ) : null}
+      {error ? <LottieFailureInline message={error} /> : null}
 
       <div className={`overflow-hidden ${portalCard}`}>
         {rows.length === 0 ? (
-          <EmptyState className="border-0 py-14" title="No disputes yet." />
+          <EmptyState className="border-0 py-14" title="No disputes yet." lottie="allCaughtUp" />
         ) : (
           <ul className="divide-y divide-neutral-100">
             {rows.map((d) => {

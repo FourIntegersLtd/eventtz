@@ -51,6 +51,7 @@ export function SettingsSignOutSection() {
         confirmLabel="Sign out"
         confirmLoadingLabel="Signing out…"
         confirmVariant="destructive"
+        lottie="welcome"
         loading={loading}
         onCancel={() => setOpen(false)}
         onConfirm={() => void handleSignOut()}

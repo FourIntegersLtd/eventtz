@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { BlogByline } from "@/features/blog/BlogByline";
+import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { fetchPublishedBlogPost, type BlogPostPublicDetail } from "@/lib/blogApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
 
@@ -59,7 +60,8 @@ export function BlogPostView({ slug }: BlogPostViewProps) {
 
   if (!post) {
     return (
-      <div className="mx-auto max-w-3xl space-y-4 px-4 py-16 text-center sm:px-6">
+      <div className="mx-auto flex max-w-3xl flex-col items-center space-y-4 px-4 py-16 text-center sm:px-6">
+        <LottieIllustration asset="notFound" className="h-32 w-32" />
         <p className="text-neutral-700">{error ?? "Post not found."}</p>
         <Link href="/blog" className="text-sm font-medium text-primary hover:underline">
           Back to blog

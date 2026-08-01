@@ -135,7 +135,7 @@ export function AdminBookingsView() {
       {loading ? (
         <AdminLoadingState label="Loading bookings…" />
       ) : rows.length === 0 ? (
-        <EmptyState title="No bookings match your filters" />
+        <EmptyState title="No bookings match your filters" lottie="searchNoResults" />
       ) : (
         <>
           <AdminTable>

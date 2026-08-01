@@ -7,7 +7,7 @@ import { ForgotPasswordView } from "@/features/auth/ForgotPasswordView";
 function Fallback() {
   return (
     <main className="min-h-dvh bg-auth-bg px-4 py-10">
-      <LoadingState label="Loading…" variant="page" />
+      <LoadingState label="Loading…" variant="page" branded />
     </main>
   );
 }

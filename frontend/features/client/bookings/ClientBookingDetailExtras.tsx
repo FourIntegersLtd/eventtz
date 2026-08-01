@@ -2,6 +2,7 @@
 
 import type { RefObject } from "react";
 import { Button } from "@/components/ui/Button";
+import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { resolveWasClientTotalLabel } from "@/features/bookings/bookingPriceLabels";
 import { BookingPriceUpdateBanner } from "@/features/bookings/BookingPriceUpdateBanner";
 import { BookingCompletionBanner } from "@/features/bookings/BookingCompletionBanner";
@@ -63,12 +64,17 @@ export function ClientBookingDetailExtras({
         <div
           className={`mt-4 rounded-2xl border px-5 py-4 text-sm ${
             paymentBanner === "cancelled"
-              ? "border-neutral-100 bg-neutral-50 text-neutral-800"
+              ? "border-amber-200 bg-amber-50 text-amber-950"
               : paymentSyncError
                 ? "border-red-200 bg-red-50 text-red-800"
-                : "border-neutral-100 bg-neutral-50 text-neutral-800"
+                : "border-emerald-100 bg-emerald-50/60 text-neutral-800"
           }`}
         >
+          {paymentBanner === "success" && !paymentSyncError ? (
+            <LottieIllustration asset="successCheck" className="mb-2 h-20 w-20" />
+          ) : paymentBanner === "cancelled" || paymentSyncError ? (
+            <LottieIllustration asset="failure" className="mb-2 h-20 w-20" />
+          ) : null}
           {checkoutReturnMessage}
         </div>
       ) : null}
@@ -86,7 +92,8 @@ export function ClientBookingDetailExtras({
       />
 
       {showCancelledRefunded ? (
-        <div className="mt-4 rounded-2xl border border-neutral-100 bg-neutral-50 px-5 py-4 text-sm text-neutral-700">
+        <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-950">
+          <LottieIllustration asset="failure" className="mb-2 h-20 w-20" />
           {PAYMENT_FLOW_COPY.cancelledRefunded}
         </div>
       ) : null}

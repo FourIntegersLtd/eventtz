@@ -76,7 +76,7 @@ export function AdminDashboardCharts({ summary }: AdminDashboardChartsProps) {
           ) : chartHasData(signupData.flatMap((d) => [d.clients, d.vendors])) ? (
             <AdminGroupedBarChart data={signupData} />
           ) : (
-            <EmptyState className="border-0 py-8" title="No signups in this period" />
+            <EmptyState className="border-0 py-8" title="No signups in this period" lottie="searchNoResults" />
           )}
         </div>
 
@@ -86,7 +86,7 @@ export function AdminDashboardCharts({ summary }: AdminDashboardChartsProps) {
             <AdminInfoHint label="Booking pipeline" info={DASHBOARD_CHART_INFO.pipeline} />
           </div>
           {pipelineTotal === 0 ? (
-            <EmptyState className="border-0 py-8" title="No bookings yet" />
+            <EmptyState className="border-0 py-8" title="No bookings yet" lottie="emptyInbox" />
           ) : (
             <AdminDonutChart data={pipelineData} />
           )}

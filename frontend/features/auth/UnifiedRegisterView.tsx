@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { AuthPageShell } from "@/components/auth/AuthPageShell";
+import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Select } from "@/components/ui/Select";
@@ -30,6 +31,7 @@ export function UnifiedRegisterView() {
 
   return (
     <AuthPageShell logoHref={isAuthenticated ? dashboardPathForUserType(userType) : "/"}>
+      <LottieIllustration asset="welcome" className="mb-4 h-20 w-20 sm:h-24 sm:w-24" />
       <Card padding="lg" className="w-full max-w-md">
         <h1 className="font-heading text-2xl font-semibold text-neutral-900">Create your account</h1>
         <p className="mt-1 text-sm text-neutral-500">Choose an account type to get started.</p>

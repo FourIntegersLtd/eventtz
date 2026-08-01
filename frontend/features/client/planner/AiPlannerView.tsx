@@ -4,6 +4,7 @@ import { useEffect, useEffectEvent, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { Button } from "@/components/ui/Button";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { getApiErrorDetail } from "@/lib/api-errors";
@@ -128,17 +129,14 @@ export function AiPlannerView({ initialPlanId }: { initialPlanId?: string }) {
         </div>
       ) : null}
 
-      {error && !simpleIntent ? (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-          {error}
-        </p>
-      ) : null}
+      {error && !simpleIntent ? <LottieFailureInline message={error} /> : null}
 
       {loading && !plan ? (
         <LoadingState
           label={PLANNER_COPY.loadingLabels[loadingTick] ?? PLANNER_COPY.loadingLabels[0]}
           variant="centered"
           className="py-16"
+          lottie="aiThinking"
         />
       ) : null}
 

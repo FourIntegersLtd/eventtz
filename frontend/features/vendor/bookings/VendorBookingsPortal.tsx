@@ -6,7 +6,7 @@ import { VendorBookingsView } from "@/features/vendor/bookings/VendorBookingsVie
 
 export function VendorBookingsPortal() {
   return (
-    <Suspense fallback={<LoadingState label="Loading bookings…" variant="centered" />}>
+    <Suspense fallback={<LoadingState label="Loading bookings…" variant="centered" branded />}>
       <VendorBookingsView />
     </Suspense>
   );

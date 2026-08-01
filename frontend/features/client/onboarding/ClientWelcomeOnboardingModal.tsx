@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { CheckCircle2, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { TextField } from "@/components/ui/TextField";
 import { FOCUS_RING, TOUCH_TARGET } from "@/components/ui/tokens";
 import { AnimatedStepItem } from "@/features/vendor/onboarding/ui/AnimatedStepItem";
@@ -16,7 +17,6 @@ import {
 } from "@/features/client/onboarding/clientOnboardingCopy";
 import {
   CLIENT_ONBOARDING_FINISH_CHIPS,
-  CLIENT_ONBOARDING_FINISH_ICON,
   CLIENT_ONBOARDING_ICON_VISUALS,
   CLIENT_ONBOARDING_NAME_ICON,
   CLIENT_ONBOARDING_WELCOME_ICON,
@@ -273,7 +273,7 @@ export function ClientWelcomeOnboardingModal() {
           {step === "finish" ? (
             <div className="flex flex-col items-center px-2 py-6 text-center sm:py-10">
               <AnimatedStepItem index={0}>
-                <OnboardingIconBadge visual={CLIENT_ONBOARDING_FINISH_ICON} size="xl" />
+                <LottieIllustration asset="allCaughtUp" className="h-32 w-32 sm:h-36 sm:w-36" />
               </AnimatedStepItem>
               <AnimatedStepItem index={1}>
                 <p className="mt-8 text-xs font-semibold uppercase tracking-[0.18em] text-accent-violet">

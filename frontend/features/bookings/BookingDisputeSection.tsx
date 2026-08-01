@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Drawer } from "@/components/ui/Drawer";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { getApiErrorDetail } from "@/lib/api-errors";
@@ -129,9 +130,7 @@ export function BookingDisputeSection({
       ) : (
         <>
           {error ? (
-            <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800">
-              {error}
-            </p>
+            <LottieFailureInline message={error} className="mt-3 text-xs" />
           ) : null}
 
           {disputes.length > 0 ? (
@@ -217,6 +216,7 @@ export function BookingDisputeSection({
           confirmLabel={BOOKING_CONFIRM_COPY.openDispute.confirmLabel}
           confirmLoadingLabel={BOOKING_CONFIRM_COPY.openDispute.confirmLoadingLabel}
           confirmVariant="destructive"
+          lottie="pendingReview"
           loading={busy}
           onCancel={() => setSubmitConfirmOpen(false)}
           onConfirm={() => void submitDispute()}
@@ -269,6 +269,7 @@ export function BookingDisputeSection({
         confirmLabel={BOOKING_CONFIRM_COPY.openDispute.confirmLabel}
         confirmLoadingLabel={BOOKING_CONFIRM_COPY.openDispute.confirmLoadingLabel}
         confirmVariant="destructive"
+        lottie="pendingReview"
         loading={busy}
         onCancel={() => setSubmitConfirmOpen(false)}
         onConfirm={() => void submitDispute()}

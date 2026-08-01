@@ -6,6 +6,7 @@ import { KeyRound, Mail, UserCircle2 } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/Button";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { TextField } from "@/components/ui/TextField";
 import type { PortalRole } from "@/components/portal-shell/portalNav";
 import { portalRoute } from "@/components/portal-shell/portalNav";
@@ -99,9 +100,7 @@ export function SettingsAccountSection({ role }: Props) {
               ) : (
                 <>
                   {nameError ? (
-                    <p className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-                      {nameError}
-                    </p>
+                    <LottieFailureInline message={nameError} className="mb-3" />
                   ) : null}
                   {nameSaved ? (
                     <p className="mb-2 text-xs font-medium text-primary">Saved.</p>

@@ -3,6 +3,7 @@
 import type { ParticipantDispute } from "@/lib/bookingDisputesApi";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { LottieFailurePanel } from "@/components/ui/LottieFailurePanel";
 import { ParticipantDisputeStatusBadge } from "@/components/ui/ParticipantDisputeStatusBadge";
 import { PaymentStatusBadge } from "@/components/ui/PaymentStatusBadge";
 import { formatDateTime, formatEventDate } from "@/lib/dateFormat";
@@ -27,14 +28,15 @@ export function ParticipantDisputeDetailPanel({ role, dispute, loading, error }:
   const messagesBase = role === "client" ? "/client/messages" : "/vendor/messages";
 
   if (loading) {
-    return <LoadingState label="Loading dispute…" variant="inline" />;
+    return <LoadingState label="Loading dispute…" variant="centered" branded className="py-12" />;
   }
 
   if (error || !dispute) {
     return (
-      <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-        {error ?? "Dispute not found."}
-      </p>
+      <LottieFailurePanel
+        title="Couldn't load dispute"
+        description={error ?? "Dispute not found."}
+      />
     );
   }
 

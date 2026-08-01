@@ -3,6 +3,8 @@
 import { portalCard } from "@/components/portal-shell/portalTheme";
 import Link from "next/link";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { LottieEmptyPanel } from "@/components/ui/LottieEmptyPanel";
+import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { PaymentStatusBadge } from "@/components/ui/PaymentStatusBadge";
 import { fetchClientBookings, type ClientBookingListItem } from "@/lib/clientBookingsApi";
 import { formatEventDate } from "@/lib/dateFormat";
@@ -24,22 +26,20 @@ export function ClientPaymentsView() {
   const rows = bookings ?? [];
 
   if (loading) {
-    return <LoadingState label="Loading payment history…" variant="inline" />;
+    return <LoadingState label="Loading payment history…" variant="centered" branded className="py-12" />;
   }
 
   if (error) {
-    return (
-      <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800 ring-1 ring-red-200/50">
-        {error}
-      </p>
-    );
+    return <LottieFailureInline message={error} />;
   }
 
   if (rows.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed border-neutral-200 bg-neutral-50/60 px-5 py-10 text-center text-sm text-neutral-600">
-        No paid bookings yet.
-      </p>
+      <LottieEmptyPanel
+        lottie="paymentSecure"
+        title="No paid bookings yet"
+        description="When you pay for a booking, it will show up here."
+      />
     );
   }
 

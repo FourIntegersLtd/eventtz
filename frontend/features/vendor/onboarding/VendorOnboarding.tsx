@@ -11,6 +11,7 @@ import { OnboardingProgressHeader } from "./OnboardingProgressHeader";
 import { useVendorOnboardingController } from "./useVendorOnboardingController";
 import { Button } from "@/components/ui/Button";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { Modal } from "@/components/ui/Modal";
 
 export function VendorOnboarding() {
@@ -175,14 +176,19 @@ export function VendorOnboarding() {
       )}
       {lockedPendingReview && (
         <div className="mb-8 rounded-2xl bg-amber-50 p-5 text-sm text-amber-950 shadow-sm ring-1 ring-amber-200/50">
-          <strong className="font-semibold">
-            {approvalStatus === "banned"
-              ? "Your profile isn’t visible to clients right now."
-              : "Thanks — we’re reviewing your profile."}
-          </strong>{" "}
-          {approvalStatus === "banned"
-            ? "An admin has restricted this profile. You can’t edit it until that changes."
-            : "You can edit again after our review."}
+          <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:text-left">
+            <LottieIllustration asset="pendingReview" className="h-20 w-20 shrink-0" />
+            <div>
+              <strong className="font-semibold">
+                {approvalStatus === "banned"
+                  ? "Your profile isn’t visible to clients right now."
+                  : "Thanks — we’re reviewing your profile."}
+              </strong>{" "}
+              {approvalStatus === "banned"
+                ? "An admin has restricted this profile. You can’t edit it until that changes."
+                : "You can edit again after our review."}
+            </div>
+          </div>
         </div>
       )}
       <Modal

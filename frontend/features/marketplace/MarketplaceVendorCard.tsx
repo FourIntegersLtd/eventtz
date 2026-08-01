@@ -13,6 +13,7 @@ import {
   formatUsualReplyWithin,
   formatVendorCompletedBookings,
 } from "@/lib/vendorMetrics";
+import { useLaunchingSoonBookingGuard } from "@/features/bookings/useLaunchingSoonBookingGuard";
 import { profileImageUrlFromPayload } from "@/lib/vendorPortfolioImages";
 
 /** Conversion rate above which plan cards show “Often booked”. */
@@ -57,6 +58,7 @@ export function MarketplaceVendorCard({
   showPlanEvidence = false,
 }: MarketplaceVendorCardProps) {
   const router = useRouter();
+  const { guardBooking, launchingSoonModal } = useLaunchingSoonBookingGuard();
   const v = card.vendor;
   const detailHref = vendorDetailHref ?? `/client/browse/${v.user_id}`;
   const p = v.payload ?? {};
@@ -159,7 +161,9 @@ export function MarketplaceVendorCard({
           aria-label={bookmarked ? "Remove saved vendor" : "Save vendor"}
         >
           <Heart
-            className="pointer-events-none h-4 w-4"
+            className={`pointer-events-none h-4 w-4 transition-transform duration-200 ${
+              bookmarked ? "scale-110 text-primary" : "scale-100"
+            }`}
             strokeWidth={2}
             fill={bookmarked ? "currentColor" : "none"}
           />
@@ -286,7 +290,7 @@ export function MarketplaceVendorCard({
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.stopPropagation();
-              onToggleSelect?.();
+              guardBooking(() => onToggleSelect?.());
             }}
             className={`flex w-full touch-manipulation items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
               selected
@@ -306,6 +310,7 @@ export function MarketplaceVendorCard({
           </button>
         ) : null}
       </div>
+      {launchingSoonModal}
     </div>
   );
 }

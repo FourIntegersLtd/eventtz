@@ -310,6 +310,7 @@ export function PortalShell({
         confirmLabel="Sign out"
         confirmLoadingLabel="Signing out…"
         confirmVariant="destructive"
+        lottie="welcome"
         loading={signingOut}
         onCancel={() => setSignOutOpen(false)}
         onConfirm={() => void handleSignOut()}

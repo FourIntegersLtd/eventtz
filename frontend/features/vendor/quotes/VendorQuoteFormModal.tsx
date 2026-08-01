@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Drawer } from "@/components/ui/Drawer";
 import { Button } from "@/components/ui/Button";
+import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { TextField } from "@/components/ui/TextField";
 import { TextArea } from "@/components/ui/TextArea";
 import { Select } from "@/components/ui/Select";
@@ -204,11 +205,7 @@ export function VendorQuoteFormModal({
           list, or a one-off price that isn&apos;t on your profile. It creates a booking
           request the client can accept or decline from Bookings.
         </p>
-        {error ? (
-          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-            {error}
-          </p>
-        ) : null}
+        {error ? <LottieFailureInline message={error} /> : null}
         <TextField
           label="Event name"
           value={eventName}

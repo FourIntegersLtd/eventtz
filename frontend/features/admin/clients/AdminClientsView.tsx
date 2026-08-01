@@ -95,7 +95,7 @@ export function AdminClientsView() {
       {loading ? (
         <AdminLoadingState label="Loading clients…" />
       ) : rows.length === 0 ? (
-        <EmptyState title="No clients match your filters" />
+        <EmptyState title="No clients match your filters" lottie="searchNoResults" />
       ) : (
         <>
           <AdminTable>
@@ -192,6 +192,7 @@ export function AdminClientsView() {
             : ADMIN_CONFIRM_COPY.suspendClient.confirmLabel
         }
         confirmVariant={confirmTarget?.account_suspended ? "primary" : "destructive"}
+        lottie={confirmTarget?.account_suspended ? "successCheck" : "failure"}
         loading={busyId === confirmTarget?.user_id}
         onCancel={() => setConfirmTarget(null)}
         onConfirm={() => {

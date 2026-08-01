@@ -8,6 +8,8 @@ import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { EventtzLogo } from "@/components/branding/EventtzLogo";
 import { PortalShell } from "@/components/portal-shell/PortalShell";
 import { BackLink } from "@/components/ui/BackLink";
+import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
+import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { useToast } from "@/components/ui/Toast";
 import {
@@ -20,6 +22,7 @@ import { buildBrowsePricingOptions } from "@/features/client/browse/vendorBrowse
 import { useExploreVendor } from "@/features/client/browse/useExploreVendor";
 import { marketplaceStateFromSearchParams, buildMarketplaceSearchUrl, toClientSearchContext } from "@/lib/marketplaceSearchParams";
 import { eventEnquirePrefillFromSearchParams } from "@/features/bookings/eventEnquirePrefill";
+import { useLaunchingSoonBookingGuard } from "@/features/bookings/useLaunchingSoonBookingGuard";
 import { vendorMatchesMarketplaceSearch } from "@/lib/marketplaceVendorMatch";
 import { usualReplyExpectation } from "@/lib/vendorMetrics";
 
@@ -40,6 +43,7 @@ export function ClientVendorBrowseDetailView() {
   const [chatOpen, setChatOpen] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [bookingSelectionIds, setBookingSelectionIds] = useState<string[]>([]);
+  const { guardBooking, launchingSoonModal } = useLaunchingSoonBookingGuard();
 
   const marketplaceSearch = useMemo(
     () => marketplaceStateFromSearchParams(searchParams),
@@ -148,18 +152,15 @@ export function ClientVendorBrowseDetailView() {
 
   const mainContent = (() => {
     if (loading || authLoading) {
-      return <LoadingState label="Loading vendor…" variant="centered" className="py-12" />;
+      return <LoadingState label="Loading vendor…" variant="centered" className="py-12" branded />;
     }
     if (error) {
-      return (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-          {error}
-        </p>
-      );
+      return <LottieFailureInline message={error} />;
     }
     if (notFound || !vendor) {
       return (
-        <div className="space-y-4">
+        <div className="flex flex-col items-center space-y-4 text-center">
+          <LottieIllustration asset="notFound" className="h-32 w-32" />
           <p className="text-sm text-neutral-700">
             This vendor could not be found or is no longer listed.
           </p>
@@ -193,9 +194,11 @@ export function ClientVendorBrowseDetailView() {
           onRequestBooking={
             isClient
               ? (ids) => {
-                  setBookingSelectionIds(ids);
-                  setBookingOpen(true);
-                  track(MixpanelEvents.enquiry_started, { vendor_user_id: userId });
+                  guardBooking(() => {
+                    setBookingSelectionIds(ids);
+                    setBookingOpen(true);
+                    track(MixpanelEvents.enquiry_started, { vendor_user_id: userId });
+                  });
                 }
               : undefined
           }
@@ -234,6 +237,7 @@ export function ClientVendorBrowseDetailView() {
             counterpartyUserId={userId}
           />
         ) : null}
+        {launchingSoonModal}
       </>
     );
   })();

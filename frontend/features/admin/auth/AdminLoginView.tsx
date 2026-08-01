@@ -5,6 +5,7 @@ import { EventtzLogo } from "@/components/branding/EventtzLogo";
 import { BackLink } from "@/components/ui/BackLink";
 import { Button } from "@/components/ui/Button";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { TextField } from "@/components/ui/TextField";
 import { PasswordField } from "@/components/ui/PasswordField";
 import { adminPageBg, adminCard } from "@/features/admin/adminTheme";
@@ -77,14 +78,7 @@ export function AdminLoginView() {
               onSubmit={(e) => void onSubmit(e)}
               className={`mt-8 space-y-4 ${adminCard} p-6 sm:p-8`}
             >
-              {error ? (
-                <div
-                  role="alert"
-                  className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
-                >
-                  {error}
-                </div>
-              ) : null}
+              {error ? <LottieFailureInline message={error} /> : null}
               <TextField
                 id="admin-email"
                 label="Email"

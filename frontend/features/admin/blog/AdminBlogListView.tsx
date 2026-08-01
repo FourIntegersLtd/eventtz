@@ -83,6 +83,7 @@ export function AdminBlogListView() {
         <EmptyState
           title="No posts yet"
           description="Write your first draft and publish when you’re ready."
+          lottie="searchNoResults"
           action={
             <Button variant="primary" size="sm" loading={creating} onClick={() => void createPost()}>
               New post

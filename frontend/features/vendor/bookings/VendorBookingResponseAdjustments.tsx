@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { inputClass, labelClass, ToggleChip } from "@/features/vendor/onboarding/steps/form-primitives";
 import { parseForm, vendorPriceAdjustmentsSchema } from "@/lib/validation";
 import {
@@ -178,11 +179,7 @@ export function VendorBookingResponseAdjustments({
         <p className="text-xs text-amber-700">Add a reason for the extra charge.</p>
       ) : null}
 
-      {adjError ? (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-          {adjError}
-        </p>
-      ) : null}
+      {adjError ? <LottieFailureInline message={adjError} /> : null}
 
       {previewTotal ? (
         <p className="text-sm text-neutral-600">

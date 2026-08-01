@@ -43,6 +43,7 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
           confirmLabel={v.confirmCopy[v.confirmAction].confirmLabel}
           confirmLoadingLabel={v.confirmCopy[v.confirmAction].loadingLabel}
           confirmVariant={v.confirmCopy[v.confirmAction].variant}
+          lottie={v.confirmAction === "complete" ? "successCheck" : "failure"}
           loading={v.actionBusy}
           onCancel={() => v.setConfirmAction(null)}
           onConfirm={v.handleConfirmAction}

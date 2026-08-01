@@ -9,6 +9,7 @@ import {
 } from "@/lib/userSettingsApi";
 import { parseForm, contactPhoneFormSchema } from "@/lib/validation";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { inputClass, labelClass } from "@/features/vendor/onboarding/steps/form-primitives";
 import type { PortalRole } from "@/components/portal-shell/portalNav";
 
@@ -94,11 +95,7 @@ export function ContactSharingSettingsSection({ role }: ContactSharingSettingsSe
       </div>
 
       <div className="space-y-3 border-t border-neutral-100 px-5 py-4 sm:px-6">
-        {error ? (
-          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-            {error}
-          </p>
-        ) : null}
+        {error ? <LottieFailureInline message={error} /> : null}
         {saved ? <p className="text-xs font-medium text-primary">Saved.</p> : null}
 
         <label className="flex items-start gap-3 text-sm">

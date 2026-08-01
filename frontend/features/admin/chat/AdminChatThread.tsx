@@ -144,7 +144,7 @@ export function AdminChatThread({ conversationId, className = "", compact = fals
             </div>
           </div>
         ) : (
-          <EmptyState title="Conversation not found" />
+          <EmptyState title="Conversation not found" lottie="notFound" />
         )
       ) : null}
 

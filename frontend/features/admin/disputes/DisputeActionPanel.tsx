@@ -7,8 +7,9 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { useAdminPermissions } from "@/features/admin/useAdminPermissions";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { ADMIN_CONFIRM_COPY } from "@/features/bookings/bookingConfirmCopy";
 import { Drawer } from "@/components/ui/Drawer";
+import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
+import { ADMIN_CONFIRM_COPY } from "@/features/bookings/bookingConfirmCopy";
 import { patchAdminDispute, type AdminDisputeCase } from "@/lib/adminPlatformApi";
 import { fetchAdminTeam, type AdminTeamMember } from "@/lib/adminTeamApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
@@ -177,11 +178,7 @@ export function DisputeActionPanel({
         }
       >
         <div className="space-y-4 text-sm">
-          {error ? (
-            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-red-800">
-              {error}
-            </p>
-          ) : null}
+          {error ? <LottieFailureInline message={error} /> : null}
 
           <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
             <div className="px-5 py-4">
@@ -389,6 +386,7 @@ export function DisputeActionPanel({
         description={ADMIN_CONFIRM_COPY.closeDispute.description}
         confirmLabel={ADMIN_CONFIRM_COPY.closeDispute.confirmLabel}
         confirmVariant="destructive"
+        lottie="pendingReview"
         loading={statusBusy}
         onCancel={() => {
           setConfirmClose(false);

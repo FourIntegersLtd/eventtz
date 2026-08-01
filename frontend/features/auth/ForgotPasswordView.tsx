@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { AuthPageShell } from "@/components/auth/AuthPageShell";
+import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { TextField } from "@/components/ui/TextField";
@@ -66,6 +67,7 @@ export function ForgotPasswordView({ variant = "default" }: ForgotPasswordViewPr
 
         {sentMessage ? (
           <div className="mt-6 space-y-4">
+            <LottieIllustration asset="successCheck" className="h-24 w-24" />
             <p className="rounded-xl bg-primary-soft px-3 py-3 text-sm text-neutral-800 ring-1 ring-primary/15">
               {sentMessage}
             </p>

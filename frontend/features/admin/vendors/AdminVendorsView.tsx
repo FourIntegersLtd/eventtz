@@ -93,7 +93,7 @@ export function AdminVendorsView() {
       {loading ? (
         <AdminLoadingState label="Loading vendors…" />
       ) : rows.length === 0 ? (
-        <EmptyState title="No vendors match your filters" />
+        <EmptyState title="No vendors match your filters" lottie="searchNoResults" />
       ) : (
         <>
           <AdminVendorsTable rows={rows} onSelect={setSelectedUserId} />

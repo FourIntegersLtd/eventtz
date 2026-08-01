@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { LottieIllustration } from "@/components/ui/LottieIllustration";
 
 type PayoutSetupRequiredModalProps = {
   isOpen: boolean;
@@ -41,6 +42,7 @@ export function PayoutSetupRequiredModal({
       }
     >
       <div className="space-y-3 text-sm leading-relaxed text-neutral-700">
+        <LottieIllustration asset="paymentSecure" className="h-24 w-24" />
         <p>
           To receive secure payments through Eventzz, you need to complete payout setup.
         </p>

@@ -4,6 +4,7 @@ import { BackLink } from "@/components/ui/BackLink";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { LottieFailurePanel } from "@/components/ui/LottieFailurePanel";
 import { useClientBookingPay } from "@/features/client/payments/useClientBookingPay";
 import { PaymentSafetyModal } from "@/features/client/payments/PaymentSafetyModal";
 
@@ -30,10 +31,15 @@ export function ClientBookingPayView({ bookingId }: ClientBookingPayViewProps) {
     return (
       <div className="w-full max-w-3xl space-y-6">
         <BackLink href={bookingHref} label="Back to booking" />
-        <p className="text-sm text-red-700">{error ?? "Could not load this booking."}</p>
-        <Button variant="secondary" onClick={() => router.push(bookingHref)}>
-          Back to booking
-        </Button>
+        <LottieFailurePanel
+          title="Payment couldn't be started"
+          description={error ?? "Could not load this booking."}
+          action={
+            <Button variant="secondary" onClick={() => router.push(bookingHref)}>
+              Back to booking
+            </Button>
+          }
+        />
       </div>
     );
   }
@@ -42,7 +48,7 @@ export function ClientBookingPayView({ bookingId }: ClientBookingPayViewProps) {
     return (
       <div className="w-full max-w-3xl space-y-6">
         <BackLink href={bookingHref} label="Back to booking" />
-        <LoadingState label="Preparing secure checkout…" variant="centered" className="py-16" />
+        <LoadingState label="Preparing secure checkout…" variant="centered" className="py-16" lottie="paymentSecure" />
       </div>
     );
   }
@@ -59,9 +65,11 @@ export function ClientBookingPayView({ bookingId }: ClientBookingPayViewProps) {
           </p>
         </header>
         {error ? (
-          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-            {error}
-          </p>
+          <LottieFailurePanel
+            className="border-red-200 bg-red-50 py-6"
+            title="Something went wrong"
+            description={error}
+          />
         ) : null}
         <div>
           <label
@@ -100,15 +108,18 @@ export function ClientBookingPayView({ bookingId }: ClientBookingPayViewProps) {
     <div className="w-full max-w-3xl space-y-6">
       <BackLink href={bookingHref} label="Back to booking" />
       {error && phase !== "redirecting" ? (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-          {error}
-        </p>
+        <LottieFailurePanel
+          className="border-red-200 bg-red-50 py-6"
+          title="Checkout failed"
+          description={error}
+        />
       ) : null}
       {phase === "redirecting" ? (
         <LoadingState
           label="Redirecting you to secure checkout…"
           variant="centered"
           className="py-16"
+          lottie="paymentSecure"
         />
       ) : (
         <p className="text-sm text-neutral-600">Review how we protect your payment, then continue.</p>

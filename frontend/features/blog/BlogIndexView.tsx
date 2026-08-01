@@ -61,6 +61,7 @@ export function BlogIndexView() {
         <EmptyState
           title="No posts yet"
           description="Check back soon for new writing from the Eventtz team."
+          lottie="searchNoResults"
         />
       ) : (
         <ul className="space-y-12 sm:space-y-16">

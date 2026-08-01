@@ -12,6 +12,9 @@ import { FEATURED_VENDORS_SECTION } from "@/features/landing/landingData";
 import { LandingSectionHeading } from "@/features/landing/LandingSectionHeading";
 import { LandingSection } from "@/features/landing/LandingSection";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { LottieEmptyPanel } from "@/components/ui/LottieEmptyPanel";
+import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
+import { MotionStaggerItem } from "@/components/ui/MotionStaggerItem";
 import {
   LANDING_SECTION_CONTENT_MT,
   landingSectionClass,
@@ -71,28 +74,30 @@ export function LandingFeaturedVendors() {
       </div>
 
       {loading ? (
-        <LoadingState label="Loading featured vendors…" variant="centered" className={`${LANDING_SECTION_CONTENT_MT} py-12`} />
+        <LoadingState label="Loading featured vendors…" variant="centered" className={`${LANDING_SECTION_CONTENT_MT} py-12`} branded />
       ) : error ? (
-        <p className={`${LANDING_SECTION_CONTENT_MT} rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800`}>
-          {error}
-        </p>
+        <LottieFailureInline message={error} className={LANDING_SECTION_CONTENT_MT} />
       ) : cards.length === 0 ? (
-        <p className={`${LANDING_SECTION_CONTENT_MT} rounded-2xl border border-primary-border bg-primary-soft px-4 py-6 text-center text-sm text-neutral-600`}>
-          No vendors yet.
-        </p>
+        <LottieEmptyPanel
+          className={LANDING_SECTION_CONTENT_MT}
+          lottie="searchNoResults"
+          title="No vendors yet"
+          description="We're onboarding vendors across the UK — check back soon."
+        />
       ) : (
         <div className={`${LANDING_SECTION_CONTENT_MT} grid justify-items-center gap-6 sm:grid-cols-2 sm:gap-7 lg:grid-cols-3 lg:gap-8`}>
-          {cards.map((card) => (
-            <MarketplaceVendorCard
-              key={card.cardKey}
-              card={card}
-              showBookmark={false}
-              onNavigate={(vendorUserId) =>
-                track(MixpanelEvents.landing_featured_vendor_clicked, {
-                  vendor_user_id: vendorUserId,
-                })
-              }
-            />
+          {cards.map((card, index) => (
+            <MotionStaggerItem key={card.cardKey} index={index}>
+              <MarketplaceVendorCard
+                card={card}
+                showBookmark={false}
+                onNavigate={(vendorUserId) =>
+                  track(MixpanelEvents.landing_featured_vendor_clicked, {
+                    vendor_user_id: vendorUserId,
+                  })
+                }
+              />
+            </MotionStaggerItem>
           ))}
         </div>
       )}

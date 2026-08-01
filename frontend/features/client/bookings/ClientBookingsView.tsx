@@ -32,6 +32,7 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
         confirmLabel={c.clientCancelCopy.confirmLabel}
         confirmLoadingLabel={c.clientCancelCopy.confirmLoadingLabel}
         confirmVariant="destructive"
+        lottie="failure"
         loading={c.actionBusy}
         onCancel={() => c.setCancelOpen(false)}
         onConfirm={() => void c.confirmCancelBooking()}
@@ -44,6 +45,7 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
         confirmLabel={BOOKING_CONFIRM_COPY.confirmComplete.confirmLabel}
         confirmLoadingLabel={BOOKING_CONFIRM_COPY.confirmComplete.confirmLoadingLabel}
         confirmVariant="primary"
+        lottie="successCheck"
         loading={c.confirmingCompletion}
         onCancel={() => c.setConfirmCompleteOpen(false)}
         onConfirm={() => void c.confirmCompletion()}
@@ -57,6 +59,7 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
         confirmLabel={BOOKING_CONFIRM_COPY.declineQuote.confirmLabel}
         confirmLoadingLabel={BOOKING_CONFIRM_COPY.declineQuote.confirmLoadingLabel}
         confirmVariant="destructive"
+        lottie="failure"
         loading={c.actionBusy && c.pendingQuoteAction === "decline"}
         onCancel={() => c.setDeclineQuoteOpen(false)}
         onConfirm={() => {
@@ -73,6 +76,7 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
         confirmLabel={BOOKING_CONFIRM_COPY.declineUpdatedPrice.confirmLabel}
         confirmLoadingLabel={BOOKING_CONFIRM_COPY.declineUpdatedPrice.confirmLoadingLabel}
         confirmVariant="destructive"
+        lottie="failure"
         loading={c.actionBusy && c.pendingPriceAction === "decline"}
         onCancel={() => c.setDeclinePriceOpen(false)}
         onConfirm={() => {

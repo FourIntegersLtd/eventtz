@@ -53,7 +53,7 @@ export function AdminAttentionList({
       {items.length === 0 ? (
         <EmptyState
           className="border-0 shadow-none"
-          icon={<Sparkles className="h-7 w-7" strokeWidth={1.5} />}
+          lottie="allCaughtUp"
           title={emptyTitle}
         />
       ) : (

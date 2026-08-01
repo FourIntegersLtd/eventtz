@@ -113,6 +113,12 @@ export const PAYMENT_FLOW_COPY = {
     "This booking was cancelled. The client's payment was refunded in full.",
 } as const;
 
+/** Closed booking outcomes shown on detail views (declined / cancelled without refund). */
+export const BOOKING_OUTCOME_COPY = {
+  declined: "This booking request was declined. No payment was taken.",
+  cancelled: "This booking was cancelled.",
+} as const;
+
 /** Pre-checkout modal and post-payment email: how client funds are protected. */
 export const PAYMENT_SAFETY_COPY = {
   modalTitle: "Your payment is in safe hands",

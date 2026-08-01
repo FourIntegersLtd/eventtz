@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
+import { LottieEmptyPanel } from "@/components/ui/LottieEmptyPanel";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import type { PlannerRecommendation, PlannerVendorCard } from "@/lib/clientPlannerApi";
 import { PLANNER_COPY } from "./plannerCopy";
@@ -94,9 +95,11 @@ export function RecommendationSection({
       </div>
 
       {!primary ? (
-        <p className="mt-3 text-sm text-neutral-600">
-          {recommendation.empty_reason || "No vendors found for this category yet."}
-        </p>
+        <LottieEmptyPanel
+          className="mt-3 border-0 bg-transparent py-4"
+          lottie="searchNoResults"
+          title={recommendation.empty_reason || "No vendors found for this category yet."}
+        />
       ) : (
         <div className="mt-4 space-y-3">
           <VendorRow

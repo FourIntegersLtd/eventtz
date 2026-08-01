@@ -5,6 +5,9 @@ import { useState } from "react";
 import { AlertCircle, ChevronDown, ChevronRight, Info, Sparkles } from "lucide-react";
 import { portalCard } from "@/components/portal-shell/portalTheme";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { LottieFailurePanel } from "@/components/ui/LottieFailurePanel";
+import { LottieIllustration } from "@/components/ui/LottieIllustration";
+import { MotionStaggerItem } from "@/components/ui/MotionStaggerItem";
 import { SkeletonListRows } from "@/components/ui/Skeleton";
 import { sortAttentionItems, type AttentionItem, type AttentionTone } from "./attentionTypes";
 
@@ -78,12 +81,12 @@ export function AttentionFeedCard({
       ) : sorted.length === 0 ? (
         <EmptyState
           className="border-0"
-          icon={<Sparkles className="h-8 w-8" strokeWidth={1.5} />}
+          lottie="allCaughtUp"
           title="You're all caught up"
         />
       ) : (
         <ul className="divide-y divide-neutral-100">
-          {visible.map((item) => {
+          {visible.map((item, index) => {
             const Icon = TONE_ICON[item.tone];
             const iconAndText = (
               <>
@@ -106,8 +109,10 @@ export function AttentionFeedCard({
               </>
             );
             return (
-              <li
+              <MotionStaggerItem
                 key={item.id}
+                as="li"
+                index={index}
                 className={`min-w-0 ${
                   item.trailing ? "flex items-center gap-2 px-4 py-3.5 sm:gap-3 sm:px-5" : ""
                 }`}
@@ -133,7 +138,7 @@ export function AttentionFeedCard({
                     <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" aria-hidden />
                   </Link>
                 )}
-              </li>
+              </MotionStaggerItem>
             );
           })}
         </ul>

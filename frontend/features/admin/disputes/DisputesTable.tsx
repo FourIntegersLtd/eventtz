@@ -53,7 +53,7 @@ export function DisputesTable({
       </AdminFilterBar>
 
       {rows.length === 0 ? (
-        <EmptyState title="No disputes match this filter" />
+        <EmptyState title="No disputes match this filter" lottie="searchNoResults" />
       ) : (
         <AdminTable>
           <AdminTableElement>

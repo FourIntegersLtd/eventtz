@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/Button";
+import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { Modal } from "@/components/ui/Modal";
 import { PasswordField } from "@/components/ui/PasswordField";
 import { useToast } from "@/components/ui/Toast";
@@ -129,11 +130,7 @@ export function ChangePasswordModal({
           ? " Admin passwords must be at least 6 characters with an uppercase letter, a number, and a symbol."
           : null}
       </p>
-      {error ? (
-        <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-          {error}
-        </p>
-      ) : null}
+      {error ? <LottieFailureInline message={error} className="mt-3" /> : null}
       <div className="mt-4 space-y-3">
         <PasswordField
           label="Current password"

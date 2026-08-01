@@ -174,6 +174,7 @@ export function VendorBookingResponseFlow({
         cancelLabel={unreadCopy.cancelLabel}
         confirmLabel={unreadGateConfirmLabel}
         confirmVariant="primary"
+        lottie="emptyMessages"
         onCancel={() => {
           setUnreadGateOpen(false);
           setPendingDecision(null);
@@ -193,6 +194,7 @@ export function VendorBookingResponseFlow({
         confirmLabel={acceptCopy.confirmLabel}
         confirmLoadingLabel={acceptCopy.confirmLoadingLabel}
         confirmVariant="primary"
+        lottie="paymentSecure"
         loading={actionBusy}
         onCancel={() => setPendingDecision(null)}
         onConfirm={() => {
@@ -209,6 +211,7 @@ export function VendorBookingResponseFlow({
         confirmLabel={declineCopy.confirmLabel}
         confirmLoadingLabel={declineCopy.confirmLoadingLabel}
         confirmVariant="destructive"
+        lottie="failure"
         loading={actionBusy}
         onCancel={() => setPendingDecision(null)}
         onConfirm={() => {

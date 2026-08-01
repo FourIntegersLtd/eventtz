@@ -2,12 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MessageSquare } from "lucide-react";
 import { portalCard } from "@/components/portal-shell/portalTheme";
 import { type ChatConversation, fetchConversations } from "@/lib/chatApi";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { SkeletonListRows } from "@/components/ui/Skeleton";
+import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
+import { LoadingState } from "@/components/ui/LoadingState";
 import { MasterDetailLayout } from "@/features/bookings/MasterDetailLayout";
 import { ChatThreadView } from "@/features/chat/ChatThreadView";
 
@@ -89,16 +89,16 @@ export function ChatPortalView({ portal, selectedConversationId }: ChatPortalVie
             <div className="scroll-pane min-h-0 flex-1">
               {loading ? (
                 <div className="p-5">
-                  <SkeletonListRows rows={5} />
+                  <LoadingState label="Loading conversations…" variant="inline" branded />
                 </div>
               ) : error ? (
-                <p className="m-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-                  {error}
-                </p>
+                <div className="m-5">
+                  <LottieFailureInline message={error} />
+                </div>
               ) : rows.length === 0 ? (
                 <EmptyState
                   className="border-0 py-16"
-                  icon={<MessageSquare className="h-8 w-8" strokeWidth={1.5} />}
+                  lottie="emptyInbox"
                   title="No conversations yet"
                 />
               ) : (
@@ -206,7 +206,7 @@ export function ChatPortalView({ portal, selectedConversationId }: ChatPortalVie
           >
             <EmptyState
               className="border-0"
-              icon={<MessageSquare className="h-8 w-8" strokeWidth={1.5} />}
+              lottie="emptyInbox"
               title={rows.length === 0 ? "No conversations yet" : "Select a conversation"}
             />
           </div>

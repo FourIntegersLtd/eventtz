@@ -82,7 +82,7 @@ export function AdminReviewsView() {
       )}
 
       {rows.length === 0 ? (
-        <EmptyState title={vendorUserId ? "No reviews for this vendor" : "No reviews yet"} />
+        <EmptyState title={vendorUserId ? "No reviews for this vendor" : "No reviews yet"} lottie="searchNoResults" />
       ) : (
         <AdminTable>
           <AdminTableElement>

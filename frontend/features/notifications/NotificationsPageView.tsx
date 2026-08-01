@@ -12,6 +12,7 @@ import { markAllClientBookingNotificationsRead } from "@/lib/clientNotifications
 import { markAllVendorBookingNotificationsRead } from "@/lib/vendorNotificationsApi";
 import { formatDateTime } from "@/lib/dateFormat";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { SkeletonListRows } from "@/components/ui/Skeleton";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 
@@ -65,11 +66,7 @@ export function NotificationsPageView({ portal }: NotificationsPageViewProps) {
 
   return (
     <div className="w-full min-w-0 max-w-3xl">
-      {error ? (
-        <p className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-          {error}
-        </p>
-      ) : null}
+      {error ? <LottieFailureInline message={error} className="mb-3" /> : null}
 
       <div className="rounded-2xl border border-neutral-200 bg-white">
         {loading ? (
@@ -79,7 +76,7 @@ export function NotificationsPageView({ portal }: NotificationsPageViewProps) {
         ) : !items || items.length === 0 ? (
           <EmptyState
             className="border-0"
-            icon={<Bell className="h-8 w-8" strokeWidth={1.5} />}
+            lottie="allCaughtUp"
             title="You're all caught up"
           />
         ) : (

@@ -7,7 +7,7 @@ import { UnifiedRegisterView } from "@/features/auth/UnifiedRegisterView";
 function AuthSearchParamsFallback() {
   return (
     <main className="min-h-dvh bg-auth-bg px-4 py-10">
-      <LoadingState label="Loading…" variant="page" />
+      <LoadingState label="Loading…" variant="page" branded />
     </main>
   );
 }

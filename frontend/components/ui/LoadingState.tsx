@@ -1,6 +1,8 @@
 "use client";
 
+import { LottieAnimation } from "@/components/ui/LottieAnimation";
 import { LoadingSpinner, type LoadingSpinnerSize } from "@/components/ui/LoadingSpinner";
+import { lottieSrc, type LottieAssetKey } from "@/lib/lottieAssets";
 
 export type LoadingStateVariant = "inline" | "centered" | "page";
 
@@ -9,6 +11,10 @@ type LoadingStateProps = {
   variant?: LoadingStateVariant;
   size?: LoadingSpinnerSize;
   className?: string;
+  /** When true, centered/page variants show the branded Lottie loader instead of a spinner. */
+  branded?: boolean;
+  /** Override the default branded loader animation. */
+  lottie?: LottieAssetKey;
 };
 
 const VARIANT_CLASS: Record<LoadingStateVariant, string> = {
@@ -23,14 +29,18 @@ const LABEL_CLASS: Record<LoadingStateVariant, string> = {
   page: "text-sm text-neutral-600",
 };
 
-/** Spinner + optional label for panels, pages, and list/detail loading shells. */
+/** Spinner or branded Lottie + optional label for panels, pages, and list/detail loading shells. */
 export function LoadingState({
   label = "Loading…",
   variant = "centered",
   size,
   className = "",
+  branded = false,
+  lottie,
 }: LoadingStateProps) {
   const spinnerSize = size ?? (variant === "inline" ? "sm" : "lg");
+  const showLottie = (branded || lottie) && variant !== "inline";
+  const lottieAsset = lottie ?? "loading";
 
   return (
     <div
@@ -40,7 +50,15 @@ export function LoadingState({
       aria-busy="true"
       aria-label={label}
     >
-      <LoadingSpinner size={spinnerSize} />
+      {showLottie ? (
+        <LottieAnimation
+          src={lottieSrc(lottieAsset)}
+          className="h-20 w-20 sm:h-24 sm:w-24"
+          ariaLabel={label}
+        />
+      ) : (
+        <LoadingSpinner size={spinnerSize} />
+      )}
       {label ? <p className={LABEL_CLASS[variant]}>{label}</p> : null}
     </div>
   );

@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AlertCircle, CalendarRange, Pencil, X } from "lucide-react";
+import { CalendarRange, Pencil, X } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
+import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { DateInput } from "@/components/ui/DateInput";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { postBookingRequest, type ClientSearchContext } from "@/lib/clientBookingsApi";
@@ -86,9 +88,9 @@ export function VendorBookingModal({
   const [notes, setNotes] = useState(initialPrefill?.notes ?? "");
   const [validationError, setValidationError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [submitResult, setSubmitResult] = useState<null | { type: "error"; message: string }>(
-    null,
-  );
+  const [submitResult, setSubmitResult] = useState<
+    null | { type: "error"; message: string } | { type: "success"; bookingId: string }
+  >(null);
   const {
     pendingPrefill,
     linkedPrefill,
@@ -230,7 +232,8 @@ export function VendorBookingModal({
           option_count: parsed.data.selectedOptionIds.length,
           source: "single",
         });
-        onSuccess?.(created.id);
+        setSubmitResult({ type: "success", bookingId: created.id });
+        setSubmitting(false);
       })
       .catch((err: unknown) => {
         track(MixpanelEvents.enquiry_failed, {
@@ -249,18 +252,38 @@ export function VendorBookingModal({
       onClose={dismissResultModal}
       zIndexClassName="z-[60]"
       maxWidthClassName="max-w-md"
-      title="Couldn’t send request"
+      title={submitResult?.type === "success" ? "Request sent" : "Couldn't send request"}
       footer={
-        <Button variant="primary" onClick={dismissResultModal} className="w-full">
-          Back to form
-        </Button>
+        submitResult?.type === "success" ? (
+          <Button
+            variant="primary"
+            onClick={() => {
+              const id = submitResult.bookingId;
+              dismissResultModal();
+              onSuccess?.(id);
+            }}
+            className="w-full"
+          >
+            View booking
+          </Button>
+        ) : (
+          <Button variant="primary" onClick={dismissResultModal} className="w-full">
+            Back to form
+          </Button>
+        )
       }
     >
-      {submitResult ? (
-        <div className="flex gap-3">
-          <span className="shrink-0 text-red-600" aria-hidden>
-            <AlertCircle className="h-6 w-6" strokeWidth={2} />
-          </span>
+      {submitResult?.type === "success" ? (
+        <div className="flex flex-col items-center gap-3 text-center">
+          <LottieIllustration asset="successCheck" className="h-24 w-24" ariaLabel="" />
+          <p className="text-sm leading-relaxed text-neutral-700">
+            Your booking request was sent to {vendorDisplayName}. They&apos;ll respond in your
+            bookings inbox.
+          </p>
+        </div>
+      ) : submitResult?.type === "error" ? (
+        <div className="flex flex-col items-center gap-3 text-center">
+          <LottieIllustration asset="failure" className="h-24 w-24" ariaLabel="" />
           <p className="text-sm leading-relaxed text-red-900">{submitResult.message}</p>
         </div>
       ) : null}
@@ -521,11 +544,7 @@ export function VendorBookingModal({
               </p>
             </div>
 
-            {validationError ? (
-              <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-                {validationError}
-              </p>
-            ) : null}
+            {validationError ? <LottieFailureInline message={validationError} /> : null}
           </div>
 
           <div className="border-t border-neutral-100 px-5 py-4 sm:px-6">

@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
+import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import {
   autoReleaseLine,
   completionWaitingCopy,
@@ -42,16 +43,23 @@ export function BookingCompletionBanner({
   const viewerNeedsToConfirm = waitingOn === "both" || waitingOn === viewer;
 
   return (
-    <div className="mt-4 overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+    <div className="mt-4 overflow-hidden rounded-2xl border border-primary/15 bg-primary/[0.03]">
       <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-neutral-900">{copy.title}</p>
-          <p className="mt-1 text-[13px] text-neutral-600">{copy.body}</p>
-          {autoReleaseAt ? (
-            <p className="mt-1.5 text-[13px] text-neutral-400">
-              {autoReleaseLine(autoReleaseAt, viewer)}
-            </p>
-          ) : null}
+        <div className="flex min-w-0 items-start gap-3">
+          <LottieIllustration
+            asset={viewerNeedsToConfirm ? "pendingReview" : "successCheck"}
+            className="h-14 w-14 shrink-0"
+            ariaLabel=""
+          />
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-neutral-900">{copy.title}</p>
+            <p className="mt-1 text-[13px] text-neutral-600">{copy.body}</p>
+            {autoReleaseAt ? (
+              <p className="mt-1.5 text-[13px] text-neutral-400">
+                {autoReleaseLine(autoReleaseAt, viewer)}
+              </p>
+            ) : null}
+          </div>
         </div>
         {viewerNeedsToConfirm && onConfirm ? (
           <Button

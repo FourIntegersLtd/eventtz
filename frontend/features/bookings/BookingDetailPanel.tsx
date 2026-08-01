@@ -6,7 +6,11 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PaymentStatusBadge } from "@/components/ui/PaymentStatusBadge";
 import { SkeletonDetailHeader } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
+import { LottieFailurePanel } from "@/components/ui/LottieFailurePanel";
+import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { BookingPricingBreakdown } from "@/features/bookings/BookingPricingBreakdown";
+import { BOOKING_OUTCOME_COPY } from "@/features/bookings/bookingConfirmCopy";
 import type {
   BookingDetailAction,
   BookingDetailSlots,
@@ -78,9 +82,7 @@ export function BookingDetailPanel({
   if (error) {
     return (
       <div className={`${portalPanelShell} sm:p-8`}>
-        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-          {error}
-        </p>
+        <LottieFailurePanel title="Couldn't load booking" description={error} />
       </div>
     );
   }
@@ -88,13 +90,17 @@ export function BookingDetailPanel({
   if (!booking) {
     return (
       <div className={`${portalPanelShell} items-center justify-center`}>
-        <EmptyState title={emptyTitle} className="border-0" />
+        <EmptyState title={emptyTitle} className="border-0" lottie="emptyInbox" />
       </div>
     );
   }
 
   const location = formatBookingLocation(booking.venuePostcode, booking.venueAddress);
   const hasFooter = footerActions.length > 0 || Boolean(slots.footerSection);
+  const isRefunded =
+    booking.paymentStatus === "refunded" || booking.paymentStatus === "partially_refunded";
+  const showDeclinedBanner = booking.status === "declined";
+  const showCancelledBanner = booking.status === "cancelled" && !isRefunded;
 
   return (
     <div className={`${portalPanelShell} sm:p-8`}>
@@ -119,12 +125,19 @@ export function BookingDetailPanel({
       </div>
 
       {actionError ? (
-        <p className="shrink-0 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-          {actionError}
-        </p>
+        <LottieFailureInline message={actionError} className="mt-4 shrink-0" />
       ) : null}
 
       <div className="scroll-pane mt-6 min-h-0 flex-1 space-y-8 px-1 pb-6 sm:mt-8">
+        {showDeclinedBanner || showCancelledBanner ? (
+          <LottieFailurePanel
+            className="py-6"
+            title={showDeclinedBanner ? "Booking declined" : "Booking cancelled"}
+            description={
+              showDeclinedBanner ? BOOKING_OUTCOME_COPY.declined : BOOKING_OUTCOME_COPY.cancelled
+            }
+          />
+        ) : null}
         {slots.beforeSections}
         <section>
           <h3 className="text-[15px] font-semibold tracking-tight text-neutral-900">
@@ -210,11 +223,7 @@ export function BookingDetailPanel({
           />
           {booking.paidAtLabel ? (
             <div className="mt-3 flex flex-wrap items-center gap-3 rounded-2xl bg-emerald-50/70 px-5 py-3.5 text-sm ring-1 ring-emerald-200/70">
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-200/50 text-emerald-700">
-                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-              </span>
+              <LottieIllustration asset="successCheck" className="h-10 w-10 shrink-0" ariaLabel="" />
               <span className="font-semibold text-emerald-900">Paid</span>
               <span className="text-neutral-600">recorded {booking.paidAtLabel}</span>
             </div>

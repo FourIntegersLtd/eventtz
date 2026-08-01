@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Drawer } from "@/components/ui/Drawer";
+import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { CHAT_UNREAD_CLEARED_EVENT, postConversation, postMessage } from "@/lib/chatApi";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
@@ -88,11 +89,7 @@ export function ChatDrawer({
           <p className="text-sm text-neutral-600">
             Your first message opens a thread in Messages.
           </p>
-          {error ? (
-            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-              {error}
-            </p>
-          ) : null}
+          {error ? <LottieFailureInline message={error} /> : null}
           <MessageComposer
             variant="compose"
             value={draft}

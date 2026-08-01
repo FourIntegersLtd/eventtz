@@ -10,6 +10,8 @@ import { ButtonLink } from "@/components/ui/ButtonLink";
 import { StarRating } from "@/components/ui/StarRating";
 import { formatEventDate } from "@/lib/dateFormat";
 import { AttentionFeedCard } from "@/features/dashboard/AttentionFeedCard";
+import { LottieFailurePanel } from "@/components/ui/LottieFailurePanel";
+import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { dashboardNotificationUpdates } from "@/features/dashboard/attentionFeedHelpers";
 import type { AttentionItem } from "@/features/dashboard/attentionTypes";
 import { eventDayOver } from "@/features/bookings/eventDay";
@@ -146,9 +148,11 @@ export function ClientDashboardView() {
   return (
     <div className="w-full min-w-0 max-w-6xl space-y-6 pt-2">
       {loadStatus === "error" && errorMessage ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-          {errorMessage}
-        </div>
+        <LottieFailurePanel
+          className="py-5"
+          title="Couldn't load dashboard"
+          description={errorMessage}
+        />
       ) : null}
 
       {loadStatus === "ready" ? (
@@ -179,6 +183,7 @@ export function ClientDashboardView() {
           ) : (
             <div className="flex flex-col gap-4 bg-primary/[0.04] px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
               <div className="min-w-0">
+                <LottieIllustration asset="welcome" className="mb-2 h-16 w-16" ariaLabel="" />
                 <p className="font-heading text-lg font-semibold text-neutral-900">
                   No upcoming events yet
                 </p>

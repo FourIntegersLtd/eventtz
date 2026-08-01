@@ -28,8 +28,11 @@ import { HeroMarketplaceSearch } from "@/features/marketplace/HeroMarketplaceSea
 import { MarketplaceFiltersBar } from "@/features/marketplace/MarketplaceFiltersBar";
 import { MarketplacePagination } from "@/features/marketplace/MarketplacePagination";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { LottieEmptyPanel } from "@/components/ui/LottieEmptyPanel";
+import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { MarketplaceVendorCard } from "@/features/marketplace/MarketplaceVendorCard";
+import { MotionStaggerItem } from "@/components/ui/MotionStaggerItem";
 import { MultiVendorEnquireModal } from "@/features/marketplace/MultiVendorEnquireModal";
 import type { EventEnquirePrefill } from "@/features/bookings/eventEnquirePrefill";
 import { eventEnquirePrefillFromSearchParams } from "@/features/bookings/eventEnquirePrefill";
@@ -42,6 +45,7 @@ import {
 } from "@/features/marketplace/marketplacePlanCopy";
 import { useMarketplaceBookmarks } from "@/features/marketplace/useMarketplaceBookmarks";
 import { ScrollToTopButton } from "@/components/ui/ScrollToTopButton";
+import { useLaunchingSoonBookingGuard } from "@/features/bookings/useLaunchingSoonBookingGuard";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 const CARD_GRID =
@@ -93,6 +97,7 @@ export function MarketplaceExploreView({
   const plannerAutoSelectDone = useRef(false);
 
   const { isSaved, toggle, savedIds, ready: bookmarksReady } = useMarketplaceBookmarks();
+  const { guardBooking, launchingSoonModal } = useLaunchingSoonBookingGuard();
   const savedOnly = mode === "favorites";
   const favoriteVendorIds = useMemo(
     () => (savedOnly && savedIds.size > 0 ? [...savedIds] : undefined),
@@ -308,11 +313,13 @@ export function MarketplaceExploreView({
   }, []);
 
   const openMultiEnquire = useCallback(() => {
-    track(MixpanelEvents.multi_enquire_opened, {
-      vendor_count: selectedCount,
+    guardBooking(() => {
+      track(MixpanelEvents.multi_enquire_opened, {
+        vendor_count: selectedCount,
+      });
+      setMultiEnquireOpen(true);
     });
-    setMultiEnquireOpen(true);
-  }, [selectedCount]);
+  }, [guardBooking, selectedCount]);
 
   const goToPage = useCallback(
     (page: number) => {
@@ -442,28 +449,34 @@ export function MarketplaceExploreView({
       </div>
 
       {loading ? (
-        <LoadingState label="Loading vendors…" variant="centered" className="mt-6 py-12" />
+        <LoadingState label="Loading vendors…" variant="centered" className="mt-6 py-12" branded />
       ) : error ? (
-        <p className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-          {error}
-        </p>
+        <LottieFailureInline message={error} className="mt-6" />
       ) : visibleCards.length === 0 && !isPlanMode ? (
-        <p className="mt-6 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-600">
-          {savedOnly ? "No saved vendors yet." : "No vendors match these filters."}
-        </p>
+        <LottieEmptyPanel
+          className="mt-6"
+          lottie={savedOnly ? "emptyInbox" : "searchNoResults"}
+          title={savedOnly ? "No saved vendors yet" : "No vendors match these filters"}
+          description={
+            savedOnly
+              ? "Tap the heart on a vendor card to save them here."
+              : "Try widening your search or clearing a filter."
+          }
+        />
       ) : savedOnly ? (
         <>
           <div className={`mt-6 ${CARD_GRID}`}>
-            {visibleCards.map((card) => (
-              <MarketplaceVendorCard
-                key={card.cardKey}
-                card={card}
-                vendorDetailHref={buildClientBrowseVendorUrl(card.vendor.user_id, state)}
-                bookmarked={isSaved(card.vendor.user_id)}
-                onToggleBookmark={() => toggle(card.vendor.user_id)}
-                onNavigate={onVendorNavigate}
-                {...cardSelectProps(card.vendor)}
-              />
+            {visibleCards.map((card, index) => (
+              <MotionStaggerItem key={card.cardKey} index={index}>
+                <MarketplaceVendorCard
+                  card={card}
+                  vendorDetailHref={buildClientBrowseVendorUrl(card.vendor.user_id, state)}
+                  bookmarked={isSaved(card.vendor.user_id)}
+                  onToggleBookmark={() => toggle(card.vendor.user_id)}
+                  onNavigate={onVendorNavigate}
+                  {...cardSelectProps(card.vendor)}
+                />
+              </MotionStaggerItem>
             ))}
           </div>
           {pagination}
@@ -519,25 +532,28 @@ export function MarketplaceExploreView({
                   ) : null}
                 </div>
                 {sectionCards.length === 0 ? (
-                  <p className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-600">
-                    No vendors for this yet.
-                  </p>
+                  <LottieEmptyPanel
+                    lottie="searchNoResults"
+                    title="No vendors for this yet"
+                    description="Try another category or check back as we add more vendors."
+                  />
                 ) : (
                   <div className={CARD_GRID}>
-                    {sectionCards.map((card) => (
-                      <MarketplaceVendorCard
-                        key={`${section.need_id}-${card.cardKey}`}
-                        card={card}
-                        vendorDetailHref={buildClientBrowseVendorUrl(
-                          card.vendor.user_id,
-                          state,
-                        )}
-                        bookmarked={isSaved(card.vendor.user_id)}
-                        onToggleBookmark={() => toggle(card.vendor.user_id)}
-                        onNavigate={onVendorNavigate}
-                        showPlanEvidence
-                        {...cardSelectProps(card.vendor)}
-                      />
+                    {sectionCards.map((card, index) => (
+                      <MotionStaggerItem key={`${section.need_id}-${card.cardKey}`} index={index}>
+                        <MarketplaceVendorCard
+                          card={card}
+                          vendorDetailHref={buildClientBrowseVendorUrl(
+                            card.vendor.user_id,
+                            state,
+                          )}
+                          bookmarked={isSaved(card.vendor.user_id)}
+                          onToggleBookmark={() => toggle(card.vendor.user_id)}
+                          onNavigate={onVendorNavigate}
+                          showPlanEvidence
+                          {...cardSelectProps(card.vendor)}
+                        />
+                      </MotionStaggerItem>
                     ))}
                   </div>
                 )}
@@ -556,16 +572,17 @@ export function MarketplaceExploreView({
 
           {exactCards.length > 0 ? (
             <div className={CARD_GRID}>
-              {exactCards.map((card) => (
-                <MarketplaceVendorCard
-                  key={card.cardKey}
-                  card={card}
-                  vendorDetailHref={buildClientBrowseVendorUrl(card.vendor.user_id, state)}
-                  bookmarked={isSaved(card.vendor.user_id)}
-                  onToggleBookmark={() => toggle(card.vendor.user_id)}
-                  onNavigate={onVendorNavigate}
-                  {...cardSelectProps(card.vendor)}
-                />
+              {exactCards.map((card, index) => (
+                <MotionStaggerItem key={card.cardKey} index={index}>
+                  <MarketplaceVendorCard
+                    card={card}
+                    vendorDetailHref={buildClientBrowseVendorUrl(card.vendor.user_id, state)}
+                    bookmarked={isSaved(card.vendor.user_id)}
+                    onToggleBookmark={() => toggle(card.vendor.user_id)}
+                    onNavigate={onVendorNavigate}
+                    {...cardSelectProps(card.vendor)}
+                  />
+                </MotionStaggerItem>
               ))}
             </div>
           ) : null}
@@ -576,16 +593,17 @@ export function MarketplaceExploreView({
                 <p className="text-sm font-semibold text-neutral-900">Also consider</p>
               </div>
               <div className={CARD_GRID}>
-                {alsoConsiderCards.map((card) => (
-                  <MarketplaceVendorCard
-                    key={card.cardKey}
-                    card={card}
-                    vendorDetailHref={buildClientBrowseVendorUrl(card.vendor.user_id, state)}
-                    bookmarked={isSaved(card.vendor.user_id)}
-                    onToggleBookmark={() => toggle(card.vendor.user_id)}
-                    onNavigate={onVendorNavigate}
-                    {...cardSelectProps(card.vendor)}
-                  />
+                {alsoConsiderCards.map((card, index) => (
+                  <MotionStaggerItem key={card.cardKey} index={index}>
+                    <MarketplaceVendorCard
+                      card={card}
+                      vendorDetailHref={buildClientBrowseVendorUrl(card.vendor.user_id, state)}
+                      bookmarked={isSaved(card.vendor.user_id)}
+                      onToggleBookmark={() => toggle(card.vendor.user_id)}
+                      onNavigate={onVendorNavigate}
+                      {...cardSelectProps(card.vendor)}
+                    />
+                  </MotionStaggerItem>
                 ))}
               </div>
             </div>
@@ -622,6 +640,7 @@ export function MarketplaceExploreView({
           }}
         />
       ) : null}
+      {launchingSoonModal}
     </div>
   );
 

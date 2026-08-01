@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertCircle } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { DateInput } from "@/components/ui/DateInput";
+import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import {
   postBookingRequest,
@@ -232,12 +232,7 @@ export function MultiVendorEnquireModal({
           }}
           vendorCategoryLabels={vendorCategoryLabels}
         />
-        {error ? (
-          <div className="flex gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900">
-            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-            <p className="whitespace-pre-wrap">{error}</p>
-          </div>
-        ) : null}
+        {error ? <LottieFailureInline message={error} /> : null}
         {loadWarning ? (
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 whitespace-pre-wrap">
             {loadWarning}

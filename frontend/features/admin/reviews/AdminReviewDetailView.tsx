@@ -173,6 +173,7 @@ export function AdminReviewDetailView({ reviewId }: Props) {
             : ADMIN_CONFIRM_COPY.hideReview.confirmLabel
         }
         confirmVariant={review.hidden_at ? "primary" : "destructive"}
+        lottie={review.hidden_at ? "successCheck" : "failure"}
         loading={busy}
         onCancel={() => setConfirmHide(false)}
         onConfirm={() => void toggleVisibility()}

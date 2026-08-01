@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { PAYMENT_SAFETY_COPY } from "@/features/bookings/bookingConfirmCopy";
 
 type PaymentSafetyModalProps = {
@@ -39,6 +40,7 @@ export function PaymentSafetyModal({
       }
     >
       <div className="space-y-3 text-sm leading-relaxed text-neutral-700">
+        <LottieIllustration asset="paymentSecure" className="mb-1 h-24 w-24" />
         <p>{PAYMENT_SAFETY_COPY.intro}</p>
         <ul className="list-disc space-y-2 pl-5">
           {PAYMENT_SAFETY_COPY.points.map((point) => (

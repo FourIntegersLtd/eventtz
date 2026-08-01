@@ -1,8 +1,10 @@
 "use client";
 
+import { AnimatePresence, motion } from "motion/react";
 import { X } from "lucide-react";
 import { useEffect, useRef, type ReactNode } from "react";
-import { FOCUS_RING, SHADOW, TOUCH_TARGET } from "@/components/ui/tokens";
+import { FOCUS_RING, MOTION, SHADOW, TOUCH_TARGET } from "@/components/ui/tokens";
+import { usePrefersReducedMotion } from "@/lib/usePrefersReducedMotion";
 
 export type DrawerProps = {
   isOpen: boolean;
@@ -35,6 +37,7 @@ export function Drawer({
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerElementRef = useRef<Element | null>(null);
   const onCloseRef = useRef(onClose);
+  const reduceMotion = usePrefersReducedMotion();
   onCloseRef.current = onClose;
 
   useEffect(() => {
@@ -77,40 +80,59 @@ export function Drawer({
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  const transition = {
+    duration: MOTION.durationStandardMs / 1000,
+    ease: [0.22, 1, 0.36, 1] as const,
+  };
 
   return (
-    <div className={`fixed inset-0 ${zIndexClassName}`} role="presentation">
-      <button
-        type="button"
-        aria-label="Close panel"
-        className="absolute inset-0 bg-black/40 animate-ui-fade-in"
-        onClick={onClose}
-      />
-      <div
-        ref={panelRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-        className={`absolute inset-y-0 right-0 flex h-full w-full max-w-[100vw] flex-col border-l border-neutral-200 bg-white animate-ui-slide-in-right ${widthClassName} ${SHADOW.overlay}`}
-      >
-        <div className="flex items-start justify-between gap-3 border-b border-neutral-200 px-5 py-4">
-          <div className="min-w-0">
-            <h2 className="truncate font-heading text-lg font-semibold text-neutral-900">{title}</h2>
-            {subtitle ? <p className="mt-0.5 truncate text-sm text-neutral-500">{subtitle}</p> : null}
-          </div>
-          <button
+    <AnimatePresence>
+      {isOpen ? (
+        <div className={`fixed inset-0 ${zIndexClassName}`} role="presentation">
+          <motion.button
             type="button"
-            onClick={onClose}
             aria-label="Close panel"
-            className={`inline-flex shrink-0 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 ${TOUCH_TARGET} ${FOCUS_RING}`}
+            initial={reduceMotion ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={reduceMotion ? undefined : { opacity: 0 }}
+            transition={transition}
+            className="absolute inset-0 bg-black/40"
+            onClick={onClose}
+          />
+          <motion.div
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={title}
+            initial={reduceMotion ? false : { x: "100%" }}
+            animate={{ x: 0 }}
+            exit={reduceMotion ? undefined : { x: "100%" }}
+            transition={transition}
+            className={`absolute inset-y-0 right-0 flex h-full w-full max-w-[100vw] flex-col border-l border-neutral-200 bg-white ${widthClassName} ${SHADOW.overlay}`}
           >
-            <X className="h-5 w-5" />
-          </button>
+            <div className="flex items-start justify-between gap-3 border-b border-neutral-200 px-5 py-4">
+              <div className="min-w-0">
+                <h2 className="truncate font-heading text-lg font-semibold text-neutral-900">
+                  {title}
+                </h2>
+                {subtitle ? (
+                  <p className="mt-0.5 truncate text-sm text-neutral-500">{subtitle}</p>
+                ) : null}
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close panel"
+                className={`inline-flex shrink-0 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 ${TOUCH_TARGET} ${FOCUS_RING}`}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="scroll-pane min-h-0 flex-1 px-5 py-4">{children}</div>
+            {footer ? <div className="border-t border-neutral-200 px-5 py-4">{footer}</div> : null}
+          </motion.div>
         </div>
-        <div className="scroll-pane min-h-0 flex-1 px-5 py-4">{children}</div>
-        {footer ? <div className="border-t border-neutral-200 px-5 py-4">{footer}</div> : null}
-      </div>
-    </div>
+      ) : null}
+    </AnimatePresence>
   );
 }

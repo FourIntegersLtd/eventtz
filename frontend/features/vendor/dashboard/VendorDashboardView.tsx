@@ -7,6 +7,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { Modal } from "@/components/ui/Modal";
 import { formatEventDate, shortDateLabel } from "@/lib/dateFormat";
 import { AttentionFeedCard } from "@/features/dashboard/AttentionFeedCard";
+import { LottieFailurePanel } from "@/components/ui/LottieFailurePanel";
 import { dashboardNotificationUpdates } from "@/features/dashboard/attentionFeedHelpers";
 import type { AttentionItem } from "@/features/dashboard/attentionTypes";
 import { eventDayOver } from "@/features/bookings/eventDay";
@@ -124,9 +125,11 @@ export function VendorDashboardView() {
   return (
     <div className="w-full min-w-0 max-w-full space-y-6 pt-2">
       {loadStatus === "error" && errorMessage && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-          {errorMessage}
-        </div>
+        <LottieFailurePanel
+          className="py-5"
+          title="Couldn't load dashboard"
+          description={errorMessage}
+        />
       )}
 
       <VendorPayoutSetupBanner />

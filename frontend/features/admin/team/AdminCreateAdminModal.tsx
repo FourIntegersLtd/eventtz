@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { Modal } from "@/components/ui/Modal";
 import { TextField } from "@/components/ui/TextField";
 import { PasswordField } from "@/components/ui/PasswordField";
@@ -88,11 +89,7 @@ export function AdminCreateAdminModal({ isOpen, onClose, onCreated }: AdminCreat
       }
     >
       <div className="space-y-4">
-        {error ? (
-          <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-            {error}
-          </p>
-        ) : null}
+        {error ? <LottieFailureInline message={error} /> : null}
 
         <div className="flex rounded-lg border border-neutral-200 p-1 text-sm">
           <button

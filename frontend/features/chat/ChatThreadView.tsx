@@ -8,6 +8,10 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { BackLink } from "@/components/ui/BackLink";
 import { Button } from "@/components/ui/Button";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
+import { LottieFailurePanel } from "@/components/ui/LottieFailurePanel";
+import { LottieIllustration } from "@/components/ui/LottieIllustration";
+import { MotionStaggerItem } from "@/components/ui/MotionStaggerItem";
 import { MessageComposer } from "@/features/chat/MessageComposer";
 import { VendorQuoteFormModal } from "@/features/vendor/quotes/VendorQuoteFormModal";
 import { formatDateTime } from "@/lib/dateFormat";
@@ -198,7 +202,7 @@ export function ChatThreadView({
   if (loading) {
     return (
       <div className={`${portalCard} px-5 py-8`}>
-        <LoadingState label="Loading conversation…" variant="centered" className="py-4" />
+        <LoadingState label="Loading conversation…" variant="centered" className="py-4" branded />
       </div>
     );
   }
@@ -206,9 +210,7 @@ export function ChatThreadView({
   if (error && !conv) {
     return (
       <div className="space-y-4">
-        <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-          {error}
-        </p>
+        <LottieFailurePanel title="Couldn't load conversation" description={error} className="py-6" />
         {backHref ? (
           <BackLink href={backHref} label={backLabel} icon="chevron" tone="muted" />
         ) : null}
@@ -278,9 +280,9 @@ export function ChatThreadView({
       ) : null}
 
       {error ? (
-        <p className="mx-5 mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 sm:mx-6">
-          {error}
-        </p>
+        <div className="mx-5 mt-4 sm:mx-6">
+          <LottieFailureInline message={error} />
+        </div>
       ) : null}
 
       <div
@@ -289,9 +291,10 @@ export function ChatThreadView({
         }`}
       >
         {messages.length === 0 ? (
-          <p className="m-auto max-w-xs text-center text-sm text-neutral-500">
-            No messages yet. Send the first one below.
-          </p>
+          <div className="m-auto flex max-w-xs flex-col items-center gap-3 text-center">
+            <LottieIllustration asset="emptyMessages" className="h-24 w-24" />
+            <p className="text-sm text-neutral-500">No messages yet. Send the first one below.</p>
+          </div>
         ) : (
           <ul className="flex flex-col gap-3.5">
             {messages.map((m) => {
@@ -303,7 +306,12 @@ export function ChatThreadView({
                     ? `/vendor/bookings/${encodeURIComponent(quote.booking_request_id)}`
                     : `/client/bookings/${encodeURIComponent(quote.booking_request_id)}`;
                 return (
-                  <li key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+                  <MotionStaggerItem
+                    key={m.id}
+                    as="li"
+                    stagger={false}
+                    className={`flex ${mine ? "justify-end" : "justify-start"}`}
+                  >
                     <Link
                       href={href}
                       className="group flex w-full max-w-[85%] items-center gap-3 rounded-2xl border border-primary/20 bg-primary/[0.06] px-4 py-3.5 transition hover:border-primary/35 hover:bg-primary/[0.1] sm:max-w-[70%]"
@@ -327,11 +335,16 @@ export function ChatThreadView({
                         aria-hidden
                       />
                     </Link>
-                  </li>
+                  </MotionStaggerItem>
                 );
               }
               return (
-                <li key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+                <MotionStaggerItem
+                  key={m.id}
+                  as="li"
+                  stagger={false}
+                  className={`flex ${mine ? "justify-end" : "justify-start"}`}
+                >
                   <div
                     className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed sm:max-w-[70%] ${
                       mine
@@ -348,7 +361,7 @@ export function ChatThreadView({
                       {formatBubbleTime(m.created_at)}
                     </p>
                   </div>
-                </li>
+                </MotionStaggerItem>
               );
             })}
           </ul>

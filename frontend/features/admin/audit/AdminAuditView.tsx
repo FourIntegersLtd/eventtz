@@ -98,7 +98,7 @@ export function AdminAuditView() {
       </AdminFilterBar>
 
       {entries.length === 0 ? (
-        <EmptyState title="No activity in this category" />
+        <EmptyState title="No activity in this category" lottie="searchNoResults" />
       ) : (
         <>
           <AdminTable>
