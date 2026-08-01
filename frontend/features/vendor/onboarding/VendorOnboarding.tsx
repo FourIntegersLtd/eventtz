@@ -271,7 +271,7 @@ export function VendorOnboarding() {
             </aside>
 
             <div className="min-w-0 space-y-6">
-              <div key={step}>
+              <div key={step} className="animate-onboarding-panel">
                 <OnboardingStepContent {...stepContentProps} />
               </div>
               <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
@@ -312,7 +312,7 @@ export function VendorOnboarding() {
             </div>
           )}
           <div className={`${portalCard} ${portalCardPaddingLg}`}>
-            <div key={step}>
+            <div key={step} className="animate-onboarding-panel">
               <OnboardingStepContent {...stepContentProps} />
             </div>
 

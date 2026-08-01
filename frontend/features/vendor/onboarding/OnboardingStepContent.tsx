@@ -101,7 +101,9 @@ export function OnboardingStepContent({
 
   switch (step) {
     case 1:
-      return wrapLive(<StepAccount data={data} update={update} />);
+      return wrapLive(
+        <StepAccount data={data} update={update} showWelcomeHero={!isLiveEdit} />,
+      );
     case 2:
       return wrapLive(
         <StepBusiness

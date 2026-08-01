@@ -140,8 +140,25 @@ body {
   animation: onboarding-step-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* Whole onboarding step panel (client modal / vendor wizard) when step key changes. */
+@keyframes onboarding-panel-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 0.5rem, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-onboarding-panel {
+  animation: onboarding-panel-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .animate-onboarding-step-in {
+  .animate-onboarding-step-in,
+  .animate-onboarding-panel {
     animation: none;
   }
 }

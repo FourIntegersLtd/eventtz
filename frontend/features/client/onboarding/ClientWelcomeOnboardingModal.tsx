@@ -190,14 +190,21 @@ export function ClientWelcomeOnboardingModal() {
 
         <div
           key={step}
-          className="scroll-pane min-h-[min(52dvh,28rem)] flex-1 overflow-y-auto px-5 py-2 sm:min-h-[26rem] sm:px-8 sm:py-4"
+          className="animate-onboarding-panel scroll-pane min-h-[min(52dvh,28rem)] flex-1 overflow-y-auto px-5 py-2 sm:min-h-[26rem] sm:px-8 sm:py-4"
         >
           {step === "welcome" ? (
             <div className="rounded-2xl bg-primary-soft px-6 py-10 text-center ring-1 ring-primary-border/50 sm:px-10 sm:py-12">
               <AnimatedStepItem index={0}>
-                <div className="mx-auto inline-flex">
-                  <OnboardingIconBadge visual={CLIENT_ONBOARDING_WELCOME_ICON} size="lg" />
-                </div>
+                <LottieIllustration
+                  asset="welcome"
+                  className="mx-auto h-28 w-28 sm:h-32 sm:w-32"
+                  ariaLabel="Welcome"
+                  fallback={
+                    <span className="mx-auto inline-flex">
+                      <OnboardingIconBadge visual={CLIENT_ONBOARDING_WELCOME_ICON} size="lg" />
+                    </span>
+                  }
+                />
               </AnimatedStepItem>
               <AnimatedStepItem index={1}>
                 <p className="mt-6 text-xs font-semibold uppercase tracking-[0.18em] text-accent-violet">
