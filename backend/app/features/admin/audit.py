@@ -70,7 +70,7 @@ def insert_admin_audit_log(
             },
         ).execute()
     except Exception as e:
-        # Table may not exist until migration 018 — log only
+        # Table may not exist until migration 018 - log only
         err = str(e).lower()
         if "admin_audit_log" in err or "does not exist" in err or "42p01" in err:
             logger.warning("admin_audit_log skipped (migration?): %s", e)

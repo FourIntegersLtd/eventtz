@@ -277,7 +277,7 @@ def test_plan_search_sections_by_need():
             "types": ["baking", "catering", "photography"],
             "event_types": ["birthdays"],
             "intent_summary": "Birthday vendors in Leeds",
-            "plan_title": "Ideas for your birthday — cake, food, and more",
+            "plan_title": "Ideas for your birthday - cake, food, and more",
             "needs": [
                 {
                     "id": "cake",

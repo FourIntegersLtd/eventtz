@@ -193,7 +193,7 @@ def mark_stale_enquiries_no_response(*, sla_hours: int) -> int:
     """Mark pending client enquiries past SLA with VENDOR_NO_RESPONSE (analytics only).
 
     Why soft-mark: expired response is a funnel signal for admin/vendor analytics;
-    do not auto-decline — the vendor may still reply and the client may still book.
+    do not auto-decline - the vendor may still reply and the client may still book.
     """
     if sla_hours <= 0:
         return 0

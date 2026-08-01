@@ -159,7 +159,7 @@ def create_connect_onboarding_link(vendor_user_id: str, return_path: str = "/ven
         except Exception as e:
             if _is_orphan_connect_account_error(e):
                 logger.warning(
-                    "Stale Stripe Connect account vendor=%s account=%s — recreating",
+                    "Stale Stripe Connect account vendor=%s account=%s - recreating",
                     vendor_user_id,
                     account_id,
                 )
@@ -183,7 +183,7 @@ def create_connect_onboarding_link(vendor_user_id: str, return_path: str = "/ven
     except Exception as e:
         if _is_orphan_connect_account_error(e):
             logger.warning(
-                "Stripe rejected account link vendor=%s account=%s — recreating",
+                "Stripe rejected account link vendor=%s account=%s - recreating",
                 vendor_user_id,
                 account_id,
             )
@@ -212,7 +212,7 @@ def sync_connect_account_status(vendor_user_id: str) -> dict[str, Any]:
     except Exception as e:
         if _is_orphan_connect_account_error(e):
             logger.warning(
-                "Stale Stripe Connect account vendor=%s account=%s — clearing",
+                "Stale Stripe Connect account vendor=%s account=%s - clearing",
                 vendor_user_id,
                 account_id,
             )
@@ -264,7 +264,7 @@ def create_checkout_session(
     description: str,
 ) -> dict[str, str]:
     """Create a Checkout Session for the full client total. Money goes to Eventtz's Stripe
-    balance first — the vendor is paid later via an explicit Transfer."""
+    balance first - the vendor is paid later via an explicit Transfer."""
     settings = get_settings()
     metadata = {
         "booking_id": booking_id,

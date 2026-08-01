@@ -1,4 +1,4 @@
-"""Password strength rules — stricter for admin accounts."""
+"""Password strength rules - stricter for admin accounts."""
 
 from __future__ import annotations
 

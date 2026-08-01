@@ -1,4 +1,4 @@
-"""Deterministic 0–100 confidence score + short reasons."""
+"""Deterministic 0-100 confidence score + short reasons."""
 
 from __future__ import annotations
 
@@ -62,7 +62,7 @@ def compute_confidence(
         for w in ("birthday", "wedding", "shower", "naming", "funeral", "corporate", "engagement")
     ):
         score -= 10
-        reasons.append("Assumed a birthday-style celebration — adjust if that is wrong.")
+        reasons.append("Assumed a birthday-style celebration - adjust if that is wrong.")
 
     if brief.currency_assumed_gbp:
         score -= 3
@@ -85,6 +85,6 @@ def compute_confidence(
     if score >= 85 and not reasons:
         reasons.append("Strong matches across your categories.")
     elif score >= 70 and len(reasons) < 1:
-        reasons.append("A solid shortlist — review each category before booking.")
+        reasons.append("A solid shortlist - review each category before booking.")
 
     return ConfidenceBlock(score=score, reasons=reasons[:3])

@@ -2,8 +2,8 @@
 
 Two browse modes after AI parse (see ``search_ai.parse_marketplace_query``):
 
-- **simple** — one ranked list (exact → related → fallback), same as classic search.
-- **plan** — a short checklist of needs (cake, food, photos…). Each need is a
+- **simple** - one ranked list (exact → related → fallback), same as classic search.
+- **plan** - a short checklist of needs (cake, food, photos…). Each need is a
   section with vendors. A vendor is only shown once (first matching need wins).
 """
 
@@ -246,14 +246,14 @@ def _build_match_notice(
     if has_exact and (has_related or has_fallback):
         return None  # Frontend shows an "Also consider" divider; no warning banner needed
     if has_related and not has_exact:
-        bits = ["No exact matches — showing close options"]
+        bits = ["No exact matches - showing close options"]
         if base:
             bits.append(f"for {base}")
         if date_softened:
             bits.append("(including vendors not free on your selected dates)")
         return " ".join(bits)
     if has_fallback and not has_exact and not has_related:
-        bits = ["No close matches — showing similar vendors"]
+        bits = ["No close matches - showing similar vendors"]
         if base:
             bits.append(f"related to {base}")
         return " ".join(bits)
@@ -596,7 +596,7 @@ def _search_plan_sections(
         )
         flat.extend(section_vendors)
 
-    # Real review quotes only — never invent testimonials.
+    # Real review quotes only - never invent testimonials.
     # Prefer quotes that mention this section’s service (cake vs food, etc.).
     try:
         from app.features.bookings.reviews import featured_snippets_for_vendor_ids

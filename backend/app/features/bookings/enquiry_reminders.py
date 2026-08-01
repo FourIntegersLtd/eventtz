@@ -168,7 +168,7 @@ def _suggest_alternative_vendors(
     silent_vendor_payload: dict[str, Any] | None,
     limit: int = 5,
 ) -> list[dict[str, str]]:
-    """Return [{name, href, reply}] for email — other vendors from similar search."""
+    """Return [{name, href, reply}] for email - other vendors from similar search."""
     from app.features.vendors.public_metrics import get_public_metrics_for_vendors
     from app.features.vendors.search import search_approved_vendors
 

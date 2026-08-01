@@ -86,7 +86,7 @@ class ExploreVendorRow(BaseModel):
     )
     conversion_rate: float | None = Field(
         default=None,
-        description="Completed / client enquiries (0–1), when enquiries exist.",
+        description="Completed / client enquiries (0-1), when enquiries exist.",
     )
 
 
@@ -112,7 +112,7 @@ class ExploreVendorSearchRow(ExploreVendorRow):
     matched_services: list[str] = Field(default_factory=list)
     match_tier: str = Field(
         default="exact",
-        description="exact | related | fallback — how closely the listing matched the search",
+        description="exact | related | fallback - how closely the listing matched the search",
     )
     featured_review: ExploreVendorFeaturedReview | None = None
     match_hint: str | None = None

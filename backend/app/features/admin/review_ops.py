@@ -91,7 +91,7 @@ def set_review_hidden(review_id: str, hidden: bool) -> bool:
         return True
     except Exception as e:
         if "hidden_at" in str(e).lower() or "42703" in str(e):
-            logger.warning("set_review_hidden: run migration 018 — %s", e)
+            logger.warning("set_review_hidden: run migration 018 - %s", e)
             return False
         logger.warning("set_review_hidden failed: %s", e, exc_info=True)
         return False

@@ -31,7 +31,7 @@ def _request(path: str, params: dict[str, Any]) -> dict[str, Any] | None:
         logger.warning("OS Places request failed %s: %s", path, e)
         return None
     if r.status_code == 401 or r.status_code == 403:
-        logger.warning("OS Places HTTP %s — check OS_PLACES_API_KEY / OS Data Hub project", r.status_code)
+        logger.warning("OS Places HTTP %s - check OS_PLACES_API_KEY / OS Data Hub project", r.status_code)
         return None
     if r.status_code != 200:
         logger.warning("OS Places %s HTTP %s", path, r.status_code)

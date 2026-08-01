@@ -14,7 +14,7 @@ def invalidate_all_sessions(user_id: str) -> None:
 
     Supabase Python ``auth.admin.sign_out`` requires the user's JWT, not their UUID.
     Password updates via the admin API revoke refresh tokens; hard deletes remove the
-    auth user entirely — so we only revoke local in-memory sessions here.
+    auth user entirely - so we only revoke local in-memory sessions here.
     """
     if local_auth_store.enabled():
         local_auth_store.revoke_all_sessions_for_user(user_id)

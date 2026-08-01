@@ -51,7 +51,7 @@ def template_estimate(
             amount_gbp=amount,
             assumption=(
                 f"Estimate: £{TEMPLATE_CATERING_PER_GUEST_GBP:.0f}/guest × {guest_note} "
-                f"— vendor has no list price yet"
+                f"- vendor has no list price yet"
             ),
             source="template",
         )
@@ -65,7 +65,7 @@ def template_estimate(
     }.get(key, key or "this service")
     return CostEstimate(
         amount_gbp=round(flat, 2),
-        assumption=f"Typical starting estimate for {label} — vendor has no list price yet",
+        assumption=f"Typical starting estimate for {label} - vendor has no list price yet",
         source="template",
     )
 
@@ -157,7 +157,7 @@ def build_budget_breakdown(
         over = remaining < 0
 
     global_assumptions: list[str] = [
-        "Each line is the estimated cost for the recommended vendor — not a forced split of your budget.",
+        "Each line is the estimated cost for the recommended vendor - not a forced split of your budget.",
     ]
     if guest_count is None and any(
         str(n.get("service_key") or "") == "catering" for n in needs
@@ -169,7 +169,7 @@ def build_budget_breakdown(
         guests, _ = _guest_scale(guest_count)
         if guests != int(guest_count):
             global_assumptions.append(
-                f"Guest count was adjusted to {guests} for estimates (we use {MIN_GUEST_ESTIMATE}–{MAX_GUEST_ESTIMATE}).",
+                f"Guest count was adjusted to {guests} for estimates (we use {MIN_GUEST_ESTIMATE}-{MAX_GUEST_ESTIMATE}).",
             )
     if user_budget_gbp is not None and over:
         global_assumptions.append(
@@ -177,7 +177,7 @@ def build_budget_breakdown(
         )
     if user_budget_gbp is None:
         global_assumptions.append(
-            "No total budget was stated — figures are vendor prices or typical starting estimates only.",
+            "No total budget was stated - figures are vendor prices or typical starting estimates only.",
         )
 
     return BudgetBreakdown(

@@ -1,4 +1,4 @@
-"""Check and tidy vendor onboarding fields — per step when advancing, and on every profile save."""
+"""Check and tidy vendor onboarding fields - per step when advancing, and on every profile save."""
 
 from __future__ import annotations
 
@@ -195,7 +195,7 @@ def _validate_step_location(payload: dict[str, Any]) -> None:
 
 
 def validate_step_fields(step: int, payload: dict[str, Any]) -> None:
-    """Check the given onboarding step (1–8). Raises ValidationError if anything is invalid."""
+    """Check the given onboarding step (1-8). Raises ValidationError if anything is invalid."""
     if step == 4:
         _money_in_range(_coerce_str(payload, "hourlyRate"), "Hourly rate")
         _money_in_range(_coerce_str(payload, "dailyRate"), "Daily rate")
@@ -242,7 +242,7 @@ def validate_step_fields(step: int, payload: dict[str, Any]) -> None:
             if parsed is None or parsed < MIN_MAX_BOOKINGS_PER_DAY or parsed > MAX_MAX_BOOKINGS_PER_DAY:
                 raise ValidationError(
                     f"Step availability: max bookings per day must be "
-                    f"{MIN_MAX_BOOKINGS_PER_DAY}–{MAX_MAX_BOOKINGS_PER_DAY}.",
+                    f"{MIN_MAX_BOOKINGS_PER_DAY}-{MAX_MAX_BOOKINGS_PER_DAY}.",
                 )
         if n < MIN_MAX_BOOKINGS_PER_DAY:
             raise ValidationError("Step availability: set max bookings per day (min 1).")
@@ -272,7 +272,7 @@ def validate_payload_for_progress(
 ) -> None:
     """
     When the vendor moves forward, check the step they just finished.
-    On submit, check every step (1–8).
+    On submit, check every step (1-8).
     """
     st = (status or "").strip().lower()
     if st in ("submitted", "complete"):

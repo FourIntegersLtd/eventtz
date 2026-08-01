@@ -4,7 +4,29 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+
+MAX_REVIEW_IMAGES = 5
+
+
+def normalize_review_image_urls(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if not isinstance(value, list):
+        return []
+    out: list[str] = []
+    for item in value:
+        url = str(item or "").strip()
+        if not url:
+            continue
+        if not (url.startswith("https://") or url.startswith("http://")):
+            continue
+        if url not in out:
+            out.append(url)
+        if len(out) >= MAX_REVIEW_IMAGES:
+            break
+    return out
 
 
 class PublicReviewItem(BaseModel):
@@ -16,6 +38,7 @@ class PublicReviewItem(BaseModel):
     event_name: str
     event_date: str = ""
     booking_total_label: str = ""
+    image_urls: list[str] = Field(default_factory=list)
 
 
 class VendorPublicReviewsResponse(BaseModel):
@@ -46,6 +69,7 @@ class ClientOwnerReviewItem(BaseModel):
     vendor_display_name: str = "Vendor"
     event_name: str = "Event"
     event_date: str = ""
+    image_urls: list[str] = Field(default_factory=list)
 
 
 class ClientOwnerReviewsResponse(BaseModel):
@@ -57,6 +81,15 @@ class ClientOwnerReviewsResponse(BaseModel):
 class PostBookingReviewBody(BaseModel):
     rating: int = Field(ge=1, le=5)
     body: str = Field(min_length=10, max_length=4000)
+    image_urls: list[str] = Field(default_factory=list)
+
+    @field_validator("image_urls", mode="before")
+    @classmethod
+    def validate_image_urls(cls, value: Any) -> list[str]:
+        urls = normalize_review_image_urls(value)
+        if isinstance(value, list) and len(value) > MAX_REVIEW_IMAGES:
+            raise ValueError(f"You can attach up to {MAX_REVIEW_IMAGES} photos.")
+        return urls
 
 
 class ClientReviewSummary(BaseModel):
@@ -64,6 +97,7 @@ class ClientReviewSummary(BaseModel):
     rating: int
     body: str = ""
     created_at: str | None = None
+    image_urls: list[str] = Field(default_factory=list)
 
 
 class VendorReviewSummary(BaseModel):
@@ -74,6 +108,7 @@ class VendorReviewSummary(BaseModel):
     body: str
     created_at: str | None = None
     reviewer_display: str
+    image_urls: list[str] = Field(default_factory=list)
 
 
 class PostBookingReviewResponse(BaseModel):

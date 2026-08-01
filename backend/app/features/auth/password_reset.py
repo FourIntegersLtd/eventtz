@@ -145,7 +145,7 @@ def _invalidate_unused_tokens(user_id: str) -> None:
         msg = str(e)
         if "password_reset_tokens" in msg or "PGRST205" in msg:
             logger.error(
-                "password_reset: table missing — run backend/sql/049_password_reset_tokens.sql in Supabase",
+                "password_reset: table missing - run backend/sql/049_password_reset_tokens.sql in Supabase",
             )
         else:
             logger.exception("password_reset: invalidate unused failed user=%s", user_id)
@@ -171,7 +171,7 @@ def _insert_token(user_id: str, token_hash: str, expires_at: datetime) -> None:
         msg = str(e)
         if "password_reset_tokens" in msg or "PGRST205" in msg:
             raise RuntimeError(
-                "password_reset_tokens table missing — run backend/sql/049_password_reset_tokens.sql",
+                "password_reset_tokens table missing - run backend/sql/049_password_reset_tokens.sql",
             ) from e
         raise
 

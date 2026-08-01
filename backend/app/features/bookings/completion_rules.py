@@ -4,7 +4,7 @@ The vendor is paid when both parties confirm completion (see payments.py), or
 automatically BOOKING_PAYOUT_AUTO_RELEASE_HOURS_AFTER_EVENT hours after the
 event ends, if the client has paid and no problem report is open.
 
-No database or Stripe imports here — payments.py and queries.py both use these
+No database or Stripe imports here - payments.py and queries.py both use these
 functions without pulling each other in at import time.
 """
 

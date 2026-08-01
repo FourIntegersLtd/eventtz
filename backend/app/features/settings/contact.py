@@ -23,7 +23,7 @@ _DEFAULT_PREFS = {
     "share_address": True,
 }
 
-# Remember after the first missing-column error — avoids log spam until migration 028 is applied.
+# Remember after the first missing-column error - avoids log spam until migration 028 is applied.
 _contact_prefs_columns_ok: bool | None = None
 
 
@@ -60,7 +60,7 @@ def get_contact_settings(user_id: str) -> dict[str, Any]:
         if _missing_contact_prefs_columns(e):
             _contact_prefs_columns_ok = False
             logger.warning(
-                "get_contact_settings: run backend/sql/028_contact_sharing_preferences.sql — %s",
+                "get_contact_settings: run backend/sql/028_contact_sharing_preferences.sql - %s",
                 e,
             )
             return dict(_DEFAULT_PREFS)
@@ -111,7 +111,7 @@ def update_contact_settings(
         if _missing_contact_prefs_columns(e):
             _contact_prefs_columns_ok = False
             logger.warning(
-                "update_contact_settings: run backend/sql/028_contact_sharing_preferences.sql — %s",
+                "update_contact_settings: run backend/sql/028_contact_sharing_preferences.sql - %s",
                 e,
             )
             return dict(_DEFAULT_PREFS)
@@ -149,7 +149,7 @@ def mask_booking_list_client_email(row: dict[str, Any]) -> dict[str, Any]:
 
 def _mask_all_counterparty_contact(out: dict[str, Any], *, viewer_role: str) -> dict[str, Any]:
     # Event venue (event_address / event_postcode) is booking data, not contact
-    # info — vendors need it to decide whether to accept or quote travel, so it
+    # info - vendors need it to decide whether to accept or quote travel, so it
     # is never masked here. Only personal contact channels are gated.
     out.pop("counterparty_phone", None)
     out["client_email"] = None
@@ -166,7 +166,7 @@ def apply_counterparty_contact_visibility(
 ) -> dict[str, Any]:
     """
     Hide counterparty contact fields (email/phone) until the client has paid,
-    then apply sharing preferences. Booking event venue is never hidden — vendors
+    then apply sharing preferences. Booking event venue is never hidden - vendors
     need it to decide whether to accept. viewer_role: 'vendor' (viewing
     client) or 'client' (viewing vendor).
     """
@@ -188,7 +188,7 @@ def apply_counterparty_contact_visibility(
             out["counterparty_phone"] = None
         return out
 
-    # Client viewing vendor — client always sees their own event location.
+    # Client viewing vendor - client always sees their own event location.
     vendor_id = str(out.get("vendor_user_id") or "")
     prefs = get_contact_settings(vendor_id) if vendor_id else _DEFAULT_PREFS
     if not prefs.get("share_email"):

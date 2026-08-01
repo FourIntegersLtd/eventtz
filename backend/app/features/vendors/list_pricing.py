@@ -130,7 +130,7 @@ def _package_description(pkg: RawPackage) -> str:
     if pkg.details.strip():
         return pkg.details.strip()
     return (
-        "The vendor listed this package with a price — ask what's included when you get in touch."
+        "The vendor listed this package with a price - ask what's included when you get in touch."
     )
 
 
@@ -271,7 +271,7 @@ def resolve_line_items(
         raise ValueError("This vendor has no published prices for your selection.")
 
     if has_quote_only and unique_ids != ["quote"]:
-        raise ValueError("This vendor only accepts quote requests — no priced options to select.")
+        raise ValueError("This vendor only accepts quote requests - no priced options to select.")
 
     return line_items
 
@@ -302,7 +302,7 @@ def compute_automatic_discount_lines(
     event_date: date,
 ) -> list[dict[str, Any]]:
     """
-    Return 0–2 extra line items (negative amounts) for bulk and off-peak discounts.
+    Return 0-2 extra line items (negative amounts) for bulk and off-peak discounts.
     Applied after the headline list discount; bulk is calculated before off-peak.
     """
     config = parse_vendor_discount_config(payload)

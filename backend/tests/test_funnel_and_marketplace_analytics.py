@@ -34,7 +34,7 @@ def test_mark_vendor_first_response_skips_when_already_set(mock_get_client):
     )
 
     mark_vendor_first_response("b1")
-    # Already set — must not call update
+    # Already set - must not call update
     mock_table.update.assert_not_called()
 
 

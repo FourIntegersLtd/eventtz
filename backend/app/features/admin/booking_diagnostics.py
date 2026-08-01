@@ -49,7 +49,7 @@ def _open_dispute_for_booking(booking_id: str) -> dict[str, Any] | None:
 
 
 def _suggest_next_action(row: dict[str, Any], flags: list[dict[str, str]]) -> str | None:
-    """One suggested support action — must match titles exposed in admin booking UI."""
+    """One suggested support action - must match titles exposed in admin booking UI."""
     codes = {f["code"] for f in flags}
 
     if "payment_not_marked_paid" in codes:
@@ -75,7 +75,7 @@ def _suggest_next_action(row: dict[str, Any], flags: list[dict[str, str]]) -> st
             return ACTION_MARK_COMPLETE_VENDOR
         if waiting == "both":
             return ACTION_MARK_COMPLETE_CLIENT
-    # No support action fixes vendor Stripe setup — flag label carries the message.
+    # No support action fixes vendor Stripe setup - flag label carries the message.
     if "vendor_payouts_disabled" in codes:
         return None
     return None
@@ -108,7 +108,7 @@ def _build_needs_attention_flags(
             {
                 "code": "checkout_pending",
                 "severity": "warning",
-                "label": "Checkout session pending — may be stale or awaiting sync",
+                "label": "Checkout session pending - may be stale or awaiting sync",
             },
         )
 
@@ -136,7 +136,7 @@ def _build_needs_attention_flags(
                 {
                     "code": "support_hold",
                     "severity": "warning",
-                    "label": "Support hold is on — automatic payout release is paused",
+                    "label": "Support hold is on - automatic payout release is paused",
                 },
             )
 
@@ -160,7 +160,7 @@ def _build_needs_attention_flags(
                     {
                         "code": "event_over_awaiting_completion",
                         "severity": "warning",
-                        "label": f"Event is over — waiting for {waiting} to confirm completion",
+                        "label": f"Event is over - waiting for {waiting} to confirm completion",
                     },
                 )
 

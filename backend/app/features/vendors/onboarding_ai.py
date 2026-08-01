@@ -115,7 +115,7 @@ def generate_vendor_public_bio(*, payload: dict[str, Any]) -> str:
 
 
 def analyze_portfolio_image(*, image_bytes: bytes, content_type: str) -> tuple[bool, int, str]:
-    """Returns (ok, score 1–5, short summary). ok=false means the image is not good enough for the marketplace."""
+    """Returns (ok, score 1-5, short summary). ok=false means the image is not good enough for the marketplace."""
     if not image_bytes:
         raise HTTPException(status_code=400, detail="Please choose an image to upload.")
     if not content_type.startswith("image/"):

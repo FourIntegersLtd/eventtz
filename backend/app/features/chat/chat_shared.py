@@ -180,7 +180,7 @@ def _messages_table_select(client: Any, conversation_id: str, *, limit: int) -> 
         msg = str(exc).lower()
         if "metadata" in msg and ("does not exist" in msg or "42703" in msg):
             logger.warning(
-                "chat: messages.metadata missing — run backend/sql/027_message_quote_metadata.sql"
+                "chat: messages.metadata missing - run backend/sql/027_message_quote_metadata.sql"
             )
             res = build("id,sender_user_id,body,created_at").execute()
         else:

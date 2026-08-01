@@ -1,4 +1,4 @@
--- Link disputes to the client–vendor chat thread for support investigations.
+-- Link disputes to the client-vendor chat thread for support investigations.
 -- Run after 018_admin_console.sql and 014_chat_conversations_messages.sql.
 
 ALTER TABLE public.dispute_cases

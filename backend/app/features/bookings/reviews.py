@@ -5,12 +5,19 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from app.contracts.reviews import MAX_REVIEW_IMAGES, normalize_review_image_urls
 from app.core.config import get_settings
 from app.core.logging import get_logger
 from app.core.db import apply_recent_first_order, get_db as get_client
 from app.features.auth.lookup import vendor_display_names_by_id
 
 logger = get_logger(__name__)
+
+
+def _review_image_urls(row: dict[str, Any] | None) -> list[str]:
+    if not isinstance(row, dict):
+        return []
+    return normalize_review_image_urls(row.get("image_urls"))
 
 
 def _reviewer_display_from_email(email: str | None) -> str:
@@ -51,7 +58,7 @@ def featured_snippets_for_vendor_ids(
     One public review snippet per vendor for plan cards.
 
     Prefers higher ratings and (when given) reviews whose body mentions the
-    service the vendor was listed under — so a baker is less likely to show a
+    service the vendor was listed under - so a baker is less likely to show a
     catering-only quote.
     Returns { vendor_id: { rating, body_excerpt, reviewer_display } }.
     """
@@ -159,7 +166,7 @@ def get_review_stats_for_vendors(vendor_ids: list[str]) -> dict[str, dict[str, A
     return out
 
 
-_REVIEW_BASE_SELECT = "id, rating, body, created_at, client_user_id, booking_request_id"
+_REVIEW_BASE_SELECT = "id, rating, body, created_at, client_user_id, booking_request_id, image_urls"
 
 
 def _fetch_vendor_review_rows(
@@ -283,6 +290,7 @@ def _vendor_review_items_from_rows(
             "event_name": ev.get("event_name", "Event"),
             "event_date": ev.get("event_date", ""),
             "booking_total_label": ev.get("total_label", ""),
+            "image_urls": _review_image_urls(r),
         }
         if include_booking_id:
             item["booking_request_id"] = bid
@@ -353,7 +361,7 @@ def list_reviews_for_client(
         return [], {"review_count": 0}
 
     client = get_client()
-    sel = "id, rating, body, created_at, vendor_user_id, booking_request_id"
+    sel = "id, rating, body, created_at, vendor_user_id, booking_request_id, image_urls"
 
     try:
         res = (
@@ -393,6 +401,7 @@ def list_reviews_for_client(
                 "vendor_display_name": vendor_names.get(vid, "Vendor"),
                 "event_name": ev.get("event_name", "Event"),
                 "event_date": ev.get("event_date", ""),
+                "image_urls": _review_image_urls(r),
             },
         )
 
@@ -416,7 +425,7 @@ def get_vendor_reviews_for_bookings(
         q = (
             client.table("booking_reviews")
             .select(
-                "id, rating, body, created_at, client_user_id, booking_request_id",
+                "id, rating, body, created_at, client_user_id, booking_request_id, image_urls",
             )
             .eq("vendor_user_id", vendor_user_id)
             .in_("booking_request_id", ids[:300])
@@ -453,6 +462,7 @@ def get_vendor_reviews_for_bookings(
             "body": str(r.get("body") or ""),
             "created_at": r.get("created_at"),
             "reviewer_display": _reviewer_display_from_email(emails.get(cid)),
+            "image_urls": _review_image_urls(r),
         }
     return out
 
@@ -463,7 +473,7 @@ def get_vendor_review_for_booking(vendor_user_id: str, booking_id: str) -> dict[
 
 
 def get_client_reviewed_booking_ids(client_user_id: str, booking_ids: list[str]) -> set[str]:
-    """Which booking ids this client has already reviewed — avoids an extra query per booking."""
+    """Which booking ids this client has already reviewed - avoids an extra query per booking."""
     if get_settings().local_auth_mode or not client_user_id:
         return set()
     ids = list({str(b) for b in booking_ids if b})
@@ -495,7 +505,7 @@ def get_client_review_for_booking(booking_id: str, client_user_id: str) -> dict[
     try:
         res = (
             client.table("booking_reviews")
-            .select("id, rating, body, created_at")
+            .select("id, rating, body, created_at, image_urls")
             .eq("booking_request_id", booking_id)
             .eq("client_user_id", client_user_id)
             .limit(1)
@@ -513,6 +523,7 @@ def get_client_review_for_booking(booking_id: str, client_user_id: str) -> dict[
         "rating": int(row.get("rating") or 0),
         "body": str(row.get("body") or ""),
         "created_at": row.get("created_at"),
+        "image_urls": _review_image_urls(row),
     }
 
 
@@ -522,6 +533,7 @@ def create_booking_review(
     booking_id: str,
     rating: int,
     body: str,
+    image_urls: list[str] | None = None,
 ) -> dict[str, Any]:
     if get_settings().local_auth_mode:
         raise ValueError("Reviews are unavailable in local auth mode.")
@@ -562,6 +574,10 @@ def create_booking_review(
     if len(text) > 4000:
         raise ValueError("Review is too long.")
 
+    photos = normalize_review_image_urls(image_urls)
+    if len(photos) > MAX_REVIEW_IMAGES:
+        raise ValueError(f"You can attach up to {MAX_REVIEW_IMAGES} photos.")
+
     client.table("booking_reviews").insert(
         {
             "booking_request_id": booking_id,
@@ -569,12 +585,13 @@ def create_booking_review(
             "client_user_id": client_user_id,
             "rating": rating,
             "body": text,
+            "image_urls": photos,
         },
     ).execute()
 
     fetch = (
         client.table("booking_reviews")
-        .select("id, rating, body, created_at")
+        .select("id, rating, body, created_at, image_urls")
         .eq("booking_request_id", booking_id)
         .limit(1)
         .execute()
@@ -592,7 +609,7 @@ def create_booking_review(
             actor_user_id=client_user_id,
             vendor_user_id=vendor_id,
             booking_request_id=booking_id,
-            payload={"rating": rating},
+            payload={"rating": rating, "photo_count": len(photos)},
         )
     except Exception:
         pass
@@ -601,4 +618,5 @@ def create_booking_review(
         "rating": int(created.get("rating") or rating),
         "body": text,
         "created_at": created.get("created_at"),
+        "image_urls": _review_image_urls(created) or photos,
     }

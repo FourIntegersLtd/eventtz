@@ -147,7 +147,7 @@ def _post_client_booking_notes_to_chat(
     vendor_user_id: str,
     notes: str | None,
 ) -> str | None:
-    """Called when creating a booking — see ensure_client_booking_notes_in_chat."""
+    """Called when creating a booking - see ensure_client_booking_notes_in_chat."""
     return ensure_client_booking_notes_in_chat(
         booking_id=booking_id,
         client_user_id=client_user_id,

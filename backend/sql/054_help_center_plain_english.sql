@@ -1,5 +1,5 @@
 -- Plain-English Help Center copy (lay terms, no jargon). Upsert by slug.
--- Run after 051–053.
+-- Run after 051-053.
 
 UPDATE public.help_categories
 SET

@@ -24,7 +24,7 @@ VENDOR_PAYMENT_RECEIVED_BODY = (
     "Thank you for your patience and for delivering through Eventtz."
 )
 
-# Kinds whose stored body is booking-specific (pricing, quotes, refunds, deadlines) —
+# Kinds whose stored body is booking-specific (pricing, quotes, refunds, deadlines) -
 # keep it in the feed and emails when present.
 _USE_STORED_BODY: frozenset[str] = frozenset(
     {

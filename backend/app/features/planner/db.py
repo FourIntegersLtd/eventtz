@@ -108,7 +108,7 @@ def insert_plan(
         return saved
     except Exception as e:
         if _missing_table(e):
-            logger.warning("insert_plan: celebration_plans missing — using memory store (%s)", e)
+            logger.warning("insert_plan: celebration_plans missing - using memory store (%s)", e)
             _LOCAL_PLANS[plan_id] = copy.deepcopy(plan_row)
             item_rows = []
             for i, item in enumerate(items):
@@ -178,7 +178,7 @@ def get_plan_for_client(plan_id: str, client_user_id: str) -> dict[str, Any] | N
         )
         plan = one_row(res)
         if not plan:
-            # IDOR: do not reveal existence — also check memory fallback
+            # IDOR: do not reveal existence - also check memory fallback
             mem = _LOCAL_PLANS.get(plan_id)
             if mem and mem.get("client_user_id") == client_user_id:
                 out = copy.deepcopy(mem)

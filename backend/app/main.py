@@ -1,4 +1,4 @@
-"""Main FastAPI app — wires middleware, routes, and startup checks."""
+"""Main FastAPI app - wires middleware, routes, and startup checks."""
 
 from contextlib import asynccontextmanager
 

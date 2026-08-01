@@ -1,4 +1,4 @@
-"""UK address lookup via getAddress.io — DISABLED (see uk_address.py; clients use free-text venues)."""
+"""UK address lookup via getAddress.io - DISABLED (see uk_address.py; clients use free-text venues)."""
 
 from __future__ import annotations
 

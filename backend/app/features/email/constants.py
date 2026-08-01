@@ -1,4 +1,4 @@
-"""Email defaults — only RESEND_API_KEY is read from the environment."""
+"""Email defaults - only RESEND_API_KEY is read from the environment."""
 
 from __future__ import annotations
 

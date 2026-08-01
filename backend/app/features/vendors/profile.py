@@ -145,7 +145,7 @@ def upsert_vendor_profile(
                 logger.warning("vendor submitted admin email failed user=%s", user_id, exc_info=True)
         return row
 
-    # vendors.user_id must exist in users — create the user row before insert or update.
+    # vendors.user_id must exist in users - create the user row before insert or update.
     norm_email = (
         user_email.strip().lower()
         if isinstance(user_email, str) and user_email.strip()

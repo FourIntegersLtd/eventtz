@@ -173,7 +173,7 @@ class SupabaseAuthService:
                 return {"success": False, "error": "Please sign in to continue."}
             return {"success": True, "user": _user_info(user)}
         except AuthApiError as e:
-            # Expired or revoked session (e.g. after sign-out), bad token — routine, not server bugs.
+            # Expired or revoked session (e.g. after sign-out), bad token - routine, not server bugs.
             logger.debug("get_user_from_access_token rejected token: %s", e)
             return {"success": False, "error": "Please sign in to continue."}
         except Exception:

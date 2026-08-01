@@ -154,7 +154,7 @@ def update_booking_request_status_for_vendor(
                         kind="booking_cancelled_by_vendor",
                         body=(
                             "The vendor has cancelled this booking. Your payment has been refunded in full.\n\n"
-                            "It should reach your card within 5–10 working days, depending on your bank."
+                            "It should reach your card within 5-10 working days, depending on your bank."
                         ),
                     )
                 else:
@@ -299,7 +299,7 @@ def _notify_client_booking_accepted(client_uid: str, booking_id: str) -> None:
     adj = full.get("vendor_adjustments")
     adj_list = adj if isinstance(adj, list) else []
     body = _client_booking_pricing_explanation_body(
-        lead_sentence="Good news — your booking was accepted.",
+        lead_sentence="Good news - your booking was accepted.",
         total_label=ttl,
         adjustments=adj_list,
     )

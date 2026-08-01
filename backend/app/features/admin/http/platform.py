@@ -1,4 +1,4 @@
-"""Admin console HTTP routes — aggregated from domain-focused modules."""
+"""Admin console HTTP routes - aggregated from domain-focused modules."""
 
 from fastapi import APIRouter
 

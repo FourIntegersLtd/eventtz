@@ -94,7 +94,7 @@ def patch_booking_payment_fields(booking_id: str, fields: dict[str, Any]) -> boo
                 stripe_charge = latest
             if not stripe_charge:
                 raise ValueError(
-                    "Could not verify stripe_charge_id — payment intent has no charge yet.",
+                    "Could not verify stripe_charge_id - payment intent has no charge yet.",
                 )
             if str(stripe_charge) != charge_id:
                 raise ValueError("stripe_charge_id does not match the payment intent.")
@@ -116,7 +116,7 @@ def patch_booking_payment_fields(booking_id: str, fields: dict[str, Any]) -> boo
         return True
     except Exception as e:
         if "stripe_payment_intent_id" in str(e).lower() or "42703" in str(e):
-            logger.warning("patch_booking_payment_fields: run migration 018 — %s", e)
+            logger.warning("patch_booking_payment_fields: run migration 018 - %s", e)
             return False
         logger.warning("patch_booking_payment_fields failed: %s", e, exc_info=True)
         return False

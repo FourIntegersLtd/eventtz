@@ -42,7 +42,7 @@ def _payment_fields_from_checkout_session(session: dict[str, Any]) -> tuple[str 
 
     if isinstance(pi_raw, str):
         text = pi_raw.strip()
-        # Persist only bare Stripe ids — never stringified objects/blobs.
+        # Persist only bare Stripe ids - never stringified objects/blobs.
         if text.startswith("pi_") and len(text) < 255 and "{" not in text:
             payment_intent_id = text
     elif isinstance(pi_raw, dict):
@@ -276,7 +276,7 @@ def sync_checkout_payment_for_client(
         code = str(getattr(e, "code", "") or "")
         if code == "resource_missing" or "checkout.session" in str(e).lower():
             logger.warning(
-                "Stale checkout session booking=%s session=%s — clearing",
+                "Stale checkout session booking=%s session=%s - clearing",
                 booking_id,
                 resolved_session_id,
             )

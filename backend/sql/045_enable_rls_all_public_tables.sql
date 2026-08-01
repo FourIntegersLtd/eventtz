@@ -1,7 +1,7 @@
 -- Enable RLS on every base table in public (run in Supabase SQL Editor).
 -- Safe for Eventtz while the FastAPI backend uses the service_role key
 -- (service_role bypasses RLS). anon / authenticated clients get zero rows
--- until you add policies — which is usually what you want if the API owns access.
+-- until you add policies - which is usually what you want if the API owns access.
 
 DO $$
 DECLARE

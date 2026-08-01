@@ -1,4 +1,4 @@
-"""Chat handler functions — shared by the /api/v1/chat routes."""
+"""Chat handler functions - shared by the /api/v1/chat routes."""
 
 from __future__ import annotations
 

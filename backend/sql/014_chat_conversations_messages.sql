@@ -1,4 +1,4 @@
--- In-app chat: one conversation per client–vendor pair; messages + read pointers on conversation.
+-- In-app chat: one conversation per client-vendor pair; messages + read pointers on conversation.
 -- Run after public.users exists (001). Backend-only writes via service role (RLS disabled).
 
 CREATE TABLE IF NOT EXISTS public.conversations (

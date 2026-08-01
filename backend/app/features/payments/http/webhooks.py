@@ -1,4 +1,4 @@
-"""Stripe webhook endpoint. Public — verified by signature, not user login."""
+"""Stripe webhook endpoint. Public - verified by signature, not user login."""
 
 from __future__ import annotations
 
@@ -51,7 +51,7 @@ async def post_stripe_webhook(
         )
     )
 
-    # Always return 200 once the signature is valid — Stripe will retry on other status codes.
+    # Always return 200 once the signature is valid - Stripe will retry on other status codes.
     # Duplicate events are ignored via the webhook-event table; handlers use conditional updates.
     try:
         if event_type == "checkout.session.completed":

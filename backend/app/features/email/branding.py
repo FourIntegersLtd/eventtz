@@ -29,7 +29,7 @@ def email_public_base() -> str:
 
 
 def public_email_url(path: str) -> str:
-    """Absolute URL for links in outbound email — always the public site."""
+    """Absolute URL for links in outbound email - always the public site."""
     base = email_public_base()
     normalized = (path or "").strip()
     if not normalized:

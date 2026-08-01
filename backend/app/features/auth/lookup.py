@@ -9,7 +9,7 @@ from app.features.auth import db_vendors as vendor_repository
 
 logger = get_logger(__name__)
 
-# Remember after the first missing-column error — avoids log spam when migration 035 is not applied yet.
+# Remember after the first missing-column error - avoids log spam when migration 035 is not applied yet.
 _preferred_name_column_ok: bool | None = None
 
 
@@ -84,7 +84,7 @@ def client_display_names_by_id(user_ids: list[str]) -> dict[str, str]:
         if _preferred_name_column_ok is not False and "preferred_name" in str(e).lower():
             _preferred_name_column_ok = False
             logger.warning(
-                "client_display_names_by_id: run backend/sql/035_client_preferred_name.sql — %s", e
+                "client_display_names_by_id: run backend/sql/035_client_preferred_name.sql - %s", e
             )
             return client_display_names_by_id(user_ids)
         logger.exception("user_lookup: batch load client display names failed")
@@ -103,7 +103,7 @@ def client_display_names_by_id(user_ids: list[str]) -> dict[str, str]:
 
 
 def client_emails_by_id(user_ids: list[str]) -> dict[str, str | None]:
-    """Extra client emails for booking lists — returns None when email is missing."""
+    """Extra client emails for booking lists - returns None when email is missing."""
     if not user_ids or get_settings().local_auth_mode:
         return {}
     try:

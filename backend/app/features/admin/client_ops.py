@@ -103,7 +103,7 @@ def list_clients_for_admin(
 
 
 def list_client_user_ids_for_broadcast() -> list[str]:
-    """All client user IDs — for sending one support message per client (not the paginated directory UI)."""
+    """All client user IDs - for sending one support message per client (not the paginated directory UI)."""
     if get_settings().local_auth_mode:
         return []
     try:
@@ -150,7 +150,7 @@ def set_client_suspended(user_id: str, suspended: bool) -> bool:
         return True
     except Exception as e:
         if "account_suspended" in str(e).lower() or "42703" in str(e):
-            logger.warning("set_client_suspended: run migration 018 — %s", e)
+            logger.warning("set_client_suspended: run migration 018 - %s", e)
             return False
         logger.warning("set_client_suspended failed: %s", e, exc_info=True)
         return False

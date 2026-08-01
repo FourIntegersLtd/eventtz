@@ -19,7 +19,7 @@ from app.features.bookings import _paid_at_iso
 logger = get_logger(__name__)
 
 #: payment_status values where Eventtz has actually collected money from the client
-#: (includes payout_released — the vendor may or may not have been paid out yet).
+#: (includes payout_released - the vendor may or may not have been paid out yet).
 _PAID_PAYMENT_STATUSES = ["paid", "payout_released", "partially_refunded"]
 
 

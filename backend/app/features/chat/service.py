@@ -1,6 +1,6 @@
-"""Client–vendor chat and Eventtz Support threads (conversations + messages).
+"""Client-vendor chat and Eventtz Support threads (conversations + messages).
 
-Re-export facade — import from here for stable public API.
+Re-export facade - import from here for stable public API.
 """
 
 from __future__ import annotations

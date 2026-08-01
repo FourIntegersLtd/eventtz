@@ -2,9 +2,9 @@
 
 ``parse_marketplace_query`` decides **simple** vs **plan**:
 
-- **simple** — user wants one kind of vendor (“caterer in Manchester”). Ranking uses
+- **simple** - user wants one kind of vendor (“caterer in Manchester”). Ranking uses
   keywords / types / location as a flat list.
-- **plan** — user wants help assembling an event (“plan my birthday”). We return a
+- **plan** - user wants help assembling an event (“plan my birthday”). We return a
   short checklist of needs (each mapped to a service key). Ranking for those needs
   happens in ``search._search_plan_sections``.
 
@@ -166,7 +166,7 @@ _CANNED_NEEDS: dict[str, list[dict[str, Any]]] = {
 }
 
 _PLAN_TITLES: dict[str, str] = {
-    "birthdays": "Ideas for your birthday — cake, food, and more",
+    "birthdays": "Ideas for your birthday - cake, food, and more",
     "weddings": "Ideas for your wedding",
     "showers": "Ideas for your shower",
     "naming_ceremonies": "Ideas for your naming ceremony",
@@ -293,7 +293,7 @@ def _friendly_need_label(raw: str, *, service_key: str) -> str:
     """Keep need titles short and client-friendly (no jargon / slash lists)."""
     label = re.sub(r"\s+", " ", (raw or "").strip())
     label = label.replace("/", " and ").replace("&", " and ")
-    label = re.sub(r"\s+", " ", label).strip(" -–—")
+    label = re.sub(r"\s+", " ", label).strip(" ---")
     # Drop stiff marketplace jargon if the model used the service key as a title.
     stiff = {
         "baking": "Cake",
@@ -320,26 +320,26 @@ def _slug_id(raw: str, *, fallback: str) -> str:
 
 
 _WHY_BY_SERVICE: dict[str, str] = {
-    "baking": "A cake is often the centrepiece — compare bakers who do celebration cakes.",
-    "catering": "Guests expect proper food — compare caterers for mains and small chops.",
-    "photography": "Photos help you keep the day — compare photographers if you want coverage.",
-    "makeup": "Many hosts book glam for the day — compare makeup artists if you need it.",
-    "rentals": "Decor and hire set the look — compare options if you need tables, chairs, or styling.",
+    "baking": "A cake is often the centrepiece - compare bakers who do celebration cakes.",
+    "catering": "Guests expect proper food - compare caterers for mains and small chops.",
+    "photography": "Photos help you keep the day - compare photographers if you want coverage.",
+    "makeup": "Many hosts book glam for the day - compare makeup artists if you need it.",
+    "rentals": "Decor and hire set the look - compare options if you need tables, chairs, or styling.",
 }
 
 _WHY_BY_EVENT_SERVICE: dict[tuple[str, str], str] = {
-    ("birthdays", "baking"): "Most birthday hosts book a cake — here are bakers who cover that.",
-    ("birthdays", "catering"): "Birthday guests expect good food — jollof, rice, and small chops usually come from a caterer.",
-    ("birthdays", "photography"): "Photos help you keep the memories — optional if you already have someone.",
-    ("weddings", "baking"): "A wedding cake is a highlight — compare bakers who do celebration cakes.",
-    ("weddings", "catering"): "Feeding your guests well matters — compare caterers for the day.",
-    ("weddings", "photography"): "Wedding photos are kept for years — compare photographers for your day.",
-    ("weddings", "makeup"): "Many couples book glam for the day — skip this if you don’t need it.",
-    ("weddings", "rentals"): "Decor and hire shape the room — compare options if you need them.",
-    ("showers", "baking"): "A cake makes the shower feel special — compare bakers.",
-    ("showers", "catering"): "Light bites and small chops keep guests happy — compare food vendors.",
-    ("naming_ceremonies", "baking"): "A celebration cake fits the day — compare bakers.",
-    ("naming_ceremonies", "catering"): "Guests will want a proper meal — compare caterers.",
+    ("birthdays", "baking"): "Most birthday hosts book a cake - here are bakers who cover that.",
+    ("birthdays", "catering"): "Birthday guests expect good food - jollof, rice, and small chops usually come from a caterer.",
+    ("birthdays", "photography"): "Photos help you keep the memories - optional if you already have someone.",
+    ("weddings", "baking"): "A wedding cake is a highlight - compare bakers who do celebration cakes.",
+    ("weddings", "catering"): "Feeding your guests well matters - compare caterers for the day.",
+    ("weddings", "photography"): "Wedding photos are kept for years - compare photographers for your day.",
+    ("weddings", "makeup"): "Many couples book glam for the day - skip this if you don’t need it.",
+    ("weddings", "rentals"): "Decor and hire shape the room - compare options if you need them.",
+    ("showers", "baking"): "A cake makes the shower feel special - compare bakers.",
+    ("showers", "catering"): "Light bites and small chops keep guests happy - compare food vendors.",
+    ("naming_ceremonies", "baking"): "A celebration cake fits the day - compare bakers.",
+    ("naming_ceremonies", "catering"): "Guests will want a proper meal - compare caterers.",
 }
 
 
@@ -359,7 +359,7 @@ def why_for_need(
             return hit
     return _WHY_BY_SERVICE.get(
         service_key,
-        "Useful for your event — compare these vendors.",
+        "Useful for your event - compare these vendors.",
     )
 
 
@@ -548,12 +548,12 @@ def _sanitize_parse_result(data: dict[str, Any] | MarketplaceQueryParseResult | 
     if mode == "plan" and not needs and event_types:
         needs = _canned_needs_for_events(event_types)
     if mode == "plan" and not needs:
-        # Still asked to plan but no event — use birthday staples as a safe default.
+        # Still asked to plan but no event - use birthday staples as a safe default.
         needs = _canned_needs_for_events(["birthdays"])
         if not event_types:
             event_types = ["birthdays"]
     if mode == "plan" and needs:
-        # One section per service — avoid repeating the same caterer under rice + chops.
+        # One section per service - avoid repeating the same caterer under rice + chops.
         collapsed: list[MarketplacePlanNeed] = []
         seen_services: set[str] = set()
         for need in needs:
@@ -642,18 +642,18 @@ def _parse_with_llm(raw_q: str, *, country_code: str) -> MarketplaceQueryParseRe
         "- mode=plan when the user asks to plan / select vendors / what they need for an event "
         "(birthday, wedding, shower, naming). mode=simple for a single vendor hunt "
         "(e.g. 'caterer in Manchester', 'puff-puff in Leeds').\n"
-        "- For birthdays: usually Birthday cake (baking), Food for the party (catering — "
+        "- For birthdays: usually Birthday cake (baking), Food for the party (catering - "
         "covers rice, jollof, small chops in ONE need), and optionally Photos.\n"
         "- For weddings: Wedding cake, Food for your guests, Photos, optionally Makeup, Decor and hire.\n"
         f"- Every need.service_key must be an allowed service key. Max {_PLAN_MAX_NEEDS} needs. "
         "Do NOT split catering into multiple needs (no separate rice vs small chops sections).\n"
-        "- need.label must be plain, friendly English a guest would say — short, no slashes, "
+        "- need.label must be plain, friendly English a guest would say - short, no slashes, "
         "no jargon (never 'Photography', 'Catering', 'Rice/Jollof Mains'; prefer "
         "'Photos', 'Food for the party', 'Birthday cake').\n"
         "- need.rationale: one short friendly sentence explaining why this need matters for "
-        "the event (e.g. 'Most birthday hosts book a cake — here are bakers who cover that.'). "
+        "the event (e.g. 'Most birthday hosts book a cake - here are bakers who cover that.'). "
         "Shown to clients as section.why. No jargon, no vendor names.\n"
-        "- plan_title: warm and plain (e.g. 'Ideas for your birthday — cake, food, and more').\n"
+        "- plan_title: warm and plain (e.g. 'Ideas for your birthday - cake, food, and more').\n"
         "- keywords: 1-12 meaningful terms. related_keywords: stems/synonyms.\n"
         f"- location: primary city/area in {market.label} or null; "
         "related_locations nearby areas.\n"
@@ -703,7 +703,7 @@ def _parse_with_llm(raw_q: str, *, country_code: str) -> MarketplaceQueryParseRe
         return result
     except Exception as e:
         logger.warning(
-            "marketplace_search_ai: LLM parse failed q=%r err=%s — using fallback",
+            "marketplace_search_ai: LLM parse failed q=%r err=%s - using fallback",
             raw_q[:80],
             e,
         )

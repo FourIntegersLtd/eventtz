@@ -184,7 +184,7 @@ class AdminDisputePatchBody(BaseModel):
     client_resolution_note: str | None = Field(default=None, max_length=8000)
     vendor_resolution_note: str | None = Field(default=None, max_length=8000)
     assigned_admin_id: str | None = None
-    #: Refund or payout choice — only applied when status is set to "resolved".
+    #: Refund or payout choice - only applied when status is set to "resolved".
     resolution_action: Literal["release_to_vendor", "refund_client", "partial_refund"] | None = None
     #: Required only when resolution_action is "partial_refund".
     refund_amount_gbp: float | None = Field(default=None, gt=0)

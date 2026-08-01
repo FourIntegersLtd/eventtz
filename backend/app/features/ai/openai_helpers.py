@@ -35,7 +35,7 @@ def require_openai_client(*, log_context: str = "openai") -> OpenAI:
         logger.debug("%s: OpenAI client initialised (key present, not logged)", log_context)
         return client
     logger.warning(
-        "%s: cannot create OpenAI client — OPENAI_API_KEY is missing or blank. "
+        "%s: cannot create OpenAI client - OPENAI_API_KEY is missing or blank. "
         "Check backend .env and restart uvicorn.",
         log_context,
     )

@@ -1,4 +1,4 @@
-"""Thin HTTP helpers — feed assembly lives in ``notifications.feed``."""
+"""Thin HTTP helpers - feed assembly lives in ``notifications.feed``."""
 
 from __future__ import annotations
 

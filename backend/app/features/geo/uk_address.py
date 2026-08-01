@@ -1,5 +1,5 @@
 """
-UK address lookup — DISABLED (getAddress.io / OS Places commented out).
+UK address lookup - DISABLED (getAddress.io / OS Places commented out).
 
 Clients enter venue addresses as free text. These stubs remain so geo routes
 still respond if called.

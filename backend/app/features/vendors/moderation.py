@@ -195,7 +195,7 @@ def list_vendors_for_admin(
 
 
 def list_vendor_user_ids_for_broadcast() -> list[str]:
-    """All vendor user IDs — for sending an admin message to every vendor."""
+    """All vendor user IDs - for sending an admin message to every vendor."""
     if get_settings().local_auth_mode:
         return list(local_vendors.keys())
     client = get_client()

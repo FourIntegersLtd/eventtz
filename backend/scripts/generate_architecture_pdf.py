@@ -113,7 +113,7 @@ def build_pdf(md_text: str, out_path: Path) -> None:
             continue
 
         if line.startswith("|") and "|" in line[1:]:
-            # Table row — render as monospace row
+            # Table row - render as monospace row
             cells = [c.strip() for c in line.strip("|").split("|")]
             row = "  |  ".join(_ascii_safe(c) for c in cells)
             if all(set(c) <= {"-", " "} for c in cells):

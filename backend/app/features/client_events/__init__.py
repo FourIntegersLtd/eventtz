@@ -1,1 +1,1 @@
-"""Client celebrations — group multi-vendor bookings under one event."""
+"""Client celebrations - group multi-vendor bookings under one event."""

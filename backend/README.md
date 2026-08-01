@@ -57,10 +57,10 @@ SQL migrations live in **`sql/`**. Apply them in **numeric order** in the Supaba
 
 Highlights from the original README (still apply):
 
-- **`001_users_and_vendor_onboarding.sql`** — enum `user_type`, `public.users`, `public.vendors` (JSONB profile). Follow with **`002`**–**`003`** if your DB was created from older snippets.
-- **`004`** / **`005`** — vendor `approval_status` including `banned`.
-- **`006_admin_vendor_list_view.sql`** — admin listing support.
-- **`009_disable_rls_public_users_vendors.sql`** — if PostgREST/RLS blocks backend-only tables, run as documented there.
+- **`001_users_and_vendor_onboarding.sql`** - enum `user_type`, `public.users`, `public.vendors` (JSONB profile). Follow with **`002`**-**`003`** if your DB was created from older snippets.
+- **`004`** / **`005`** - vendor `approval_status` including `banned`.
+- **`006_admin_vendor_list_view.sql`** - admin listing support.
+- **`009_disable_rls_public_users_vendors.sql`** - if PostgREST/RLS blocks backend-only tables, run as documented there.
 
 **Admin users:** no public admin signup. Create the user in Supabase Auth, then in the SQL Editor:
 
@@ -84,7 +84,7 @@ Guards in `app/api/authz.py` / `deps.py` resolve role from `public.users`, then 
 
 ## Payments (Stripe Connect)
 
-Vendor Connect Express + client Checkout, held funds, and payouts live in `app/features/payments/stripe.py` (thin Stripe SDK wrapper) and `app/features/bookings/payments.py` (checkout sessions, webhook finalize, mutual-completion payout, admin refund/release). Connect is **not** part of vendor profile onboarding — it runs at Accept / Payments. See the **Payments (Stripe Connect)** section in [`cursor.md`](../cursor.md) for the full design (held-funds model, `payment_status` vs `status`, idempotency).
+Vendor Connect Express + client Checkout, held funds, and payouts live in `app/features/payments/stripe.py` (thin Stripe SDK wrapper) and `app/features/bookings/payments.py` (checkout sessions, webhook finalize, mutual-completion payout, admin refund/release). Connect is **not** part of vendor profile onboarding - it runs at Accept / Payments. See the **Payments (Stripe Connect)** section in [`cursor.md`](../cursor.md) for the full design (held-funds model, `payment_status` vs `status`, idempotency).
 
 **Setup:**
 
@@ -116,7 +116,7 @@ make stripe-webhooks
 # or: stripe listen --forward-to localhost:8000/api/v1/webhooks/stripe
 ```
 
-The CLI prints a `whsec_...` signing secret — set it as `STRIPE_WEBHOOK_SECRET` in `.env` and restart `uvicorn`. Trigger test events with:
+The CLI prints a `whsec_...` signing secret - set it as `STRIPE_WEBHOOK_SECRET` in `.env` and restart `uvicorn`. Trigger test events with:
 
 ```bash
 stripe trigger checkout.session.completed
@@ -129,11 +129,11 @@ In production, configure the webhook endpoint (`https://<your-api-domain>/api/v1
 
 ## Deploy to Railway (CLI)
 
-Deploy from your machine with the **Railway CLI** — no GitHub connection required. All deploy config lives in **`backend/`**; run every command from that folder.
+Deploy from your machine with the **Railway CLI** - no GitHub connection required. All deploy config lives in **`backend/`**; run every command from that folder.
 
 | File | Purpose |
 |------|---------|
-| `requirements.txt` | Pinned deps (export from Poetry — see below) |
+| `requirements.txt` | Pinned deps (export from Poetry - see below) |
 | `Procfile` | `web` process: uvicorn on `$PORT` |
 | `railway.toml` | Health check `/health`, start command |
 | `nixpacks.toml` | Python 3.13 + pip install |
@@ -161,7 +161,7 @@ railway login
 ```bash
 cd backend
 railway init          # new project + service
-# — or —
+# - or -
 railway link          # attach to an existing Railway project
 ```
 
@@ -171,9 +171,9 @@ This creates a local `.railway/` folder (gitignored).
 
 Railway does **not** upload your local `.env`. Set vars on the service:
 
-**Option A — Dashboard:** Railway project → your service → **Variables** → **Raw Editor** → paste contents of `.env.example` filled in (use `KEY=value` lines, no spaces around `=`).
+**Option A - Dashboard:** Railway project → your service → **Variables** → **Raw Editor** → paste contents of `.env.example` filled in (use `KEY=value` lines, no spaces around `=`).
 
-**Option B — CLI (one at a time):**
+**Option B - CLI (one at a time):**
 
 ```bash
 cd backend

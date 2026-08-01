@@ -20,13 +20,13 @@ class Settings(BaseSettings):
     )
 
     #: Website addresses allowed to call this API from a browser (comma-separated).
-    #: In production, set this in your host env — don't hardcode live domains here.
+    #: In production, set this in your host env - don't hardcode live domains here.
     #: Your ``FRONTEND_URL`` is always included automatically.
     cors_allowed_origins: str = (
         "http://localhost:3000, http://127.0.0.1:3000"
     )
 
-    #: Database / auth project URL and secret key (server-only — never put in the browser).
+    #: Database / auth project URL and secret key (server-only - never put in the browser).
     supabase_url: str = ""
     supabase_service_role_key: str = ""
 
@@ -66,7 +66,7 @@ class Settings(BaseSettings):
     #: Backup address lookup key (getAddress.io) if the Places key above is empty.
     getaddress_api_key: str = ""
 
-    #: Public website URL — used for payment “back to site” / success / cancel links.
+    #: Public website URL - used for payment “back to site” / success / cancel links.
     frontend_url: str = "http://localhost:3000"
 
     #: Payment provider keys: secret for server calls; webhook secret to verify payment events.

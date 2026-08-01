@@ -209,6 +209,7 @@ def post_booking_review(
             booking_id=booking_id,
             rating=body.rating,
             body=body.body,
+            image_urls=body.image_urls,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e

@@ -90,7 +90,7 @@ def test_auto_release_blocked_by_open_dispute(mock_finalize, _dispute):
 @patch("app.features.bookings.disputes.has_active_dispute_for_booking", return_value=False)
 @patch("app.features.bookings.payment_maintenance._finalize_completion")
 def test_auto_release_not_marked_when_payout_not_released(mock_finalize, _dispute):
-    # e.g. vendor Stripe account not ready — booking stays eligible for a later run.
+    # e.g. vendor Stripe account not ready - booking stays eligible for a later run.
     mock_finalize.return_value = {"payment_status": "paid"}
     assert payments._auto_release_payout_row(_paid_row(5)) is False
 

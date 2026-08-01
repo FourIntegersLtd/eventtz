@@ -119,7 +119,7 @@ def get_explore_vendors_search(
     ),
     vendor_ids: str | None = Query(
         None,
-        description="Comma-separated vendor user IDs — restrict search (e.g. favorites).",
+        description="Comma-separated vendor user IDs - restrict search (e.g. favorites).",
     ),
     country: str | None = Query(None, description="ISO country code (default GB)."),
     limit: int = Query(50, ge=1, le=200),

@@ -42,7 +42,7 @@ def _payload(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def build_fact_card(row: dict[str, Any]) -> FactCard:
-    """FactCard from explore/public metric fields only — never invent numbers."""
+    """FactCard from explore/public metric fields only - never invent numbers."""
     payload = _payload(row)
     services_raw = payload.get("servicesOffered")
     if not isinstance(services_raw, list):

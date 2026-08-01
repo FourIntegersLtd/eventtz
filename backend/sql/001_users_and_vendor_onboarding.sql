@@ -14,7 +14,7 @@ BEGIN
 END$$;
 
 -- ---------------------------------------------------------------------------
--- public.users — one row per auth user; role for app routing and permissions
+-- public.users - one row per auth user; role for app routing and permissions
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.users (
   id uuid PRIMARY KEY REFERENCES auth.users (id) ON DELETE CASCADE,
@@ -30,7 +30,7 @@ CREATE INDEX IF NOT EXISTS idx_users_user_type ON public.users (user_type);
 COMMENT ON TABLE public.users IS 'App profile linked to auth.users; user_type drives client vs vendor vs admin UI.';
 
 -- ---------------------------------------------------------------------------
--- vendors — one row per vendor account; serializable JSON only (no file blobs; use Storage later)
+-- vendors - one row per vendor account; serializable JSON only (no file blobs; use Storage later)
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.vendors (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -80,7 +80,7 @@ CREATE TRIGGER trg_vendors_updated_at
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.vendors ENABLE ROW LEVEL SECURITY;
 
--- Backend uses service role — no policies required for server-only access.
+-- Backend uses service role - no policies required for server-only access.
 -- Example policy for authenticated users (uncomment and tune when using Supabase client from browser):
 -- CREATE POLICY "users_select_own" ON public.users FOR SELECT TO authenticated USING (auth.uid() = id);
 -- CREATE POLICY "users_update_own" ON public.users FOR UPDATE TO authenticated USING (auth.uid() = id);

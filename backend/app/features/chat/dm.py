@@ -1,4 +1,4 @@
-"""Client–vendor DM conversation logic and user-facing chat inbox."""
+"""Client-vendor DM conversation logic and user-facing chat inbox."""
 
 from __future__ import annotations
 
@@ -447,7 +447,7 @@ def send_quote_message(
     """Add a system "quote sent" card to the thread. Best-effort."""
     if get_settings().local_auth_mode:
         return
-    fallback_body = f"Sent a custom quote — {event_name} ({total_label})"
+    fallback_body = f"Sent a custom quote - {event_name} ({total_label})"
     metadata = {
         "kind": "quote",
         "booking_request_id": booking_request_id,

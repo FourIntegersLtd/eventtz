@@ -1,4 +1,4 @@
-"""Extract normalized 0–1 ranking features from an explore vendor row."""
+"""Extract normalized 0-1 ranking features from an explore vendor row."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from app.features.vendors.ranking.types import RankingContext
 # Neutral score when a signal is missing (new vendors are not hard-zeroed).
 NEUTRAL = 0.5
 
-# Extension points (not weighted in v1 — data not denormalized for ranking):
+# Extension points (not weighted in v1 - data not denormalized for ranking):
 # - stripe_ready
 # - dispute_rate
 # - cancellation_rate
@@ -37,7 +37,7 @@ def rating_quality(row: dict[str, Any]) -> float:
         rating = float(avg)
     except (TypeError, ValueError):
         return NEUTRAL
-    # avg/5 × log1p(count) / log1p(50) — soft-caps volume influence
+    # avg/5 × log1p(count) / log1p(50) - soft-caps volume influence
     volume = math.log1p(count) / math.log1p(50)
     return _clamp01((rating / 5.0) * min(1.0, volume))
 
@@ -156,7 +156,7 @@ def recency(row: dict[str, Any]) -> float:
 
 
 def extract_features(row: dict[str, Any], ctx: RankingContext) -> dict[str, float]:
-    """Return 0–1 features keyed like RANKING_WEIGHTS."""
+    """Return 0-1 features keyed like RANKING_WEIGHTS."""
     return {
         "rating_quality": rating_quality(row),
         "completed_bookings": completed_bookings_signal(row),

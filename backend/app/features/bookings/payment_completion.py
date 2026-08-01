@@ -35,7 +35,7 @@ def _serialize_completion_state(row: dict[str, Any]) -> dict[str, Any]:
 def _finalize_completion(row: dict[str, Any]) -> dict[str, Any]:
     """Both parties have confirmed: mark the booking completed and pay the vendor."""
     booking_id = str(row.get("id") or "")
-    # Reload from the database — list and dashboard views omit vendor_amount_gbp and other payment fields.
+    # Reload from the database - list and dashboard views omit vendor_amount_gbp and other payment fields.
     full = _load_full_booking_row(booking_id)
     if full is None:
         raise ValueError("Booking not found.")
@@ -88,7 +88,7 @@ def _finalize_completion(row: dict[str, Any]) -> dict[str, Any]:
 
     try:
         # Checkout collects the full client payment on the platform; the vendor share stays
-        # held until completion — Transfer moves that held balance to their Connect account.
+        # held until completion - Transfer moves that held balance to their Connect account.
         transfer_id = stripe_service.create_transfer(
             destination_account_id=str(vendor_stripe["stripe_account_id"]),
             amount_gbp=amount_gbp,

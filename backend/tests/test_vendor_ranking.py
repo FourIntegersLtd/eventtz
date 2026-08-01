@@ -1,4 +1,4 @@
-"""Tests for VendorRankingEngine — deterministic scores and order."""
+"""Tests for VendorRankingEngine - deterministic scores and order."""
 
 from __future__ import annotations
 

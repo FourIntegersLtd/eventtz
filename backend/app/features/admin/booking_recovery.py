@@ -141,7 +141,7 @@ def admin_sync_payment_for_booking(booking_id: str) -> dict[str, Any]:
             if code == "resource_missing" or "checkout.session" in str(e).lower():
                 admin_clear_checkout_session(booking_id)
                 raise ValueError(
-                    "Checkout session not found in Stripe. Checkout was reset — verify charge manually.",
+                    "Checkout session not found in Stripe. Checkout was reset - verify charge manually.",
                 ) from e
             raise
         session = stripe_module.stripe_object_to_dict(session_raw)
@@ -158,7 +158,7 @@ def admin_sync_payment_for_booking(booking_id: str) -> dict[str, Any]:
     pi_raw = stripe_module.retrieve_payment_intent(pi_id)
     pi_dict = pi_raw if isinstance(pi_raw, dict) else stripe_module.stripe_object_to_dict(pi_raw)
     if not _mark_paid_from_payment_intent(row, pi_dict):
-        raise ValueError("Booking could not be marked paid — check status and payment state.")
+        raise ValueError("Booking could not be marked paid - check status and payment state.")
     return _load_booking_row(booking_id)
 
 
@@ -192,7 +192,7 @@ def admin_retry_payout_for_booking(booking_id: str) -> dict[str, Any]:
     refreshed = _load_booking_row(booking_id)
     if str(refreshed.get("payment_status") or "") != "payout_released":
         raise ValueError(
-            "Payout was not released — vendor Stripe account may not be ready or transfer failed.",
+            "Payout was not released - vendor Stripe account may not be ready or transfer failed.",
         )
     return refreshed
 

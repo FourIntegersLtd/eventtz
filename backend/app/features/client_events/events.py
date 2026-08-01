@@ -1,4 +1,4 @@
-"""Client celebrations — group multi-vendor bookings under one event."""
+"""Client celebrations - group multi-vendor bookings under one event."""
 
 from __future__ import annotations
 
@@ -126,7 +126,7 @@ def get_client_event_row(client_user_id: str, event_id: str) -> dict[str, Any] |
     except Exception as e:
         msg = str(e).lower()
         if "client_events" in msg or "pgrst205" in msg:
-            logger.error("client_events table missing — run backend/sql/057_client_events.sql")
+            logger.error("client_events table missing - run backend/sql/057_client_events.sql")
         else:
             logger.warning("get_client_event_row failed event=%s: %s", event_id, e)
         return None

@@ -138,7 +138,7 @@ def test_budget_breakdown_includes_assumptions():
         allocated_by_need={"food": 350.0},
         user_budget_gbp=1000.0,
         assumption_by_need={
-            "food": "Estimate: £18/guest × assumed 80 guests (none stated) — vendor has no list price yet",
+            "food": "Estimate: £18/guest × assumed 80 guests (none stated) - vendor has no list price yet",
         },
         guest_count=None,
     )

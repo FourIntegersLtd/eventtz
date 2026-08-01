@@ -13,7 +13,7 @@ logger = get_logger(__name__)
 
 _DEFAULT_STATE: dict[str, Any] = {"completed": False, "preferred_name": None}
 
-# Remember after the first missing-column error — avoids log spam until migration 035 is applied.
+# Remember after the first missing-column error - avoids log spam until migration 035 is applied.
 _onboarding_columns_ok: bool | None = None
 
 
@@ -43,7 +43,7 @@ def get_client_onboarding(user_id: str) -> dict[str, Any]:
         if _missing_onboarding_columns(e):
             _onboarding_columns_ok = False
             logger.warning(
-                "get_client_onboarding: run backend/sql/035_client_preferred_name.sql — %s", e
+                "get_client_onboarding: run backend/sql/035_client_preferred_name.sql - %s", e
             )
             return dict(_DEFAULT_STATE)
         logger.exception("get_client_onboarding failed user_id=%s", user_id)
@@ -83,7 +83,7 @@ def update_client_onboarding(
         if _missing_onboarding_columns(e):
             _onboarding_columns_ok = False
             logger.warning(
-                "update_client_onboarding: run backend/sql/035_client_preferred_name.sql — %s", e
+                "update_client_onboarding: run backend/sql/035_client_preferred_name.sql - %s", e
             )
             return dict(_DEFAULT_STATE)
         raise

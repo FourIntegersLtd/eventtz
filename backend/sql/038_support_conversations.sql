@@ -50,7 +50,7 @@ CREATE INDEX IF NOT EXISTS idx_conversations_kind
   ON public.conversations (kind);
 
 COMMENT ON COLUMN public.conversations.kind IS
-  'dm = client–vendor pair; support = Eventtz Support ↔ one end user.';
+  'dm = client-vendor pair; support = Eventtz Support ↔ one end user.';
 COMMENT ON COLUMN public.conversations.support_user_id IS
   'End user (client or vendor) on a support thread; null for DMs.';
 COMMENT ON COLUMN public.conversations.admin_last_read_at IS

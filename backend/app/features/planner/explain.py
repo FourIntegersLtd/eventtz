@@ -1,4 +1,4 @@
-"""Grounded explanations from FactCards — LLM one-liner or template fallback."""
+"""Grounded explanations from FactCards - LLM one-liner or template fallback."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ def template_why_selected(
     need_label: str,
     location: str | None,
 ) -> str:
-    """One sentence from real facts only — never invent stats."""
+    """One sentence from real facts only - never invent stats."""
     bits: list[str] = []
     name = fact.business_name or "This vendor"
     if fact.review_average is not None and fact.review_count > 0:
@@ -60,7 +60,7 @@ def template_why_selected(
 
     if not bits:
         return f"{name} is a solid match for {need_label.lower()} on Eventtz."
-    return f"{name} — {'; '.join(bits)}."
+    return f"{name} - {'; '.join(bits)}."
 
 
 def llm_why_selected(
@@ -126,13 +126,13 @@ def template_summary(brief: CelebrationBrief, *, title: str, need_labels: list[s
     if need_labels:
         parts.append("Covering " + ", ".join(need_labels[:5]) + ".")
     if brief.preferred_date_invalid:
-        parts.append("The date you mentioned looks past — treat availability as open for now.")
+        parts.append("The date you mentioned looks past - treat availability as open for now.")
     if brief.currency_assumed_gbp:
         parts.append("Budget figures are shown in GBP.")
     if brief.unsupported_categories_mentioned:
         unsupported = ", ".join(brief.unsupported_categories_mentioned)
         parts.append(
-            f"We do not list {unsupported} as dedicated categories yet — "
+            f"We do not list {unsupported} as dedicated categories yet - "
             "focus on the services below.",
         )
     if brief.event_kind == "funeral":
@@ -149,7 +149,7 @@ def build_summary(
     client = try_openai_client()
     if client is not None:
         system = (
-            "Write a short warm paragraph (2–3 sentences) summarising an event plan. "
+            "Write a short warm paragraph (2-3 sentences) summarising an event plan. "
             "Do not invent vendor names or statistics. No markdown."
         )
         user = (

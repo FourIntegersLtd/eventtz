@@ -1,4 +1,4 @@
-"""Client-only UK address helpers — DISABLED (lookup commented out in uk_address.py)."""
+"""Client-only UK address helpers - DISABLED (lookup commented out in uk_address.py)."""
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ def get_address_find(
         ...,
         min_length=4,
         max_length=16,
-        description="UK postcode — returns all street-level addresses at that postcode",
+        description="UK postcode - returns all street-level addresses at that postcode",
     ),
 ) -> AddressFindResponse:
     _ = require_client(request, response)
@@ -70,7 +70,7 @@ def get_address_resolve(
             status_code=404,
             detail=(
                 "Could not resolve that address. Configure OS_PLACES_API_KEY (OS Places API on "
-                "OS Data Hub — not Maps) or GETADDRESS_API_KEY, then try again."
+                "OS Data Hub - not Maps) or GETADDRESS_API_KEY, then try again."
             ),
         )
     return AddressResolveResponse(

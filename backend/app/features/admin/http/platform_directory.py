@@ -53,7 +53,7 @@ def admin_directory_search(
     ),
     limit: int = Query(20, ge=1, le=50),
 ) -> AdminDirectorySearchResponse:
-    """Typeahead for admin recipient pickers — prefer over loading full client/vendor lists."""
+    """Typeahead for admin recipient pickers - prefer over loading full client/vendor lists."""
     require_admin(request, response)
     kind_list = []
     for part in kinds.split(","):

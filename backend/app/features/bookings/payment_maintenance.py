@@ -114,9 +114,9 @@ def touch_completion_side_effects_for_booking_rows(
     *,
     cap: int = LIST_COMPLETION_TOUCH_CAP,
 ) -> None:
-    """Send completion reminders when a booking list is loaded — reminders only, no payout.
+    """Send completion reminders when a booking list is loaded - reminders only, no payout.
 
-    Automatic payout runs on the booking detail page, the hourly job, and admin retry —
+    Automatic payout runs on the booking detail page, the hourly job, and admin retry -
     not on list views, which refresh often from the dashboard.
     """
     if get_settings().local_auth_mode:
@@ -162,7 +162,7 @@ def _auto_release_payout_row(row: dict[str, Any]) -> bool:
         return False
     result = _finalize_completion(row)
     if str((result or {}).get("payment_status") or "") != "payout_released":
-        # e.g. vendor Stripe account not ready — leave for a later run.
+        # e.g. vendor Stripe account not ready - leave for a later run.
         return False
     get_client().table("booking_requests").update(
         {"payout_auto_released_at": _now_iso()},

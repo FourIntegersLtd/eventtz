@@ -25,17 +25,17 @@ def validate_settings(settings: Settings) -> None:
     if settings.is_production:
         if not settings.stripe_secret_key.strip():
             logger.warning(
-                "STRIPE_SECRET_KEY is not set — payment routes will fail at runtime."
+                "STRIPE_SECRET_KEY is not set - payment routes will fail at runtime."
             )
         if not settings.stripe_webhook_secret.strip():
             logger.warning(
-                "STRIPE_WEBHOOK_SECRET is not set — Stripe webhooks will be rejected."
+                "STRIPE_WEBHOOK_SECRET is not set - Stripe webhooks will be rejected."
             )
 
-    # Address autocomplete is off for now — people type the venue address themselves.
+    # Address autocomplete is off for now - people type the venue address themselves.
     # if not settings.os_places_api_key.strip() and not settings.getaddress_api_key.strip():
     #     logger.warning(
-    #         "Neither OS_PLACES_API_KEY nor GETADDRESS_API_KEY is set — "
+    #         "Neither OS_PLACES_API_KEY nor GETADDRESS_API_KEY is set - "
     #         "UK address lookup will return empty results."
     #     )
     # elif settings.getaddress_api_key.strip() and not settings.os_places_api_key.strip():

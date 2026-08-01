@@ -102,11 +102,11 @@ def _next_steps(brief: CelebrationBrief, recommendations: list[PlannerRecommenda
     steps: list[str] = []
     primary_needs = [r for r in recommendations if r.primary is not None and not r.optional]
     if primary_needs:
-        steps.append(f"Review {primary_needs[0].label.lower()} first — it often books out earliest.")
+        steps.append(f"Review {primary_needs[0].label.lower()} first - it often books out earliest.")
     empty = [r for r in recommendations if r.primary is None]
     if empty:
         steps.append("Widen location or budget for categories with no matches, then Replace.")
-    steps.append("Open a vendor profile to request a booking — nothing is booked until you confirm.")
+    steps.append("Open a vendor profile to request a booking - nothing is booked until you confirm.")
     if brief.budget_gbp is not None:
         steps.append("Compare estimated costs against your budget before enquiring.")
     return steps[:4]
@@ -153,7 +153,7 @@ def _select_for_need(
             primary = rv
             break
     if primary is None:
-        # All top vendors claimed — still assign best remaining (overlap allowed for alts only)
+        # All top vendors claimed - still assign best remaining (overlap allowed for alts only)
         primary = ranked[0]
 
     alts = [rv for rv in ranked if rv.user_id != primary.user_id][:2]
@@ -451,7 +451,7 @@ def _hydrate_recommendations_from_items(
         if primary_card is None:
             empty_reason = "No vendor saved for this need."
         elif unavailable:
-            empty_reason = "This vendor is no longer listed — try Replace."
+            empty_reason = "This vendor is no longer listed - try Replace."
         stored_cost = (
             float(item["estimated_cost_gbp"])
             if item.get("estimated_cost_gbp") is not None

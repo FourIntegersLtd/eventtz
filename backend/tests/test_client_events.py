@@ -1,4 +1,4 @@
-"""Client events — resolve/link for multi-vendor booking create."""
+"""Client events - resolve/link for multi-vendor booking create."""
 
 from __future__ import annotations
 

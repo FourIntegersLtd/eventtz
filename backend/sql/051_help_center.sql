@@ -110,7 +110,7 @@ $md$,
 ## Booking flow
 
 1. Choose a vendor and add your date (and venue if you have it).
-2. Send an enquiry — chat to agree the details and price.
+2. Send an enquiry - chat to agree the details and price.
 3. When the vendor accepts, you pay the full total (including our service fee).
 4. After the event, confirm completion so the vendor can be paid.
 
@@ -154,7 +154,7 @@ $md$,
   $md$
 ## Cancellation
 
-You can cancel from your booking before the vendor is paid. If you have already paid, you get a **full refund** back to your card (usually within 5–10 working days).
+You can cancel from your booking before the vendor is paid. If you have already paid, you get a **full refund** back to your card (usually within 5-10 working days).
 
 If something went wrong after the event, use **Disputes** instead of cancelling.
 $md$,
@@ -177,7 +177,7 @@ $md$,
   'c1111111-1111-4111-8111-111111111103',
   'client-when-do-i-pay',
   'When do I pay?',
-  'After the vendor accepts — you see the full total first.',
+  'After the vendor accepts - you see the full total first.',
   $md$
 ## Timing
 
@@ -189,7 +189,7 @@ $md$,
   'c1111111-1111-4111-8111-111111111103',
   'client-service-fee',
   'Is there a service fee?',
-  'Yes — 5%, shown before you pay. No hidden extras.',
+  'Yes - 5%, shown before you pay. No hidden extras.',
   $md$
 ## Service fee
 
@@ -243,7 +243,7 @@ $md$,
   'c1111111-1111-4111-8111-111111111105',
   'client-report-problem',
   'What if something goes wrong?',
-  'Report a problem from your booking — we may pause payout.',
+  'Report a problem from your booking - we may pause payout.',
   $md$
 ## Disputes
 
@@ -263,7 +263,7 @@ $md$,
 
 Open **Contact** in the portal to send a message (include a booking ID for booking or payment issues). We aim to reply by email within about two working days.
 
-Use this Help Center for how-to questions first — the assistant can point you to the right article.
+Use this Help Center for how-to questions first - the assistant can point you to the right article.
 $md$,
   'client', 20, ARRAY['client-report-problem', 'client-are-vendors-vetted']
 ),
@@ -316,7 +316,7 @@ $md$,
 1. Register as a vendor.
 2. Complete your profile (business, services, portfolio, availability).
 3. Connect Stripe for payouts.
-4. Submit for review — we approve before you appear on Browse.
+4. Submit for review - we approve before you appear on Browse.
 $md$,
   'vendor', 10, ARRAY['vendor-onboarding-steps', 'vendor-when-live']
 ),
@@ -404,7 +404,7 @@ $md$,
   $md$
 ## Completion and cancellation
 
-After a paid event, confirm completion so payout can proceed. You can cancel some bookings from the booking detail when the status allows — check the actions on that booking for what is available.
+After a paid event, confirm completion so payout can proceed. You can cancel some bookings from the booking detail when the status allows - check the actions on that booking for what is available.
 $md$,
   'vendor', 40, ARRAY['vendor-when-get-paid', 'vendor-dispute']
 ),
@@ -413,7 +413,7 @@ $md$,
   'b1111111-1111-4111-8111-111111111104',
   'vendor-no-cut',
   'Does Eventtz take a cut from my earnings?',
-  'No — clients pay the service fee on top of your quote.',
+  'No - clients pay the service fee on top of your quote.',
   $md$
 ## Fees
 
@@ -429,7 +429,7 @@ $md$,
   $md$
 ## Timing
 
-When a client books you, payment is held by Eventtz. After the event, mark it complete to get paid — or funds may release automatically about **48 hours** after the event if there is no problem.
+When a client books you, payment is held by Eventtz. After the event, mark it complete to get paid - or funds may release automatically about **48 hours** after the event if there is no problem.
 $md$,
   'vendor', 20, ARRAY['vendor-no-cut', 'vendor-dispute']
 ),

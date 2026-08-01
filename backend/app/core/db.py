@@ -27,7 +27,7 @@ def _create_supabase_client() -> Client:
     if not settings.supabase_url or not settings.supabase_service_role_key:
         logger.error(
             "Supabase env missing: set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY "
-            "(service role secret — backend only, never expose to clients)",
+            "(service role secret - backend only, never expose to clients)",
         )
         raise RuntimeError(
             "SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set",
@@ -58,7 +58,7 @@ def get_supabase() -> Client:
 
 
 def get_supabase_auth_client() -> Client:
-    """Sign-in / token validation only — never call ``auth.admin`` on this client.
+    """Sign-in / token validation only - never call ``auth.admin`` on this client.
 
     User sessions replace the service-role Authorization header on the shared instance.
     Admin APIs (password reset, team invites) must use ``get_db()`` / ``get_supabase()``.
@@ -89,7 +89,7 @@ def get_db() -> Client:
 
 
 def get_client() -> Client:
-    """Old name for ``get_db()`` — prefer ``get_db()`` in new code."""
+    """Old name for ``get_db()`` - prefer ``get_db()`` in new code."""
     return get_db()
 
 

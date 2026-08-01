@@ -25,7 +25,7 @@ def list_saved_vendor_ids(client_user_id: str) -> list[str]:
         )
     except Exception as e:
         if "42p01" in str(e).lower() or "client_saved_vendors" in str(e).lower():
-            logger.warning("list_saved_vendor_ids: run migration 041 — %s", e)
+            logger.warning("list_saved_vendor_ids: run migration 041 - %s", e)
             return []
         logger.warning("list_saved_vendor_ids failed: %s", e, exc_info=True)
         return []

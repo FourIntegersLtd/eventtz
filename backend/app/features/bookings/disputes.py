@@ -22,7 +22,7 @@ _ALLOWED_BOOKING_STATUSES_FOR_NEW_DISPUTE = frozenset(
 
 
 def _lookup_conversation_id_for_pair(client_uid: str, vendor_uid: str) -> str | None:
-    """Any existing client–vendor DM thread (unique pair in conversations)."""
+    """Any existing client-vendor DM thread (unique pair in conversations)."""
     if get_settings().local_auth_mode:
         return None
     if not client_uid or not vendor_uid:

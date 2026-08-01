@@ -1,4 +1,4 @@
-"""Fixed values shared across the app (not secrets — those go in env / Settings)."""
+"""Fixed values shared across the app (not secrets - those go in env / Settings)."""
 
 # Cookie names for stay-signed-in.
 ACCESS_COOKIE_NAME = "eventtz_access_token"

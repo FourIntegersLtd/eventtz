@@ -231,7 +231,7 @@ def _parse_budget(text: str) -> tuple[float | None, bool]:
 def _parse_guests(text: str) -> int | None:
     m = _GUEST_RE.search(text)
     if not m:
-        # "my 30th" is age, not guests — ignore bare numbers
+        # "my 30th" is age, not guests - ignore bare numbers
         return None
     raw = m.group("n") or m.group("n2")
     try:
@@ -421,7 +421,7 @@ def _llm_brief(prompt: str) -> CelebrationBrief | None:
         "corporate/office→corporate. Allowed celebration types: birthdays, weddings, showers, "
         "naming_ceremonies, corporate, funeral. "
         "Use event_kind funeral|corporate|standard. "
-        "Budget numbers without £ are still GBP for GB market — set currency_assumed_gbp true "
+        "Budget numbers without £ are still GBP for GB market - set currency_assumed_gbp true "
         "when the symbol is not £. "
         "excluded_needs: services the user said they do not want (makeup, photos, cake, etc.). "
         "unsupported_categories_mentioned: dj, mc, videographer if mentioned."
@@ -523,7 +523,7 @@ def parse_celebration_prompt(prompt: str, *, country_code: str | None = "GB") ->
         text = text[:MAX_PROMPT_LENGTH]
     if _looks_like_nonsense(text):
         raise ValidationError(
-            "Describe your celebration in a few words — for example a birthday in London for 80 guests.",
+            "Describe your celebration in a few words - for example a birthday in London for 80 guests.",
             code="invalid_prompt",
         )
 

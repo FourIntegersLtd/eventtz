@@ -1,4 +1,4 @@
-"""Shared types for client–vendor messages."""
+"""Shared types for client-vendor messages."""
 
 from __future__ import annotations
 

@@ -333,7 +333,7 @@ def get_marketplace_analytics(
             "category": r["key"],
             "enquiries": r["enquiries"],
             "failed": r["failed"],
-            "message": f"High demand for {r['key']} — consider recruiting more vendors",
+            "message": f"High demand for {r['key']} - consider recruiting more vendors",
         }
         for r in category_rows
         if r["enquiries"] >= 5 and (r["failed"] / r["enquiries"] if r["enquiries"] else 0) >= 0.25
@@ -343,7 +343,7 @@ def get_marketplace_analytics(
             "location": r["key"],
             "enquiries": r["enquiries"],
             "failed": r["failed"],
-            "message": f"High demand in {r['key']} — consider recruiting more supply",
+            "message": f"High demand in {r['key']} - consider recruiting more supply",
         }
         for r in location_rows
         if r["enquiries"] >= 5 and (r["failed"] / r["enquiries"] if r["enquiries"] else 0) >= 0.25

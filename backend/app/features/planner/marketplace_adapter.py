@@ -89,7 +89,7 @@ def filter_candidates_for_need(
             return 0
         price = row.get("min_list_price_gbp")
         if price is None:
-            return 1  # quote-only — keep, ranking uses neutral
+            return 1  # quote-only - keep, ranking uses neutral
         try:
             p = float(price)
         except (TypeError, ValueError):

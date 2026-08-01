@@ -31,7 +31,7 @@ async def upload_file(
     file: UploadFile,
     user: Annotated[dict[str, Any], Depends(get_current_user_dep)],
 ) -> ImageUploadResponse:
-    """Accepts images, PDFs, and videos — for portfolio video and profile
+    """Accepts images, PDFs, and videos - for portfolio video and profile
     certificates (food hygiene, indemnity/insurance) where image-only checks
     would be too strict."""
     uploaded = await upload_user_file(user_id=str(user.get("id") or ""), file=file)

@@ -33,7 +33,7 @@ EVENT_TITLES = (
     "Naming ceremony",
 )
 
-# Per-vendor review sets (rating, body) — natural copy, no demo prefix.
+# Per-vendor review sets (rating, body) - natural copy, no demo prefix.
 VENDOR_REVIEW_SETS: tuple[tuple[tuple[int, str], ...], ...] = (
     (
         (

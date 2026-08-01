@@ -27,7 +27,7 @@ def _refund_paid_booking_row(
     """Refund a paid booking via Stripe and update payment_status.
 
     Used for admin refunds and cancellation refunds. Raises ValueError with a
-    user-friendly message when the refund fails — callers must not change booking
+    user-friendly message when the refund fails - callers must not change booking
     state if that happens.
     """
     booking_id = str(row.get("id") or "")
@@ -80,7 +80,7 @@ def _refund_paid_booking_row(
 def refund_booking_on_cancel(booking_id: str, *, cancelled_by: str) -> dict[str, Any] | None:
     """Full refund when a paid booking is cancelled before the vendor is paid.
 
-    Raises ValueError when the refund fails — the caller must not cancel the
+    Raises ValueError when the refund fails - the caller must not cancel the
     booking in that case. Refund the money first, then change status.
     """
     if get_settings().local_auth_mode:
@@ -95,7 +95,7 @@ def refund_booking_on_cancel(booking_id: str, *, cancelled_by: str) -> dict[str,
         idempotency_suffix=f"cancel-{cancelled_by}",
         refund_body=(
             "This booking was cancelled. Your payment has been refunded in full.\n\n"
-            "It should reach your card within 5–10 working days, depending on your bank."
+            "It should reach your card within 5-10 working days, depending on your bank."
         ),
     )
 
@@ -112,5 +112,5 @@ def admin_refund_booking(booking_id: str, *, amount_gbp: float | None) -> dict[s
         rows[0],
         amount_gbp=amount_gbp,
         idempotency_suffix="partial" if amount_gbp is not None else "full",
-        refund_body="Your payment for this booking was refunded.\n\nIt should reach your card within 5–10 working days, depending on your bank.",
+        refund_body="Your payment for this booking was refunded.\n\nIt should reach your card within 5-10 working days, depending on your bank.",
     )

@@ -1,1 +1,1 @@
-"""Analytics package — marketplace funnel events."""
+"""Analytics package - marketplace funnel events."""
