@@ -13,7 +13,7 @@ export function BlogSiteChrome({ children }: BlogSiteChromeProps) {
   return (
     <div className="min-h-dvh bg-[linear-gradient(180deg,#faf8fc_0%,#f3eef9_42%,#faf8fc_100%)] text-neutral-900">
       <header className="sticky top-0 z-40 border-b border-primary-border/50 bg-white/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-2.5 lg:px-8">
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-2.5 lg:px-8">
           <EventtzLogo
             href="/"
             variant="header"

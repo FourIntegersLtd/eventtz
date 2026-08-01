@@ -52,7 +52,7 @@ export function BlogPostView({ slug }: BlogPostViewProps) {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-20 text-center text-sm text-neutral-500">
+      <div className="mx-auto max-w-4xl px-4 py-16 text-center text-sm text-neutral-500 sm:px-6 sm:py-20 lg:px-8">
         Loading…
       </div>
     );
@@ -60,7 +60,7 @@ export function BlogPostView({ slug }: BlogPostViewProps) {
 
   if (!post) {
     return (
-      <div className="mx-auto flex max-w-3xl flex-col items-center space-y-4 px-4 py-16 text-center sm:px-6">
+      <div className="mx-auto flex max-w-4xl flex-col items-center space-y-4 px-4 py-16 text-center sm:px-6 lg:px-8">
         <LottieIllustration asset="notFound" className="h-32 w-32" />
         <p className="text-neutral-700">{error ?? "Post not found."}</p>
         <Link href="/blog" className="text-sm font-medium text-primary hover:underline">
@@ -72,33 +72,34 @@ export function BlogPostView({ slug }: BlogPostViewProps) {
 
   return (
     <article>
-      {/* ~Substack reading column: ~768px with larger body type */}
-      <div className="mx-auto max-w-3xl px-4 pb-20 pt-10 sm:px-6 sm:pt-14 lg:px-8">
+      <div className="mx-auto w-full max-w-4xl px-4 pb-16 pt-8 sm:px-6 sm:pb-20 sm:pt-12 lg:px-8">
         <Link
           href="/blog"
-          className="mb-8 inline-flex items-center gap-1.5 text-sm text-neutral-600 transition hover:text-primary"
+          className="mb-6 inline-flex items-center gap-1.5 text-sm text-neutral-600 transition hover:text-primary sm:mb-8"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden />
           All posts
         </Link>
 
-        <header className="mb-8 space-y-4 text-left">
+        <header className="mb-6 space-y-3 text-left sm:mb-8 sm:space-y-4">
           <BlogByline
             publishedAt={formatPublished(post.published_at)}
             publishedAtIso={post.published_at}
             authorName={post.author_name}
           />
-          <h1 className="font-heading text-4xl font-semibold tracking-tight text-neutral-900 sm:text-5xl">
+          <h1 className="font-heading text-2xl font-semibold tracking-tight text-neutral-900 sm:text-4xl lg:text-5xl">
             {post.title}
           </h1>
           {post.subtitle &&
           post.subtitle.trim().toLowerCase() !== post.title.trim().toLowerCase() ? (
-            <p className="text-lg leading-relaxed text-neutral-600 sm:text-xl">{post.subtitle}</p>
+            <p className="text-base leading-relaxed text-neutral-600 sm:text-lg lg:text-xl">
+              {post.subtitle}
+            </p>
           ) : null}
         </header>
 
         {post.cover_image_url ? (
-          <div className="mb-10 overflow-hidden rounded-2xl bg-neutral-100">
+          <div className="mb-8 overflow-hidden rounded-2xl bg-neutral-100 sm:mb-10">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={post.cover_image_url}

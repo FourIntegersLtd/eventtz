@@ -310,47 +310,103 @@ body {
   margin-top: 2.5rem;
 }
 
-/* Public blog reading surface - Substack-like measure + body size */
+/* Public blog reading surface - readable on phone, larger from sm up */
 .blog-prose {
   color: rgb(38 38 38);
-  font-size: 1.25rem;
-  line-height: 1.7;
+  font-size: 1rem;
+  line-height: 1.65;
   text-align: left;
 }
 
+@media (min-width: 640px) {
+  .blog-prose {
+    font-size: 1.125rem;
+    line-height: 1.7;
+  }
+}
+
+@media (min-width: 1024px) {
+  .blog-prose {
+    font-size: 1.25rem;
+  }
+}
+
 .blog-prose > * + * {
-  margin-top: 1.25rem;
+  margin-top: 1rem;
+}
+
+@media (min-width: 640px) {
+  .blog-prose > * + * {
+    margin-top: 1.25rem;
+  }
 }
 
 .blog-prose h1 {
   font-family: var(--font-fraunces), ui-serif, serif;
-  font-size: 2rem;
+  font-size: 1.375rem;
   font-weight: 600;
   line-height: 1.25;
-  margin-top: 2.25rem;
+  margin-top: 1.75rem;
   color: rgb(23 23 23);
 }
 
 .blog-prose h2 {
   font-family: var(--font-fraunces), ui-serif, serif;
-  font-size: 1.75rem;
+  font-size: 1.25rem;
   font-weight: 600;
   line-height: 1.3;
-  margin-top: 2.5rem;
+  margin-top: 1.75rem;
   color: rgb(23 23 23);
 }
 
 .blog-prose h3 {
   font-family: var(--font-fraunces), ui-serif, serif;
-  font-size: 1.35rem;
+  font-size: 1.125rem;
   font-weight: 600;
   line-height: 1.35;
-  margin-top: 2rem;
+  margin-top: 1.5rem;
   color: rgb(23 23 23);
 }
 
+@media (min-width: 640px) {
+  .blog-prose h1 {
+    font-size: 1.75rem;
+    margin-top: 2.25rem;
+  }
+
+  .blog-prose h2 {
+    font-size: 1.5rem;
+    margin-top: 2.25rem;
+  }
+
+  .blog-prose h3 {
+    font-size: 1.25rem;
+    margin-top: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .blog-prose h1 {
+    font-size: 2rem;
+  }
+
+  .blog-prose h2 {
+    font-size: 1.75rem;
+  }
+
+  .blog-prose h3 {
+    font-size: 1.35rem;
+  }
+}
+
 .blog-prose p {
-  margin-top: 1.25rem;
+  margin-top: 1rem;
+}
+
+@media (min-width: 640px) {
+  .blog-prose p {
+    margin-top: 1.25rem;
+  }
 }
 
 .blog-prose a {
@@ -368,17 +424,32 @@ body {
 }
 
 .blog-prose blockquote {
-  margin-top: 1.75rem;
+  margin-top: 1.25rem;
   border-left: 3px solid var(--primary);
-  padding-left: 1.25rem;
+  padding-left: 1rem;
   color: rgb(64 64 64);
   font-style: italic;
 }
 
+@media (min-width: 640px) {
+  .blog-prose blockquote {
+    margin-top: 1.75rem;
+    padding-left: 1.25rem;
+  }
+}
+
 .blog-prose ul,
 .blog-prose ol {
-  margin-top: 1.25rem;
-  padding-left: 1.75rem !important;
+  margin-top: 1rem;
+  padding-left: 1.25rem !important;
+}
+
+@media (min-width: 640px) {
+  .blog-prose ul,
+  .blog-prose ol {
+    margin-top: 1.25rem;
+    padding-left: 1.75rem !important;
+  }
 }
 
 .blog-prose ul {
@@ -401,8 +472,14 @@ body {
   display: block;
   max-width: 100%;
   height: auto;
-  margin: 2rem auto;
+  margin: 1.5rem auto;
   border-radius: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .blog-prose img {
+    margin: 2rem auto;
+  }
 }
 
 /* TipTap admin editor - same structural styles (Tailwind preflight removes list markers) */
