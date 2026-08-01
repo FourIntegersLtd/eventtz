@@ -5,6 +5,7 @@ export type ReviewCore = {
   rating: number;
   body: string;
   created_at: string | null;
+  image_urls?: string[];
 };
 
 export type BookingReviewDisplay = ReviewCore & {

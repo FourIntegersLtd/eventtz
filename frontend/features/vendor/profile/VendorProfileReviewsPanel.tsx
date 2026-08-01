@@ -21,6 +21,7 @@ function VendorReviewRow({ review }: { review: VendorOwnerReviewItem }) {
       bookingHref={
         review.booking_request_id ? `/vendor/bookings/${review.booking_request_id}` : null
       }
+      imageUrls={review.image_urls}
     />
   );
 }

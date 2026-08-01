@@ -9,6 +9,7 @@ export type PublicReviewItem = {
   event_name: string;
   event_date: string;
   booking_total_label: string;
+  image_urls?: string[];
 };
 
 export type VendorPublicReviewsResponse = {
@@ -53,6 +54,7 @@ export type ClientOwnerReviewItem = {
   vendor_display_name: string;
   event_name: string;
   event_date: string;
+  image_urls?: string[];
 };
 
 export type ClientOwnerReviewsResponse = {
@@ -69,12 +71,21 @@ export async function fetchClientOwnReviews(): Promise<ClientOwnerReviewsRespons
 export type PostBookingReviewBody = {
   rating: number;
   body: string;
+  image_urls?: string[];
+};
+
+export type PostedBookingReview = {
+  id: string;
+  rating: number;
+  body: string;
+  created_at: string | null;
+  image_urls?: string[];
 };
 
 export async function postBookingReview(
   bookingId: string,
   body: PostBookingReviewBody,
-): Promise<{ success: boolean; review: { id: string; rating: number; body: string; created_at: string | null } }> {
+): Promise<{ success: boolean; review: PostedBookingReview }> {
   const { data } = await api.post(
     `/api/v1/client/booking-requests/${encodeURIComponent(bookingId)}/review`,
     body,

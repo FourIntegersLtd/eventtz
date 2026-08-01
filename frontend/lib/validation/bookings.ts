@@ -9,6 +9,11 @@ import {
 export const reviewSchema = z.object({
   rating: z.number().int().min(1, "Tap a star to rate your experience.").max(5),
   body: messageBodySchema({ min: 10, max: 4000, label: "Review" }),
+  image_urls: z
+    .array(z.string().url())
+    .max(5, "You can attach up to 5 photos.")
+    .optional()
+    .default([]),
 });
 
 export const disputeSummarySchema = z.object({

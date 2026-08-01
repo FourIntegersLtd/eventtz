@@ -48,10 +48,14 @@ export function mapAdminLineItems(items: unknown[]): BookingLineItemRow[] {
 export function asClientReview(v: unknown): BookingReviewDisplay | null {
   const r = asRecord(v);
   if (!r || typeof r.rating !== "number") return null;
+  const imageUrls = Array.isArray(r.image_urls)
+    ? r.image_urls.map((u) => String(u ?? "").trim()).filter(Boolean)
+    : [];
   return {
     id: String(r.id ?? ""),
     rating: r.rating,
     body: String(r.body ?? ""),
     created_at: typeof r.created_at === "string" ? r.created_at : null,
+    image_urls: imageUrls,
   };
 }

@@ -106,6 +106,22 @@ export function LandingReviewsSection() {
               <p className="mt-4 flex-1 text-sm leading-relaxed text-neutral-700 sm:text-[15px] sm:leading-7">
                 &ldquo;{trimBody(review.body)}&rdquo;
               </p>
+              {review.image_urls?.length ? (
+                <ul className="mt-4 flex flex-wrap gap-2" aria-label="Review photos">
+                  {review.image_urls.slice(0, 3).map((url, i) => (
+                    <li key={`${url}-${i}`}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={url}
+                        alt=""
+                        className="h-14 w-14 rounded-md object-cover ring-1 ring-primary-border/60"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
               <div className="mt-5 border-t border-primary-border/60 pt-4">
                 <p className="text-sm font-medium text-neutral-900">{review.reviewer_display}</p>
                 <p className="mt-0.5 text-xs text-neutral-500">

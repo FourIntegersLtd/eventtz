@@ -37,7 +37,7 @@ export function LandingFeaturedVendors() {
         });
         if (!cancelled) setVendors(rows);
       } catch {
-        if (!cancelled) setError("Could not load vendors.");
+        if (!cancelled) setError("Could not load vendors");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -82,7 +82,7 @@ export function LandingFeaturedVendors() {
           className={LANDING_SECTION_CONTENT_MT}
           lottie="searchNoResults"
           title="No vendors yet"
-          description="We're onboarding vendors across the UK - check back soon."
+          description="We're onboarding vendors across the UK - check back soon"
         />
       ) : (
         <div className={`${LANDING_SECTION_CONTENT_MT} grid justify-items-center gap-6 sm:grid-cols-2 sm:gap-7 lg:grid-cols-3 lg:gap-8`}>

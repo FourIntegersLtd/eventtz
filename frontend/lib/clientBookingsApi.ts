@@ -131,7 +131,13 @@ export type ClientBookingDetail = {
   /** Who still needs to confirm the event went well. */
   completion_waiting_on?: "client" | "vendor" | "both" | null;
   /** Present when the client has submitted a review for this booking. */
-  review?: { id: string; rating: number; body: string; created_at: string | null } | null;
+  review?: {
+    id: string;
+    rating: number;
+    body: string;
+    created_at: string | null;
+    image_urls?: string[];
+  } | null;
   initiator?: BookingInitiator;
   conversation_id: string | null;
   counterparty_phone?: string | null;

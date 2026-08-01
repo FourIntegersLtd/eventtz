@@ -33,7 +33,7 @@ const PATHS: PathConfig[] = [
   },
   {
     eyebrow: "Vendors",
-    title: "Show up where clients are searching.",
+    title: "Show up where clients are searching",
     description: VENDOR_SECTION.title,
     href: VENDOR_SECTION.ctaHref,
     label: VENDOR_SECTION.ctaLabel,

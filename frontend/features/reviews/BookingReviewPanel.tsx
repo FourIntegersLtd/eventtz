@@ -1,6 +1,7 @@
 import { StarRating } from "@/components/ui/StarRating";
 import { formatReviewWhen } from "./reviewFormatters";
 import { ReviewBodyText } from "./ReviewBodyText";
+import { ReviewPhotoGallery } from "./ReviewPhotoGallery";
 import type { BookingReviewDisplay } from "@/lib/reviewTypes";
 
 type BookingReviewPanelProps = {
@@ -36,6 +37,7 @@ export function BookingReviewPanel({
           <div className="mt-3">
             <ReviewBodyText body={review.body} previewLen={9999} />
           </div>
+          <ReviewPhotoGallery urls={review.image_urls} />
         </div>
       ) : (
         <p className="mt-2 text-xs text-neutral-500">{emptyLabel}</p>

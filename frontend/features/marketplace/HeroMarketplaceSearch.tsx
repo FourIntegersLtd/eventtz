@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, ChevronDown, Search, Tags } from "lucide-react";
+import { Calendar, ChevronDown, Search, Tags, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
@@ -18,7 +18,7 @@ import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { RotatingSearchPlaceholder } from "@/features/marketplace/RotatingSearchPlaceholder";
 
 const OTHER_TOOLTIP =
-  "We’re expanding categories. Join the waitlist to hear when your vendor type goes live.";
+  "We’re expanding categories. Join the waitlist to hear when your vendor type goes live";
 
 type HeroMarketplaceSearchProps = {
   variant?: "landing" | "default";
@@ -71,7 +71,7 @@ export function HeroMarketplaceSearch({
   const [typesOpen, setTypesOpen] = useState(false);
   const [datesOpen, setDatesOpen] = useState(false);
   const [datePickerError, setDatePickerError] = useState<string | null>(null);
-  const [draftEventDate, setDraftEventDate] = useState(() => todayIsoDate());
+  const [draftEventDate, setDraftEventDate] = useState("");
   const typesRef = useRef<HTMLDivElement>(null);
   const datesRef = useRef<HTMLDivElement>(null);
 
@@ -107,7 +107,7 @@ export function HeroMarketplaceSearch({
   const responsiveGridCols = gridColsForFieldCount(visibleFieldCount);
 
   const shellClassName = landing
-    ? `grid w-full min-w-0 max-w-full grid-cols-1 gap-2 overflow-visible rounded-2xl border border-primary-border bg-white p-2 shadow-primary-soft ${responsiveGridCols} lg:items-center lg:gap-0 lg:rounded-full lg:p-1.5`
+    ? `grid w-full min-w-0 max-w-full grid-cols-1 gap-2 overflow-visible rounded-2xl border border-primary-border bg-white p-2 shadow-primary-soft ${responsiveGridCols} lg:items-center lg:gap-0 lg:rounded-full lg:py-1.5 lg:pl-1.5 lg:pr-3`
     : `grid min-w-0 max-w-full grid-cols-1 gap-3 overflow-visible rounded-2xl border border-neutral-200 bg-white p-3 shadow-sm sm:grid-cols-2 ${responsiveGridCols} lg:items-end`;
 
   const submitSpanClass = landing
@@ -165,10 +165,10 @@ export function HeroMarketplaceSearch({
     else router.push(url);
   };
 
-  const addDraftDate = () => {
-    if (!draftEventDate) return;
+  const addDate = (iso: string) => {
+    if (!iso) return;
     const parsed = parseForm(eventDatesSchema({ requireStart: true }), {
-      eventDate: draftEventDate,
+      eventDate: iso,
       eventEndDate: null,
     });
     if (!parsed.ok) {
@@ -177,11 +177,12 @@ export function HeroMarketplaceSearch({
     }
     setDatePickerError(null);
     setState((s) => {
-      if (s.dateFlexible) return { ...s, dates: [draftEventDate], dateFlexible: false };
-      const next = [...s.dates.filter((d) => d !== draftEventDate), draftEventDate].slice(0, 3);
+      if (s.dateFlexible) return { ...s, dates: [iso], dateFlexible: false };
+      if (s.dates.includes(iso)) return s;
+      const next = [...s.dates, iso].slice(0, 3);
       return { ...s, dates: next };
     });
-    setDraftEventDate(todayIsoDate());
+    setDraftEventDate("");
   };
 
   const removeDate = (iso: string) => {
@@ -325,8 +326,10 @@ export function HeroMarketplaceSearch({
               {state.dateFlexible
                 ? "Flexible on dates"
                 : state.dates.length === 0
-                  ? "Event dates"
-                  : `${state.dates.length} date(s)`}
+                  ? "Event date"
+                  : state.dates.length === 1
+                    ? formatEventDate(state.dates[0]!)
+                    : `${state.dates.length} dates`}
             </span>
             <ChevronDown className="h-4 w-4 shrink-0 opacity-70" />
           </button>
@@ -339,58 +342,78 @@ export function HeroMarketplaceSearch({
                   : "absolute left-0 right-0 top-full z-[70] mt-1 box-border min-w-0 max-w-full rounded-xl border border-neutral-200 bg-white p-3 shadow-lg"
               }
             >
-              <p className="text-xs font-medium text-neutral-500">
-                Up to 3 dates
-              </p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {state.dates.map((d) => (
-                  <button
-                    key={d}
-                    type="button"
-                    onClick={() => removeDate(d)}
-                    className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
-                  >
-                    {formatEventDate(d)} ×
-                  </button>
-                ))}
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-medium text-neutral-500">Pick a date</p>
+                <button
+                  type="button"
+                  aria-label="Close date picker"
+                  onClick={() => {
+                    setDatesOpen(false);
+                    setDatePickerError(null);
+                  }}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-800"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
+
+              {state.dates.length > 0 ? (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {state.dates.map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => removeDate(d)}
+                      className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
+                    >
+                      {formatEventDate(d)} ×
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+
               {state.dates.length < 3 && !state.dateFlexible ? (
-                <div className="mt-2 min-w-0 space-y-2">
+                <div className="mt-2 min-w-0">
                   <DateInput
                     value={draftEventDate}
                     min={todayIsoDate()}
+                    allowEmpty
                     onChange={(e) => {
-                      setDraftEventDate(e.target.value);
-                      setDatePickerError(null);
+                      const iso = e.target.value;
+                      setDraftEventDate(iso);
+                      if (iso) {
+                        addDate(iso);
+                        setDatesOpen(false);
+                      }
                     }}
                   />
-                  <button
-                    type="button"
-                    onClick={addDraftDate}
-                    className="inline-flex h-10 w-full items-center justify-center rounded-lg bg-primary/10 text-sm font-semibold text-primary transition hover:bg-primary/15"
-                  >
-                    Add this date
-                  </button>
                 </div>
               ) : null}
+
               {datePickerError ? (
                 <p className="mt-2 text-xs font-medium text-red-600">{datePickerError}</p>
               ) : null}
-              <label className="mt-3 flex cursor-pointer items-center gap-2 border-t border-neutral-100 pt-3 text-sm text-neutral-800">
-                <input
-                  type="checkbox"
-                  checked={state.dateFlexible}
-                  onChange={(e) =>
-                    setState((s) => ({
-                      ...s,
-                      dateFlexible: e.target.checked,
-                      dates: e.target.checked ? [] : s.dates,
-                    }))
-                  }
-                  className="rounded border-neutral-300 text-primary"
-                />
+
+              <button
+                type="button"
+                onClick={() => {
+                  setState((s) => ({
+                    ...s,
+                    dateFlexible: !s.dateFlexible,
+                    dates: !s.dateFlexible ? [] : s.dates,
+                  }));
+                  setDraftEventDate("");
+                  setDatePickerError(null);
+                  setDatesOpen(false);
+                }}
+                className={`mt-3 w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
+                  state.dateFlexible
+                    ? "border-primary/30 bg-primary/10 font-medium text-primary"
+                    : "border-neutral-200 bg-neutral-50 text-neutral-800 hover:bg-neutral-100"
+                }`}
+              >
                 I&apos;m flexible on dates
-              </label>
+              </button>
             </div>
           )}
         </div>
@@ -403,10 +426,8 @@ export function HeroMarketplaceSearch({
       </div>
 
       {landing && (
-        <p className="mt-3 text-center text-xs text-neutral-500">
-          <Link href="/client/browse" className="font-medium text-primary underline-offset-2 hover:underline">
-            Browse all vendors
-          </Link>
+        <p className="mt-3 text-center text-xs text-neutral-500 sm:text-sm">
+          Plan an event or search vendors in plain English
         </p>
       )}
     </form>

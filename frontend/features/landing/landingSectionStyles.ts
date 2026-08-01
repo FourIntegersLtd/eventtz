@@ -18,15 +18,16 @@ export const LANDING_SECTION_BORDER = "border-t border-primary-border/50";
 
 /**
  * Viewport-tiered section shells (prefer `min-h-dvh`, never force exact `h-dvh`):
- * - **full** - one story per screen (hero, discover)
+ * - **full** - one story per screen (hero)
  * - **near** - story sections on desktop; natural height on mobile
- * - **content** - dense blocks (grids, FAQ); generous padding only
+ * - **content** - dense blocks (discover, grids, FAQ); generous padding only
  */
 export type LandingSectionShell = "full" | "near" | "content";
 
 export const LANDING_SECTION_SHELL = {
   full: "relative flex min-h-dvh flex-col",
-  near: "relative min-h-0 lg:min-h-dvh",
+  /** Desktop: fill the viewport and center the story block; mobile: natural height. */
+  near: "relative flex min-h-0 flex-col justify-center lg:min-h-dvh",
   content: "relative",
 } as const;
 

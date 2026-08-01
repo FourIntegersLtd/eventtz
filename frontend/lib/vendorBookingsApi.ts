@@ -27,6 +27,7 @@ export type VendorReviewSummary = {
   body: string;
   created_at: string | null;
   reviewer_display: string;
+  image_urls?: string[];
 };
 
 export type VendorBookingListItem = {

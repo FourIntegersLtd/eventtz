@@ -9,6 +9,7 @@ import { getButtonClassName } from "@/components/ui/buttonStyles";
 import {
   BLOG_LINK,
   BROWSE_LINK,
+  CONTACT_US_LINK,
   EXPLORE_NAV_LINKS,
   REGISTER_LINK,
   MOBILE_NAV_SECTION_LINKS,
@@ -26,7 +27,7 @@ type NavLinkItemProps = {
 };
 
 function NavLinkItem({ href, className, children, onClick }: NavLinkItemProps) {
-  if (href.startsWith("#")) {
+  if (href.startsWith("#") || href.startsWith("mailto:")) {
     return (
       <a href={href} className={className} onClick={onClick}>
         {children}
@@ -202,6 +203,17 @@ export function LandingNav({
               }
             >
               {BLOG_LINK.label}
+            </NavLinkItem>
+
+            <NavLinkItem
+              href={CONTACT_US_LINK.href}
+              className={
+                darkNav
+                  ? "rounded-lg px-3 py-2 text-sm font-medium text-white/95 transition hover:bg-white/10"
+                  : "rounded-lg px-3 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 hover:text-primary"
+              }
+            >
+              {CONTACT_US_LINK.label}
             </NavLinkItem>
 
             <NavLinkItem

@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { StarRating } from "@/components/ui/StarRating";
 import { ReviewBodyText } from "./ReviewBodyText";
+import { ReviewPhotoGallery } from "./ReviewPhotoGallery";
 import { formatReviewWhen } from "./reviewFormatters";
 
 export type ReviewCardProps = {
@@ -19,6 +20,7 @@ export type ReviewCardProps = {
   compact?: boolean;
   /** `row` for use inside a divided list surface (no per-item card chrome). */
   variant?: "card" | "row";
+  imageUrls?: string[] | null;
 };
 
 export function ReviewCard({
@@ -33,6 +35,7 @@ export function ReviewCard({
   previewLen,
   compact = false,
   variant = "card",
+  imageUrls,
 }: ReviewCardProps) {
   const titleNode =
     titleHref && typeof title === "string" ? (
@@ -62,6 +65,8 @@ export function ReviewCard({
       <div className="mt-3">
         <ReviewBodyText body={body} previewLen={previewLen} />
       </div>
+
+      <ReviewPhotoGallery urls={imageUrls} />
 
       {createdAt || bookingHref ? (
         <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-500">

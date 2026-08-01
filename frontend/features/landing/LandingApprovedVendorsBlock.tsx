@@ -23,7 +23,7 @@ export function LandingApprovedVendorsBlock({
         loading={loading}
         error={error}
         title="Browse top vendors"
-        emptyLabel="No vendors found."
+        emptyLabel="No vendors found"
         maxItems={6}
       />
     </section>

@@ -123,12 +123,16 @@ export function LandingScrollFeatureShowcase({
 
   return (
     <LandingSection id={id} className={landingFeatureSectionClass(tone)} width="7xl">
-      <div className="mx-auto max-w-3xl text-center">
+      <div className="mx-auto max-w-5xl text-center">
         {eyebrow ? (
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{eyebrow}</p>
         ) : null}
-        <h2 className={`${LANDING_FEATURE_HEADLINE_CLASS} ${eyebrow ? "mt-2.5" : ""}`}>{title}</h2>
-        <p className={`${LANDING_FEATURE_BODY_CLASS} hidden md:block`}>{description}</p>
+        <h2 className={`${LANDING_FEATURE_HEADLINE_CLASS} text-balance ${eyebrow ? "mt-2.5" : ""}`}>
+          {title}
+        </h2>
+        <p className={`${LANDING_FEATURE_BODY_CLASS} mx-auto hidden max-w-3xl text-pretty md:block`}>
+          {description}
+        </p>
       </div>
 
       <div

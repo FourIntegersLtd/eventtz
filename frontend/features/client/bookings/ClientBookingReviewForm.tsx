@@ -5,16 +5,18 @@ import { postBookingReview } from "@/lib/reviewsApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { parseForm, reviewSchema } from "@/lib/validation";
+import type { BookingReviewDisplay } from "@/lib/reviewTypes";
 import { StarRating } from "@/components/ui/StarRating";
 import { Button } from "@/components/ui/Button";
 import { TextArea } from "@/components/ui/TextArea";
+import { ReviewPhotoPicker } from "@/features/reviews/ReviewPhotoPicker";
 
 type ClientBookingReviewFormProps = {
   bookingId: string;
   vendorName: string;
   /** Pre-selects a star rating (e.g. arriving from the dashboard nudge) and auto-focuses the write-up. */
   initialRating?: number;
-  onSubmitted: (review: { id: string; rating: number; body: string; created_at: string | null }) => void;
+  onSubmitted: (review: BookingReviewDisplay) => void;
 };
 
 /**
@@ -30,6 +32,7 @@ export function ClientBookingReviewForm({
 }: ClientBookingReviewFormProps) {
   const [rating, setRating] = useState(initialRating);
   const [body, setBody] = useState("");
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -44,7 +47,7 @@ export function ClientBookingReviewForm({
 
   const submit = async () => {
     setError(null);
-    const parsed = parseForm(reviewSchema, { rating, body });
+    const parsed = parseForm(reviewSchema, { rating, body, image_urls: imageUrls });
     if (!parsed.ok) {
       setError(parsed.formError);
       return;
@@ -55,9 +58,11 @@ export function ClientBookingReviewForm({
       track(MixpanelEvents.review_submitted, {
         booking_id: bookingId,
         rating: parsed.data.rating,
+        photo_count: parsed.data.image_urls.length,
       });
       onSubmitted(res.review);
       setBody("");
+      setImageUrls([]);
     } catch (e: unknown) {
       setError(getApiErrorDetail(e) ?? "Could not submit your review.");
     } finally {
@@ -93,6 +98,7 @@ export function ClientBookingReviewForm({
             maxLength={4000}
             placeholder="What went well? (min 10 characters)"
           />
+          <ReviewPhotoPicker urls={imageUrls} onChange={setImageUrls} disabled={busy} />
           {error ? <p className="text-xs text-red-700">{error}</p> : null}
           <Button variant="primary" loading={busy} onClick={() => void submit()}>
             Submit review

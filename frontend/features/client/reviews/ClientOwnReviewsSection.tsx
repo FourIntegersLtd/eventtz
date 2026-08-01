@@ -19,6 +19,7 @@ function ClientReviewRow({ review }: { review: ClientOwnerReviewItem }) {
       body={review.body}
       createdAt={review.created_at}
       bookingHref={`/client/bookings/${review.booking_request_id}`}
+      imageUrls={review.image_urls}
       compact
     />
   );

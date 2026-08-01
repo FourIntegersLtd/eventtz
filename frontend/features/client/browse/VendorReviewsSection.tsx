@@ -10,6 +10,7 @@ import {
   type VendorPublicReviewsResponse,
 } from "@/lib/reviewsApi";
 import { StarRating } from "@/components/ui/StarRating";
+import { ReviewPhotoGallery } from "@/features/reviews/ReviewPhotoGallery";
 
 const PREVIEW_LEN = 220;
 
@@ -63,6 +64,7 @@ function ReviewCard({
           {expanded ? "Show less" : "See more"}
         </button>
       ) : null}
+      <ReviewPhotoGallery urls={r.image_urls} />
       <p className="mt-3 text-xs text-neutral-400">{formatRelative(r.created_at)}</p>
     </div>
   );

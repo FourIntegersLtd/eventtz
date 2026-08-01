@@ -68,7 +68,7 @@ export function LandingHero() {
             </Link>
           </div>
 
-          <div className="relative mx-auto w-full max-w-[18rem] motion-safe:animate-[hero-copy-in_0.75s_ease-out_0.08s_both] sm:max-w-md lg:mx-0 lg:max-w-none lg:justify-self-end lg:pl-2 xl:pl-4">
+          <div className="relative mx-auto w-full max-w-[16rem] motion-safe:animate-[hero-copy-in_0.75s_ease-out_0.08s_both] sm:max-w-sm lg:mx-0 lg:max-w-none lg:justify-self-end lg:pl-2 xl:pl-4">
             <div className="relative overflow-hidden rounded-[1.75rem] border border-primary-border/70 bg-white/60 p-1.5 shadow-primary-soft sm:rounded-[2.5rem] sm:p-2.5">
               <Image
                 src={HERO_IMAGE_SRC}
@@ -76,18 +76,17 @@ export function LandingHero() {
                 width={900}
                 height={900}
                 priority
-                className="h-auto max-h-[min(34dvh,15rem)] w-full rounded-[1.35rem] object-contain sm:max-h-[min(48dvh,26rem)] sm:rounded-[2rem] lg:max-h-[min(58dvh,34rem)] xl:max-h-[min(62dvh,38rem)]"
+                className="h-auto max-h-[min(30dvh,13rem)] w-full rounded-[1.35rem] object-contain sm:max-h-[min(42dvh,22rem)] sm:rounded-[2rem] lg:max-h-[min(50dvh,28rem)] xl:max-h-[min(54dvh,32rem)]"
               />
             </div>
           </div>
         </div>
 
-        <div className="relative z-20 mx-auto mt-12 w-full min-w-0 max-w-3xl overflow-visible motion-safe:animate-[hero-copy-in_0.75s_ease-out_0.12s_both] sm:mt-8 lg:mt-8 xl:max-w-4xl">
+        <div className="relative z-20 mx-auto mt-11 w-full min-w-0 max-w-3xl overflow-visible motion-safe:animate-[hero-copy-in_0.75s_ease-out_0.12s_both] sm:mt-10 lg:mt-12 xl:max-w-4xl">
           <p className="mb-2 flex flex-wrap items-center gap-2 text-sm text-neutral-600">
             <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold tracking-wide text-primary">
               AI-powered
             </span>
-            <span>Plan an event or search vendors in plain English.</span>
           </p>
           <HeroMarketplaceSearch variant="landing" submitToPath="/client/browse" />
         </div>

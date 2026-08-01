@@ -6,7 +6,6 @@ import { BROWSE_SECTION, CATEGORIES } from "@/features/landing/landingData";
 import {
   LANDING_HORIZONTAL_PADDING,
   LANDING_PAGE_MAX_WIDTH,
-  LANDING_SECTION_CONTENT_MT,
   LANDING_SECTION_SHELL,
 } from "@/features/landing/landingSectionStyles";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
@@ -22,38 +21,38 @@ export function LandingBrowseStrip() {
   return (
     <section
       id="browse"
-      className={`${LANDING_SECTION_SHELL.near} z-10 bg-white lg:flex lg:flex-col`}
+      className={`${LANDING_SECTION_SHELL.content} z-10 bg-white`}
     >
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-neutral-100/80 to-transparent"
+        className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-neutral-100/80 to-transparent"
         aria-hidden
       />
 
       <div
-        className={`relative mx-auto flex w-full flex-col lg:flex-1 lg:justify-center ${LANDING_PAGE_MAX_WIDTH} ${LANDING_HORIZONTAL_PADDING} py-14 sm:py-16 lg:py-24`}
+        className={`relative mx-auto flex w-full flex-col ${LANDING_PAGE_MAX_WIDTH} ${LANDING_HORIZONTAL_PADDING} py-14 sm:py-16 lg:py-20`}
       >
-        <div className="mx-auto max-w-2xl text-center">
+        <div className="mx-auto w-full max-w-4xl text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
             {BROWSE_SECTION.eyebrow}
           </p>
-          <h2 className="font-heading mt-3 text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl lg:text-4xl">
+          <h2 className="font-heading mt-2 text-2xl font-semibold tracking-tight text-neutral-900 sm:mt-3 sm:text-3xl lg:text-4xl">
             {BROWSE_SECTION.title}
           </h2>
-          <p className="mt-3 text-sm leading-relaxed text-neutral-600 sm:text-base">
+          <p className="mx-auto mt-2 max-w-2xl text-sm leading-relaxed text-neutral-600 sm:mt-3 sm:text-base">
             {BROWSE_SECTION.description}
           </p>
-          <span className="mx-auto mt-5 block h-px w-12 bg-primary/40" aria-hidden />
+          <span className="mx-auto mt-4 block h-px w-12 bg-primary/40" aria-hidden />
         </div>
 
         <nav
           aria-label="Browse by category"
-          className={`flex flex-wrap items-start justify-center gap-x-6 gap-y-8 sm:gap-x-12 sm:gap-y-10 lg:gap-x-14 ${LANDING_SECTION_CONTENT_MT}`}
+          className="mt-8 flex w-full flex-wrap items-start justify-center gap-x-8 gap-y-6 sm:mt-10 sm:gap-x-14 sm:gap-y-8 lg:gap-x-16"
         >
           {CATEGORIES.map(({ name, value, Icon, iconBg, iconColor }) => (
             <Link
               key={value}
               href={`/client/browse?types=${value}`}
-              className="group flex w-[5.75rem] flex-col items-center gap-2.5 text-center sm:w-[7.25rem] sm:gap-3"
+              className="group flex w-[6.5rem] flex-col items-center gap-2.5 text-center sm:w-[8rem] sm:gap-3"
               onClick={() =>
                 track(MixpanelEvents.landing_category_clicked, {
                   vendor_type: value,
@@ -77,7 +76,7 @@ export function LandingBrowseStrip() {
           ))}
         </nav>
 
-        <div className="mt-10 flex justify-center sm:mt-12 lg:mt-14">
+        <div className="mt-8 flex justify-center pb-6 sm:mt-10 sm:pb-8">
           <Link
             href="/client/browse"
             className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary transition hover:gap-2.5 hover:opacity-90"
@@ -88,21 +87,21 @@ export function LandingBrowseStrip() {
               })
             }
           >
-            View all vendors
+            View all categories
             <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
         </div>
       </div>
 
       {/* In-flow on mobile; straddles the border from sm up */}
-      <div className="relative z-20 mt-8 pb-2 sm:absolute sm:inset-x-0 sm:bottom-0 sm:mt-0 sm:translate-y-1/2 sm:pb-0">
+      <div className="relative z-20 mt-4 pb-2 sm:absolute sm:inset-x-0 sm:bottom-0 sm:mt-0 sm:translate-y-1/2 sm:pb-0">
         <div
           className={`mx-auto grid w-full grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-4 ${LANDING_PAGE_MAX_WIDTH} ${LANDING_HORIZONTAL_PADDING}`}
         >
           {TRUST_ITEMS.map(({ icon: Icon, label }) => (
             <div
               key={label}
-              className="flex min-w-0 items-center gap-2 rounded-2xl border border-primary-border/80 bg-white px-3 py-3 shadow-primary-soft sm:gap-3 sm:px-5 sm:py-5"
+              className="flex min-w-0 items-center justify-center gap-2 rounded-2xl border border-primary-border/80 bg-white px-3 py-3 text-center shadow-primary-soft sm:gap-3 sm:px-5 sm:py-4"
             >
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary sm:h-10 sm:w-10">
                 <Icon className="h-4 w-4" strokeWidth={2} aria-hidden />
