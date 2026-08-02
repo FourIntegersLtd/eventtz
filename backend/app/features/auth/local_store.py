@@ -18,6 +18,7 @@ _local_users_by_email: dict[str, dict[str, Any]] = {}
 _local_access_tokens: dict[str, str] = {}
 _local_refresh_tokens: dict[str, str] = {}
 _local_password_reset_tokens: dict[str, dict[str, Any]] = {}
+_local_email_verification_tokens: dict[str, dict[str, Any]] = {}
 
 
 def normalize_email(email: str) -> str:
@@ -46,6 +47,11 @@ def register_user(email: str, password: str, user_type: Literal["client", "vendo
     if email in _local_users_by_email:
         raise ValueError("Email already registered")
     user = build_user(email, user_type)
+    # Client/vendor must verify email before sign-in (same as production).
+    if user_type == "admin":
+        user["email_verified_at"] = datetime_utc_now_iso()
+    else:
+        user["email_verified_at"] = None
     _local_users_by_email[email] = {
         "user": user,
         "password_hash": password_hash(password),
@@ -161,6 +167,70 @@ def mark_password_reset_token_used(token_id: str) -> None:
         if row.get("id") == token_id:
             row["used_at"] = now
             return
+
+
+def invalidate_email_verification_tokens(user_id: str) -> None:
+    now = datetime_utc_now_iso()
+    for row in _local_email_verification_tokens.values():
+        if row.get("user_id") == user_id and row.get("used_at") is None:
+            row["used_at"] = now
+
+
+def insert_email_verification_token(
+    *,
+    user_id: str,
+    token_hash: str,
+    expires_at: Any,
+) -> None:
+    from datetime import datetime, timezone
+
+    token_id = str(uuid4())
+    exp = expires_at
+    if isinstance(exp, datetime) and exp.tzinfo is None:
+        exp = exp.replace(tzinfo=timezone.utc)
+    _local_email_verification_tokens[token_hash] = {
+        "id": token_id,
+        "user_id": user_id,
+        "token_hash": token_hash,
+        "expires_at": exp.isoformat() if hasattr(exp, "isoformat") else str(exp),
+        "used_at": None,
+    }
+
+
+def find_email_verification_token(token_hash: str) -> dict[str, Any] | None:
+    row = _local_email_verification_tokens.get(token_hash)
+    return dict(row) if row else None
+
+
+def mark_email_verification_token_used(token_id: str) -> None:
+    now = datetime_utc_now_iso()
+    for row in _local_email_verification_tokens.values():
+        if row.get("id") == token_id:
+            row["used_at"] = now
+            return
+
+
+def mark_email_verified(user_id: str) -> None:
+    email = email_for_user_id(user_id)
+    if not email:
+        return
+    record = _local_users_by_email.get(email)
+    if not record:
+        return
+    record["user"]["email_verified_at"] = datetime_utc_now_iso()
+
+
+def is_email_verified(user_id: str) -> bool:
+    email = email_for_user_id(user_id)
+    if not email:
+        return False
+    record = _local_users_by_email.get(email)
+    if not record:
+        return False
+    user = record["user"]
+    if str(user.get("user_type") or "") == "admin":
+        return True
+    return bool(user.get("email_verified_at"))
 
 
 def datetime_utc_now_iso() -> str:

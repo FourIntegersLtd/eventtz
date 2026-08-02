@@ -49,12 +49,59 @@ _BIO_SAFE_KEYS = frozenset(
 )
 
 
+def _humanize_payload_for_bio(payload: dict[str, Any]) -> dict[str, Any]:
+    """Replace raw enum keys with plain-English labels before sending to the model."""
+    out = dict(payload)
+    service_labels = {
+        "catering": "Catering",
+        "photography": "Photography",
+        "videography": "Videography",
+        "dj": "DJ",
+        "entertainment": "Entertainment",
+        "decor": "Decor & styling",
+        "venue": "Venue",
+        "rentals": "Rentals",
+        "beauty": "Hair & makeup",
+        "transport": "Transport",
+        "cakes": "Cakes & desserts",
+        "other": "Other services",
+    }
+    event_labels = {
+        "all": "All event types",
+        "weddings": "Weddings",
+        "birthdays": "Birthdays",
+        "corporate": "Corporate events",
+        "religious": "Religious ceremonies",
+        "naming_ceremonies": "Naming ceremonies",
+        "funerals": "Funerals & memorials",
+        "community": "Community events",
+    }
+    raw_services = out.get("servicesOffered")
+    if isinstance(raw_services, list):
+        out["servicesOffered"] = [
+            service_labels.get(str(s).strip(), str(s).replace("_", " "))
+            for s in raw_services
+            if str(s).strip()
+        ]
+    raw_events = out.get("eventTypes")
+    if isinstance(raw_events, list):
+        if "all" in [str(e).strip() for e in raw_events]:
+            out["eventTypes"] = ["All event types"]
+        else:
+            out["eventTypes"] = [
+                event_labels.get(str(e).strip(), str(e).replace("_", " "))
+                for e in raw_events
+                if str(e).strip()
+            ]
+    return out
+
+
 def _sanitize_payload_for_bio(payload: dict[str, Any]) -> dict[str, Any]:
     out: dict[str, Any] = {}
     for k, v in payload.items():
         if k in _BIO_SAFE_KEYS:
             out[k] = v
-    return out
+    return _humanize_payload_for_bio(out)
 
 
 def generate_vendor_public_bio(*, payload: dict[str, Any]) -> str:
@@ -74,7 +121,7 @@ def generate_vendor_public_bio(*, payload: dict[str, Any]) -> str:
         "You write public-facing vendor bios for Eventtz, a UK events marketplace. "
         "Tone: warm, professional, confident, inclusive. No markdown, no headings, no bullet lists. "
         "Write EXACTLY ONE paragraph of 3-4 lines (about 40-60 words total). Do not exceed 60 words. "
-        "UK English spelling."
+        "UK English spelling. Use normal sentence case — never camelCase or raw field names."
     )
     user_text = (
         "Here is structured onboarding data about this vendor (JSON). "

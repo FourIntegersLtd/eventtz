@@ -499,6 +499,35 @@ class EmailService:
         subject = f"{headline} | {APP_NAME}"
         return resend_send(to=[to_email], subject=subject, html=html, text=text)
 
+    def send_email_verification(
+        self,
+        *,
+        to_email: str,
+        verify_url: str,
+        expires_minutes: int = 60,
+        user_type: str | None = None,
+    ) -> bool:
+        role = "vendor" if user_type == "vendor" else "client"
+        headline = "Verify your email"
+        body = (
+            f"Thanks for creating your Eventtz {role} account.\n\n"
+            "Click the button below to verify your email address. "
+            f"This link expires in {expires_minutes} minutes and can only be used once.\n\n"
+            "If you did not create an account, you can ignore this email."
+        )
+        ctx = transactional_email_context(
+            subject=headline,
+            headline=headline,
+            subtitle="Confirm your address to sign in",
+            body=body,
+            action_url=ensure_public_email_url(verify_url),
+            action_label="Verify email",
+        )
+        html = render_template("auth/password_reset.html", ctx)
+        text = render_template("auth/password_reset.txt", ctx)
+        subject = f"{headline} | {APP_NAME}"
+        return resend_send(to=[to_email], subject=subject, html=html, text=text)
+
     def send_password_changed(
         self,
         *,

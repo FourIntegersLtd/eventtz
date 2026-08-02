@@ -326,3 +326,27 @@ def send_password_reset_email(
     except Exception:
         logger.exception("send_password_reset_email failed email=%s", normalized)
         return False
+
+
+def send_email_verification_email(
+    *,
+    email: str,
+    verify_url: str,
+    expires_minutes: int = 60,
+    user_type: str | None = None,
+) -> bool:
+    if get_settings().local_auth_mode:
+        return False
+    normalized = email.strip().lower()
+    if not normalized or "@" not in normalized or not verify_url.strip():
+        return False
+    try:
+        return get_email_service().send_email_verification(
+            to_email=normalized,
+            verify_url=ensure_public_email_url(verify_url.strip()),
+            expires_minutes=expires_minutes,
+            user_type=user_type,
+        )
+    except Exception:
+        logger.exception("send_email_verification_email failed email=%s", normalized)
+        return False

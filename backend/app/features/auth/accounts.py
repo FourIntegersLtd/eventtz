@@ -54,7 +54,14 @@ def user_type_from_auth_metadatas(user: dict[str, Any]) -> str | None:
     return None
 
 
-def upsert_user_profile(user_id: str, email: str | None, user_type: UserType | str) -> None:
+def upsert_user_profile(
+    user_id: str,
+    email: str | None,
+    user_type: UserType | str,
+    *,
+    email_verified_at: str | None = None,
+    clear_email_verified: bool = False,
+) -> None:
     """Optional: copy role into public.users for database joins (explore/admin). Never raises."""
     if get_settings().local_auth_mode:
         return
@@ -64,6 +71,10 @@ def upsert_user_profile(user_id: str, email: str | None, user_type: UserType | s
     row: dict[str, Any] = {"id": user_id, "user_type": user_type}
     if email is not None:
         row["email"] = email.strip().lower()
+    if clear_email_verified:
+        row["email_verified_at"] = None
+    elif email_verified_at is not None:
+        row["email_verified_at"] = email_verified_at
     try:
         get_client().table("users").upsert(row).execute()
         logger.info("upsert_user_profile user_id=%s user_type=%s", user_id, user_type)
@@ -80,7 +91,7 @@ def fetch_user_profile(user_id: str) -> dict[str, Any] | None:
     res = (
         get_client()
         .table("users")
-        .select("id,email,user_type,admin_role,created_at,updated_at,account_suspended")
+        .select("id,email,user_type,admin_role,created_at,updated_at,account_suspended,email_verified_at")
         .eq("id", user_id)
         .limit(1)
         .execute()
@@ -100,7 +111,7 @@ def fetch_user_profile_by_email(email: str) -> dict[str, Any] | None:
     res = (
         get_client()
         .table("users")
-        .select("id,email,user_type,admin_role,created_at,updated_at,account_suspended")
+        .select("id,email,user_type,admin_role,created_at,updated_at,account_suspended,email_verified_at")
         .eq("email", em)
         .limit(1)
         .execute()
@@ -130,6 +141,9 @@ def hydrate_user_from_db(auth_user: dict[str, Any]) -> dict[str, Any]:
         merged_user.setdefault("account_suspended", False)
         merged_user.setdefault("preferred_name", None)
         merged_user.setdefault("client_onboarding_completed", True)
+        merged_user["email_verified"] = bool(merged_user.get("email_verified_at")) or str(
+            merged_user.get("user_type") or "",
+        ) == "admin"
         return merged_user
 
     merged_user["user_type"] = user_type_from_auth_metadatas(merged_user) or "client"
@@ -139,8 +153,13 @@ def hydrate_user_from_db(auth_user: dict[str, Any]) -> dict[str, Any]:
         if db_type == "admin":
             merged_user["user_type"] = "admin"
         merged_user["account_suspended"] = bool(db_profile.get("account_suspended", False))
+        if db_type == "admin":
+            merged_user["email_verified"] = True
+        else:
+            merged_user["email_verified"] = bool(db_profile.get("email_verified_at"))
     else:
         merged_user.setdefault("account_suspended", False)
+        merged_user.setdefault("email_verified", True)
 
     if merged_user.get("user_type") == "client":
         from app.features.settings.client_onboarding import get_client_onboarding

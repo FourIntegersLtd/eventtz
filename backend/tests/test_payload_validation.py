@@ -99,6 +99,49 @@ def test_validate_step_6_rejects_over_cap():
         validate_step_fields(6, payload)
 
 
+def test_validate_step_1_requires_valid_phone():
+    with pytest.raises(ValidationError, match="phone number is required"):
+        validate_step_fields(1, {"firstName": "Ada", "lastName": "Lovelace", "phone": ""})
+    with pytest.raises(ValidationError, match="valid phone number"):
+        validate_step_fields(
+            1,
+            {"firstName": "Ada", "lastName": "Lovelace", "phone": "not-a-phone"},
+        )
+    validate_step_fields(
+        1,
+        {"firstName": "Ada", "lastName": "Lovelace", "phone": "07123456789"},
+    )
+
+
+def test_validate_payload_for_progress_step_1():
+    with pytest.raises(ValidationError, match="valid phone number"):
+        validate_payload_for_progress(
+            current_step=2,
+            previous_step=1,
+            payload={"firstName": "Ada", "lastName": "Lovelace", "phone": "123"},
+            status="draft",
+        )
+
+
+def test_validate_step_4_rejects_zero_price():
+    payload = {
+        "hourlyRate": "0",
+        "packages": [{"title": "Gold", "price": "500"}],
+    }
+    with pytest.raises(ValidationError, match="at least"):
+        validate_step_fields(4, payload)
+
+
+def test_validate_step_4_requires_discount_option_when_enabled():
+    payload = {
+        "packages": [{"title": "Gold", "price": "500"}],
+        "offerDiscounts": True,
+        "discountLabel": "Summer sale",
+    }
+    with pytest.raises(ValidationError, match="at least one discount"):
+        validate_step_fields(4, payload)
+
+
 def test_normalize_strips_external_portfolio_url():
     payload = {
         "portfolioFileNames": [

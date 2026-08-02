@@ -7,11 +7,13 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.core.errors import ValidationError
+from app.core.phone_validation import is_valid_phone_number
 from app.features.vendors.markets import DEFAULT_COUNTRY_CODE, is_market_enabled, normalize_country_code
 from app.features.vendors.list_pricing import parse_money_gbp
 
 MAX_DISCOUNT_PCT = 100.0
 MAX_MONEY_GBP = 1_000_000.0
+MIN_MONEY_GBP = 0.1
 MIN_MAX_BOOKINGS_PER_DAY = 1
 MAX_MAX_BOOKINGS_PER_DAY = 20
 
@@ -118,8 +120,22 @@ def normalize_payload_fields(payload: dict[str, Any], user_id: str) -> dict[str,
     out["maxBookingsPerDay"] = str(_parse_max_bookings(_coerce_str(out, "maxBookingsPerDay")))
 
     out["portfolioFileNames"] = _filter_url_list(out.get("portfolioFileNames"), user_id)
+    videos = out.get("portfolioVideoNamesPersisted")
+    legacy_video = _coerce_str(out, "portfolioVideoNamePersisted").strip()
+    if not isinstance(videos, list):
+        videos = []
+    if legacy_video:
+        videos = [legacy_video, *[v for v in videos if v != legacy_video]]
+    out["portfolioVideoNamesPersisted"] = _filter_url_list(videos, user_id)
+    out["portfolioVideoNamePersisted"] = ""
+    labels = out.get("uploadedFileLabels")
+    if isinstance(labels, dict):
+        cleaned_labels: dict[str, str] = {}
+        for key, value in labels.items():
+            if isinstance(key, str) and isinstance(value, str) and value.strip():
+                cleaned_labels[key.strip()] = value.strip()[:200]
+        out["uploadedFileLabels"] = cleaned_labels
     for key in (
-        "portfolioVideoNamePersisted",
         "foodHygieneCertNamePersisted",
         "indemnityCertNamePersisted",
         "profileImageUrl",
@@ -172,7 +188,9 @@ def _money_in_range(raw: str, label: str, *, required: bool = False) -> None:
     n = parse_money_gbp(raw)
     if n is None:
         raise ValidationError(f"Step pricing: {label} must be a valid amount.")
-    if n < 0 or n > MAX_MONEY_GBP:
+    if n < MIN_MONEY_GBP or n > MAX_MONEY_GBP:
+        if n < MIN_MONEY_GBP:
+            raise ValidationError(f"Step pricing: {label} must be at least £{MIN_MONEY_GBP:.2f}.")
         raise ValidationError(f"Step pricing: {label} is out of allowed range.")
 
 
@@ -194,9 +212,43 @@ def _validate_step_location(payload: dict[str, Any]) -> None:
         raise ValidationError("Step location: describe your custom travel / delivery rule.")
 
 
+def _validate_offer_discounts(payload: dict[str, Any]) -> None:
+    if not payload.get("offerDiscounts"):
+        return
+    if not _coerce_str(payload, "discountLabel").strip():
+        raise ValidationError("Step pricing: discount name is required.")
+    has_list = bool(_coerce_str(payload, "discountPercentage").strip())
+    bulk_threshold = _coerce_str(payload, "bulkDiscountThreshold").strip()
+    bulk_pct = _coerce_str(payload, "bulkDiscountPercent").strip()
+    has_bulk = bool(bulk_threshold and bulk_pct)
+    has_off_peak = bool(_coerce_str(payload, "offPeakDiscountPercent").strip())
+    if not has_list and not has_bulk and not has_off_peak:
+        raise ValidationError("Step pricing: select at least one discount option.")
+    if (bulk_threshold and not bulk_pct) or (bulk_pct and not bulk_threshold):
+        raise ValidationError(
+            "Step pricing: bulk discount needs both a threshold and a percentage.",
+        )
+
+
+def _validate_step_account(payload: dict[str, Any]) -> None:
+    if not _coerce_str(payload, "firstName").strip():
+        raise ValidationError("Step account: first name is required.")
+    if not _coerce_str(payload, "lastName").strip():
+        raise ValidationError("Step account: last name is required.")
+    phone = _coerce_str(payload, "phone").strip()
+    if not phone:
+        raise ValidationError("Step account: phone number is required.")
+    if not is_valid_phone_number(phone):
+        raise ValidationError(
+            "Step account: enter a valid phone number (e.g. 07xxx xxxxxx or +44 7xxx xxxxxx).",
+        )
+
+
 def validate_step_fields(step: int, payload: dict[str, Any]) -> None:
     """Check the given onboarding step (1-8). Raises ValidationError if anything is invalid."""
-    if step == 4:
+    if step == 1:
+        _validate_step_account(payload)
+    elif step == 4:
         _money_in_range(_coerce_str(payload, "hourlyRate"), "Hourly rate")
         _money_in_range(_coerce_str(payload, "dailyRate"), "Daily rate")
         pkgs = payload.get("packages")
@@ -226,6 +278,7 @@ def validate_step_fields(step: int, payload: dict[str, Any]) -> None:
                 "Step pricing: add at least one rate or a package price.",
             )
         if payload.get("offerDiscounts"):
+            _validate_offer_discounts(payload)
             _pct_in_range(_coerce_str(payload, "discountPercentage"), "List discount")
             _pct_in_range(_coerce_str(payload, "bulkDiscountPercent"), "Bulk discount")
             _pct_in_range(_coerce_str(payload, "offPeakDiscountPercent"), "Off-peak discount")
@@ -259,7 +312,7 @@ def validate_step_fields(step: int, payload: dict[str, Any]) -> None:
     elif step == 7:
         pass  # optional documents; upload URLs are cleaned on save
 
-    elif step in (1, 2, 8):
+    elif step in (2, 8):
         pass  # frontend checks these steps; server re-checks on submit
 
 
@@ -280,6 +333,7 @@ def validate_payload_for_progress(
             validate_step_fields(s, payload)
         if not _coerce_str(payload, "businessName").strip():
             raise ValidationError("Business name is required before submit.")
+        _validate_step_account(payload)
         if not _coerce_str(payload, "countryCode").strip():
             payload = {**payload, "countryCode": DEFAULT_COUNTRY_CODE}
         _validate_step_location(payload)

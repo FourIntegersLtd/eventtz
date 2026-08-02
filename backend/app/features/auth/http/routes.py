@@ -14,7 +14,6 @@ from app.features.auth.session import (
     set_session_cookies,
 )
 from app.features.auth.accounts import hydrate_user_from_db, upsert_user_profile, assert_user_not_suspended
-from app.features.email.dispatch import send_welcome_email
 
 # --- Schemas  ---
 
@@ -94,6 +93,26 @@ class ChangePasswordResponse(BaseModel):
     requires_sign_in: bool = True
 
 
+class ResendVerificationRequest(BaseModel):
+    email: str = Field(min_length=3)
+
+
+class ResendVerificationResponse(BaseModel):
+    success: bool = True
+    message: str
+
+
+class VerifyEmailRequest(BaseModel):
+    token: str = Field(min_length=20)
+
+
+class VerifyEmailResponse(BaseModel):
+    success: bool = True
+    message: str
+    user: dict[str, Any] | None = None
+    session: dict[str, Any] | None = None
+
+
 # --- Routes ---
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -103,25 +122,42 @@ logger = get_logger(__name__)
 @router.post("/signup", response_model=SignupResponse)
 async def signup(
     body: SignupRequest,
+    request: Request,
     response: Response,
 ):
-    """Register with email and password. Saves user_type to public.users when the database is available."""
+    """Register with email and password. Client/vendor must verify email before sign-in."""
+    from app.features.auth.email_verification import (
+        SIGNUP_VERIFY_MESSAGE,
+        confirm_supabase_email,
+        issue_email_verification,
+    )
+
     logger.info(
         "POST /auth/signup email=%s user_type=%s",
         body.email,
         body.user_type,
     )
+    client_ip = _client_ip(request)
+
     if local_auth_store.enabled():
         try:
             user = local_auth_store.register_user(body.email, body.password, body.user_type)
         except ValueError:
             raise HTTPException(status_code=400, detail="That email is already registered. Try signing in.") from None
-        session = local_auth_store.create_session(body.email)
-        set_session_cookies(response, session)
+        clear_session_cookies(response)
+        try:
+            issue_email_verification(
+                user_id=str(user["id"]),
+                email=body.email,
+                user_type=body.user_type,
+                client_ip=client_ip,
+            )
+        except ValueError as e:
+            raise HTTPException(status_code=429, detail=str(e)) from e
         return SignupResponse(
             user=hydrate_user_from_db(user),
-            session=session,
-            message="Local auth mode enabled: account created in memory.",
+            session=None,
+            message=SIGNUP_VERIFY_MESSAGE,
         )
 
     service = get_supabase_auth_service()
@@ -137,19 +173,28 @@ async def signup(
     if result.get("success"):
         logger.info("POST /auth/signup completed email=%s success=true", body.email)
         uid = result["user"].get("id")
+        clear_session_cookies(response)
         if uid:
             upsert_user_profile(
                 str(uid),
                 local_auth_store.normalize_email(body.email),
                 body.user_type,
+                clear_email_verified=True,
             )
-        if result.get("session"):
-            set_session_cookies(response, result["session"])
-        send_welcome_email(email=body.email, user_type=body.user_type)
+            confirm_supabase_email(str(uid))
+            try:
+                issue_email_verification(
+                    user_id=str(uid),
+                    email=body.email,
+                    user_type=body.user_type,
+                    client_ip=client_ip,
+                )
+            except ValueError as e:
+                raise HTTPException(status_code=429, detail=str(e)) from e
         return SignupResponse(
             user=hydrate_user_from_db(result["user"]),
-            session=result.get("session"),
-            message=result.get("message"),
+            session=None,
+            message=SIGNUP_VERIFY_MESSAGE,
         )
     logger.warning(
         "POST /auth/signup completed email=%s success=false error=%s",
@@ -169,6 +214,7 @@ async def sign_in(
     response: Response,
 ):
     """Sign in with email and password."""
+    from app.features.auth.email_verification import UNVERIFIED_LOGIN_DETAIL, is_email_verified
     from app.features.auth.rate_limit import assert_sign_in_rate
 
     client_ip = _client_ip(request)
@@ -185,6 +231,11 @@ async def sign_in(
             assert_user_not_suspended(str(user.get("id") or ""))
         except ValueError as e:
             raise HTTPException(status_code=403, detail=str(e)) from e
+        uid = str(user.get("id") or "")
+        ut = str(user.get("user_type") or "")
+        if ut in ("client", "vendor") and not is_email_verified(uid, user_type=ut):
+            clear_session_cookies(response)
+            raise HTTPException(status_code=403, detail=UNVERIFIED_LOGIN_DETAIL)
         session = local_auth_store.create_session(body.email)
         set_session_cookies(response, session)
         return SignInResponse(
@@ -211,6 +262,11 @@ async def sign_in(
         except ValueError as e:
             clear_session_cookies(response)
             raise HTTPException(status_code=403, detail=str(e)) from e
+        uid = str(hydrated.get("id") or "")
+        ut = str(hydrated.get("user_type") or "")
+        if ut in ("client", "vendor") and not is_email_verified(uid, user_type=ut):
+            clear_session_cookies(response)
+            raise HTTPException(status_code=403, detail=UNVERIFIED_LOGIN_DETAIL)
         set_session_cookies(response, result["session"])
         return SignInResponse(
             success=True,
@@ -334,6 +390,7 @@ async def reset_password(
     response: Response,
 ):
     """Consume a one-click reset token and set a new password; signs the user in."""
+    from app.features.auth.email_verification import mark_email_verified
     from app.features.auth.password_reset import reset_password_with_token
 
     try:
@@ -344,10 +401,55 @@ async def reset_password(
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
+    uid = str((result.get("user") or {}).get("id") or "")
+    if uid:
+        mark_email_verified(uid)
     set_session_cookies(response, result["session"])
     return ResetPasswordResponse(
         user=hydrate_user_from_db(result["user"]),
         session=result["session"],
+    )
+
+
+@router.post("/resend-verification", response_model=ResendVerificationResponse)
+async def resend_verification(body: ResendVerificationRequest, request: Request):
+    """Resend verify-email link. Always returns the same message (enumeration-safe)."""
+    from app.features.auth.email_verification import resend_email_verification
+
+    try:
+        message = resend_email_verification(email=body.email, client_ip=_client_ip(request))
+    except ValueError as e:
+        raise HTTPException(status_code=429, detail=str(e)) from e
+    return ResendVerificationResponse(message=message)
+
+
+@router.post("/verify-email", response_model=VerifyEmailResponse)
+async def verify_email(
+    body: VerifyEmailRequest,
+    request: Request,
+    response: Response,
+):
+    """Consume a one-click verify link. Signs in automatically in local auth only."""
+    from app.features.auth.email_verification import verify_email_with_token
+
+    try:
+        result = verify_email_with_token(token=body.token, client_ip=_client_ip(request))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    session = result.get("session")
+    if session:
+        set_session_cookies(response, session)
+        return VerifyEmailResponse(
+            message="Email verified. You're signed in.",
+            user=hydrate_user_from_db(result["user"]),
+            session=session,
+        )
+    clear_session_cookies(response)
+    return VerifyEmailResponse(
+        message="Email verified. You can sign in now.",
+        user=result.get("user"),
+        session=None,
     )
 
 

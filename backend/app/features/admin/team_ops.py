@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import secrets
+from datetime import datetime, timezone
 from typing import Any, Literal
 
 from app.core.config import get_settings
@@ -184,7 +185,13 @@ def invite_admin_colleague(email: str, *, password: str | None = None) -> dict[s
 
     uid = str(user.id)
     client.table("users").upsert(
-        {"id": uid, "email": em, "user_type": "admin", "admin_role": "admin"},
+        {
+            "id": uid,
+            "email": em,
+            "user_type": "admin",
+            "admin_role": "admin",
+            "email_verified_at": datetime.now(timezone.utc).isoformat(),
+        },
         on_conflict="id",
     ).execute()
 
