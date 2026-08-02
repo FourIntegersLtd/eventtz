@@ -142,24 +142,15 @@ export function VendorBrowseDetailBody({
 
   const bookingCard = (
     <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
-      <div className="px-5 pt-5 pb-4">
-        <h3 className="text-[15px] font-semibold tracking-tight text-neutral-900">
-          Pricing &amp; booking
-        </h3>
-        {onRequestBooking ? (
-          <p className="mt-1 text-[13px] text-neutral-400">
-            Select what you need, then request a booking.
-          </p>
-        ) : null}
-      </div>
-
       <BrowsePricingSharedInfo
         {...pricingShared}
         variant="booking"
-        className="border-t border-neutral-100"
+        embedded
+        className="pt-5"
       />
 
       <BrowsePricingPackagesSection
+        nested
         options={pricingOptions}
         listClassName="max-h-[min(60vh,500px)] overflow-y-auto overscroll-contain"
         getItemClassName={(opt) =>
