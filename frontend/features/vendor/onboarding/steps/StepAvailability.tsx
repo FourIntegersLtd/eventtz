@@ -56,13 +56,15 @@ function BlockedDatePicker({
   return (
     <div className="min-w-0 space-y-2">
       <DateInput value={draftDate} min={todayIsoDate()} onChange={(e) => setDraftDate(e.target.value)} />
-      <button
-        type="button"
-        onClick={handleAdd}
-        className="inline-flex h-10 w-full items-center justify-center rounded-lg border border-neutral-200 bg-white text-sm font-semibold text-primary transition hover:bg-neutral-50"
-      >
-        Add blocked date
-      </button>
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={handleAdd}
+          className="inline-flex h-10 items-center justify-center rounded-lg border border-neutral-200 bg-white px-4 text-sm font-semibold text-primary transition hover:bg-neutral-50"
+        >
+          Add blocked date
+        </button>
+      </div>
       {error ? <p className="text-xs font-medium text-red-600">{error}</p> : null}
     </div>
   );

@@ -12,6 +12,7 @@ import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { inputClass, labelClass } from "@/features/vendor/onboarding/steps/form-primitives";
 import type { PortalRole } from "@/components/portal-shell/portalNav";
+import { SettingsSection } from "./SettingsSection";
 
 export type ContactSharingSettingsSectionProps = {
   role: PortalRole;
@@ -73,27 +74,23 @@ export function ContactSharingSettingsSection({ role }: ContactSharingSettingsSe
     }
   };
 
+  const title = isVendor ? "Contact" : "After you pay";
+  const description = isVendor
+    ? "What clients see once they've paid."
+    : "Email and phone stay hidden until you pay.";
+
   if (!settings) {
     return (
-      <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white px-5 py-5 sm:px-6">
-        <LoadingState label="Loading contact preferences…" variant="inline" />
-      </section>
+      <SettingsSection title={title} description={description}>
+        <div className="px-5 py-5 sm:px-6">
+          <LoadingState label="Loading contact preferences…" variant="inline" />
+        </div>
+      </SettingsSection>
     );
   }
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
-      <div className="px-5 py-4 sm:px-6 sm:py-5">
-        <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">
-          {isVendor ? "Contact" : "After you pay"}
-        </h2>
-        <p className="mt-0.5 text-[13px] text-neutral-400">
-          {isVendor
-            ? "What clients see once they've paid."
-            : "Email and phone stay hidden until you pay."}
-        </p>
-      </div>
-
+    <SettingsSection title={title} description={description}>
       <div className="space-y-3 border-t border-neutral-100 px-5 py-4 sm:px-6">
         {error ? <LottieFailureInline message={error} /> : null}
         {saved ? <p className="text-xs font-medium text-primary">Saved.</p> : null}
@@ -151,6 +148,6 @@ export function ContactSharingSettingsSection({ role }: ContactSharingSettingsSe
           </div>
         ) : null}
       </div>
-    </section>
+    </SettingsSection>
   );
 }

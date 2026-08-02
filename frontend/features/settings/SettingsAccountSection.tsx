@@ -13,6 +13,7 @@ import { portalRoute } from "@/components/portal-shell/portalNav";
 import { updateClientOnboarding, getClientOnboarding } from "@/lib/clientOnboardingApi";
 import { parseForm, preferredNameFormSchema } from "@/lib/validation";
 import { ChangePasswordModal } from "./ChangePasswordModal";
+import { SettingsSection } from "./SettingsSection";
 
 type Props = {
   role: PortalRole;
@@ -72,14 +73,12 @@ export function SettingsAccountSection({ role }: Props) {
 
   return (
     <>
-      <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
-        <div className="px-5 py-4 sm:px-6 sm:py-5">
-          <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">Account</h2>
-          <p className="mt-0.5 text-[13px] text-neutral-400">
-            {role === "vendor" ? "Your sign-in email." : "Sign-in email and your name for vendors."}
-          </p>
-        </div>
-
+      <SettingsSection
+        title="Account"
+        description={
+          role === "vendor" ? "Your sign-in email." : "Sign-in email and your name for vendors."
+        }
+      >
         <dl className="divide-y divide-neutral-100 border-t border-neutral-100">
           <div className="flex items-center gap-3 px-5 py-4 sm:px-6">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -172,7 +171,7 @@ export function SettingsAccountSection({ role }: Props) {
             </div>
           ) : null}
         </dl>
-      </section>
+      </SettingsSection>
 
       <ChangePasswordModal isOpen={passwordOpen} onClose={() => setPasswordOpen(false)} />
     </>

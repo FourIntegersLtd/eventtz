@@ -20,7 +20,7 @@ export type SettingsViewProps = {
  */
 export function SettingsView({ role }: SettingsViewProps) {
   return (
-    <div className="w-full min-w-0 max-w-6xl space-y-6">
+    <div className="w-full min-w-0 max-w-6xl space-y-8">
       <header>
         <h1 className="font-heading text-2xl font-semibold tracking-tight text-neutral-900">
           Settings
@@ -29,7 +29,7 @@ export function SettingsView({ role }: SettingsViewProps) {
       </header>
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-        <div className="min-w-0 space-y-6">
+        <div className="min-w-0 space-y-8">
           <SettingsAccountSection role={role} />
           <ContactSharingSettingsSection role={role} />
           <SettingsNotificationsSection role={role} />
@@ -37,7 +37,7 @@ export function SettingsView({ role }: SettingsViewProps) {
           {role === "vendor" ? <SettingsOnboardingPreviewSection /> : null}
         </div>
 
-        <aside className="min-w-0 space-y-6 lg:sticky lg:top-4">
+        <aside className="min-w-0 space-y-8 lg:sticky lg:top-4">
           <SettingsShortcutsSection role={role} />
           <SettingsLegalSection />
           <SettingsSignOutSection />

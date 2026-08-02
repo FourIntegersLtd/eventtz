@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ChevronRight, FileText } from "lucide-react";
+import { SettingsSection } from "./SettingsSection";
 
 const LEGAL_LINKS = [
   { href: "/compliances/privacy-policy", label: "Privacy policy" },
@@ -11,10 +12,7 @@ const LEGAL_LINKS = [
 
 export function SettingsLegalSection() {
   return (
-    <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
-      <div className="px-5 py-4 sm:px-6 sm:py-5">
-        <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">Legal</h2>
-      </div>
+    <SettingsSection title="Legal">
       <ul className="divide-y divide-neutral-100 border-t border-neutral-100">
         {LEGAL_LINKS.map((item) => (
           <li key={item.href}>
@@ -33,6 +31,6 @@ export function SettingsLegalSection() {
           </li>
         ))}
       </ul>
-    </section>
+    </SettingsSection>
   );
 }

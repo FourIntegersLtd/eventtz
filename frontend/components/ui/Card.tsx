@@ -5,9 +5,7 @@ import {
   portalCardPaddingLg,
   portalInsetCard,
 } from "@/components/portal-shell/portalTheme";
-
-/** Keep in sync with `features/admin/adminTheme.adminCard` - duplicated so ui/ does not import features/. */
-const ADMIN_CARD = "rounded-2xl border border-neutral-100 bg-white";
+import { panelCardSurface } from "@/components/ui/sectionBlockTokens";
 
 export type CardVariant = "portal" | "portal-inset" | "admin";
 export type CardPadding = "none" | "md" | "lg";
@@ -23,7 +21,7 @@ type CardProps<T extends ElementType = "div"> = {
 const VARIANT_CLASSES: Record<CardVariant, string> = {
   portal: portalCard,
   "portal-inset": portalInsetCard,
-  admin: ADMIN_CARD,
+  admin: panelCardSurface,
 };
 
 const PADDING_CLASSES: Record<CardPadding, string> = {

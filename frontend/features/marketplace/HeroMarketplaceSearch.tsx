@@ -106,20 +106,15 @@ export function HeroMarketplaceSearch({
 
   const responsiveGridCols = gridColsForFieldCount(visibleFieldCount);
 
-  const shellClassName = landing
-    ? `grid w-full min-w-0 max-w-full grid-cols-1 gap-2 overflow-visible rounded-2xl border border-primary-border bg-white p-2 shadow-primary-soft ${responsiveGridCols} lg:items-center lg:gap-0 lg:rounded-full lg:py-1.5 lg:pl-1.5 lg:pr-3`
-    : `grid min-w-0 max-w-full grid-cols-1 gap-3 overflow-visible rounded-2xl border border-neutral-200 bg-white p-3 shadow-sm sm:grid-cols-2 ${responsiveGridCols} lg:items-end`;
+  const shellClassName = `grid w-full min-w-0 max-w-full grid-cols-1 gap-2 overflow-visible rounded-2xl border border-primary-border bg-white p-2 shadow-primary-soft ${responsiveGridCols} lg:items-center lg:gap-0 lg:rounded-full lg:py-1.5 lg:pl-1.5 lg:pr-3`;
 
-  const submitSpanClass = landing
-    ? "lg:col-span-1"
-    : visibleFieldCount === 1
-      ? "sm:col-span-1"
-      : "sm:col-span-2";
+  const submitSpanClass = "lg:col-span-1";
   const fieldClassName = "relative z-20 min-w-0";
-  const landingFieldDivider = landing ? "lg:border-l lg:border-primary-border" : "";
-  const submitClassName = landing
-    ? `flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-white transition hover:opacity-95 sm:px-6 ${submitSpanClass} lg:w-auto lg:justify-self-end lg:px-6`
-    : `flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-white transition hover:opacity-95 ${submitSpanClass} lg:col-span-1 lg:w-auto lg:justify-self-end`;
+  const fieldDivider = "lg:border-l lg:border-primary-border";
+  const submitClassName = `flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-white transition hover:opacity-95 sm:px-6 ${submitSpanClass} lg:w-auto lg:justify-self-end lg:px-6`;
+  const dropdownTriggerClassName = `flex h-12 w-full items-center justify-between gap-2 rounded-xl px-4 text-left text-sm font-medium text-neutral-900 lg:rounded-none lg:bg-transparent ${fieldDivider}`;
+  const queryInputClassName =
+    "relative z-[1] h-12 w-full rounded-xl border-0 bg-transparent py-3 pl-11 pr-4 text-base text-neutral-900 caret-neutral-900 focus:border-0 focus:outline-none focus:ring-0 lg:rounded-none";
 
   const toggleType = useCallback((value: string) => {
     setState((s) => {
@@ -206,21 +201,13 @@ export function HeroMarketplaceSearch({
               setTypesOpen((o) => !o);
               setDatesOpen(false);
             }}
-            className={
-              landing
-                ? `flex h-12 w-full items-center justify-between gap-2 rounded-xl px-4 text-left text-sm font-medium text-neutral-900 lg:rounded-none lg:bg-transparent ${landingFieldDivider}`
-                : "flex h-12 w-full items-center justify-between gap-2 rounded-xl border border-neutral-200 bg-neutral-50 px-3 text-left text-sm text-neutral-900"
-            }
+            className={dropdownTriggerClassName}
           >
             <span className="flex min-w-0 items-center gap-2">
-              <Tags
-                className={`h-4 w-4 shrink-0 ${landing ? "text-primary" : "text-primary"}`}
-              />
+              <Tags className="h-4 w-4 shrink-0 text-primary" />
               <span className="truncate">{typesSummary}</span>
             </span>
-            <ChevronDown
-              className={`h-4 w-4 shrink-0 opacity-70 ${landing ? "text-neutral-600" : ""}`}
-            />
+            <ChevronDown className="h-4 w-4 shrink-0 text-neutral-600 opacity-70" />
           </button>
           {typesOpen && (
             <div
@@ -276,9 +263,7 @@ export function HeroMarketplaceSearch({
         {/* Free-text search - vendor name, city, or services (not place autocomplete) */}
         <div className={`relative ${fieldClassName}`}>
           <Search
-            className={`pointer-events-none absolute left-3 top-1/2 z-[1] h-4 w-4 -translate-y-1/2 ${
-              landing ? "text-primary" : "text-neutral-400"
-            }`}
+            className="pointer-events-none absolute left-3 top-1/2 z-[1] h-4 w-4 -translate-y-1/2 text-primary"
             aria-hidden
           />
           <RotatingSearchPlaceholder
@@ -294,11 +279,7 @@ export function HeroMarketplaceSearch({
             value={state.query}
             onChange={(e) => setState((s) => ({ ...s, query: e.target.value }))}
             placeholder=""
-            className={
-              landing
-                ? "relative z-[1] h-12 w-full rounded-xl border-0 bg-transparent py-3 pl-11 pr-4 text-base text-neutral-900 caret-neutral-900 focus:border-0 focus:outline-none focus:ring-0 lg:rounded-none"
-                : "relative z-[1] h-12 w-full rounded-xl border border-neutral-200 bg-transparent py-2 pl-10 pr-4 text-sm text-neutral-900 caret-neutral-900 outline-none ring-primary/15 focus:border-primary focus:ring-2"
-            }
+            className={queryInputClassName}
           />
         </div>
 
@@ -313,16 +294,10 @@ export function HeroMarketplaceSearch({
               setDatesOpen((o) => !o);
               setTypesOpen(false);
             }}
-            className={
-              landing
-                ? `flex h-12 w-full items-center justify-between gap-2 rounded-xl px-4 text-left text-sm font-medium text-neutral-900 lg:rounded-none lg:bg-transparent ${landingFieldDivider}`
-                : "flex h-12 w-full items-center justify-between gap-2 rounded-xl border border-neutral-200 bg-neutral-50 px-3 text-left text-sm text-neutral-900"
-            }
+            className={dropdownTriggerClassName}
           >
             <span className="flex items-center gap-2 truncate">
-              <Calendar
-                className={`h-4 w-4 shrink-0 ${landing ? "text-primary" : "text-primary"}`}
-              />
+              <Calendar className="h-4 w-4 shrink-0 text-primary" />
               {state.dateFlexible
                 ? "Flexible on dates"
                 : state.dates.length === 0

@@ -1,17 +1,15 @@
 "use client";
 
-import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
-import { EventtzLogo } from "@/components/branding/EventtzLogo";
-import { PortalShell } from "@/components/portal-shell/PortalShell";
 import { BackLink } from "@/components/ui/BackLink";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { useToast } from "@/components/ui/Toast";
+import { MarketplaceBrowseShell } from "@/features/marketplace/MarketplaceBrowseShell";
 import {
   VendorBookingModal,
   type VendorBookingSearchPrefill,
@@ -37,7 +35,7 @@ export function ClientVendorBrowseDetailView() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const userId = typeof params.userId === "string" ? params.userId : "";
-  const { user, loading: authLoading, signOut } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { vendor, loading, error, notFound } = useExploreVendor(userId);
   const { showToast } = useToast();
   const [chatOpen, setChatOpen] = useState(false);
@@ -126,27 +124,18 @@ export function ClientVendorBrowseDetailView() {
   }, [vendor?.user_id, user?.id, user?.user_type]);
 
   const isClient = user?.user_type === "client";
-  const logoHref = isClient ? "/client/dashboard" : "/";
 
   const headerBar = (
     <div className="mb-6 flex flex-wrap items-center gap-3">
       <BackLink href={browseListHref} label="Back to browse" tone="muted" />
-      {!user ? (
-        <Link
-          href="/"
-          className="text-sm font-medium text-neutral-500 hover:text-neutral-800"
-        >
-          Home
-        </Link>
-      ) : null}
     </div>
   );
 
   if (!userId) {
     return (
-      <main className="min-h-screen bg-auth-bg px-4 py-10">
+      <MarketplaceBrowseShell width="detail">
         <p className="text-center text-sm text-neutral-600">Invalid link.</p>
-      </main>
+      </MarketplaceBrowseShell>
     );
   }
 
@@ -242,60 +231,10 @@ export function ClientVendorBrowseDetailView() {
     );
   })();
 
-  // Signed-in clients keep the portal shell (sidebar, notification bell, sign-out) throughout -
-  // it should never disappear just because they navigated into a vendor's profile.
-  if (isClient) {
-    return (
-      <PortalShell portal="client" title={businessName}>
-        <div className="mx-auto w-full min-w-0 max-w-6xl">
-          {headerBar}
-          {mainContent}
-        </div>
-      </PortalShell>
-    );
-  }
-
   return (
-    <main className="min-h-dvh bg-auth-bg">
-      <header className="border-b border-neutral-200/60 bg-auth-bg/90 px-4 py-3 backdrop-blur sm:px-6 lg:px-12">
-        <div className="mx-auto flex min-w-0 max-w-6xl flex-wrap items-center justify-between gap-3">
-          <EventtzLogo priority href={logoHref} />
-          <nav className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 text-sm">
-            {!user ? (
-              <>
-                <Link href="/login" className="font-medium text-primary hover:underline">
-                  Sign in
-                </Link>
-                <Link
-                  href={`/register?type=client&next=${encodeURIComponent(detailPath)}`}
-                  className="rounded-lg bg-primary px-3 py-1.5 font-semibold text-white hover:opacity-95"
-                >
-                  Create account
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link href="/" className="font-medium text-neutral-700 hover:underline">
-                  Home
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => {
-                    void signOut().then(() => router.replace("/login"));
-                  }}
-                  className="font-medium text-neutral-600 hover:text-neutral-900 hover:underline"
-                >
-                  Sign out
-                </button>
-              </>
-            )}
-          </nav>
-        </div>
-      </header>
-      <div className="mx-auto w-full min-w-0 max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        {headerBar}
-        {mainContent}
-      </div>
-    </main>
+    <MarketplaceBrowseShell width="detail">
+      {headerBar}
+      {mainContent}
+    </MarketplaceBrowseShell>
   );
 }

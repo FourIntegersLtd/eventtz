@@ -2,7 +2,7 @@
 
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
-import { adminCard } from "@/features/admin/adminTheme";
+import { ContentCard } from "@/components/ui/SectionBlock";
 
 type AdminKpiTone = "default" | "warning" | "info" | "success" | "primary";
 
@@ -34,7 +34,7 @@ export function AdminKpiCard({
   linkLabel,
 }: AdminKpiCardProps) {
   return (
-    <div className={`${adminCard} p-4`}>
+    <ContentCard>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm text-neutral-500">{label}</p>
@@ -59,6 +59,6 @@ export function AdminKpiCard({
           </span>
         ) : null}
       </div>
-    </div>
+    </ContentCard>
   );
 }

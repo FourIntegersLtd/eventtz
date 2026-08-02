@@ -5,26 +5,30 @@ import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 const COLORS = ["#f59e0b", "#10b981", "#0ea5e9", "#ef4444", "#94a3b8"];
 
 type AdminDonutChartProps = {
-  data: { name: string; value: number }[];
+  data: { name: string; value: number; color?: string }[];
   /** Override the center label (defaults to sum of values). */
   centerLabel?: string;
   valueFormatter?: (value: number) => string;
+  /** Chart height in px. */
+  height?: number;
 };
 
 export function AdminDonutChart({
   data,
   centerLabel,
   valueFormatter,
+  height = 220,
 }: AdminDonutChartProps) {
   const filtered = data.filter((d) => d.value > 0);
   const total = filtered.reduce((s, d) => s + d.value, 0);
   const center = centerLabel ?? (valueFormatter ? valueFormatter(total) : String(total));
+  const slices = filtered.length ? filtered : [{ name: "None", value: 1 }];
 
   return (
-    <ResponsiveContainer width="100%" height={220}>
+    <ResponsiveContainer width="100%" height={height}>
       <PieChart>
         <Pie
-          data={filtered.length ? filtered : [{ name: "None", value: 1 }]}
+          data={slices}
           dataKey="value"
           nameKey="name"
           cx="50%"
@@ -33,10 +37,14 @@ export function AdminDonutChart({
           outerRadius={78}
           paddingAngle={2}
         >
-          {(filtered.length ? filtered : [{ name: "None", value: 1 }]).map((entry, i) => (
+          {slices.map((entry, i) => (
             <Cell
               key={entry.name}
-              fill={filtered.length ? COLORS[i % COLORS.length] : "#e5e5e5"}
+              fill={
+                filtered.length
+                  ? (entry.color ?? COLORS[i % COLORS.length])
+                  : "#e5e5e5"
+              }
             />
           ))}
         </Pie>

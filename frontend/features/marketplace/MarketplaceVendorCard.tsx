@@ -174,7 +174,7 @@ export function MarketplaceVendorCard({
         payload={p}
         businessName={biz}
         heightClass="h-44 sm:h-48"
-        objectFit="cover"
+        objectFit="contain"
         className="rounded-none"
         overlay={
           <div className="flex flex-wrap items-start gap-2">

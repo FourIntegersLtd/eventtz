@@ -32,6 +32,10 @@ import { AnimatedStepItem } from "../ui/AnimatedStepItem";
 
 const BIO_MAX_WORDS = 60;
 
+function yesNo(value: boolean): string {
+  return value ? "Yes" : "No";
+}
+
 const DELIVERY_LABELS: Record<string, string> = {
   travel_to_client: "I travel to the client",
   client_comes: "Clients come to me",
@@ -55,14 +59,16 @@ function ReviewSection({
   onNavigateToStep,
   children,
   isLiveEdit,
+  readOnly,
 }: {
   title: string;
   step: number;
   onNavigateToStep: (step: number) => void;
   children: ReactNode;
   isLiveEdit: boolean;
+  readOnly?: boolean;
 }) {
-  const editButton = (
+  const editButton = readOnly ? null : (
     <button
       type="button"
       className="shrink-0 inline-flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 transition hover:bg-neutral-50 hover:text-neutral-800"
@@ -72,6 +78,17 @@ function ReviewSection({
       <Pencil className="h-4 w-4" />
     </button>
   );
+
+  if (readOnly) {
+    return (
+      <section className="space-y-2">
+        <h3 className="text-sm font-semibold text-neutral-900">{title}</h3>
+        <div className="overflow-hidden rounded-xl border border-neutral-100 bg-white">
+          {children}
+        </div>
+      </section>
+    );
+  }
 
   if (isLiveEdit) {
     return (
@@ -149,6 +166,8 @@ export type StepReviewProps = {
   profileImageError?: string | null;
   onUploadProfileImage: (file: File) => void | Promise<void>;
   isLiveEdit?: boolean;
+  /** Admin / audit view — same layout as step 8, no edits or uploads. */
+  readOnly?: boolean;
 };
 
 export function StepReview({
@@ -162,6 +181,7 @@ export function StepReview({
   profileImageError,
   onUploadProfileImage,
   isLiveEdit = false,
+  readOnly = false,
 }: StepReviewProps) {
   const profileImageInputRef = useRef<HTMLInputElement>(null);
   const radiusLabel =
@@ -204,8 +224,32 @@ export function StepReview({
     (p) =>
       p.title.trim() || p.price.trim() || p.details.trim() || p.duration.trim(),
   );
+  const configuredPackages = data.packages.filter(
+    (p) =>
+      p.title.trim() || p.price.trim() || p.details.trim() || p.duration.trim(),
+  );
 
-  const profilePhotoBlock = (
+  const profilePhotoBlock = readOnly ? (
+    <div className="flex flex-col items-center gap-2">
+      {data.profileImageUrl ? (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={data.profileImageUrl}
+            alt="Profile"
+            className="h-24 w-24 rounded-full border border-neutral-100 object-cover object-center"
+          />
+        </>
+      ) : (
+        <div className="flex h-24 w-24 items-center justify-center rounded-full bg-primary text-2xl font-semibold text-white">
+          {(data.firstName[0] ?? "?") + (data.lastName[0] ?? "")}
+        </div>
+      )}
+      <p className="max-w-xs text-center text-xs text-neutral-500">
+        This photo appears first on your public profile.
+      </p>
+    </div>
+  ) : (
     <div className="flex flex-col items-center gap-2">
       <div className="relative">
         {data.profileImageUrl ? (
@@ -258,7 +302,16 @@ export function StepReview({
     </div>
   );
 
-  const bioBlock = (
+  const bioBlock = readOnly ? (
+    <div className="space-y-3">
+      <p className="min-h-[60px] whitespace-pre-wrap text-sm leading-relaxed text-neutral-800">
+        {data.aiBioDraft.trim() || "-"}
+      </p>
+      <p className="text-right text-xs text-neutral-400">
+        {wordCount}/{BIO_MAX_WORDS} words
+      </p>
+    </div>
+  ) : (
     <div className="space-y-3">
       <ClearableTextarea
         className="min-h-[100px]"
@@ -308,6 +361,7 @@ export function StepReview({
         step={1}
         onNavigateToStep={onNavigateToStep}
         isLiveEdit={isLiveEdit}
+        readOnly={readOnly}
       >
         <FieldList compact={!isLiveEdit}>
           <Field
@@ -326,6 +380,7 @@ export function StepReview({
         step={2}
         onNavigateToStep={onNavigateToStep}
         isLiveEdit={isLiveEdit}
+        readOnly={readOnly}
       >
         <FieldList compact={!isLiveEdit}>
           <Field label="Business name" value={data.businessName || "-"} />
@@ -339,13 +394,16 @@ export function StepReview({
         step={3}
         onNavigateToStep={onNavigateToStep}
         isLiveEdit={isLiveEdit}
+        readOnly={readOnly}
       >
         <FieldList compact={!isLiveEdit}>
           <Field label="Country" value={getMarket(data.countryCode).label} />
           <Field label="Base city" value={data.baseCity || "-"} />
-          {data.region ? <Field label="Region" value={data.region} /> : null}
-          {data.postalCode ? (
-            <Field label="Postcode" value={data.postalCode} />
+          {readOnly || data.region ? (
+            <Field label="Region" value={data.region || "-"} />
+          ) : null}
+          {readOnly || data.postalCode ? (
+            <Field label="Postcode" value={data.postalCode || "-"} />
           ) : null}
           <Field label="Delivery modes" value={deliveryLabel} />
           <Field label="Travel radius" value={radiusLabel} />
@@ -367,18 +425,33 @@ export function StepReview({
         step={4}
         onNavigateToStep={onNavigateToStep}
         isLiveEdit={isLiveEdit}
+        readOnly={readOnly}
       >
         <FieldList compact={!isLiveEdit}>
           <Field label="Hourly rate" value={`£${data.hourlyRate || "-"}`} />
           <Field label="Daily rate" value={`£${data.dailyRate || "-"}`} />
+          {readOnly ? (
+            <>
+              <Field
+                label="Default travel rule for hourly"
+                value={yesNo(data.useDefaultTravelHourly)}
+              />
+              <Field
+                label="Default travel rule for daily"
+                value={yesNo(data.useDefaultTravelDaily)}
+              />
+              <Field label="Offers discounts" value={yesNo(data.offerDiscounts)} />
+            </>
+          ) : null}
         </FieldList>
         <div className="border-t border-neutral-100">
           <p className="px-5 pt-4 text-[13px] font-medium text-neutral-500 sm:px-6">
             Packages
           </p>
-          {hasPackages ? (
+          {readOnly || hasPackages ? (
+            configuredPackages.length > 0 ? (
             <ul className="divide-y divide-neutral-100">
-              {data.packages.map((p) => (
+              {configuredPackages.map((p) => (
                 <li
                   key={p.id}
                   className="px-5 py-3.5 text-sm text-neutral-700 sm:px-6"
@@ -405,13 +478,18 @@ export function StepReview({
                 </li>
               ))}
             </ul>
+            ) : (
+              <p className="px-5 py-3.5 text-sm text-neutral-500 sm:px-6">
+                No packages added
+              </p>
+            )
           ) : (
             <p className="px-5 py-3.5 text-sm text-neutral-500 sm:px-6">
               No packages added
             </p>
           )}
         </div>
-        {data.offerDiscounts ? (
+        {(readOnly && data.offerDiscounts) || (!readOnly && data.offerDiscounts) ? (
           <div className="space-y-1 border-t border-neutral-100 px-5 py-3.5 text-sm text-neutral-700 sm:px-6">
             <p className="font-medium text-neutral-900">Discounts</p>
             {discountLines.map((line) => (
@@ -426,6 +504,7 @@ export function StepReview({
         step={5}
         onNavigateToStep={onNavigateToStep}
         isLiveEdit={isLiveEdit}
+        readOnly={readOnly}
       >
         <FieldList compact={!isLiveEdit}>
           <Field
@@ -440,47 +519,60 @@ export function StepReview({
             label="Max bookings / day"
             value={data.maxBookingsPerDay || "-"}
           />
-          {blockedDatesLabel ? (
-            <Field label="Blocked dates" value={blockedDatesLabel} />
+          {readOnly || blockedDatesLabel ? (
+            <Field label="Blocked dates" value={blockedDatesLabel ?? "-"} />
           ) : null}
         </FieldList>
       </ReviewSection>
 
-      {hasPortfolioContent(data) ? (
+      {(readOnly || hasPortfolioContent(data)) ? (
         <ReviewSection
           title="Portfolio & links"
           step={6}
           onNavigateToStep={onNavigateToStep}
           isLiveEdit={isLiveEdit}
+          readOnly={readOnly}
         >
           <FieldList compact={!isLiveEdit}>
-            {portfolioImageCount > 0 ? (
+            {readOnly || portfolioImageCount > 0 ? (
               <Field
                 label="Portfolio images"
-                value={`${portfolioImageCount} image(s) on file`}
+                value={
+                  portfolioImageCount > 0
+                    ? `${portfolioImageCount} image(s) on file`
+                    : "-"
+                }
               />
             ) : null}
-            {data.portfolioVideoNamesPersisted.length > 0 ? (
+            {readOnly || data.portfolioVideoNamesPersisted.length > 0 ? (
               <Field
                 label="Videos"
-                value={data.portfolioVideoNamesPersisted
-                  .map((url) =>
-                    uploadedFileDisplayName(url, data.uploadedFileLabels, "Video"),
-                  )
-                  .join(", ")}
+                value={
+                  data.portfolioVideoNamesPersisted.length
+                    ? data.portfolioVideoNamesPersisted
+                        .map((url) =>
+                          uploadedFileDisplayName(url, data.uploadedFileLabels, "Video"),
+                        )
+                        .join(", ")
+                    : "-"
+                }
               />
             ) : null}
-            {data.socialLinks.length > 0 ? (
+            {readOnly || data.socialLinks.length > 0 ? (
               <Field
                 label="Social links"
-                value={data.socialLinks
-                  .map((s) => {
-                    const platform =
-                      SOCIAL_PLATFORM_OPTIONS.find((o) => o.value === s.platform)
-                        ?.label ?? s.platform;
-                    return `${platform}: ${s.handle || "-"}`;
-                  })
-                  .join(", ")}
+                value={
+                  data.socialLinks.length
+                    ? data.socialLinks
+                        .map((s) => {
+                          const platform =
+                            SOCIAL_PLATFORM_OPTIONS.find((o) => o.value === s.platform)
+                              ?.label ?? s.platform;
+                          return `${platform}: ${s.handle || "-"}`;
+                        })
+                        .join(", ")
+                    : "-"
+                }
               />
             ) : null}
           </FieldList>
@@ -492,50 +584,117 @@ export function StepReview({
         </ReviewSection>
       ) : null}
 
-      {hasAdditionalInfoContent(data) ? (
+      {(readOnly || hasAdditionalInfoContent(data)) ? (
         <ReviewSection
           title="Additional info"
           step={7}
           onNavigateToStep={onNavigateToStep}
           isLiveEdit={isLiveEdit}
+          readOnly={readOnly}
         >
           <FieldList compact={!isLiveEdit}>
-            {data.foodHygieneCertNamePersisted ? (
+            {readOnly || data.foodHygieneCertNamePersisted ? (
               <Field
                 label="Food hygiene certificate"
-                value={uploadedFileDisplayName(
-                  data.foodHygieneCertNamePersisted,
-                  data.uploadedFileLabels,
-                  "Food hygiene certificate",
-                )}
+                value={
+                  data.foodHygieneCertNamePersisted
+                    ? uploadedFileDisplayName(
+                        data.foodHygieneCertNamePersisted,
+                        data.uploadedFileLabels,
+                        "Food hygiene certificate",
+                      )
+                    : "-"
+                }
               />
             ) : null}
-            {data.indemnityCertNamePersisted ? (
+            {readOnly || data.indemnityCertNamePersisted ? (
               <Field
                 label="Indemnity / insurance"
-                value={uploadedFileDisplayName(
-                  data.indemnityCertNamePersisted,
-                  data.uploadedFileLabels,
-                  "Indemnity / insurance certificate",
-                )}
+                value={
+                  data.indemnityCertNamePersisted
+                    ? uploadedFileDisplayName(
+                        data.indemnityCertNamePersisted,
+                        data.uploadedFileLabels,
+                        "Indemnity / insurance certificate",
+                      )
+                    : "-"
+                }
               />
             ) : null}
-            {data.isHalal ? <Field label="Halal" value="Yes" /> : null}
-            {data.isVegan ? <Field label="Vegan" value="Yes" /> : null}
-            {data.isVegetarian ? <Field label="Vegetarian" value="Yes" /> : null}
-            {data.isGlutenFree ? (
-              <Field label="Gluten-free" value="Yes" />
-            ) : null}
-            {data.allergenInfo.trim() ? (
-              <Field label="Allergen info" value={data.allergenInfo.trim()} />
-            ) : null}
+            {readOnly ? (
+              <>
+                <Field label="Halal" value={yesNo(data.isHalal)} />
+                <Field label="Vegan" value={yesNo(data.isVegan)} />
+                <Field label="Vegetarian" value={yesNo(data.isVegetarian)} />
+                <Field label="Gluten-free" value={yesNo(data.isGlutenFree)} />
+                <Field
+                  label="Allergen info"
+                  value={data.allergenInfo.trim() || "-"}
+                />
+                <Field
+                  label="Other documents"
+                  value={
+                    data.otherDocsNamesPersisted.length
+                      ? data.otherDocsNamesPersisted
+                          .map((url) =>
+                            uploadedFileDisplayName(
+                              url,
+                              data.uploadedFileLabels,
+                              "Document",
+                            ),
+                          )
+                          .join(", ")
+                      : "-"
+                  }
+                />
+              </>
+            ) : (
+              <>
+                {data.isHalal ? <Field label="Halal" value="Yes" /> : null}
+                {data.isVegan ? <Field label="Vegan" value="Yes" /> : null}
+                {data.isVegetarian ? (
+                  <Field label="Vegetarian" value="Yes" />
+                ) : null}
+                {data.isGlutenFree ? (
+                  <Field label="Gluten-free" value="Yes" />
+                ) : null}
+                {data.allergenInfo.trim() ? (
+                  <Field label="Allergen info" value={data.allergenInfo.trim()} />
+                ) : null}
+              </>
+            )}
           </FieldList>
         </ReviewSection>
       ) : null}
     </>
   );
 
-  const confirmations = (
+  const confirmations = readOnly ? (
+    <div className="space-y-3">
+      <label className="flex items-start gap-3 text-sm">
+        <input
+          type="checkbox"
+          checked={data.confirmTruthful}
+          disabled
+          readOnly
+          className="mt-0.5"
+        />
+        <span>I confirm that all provided details are truthful.</span>
+      </label>
+      <label className="flex items-start gap-3 text-sm">
+        <input
+          type="checkbox"
+          checked={data.confirmTerms}
+          disabled
+          readOnly
+          className="mt-0.5"
+        />
+        <span>
+          I accept the Platform&apos;s Terms of Service and Legal Policies.
+        </span>
+      </label>
+    </div>
+  ) : (
     <div className="space-y-3">
       <label className="flex items-start gap-3 text-sm">
         <input
@@ -559,6 +718,23 @@ export function StepReview({
       </label>
     </div>
   );
+
+  if (readOnly) {
+    return (
+      <div className="space-y-7">
+        {profilePhotoBlock}
+        <div>
+          <label className={labelClass()}>Public bio</label>
+          <p className="mb-2 text-xs text-neutral-500">
+            Short bio for your public profile.
+          </p>
+          {bioBlock}
+        </div>
+        <div className="space-y-3">{reviewSections}</div>
+        {confirmations}
+      </div>
+    );
+  }
 
   if (isLiveEdit) {
     return (

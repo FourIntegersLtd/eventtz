@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { AlertCircle, ChevronRight, Info, Sparkles } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { adminCard } from "@/features/admin/adminTheme";
+import { PanelCard } from "@/components/ui/SectionBlock";
 
 export type AdminAttentionItem = {
   id: string;
@@ -40,16 +40,16 @@ export function AdminAttentionList({
   emptyTitle = "All clear",
 }: AdminAttentionListProps) {
   return (
-    <section className={`${adminCard} overflow-hidden`}>
-      <div className="border-b border-neutral-100 px-5 py-4">
-        <h2 className="text-sm font-semibold text-neutral-900">{title}</h2>
-        {subtitle ? <p className="mt-0.5 text-sm text-neutral-500">{subtitle}</p> : null}
-        {!subtitle && items.length > 0 ? (
-          <p className="mt-0.5 text-xs text-neutral-400">
-            {items.length} item{items.length === 1 ? "" : "s"}
-          </p>
-        ) : null}
-      </div>
+    <PanelCard
+      title={title}
+      description={
+        subtitle ??
+        (items.length > 0
+          ? `${items.length} item${items.length === 1 ? "" : "s"}`
+          : undefined)
+      }
+      bodyClassName="p-0 pb-0 sm:pb-0"
+    >
       {items.length === 0 ? (
         <EmptyState
           className="border-0 shadow-none"
@@ -65,7 +65,7 @@ export function AdminAttentionList({
               <li key={item.id}>
                 <Link
                   href={item.href}
-                  className="flex items-center gap-3 px-5 py-3.5 transition hover:bg-neutral-50/80"
+                  className="flex items-center gap-3 px-5 py-3.5 transition hover:bg-neutral-50/80 sm:px-6"
                 >
                   <Icon className={`h-4 w-4 shrink-0 ${TONE_CLASS[tone]}`} aria-hidden />
                   <div className="min-w-0 flex-1">
@@ -84,6 +84,6 @@ export function AdminAttentionList({
           })}
         </ul>
       )}
-    </section>
+    </PanelCard>
   );
 }

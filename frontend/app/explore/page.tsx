@@ -7,9 +7,8 @@ type PageProps = {
 /**
  * `/explore` and `/client/browse` used to be two divergent marketplace URLs
  * rendering the same view with different chrome. `/client/browse` is now
- * the single canonical route (it already renders the public marketing
- * header for signed-out visitors and the signed-in shell for clients - see
- * `MarketplaceExploreView`). This keeps old bookmarked/shared `/explore`
+ * the single canonical route with the shared site top nav (see
+ * `MarketplaceBrowseShell` / `LandingNav`). This keeps old bookmarked/shared `/explore`
  * links working by redirecting with the search preserved.
  */
 export default async function ExploreRedirectPage({ searchParams }: PageProps) {

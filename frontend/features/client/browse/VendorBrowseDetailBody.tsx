@@ -6,13 +6,16 @@ import {
   ArrowRight,
   CalendarCheck,
   Check,
+  ChevronDown,
   Clock,
   ExternalLink,
   MessageCircle,
   Play,
+  Truck,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ButtonLink } from "@/components/ui/ButtonLink";
+import type { BrowsePricingOption } from "./vendorBrowseDetailModel";
 import { VendorMetricsStrip } from "@/components/vendor/VendorMetricsStrip";
 import type { ExploreVendor } from "@/lib/clientExploreApi";
 import { usualReplyExpectation } from "@/lib/vendorMetrics";
@@ -47,6 +50,157 @@ type VendorBrowseDetailBodyProps = {
 function payloadStr(p: Record<string, unknown>, key: string): string {
   const v = p[key];
   return typeof v === "string" ? v : "";
+}
+
+function BrowsePricingOptionCard({
+  opt,
+  isOpen,
+  showCheckbox,
+  selected,
+  onToggleSelect,
+  onToggleDetails,
+}: {
+  opt: BrowsePricingOption;
+  isOpen: boolean;
+  showCheckbox: boolean;
+  selected: boolean;
+  onToggleSelect: () => void;
+  onToggleDetails: () => void;
+}) {
+  const description = opt.description?.trim() ?? "";
+  const hasDetails = Boolean(description) || opt.featureLines.length > 0;
+  const showLogistics = Boolean(opt.timelineLine || opt.travelLine);
+
+  return (
+    <div className="flex gap-3">
+      {showCheckbox ? (
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={onToggleSelect}
+          className="mt-1 h-4 w-4 shrink-0 rounded border-neutral-300 text-primary focus:ring-primary/30"
+          aria-label={`Include ${opt.heading}`}
+        />
+      ) : null}
+      <div className="min-w-0 flex-1 space-y-2.5">
+        <div className="flex items-baseline justify-between gap-3">
+          <p className="text-sm font-semibold text-neutral-900">{opt.heading}</p>
+          <p className="shrink-0 text-sm font-semibold tabular-nums text-neutral-900">
+            {opt.priceDisplay != null ? (
+              <>
+                {opt.compareAtDisplay ? (
+                  <span className="mr-1.5 text-xs font-normal text-neutral-400 line-through">
+                    £{opt.compareAtDisplay}
+                  </span>
+                ) : null}
+                £{opt.priceDisplay}
+              </>
+            ) : (
+              <span className="font-medium text-neutral-500">Quote</span>
+            )}
+          </p>
+        </div>
+
+        {opt.discountBadge ? (
+          <p>
+            <span className="inline-flex rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800 ring-1 ring-inset ring-emerald-200/70">
+              {opt.discountBadge}
+            </span>
+          </p>
+        ) : null}
+
+        {showLogistics ? (
+          <div className="rounded-lg bg-neutral-50 px-3 py-2.5 ring-1 ring-inset ring-neutral-100">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-neutral-400">
+              Logistics
+            </p>
+            <dl className="mt-1.5 space-y-1.5">
+              {opt.timelineLine ? (
+                <div className="flex items-start gap-2 text-[13px] leading-snug text-neutral-700">
+                  <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
+                  <dd>{opt.timelineLine}</dd>
+                </div>
+              ) : null}
+              {opt.travelLine ? (
+                <div className="flex items-start gap-2 text-[13px] leading-snug text-neutral-700">
+                  <Truck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
+                  <dd>{opt.travelLine}</dd>
+                </div>
+              ) : null}
+            </dl>
+          </div>
+        ) : null}
+
+        {opt.promoLines.length > 0 ? (
+          <div className="rounded-lg border border-dashed border-neutral-200 bg-white px-3 py-2.5">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-neutral-400">
+              Extra savings
+            </p>
+            <ul className="mt-1.5 space-y-1">
+              {opt.promoLines.map((line) => (
+                <li key={line} className="text-[12px] leading-snug text-neutral-600">
+                  {line}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
+        {hasDetails ? (
+          <div className="overflow-hidden rounded-lg border border-neutral-200 bg-neutral-50/80">
+            <button
+              type="button"
+              aria-expanded={isOpen}
+              onClick={onToggleDetails}
+              className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-[13px] font-medium text-neutral-800 transition hover:bg-neutral-100/60"
+            >
+              <span>What&apos;s included</span>
+              <ChevronDown
+                className={`h-4 w-4 shrink-0 text-neutral-400 transition ${isOpen ? "rotate-180" : ""}`}
+                aria-hidden
+              />
+            </button>
+            {isOpen ? (
+              <div className="space-y-2.5 border-t border-neutral-200/80 px-3 py-3">
+                {description ? (
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-neutral-400">
+                      Package details
+                    </p>
+                    <p className="mt-1.5 text-[13px] leading-relaxed text-neutral-700">
+                      {description}
+                    </p>
+                  </div>
+                ) : null}
+                {opt.featureLines.length > 0 ? (
+                  <div className={description ? "border-t border-neutral-200/80 pt-2.5" : ""}>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-neutral-400">
+                      Services covered
+                    </p>
+                    <ul className="mt-1.5 space-y-1.5">
+                      {opt.featureLines.map((line) => (
+                        <li
+                          key={line}
+                          className="flex items-start gap-2 text-[13px] leading-snug text-neutral-700"
+                        >
+                          <Check
+                            className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary/70"
+                            strokeWidth={2.5}
+                            aria-hidden
+                          />
+                          <span>{line}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
 }
 
 export function VendorBrowseDetailBody({
@@ -146,7 +300,7 @@ export function VendorBrowseDetailBody({
   const buildLoginLink = () => appendAuthParams(loginHref);
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[1fr_minmax(260px,340px)] lg:items-start lg:gap-10">
+    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(260px,440px)] lg:items-start lg:gap-10 xl:grid-cols-[minmax(0,1.15fr)_minmax(280px,440px)]">
       <div className="min-w-0 space-y-6">
         <header className="space-y-1.5">
           <h1 className="font-heading text-3xl font-semibold tracking-tight text-neutral-900 sm:text-4xl">
@@ -157,25 +311,25 @@ export function VendorBrowseDetailBody({
           ) : null}
         </header>
 
-        <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
-          <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-100">
+        <div className="rounded-2xl border border-neutral-100 bg-white">
+          <div className="relative flex min-h-[12rem] max-h-[min(90vw,560px)] w-full items-center justify-center overflow-hidden rounded-t-2xl bg-neutral-100 sm:min-h-[16rem] lg:max-h-[620px]">
             {activePhotoUrl ? (
               <button
                 type="button"
                 onClick={() => setLightboxOpen(true)}
-                className="group relative block h-full w-full cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset"
+                className="group flex w-full cursor-zoom-in items-center justify-center px-2 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset sm:px-3 sm:py-4"
                 aria-label={`Open ${businessName} portfolio fullscreen`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={activePhotoUrl}
                   alt={`${businessName} portfolio`}
-                  className="h-full w-full object-cover object-center transition duration-300 group-hover:scale-[1.02]"
+                  className="max-h-[min(90vw,560px)] max-w-full object-contain object-center transition duration-300 group-hover:scale-[1.01] lg:max-h-[620px]"
                   decoding="async"
                 />
               </button>
             ) : (
-              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-neutral-100 via-white to-neutral-50">
+              <div className="flex min-h-[12rem] w-full items-center justify-center bg-gradient-to-br from-neutral-100 via-white to-neutral-50 sm:min-h-[16rem]">
                 <span className="font-heading text-4xl font-semibold tracking-tight text-neutral-300 sm:text-5xl">
                   {businessName.slice(0, 1).toUpperCase()}
                 </span>
@@ -183,7 +337,7 @@ export function VendorBrowseDetailBody({
             )}
           </div>
           {portfolioUrls.length > 0 ? (
-            <div className="flex gap-2.5 overflow-x-auto border-t border-neutral-100 px-3 py-3">
+            <div className="flex shrink-0 gap-2.5 overflow-x-auto border-t border-neutral-100 px-3 py-3.5">
               {portfolioUrls.map((url, index) => {
                 const selected = index === activePhotoIndex;
                 return (
@@ -191,7 +345,7 @@ export function VendorBrowseDetailBody({
                     key={url}
                     type="button"
                     onClick={() => setActivePhotoIndex(index)}
-                    className={`h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-neutral-50 ring-2 transition ${
+                    className={`flex h-[4.5rem] w-[5.5rem] shrink-0 items-center justify-center overflow-hidden rounded-lg bg-neutral-100 ring-2 transition ${
                       selected
                         ? "ring-neutral-400"
                         : "ring-transparent hover:ring-neutral-300"
@@ -203,7 +357,7 @@ export function VendorBrowseDetailBody({
                     <img
                       src={url}
                       alt=""
-                      className="h-full w-full object-cover object-center"
+                      className="max-h-full max-w-full object-contain object-center"
                       decoding="async"
                     />
                   </button>
@@ -211,11 +365,11 @@ export function VendorBrowseDetailBody({
               })}
             </div>
           ) : (
-            <div className="flex gap-2.5 border-t border-neutral-100 px-3 py-3">
+            <div className="flex shrink-0 gap-2.5 border-t border-neutral-100 px-3 py-3.5">
               {[0, 1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="h-14 flex-1 rounded-lg bg-neutral-50 ring-1 ring-inset ring-neutral-100"
+                  className="h-[4.5rem] flex-1 rounded-lg bg-neutral-50 ring-1 ring-inset ring-neutral-100"
                 />
               ))}
             </div>
@@ -402,95 +556,16 @@ export function VendorBrowseDetailBody({
               return (
                 <li
                   key={opt.id}
-                  className={`px-5 py-4 transition ${selected ? "bg-neutral-50/80" : ""}`}
+                  className={`px-5 py-5 transition ${selected ? "bg-primary/[0.03]" : "bg-white"}`}
                 >
-                  <div className="flex gap-3">
-                    {showCheckbox ? (
-                      <input
-                        type="checkbox"
-                        checked={selected}
-                        onChange={() => togglePackage(opt.id)}
-                        className="mt-1 h-4 w-4 shrink-0 rounded border-neutral-300 text-primary focus:ring-primary/30"
-                        aria-label={`Include ${opt.heading}`}
-                      />
-                    ) : null}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-baseline justify-between gap-3">
-                        <p className="text-sm font-medium text-neutral-900">{opt.heading}</p>
-                        <p className="shrink-0 text-sm font-semibold tabular-nums text-neutral-900">
-                          {opt.priceDisplay != null ? (
-                            <>
-                              {opt.compareAtDisplay ? (
-                                <span className="mr-1.5 text-xs font-normal text-neutral-400 line-through">
-                                  £{opt.compareAtDisplay}
-                                </span>
-                              ) : null}
-                              £{opt.priceDisplay}
-                            </>
-                          ) : (
-                            <span className="font-medium text-neutral-500">Quote</span>
-                          )}
-                        </p>
-                      </div>
-                      {opt.discountBadge ? (
-                        <p className="mt-1 text-xs text-emerald-700">{opt.discountBadge}</p>
-                      ) : null}
-                      {opt.timelineLine ? (
-                        <p className="mt-1.5 flex items-center gap-1.5 text-[13px] text-neutral-500">
-                          <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                          {opt.timelineLine}
-                        </p>
-                      ) : null}
-                      {opt.travelLine ? (
-                        <p className="mt-1.5 text-[13px] text-neutral-500">{opt.travelLine}</p>
-                      ) : null}
-                      {!isOpen && opt.description?.trim() ? (
-                        <p className="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-neutral-500">
-                          {opt.description}
-                        </p>
-                      ) : null}
-                      {opt.promoLines.length > 0 ? (
-                        <p className="mt-1.5 text-[12px] text-neutral-500">
-                          {opt.promoLines.join(" · ")}
-                        </p>
-                      ) : null}
-                      {opt.description?.trim() || opt.featureLines.length > 0 ? (
-                        <button
-                          type="button"
-                          onClick={() => setDetailOpenId(isOpen ? null : opt.id)}
-                          className="mt-2 text-[13px] font-medium text-neutral-700 underline-offset-2 hover:underline"
-                        >
-                          {isOpen ? "Hide details" : "What's included"}
-                        </button>
-                      ) : null}
-                      {isOpen ? (
-                        <div className="mt-2 space-y-2">
-                          {opt.description?.trim() ? (
-                            <p className="text-[13px] leading-relaxed text-neutral-600">
-                              {opt.description}
-                            </p>
-                          ) : null}
-                          {opt.featureLines.length > 0 ? (
-                            <ul className="space-y-1.5">
-                              {opt.featureLines.map((line) => (
-                                <li
-                                  key={line}
-                                  className="flex items-start gap-2 text-[13px] text-neutral-700"
-                                >
-                                  <Check
-                                    className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neutral-400"
-                                    strokeWidth={2.5}
-                                    aria-hidden
-                                  />
-                                  <span>{line}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          ) : null}
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
+                  <BrowsePricingOptionCard
+                    opt={opt}
+                    isOpen={isOpen}
+                    showCheckbox={showCheckbox}
+                    selected={selected}
+                    onToggleSelect={() => togglePackage(opt.id)}
+                    onToggleDetails={() => setDetailOpenId(isOpen ? null : opt.id)}
+                  />
                 </li>
               );
             })}

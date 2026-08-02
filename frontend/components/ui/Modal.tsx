@@ -13,6 +13,10 @@ type ModalProps = {
   children: React.ReactNode;
   footer?: React.ReactNode;
   maxWidthClassName?: string;
+  /** Override scroll area max-height for the body (e.g. long admin review). */
+  bodyMaxHeightClassName?: string;
+  /** Extra classes for the scrollable body wrapper. */
+  bodyClassName?: string;
   /** Stack above other overlays (e.g. nested dialogs). */
   zIndexClassName?: string;
 };
@@ -24,6 +28,8 @@ export function Modal({
   children,
   footer,
   maxWidthClassName = "max-w-3xl",
+  bodyMaxHeightClassName = "max-h-[min(70dvh,640px)]",
+  bodyClassName,
   zIndexClassName = "z-50",
 }: ModalProps) {
   const reduceMotion = usePrefersReducedMotion();
@@ -67,7 +73,7 @@ export function Modal({
               transition={transition}
               className={`my-auto w-full rounded-2xl bg-white shadow-xl ${MODAL_PANEL} ${maxWidthClassName}`}
             >
-              <div className="flex items-center justify-between gap-3 border-b border-neutral-200 px-4 py-3 sm:px-5 sm:py-4">
+              <div className="flex items-center justify-between gap-3 border-b border-neutral-100 bg-white px-4 py-3 sm:px-5 sm:py-4">
                 <h2
                   id="modal-title"
                   className="font-heading min-w-0 flex-1 pr-2 text-base font-semibold text-neutral-900 sm:text-lg"
@@ -83,12 +89,14 @@ export function Modal({
                 </button>
               </div>
               {children ? (
-                <div className="max-h-[min(70dvh,640px)] overflow-y-auto px-4 py-4 sm:px-5">
+                <div
+                  className={`${bodyMaxHeightClassName} overflow-y-auto bg-neutral-50 px-4 py-4 sm:px-5 ${bodyClassName ?? ""}`.trim()}
+                >
                   {children}
                 </div>
               ) : null}
               {footer ? (
-                <div className="border-t border-neutral-200 px-4 py-3 sm:px-5 sm:py-4">{footer}</div>
+                <div className="border-t border-neutral-100 bg-white px-4 py-3 sm:px-5 sm:py-4">{footer}</div>
               ) : null}
             </motion.div>
           </div>

@@ -136,7 +136,6 @@ export function StepLocation({ data, update }: StepLocationProps) {
               ? "e.g. London, Manchester, Birmingham"
               : `e.g. a city in ${market.label}`
           }
-          helpText={`Suggestions are places in ${market.label} - pick one or keep typing your own area.`}
         />
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div>

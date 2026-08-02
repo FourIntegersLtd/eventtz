@@ -63,6 +63,11 @@ export async function patchVendorApproval(
   });
 }
 
+export type AdminVendorBookingsByMonthRow = {
+  month: string;
+  [status: string]: string | number;
+};
+
 export type AdminVendorInsights = {
   success: boolean;
   user_id: string;
@@ -70,6 +75,7 @@ export type AdminVendorInsights = {
   review_count: number;
   bookings_total: number;
   bookings_by_status: Record<string, number>;
+  bookings_by_month: AdminVendorBookingsByMonthRow[];
   open_disputes_on_bookings: number;
   explore_path: string;
 };

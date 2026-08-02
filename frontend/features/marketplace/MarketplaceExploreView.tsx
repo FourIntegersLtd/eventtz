@@ -4,11 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { EventtzLogo } from "@/components/branding/EventtzLogo";
-import { PortalShell } from "@/components/portal-shell/PortalShell";
 import { Button } from "@/components/ui/Button";
-import { ButtonLink } from "@/components/ui/ButtonLink";
-import { getButtonClassName } from "@/components/ui/buttonStyles";
 import { useToast } from "@/components/ui/Toast";
 import {
   fetchExploreVendorsSearch,
@@ -25,6 +21,7 @@ import {
   type MarketplaceSearchState,
 } from "@/lib/marketplaceSearchParams";
 import { HeroMarketplaceSearch } from "@/features/marketplace/HeroMarketplaceSearch";
+import { MarketplaceBrowseShell } from "@/features/marketplace/MarketplaceBrowseShell";
 import { MarketplaceFiltersBar } from "@/features/marketplace/MarketplaceFiltersBar";
 import { MarketplacePagination } from "@/features/marketplace/MarketplacePagination";
 import { LoadingState } from "@/components/ui/LoadingState";
@@ -644,7 +641,7 @@ export function MarketplaceExploreView({
     </div>
   );
 
-  if (user && embedded) {
+  if (embedded) {
     return (
       <>
         <div className="mt-5">{filtersAndResults}</div>
@@ -653,54 +650,17 @@ export function MarketplaceExploreView({
     );
   }
 
-  if (user && !embedded) {
-    return (
-      <PortalShell portal="client" title={savedOnly ? "Favorites" : "Browse vendors"}>
-        <div className="mt-5">{filtersAndResults}</div>
-        <ScrollToTopButton />
-      </PortalShell>
-    );
-  }
-
   return (
-    <div className="min-h-dvh bg-page-bg text-neutral-900">
-      <header className="bg-primary-soft/95 backdrop-blur-xl">
-        <div className="mx-auto flex min-w-0 max-w-8xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-12">
-          <EventtzLogo
-            href="/"
-            className="inline-flex min-w-0 shrink-0 items-center"
-            variant="header"
-            imageClassName="h-9 w-auto sm:h-10"
-            width={200}
-            height={72}
-          />
-          <nav className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-2 text-sm sm:flex-none">
-            <Link
-              href="/login"
-              className={getButtonClassName({
-                variant: "ghost",
-                shape: "pill",
-                className: "px-3 py-1.5",
-              })}
-            >
-              Sign in
-            </Link>
-            <ButtonLink href="/register?type=client" shape="pill" className="px-4 py-2">
-              Create account
-            </ButtonLink>
-          </nav>
-        </div>
-      </header>
-
-      <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <MarketplaceBrowseShell>
+      {!savedOnly ? (
         <div className="mb-6">
           <h1 className="font-heading text-2xl font-semibold text-neutral-900 sm:text-3xl">
             Find vendors
           </h1>
         </div>
-        {filtersAndResults}
-        <ScrollToTopButton />
-      </div>
-    </div>
+      ) : null}
+      {filtersAndResults}
+      <ScrollToTopButton />
+    </MarketplaceBrowseShell>
   );
 }

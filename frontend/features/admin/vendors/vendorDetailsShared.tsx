@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { type ReactNode } from "react";
+import { ContentCard, SectionSubheading } from "@/components/ui/SectionBlock";
 import {
   AlertTriangle,
   Ban,
@@ -22,6 +23,9 @@ import {
 } from "lucide-react";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { AdminVendorRow } from "@/lib/adminVendorsApi";
+import type { BookingStatus } from "@/lib/domain-types";
+import { getBookingStatusMeta } from "@/lib/domain-types";
+import { AdminDonutChart } from "@/features/admin/components/AdminDonutChart";
 import { portfolioImageUrlsFromPayload } from "@/lib/vendorPortfolioImages";
 import {
   formatMoneyLabel,
@@ -38,7 +42,7 @@ export const VENDOR_DETAILS_TAB_CONFIG: {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
 }[] = [
-  { id: "profile", label: "Profile", icon: Briefcase },
+  { id: "profile", label: "Submission", icon: Briefcase },
   { id: "insights", label: "Insights", icon: BarChart3 },
   { id: "actions", label: "Actions", icon: Shield },
 ];
@@ -81,34 +85,94 @@ export function StatCard({
   );
 }
 
+const BOOKING_STATUS_ORDER: BookingStatus[] = [
+  "pending",
+  "accepted",
+  "completed",
+  "declined",
+  "cancelled",
+  "disputed",
+];
+
+const BOOKING_STATUS_CHART_COLOR: Record<BookingStatus, string> = {
+  pending: "#fbbf24",
+  accepted: "#10b981",
+  completed: "#3b82f6",
+  declined: "#a3a3a3",
+  cancelled: "#d4d4d4",
+  disputed: "#f43f5e",
+};
+
+function bookingStatusColor(status: string): string {
+  return status in BOOKING_STATUS_CHART_COLOR
+    ? BOOKING_STATUS_CHART_COLOR[status as BookingStatus]
+    : "#737373";
+}
+
+function bookingStatusEntries(byStatus: Record<string, number>) {
+  const known = new Set<string>(BOOKING_STATUS_ORDER);
+  const ordered = BOOKING_STATUS_ORDER.map((status) => ({
+    status,
+    count: byStatus[status] ?? 0,
+  })).filter((entry) => entry.count > 0);
+
+  const extras = Object.entries(byStatus)
+    .filter(([status]) => !known.has(status))
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([status, count]) => ({ status, count }))
+    .filter((entry) => entry.count > 0);
+
+  return [...ordered, ...extras];
+}
+
 export function BookingStatusBreakdown({ byStatus }: { byStatus: Record<string, number> }) {
-  const entries = Object.entries(byStatus).sort(([a], [b]) => a.localeCompare(b));
-  const total = entries.reduce((sum, [, n]) => sum + n, 0);
+  const entries = bookingStatusEntries(byStatus);
+  const total = entries.reduce((sum, { count }) => sum + count, 0);
+
   if (entries.length === 0) {
     return <p className="text-sm text-neutral-500">No bookings recorded yet.</p>;
   }
+
   return (
-    <ul className="space-y-4">
-      {entries.map(([status, count]) => {
-        const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-        return (
-          <li key={status}>
-            <div className="flex items-center justify-between gap-3">
-              <StatusBadge status={status} />
-              <span className="text-sm tabular-nums text-neutral-600">
-                {count} <span className="text-neutral-400">({pct}%)</span>
-              </span>
+    <div className="flex flex-col items-center gap-4">
+      <div className="h-[180px] w-40 shrink-0">
+        <AdminDonutChart
+          data={entries.map(({ status, count }) => ({
+            name: getBookingStatusMeta(status).label,
+            value: count,
+            color: bookingStatusColor(status),
+          }))}
+          centerLabel={String(total)}
+          height={180}
+        />
+      </div>
+
+      <dl className="w-full divide-y divide-neutral-100">
+        {entries.map(({ status, count }) => {
+          const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+
+          return (
+            <div
+              key={status}
+              className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
+            >
+              <dt className="flex min-w-0 items-center gap-2">
+                <span
+                  className="h-2.5 w-2.5 shrink-0 rounded-full"
+                  style={{ backgroundColor: bookingStatusColor(status) }}
+                  aria-hidden
+                />
+                <StatusBadge status={status} />
+              </dt>
+              <dd className="shrink-0 text-sm font-semibold tabular-nums text-neutral-900">
+                {count}
+                <span className="ml-1.5 font-normal text-neutral-500">{pct}%</span>
+              </dd>
             </div>
-            <div className="mt-2 h-2 overflow-hidden rounded-full bg-neutral-100">
-              <div
-                className="h-full rounded-full bg-primary/70 transition-all"
-                style={{ width: `${pct}%` }}
-              />
-            </div>
-          </li>
-        );
-      })}
-    </ul>
+          );
+        })}
+      </dl>
+    </div>
   );
 }
 
@@ -117,20 +181,31 @@ export function QuickLinkRow({
   icon: Icon,
   label,
   external,
+  inset = false,
 }: {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   external?: boolean;
+  /** Flat row inside a VendorPanelCard (no outer border/background). */
+  inset?: boolean;
 }) {
+  const className = inset
+    ? "flex items-center gap-3 py-4 text-sm font-medium text-neutral-800 transition first:pt-0 last:pb-0 hover:text-primary"
+    : "flex items-center gap-3 rounded-xl border border-neutral-100 bg-white px-4 py-3.5 text-sm font-medium text-neutral-800 transition hover:border-neutral-200";
+
+  const iconWrapClass = inset
+    ? "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-neutral-50 text-primary ring-1 ring-inset ring-neutral-100"
+    : "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-neutral-50 text-primary ring-1 ring-inset ring-neutral-100";
+
   return (
     <Link
       href={href}
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
-      className="flex items-center gap-3 rounded-xl border border-neutral-200/80 bg-neutral-50/50 px-4 py-3 text-sm font-medium text-neutral-800 transition hover:border-neutral-300 hover:bg-white"
+      className={className}
     >
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-primary ring-1 ring-neutral-200/80">
+      <span className={iconWrapClass}>
         <Icon className="h-4 w-4" aria-hidden />
       </span>
       <span className="min-w-0 flex-1">{label}</span>
@@ -169,18 +244,18 @@ export function ApprovalCard({
 
   const ringClass = isCurrent
     ? variant === "primary"
-      ? "border-emerald-300 ring-2 ring-emerald-200/80"
+      ? "border-emerald-300 bg-emerald-50/50 ring-2 ring-emerald-200/80"
       : variant === "destructive"
-        ? "border-red-300 ring-2 ring-red-200/80"
-        : "border-neutral-300 ring-2 ring-neutral-200/80"
-    : "border-neutral-200/80 hover:border-neutral-300 hover:bg-neutral-50/80";
+        ? "border-red-300 bg-red-50/50 ring-2 ring-red-200/80"
+        : "border-neutral-300 bg-neutral-50/80 ring-2 ring-neutral-200/80"
+    : "border-neutral-200/80 bg-transparent hover:border-neutral-300 hover:bg-neutral-50/50";
 
   return (
     <button
       type="button"
       disabled={disabled || isCurrent}
       onClick={onClick}
-      className={`flex flex-col items-center gap-3 rounded-xl border bg-white p-5 text-center transition disabled:cursor-default disabled:opacity-100 ${ringClass}`}
+      className={`flex flex-col items-center gap-3 rounded-xl border p-5 text-center transition disabled:cursor-default disabled:opacity-100 ${ringClass}`}
     >
       <span className={`flex h-11 w-11 items-center justify-center rounded-xl ${iconTone}`}>
         <Icon className="h-5 w-5" aria-hidden />
@@ -228,7 +303,7 @@ export function TabButton({
 }
 
 export function ProfileSection({
-  icon: Icon,
+  icon: _Icon,
   title,
   children,
   className = "",
@@ -239,15 +314,10 @@ export function ProfileSection({
   className?: string;
 }) {
   return (
-    <section className={`rounded-xl border border-neutral-200/80 bg-white p-5 ${className}`.trim()}>
-      <h3 className="flex items-center gap-2.5 border-b border-neutral-100 pb-3">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <Icon className="h-4 w-4" aria-hidden />
-        </span>
-        <span className="text-sm font-semibold text-neutral-900">{title}</span>
-      </h3>
-      <div className="mt-5 space-y-5">{children}</div>
-    </section>
+    <ContentCard className={className}>
+      <SectionSubheading title={title} />
+      <div className="space-y-5">{children}</div>
+    </ContentCard>
   );
 }
 
@@ -276,12 +346,13 @@ export function ProfileField({
 }
 
 export function TagPills({ items }: { items: string[] }) {
-  if (items.length === 0) {
+  const safeItems = Array.isArray(items) ? items : [];
+  if (safeItems.length === 0) {
     return <span className="text-sm text-neutral-500">-</span>;
   }
   return (
     <ul className="flex flex-wrap gap-1.5">
-      {items.map((item) => (
+      {safeItems.map((item) => (
         <li
           key={item}
           className="rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-medium text-neutral-700"

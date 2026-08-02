@@ -4,6 +4,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -11,7 +12,7 @@ import {
 } from "recharts";
 
 type AdminHorizontalBarChartProps = {
-  data: { label: string; value: number }[];
+  data: { label: string; value: number; color?: string }[];
   valueLabel?: string;
   color?: string;
   /** Max rows to show (longest labels stay readable). */
@@ -58,7 +59,11 @@ export function AdminHorizontalBarChart({
             return row?.label ?? "";
           }}
         />
-        <Bar dataKey="value" fill={color} radius={[0, 4, 4, 0]} maxBarSize={22} />
+        <Bar dataKey="value" radius={[0, 4, 4, 0]} maxBarSize={22}>
+          {chartData.map((entry) => (
+            <Cell key={entry.label} fill={entry.color ?? color} />
+          ))}
+        </Bar>
       </BarChart>
     </ResponsiveContainer>
   );

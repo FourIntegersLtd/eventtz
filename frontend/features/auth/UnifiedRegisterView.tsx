@@ -3,9 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { AuthPageShell } from "@/components/auth/AuthPageShell";
-import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { Select } from "@/components/ui/Select";
 import { TextField } from "@/components/ui/TextField";
 import { PasswordField } from "@/components/ui/PasswordField";
@@ -55,8 +53,7 @@ export function UnifiedRegisterView() {
 
   return (
     <AuthPageShell logoHref={isAuthenticated ? dashboardPathForUserType(userType) : "/"}>
-      <LottieIllustration asset="welcome" className="mb-4 h-20 w-20 sm:h-24 sm:w-24" />
-      <Card padding="lg" className="w-full max-w-md">
+      <div className="w-full max-w-md">
         {awaitingVerification ? (
           <>
             <h1 className="font-heading text-2xl font-semibold text-neutral-900">
@@ -149,7 +146,7 @@ export function UnifiedRegisterView() {
             </p>
           </>
         )}
-      </Card>
+      </div>
     </AuthPageShell>
   );
 }

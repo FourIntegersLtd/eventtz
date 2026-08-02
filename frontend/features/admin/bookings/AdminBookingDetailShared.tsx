@@ -3,16 +3,16 @@
 import Link from "next/link";
 import { useState } from "react";
 import { AlertTriangle, ChevronRight, type LucideIcon } from "lucide-react";
+import { SectionBlock, ContentCard } from "@/components/ui/SectionBlock";
 import { adminCard } from "@/features/admin/adminTheme";
 import type { AdminBookingSupportMeta } from "@/lib/adminPlatformApi";
 import { shortId } from "./adminBookingDetailUtils";
 
 export function DetailSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className={`${adminCard} p-5`}>
-      <h2 className="text-sm font-semibold text-neutral-900">{title}</h2>
-      <div className="mt-4">{children}</div>
-    </section>
+    <SectionBlock title={title}>
+      <ContentCard>{children}</ContentCard>
+    </SectionBlock>
   );
 }
 

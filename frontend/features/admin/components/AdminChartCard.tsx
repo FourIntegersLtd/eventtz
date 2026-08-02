@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { adminCard } from "@/features/admin/adminTheme";
+import { ContentCard, PanelCard } from "@/components/ui/SectionBlock";
 import {
   AdminInfoHint,
   type AdminChartInfo,
@@ -31,14 +31,13 @@ export function AdminChartCard({
   className = "",
 }: AdminChartCardProps) {
   return (
-    <section className={`${adminCard} flex flex-col p-4 sm:p-5 ${className}`.trim()}>
-      <div className="mb-4 flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h2 className="text-sm font-semibold text-neutral-900">{title}</h2>
-          {subtitle ? <p className="mt-0.5 text-xs text-neutral-500">{subtitle}</p> : null}
-        </div>
-        {info ? <AdminInfoHint label={title} info={info} /> : null}
-      </div>
+    <PanelCard
+      className={`flex flex-col ${className}`.trim()}
+      title={title}
+      description={subtitle}
+      trailing={info ? <AdminInfoHint label={title} info={info} /> : undefined}
+      bodyClassName="flex min-h-0 flex-1 flex-col pt-0"
+    >
       <div className="min-h-[220px] flex-1">{children}</div>
       {footerHref && footerLabel ? (
         <div className="mt-3 border-t border-neutral-100 pt-3">
@@ -47,6 +46,6 @@ export function AdminChartCard({
           </Link>
         </div>
       ) : null}
-    </section>
+    </PanelCard>
   );
 }

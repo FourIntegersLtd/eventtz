@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { EventtzLogo } from "@/components/branding/EventtzLogo";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { getButtonClassName } from "@/components/ui/buttonStyles";
 import {
   BLOG_LINK,
@@ -101,9 +102,16 @@ export function LandingNav({
   sectionLinkPrefix = "",
 }: LandingNavProps) {
   const scrollSolid = useLandingNavScroll();
+  const { user } = useAuth();
   const navSolid = variant === "solid" || scrollSolid;
   const [mobileOpen, setMobileOpen] = useState(false);
   const darkNav = variant === "hero" && !navSolid;
+  const dashboardHref =
+    user?.user_type === "client"
+      ? "/client/dashboard"
+      : user?.user_type === "vendor"
+        ? "/vendor/dashboard"
+        : null;
 
   const exploreLinks = EXPLORE_NAV_LINKS.map((item) => ({
     ...item,
@@ -216,20 +224,28 @@ export function LandingNav({
               {CONTACT_US_LINK.label}
             </NavLinkItem>
 
-            <NavLinkItem
-              href={SIGN_IN_LINK.href}
-              className={
-                darkNav
-                  ? "rounded-lg px-3 py-2 text-sm font-medium text-white/95 transition hover:bg-white/10"
-                  : "rounded-lg px-3 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 hover:text-primary"
-              }
-            >
-              {SIGN_IN_LINK.label}
-            </NavLinkItem>
+            {dashboardHref ? (
+              <NavLinkItem href={dashboardHref} className={primaryCtaClass}>
+                Dashboard
+              </NavLinkItem>
+            ) : (
+              <>
+                <NavLinkItem
+                  href={SIGN_IN_LINK.href}
+                  className={
+                    darkNav
+                      ? "rounded-lg px-3 py-2 text-sm font-medium text-white/95 transition hover:bg-white/10"
+                      : "rounded-lg px-3 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 hover:text-primary"
+                  }
+                >
+                  {SIGN_IN_LINK.label}
+                </NavLinkItem>
 
-            <NavLinkItem href={REGISTER_LINK.href} className={primaryCtaClass}>
-              {REGISTER_LINK.label}
-            </NavLinkItem>
+                <NavLinkItem href={REGISTER_LINK.href} className={primaryCtaClass}>
+                  {REGISTER_LINK.label}
+                </NavLinkItem>
+              </>
+            )}
 
             {/* <NavLinkItem href={BROWSE_LINK.href} className={primaryCtaClass}>
               {BROWSE_LINK.label}
@@ -290,22 +306,34 @@ export function LandingNav({
               >
                 {BROWSE_LINK.label} vendors
               </NavLinkItem>
-              <NavLinkItem
-                href={REGISTER_LINK.href}
-                className={mobileMenuSecondaryClass}
-                onClick={closeMobile}
-              >
-                {REGISTER_LINK.label}
-              </NavLinkItem>
-              <NavLinkItem
-                href={SIGN_IN_LINK.href}
-                className={`rounded-lg py-3.5 text-center text-[15px] font-medium ${
-                  darkNav ? "text-white/80 hover:text-white" : "text-neutral-600 hover:text-primary"
-                }`}
-                onClick={closeMobile}
-              >
-                {SIGN_IN_LINK.label}
-              </NavLinkItem>
+              {dashboardHref ? (
+                <NavLinkItem
+                  href={dashboardHref}
+                  className={mobileMenuSecondaryClass}
+                  onClick={closeMobile}
+                >
+                  Dashboard
+                </NavLinkItem>
+              ) : (
+                <>
+                  <NavLinkItem
+                    href={REGISTER_LINK.href}
+                    className={mobileMenuSecondaryClass}
+                    onClick={closeMobile}
+                  >
+                    {REGISTER_LINK.label}
+                  </NavLinkItem>
+                  <NavLinkItem
+                    href={SIGN_IN_LINK.href}
+                    className={`rounded-lg py-3.5 text-center text-[15px] font-medium ${
+                      darkNav ? "text-white/80 hover:text-white" : "text-neutral-600 hover:text-primary"
+                    }`}
+                    onClick={closeMobile}
+                  >
+                    {SIGN_IN_LINK.label}
+                  </NavLinkItem>
+                </>
+              )}
             </div>
           </div>
         </div>
