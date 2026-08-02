@@ -57,7 +57,7 @@ export function ApprovedVendorsSection({
         />
       ) : (
         <>
-          <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-5 grid grid-cols-1 items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {displayVendors.map((v, index) => {
               const p = v.payload ?? {};
               const biz = (typeof p.businessName === "string" && p.businessName) || "Unnamed business";
@@ -82,10 +82,14 @@ export function ApprovedVendorsSection({
               const priceLabel = hourly ? `From GBP ${hourly}/hr` : "Request custom quote";
 
               return (
-                <MotionStaggerItem key={v.user_id} index={index}>
+                <MotionStaggerItem
+                  key={v.user_id}
+                  index={index}
+                  className="h-full w-full min-w-0"
+                >
                   <Link
                     href={`/client/browse/${v.user_id}`}
-                    className="group block rounded-2xl border border-neutral-200 bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                    className="group flex h-full w-full min-w-0 flex-col rounded-2xl border border-neutral-200 bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
                   >
                     <VendorPortfolioCover
                       payload={p}
@@ -96,17 +100,19 @@ export function ApprovedVendorsSection({
                         </p>
                       }
                     />
-                    <h4 className="font-heading mt-3 text-base font-semibold text-neutral-900 group-hover:text-primary">
+                    <h4 className="font-heading mt-3 line-clamp-2 min-h-[2.75rem] text-base font-semibold leading-snug text-neutral-900 group-hover:text-primary">
                       {biz}
                     </h4>
-                    <p className="mt-1 line-clamp-2 text-sm text-neutral-600">{bio}</p>
-                    <p className="mt-3 text-sm font-medium text-neutral-900">{priceLabel}</p>
-                    <p className="mt-1 line-clamp-1 text-xs text-neutral-600">
-                      {services || "Services coming soon"}
-                    </p>
-                    <p className="mt-1 line-clamp-1 text-xs text-neutral-500">
-                      {events || "Events not specified"}
-                    </p>
+                    <p className="mt-1 line-clamp-2 min-h-[2.5rem] flex-1 text-sm text-neutral-600">{bio}</p>
+                    <div className="mt-auto pt-3">
+                      <p className="text-sm font-medium text-neutral-900">{priceLabel}</p>
+                      <p className="mt-1 line-clamp-1 text-xs text-neutral-600">
+                        {services || "Services coming soon"}
+                      </p>
+                      <p className="mt-1 line-clamp-1 text-xs text-neutral-500">
+                        {events || "Events not specified"}
+                      </p>
+                    </div>
                   </Link>
                 </MotionStaggerItem>
               );

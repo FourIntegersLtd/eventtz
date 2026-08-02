@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import type { VendorOnboardingData, VendorOnboardingUpdate } from "./types";
+import type { VendorOnboardingData, VendorOnboardingUpdate, VendorStatusCheckFeedback } from "./types";
 import type { VendorApprovalStatus } from "@/lib/domain-types";
 import type { PortfolioImageQualityRow } from "./useVendorOnboardingController";
 import { OnboardingWizardStepTitle } from "./ui/OnboardingWizardStepTitle";
@@ -33,6 +33,7 @@ type Props = {
   onViewProfileReview: () => void;
   onRefreshStatus: () => void;
   refreshingStatus?: boolean;
+  statusCheckFeedback?: VendorStatusCheckFeedback | null;
   submittedSummaryBusinessName?: string;
   portfolioQuality: Record<string, PortfolioImageQualityRow>;
   portfolioQualityAccepted: Record<string, boolean>;
@@ -82,6 +83,7 @@ export function OnboardingStepContent({
   onViewProfileReview,
   onRefreshStatus,
   refreshingStatus,
+  statusCheckFeedback,
   submittedSummaryBusinessName,
   portfolioQuality,
   portfolioQualityAccepted,
@@ -186,6 +188,7 @@ export function OnboardingStepContent({
           onViewProfileReview={onViewProfileReview}
           onRefreshStatus={onRefreshStatus}
           refreshing={refreshingStatus}
+          statusCheckFeedback={statusCheckFeedback}
           businessName={submittedSummaryBusinessName}
         />
       );

@@ -1,4 +1,5 @@
 import type { ExploreVendor } from "@/lib/clientExploreApi";
+import { displayServicesOffered } from "@/features/client/browse/browseLabels";
 import {
   buildDiscountPromoLines,
   listPriceDisplay,
@@ -28,6 +29,13 @@ export type BrowsePricingOption = {
   timelineLine: string | null;
   /** Extra bullets (details lines, services, etc.) */
   featureLines: string[];
+};
+
+/** Vendor-level lines duplicated on every package — show once in the pricing panel. */
+export type BrowsePricingSharedContext = {
+  travelLine: string | null;
+  serviceLines: string[];
+  promoLines: string[];
 };
 
 export type BookingLineItem = {
@@ -173,7 +181,41 @@ function servicesFeatureLines(
   const services = Array.isArray(payload.servicesOffered)
     ? (payload.servicesOffered as unknown[]).map((s) => String(s).trim()).filter(Boolean)
     : [];
-  return services.slice(0, 6).map((s) => s);
+  return displayServicesOffered(services).slice(0, 6);
+}
+
+/**
+ * Vendor-wide pricing context from onboarding (Step 2 services, Step 3 travel, discounts).
+ * Package cards should only show per-package duration, details, and custom travel overrides.
+ */
+export function extractBrowsePricingSharedContext(
+  payload: Record<string, unknown>,
+  options: BrowsePricingOption[],
+): BrowsePricingSharedContext {
+  const defaultTravel = packageTravelLine(payload, true);
+  const travelLines = [...new Set(options.map((o) => o.travelLine).filter(Boolean))];
+  const travelLine =
+    travelLines.length === 1
+      ? travelLines[0]!
+      : travelLines.length === 0
+        ? defaultTravel
+        : defaultTravel;
+
+  return {
+    travelLine: travelLine ?? defaultTravel,
+    serviceLines: servicesFeatureLines(payload),
+    promoLines: options[0]?.promoLines ?? [],
+  };
+}
+
+/** Per-package travel when it differs from the vendor default shown once above the list. */
+export function packageSpecificTravelLine(
+  opt: BrowsePricingOption,
+  shared: BrowsePricingSharedContext,
+): string | null {
+  if (!opt.travelLine) return null;
+  if (shared.travelLine && opt.travelLine === shared.travelLine) return null;
+  return opt.travelLine;
 }
 
 export {

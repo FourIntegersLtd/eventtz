@@ -1,7 +1,6 @@
 "use client";
 
 import { BadgeCheck, Check, Heart, Star } from "lucide-react";
-import { portalCard } from "@/components/portal-shell/portalTheme";
 import { useRouter } from "next/navigation";
 import { VendorPortfolioCover } from "@/components/vendor/VendorPortfolioCover";
 import { buildBrowsePricingOptions } from "@/features/client/browse/vendorBrowseDetailModel";
@@ -24,6 +23,13 @@ const REPLY_CHIP_MAX_SECONDS = 48 * 3600;
 function labelForService(value: string): string {
   return SERVICE_OPTIONS.find((o) => o.value === value)?.label ?? value;
 }
+
+/** Grid for landing, browse, and saved vendors — cards stretch full width on mobile. */
+export const marketplaceVendorCardGridClass =
+  "grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 sm:gap-7 lg:grid-cols-3 lg:gap-8";
+
+/** Wrap each card (e.g. MotionStaggerItem) so grid rows share equal height. */
+export const marketplaceVendorCardGridItemClass = "h-full w-full min-w-0";
 
 type MarketplaceVendorCardProps = {
   card: ExpandedSearchCard;
@@ -147,7 +153,7 @@ export function MarketplaceVendorCard({
           openDetail();
         }
       }}
-      className={`group relative isolate mx-auto flex w-full max-w-[22rem] cursor-pointer flex-col overflow-hidden ${portalCard} text-left transition hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${selected ? "border-primary ring-2 ring-primary/35" : ""}`}
+      className={`group relative isolate flex h-full w-full min-w-0 cursor-pointer flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm text-left transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${selected ? "border-primary ring-2 ring-primary/35" : ""}`}
     >
       {showBookmark ? (
         <button
@@ -185,7 +191,7 @@ export function MarketplaceVendorCard({
         }
       />
 
-      <div className="flex flex-1 flex-col bg-[#faf8fc] px-3.5 pb-0 pt-3.5">
+      <div className="flex min-h-[9.5rem] flex-1 flex-col bg-[#faf8fc] px-3.5 pb-0 pt-3.5">
         <div className="flex items-center gap-3">
           <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-primary/10 ring-2 ring-white shadow-sm">
             {avatarUrl ? (
@@ -265,7 +271,7 @@ export function MarketplaceVendorCard({
         ) : null}
       </div>
 
-      <div className="mt-3.5 space-y-2 border-t border-primary/10 bg-primary-soft px-3.5 py-3">
+      <div className="mt-auto space-y-2 border-t border-primary/10 bg-primary-soft px-3.5 py-3">
         <div className="flex items-center justify-between gap-3">
           <p className="font-heading text-lg font-semibold text-primary">
             {minGbp != null ? (

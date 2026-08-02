@@ -28,7 +28,11 @@ import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieEmptyPanel } from "@/components/ui/LottieEmptyPanel";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { MarketplaceVendorCard } from "@/features/marketplace/MarketplaceVendorCard";
+import {
+  MarketplaceVendorCard,
+  marketplaceVendorCardGridClass,
+  marketplaceVendorCardGridItemClass,
+} from "@/features/marketplace/MarketplaceVendorCard";
 import { MotionStaggerItem } from "@/components/ui/MotionStaggerItem";
 import { MultiVendorEnquireModal } from "@/features/marketplace/MultiVendorEnquireModal";
 import type { EventEnquirePrefill } from "@/features/bookings/eventEnquirePrefill";
@@ -45,8 +49,8 @@ import { ScrollToTopButton } from "@/components/ui/ScrollToTopButton";
 import { useLaunchingSoonBookingGuard } from "@/features/bookings/useLaunchingSoonBookingGuard";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
-const CARD_GRID =
-  "grid justify-items-center gap-6 sm:grid-cols-2 sm:gap-7 lg:grid-cols-3 lg:gap-8";
+const CARD_GRID = marketplaceVendorCardGridClass;
+const CARD_GRID_ITEM = marketplaceVendorCardGridItemClass;
 
 function planSeeMoreHref(
   pathname: string,
@@ -464,7 +468,7 @@ export function MarketplaceExploreView({
         <>
           <div className={`mt-6 ${CARD_GRID}`}>
             {visibleCards.map((card, index) => (
-              <MotionStaggerItem key={card.cardKey} index={index}>
+              <MotionStaggerItem key={card.cardKey} index={index} className={CARD_GRID_ITEM}>
                 <MarketplaceVendorCard
                   card={card}
                   vendorDetailHref={buildClientBrowseVendorUrl(card.vendor.user_id, state)}
@@ -537,7 +541,11 @@ export function MarketplaceExploreView({
                 ) : (
                   <div className={CARD_GRID}>
                     {sectionCards.map((card, index) => (
-                      <MotionStaggerItem key={`${section.need_id}-${card.cardKey}`} index={index}>
+                      <MotionStaggerItem
+                        key={`${section.need_id}-${card.cardKey}`}
+                        index={index}
+                        className={CARD_GRID_ITEM}
+                      >
                         <MarketplaceVendorCard
                           card={card}
                           vendorDetailHref={buildClientBrowseVendorUrl(
@@ -570,7 +578,7 @@ export function MarketplaceExploreView({
           {exactCards.length > 0 ? (
             <div className={CARD_GRID}>
               {exactCards.map((card, index) => (
-                <MotionStaggerItem key={card.cardKey} index={index}>
+                <MotionStaggerItem key={card.cardKey} index={index} className={CARD_GRID_ITEM}>
                   <MarketplaceVendorCard
                     card={card}
                     vendorDetailHref={buildClientBrowseVendorUrl(card.vendor.user_id, state)}
@@ -591,7 +599,7 @@ export function MarketplaceExploreView({
               </div>
               <div className={CARD_GRID}>
                 {alsoConsiderCards.map((card, index) => (
-                  <MotionStaggerItem key={card.cardKey} index={index}>
+                  <MotionStaggerItem key={card.cardKey} index={index} className={CARD_GRID_ITEM}>
                     <MarketplaceVendorCard
                       card={card}
                       vendorDetailHref={buildClientBrowseVendorUrl(card.vendor.user_id, state)}

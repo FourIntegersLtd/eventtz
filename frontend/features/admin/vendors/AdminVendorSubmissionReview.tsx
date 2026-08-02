@@ -11,30 +11,12 @@ import {
   SubmissionFieldGrid,
   SubmissionFieldRows,
   SubmissionLabelRow,
+  SubmissionPricingOptionsList,
 } from "./AdminVendorSubmissionShared";
 import type {
   AdminSubmissionField,
-  AdminSubmissionPackage,
   AdminVendorSubmissionReviewModel,
 } from "./adminVendorSubmissionReviewModel";
-
-function PackageCard({ pkg }: { pkg: AdminSubmissionPackage }) {
-  return (
-    <li className="rounded-xl border border-neutral-100 border-l-[3px] border-l-primary bg-neutral-50 px-4 py-4">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="text-sm font-semibold text-neutral-900">{pkg.title}</p>
-        <p className="text-sm font-semibold tabular-nums text-neutral-900">{pkg.price}</p>
-      </div>
-      {pkg.duration !== "-" ? (
-        <p className="mt-0.5 text-xs text-neutral-500">{pkg.duration}</p>
-      ) : null}
-      {pkg.details ? (
-        <p className="mt-2 text-sm leading-relaxed text-neutral-600">{pkg.details}</p>
-      ) : null}
-      <p className="mt-2 text-xs text-neutral-500">Travel: {pkg.travel}</p>
-    </li>
-  );
-}
 
 function ConfirmationRow({ label, accepted }: { label: string; accepted: boolean }) {
   return (
@@ -59,8 +41,7 @@ function ConfirmationRow({ label, accepted }: { label: string; accepted: boolean
 function splitPortfolioFields(fields: AdminSubmissionField[]) {
   const safe = fields ?? [];
   const socialLinks = safe.find((f) => f.label === "Social links");
-  const mediaFacts = safe.filter((f) => f.label !== "Social links");
-  return { socialLinks, mediaFacts };
+  return { socialLinks };
 }
 
 type Props = {
@@ -72,17 +53,22 @@ export function AdminVendorSubmissionReview({ model }: Props) {
   const reachFields = model.reachFields ?? [];
   const locationFields = model.locationFields ?? [];
   const pricingFields = model.pricingFields ?? [];
-  const packages = model.packages ?? [];
+  const pricingOptions = model.pricingOptions ?? [];
+  const pricingSharedContext = model.pricingSharedContext ?? {
+    travelLine: null,
+    serviceLines: [],
+    promoLines: [],
+  };
   const discountLines = model.discountLines ?? [];
   const availabilityFields = model.availabilityFields ?? [];
-  const portfolioUrls = model.portfolioUrls ?? [];
   const portfolioFields = model.portfolioFields ?? [];
+  const submittedMedia = model.submittedMedia;
   const additionalFields = model.additionalFields ?? [];
   const serviceLabels = model.serviceLabels ?? [];
   const eventTypeLabels = model.eventTypeLabels ?? [];
   const confirmations = model.confirmations ?? [];
 
-  const { socialLinks, mediaFacts } = splitPortfolioFields(portfolioFields);
+  const { socialLinks } = splitPortfolioFields(portfolioFields);
 
   const identityFields: AdminSubmissionField[] = [
     { label: "Contact name", value: model.fullName },
@@ -138,22 +124,18 @@ export function AdminVendorSubmissionReview({ model }: Props) {
           >
             <SubmissionFieldGrid fields={pricingFields} />
             <SubmissionCard>
-              {packages.length > 0 ? (
-                <ul className="space-y-4">
-                  {packages.map((pkg) => (
-                    <PackageCard key={`${pkg.title}-${pkg.price}`} pkg={pkg} />
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-neutral-500">No packages submitted.</p>
-              )}
+              <SubmissionPricingOptionsList
+                options={pricingOptions}
+                sharedContext={pricingSharedContext}
+              />
               {discountLines.length > 0 ? (
-                <ul className="mt-6 space-y-2 border-t border-neutral-100 pt-6 text-sm text-neutral-700">
-                  <li className="text-[13px] font-medium text-neutral-500">Discounts</li>
-                  {discountLines.map((line) => (
-                    <li key={line}>{line}</li>
-                  ))}
-                </ul>
+                <SubmissionLabelRow label="Discounts">
+                  <ul className="space-y-2 text-sm text-neutral-700">
+                    {discountLines.map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                  </ul>
+                </SubmissionLabelRow>
               ) : null}
             </SubmissionCard>
           </DetailSection>
@@ -161,21 +143,14 @@ export function AdminVendorSubmissionReview({ model }: Props) {
           <DetailSection
             id="submission-availability"
             title="Portfolio & availability"
-            description="Location, travel, schedule, and supporting media"
+            description="Location, travel, and schedule"
           >
             <SubmissionFieldGrid fields={locationFields} />
             <SubmissionCard>
               <SubmissionFieldRows fields={availabilityFields} />
-              {mediaFacts.length > 0 ? (
+              {additionalFields.length > 0 ? (
                 <div className="mt-6 border-t border-neutral-100 pt-6">
-                  <SubmissionFieldRows fields={mediaFacts} />
-                </div>
-              ) : null}
-              {model.hasAdditionalInfo ? (
-                <div className="mt-6 border-t border-neutral-100 pt-6">
-                  <p className="mb-3 text-[13px] font-medium text-neutral-500">
-                    Documents & dietary info
-                  </p>
+                  <p className="mb-3 text-[13px] font-medium text-neutral-500">Dietary info</p>
                   <SubmissionFieldRows fields={additionalFields} />
                 </div>
               ) : null}
@@ -203,11 +178,10 @@ export function AdminVendorSubmissionReview({ model }: Props) {
       </div>
 
       <AdminVendorSubmissionMediaRail
-        profileImageUrl={model.profileImageUrl}
         initials={model.initials}
         businessName={model.businessName}
         fullName={model.fullName}
-        portfolioUrls={portfolioUrls}
+        submittedMedia={submittedMedia}
       />
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PortfolioLightbox } from "@/features/client/browse/PortfolioLightbox";
+import { PortfolioLightbox } from "@/components/ui/PortfolioLightbox";
 
 type ReviewPhotoGalleryProps = {
   urls: string[] | null | undefined;

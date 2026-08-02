@@ -1,6 +1,14 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { BrowsePricingOptionCard } from "@/components/vendor/BrowsePricingOptionCard";
+import { BrowsePricingPackagesSection } from "@/components/vendor/BrowsePricingPackagesSection";
+import { BrowsePricingSharedInfo } from "@/components/vendor/BrowsePricingSharedInfo";
+import {
+  packageSpecificTravelLine,
+  type BrowsePricingOption,
+  type BrowsePricingSharedContext,
+} from "@/features/client/browse/vendorBrowseDetailModel";
 import { VendorPanelCard, VendorPanelSection } from "./vendorDetailsPanel";
 import type { AdminSubmissionField } from "./adminVendorSubmissionReviewModel";
 
@@ -152,6 +160,45 @@ export function SubmissionLabelRow({
     <div className="border-t border-neutral-100 pt-5">
       <p className="text-[13px] font-medium text-neutral-500">{label}</p>
       <div className="mt-3">{children}</div>
+    </div>
+  );
+}
+
+export function SubmissionPricingOptionsList({
+  options,
+  sharedContext,
+}: {
+  options: BrowsePricingOption[];
+  sharedContext: BrowsePricingSharedContext;
+}) {
+  const safeOptions = options ?? [];
+  const hasShared =
+    Boolean(sharedContext.travelLine) ||
+    sharedContext.serviceLines.length > 0 ||
+    sharedContext.promoLines.length > 0;
+
+  if (safeOptions.length === 0 && !hasShared) {
+    return <p className="text-sm text-neutral-500">No packages submitted.</p>;
+  }
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-neutral-100 bg-white">
+      {hasShared ? <BrowsePricingSharedInfo {...sharedContext} embedded /> : null}
+      {safeOptions.length > 0 ? (
+        <BrowsePricingPackagesSection nested options={safeOptions}>
+          {(opt) => (
+            <BrowsePricingOptionCard
+              opt={opt}
+              packageTravelLine={packageSpecificTravelLine(opt, sharedContext)}
+              hideFeatureLines={sharedContext.serviceLines.length > 0}
+              hidePromoLines={sharedContext.promoLines.length > 0}
+              detailsMode="always"
+            />
+          )}
+        </BrowsePricingPackagesSection>
+      ) : (
+        <p className="px-5 py-4 text-sm text-neutral-500">No packages submitted.</p>
+      )}
     </div>
   );
 }

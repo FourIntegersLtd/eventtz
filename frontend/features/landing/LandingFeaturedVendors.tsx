@@ -6,7 +6,11 @@ import {
   fetchExploreVendorsSearch,
   type ExploreVendorSearchRow,
 } from "@/lib/clientExploreApi";
-import { MarketplaceVendorCard } from "@/features/marketplace/MarketplaceVendorCard";
+import {
+  MarketplaceVendorCard,
+  marketplaceVendorCardGridClass,
+  marketplaceVendorCardGridItemClass,
+} from "@/features/marketplace/MarketplaceVendorCard";
 import { expandVendorsForSearchResults } from "@/features/marketplace/marketplaceSearchModel";
 import { FEATURED_VENDORS_SECTION } from "@/features/landing/landingData";
 import { LandingSectionHeading } from "@/features/landing/LandingSectionHeading";
@@ -85,9 +89,13 @@ export function LandingFeaturedVendors() {
           description="We're onboarding vendors across the UK - check back soon"
         />
       ) : (
-        <div className={`${LANDING_SECTION_CONTENT_MT} grid justify-items-center gap-6 sm:grid-cols-2 sm:gap-7 lg:grid-cols-3 lg:gap-8`}>
+        <div className={`${LANDING_SECTION_CONTENT_MT} ${marketplaceVendorCardGridClass}`}>
           {cards.map((card, index) => (
-            <MotionStaggerItem key={card.cardKey} index={index}>
+            <MotionStaggerItem
+              key={card.cardKey}
+              index={index}
+              className={marketplaceVendorCardGridItemClass}
+            >
               <MarketplaceVendorCard
                 card={card}
                 showBookmark={false}

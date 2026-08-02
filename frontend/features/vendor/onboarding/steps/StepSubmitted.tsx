@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { CheckCircle2, Info, TriangleAlert, XCircle } from "lucide-react";
 import type { VendorApprovalStatus } from "@/lib/domain-types";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import type { VendorStatusCheckFeedback } from "../types";
 import { AnimatedStepItem } from "../ui/AnimatedStepItem";
 
 type StepSubmittedProps = {
@@ -12,15 +14,62 @@ type StepSubmittedProps = {
   onViewProfileReview: () => void;
   onRefreshStatus: () => void;
   refreshing?: boolean;
+  statusCheckFeedback?: VendorStatusCheckFeedback | null;
   /** Shown under the heading so vendors see their saved business name while locked. */
   businessName?: string;
 };
+
+const FEEDBACK_STYLES: Record<
+  VendorStatusCheckFeedback["tone"],
+  { container: string; icon: typeof Info }
+> = {
+  success: {
+    container: "bg-emerald-50 text-emerald-950 ring-emerald-200/70",
+    icon: CheckCircle2,
+  },
+  info: {
+    container: "bg-sky-50 text-sky-950 ring-sky-200/70",
+    icon: Info,
+  },
+  warning: {
+    container: "bg-amber-50 text-amber-950 ring-amber-200/70",
+    icon: TriangleAlert,
+  },
+  error: {
+    container: "bg-red-50 text-red-950 ring-red-200/70",
+    icon: XCircle,
+  },
+};
+
+function StatusCheckFeedbackBanner({ feedback }: { feedback: VendorStatusCheckFeedback }) {
+  const styles = FEEDBACK_STYLES[feedback.tone];
+  const Icon = styles.icon;
+
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className={`mx-auto mt-4 max-w-md rounded-xl px-4 py-3 text-left ring-1 ${styles.container}`}
+    >
+      <div className="flex items-start gap-3">
+        <Icon className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
+        <div className="min-w-0">
+          <p className="text-sm font-semibold">{feedback.title}</p>
+          {feedback.description ? (
+            <p className="mt-1 text-sm leading-relaxed opacity-90">{feedback.description}</p>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function StepSubmitted({
   approvalStatus,
   onViewProfileReview,
   onRefreshStatus,
   refreshing = false,
+  statusCheckFeedback = null,
   businessName,
 }: StepSubmittedProps) {
   const approved = approvalStatus === "approved";
@@ -77,30 +126,47 @@ export function StepSubmitted({
           </div>
         </AnimatedStepItem>
       ) : banned ? (
-        <AnimatedStepItem index={2}>
-          <LottieFailureInline
-            message="Your profile isn't visible to clients."
-            className="mx-auto max-w-md text-left"
-          />
-        </AnimatedStepItem>
+        <>
+          <AnimatedStepItem index={2}>
+            <LottieFailureInline
+              message="Your profile isn't visible to clients."
+              className="mx-auto max-w-md text-left"
+            />
+          </AnimatedStepItem>
+          {statusCheckFeedback ? (
+            <AnimatedStepItem index={3}>
+              <StatusCheckFeedbackBanner feedback={statusCheckFeedback} />
+            </AnimatedStepItem>
+          ) : null}
+        </>
       ) : (
-        <AnimatedStepItem index={2}>
-          <button
-            type="button"
-            disabled={refreshing}
-            onClick={onRefreshStatus}
-            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm hover:opacity-95 disabled:opacity-60 sm:mx-auto sm:w-auto sm:min-w-[12rem]"
-          >
-            {refreshing ? (
-              <>
-                <LoadingSpinner size="sm" />
-                Checking…
-              </>
-            ) : (
-              "Check approval status"
-            )}
-          </button>
-        </AnimatedStepItem>
+        <>
+          <AnimatedStepItem index={2}>
+            <button
+              type="button"
+              disabled={refreshing}
+              onClick={onRefreshStatus}
+              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm hover:opacity-95 disabled:opacity-60 sm:mx-auto sm:w-auto sm:min-w-[12rem]"
+            >
+              {refreshing ? (
+                <>
+                  <LoadingSpinner size="sm" />
+                  Checking…
+                </>
+              ) : (
+                "Check approval status"
+              )}
+            </button>
+            <p className="mx-auto mt-3 max-w-md text-xs text-neutral-500">
+              Tap to refresh — we&apos;ll show the latest review status here.
+            </p>
+          </AnimatedStepItem>
+          {statusCheckFeedback ? (
+            <AnimatedStepItem index={3}>
+              <StatusCheckFeedbackBanner feedback={statusCheckFeedback} />
+            </AnimatedStepItem>
+          ) : null}
+        </>
       )}
     </div>
   );

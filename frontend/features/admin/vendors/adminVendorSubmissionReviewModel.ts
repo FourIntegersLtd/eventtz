@@ -7,11 +7,21 @@ import {
   hasAdditionalInfoContent,
   packageTravelPolicyLabel,
 } from "@/features/vendor/onboarding/reviewDisplayHelpers";
-import { uploadedFileDisplayName } from "@/features/vendor/onboarding/uploadedFileDisplayName";
 import type { VendorOnboardingData } from "@/features/vendor/onboarding/types";
 import { getMarket } from "@/lib/markets";
 import { radiusOptionsForMarket } from "@/lib/photonLocationAutocomplete";
 import { portfolioImageUrlsFromPayload } from "@/lib/vendorPortfolioImages";
+import {
+  buildSubmittedMediaBundle,
+  type SubmittedMediaBundle,
+} from "@/lib/submittedMediaUtils";
+import {
+  buildBrowsePricingOptions,
+  extractBrowsePricingSharedContext,
+  type BrowsePricingOption,
+  type BrowsePricingSharedContext,
+} from "@/features/client/browse/vendorBrowseDetailModel";
+import { vendorDataToPayload } from "@/features/vendor/onboarding/serializeVendorPayload";
 
 export type AdminSubmissionField = {
   label: string;
@@ -59,11 +69,13 @@ export type AdminVendorSubmissionReviewModel = {
   reachFields: AdminSubmissionField[];
   locationFields: AdminSubmissionField[];
   pricingFields: AdminSubmissionField[];
-  packages: AdminSubmissionPackage[];
+  pricingOptions: BrowsePricingOption[];
+  pricingSharedContext: BrowsePricingSharedContext;
   discountLines: string[];
   availabilityFields: AdminSubmissionField[];
   portfolioUrls: string[];
   portfolioFields: AdminSubmissionField[];
+  submittedMedia: SubmittedMediaBundle;
   hasAdditionalInfo: boolean;
   additionalFields: AdminSubmissionField[];
   confirmations: AdminSubmissionConfirmation[];
@@ -168,6 +180,13 @@ export function buildAdminVendorSubmissionReviewModel(
       ? data.portfolioFileNamesPersisted
       : [],
   });
+  const submittedMedia = buildSubmittedMediaBundle(data);
+  const vendorPayload = vendorDataToPayload(data);
+  const pricingOptions = buildBrowsePricingOptions({
+    user_id: "",
+    payload: vendorPayload,
+  });
+  const pricingSharedContext = extractBrowsePricingSharedContext(vendorPayload, pricingOptions);
 
   const firstName = String(data.firstName ?? "");
   const lastName = String(data.lastName ?? "");
@@ -196,40 +215,6 @@ export function buildAdminVendorSubmissionReviewModel(
 
   const additionalFields: AdminSubmissionField[] = [];
   if (hasAdditionalInfoContent(data)) {
-    if (data.foodHygieneCertNamePersisted) {
-      additionalFields.push(
-        field(
-          "Food hygiene certificate",
-          uploadedFileDisplayName(
-            data.foodHygieneCertNamePersisted,
-            data.uploadedFileLabels,
-            "Food hygiene certificate",
-          ),
-        ),
-      );
-    }
-    if (data.indemnityCertNamePersisted) {
-      additionalFields.push(
-        field(
-          "Indemnity / insurance",
-          uploadedFileDisplayName(
-            data.indemnityCertNamePersisted,
-            data.uploadedFileLabels,
-            "Indemnity / insurance certificate",
-          ),
-        ),
-      );
-    }
-    for (const url of Array.isArray(data.otherDocsNamesPersisted)
-      ? data.otherDocsNamesPersisted
-      : []) {
-      additionalFields.push(
-        field(
-          "Supporting document",
-          uploadedFileDisplayName(url, data.uploadedFileLabels, "Document"),
-        ),
-      );
-    }
     const dietary: string[] = [];
     if (data.isHalal) dietary.push("Halal");
     if (data.isVegan) dietary.push("Vegan");
@@ -244,19 +229,6 @@ export function buildAdminVendorSubmissionReviewModel(
   }
 
   const portfolioFields: AdminSubmissionField[] = [];
-  if (portfolioUrls.length) {
-    portfolioFields.push(field("Portfolio photos", `${portfolioUrls.length} uploaded`));
-  }
-  if (Array.isArray(data.portfolioVideoNamesPersisted) && data.portfolioVideoNamesPersisted.length) {
-    portfolioFields.push(
-      field(
-        "Videos",
-        data.portfolioVideoNamesPersisted
-          .map((url) => uploadedFileDisplayName(url, data.uploadedFileLabels, "Video"))
-          .join(", "),
-      ),
-    );
-  }
   if (Array.isArray(data.socialLinks) && data.socialLinks.length) {
     portfolioFields.push(
       field(
@@ -426,7 +398,8 @@ export function buildAdminVendorSubmissionReviewModel(
       ),
       field("Offers discounts", data.offerDiscounts ? "Yes" : "No"),
     ],
-    packages: configuredPackages,
+    pricingOptions,
+    pricingSharedContext,
     discountLines: formatDiscountSummary(data) ?? [],
     availabilityFields: [
       field(
@@ -440,6 +413,7 @@ export function buildAdminVendorSubmissionReviewModel(
     ],
     portfolioUrls,
     portfolioFields,
+    submittedMedia,
     hasAdditionalInfo: hasAdditionalInfoContent(data),
     additionalFields,
     confirmations: [

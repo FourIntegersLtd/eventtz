@@ -55,6 +55,7 @@ export function useVendorOnboardingController(options?: { isWalkthrough?: boolea
     generatingBio: persistence.generatingBio,
     approvalStatus: persistence.approvalStatus,
     refreshingStatus: persistence.refreshingStatus,
+    statusCheckFeedback: persistence.statusCheckFeedback,
     accessDenied: persistence.accessDenied,
     accessDeniedMessage: persistence.accessDeniedMessage,
     lockedPendingReview: persistence.lockedPendingReview,

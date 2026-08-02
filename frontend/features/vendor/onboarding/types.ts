@@ -28,6 +28,13 @@ export type VendorPackageItem = {
   useDefaultTravelPackage: boolean;
 };
 
+/** Inline result after "Check approval status" on the submitted step. */
+export type VendorStatusCheckFeedback = {
+  tone: "success" | "info" | "warning" | "error";
+  title: string;
+  description?: string;
+};
+
 export function createVendorPackage(): VendorPackageItem {
   return {
     id:

@@ -24,7 +24,7 @@ import {
   normalizeVendorPayload,
   vendorDataToPayload,
 } from "./serializeVendorPayload";
-import { initialVendorOnboardingData, type VendorOnboardingData } from "./types";
+import { initialVendorOnboardingData, type VendorOnboardingData, type VendorStatusCheckFeedback } from "./types";
 
 type UseOnboardingPersistenceOptions = {
   isWalkthrough: boolean;
@@ -56,6 +56,9 @@ export function useOnboardingPersistence({
   const [profileStatus, setProfileStatus] = useState<string>("draft");
   const [approvalStatus, setApprovalStatus] = useState<VendorApprovalStatus>("pending");
   const [refreshingStatus, setRefreshingStatus] = useState(false);
+  const [statusCheckFeedback, setStatusCheckFeedback] = useState<VendorStatusCheckFeedback | null>(
+    null,
+  );
   const [accessDenied, setAccessDenied] = useState(false);
   const [accessDeniedMessage, setAccessDeniedMessage] = useState<string | null>(null);
 
@@ -209,7 +212,14 @@ export function useOnboardingPersistence({
   );
 
   const onRefreshStatus = useCallback(async () => {
-    if (!user?.email) return;
+    if (!user?.email) {
+      setStatusCheckFeedback({
+        tone: "error",
+        title: "We couldn't verify your account",
+        description: "Sign out and sign in again, then try once more.",
+      });
+      return;
+    }
     setRefreshingStatus(true);
     setFormError(null);
     try {
@@ -226,20 +236,46 @@ export function useOnboardingPersistence({
         password: "",
       });
       if (res.approval_status === "approved") {
+        setStatusCheckFeedback({
+          tone: "success",
+          title: "You're approved!",
+          description: "Your profile is live. Head to your dashboard to manage bookings.",
+        });
         showToast({
           title: "You're approved!",
           description: "Your dashboard is ready — welcome to Eventtz.",
           tone: "success",
         });
+      } else if (res.approval_status === "banned") {
+        setStatusCheckFeedback({
+          tone: "warning",
+          title: "Profile not visible",
+          description: "An admin has restricted this profile. Contact support if you believe this is a mistake.",
+        });
       } else if (res.status === "submitted") {
+        setStatusCheckFeedback({
+          tone: "info",
+          title: "Still under review",
+          description: "No change yet — we'll email you when your profile goes live (usually 1–3 business days).",
+        });
         showToast({
           title: "Still under review",
           description: "We'll email you when your profile goes live.",
           tone: "neutral",
         });
+      } else {
+        setStatusCheckFeedback({
+          tone: "info",
+          title: "Status checked",
+          description: "Your profile hasn't been submitted for review yet.",
+        });
       }
     } catch {
-      setFormError("We couldn't refresh your status. Please try again.");
+      setStatusCheckFeedback({
+        tone: "error",
+        title: "Couldn't refresh your status",
+        description: "Check your connection and try again in a moment.",
+      });
     } finally {
       setRefreshingStatus(false);
     }
@@ -260,6 +296,7 @@ export function useOnboardingPersistence({
     profileStatus,
     approvalStatus,
     refreshingStatus,
+    statusCheckFeedback,
     accessDenied,
     accessDeniedMessage,
     lockedPendingReview,
