@@ -208,7 +208,6 @@ export function VendorBrowseDetailBody({
         {requireLoginForActions ? (
           <>
             <p className="text-[13px] leading-snug text-neutral-500">
-              <span className="font-medium text-neutral-800">Sign in to contact this vendor.</span>{" "}
               Create a free client account to continue.
             </p>
             <ButtonLink href={buildRegisterLink()} className="w-full">
