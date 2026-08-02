@@ -153,7 +153,7 @@ export function MarketplaceVendorCard({
           openDetail();
         }
       }}
-      className={`group relative isolate flex h-full w-full min-w-0 cursor-pointer flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm text-left transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${selected ? "border-primary ring-2 ring-primary/35" : ""}`}
+      className={`group relative isolate flex h-full w-full min-w-0 cursor-pointer flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white text-left transition hover:-translate-y-0.5 hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${selected ? "border-primary ring-2 ring-primary/35" : ""}`}
     >
       {showBookmark ? (
         <button

@@ -89,7 +89,7 @@ export function ApprovedVendorsSection({
                 >
                   <Link
                     href={`/client/browse/${v.user_id}`}
-                    className="group flex h-full w-full min-w-0 flex-col rounded-2xl border border-neutral-200 bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
+                    className="group flex h-full w-full min-w-0 flex-col rounded-2xl border border-neutral-200 bg-white p-3 text-left transition hover:-translate-y-0.5 hover:border-primary/30"
                   >
                     <VendorPortfolioCover
                       payload={p}
