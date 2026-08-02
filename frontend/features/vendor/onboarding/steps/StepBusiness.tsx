@@ -10,13 +10,12 @@ import {
 import { STEP_COPY } from "../onboardingCopy";
 import type { VendorOnboardingData, VendorOnboardingUpdate } from "../types";
 import {
-  OnboardingQuestionLayout,
   OnboardingSubQuestion,
 } from "../ui/OnboardingQuestionLayout";
 import { checkBusinessNameAvailable } from "@/lib/vendorProfileApi";
 import { Modal } from "@/components/ui/Modal";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
-import { inputClass, labelClass, ToggleChip } from "./form-primitives";
+import { ClearableTextField, labelClass, ToggleChip } from "./form-primitives";
 
 export type StepBusinessProps = {
   data: VendorOnboardingData;
@@ -93,15 +92,13 @@ export function StepBusiness({
 
   return (
     <div className="space-y-8">
-      <OnboardingQuestionLayout headline={copy.headline} subtext={copy.subtext} />
-      <OnboardingSubQuestion headline="Your business name" indexOffset={3}>
+      <OnboardingSubQuestion headline="Your business name" indexOffset={0}>
         <div>
           <label className={labelClass()}>Business name</label>
-          <input
-            className={inputClass()}
+          <ClearableTextField
             value={data.businessName}
-            onChange={(e) => {
-              update({ businessName: e.target.value });
+            onChange={(v) => {
+              update({ businessName: v });
               setBusinessNameError(null);
               setNameAvailable(null);
             }}
@@ -124,7 +121,7 @@ export function StepBusiness({
       <OnboardingSubQuestion
         headline={copy.servicesHeadline}
         subtext={copy.servicesSubtext}
-        indexOffset={6}
+        indexOffset={3}
       >
         <div className="flex flex-wrap gap-2">
           {SERVICE_OPTIONS.map((o) => (
@@ -146,7 +143,7 @@ export function StepBusiness({
           ))}
         </div>
       </OnboardingSubQuestion>
-      <OnboardingSubQuestion headline={copy.eventTypesHeadline} indexOffset={9}>
+      <OnboardingSubQuestion headline={copy.eventTypesHeadline} indexOffset={6}>
         <div className="flex flex-wrap gap-2">
           {EVENT_TYPE_OPTIONS.map((o) => (
             <ToggleChip

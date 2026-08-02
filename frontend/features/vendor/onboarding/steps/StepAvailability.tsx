@@ -2,10 +2,9 @@ import { useState } from "react";
 import { STEP_COPY } from "../onboardingCopy";
 import type { VendorOnboardingData, VendorOnboardingUpdate } from "../types";
 import {
-  OnboardingQuestionLayout,
   OnboardingSubQuestion,
 } from "../ui/OnboardingQuestionLayout";
-import { inputClass, ToggleChip } from "./form-primitives";
+import { ClearableTextField, ToggleChip } from "./form-primitives";
 import { DateInput } from "@/components/ui/DateInput";
 import { EVENT_DATE_PAST_ERROR, isPastIsoDate, todayIsoDate } from "@/lib/eventDateValidation";
 
@@ -92,8 +91,7 @@ export function StepAvailability({ data, update }: StepAvailabilityProps) {
 
   return (
     <div className="space-y-8">
-      <OnboardingQuestionLayout headline={copy.headline} subtext={copy.subtext} />
-      <OnboardingSubQuestion headline={copy.daysHeadline} indexOffset={3}>
+      <OnboardingSubQuestion headline={copy.daysHeadline} indexOffset={0}>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
@@ -151,12 +149,11 @@ export function StepAvailability({ data, update }: StepAvailabilityProps) {
         )}
       </OnboardingSubQuestion>
       <OnboardingSubQuestion headline={copy.maxBookingsHeadline} indexOffset={9}>
-        <input
+        <ClearableTextField
           type="number"
           min={1}
-          className={inputClass()}
           value={data.maxBookingsPerDay}
-          onChange={(e) => update({ maxBookingsPerDay: e.target.value })}
+          onChange={(v) => update({ maxBookingsPerDay: v })}
         />
       </OnboardingSubQuestion>
     </div>

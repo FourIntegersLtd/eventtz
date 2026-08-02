@@ -17,6 +17,7 @@ import {
   vendorOnboardingAiErrorMessage,
 } from "@/lib/vendorOnboardingAiApi";
 import { buildDraftBio } from "./onboardingLogic";
+import { normalizePublicBioText } from "./reviewDisplayHelpers";
 import { mapLegacyOnboardingStep } from "./onboardingProgress";
 import {
   mergePayloadIntoVendorData,
@@ -29,16 +30,25 @@ type UseOnboardingPersistenceOptions = {
   isWalkthrough: boolean;
   step: number;
   setStep: Dispatch<SetStateAction<number>>;
+  showToast: ReturnType<typeof import("@/components/ui/Toast").useToast>["showToast"];
 };
 
 export function useOnboardingPersistence({
   isWalkthrough,
   step,
   setStep,
+  showToast,
 }: UseOnboardingPersistenceOptions) {
   const { user, loading: authLoading } = useAuth();
   const [data, setData] = useState<VendorOnboardingData>(initialVendorOnboardingData);
-  const [formError, setFormError] = useState<string | null>(null);
+  const [formError, setFormErrorState] = useState<string | null>(null);
+  const [formErrorAlertKey, setFormErrorAlertKey] = useState(0);
+  const setFormError = useCallback((message: string | null) => {
+    setFormErrorState(message);
+    if (message) {
+      setFormErrorAlertKey((key) => key + 1);
+    }
+  }, []);
   const [bioVariant, setBioVariant] = useState(0);
   const [loadStatus, setLoadStatus] = useState<"loading" | "ready" | "error">("loading");
   const [saving, setSaving] = useState(false);
@@ -149,7 +159,7 @@ export function useOnboardingPersistence({
     try {
       const payload = vendorDataToPayload(data);
       const { bio } = await postGenerateVendorBio(payload);
-      const nextData = { ...data, aiBioDraft: bio };
+      const nextData = { ...data, aiBioDraft: normalizePublicBioText(bio) };
       setData(nextData);
       try {
         const res = await saveVendorProfile({
@@ -215,21 +225,32 @@ export function useOnboardingPersistence({
         email: merged.email?.trim() || user.email || "",
         password: "",
       });
-      if (res.status === "submitted" && res.approval_status === "approved") {
-        setStep(1);
+      if (res.approval_status === "approved") {
+        showToast({
+          title: "You're approved!",
+          description: "Your dashboard is ready — welcome to Eventtz.",
+          tone: "success",
+        });
+      } else if (res.status === "submitted") {
+        showToast({
+          title: "Still under review",
+          description: "We'll email you when your profile goes live.",
+          tone: "neutral",
+        });
       }
     } catch {
       setFormError("We couldn't refresh your status. Please try again.");
     } finally {
       setRefreshingStatus(false);
     }
-  }, [user?.email, applyVendorProfileResponse, setStep]);
+  }, [user?.email, applyVendorProfileResponse, showToast]);
 
   return {
     data,
     setData,
     update,
     formError,
+    formErrorAlertKey,
     setFormError,
     bioVariant,
     loadStatus,

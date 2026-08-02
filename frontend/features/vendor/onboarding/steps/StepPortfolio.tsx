@@ -5,7 +5,6 @@ import { ImagePlus, Trash2, Video, X } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { portfolioFileKey } from "@/lib/portfolioFileKey";
 import { SOCIAL_PLATFORM_OPTIONS } from "../constants";
-import { STEP_COPY } from "../onboardingCopy";
 import type { PortfolioImageQualityRow } from "../useVendorOnboardingController";
 import {
   createVendorSocialLink,
@@ -14,10 +13,10 @@ import {
   type VendorOnboardingUpdate,
 } from "../types";
 import {
-  OnboardingQuestionLayout,
   OnboardingSubQuestion,
 } from "../ui/OnboardingQuestionLayout";
-import { inputClass } from "./form-primitives";
+import { uploadedFileDisplayName } from "../uploadedFileDisplayName";
+import { ClearableTextField, inputClass } from "./form-primitives";
 
 export type StepPortfolioProps = {
   data: VendorOnboardingData;
@@ -30,7 +29,7 @@ export type StepPortfolioProps = {
   uploadingVideo?: boolean;
   videoUploadError?: string | null;
   onUploadPortfolioVideo: (file: File) => void | Promise<void>;
-  onRemovePortfolioVideo: () => void;
+  onRemovePortfolioVideo: (url: string) => void;
 };
 
 function ImageChip({
@@ -161,11 +160,7 @@ export function StepPortfolio({
 
   return (
     <div className="space-y-8">
-      <OnboardingQuestionLayout
-        headline={STEP_COPY[6].headline}
-        subtext={STEP_COPY[6].subtext}
-      />
-      <OnboardingSubQuestion headline="Upload your portfolio photos (optional)" indexOffset={3}>
+      <OnboardingSubQuestion headline="Upload your portfolio photos (optional)" indexOffset={0}>
         <div
           className={`rounded-xl border-2 border-dashed p-8 text-center transition ${
             dragOver
@@ -281,55 +276,62 @@ export function StepPortfolio({
           ))}
         </div>
       )}
-      <OnboardingSubQuestion headline="Add a video (optional)" indexOffset={6}>
-        {data.portfolioVideoNamePersisted ? (
-          <div className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3">
-            <Video className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.5} />
-            <span className="min-w-0 flex-1 truncate text-sm text-neutral-700">
-              Video uploaded
+      <OnboardingSubQuestion headline="Add videos (optional)" indexOffset={6}>
+        <div className="rounded-xl border-2 border-dashed border-neutral-200 bg-neutral-50/80 p-6 text-center">
+          <input
+            type="file"
+            accept="video/*"
+            className="hidden"
+            id="portfolio-video"
+            disabled={uploadingVideo}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void onUploadPortfolioVideo(f);
+              e.target.value = "";
+            }}
+          />
+          <label
+            htmlFor="portfolio-video"
+            className={`inline-flex cursor-pointer flex-col items-center gap-2 text-primary ${
+              uploadingVideo ? "pointer-events-none opacity-60" : ""
+            }`}
+          >
+            <Video className="h-7 w-7" strokeWidth={1.5} />
+            <span className="inline-flex items-center gap-2 text-sm font-medium hover:underline">
+              {uploadingVideo ? (
+                <>
+                  <LoadingSpinner size="sm" />
+                  Uploading…
+                </>
+              ) : (
+                "Click to upload a video"
+              )}
             </span>
-            <button
-              type="button"
-              onClick={onRemovePortfolioVideo}
-              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
-            >
-              <Trash2 className="h-3.5 w-3.5" /> Remove
-            </button>
-          </div>
-        ) : (
-          <div className="rounded-xl border-2 border-dashed border-neutral-200 bg-neutral-50/80 p-6 text-center">
-            <input
-              type="file"
-              accept="video/*"
-              className="hidden"
-              id="portfolio-video"
-              disabled={uploadingVideo}
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) void onUploadPortfolioVideo(f);
-                e.target.value = "";
-              }}
-            />
-            <label
-              htmlFor="portfolio-video"
-              className={`inline-flex cursor-pointer flex-col items-center gap-2 text-primary ${
-                uploadingVideo ? "pointer-events-none opacity-60" : ""
-              }`}
-            >
-              <Video className="h-7 w-7" strokeWidth={1.5} />
-              <span className="inline-flex items-center gap-2 text-sm font-medium hover:underline">
-                {uploadingVideo ? (
-                  <>
-                    <LoadingSpinner size="sm" />
-                    Uploading…
-                  </>
-                ) : (
-                  "Click to upload a short video"
-                )}
-              </span>
-            </label>
-          </div>
-        )}
+          </label>
+          <p className="mt-1 text-xs text-neutral-500">You can add more than one.</p>
+        </div>
+        {data.portfolioVideoNamesPersisted.length > 0 ? (
+          <ul className="mt-3 space-y-2">
+            {data.portfolioVideoNamesPersisted.map((url) => (
+              <li
+                key={url}
+                className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3"
+              >
+                <Video className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.5} />
+                <span className="min-w-0 flex-1 truncate text-sm text-neutral-700">
+                  {uploadedFileDisplayName(url, data.uploadedFileLabels, "Video")}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onRemovePortfolioVideo(url)}
+                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 className="h-3.5 w-3.5" /> Remove
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
         {videoUploadError ? (
           <p className="mt-1 text-xs text-red-700">{videoUploadError}</p>
         ) : null}
@@ -346,7 +348,7 @@ export function StepPortfolio({
         </div>
         {data.socialLinks.length === 0 ? (
           <p className="text-xs text-neutral-500">
-            Add Instagram, TikTok, or your website.
+            Add Instagram, TikTok, Twitter, or your website.
           </p>
         ) : (
           <div className="space-y-2">
@@ -371,10 +373,10 @@ export function StepPortfolio({
                       </option>
                     ))}
                   </select>
-                  <input
-                    className={inputClass()}
+                  <ClearableTextField
+                    className="min-w-0 flex-1"
                     value={link.handle}
-                    onChange={(e) => updateSocialLink(link.id, { handle: e.target.value })}
+                    onChange={(v) => updateSocialLink(link.id, { handle: v })}
                     placeholder={platformOpt.placeholder}
                   />
                   <button

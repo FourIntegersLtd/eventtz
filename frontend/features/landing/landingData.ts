@@ -148,7 +148,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
     items: [
       {
         q: "How does booking work?",
-        a: "Choose a vendor, add your date and venue, chat to agree the price, then pay once the vendor accepts. Everything stays in one place",
+        a: "Choose a vendor, add your date and venue, pick a listed price yourself or chat to agree a custom quote, then pay once the vendor accepts. Everything stays in one place",
       },
       {
         q: "When do I pay?",

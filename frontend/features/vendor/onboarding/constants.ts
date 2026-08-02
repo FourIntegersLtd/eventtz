@@ -43,6 +43,7 @@ export const VENDOR_WAITLIST_URL =
   "https://forms.gle/6c4Ezw5MNuQaYr238";
 
 /** Mirror backend `app/features/vendors/payload_validation.py`. */
+export const MIN_MONEY_GBP = 0.1;
 export const MAX_DISCOUNT_PCT = 100;
 export const MAX_MONEY_GBP = 1_000_000;
 export const MIN_MAX_BOOKINGS_PER_DAY = 1;
@@ -66,13 +67,14 @@ export const WEEKDAY_LABELS = [
 ];
 
 export const SOCIAL_PLATFORM_OPTIONS: {
-  value: "instagram" | "tiktok" | "facebook" | "website" | "other";
+  value: "instagram" | "tiktok" | "facebook" | "twitter" | "website" | "other";
   label: string;
   placeholder: string;
 }[] = [
   { value: "instagram", label: "Instagram", placeholder: "@yourbusiness" },
   { value: "tiktok", label: "TikTok", placeholder: "@yourbusiness" },
   { value: "facebook", label: "Facebook", placeholder: "facebook.com/yourbusiness" },
+  { value: "twitter", label: "Twitter / X", placeholder: "@yourbusiness" },
   { value: "website", label: "Website", placeholder: "https://yourbusiness.com" },
   { value: "other", label: "Other", placeholder: "Link or handle" },
 ];

@@ -47,6 +47,7 @@ export type SocialPlatform =
   | "instagram"
   | "tiktok"
   | "facebook"
+  | "twitter"
   | "website"
   | "other";
 
@@ -114,8 +115,10 @@ export interface VendorOnboardingData {
   /** Filenames last saved to the server (File objects cannot be restored from JSON). */
   portfolioFileNamesPersisted: string[];
   portfolioVideo: File | null;
-  /** Path last saved to the server for the portfolio video. */
-  portfolioVideoNamePersisted: string;
+  /** Public URLs for uploaded portfolio videos. */
+  portfolioVideoNamesPersisted: string[];
+  /** Original file names keyed by persisted upload URL. */
+  uploadedFileLabels: Record<string, string>;
   socialLinks: VendorSocialLink[];
   portfolioWarnings: string[];
   /** Kept for backward-compatible payloads; no longer collected in onboarding. */
@@ -130,6 +133,9 @@ export interface VendorOnboardingData {
   otherDocsFiles: File[];
   otherDocsNamesPersisted: string[];
   isHalal: boolean;
+  isVegan: boolean;
+  isVegetarian: boolean;
+  isGlutenFree: boolean;
   allergenInfo: string;
   // Step 8 - Review
   aiBioDraft: string;
@@ -187,7 +193,8 @@ export const initialVendorOnboardingData: VendorOnboardingData = {
   portfolioFiles: [],
   portfolioFileNamesPersisted: [],
   portfolioVideo: null,
-  portfolioVideoNamePersisted: "",
+  portfolioVideoNamesPersisted: [],
+  uploadedFileLabels: {},
   socialLinks: [],
   portfolioWarnings: [],
   stripeConnectStarted: false,
@@ -199,6 +206,9 @@ export const initialVendorOnboardingData: VendorOnboardingData = {
   otherDocsFiles: [],
   otherDocsNamesPersisted: [],
   isHalal: false,
+  isVegan: false,
+  isVegetarian: false,
+  isGlutenFree: false,
   allergenInfo: "",
   aiBioDraft: "",
   profileImageUrl: "",

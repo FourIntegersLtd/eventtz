@@ -4,9 +4,11 @@ import {
   MAX_MONEY_GBP,
   MAX_MAX_BOOKINGS_PER_DAY,
   MIN_MAX_BOOKINGS_PER_DAY,
+  MIN_MONEY_GBP,
 } from "@/features/vendor/onboarding/constants";
 import type { VendorOnboardingData } from "@/features/vendor/onboarding/types";
 import { portfolioFileKey } from "@/lib/portfolioFileKey";
+import { phoneRequiredSchema } from "@/lib/validation/phone";
 import { parseMoneyNumber } from "@/lib/vendorDiscountDisplay";
 
 const BIO_MAX_WORDS = 60;
@@ -22,14 +24,22 @@ function bioWordCount(text: string): number {
 }
 
 /** Returns a step-banner label/message, or null when valid. */
-function moneyFieldError(raw: string, label: string, required = false): string | null {
+function moneyFieldError(
+  raw: string,
+  label: string,
+  required = false,
+  minAmount = MIN_MONEY_GBP,
+): string | null {
   const trimmed = raw.trim();
   if (!trimmed) {
     return required ? `${label} is required` : null;
   }
   const n = parseMoneyNumber(trimmed);
   if (n === null) return `${label} must be a valid amount`;
-  if (n < 0 || n > MAX_MONEY_GBP) return `${label} is out of allowed range`;
+  if (n < minAmount || n > MAX_MONEY_GBP) {
+    if (n < minAmount) return `${label} must be at least £${minAmount.toFixed(2)}`;
+    return `${label} is out of allowed range`;
+  }
   return null;
 }
 
@@ -52,7 +62,10 @@ function addIssue(ctx: z.RefinementCtx, message: string) {
 const step1Schema = vendorDataSchema.superRefine((d, ctx) => {
   if (!d.firstName.trim()) addIssue(ctx, "First name");
   if (!d.lastName.trim()) addIssue(ctx, "Last name");
-  if (!d.phone.trim()) addIssue(ctx, "Phone number");
+  const phoneResult = phoneRequiredSchema.safeParse(d.phone);
+  if (!phoneResult.success) {
+    addIssue(ctx, phoneResult.error.issues[0]?.message ?? "Valid phone number");
+  }
 });
 
 const step2Schema = vendorDataSchema.superRefine((d, ctx) => {
@@ -101,6 +114,20 @@ const step4Schema = vendorDataSchema.superRefine((d, ctx) => {
   }
 
   if (d.offerDiscounts) {
+    if (!d.discountLabel.trim()) addIssue(ctx, "Discount name");
+    const hasList = d.discountPercentage.trim().length > 0;
+    const hasBulk =
+      d.bulkDiscountThreshold.trim().length > 0 && d.bulkDiscountPercent.trim().length > 0;
+    const hasOffPeak = d.offPeakDiscountPercent.trim().length > 0;
+    if (!hasList && !hasBulk && !hasOffPeak) {
+      addIssue(ctx, "At least one discount option");
+    }
+    if (
+      (d.bulkDiscountThreshold.trim() && !d.bulkDiscountPercent.trim()) ||
+      (!d.bulkDiscountThreshold.trim() && d.bulkDiscountPercent.trim())
+    ) {
+      addIssue(ctx, "Bulk discount needs a threshold and a percentage");
+    }
     for (const [raw, label] of [
       [d.discountPercentage, "List discount"],
       [d.bulkDiscountPercent, "Bulk discount"],

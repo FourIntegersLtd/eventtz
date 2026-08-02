@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { AuthPageShell } from "@/components/auth/AuthPageShell";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { Button } from "@/components/ui/Button";
@@ -9,6 +10,8 @@ import { TextField } from "@/components/ui/TextField";
 import { PasswordField } from "@/components/ui/PasswordField";
 import { dashboardPathForUserType } from "@/features/auth/authRouting";
 import { useUnifiedLogin } from "@/features/auth/useUnifiedLogin";
+import { resendVerification } from "@/lib/auth-api";
+import { getApiErrorDetail } from "@/lib/api-errors";
 
 export function UnifiedLoginView() {
   const {
@@ -23,7 +26,28 @@ export function UnifiedLoginView() {
     postAuthQuery,
     isAuthenticated,
     userType,
+    needsVerification,
   } = useUnifiedLogin();
+
+  const [resendBusy, setResendBusy] = useState(false);
+  const [resendNote, setResendNote] = useState<string | null>(null);
+
+  const onResend = async () => {
+    setResendNote(null);
+    if (!email.trim()) {
+      setResendNote("Enter your email above, then request a new link.");
+      return;
+    }
+    setResendBusy(true);
+    try {
+      const res = await resendVerification(email.trim());
+      setResendNote(res.message);
+    } catch (e: unknown) {
+      setResendNote(getApiErrorDetail(e) ?? "Could not send a new link. Try again later.");
+    } finally {
+      setResendBusy(false);
+    }
+  };
 
   return (
     <AuthPageShell logoHref={isAuthenticated ? dashboardPathForUserType(userType) : "/"}>
@@ -61,6 +85,25 @@ export function UnifiedLoginView() {
             <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-red-200/60">
               {error}
             </p>
+          ) : null}
+
+          {needsVerification ? (
+            <div className="space-y-2">
+              <Button
+                type="button"
+                variant="secondary"
+                loading={resendBusy}
+                className="w-full"
+                onClick={() => void onResend()}
+              >
+                Resend verification email
+              </Button>
+              {resendNote ? (
+                <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-800 ring-1 ring-amber-200/60">
+                  {resendNote}
+                </p>
+              ) : null}
+            </div>
           ) : null}
 
           <Button type="submit" loading={submitting} className="w-full">

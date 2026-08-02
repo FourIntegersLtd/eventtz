@@ -4,15 +4,21 @@ import { useRef, type ReactNode } from "react";
 import { Pencil } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import {
-  EVENT_TYPE_OPTIONS,
-  SERVICE_OPTIONS,
   SOCIAL_PLATFORM_OPTIONS,
   WEEKDAY_LABELS,
 } from "../constants";
 import { bioWordCount } from "../onboardingLogic";
+import {
+  formatDiscountSummary,
+  formatReviewBlockedDates,
+  formatReviewEventTypes,
+  formatReviewServices,
+  hasAdditionalInfoContent,
+  hasPortfolioContent,
+  packageTravelPolicyLabel,
+} from "../reviewDisplayHelpers";
 import { getMarket } from "@/lib/markets";
 import { radiusOptionsForMarket } from "@/lib/photonLocationAutocomplete";
-import { STEP_COPY } from "../onboardingCopy";
 import { VendorPortfolioThumbGrid } from "@/components/vendor/VendorPortfolioThumbGrid";
 import { portfolioImageUrlsFromPayload } from "@/lib/vendorPortfolioImages";
 import type {
@@ -20,8 +26,8 @@ import type {
   VendorOnboardingData,
   VendorOnboardingUpdate,
 } from "../types";
-import { inputClass, labelClass } from "./form-primitives";
-import { OnboardingQuestionLayout } from "../ui/OnboardingQuestionLayout";
+import { ClearableTextarea, inputClass, labelClass } from "./form-primitives";
+import { uploadedFileDisplayName } from "../uploadedFileDisplayName";
 import { AnimatedStepItem } from "../ui/AnimatedStepItem";
 
 const BIO_MAX_WORDS = 60;
@@ -42,16 +48,6 @@ const TRAVEL_DELIVERY_POLICY_LABELS: Record<TravelDeliveryPolicy, string> = {
   not_applicable: "Not applicable",
   custom: "Custom rule",
 };
-
-function labelsFromValues(
-  values: string[],
-  options: { value: string; label: string }[],
-): string {
-  if (values.length === 0) return "-";
-  return values
-    .map((v) => options.find((o) => o.value === v)?.label ?? v)
-    .join(", ");
-}
 
 function ReviewSection({
   title,
@@ -196,6 +192,8 @@ export function StepReview({
   })();
   const wordCount = bioWordCount(data.aiBioDraft);
   const overLimit = wordCount > BIO_MAX_WORDS;
+  const blockedDatesLabel = formatReviewBlockedDates(data.blockedDates);
+  const discountLines = formatDiscountSummary(data);
   const persistedPortfolioUrls = portfolioImageUrlsFromPayload({
     portfolioFileNames: data.portfolioFileNamesPersisted,
   });
@@ -262,41 +260,41 @@ export function StepReview({
 
   const bioBlock = (
     <div className="space-y-3">
-      <textarea
-        className={`${inputClass()} min-h-[100px]`}
+      <ClearableTextarea
+        className="min-h-[100px]"
         value={data.aiBioDraft}
-        onChange={(e) => update({ aiBioDraft: e.target.value })}
+        onChange={(v) => update({ aiBioDraft: v })}
       />
       <p
         className={`text-right text-xs ${overLimit ? "text-red-600" : "text-neutral-400"}`}
       >
         {wordCount}/{BIO_MAX_WORDS} words
       </p>
-      <div className="flex flex-col items-stretch justify-center gap-2 sm:flex-row sm:flex-wrap">
-        <div className="flex-1 sm:flex-none">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="flex flex-col">
           <button
             type="button"
             disabled={generatingBio}
             onClick={() => void onGenerateBioWithAI()}
-            className="inline-flex w-full items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+            className="inline-flex min-h-[42px] w-full items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {generatingBio ? "Generating…" : "Generate bio with AI"}
           </button>
-          <p className="mt-1 text-center text-[11px] text-neutral-500 sm:text-left">
-            Writes a personalised bio from your profile details.
+          <p className="mt-1.5 text-[11px] leading-snug text-neutral-500">
+            Writes a tailored bio from your full profile using AI (takes a few seconds).
           </p>
         </div>
-        <div className="flex-1 sm:flex-none">
+        <div className="flex flex-col">
           <button
             type="button"
             disabled={generatingBio}
             onClick={onRegenerateBio}
-            className="inline-flex w-full items-center justify-center rounded-lg border border-primary/25 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/15 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+            className="inline-flex min-h-[42px] w-full items-center justify-center rounded-lg border border-primary/25 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Quick template (local)
+            Use quick template
           </button>
-          <p className="mt-1 text-center text-[11px] text-neutral-500 sm:text-left">
-            Editable starter text. No AI.
+          <p className="mt-1.5 text-[11px] leading-snug text-neutral-500">
+            Inserts a ready-made paragraph instantly — no AI, easy to edit.
           </p>
         </div>
       </div>
@@ -331,14 +329,8 @@ export function StepReview({
       >
         <FieldList compact={!isLiveEdit}>
           <Field label="Business name" value={data.businessName || "-"} />
-          <Field
-            label="Services"
-            value={labelsFromValues(data.servicesOffered, SERVICE_OPTIONS)}
-          />
-          <Field
-            label="Event types"
-            value={labelsFromValues(data.eventTypes, EVENT_TYPE_OPTIONS)}
-          />
+          <Field label="Services" value={formatReviewServices(data.servicesOffered)} />
+          <Field label="Event types" value={formatReviewEventTypes(data.eventTypes)} />
         </FieldList>
       </ReviewSection>
 
@@ -404,8 +396,11 @@ export function StepReview({
                     <p className="mt-0.5 text-xs text-neutral-500">{p.details}</p>
                   ) : null}
                   <p className="mt-1 text-xs text-neutral-500">
-                    Default travel rule:{" "}
-                    {(p.useDefaultTravelPackage ?? true) ? "Yes" : "No"}
+                    Travel:{" "}
+                    {packageTravelPolicyLabel(
+                      data,
+                      p.useDefaultTravelPackage ?? true,
+                    )}
                   </p>
                 </li>
               ))}
@@ -419,25 +414,9 @@ export function StepReview({
         {data.offerDiscounts ? (
           <div className="space-y-1 border-t border-neutral-100 px-5 py-3.5 text-sm text-neutral-700 sm:px-6">
             <p className="font-medium text-neutral-900">Discounts</p>
-            {data.discountPercentage.trim() ? (
-              <p>
-                {data.discountPercentage.trim()}% off
-                {data.discountLabel.trim()
-                  ? ` - ${data.discountLabel.trim()}`
-                  : ""}{" "}
-                on listed prices
-              </p>
-            ) : null}
-            {data.bulkDiscountThreshold.trim() &&
-            data.bulkDiscountPercent.trim() ? (
-              <p>
-                Extra {data.bulkDiscountPercent.trim()}% off over £
-                {data.bulkDiscountThreshold.trim()}
-              </p>
-            ) : null}
-            {data.offPeakDiscountPercent.trim() ? (
-              <p>{data.offPeakDiscountPercent.trim()}% off off-peak dates</p>
-            ) : null}
+            {discountLines.map((line) => (
+              <p key={line}>{line}</p>
+            ))}
           </div>
         ) : null}
       </ReviewSection>
@@ -461,79 +440,98 @@ export function StepReview({
             label="Max bookings / day"
             value={data.maxBookingsPerDay || "-"}
           />
+          {blockedDatesLabel ? (
+            <Field label="Blocked dates" value={blockedDatesLabel} />
+          ) : null}
         </FieldList>
       </ReviewSection>
 
-      <ReviewSection
-        title="Portfolio & links"
-        step={6}
-        onNavigateToStep={onNavigateToStep}
-        isLiveEdit={isLiveEdit}
-      >
-        <FieldList compact={!isLiveEdit}>
-          <Field
-            label="Portfolio images"
-            value={
-              portfolioImageCount
-                ? `${portfolioImageCount} image(s) on file`
-                : "No images yet"
-            }
-          />
-          <Field
-            label="Video"
-            value={data.portfolioVideoNamePersisted ? "Uploaded" : "-"}
-          />
-          <Field
-            label="Social links"
-            value={
-              data.socialLinks.length
-                ? data.socialLinks
-                    .map((s) => {
-                      const platform =
-                        SOCIAL_PLATFORM_OPTIONS.find((o) => o.value === s.platform)
-                          ?.label ?? s.platform;
-                      return `${platform}: ${s.handle || "-"}`;
-                    })
-                    .join(", ")
-                : "-"
-            }
-          />
-        </FieldList>
-        {persistedPortfolioUrls.length > 0 ? (
-          <div className="border-t border-neutral-100 px-5 py-4 sm:px-6">
-            <VendorPortfolioThumbGrid urls={persistedPortfolioUrls} />
-          </div>
-        ) : null}
-        {data.socialLinks.length === 0 ? (
-          <p className="border-t border-neutral-100 bg-amber-50/80 px-5 py-3 text-sm text-amber-800 sm:px-6">
-            Add a social link to increase trust.
-          </p>
-        ) : null}
-      </ReviewSection>
+      {hasPortfolioContent(data) ? (
+        <ReviewSection
+          title="Portfolio & links"
+          step={6}
+          onNavigateToStep={onNavigateToStep}
+          isLiveEdit={isLiveEdit}
+        >
+          <FieldList compact={!isLiveEdit}>
+            {portfolioImageCount > 0 ? (
+              <Field
+                label="Portfolio images"
+                value={`${portfolioImageCount} image(s) on file`}
+              />
+            ) : null}
+            {data.portfolioVideoNamesPersisted.length > 0 ? (
+              <Field
+                label="Videos"
+                value={data.portfolioVideoNamesPersisted
+                  .map((url) =>
+                    uploadedFileDisplayName(url, data.uploadedFileLabels, "Video"),
+                  )
+                  .join(", ")}
+              />
+            ) : null}
+            {data.socialLinks.length > 0 ? (
+              <Field
+                label="Social links"
+                value={data.socialLinks
+                  .map((s) => {
+                    const platform =
+                      SOCIAL_PLATFORM_OPTIONS.find((o) => o.value === s.platform)
+                        ?.label ?? s.platform;
+                    return `${platform}: ${s.handle || "-"}`;
+                  })
+                  .join(", ")}
+              />
+            ) : null}
+          </FieldList>
+          {persistedPortfolioUrls.length > 0 ? (
+            <div className="border-t border-neutral-100 px-5 py-4 sm:px-6">
+              <VendorPortfolioThumbGrid urls={persistedPortfolioUrls} />
+            </div>
+          ) : null}
+        </ReviewSection>
+      ) : null}
 
-      <ReviewSection
-        title="Additional info"
-        step={7}
-        onNavigateToStep={onNavigateToStep}
-        isLiveEdit={isLiveEdit}
-      >
-        <FieldList compact={!isLiveEdit}>
-          <Field
-            label="Food hygiene certificate"
-            value={
-              data.foodHygieneCertNamePersisted ? "Uploaded" : "Not provided"
-            }
-          />
-          <Field
-            label="Indemnity / insurance"
-            value={
-              data.indemnityCertNamePersisted ? "Uploaded" : "Not provided"
-            }
-          />
-          <Field label="Halal" value={data.isHalal ? "Yes" : "Not specified"} />
-          <Field label="Allergen info" value={data.allergenInfo || "-"} />
-        </FieldList>
-      </ReviewSection>
+      {hasAdditionalInfoContent(data) ? (
+        <ReviewSection
+          title="Additional info"
+          step={7}
+          onNavigateToStep={onNavigateToStep}
+          isLiveEdit={isLiveEdit}
+        >
+          <FieldList compact={!isLiveEdit}>
+            {data.foodHygieneCertNamePersisted ? (
+              <Field
+                label="Food hygiene certificate"
+                value={uploadedFileDisplayName(
+                  data.foodHygieneCertNamePersisted,
+                  data.uploadedFileLabels,
+                  "Food hygiene certificate",
+                )}
+              />
+            ) : null}
+            {data.indemnityCertNamePersisted ? (
+              <Field
+                label="Indemnity / insurance"
+                value={uploadedFileDisplayName(
+                  data.indemnityCertNamePersisted,
+                  data.uploadedFileLabels,
+                  "Indemnity / insurance certificate",
+                )}
+              />
+            ) : null}
+            {data.isHalal ? <Field label="Halal" value="Yes" /> : null}
+            {data.isVegan ? <Field label="Vegan" value="Yes" /> : null}
+            {data.isVegetarian ? <Field label="Vegetarian" value="Yes" /> : null}
+            {data.isGlutenFree ? (
+              <Field label="Gluten-free" value="Yes" />
+            ) : null}
+            {data.allergenInfo.trim() ? (
+              <Field label="Allergen info" value={data.allergenInfo.trim()} />
+            ) : null}
+          </FieldList>
+        </ReviewSection>
+      ) : null}
     </>
   );
 
@@ -556,8 +554,7 @@ export function StepReview({
           className="mt-0.5"
         />
         <span>
-          I accept the platform&apos;s Terms &amp; Conditions, including food
-          hygiene, allergen, and payment policies.
+          I accept the Platform&apos;s Terms of Service and Legal Policies.
         </span>
       </label>
     </div>
@@ -614,22 +611,18 @@ export function StepReview({
 
   return (
     <div className="space-y-7">
-      <OnboardingQuestionLayout
-        headline={STEP_COPY[8].headline}
-        subtext={STEP_COPY[8].subtext}
-      />
-      <AnimatedStepItem index={4}>{profilePhotoBlock}</AnimatedStepItem>
-      <AnimatedStepItem index={5}>
+      <AnimatedStepItem index={0}>{profilePhotoBlock}</AnimatedStepItem>
+      <AnimatedStepItem index={1}>
         <label className={labelClass()}>Public bio</label>
         <p className="mb-2 text-xs text-neutral-500">
           Short bio for your public profile.
         </p>
         {bioBlock}
       </AnimatedStepItem>
-      <AnimatedStepItem index={6}>
+      <AnimatedStepItem index={2}>
         <div className="space-y-3">{reviewSections}</div>
       </AnimatedStepItem>
-      <AnimatedStepItem index={7}>{confirmations}</AnimatedStepItem>
+      <AnimatedStepItem index={3}>{confirmations}</AnimatedStepItem>
     </div>
   );
 }

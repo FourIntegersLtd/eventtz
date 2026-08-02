@@ -56,6 +56,8 @@ export function useOnboardingSteps({
 }: UseOnboardingStepsOptions) {
   const router = useRouter();
   const [businessNameError, setBusinessNameError] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [returnToReview, setReturnToReview] = useState(false);
 
   const {
     data,
@@ -100,6 +102,10 @@ export function useOnboardingSteps({
   const goNext = useCallback(async () => {
     if (step === 9 || saving || loadStatus !== "ready" || authLoading) return;
     if (lockedPendingReview) return;
+    if (phoneError && step === 1) {
+      setFormError("Fix your phone number before continuing.");
+      return;
+    }
     if (businessNameError && step === 2) {
       setFormError("Fix business name before continuing.");
       return;
@@ -167,6 +173,9 @@ export function useOnboardingSteps({
           track(MixpanelEvents.vendor_onboarding_submitted);
         }
         setStep(nextStep);
+        if (nextStep === 8) {
+          setReturnToReview(false);
+        }
       }
     } catch (e) {
       const detail =
@@ -194,6 +203,7 @@ export function useOnboardingSteps({
     profileStatus,
     approvalStatus,
     businessNameError,
+    phoneError,
     data,
     bioVariant,
     applyVendorProfileResponse,
@@ -216,11 +226,23 @@ export function useOnboardingSteps({
     setStep((s) => s - 1);
   }, [lockedPendingReview, step, setFormError, setStep]);
 
+  const goBackToReview = useCallback(() => {
+    setFormError(null);
+    setReturnToReview(false);
+    setStep(8);
+  }, [setFormError, setStep]);
+
   const navigateToStep = useCallback(
     (target: number) => {
       if (lockedPendingReview) return;
       if (target < 1 || target > 8) return;
       setFormError(null);
+      if (target >= 1 && target <= 7) {
+        setReturnToReview(true);
+      }
+      if (target === 8) {
+        setReturnToReview(false);
+      }
       setStep(target);
     },
     [lockedPendingReview, setFormError, setStep],
@@ -229,10 +251,14 @@ export function useOnboardingSteps({
   return {
     businessNameError,
     setBusinessNameError,
+    phoneError,
+    setPhoneError,
     primaryLabel,
     onViewProfileReview,
     goNext,
     goBack,
+    goBackToReview,
+    returnToReview,
     navigateToStep,
   };
 }

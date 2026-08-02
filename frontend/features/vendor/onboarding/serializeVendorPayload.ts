@@ -35,6 +35,33 @@ export function normalizeVendorPayload(
   return {};
 }
 
+function parseUploadedFileLabels(raw: unknown): Record<string, string> {
+  if (raw == null || typeof raw !== "object" || Array.isArray(raw)) return {};
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (typeof key === "string" && typeof value === "string" && value.trim()) {
+      out[key] = value.trim();
+    }
+  }
+  return out;
+}
+
+function parsePortfolioVideoUrls(
+  p: Record<string, unknown>,
+): string[] {
+  const fromArray = strArrFromPayload(p, "portfolioVideoNamesPersisted");
+  const legacy = coerceStr(p, "portfolioVideoNamePersisted").trim();
+  const urls = [...fromArray];
+  if (legacy && !urls.includes(legacy)) {
+    urls.unshift(legacy);
+  }
+  return urls.filter((u) => /^https?:\/\//i.test(u));
+}
+
+function strArrFromPayload(p: Record<string, unknown>, k: string): string[] {
+  return Array.isArray(p[k]) ? (p[k] as unknown[]).map(String) : [];
+}
+
 function coerceStr(p: Record<string, unknown>, k: string): string {
   const v = p[k];
   if (v == null) return "";
@@ -62,6 +89,7 @@ const SOCIAL_PLATFORM_SET = new Set<string>([
   "instagram",
   "tiktok",
   "facebook",
+  "twitter",
   "website",
   "other",
 ]);
@@ -143,7 +171,8 @@ export function vendorDataToPayload(
     blockedDates: data.blockedDates,
     maxBookingsPerDay: data.maxBookingsPerDay,
     portfolioFileNames: [...names],
-    portfolioVideoNamePersisted: data.portfolioVideoNamePersisted,
+    portfolioVideoNamesPersisted: data.portfolioVideoNamesPersisted,
+    uploadedFileLabels: data.uploadedFileLabels,
     socialLinks: data.socialLinks.map((s) => ({
       id: s.id,
       platform: s.platform,
@@ -157,6 +186,9 @@ export function vendorDataToPayload(
     indemnityCertNamePersisted: data.indemnityCertNamePersisted,
     otherDocsNamesPersisted: data.otherDocsNamesPersisted,
     isHalal: data.isHalal,
+    isVegan: data.isVegan,
+    isVegetarian: data.isVegetarian,
+    isGlutenFree: data.isGlutenFree,
     allergenInfo: data.allergenInfo,
     aiBioDraft: clampBioWords(data.aiBioDraft),
     profileImageUrl: data.profileImageUrl.trim(),
@@ -255,7 +287,8 @@ export function mergePayloadIntoVendorData(
     portfolioFiles: [],
     portfolioFileNamesPersisted,
     portfolioVideo: null,
-    portfolioVideoNamePersisted: coerceStr(p, "portfolioVideoNamePersisted"),
+    portfolioVideoNamesPersisted: parsePortfolioVideoUrls(p),
+    uploadedFileLabels: parseUploadedFileLabels(p.uploadedFileLabels),
     socialLinks,
     portfolioWarnings: strArr("portfolioWarnings"),
     // Legacy-only: read from stored payloads; not collected in onboarding.
@@ -274,6 +307,9 @@ export function mergePayloadIntoVendorData(
     otherDocsFiles: [],
     otherDocsNamesPersisted: strArr("otherDocsNamesPersisted"),
     isHalal: typeof p.isHalal === "boolean" ? p.isHalal : false,
+    isVegan: typeof p.isVegan === "boolean" ? p.isVegan : false,
+    isVegetarian: typeof p.isVegetarian === "boolean" ? p.isVegetarian : false,
+    isGlutenFree: typeof p.isGlutenFree === "boolean" ? p.isGlutenFree : false,
     allergenInfo: coerceStr(p, "allergenInfo"),
     aiBioDraft: coerceStr(p, "aiBioDraft"),
     profileImageUrl: coerceStr(p, "profileImageUrl"),

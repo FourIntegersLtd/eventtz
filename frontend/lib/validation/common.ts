@@ -43,11 +43,7 @@ export const preferredNameSchema = z
   .min(1, "Enter a preferred name.")
   .max(80, "Preferred name is too long.");
 
-export const phoneOptionalSchema = z
-  .string()
-  .trim()
-  .max(40, "Phone number is too long.")
-  .transform((v) => (v.length > 0 ? v : null));
+export { isValidPhoneNumber, phoneDigitsOnly, phoneOptionalSchema, phoneRequiredSchema } from "@/lib/validation/phone";
 
 export const isoDateSchema = z
   .string()

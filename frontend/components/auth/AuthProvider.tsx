@@ -89,7 +89,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       },
       signUp: async (email, password, opts) => {
         const result = await apiSignUp(email, password, opts);
-        await refreshUser();
+        // Signup no longer returns a session until email is verified.
+        if (!result.session) {
+          setUser(null);
+        } else {
+          await refreshUser();
+        }
         track(MixpanelEvents.user_signed_up, {
           user_type: opts?.userType ?? "client",
         });

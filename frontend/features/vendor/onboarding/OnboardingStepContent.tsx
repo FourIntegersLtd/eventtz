@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import type { VendorOnboardingData, VendorOnboardingUpdate } from "./types";
 import type { VendorApprovalStatus } from "@/lib/domain-types";
 import type { PortfolioImageQualityRow } from "./useVendorOnboardingController";
+import { OnboardingWizardStepTitle } from "./ui/OnboardingWizardStepTitle";
 import {
   StepAccount,
   StepAdditionalInfo,
@@ -22,6 +23,8 @@ type Props = {
   update: VendorOnboardingUpdate;
   businessNameError: string | null;
   setBusinessNameError: (v: string | null) => void;
+  phoneError: string | null;
+  setPhoneError: (v: string | null) => void;
   onRegenerateBio: () => void;
   onGenerateBioWithAI: () => void | Promise<void>;
   generatingBio?: boolean;
@@ -39,7 +42,7 @@ type Props = {
   uploadingVideo?: boolean;
   videoUploadError?: string | null;
   onUploadPortfolioVideo: (file: File) => void | Promise<void>;
-  onRemovePortfolioVideo: () => void;
+  onRemovePortfolioVideo: (url: string) => void;
   uploadingDoc: Record<"foodHygiene" | "indemnity" | "other", boolean>;
   onUploadAdditionalDoc: (
     kind: "foodHygiene" | "indemnity" | "other",
@@ -69,6 +72,8 @@ export function OnboardingStepContent({
   update,
   businessNameError,
   setBusinessNameError,
+  phoneError,
+  setPhoneError,
   onRegenerateBio,
   onGenerateBioWithAI,
   generatingBio,
@@ -97,12 +102,25 @@ export function OnboardingStepContent({
   isLiveEdit = false,
 }: Props) {
   const wrapLive = (node: ReactNode) =>
-    isLiveEdit ? <LiveEditStepShell>{node}</LiveEditStepShell> : node;
+    isLiveEdit ? (
+      <LiveEditStepShell>
+        {step >= 1 && step <= 8 ? <OnboardingWizardStepTitle step={step} /> : null}
+        {node}
+      </LiveEditStepShell>
+    ) : (
+      node
+    );
 
   switch (step) {
     case 1:
       return wrapLive(
-        <StepAccount data={data} update={update} showWelcomeHero={!isLiveEdit} />,
+        <StepAccount
+          data={data}
+          update={update}
+          phoneError={phoneError}
+          setPhoneError={setPhoneError}
+          showWelcomeHero={!isLiveEdit}
+        />,
       );
     case 2:
       return wrapLive(

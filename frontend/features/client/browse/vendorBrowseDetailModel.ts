@@ -19,6 +19,8 @@ export type BrowsePricingOption = {
   unitPriceGbp: number | null;
   /** e.g. "10% off - Easter discount" */
   discountBadge: string | null;
+  /** Travel/delivery policy for this package or default vendor rule. */
+  travelLine: string | null;
   /** Bulk / off-peak promos (informational). */
   promoLines: string[];
   description: string;
@@ -109,7 +111,32 @@ type RawPkg = {
   details: string;
   price: string;
   duration: string;
+  useDefaultTravelPackage: boolean;
 };
+
+const TRAVEL_POLICY_LABELS: Record<string, string> = {
+  fee_included: "Travel or delivery fee is included",
+  free_within_base_city:
+    "Free within their base city (extra may apply outside)",
+  fee_after_booking_request: "Travel or delivery fee confirmed after you enquire",
+  not_applicable: "Travel or delivery not needed for this service",
+};
+
+function packageTravelLine(
+  payload: Record<string, unknown>,
+  useDefaultTravelPackage: boolean,
+): string | null {
+  if (!useDefaultTravelPackage) {
+    return "Custom travel or delivery terms for this package";
+  }
+  const policyRaw = coerceStr(payload, "travelDeliveryPolicy");
+  if (policyRaw === "custom") {
+    const custom = coerceStr(payload, "travelDeliveryPolicyCustomText");
+    return custom || "Custom travel or delivery terms";
+  }
+  if (!policyRaw) return null;
+  return TRAVEL_POLICY_LABELS[policyRaw] ?? null;
+}
 
 function normalizePackages(payload: Record<string, unknown>): RawPkg[] {
   const raw = payload.packages;
@@ -123,6 +150,7 @@ function normalizePackages(payload: Record<string, unknown>): RawPkg[] {
       details: coerceStr(o, "details").trim(),
       price: coerceStr(o, "price").trim(),
       duration: coerceStr(o, "duration").trim(),
+      useDefaultTravelPackage: o.useDefaultTravelPackage !== false,
     };
   });
 }
@@ -177,6 +205,7 @@ export function buildBrowsePricingOptions(vendor: ExploreVendor): BrowsePricingO
       const timelineLine = pkg.duration.trim()
         ? pkg.duration.trim()
         : null;
+      const travelLine = packageTravelLine(p, pkg.useDefaultTravelPackage);
 
       return {
         id: pkg.id,
@@ -186,6 +215,7 @@ export function buildBrowsePricingOptions(vendor: ExploreVendor): BrowsePricingO
         compareAtDisplay: priced.compareAtDisplay,
         unitPriceGbp: priced.unitPriceGbp,
         discountBadge: priced.discountBadge,
+        travelLine,
         promoLines,
         description:
           pkg.details.trim() ||
@@ -208,6 +238,7 @@ export function buildBrowsePricingOptions(vendor: ExploreVendor): BrowsePricingO
       compareAtDisplay: priced.compareAtDisplay,
       unitPriceGbp: priced.unitPriceGbp,
       discountBadge: priced.discountBadge,
+      travelLine: packageTravelLine(p, p.useDefaultTravelHourly !== false),
       promoLines,
       description: "Hourly rate. Confirm hours and travel with the vendor.",
       timelineLine: null,
@@ -225,6 +256,7 @@ export function buildBrowsePricingOptions(vendor: ExploreVendor): BrowsePricingO
       compareAtDisplay: priced.compareAtDisplay,
       unitPriceGbp: priced.unitPriceGbp,
       discountBadge: priced.discountBadge,
+      travelLine: packageTravelLine(p, p.useDefaultTravelDaily !== false),
       promoLines,
       description: "Daily rate. Confirm coverage and travel with the vendor.",
       timelineLine: null,
@@ -245,6 +277,7 @@ export function buildBrowsePricingOptions(vendor: ExploreVendor): BrowsePricingO
       compareAtDisplay: null,
       unitPriceGbp: null,
       discountBadge: null,
+      travelLine: null,
       promoLines: [],
       description: "Prices aren't listed yet. Ask for a quote.",
       timelineLine: null,

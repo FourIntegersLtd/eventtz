@@ -236,17 +236,24 @@ export function VendorBrowseDetailBody({
               }}
             />
             <p className="text-sm leading-relaxed text-neutral-700">{bio}</p>
-            {facts.portfolioVideoUrl ? (
-              <a
-                href={facts.portfolioVideoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-              >
-                <Play className="h-4 w-4" aria-hidden />
-                Watch portfolio video
-                <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-              </a>
+            {facts.portfolioVideoUrls.length > 0 ? (
+              <div className="flex flex-col gap-2">
+                {facts.portfolioVideoUrls.map((url, index) => (
+                  <a
+                    key={url}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+                  >
+                    <Play className="h-4 w-4" aria-hidden />
+                    {facts.portfolioVideoUrls.length > 1
+                      ? `Watch portfolio video ${index + 1}`
+                      : "Watch portfolio video"}
+                    <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                  </a>
+                ))}
+              </div>
             ) : null}
           </div>
 
@@ -433,6 +440,9 @@ export function VendorBrowseDetailBody({
                           <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
                           {opt.timelineLine}
                         </p>
+                      ) : null}
+                      {opt.travelLine ? (
+                        <p className="mt-1.5 text-[13px] text-neutral-500">{opt.travelLine}</p>
                       ) : null}
                       {!isOpen && opt.description?.trim() ? (
                         <p className="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-neutral-500">

@@ -9,11 +9,10 @@ import type {
   VendorOnboardingUpdate,
 } from "../types";
 import {
-  OnboardingQuestionLayout,
   OnboardingSubQuestion,
 } from "../ui/OnboardingQuestionLayout";
 import { OnboardingOptionPill } from "../ui/OnboardingOptionPill";
-import { inputClass, labelClass, ToggleChip } from "./form-primitives";
+import { ClearableTextField, ClearableTextarea, labelClass, ToggleChip } from "./form-primitives";
 
 export type StepLocationProps = {
   data: VendorOnboardingData;
@@ -110,9 +109,8 @@ export function StepLocation({ data, update }: StepLocationProps) {
 
   return (
     <div className="space-y-8">
-      <OnboardingQuestionLayout headline={copy.headline} subtext={copy.subtext} />
       {showCountryPicker ? (
-        <OnboardingSubQuestion headline="Which country do you operate in?" indexOffset={3}>
+        <OnboardingSubQuestion headline="Which country do you operate in?" indexOffset={0}>
           <div className="flex flex-wrap gap-2">
             {markets.map((m) => (
               <ToggleChip
@@ -126,7 +124,7 @@ export function StepLocation({ data, update }: StepLocationProps) {
           </div>
         </OnboardingSubQuestion>
       ) : null}
-      <OnboardingSubQuestion headline="Where is your base city?" indexOffset={showCountryPicker ? 4 : 3}>
+      <OnboardingSubQuestion headline="Where is your base city?" indexOffset={showCountryPicker ? 1 : 0}>
         <LocationAutocompleteInput
           label="Base city"
           inputId="onboarding-base-city"
@@ -145,12 +143,12 @@ export function StepLocation({ data, update }: StepLocationProps) {
             <label className={labelClass()} htmlFor="onboarding-region">
               Region / county <span className="font-normal text-neutral-400">(optional)</span>
             </label>
-            <input
+            <ClearableTextField
               id="onboarding-region"
               type="text"
-              className={`${inputClass()} mt-1.5`}
+              className="mt-1.5"
               value={data.region}
-              onChange={(e) => update({ region: e.target.value })}
+              onChange={(v) => update({ region: v })}
               placeholder="e.g. Greater London"
             />
           </div>
@@ -158,12 +156,12 @@ export function StepLocation({ data, update }: StepLocationProps) {
             <label className={labelClass()} htmlFor="onboarding-postal">
               Postcode / ZIP <span className="font-normal text-neutral-400">(optional)</span>
             </label>
-            <input
+            <ClearableTextField
               id="onboarding-postal"
               type="text"
-              className={`${inputClass()} mt-1.5`}
+              className="mt-1.5"
               value={data.postalCode}
-              onChange={(e) => update({ postalCode: e.target.value })}
+              onChange={(v) => update({ postalCode: v })}
               placeholder={market.countryCode === "GB" ? "e.g. SW1A 1AA" : "Postal code"}
             />
           </div>
@@ -227,12 +225,10 @@ export function StepLocation({ data, update }: StepLocationProps) {
         {data.travelDeliveryPolicy === "custom" ? (
           <div className="mt-4">
             <label className={labelClass()}>Describe your travel / delivery rule</label>
-            <textarea
-              className={`${inputClass()} mt-1.5 min-h-[80px]`}
+            <ClearableTextarea
+              className="mt-1.5 min-h-[80px]"
               value={data.travelDeliveryPolicyCustomText}
-              onChange={(e) =>
-                update({ travelDeliveryPolicyCustomText: e.target.value })
-              }
+              onChange={(v) => update({ travelDeliveryPolicyCustomText: v })}
               placeholder={`e.g. £1.50 per ${distanceUnit === "km" ? "kilometre" : "mile"} beyond 10 ${distanceUnit} from base city`}
             />
           </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { VendorApprovalStatus } from "@/lib/domain-types";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
@@ -25,6 +26,18 @@ export function StepSubmitted({
   const approved = approvalStatus === "approved";
   const banned = approvalStatus === "banned";
 
+  const heading = approved
+    ? "You're approved"
+    : banned
+      ? "Profile not visible"
+      : "Profile submitted";
+
+  const statusCopy = approved
+    ? "Your profile is live. Head to your dashboard to manage bookings and enquiries."
+    : banned
+      ? "Your profile isn't visible to clients. Contact support if you believe this is a mistake."
+      : "We're reviewing your profile. This usually takes 1–3 business days — we'll email you when you're live.";
+
   return (
     <div className="space-y-6 py-4 text-center">
       <AnimatedStepItem index={0}>
@@ -35,20 +48,25 @@ export function StepSubmitted({
         />
       </AnimatedStepItem>
       <AnimatedStepItem index={1}>
-        <h2 className="font-heading text-2xl font-semibold text-neutral-900">
-          Thank you for signing up
-        </h2>
-      </AnimatedStepItem>
-      {businessName?.trim() ? (
-        <AnimatedStepItem index={2}>
-          <p className="text-sm font-medium text-neutral-700">
-            Profile: <span className="text-neutral-900">{businessName.trim()}</span>
+        <h2 className="font-heading text-2xl font-semibold text-neutral-900">{heading}</h2>
+        {businessName?.trim() ? (
+          <p className="mt-2 text-sm font-medium text-neutral-700">
+            {businessName.trim()}
           </p>
-        </AnimatedStepItem>
-      ) : null}
+        ) : null}
+        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-neutral-600">
+          {statusCopy}
+        </p>
+      </AnimatedStepItem>
       {approved ? (
-        <AnimatedStepItem index={3}>
+        <AnimatedStepItem index={2}>
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Link
+              href="/vendor/dashboard"
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm hover:opacity-95 sm:w-auto sm:min-w-[12rem]"
+            >
+              Go to dashboard
+            </Link>
             <button
               type="button"
               onClick={onViewProfileReview}
@@ -59,36 +77,29 @@ export function StepSubmitted({
           </div>
         </AnimatedStepItem>
       ) : banned ? (
-        <AnimatedStepItem index={3}>
+        <AnimatedStepItem index={2}>
           <LottieFailureInline
             message="Your profile isn't visible to clients."
             className="mx-auto max-w-md text-left"
           />
         </AnimatedStepItem>
       ) : (
-        <AnimatedStepItem index={3}>
-          <div className="space-y-3">
-            <p className="mx-auto max-w-md text-sm leading-relaxed text-neutral-600">
-              Your profile is under review. We usually respond within a few business days.
-            </p>
-            <p className="text-xs text-neutral-500">
-              <button
-                type="button"
-                disabled={refreshing}
-                onClick={onRefreshStatus}
-                className="inline-flex items-center justify-center gap-2 font-medium text-primary underline hover:no-underline disabled:opacity-50"
-              >
-                {refreshing ? (
-                  <>
-                    <LoadingSpinner size="sm" />
-                    Checking…
-                  </>
-                ) : (
-                  "Check approval status"
-                )}
-              </button>
-            </p>
-          </div>
+        <AnimatedStepItem index={2}>
+          <button
+            type="button"
+            disabled={refreshing}
+            onClick={onRefreshStatus}
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm hover:opacity-95 disabled:opacity-60 sm:mx-auto sm:w-auto sm:min-w-[12rem]"
+          >
+            {refreshing ? (
+              <>
+                <LoadingSpinner size="sm" />
+                Checking…
+              </>
+            ) : (
+              "Check approval status"
+            )}
+          </button>
         </AnimatedStepItem>
       )}
     </div>

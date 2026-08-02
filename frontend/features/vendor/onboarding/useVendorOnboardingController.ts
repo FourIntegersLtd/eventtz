@@ -19,6 +19,7 @@ export function useVendorOnboardingController(options?: { isWalkthrough?: boolea
     isWalkthrough,
     step,
     setStep,
+    showToast,
   });
 
   const media = useOnboardingMedia({
@@ -45,7 +46,9 @@ export function useVendorOnboardingController(options?: { isWalkthrough?: boolea
     step,
     data: persistence.data,
     businessNameError: steps.businessNameError,
+    phoneError: steps.phoneError,
     formError: persistence.formError,
+    formErrorAlertKey: persistence.formErrorAlertKey,
     setFormError: persistence.setFormError,
     loadStatus: persistence.loadStatus,
     saving: persistence.saving,
@@ -58,12 +61,15 @@ export function useVendorOnboardingController(options?: { isWalkthrough?: boolea
     primaryLabel: steps.primaryLabel,
     profileStatus: persistence.profileStatus,
     setBusinessNameError: steps.setBusinessNameError,
+    setPhoneError: steps.setPhoneError,
     onRegenerateBio: persistence.onRegenerateBio,
     onGenerateBioWithAI: persistence.onGenerateBioWithAI,
     onViewProfileReview: steps.onViewProfileReview,
     onRefreshStatus: persistence.onRefreshStatus,
     goNext: steps.goNext,
     goBack: steps.goBack,
+    goBackToReview: steps.goBackToReview,
+    returnToReview: steps.returnToReview,
     navigateToStep: steps.navigateToStep,
     update: persistence.update,
     authLoading,

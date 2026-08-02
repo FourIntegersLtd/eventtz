@@ -2,13 +2,12 @@
 
 import { FileText, Trash2, Upload } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { STEP_COPY } from "../onboardingCopy";
 import type { VendorOnboardingData, VendorOnboardingUpdate } from "../types";
 import {
-  OnboardingQuestionLayout,
   OnboardingSubQuestion,
 } from "../ui/OnboardingQuestionLayout";
-import { inputClass, labelClass } from "./form-primitives";
+import { ClearableTextarea, labelClass } from "./form-primitives";
+import { uploadedFileDisplayName } from "../uploadedFileDisplayName";
 
 export type StepAdditionalInfoProps = {
   data: VendorOnboardingData;
@@ -26,6 +25,7 @@ function DocUploadRow({
   label,
   helpText,
   persistedUrl,
+  displayName,
   uploading,
   inputId,
   onUpload,
@@ -34,6 +34,7 @@ function DocUploadRow({
   label: string;
   helpText: string;
   persistedUrl: string;
+  displayName: string;
   uploading?: boolean;
   inputId: string;
   onUpload: (file: File) => void;
@@ -46,9 +47,7 @@ function DocUploadRow({
       {persistedUrl ? (
         <div className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3">
           <FileText className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.5} />
-          <span className="min-w-0 flex-1 truncate text-sm text-neutral-700">
-            Document uploaded
-          </span>
+          <span className="min-w-0 flex-1 truncate text-sm text-neutral-700">{displayName}</span>
           <button
             type="button"
             onClick={onRemove}
@@ -95,6 +94,28 @@ function DocUploadRow({
   );
 }
 
+function DietaryCheckbox({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  label: string;
+}) {
+  return (
+    <label className="flex items-start gap-3 text-sm">
+      <input
+        type="checkbox"
+        className="mt-0.5"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+      <span>{label}</span>
+    </label>
+  );
+}
+
 export function StepAdditionalInfo({
   data,
   update,
@@ -103,17 +124,18 @@ export function StepAdditionalInfo({
   onRemoveAdditionalDoc,
   onRemoveOtherDoc,
 }: StepAdditionalInfoProps) {
-  const copy = STEP_COPY[7];
-
   return (
     <div className="space-y-8">
-      <OnboardingQuestionLayout headline={copy.headline} subtext={copy.subtext} />
-
-      <OnboardingSubQuestion headline="Food hygiene certificate" indexOffset={3}>
+      <OnboardingSubQuestion headline="Food hygiene certificate" indexOffset={0}>
         <DocUploadRow
           label=""
           helpText="If you handle or serve food, clients feel safer booking a certified vendor."
           persistedUrl={data.foodHygieneCertNamePersisted}
+          displayName={uploadedFileDisplayName(
+            data.foodHygieneCertNamePersisted,
+            data.uploadedFileLabels,
+            "Food hygiene certificate",
+          )}
           uploading={uploadingDoc.foodHygiene}
           inputId="doc-food-hygiene"
           onUpload={(f) => void onUploadAdditionalDoc("foodHygiene", f)}
@@ -121,11 +143,16 @@ export function StepAdditionalInfo({
         />
       </OnboardingSubQuestion>
 
-      <OnboardingSubQuestion headline="Indemnity / insurance certificate" indexOffset={6}>
+      <OnboardingSubQuestion headline="Indemnity / insurance certificate" indexOffset={3}>
         <DocUploadRow
           label=""
           helpText="Public liability or indemnity insurance, if you have it."
           persistedUrl={data.indemnityCertNamePersisted}
+          displayName={uploadedFileDisplayName(
+            data.indemnityCertNamePersisted,
+            data.uploadedFileLabels,
+            "Indemnity / insurance certificate",
+          )}
           uploading={uploadingDoc.indemnity}
           inputId="doc-indemnity"
           onUpload={(f) => void onUploadAdditionalDoc("indemnity", f)}
@@ -175,7 +202,7 @@ export function StepAdditionalInfo({
               >
                 <FileText className="h-4 w-4 shrink-0 text-neutral-500" />
                 <span className="min-w-0 flex-1 truncate text-sm text-neutral-700">
-                  Document uploaded
+                  {uploadedFileDisplayName(url, data.uploadedFileLabels, "Document")}
                 </span>
                 <button
                   type="button"
@@ -191,26 +218,37 @@ export function StepAdditionalInfo({
       </OnboardingSubQuestion>
 
       <OnboardingSubQuestion headline="Dietary details (optional)" indexOffset={12}>
-        <label className="flex items-start gap-3 text-sm">
-          <input
-            type="checkbox"
-            className="mt-0.5"
+        <p className="mb-3 text-xs text-neutral-500">
+          Only relevant if you offer food or catering services.
+        </p>
+        <div className="space-y-3">
+          <DietaryCheckbox
             checked={data.isHalal}
-            onChange={(e) => update({ isHalal: e.target.checked })}
+            onChange={(checked) => update({ isHalal: checked })}
+            label="Halal"
           />
-          <span>
-            My food is halal
-            <span className="mt-0.5 block text-xs font-normal text-neutral-500">
-              Only relevant if you offer food or catering services.
-            </span>
-          </span>
-        </label>
+          <DietaryCheckbox
+            checked={data.isVegan}
+            onChange={(checked) => update({ isVegan: checked })}
+            label="Vegan options available"
+          />
+          <DietaryCheckbox
+            checked={data.isVegetarian}
+            onChange={(checked) => update({ isVegetarian: checked })}
+            label="Vegetarian options available"
+          />
+          <DietaryCheckbox
+            checked={data.isGlutenFree}
+            onChange={(checked) => update({ isGlutenFree: checked })}
+            label="Gluten-free options available"
+          />
+        </div>
         <div className="mt-4">
           <label className={labelClass()}>Allergen information (optional)</label>
-          <textarea
-            className={`${inputClass()} min-h-[80px]`}
+          <ClearableTextarea
+            className="min-h-[80px]"
             value={data.allergenInfo}
-            onChange={(e) => update({ allergenInfo: e.target.value })}
+            onChange={(v) => update({ allergenInfo: v })}
             placeholder="e.g. Contains nuts and dairy; gluten-free options available on request"
           />
         </div>

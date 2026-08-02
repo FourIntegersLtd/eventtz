@@ -171,7 +171,11 @@ export function useOnboardingMedia({
       setData((prev) => ({
         ...prev,
         portfolioVideo: null,
-        portfolioVideoNamePersisted: uploaded.public_url,
+        portfolioVideoNamesPersisted: [...prev.portfolioVideoNamesPersisted, uploaded.public_url],
+        uploadedFileLabels: {
+          ...prev.uploadedFileLabels,
+          [uploaded.public_url]: file.name,
+        },
       }));
     } catch {
       setVideoUploadError("Could not upload video. Check your connection and try again.");
@@ -180,8 +184,17 @@ export function useOnboardingMedia({
     }
   }, [setData]);
 
-  const onRemovePortfolioVideo = useCallback(() => {
-    setData((prev) => ({ ...prev, portfolioVideo: null, portfolioVideoNamePersisted: "" }));
+  const onRemovePortfolioVideo = useCallback((url: string) => {
+    setData((prev) => {
+      const nextLabels = { ...prev.uploadedFileLabels };
+      delete nextLabels[url];
+      return {
+        ...prev,
+        portfolioVideo: null,
+        portfolioVideoNamesPersisted: prev.portfolioVideoNamesPersisted.filter((u) => u !== url),
+        uploadedFileLabels: nextLabels,
+      };
+    });
   }, [setData]);
 
   const [uploadingProfileImage, setUploadingProfileImage] = useState(false);
@@ -219,16 +232,31 @@ export function useOnboardingMedia({
       try {
         const uploaded = await uploadFile(file);
         setData((prev) => {
+          const labelPatch = {
+            ...prev.uploadedFileLabels,
+            [uploaded.public_url]: file.name,
+          };
           if (kind === "foodHygiene") {
-            return { ...prev, foodHygieneCertFile: null, foodHygieneCertNamePersisted: uploaded.public_url };
+            return {
+              ...prev,
+              foodHygieneCertFile: null,
+              foodHygieneCertNamePersisted: uploaded.public_url,
+              uploadedFileLabels: labelPatch,
+            };
           }
           if (kind === "indemnity") {
-            return { ...prev, indemnityCertFile: null, indemnityCertNamePersisted: uploaded.public_url };
+            return {
+              ...prev,
+              indemnityCertFile: null,
+              indemnityCertNamePersisted: uploaded.public_url,
+              uploadedFileLabels: labelPatch,
+            };
           }
           return {
             ...prev,
             otherDocsFiles: [],
             otherDocsNamesPersisted: [...prev.otherDocsNamesPersisted, uploaded.public_url],
+            uploadedFileLabels: labelPatch,
           };
         });
       } catch {
@@ -242,21 +270,42 @@ export function useOnboardingMedia({
 
   const onRemoveAdditionalDoc = useCallback(
     (kind: "foodHygiene" | "indemnity") => {
-      setData((prev) =>
-        kind === "foodHygiene"
-          ? { ...prev, foodHygieneCertFile: null, foodHygieneCertNamePersisted: "" }
-          : { ...prev, indemnityCertFile: null, indemnityCertNamePersisted: "" },
-      );
+      setData((prev) => {
+        const url =
+          kind === "foodHygiene"
+            ? prev.foodHygieneCertNamePersisted
+            : prev.indemnityCertNamePersisted;
+        const nextLabels = { ...prev.uploadedFileLabels };
+        if (url) delete nextLabels[url];
+        return kind === "foodHygiene"
+          ? {
+              ...prev,
+              foodHygieneCertFile: null,
+              foodHygieneCertNamePersisted: "",
+              uploadedFileLabels: nextLabels,
+            }
+          : {
+              ...prev,
+              indemnityCertFile: null,
+              indemnityCertNamePersisted: "",
+              uploadedFileLabels: nextLabels,
+            };
+      });
     },
     [setData],
   );
 
   const onRemoveOtherDoc = useCallback(
     (url: string) => {
-      setData((prev) => ({
-        ...prev,
-        otherDocsNamesPersisted: prev.otherDocsNamesPersisted.filter((u) => u !== url),
-      }));
+      setData((prev) => {
+        const nextLabels = { ...prev.uploadedFileLabels };
+        delete nextLabels[url];
+        return {
+          ...prev,
+          otherDocsNamesPersisted: prev.otherDocsNamesPersisted.filter((u) => u !== url),
+          uploadedFileLabels: nextLabels,
+        };
+      });
     },
     [setData],
   );

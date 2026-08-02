@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 import { portalCard, portalCardPaddingLg } from "@/components/portal-shell/portalTheme";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
@@ -8,6 +9,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { STEP_LABELS } from "./constants";
 import { OnboardingStepContent } from "./OnboardingStepContent";
 import { OnboardingProgressHeader } from "./OnboardingProgressHeader";
+import { OnboardingWizardStepTitle } from "./ui/OnboardingWizardStepTitle";
 import { useVendorOnboardingController } from "./useVendorOnboardingController";
 import { Button } from "@/components/ui/Button";
 import { LoadingState } from "@/components/ui/LoadingState";
@@ -24,7 +26,9 @@ export function VendorOnboarding() {
     step,
     data,
     businessNameError,
+    phoneError,
     formError,
+    formErrorAlertKey,
     setFormError,
     loadStatus,
     saving,
@@ -36,6 +40,7 @@ export function VendorOnboarding() {
     primaryLabel,
     profileStatus,
     setBusinessNameError,
+    setPhoneError,
     onRegenerateBio,
     onGenerateBioWithAI,
     generatingBio,
@@ -43,6 +48,8 @@ export function VendorOnboarding() {
     onRefreshStatus,
     goNext,
     goBack,
+    goBackToReview,
+    returnToReview,
     navigateToStep,
     update,
     authLoading,
@@ -69,6 +76,13 @@ export function VendorOnboarding() {
   const useWizardLayout = isWalkthrough || !isApprovedLive;
 
   const isLiveEdit = !useWizardLayout;
+  const questionnaireTopRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isLiveEdit || step > 8) return;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    questionnaireTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [step, isLiveEdit]);
 
   const stepContentProps = {
     step,
@@ -76,6 +90,8 @@ export function VendorOnboarding() {
     update,
     businessNameError,
     setBusinessNameError,
+    phoneError,
+    setPhoneError,
     onRegenerateBio,
     onGenerateBioWithAI,
     generatingBio,
@@ -192,6 +208,7 @@ export function VendorOnboarding() {
         </div>
       )}
       <Modal
+        key={formErrorAlertKey}
         isOpen={!!formError}
         onClose={() => setFormError(null)}
         title="Almost there"
@@ -294,88 +311,56 @@ export function VendorOnboarding() {
         </div>
       ) : (
         <div className="mx-auto max-w-3xl">
+          <div ref={questionnaireTopRef} className="scroll-mt-4" aria-hidden />
           {step <= 8 && (
-            <div className="mb-6 flex items-start gap-3">
-              {step > 1 && (
-                <button
-                  type="button"
-                  onClick={goBack}
-                  aria-label="Go back"
-                  className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-neutral-600 shadow-sm ring-1 ring-neutral-200/50 transition hover:bg-neutral-50"
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </button>
-              )}
-              <div className="min-w-0 flex-1">
-                <OnboardingProgressHeader step={step} saving={saving} />
-              </div>
+            <div className="mb-6">
+              <OnboardingProgressHeader step={step} />
             </div>
           )}
           <div className={`${portalCard} ${portalCardPaddingLg}`}>
+            {step <= 8 ? <OnboardingWizardStepTitle step={step} /> : null}
             <div key={step} className="animate-onboarding-panel">
               <OnboardingStepContent {...stepContentProps} />
             </div>
 
             {step <= 8 && (
               <div className="mt-10 border-t border-neutral-100 pt-8">
-                <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex flex-col gap-2 sm:justify-start">
-                    {step > 1 && step < 9 && (
+                <p className="mb-4 text-center text-xs text-neutral-500 sm:text-left">
+                  Close anytime. Your progress is saved.
+                </p>
+                <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+                  {returnToReview && step < 8 ? (
+                    <button
+                      type="button"
+                      onClick={goBackToReview}
+                      className="min-h-11 w-full rounded-xl border border-primary/20 bg-primary/5 px-5 py-3 text-sm font-semibold text-primary transition hover:bg-primary/10 sm:order-first sm:w-auto sm:min-w-[9rem]"
+                    >
+                      Back to review
+                    </button>
+                  ) : null}
+                  <div className="flex flex-1 items-stretch gap-3">
+                    {step > 1 ? (
                       <button
                         type="button"
                         onClick={goBack}
-                        className="flex min-h-11 w-full items-center justify-center gap-1 rounded-xl bg-neutral-50 px-5 py-3 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 sm:hidden"
+                        className="flex min-h-11 flex-1 items-center justify-center gap-1 rounded-xl bg-neutral-50 px-5 py-3 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 sm:flex-none sm:min-w-[7.5rem]"
                       >
                         <ChevronLeft className="h-4 w-4" />
                         Back
                       </button>
+                    ) : (
+                      <span className="hidden min-w-[7.5rem] sm:inline-block" aria-hidden />
                     )}
-                    <p className="text-center text-xs text-neutral-500 sm:text-left">
-                      Close anytime. Your progress is saved.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => void goNext()}
-                    disabled={saving}
-                    className="min-h-11 w-full rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:opacity-90 disabled:opacity-60 sm:w-auto"
-                  >
-                    {saving ? "Saving…" : primaryLabel}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {step === 9 && (
-              <div className="mt-10 flex flex-col items-center gap-3 border-t border-neutral-100 pt-8 text-center">
-                {approvalStatus === "approved" ? (
-                  <Link
-                    href="/vendor/dashboard"
-                    className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:opacity-90 sm:w-auto sm:min-w-[12rem]"
-                  >
-                    Go to dashboard
-                  </Link>
-                ) : approvalStatus === "banned" ? (
-                  <p className="max-w-md text-sm text-neutral-600">
-                    Your profile is not visible to clients. Contact support if you believe this
-                    is a mistake.
-                  </p>
-                ) : (
-                  <>
-                    <p className="max-w-md text-sm leading-relaxed text-neutral-600">
-                      Your dashboard unlocks after approval. We&apos;ll email you when you&apos;re
-                      live.
-                    </p>
                     <button
                       type="button"
-                      disabled={refreshingStatus}
-                      onClick={() => void onRefreshStatus()}
-                      className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:opacity-90 disabled:opacity-60 sm:w-auto sm:min-w-[12rem]"
+                      onClick={() => void goNext()}
+                      disabled={saving}
+                      className="min-h-11 flex-1 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:opacity-90 disabled:opacity-60 sm:min-w-[7.5rem] sm:flex-none"
                     >
-                      {refreshingStatus ? "Checking…" : "Check approval status"}
+                      {saving ? "Saving…" : primaryLabel}
                     </button>
-                  </>
-                )}
+                  </div>
+                </div>
               </div>
             )}
           </div>

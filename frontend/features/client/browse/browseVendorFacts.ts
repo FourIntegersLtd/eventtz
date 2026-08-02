@@ -34,13 +34,6 @@ function asHttpUrl(raw: unknown): string | null {
   return s;
 }
 
-function todayUtcIso(): string {
-  const now = new Date();
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
-    .toISOString()
-    .slice(0, 10);
-}
-
 function formatBlockedDate(iso: string): string {
   const d = new Date(`${iso}T12:00:00Z`);
   if (Number.isNaN(d.getTime())) return iso;
@@ -69,7 +62,7 @@ export type BrowseVendorProfileFacts = {
   unavailableDatesLabel: string | null;
   foodNotes: BrowseVendorFact[];
   trustBadges: string[];
-  portfolioVideoUrl: string | null;
+  portfolioVideoUrls: string[];
 };
 
 function formatAvailableWeekdays(raw: unknown): string | null {
@@ -85,18 +78,17 @@ function formatAvailableWeekdays(raw: unknown): string | null {
 
 function formatUnavailableDates(raw: unknown): string | null {
   if (!Array.isArray(raw) || raw.length === 0) return null;
-  const today = todayUtcIso();
-  const upcoming = raw
+  const valid = raw
     .map((d) => String(d).trim().slice(0, 10))
-    .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && d >= today)
+    .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d))
     .sort();
-  if (upcoming.length === 0) return null;
-  const shown = upcoming.slice(0, MAX_BLOCKED_DATES_SHOWN).map(formatBlockedDate);
-  const extra = upcoming.length - shown.length;
+  if (valid.length === 0) return null;
+  const shown = valid.slice(0, MAX_BLOCKED_DATES_SHOWN).map(formatBlockedDate);
+  const extra = valid.length - shown.length;
   if (extra > 0) {
-    return `${shown.join("; ")} (+${extra} more)`;
+    return `${shown.join(", ")} (+${extra} more)`;
   }
-  return shown.join("; ");
+  return shown.join(", ");
 }
 
 function formatDeliveryModes(raw: unknown): string[] {
@@ -152,6 +144,15 @@ export function buildBrowseVendorProfileFacts(
   if (payloadBool(payload, "isHalal")) {
     foodNotes.push({ label: "Halal", value: "Yes" });
   }
+  if (payloadBool(payload, "isVegan")) {
+    foodNotes.push({ label: "Vegan", value: "Options available" });
+  }
+  if (payloadBool(payload, "isVegetarian")) {
+    foodNotes.push({ label: "Vegetarian", value: "Options available" });
+  }
+  if (payloadBool(payload, "isGlutenFree")) {
+    foodNotes.push({ label: "Gluten-free", value: "Options available" });
+  }
   const allergen = payloadStr(payload, "allergenInfo");
   if (allergen) {
     foodNotes.push({ label: "Allergens & dietary", value: allergen });
@@ -165,6 +166,16 @@ export function buildBrowseVendorProfileFacts(
     trustBadges.push("Public liability insurance on file");
   }
 
+  const videoUrls: string[] = [];
+  const legacyVideo = asHttpUrl(payload.portfolioVideoNamePersisted);
+  if (legacyVideo) videoUrls.push(legacyVideo);
+  if (Array.isArray(payload.portfolioVideoNamesPersisted)) {
+    for (const item of payload.portfolioVideoNamesPersisted) {
+      const url = asHttpUrl(item);
+      if (url && !videoUrls.includes(url)) videoUrls.push(url);
+    }
+  }
+
   return {
     locationLine,
     howTheyWork: formatDeliveryModes(payload.deliveryModes),
@@ -175,6 +186,6 @@ export function buildBrowseVendorProfileFacts(
     unavailableDatesLabel: formatUnavailableDates(payload.blockedDates),
     foodNotes,
     trustBadges,
-    portfolioVideoUrl: asHttpUrl(payload.portfolioVideoNamePersisted),
+    portfolioVideoUrls: videoUrls,
   };
 }

@@ -43,9 +43,9 @@ export function Modal({
   };
 
   return (
-    <AnimatePresence>
+    <AnimatePresence initial={false}>
       {isOpen ? (
-        <div className={`fixed inset-0 ${zIndexClassName}`}>
+        <div key="modal-overlay" className={`fixed inset-0 ${zIndexClassName}`}>
           <motion.button
             type="button"
             aria-label="Close modal"

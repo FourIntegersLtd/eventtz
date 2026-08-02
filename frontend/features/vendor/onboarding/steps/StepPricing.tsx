@@ -7,11 +7,10 @@ import {
   type VendorPackageItem,
 } from "../types";
 import {
-  OnboardingQuestionLayout,
   OnboardingSubQuestion,
 } from "../ui/OnboardingQuestionLayout";
 import { AnimatedStepItem } from "../ui/AnimatedStepItem";
-import { inputClass, labelClass } from "./form-primitives";
+import { labelClass, ClearableTextField, ClearableTextarea } from "./form-primitives";
 
 export type StepPricingProps = {
   data: VendorOnboardingData;
@@ -41,27 +40,24 @@ export function StepPricing({ data, update }: StepPricingProps) {
 
   return (
     <div className="space-y-8">
-      <OnboardingQuestionLayout headline={copy.headline} subtext={copy.subtext} />
-      <OnboardingSubQuestion headline={copy.fixedRatesHeadline} indexOffset={3}>
+      <OnboardingSubQuestion headline={copy.fixedRatesHeadline} indexOffset={0}>
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <label className={labelClass()}>Hourly (£ / hr)</label>
-            <input
+            <ClearableTextField
               type="text"
               inputMode="decimal"
-              className={inputClass()}
               value={data.hourlyRate}
-              onChange={(e) => update({ hourlyRate: e.target.value })}
+              onChange={(v) => update({ hourlyRate: v })}
             />
           </div>
           <div>
             <label className={labelClass()}>Daily (£ / day)</label>
-            <input
+            <ClearableTextField
               type="text"
               inputMode="decimal"
-              className={inputClass()}
               value={data.dailyRate}
-              onChange={(e) => update({ dailyRate: e.target.value })}
+              onChange={(v) => update({ dailyRate: v })}
             />
           </div>
         </div>
@@ -169,14 +165,11 @@ export function StepPricing({ data, update }: StepPricingProps) {
                   <div className="space-y-4">
                     <div>
                       <label className={labelClass()}>Package name</label>
-                      <input
-                        className={inputClass()}
+                      <ClearableTextField
                         value={pkg.title}
-                        onChange={(e) =>
+                        onChange={(v) =>
                           update({
-                            packages: updatePackage(packages, pkg.id, {
-                              title: e.target.value,
-                            }),
+                            packages: updatePackage(packages, pkg.id, { title: v }),
                           })
                         }
                         placeholder="e.g. Gold wedding package"
@@ -185,28 +178,22 @@ export function StepPricing({ data, update }: StepPricingProps) {
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div>
                         <label className={labelClass()}>Price (£)</label>
-                        <input
-                          className={inputClass()}
+                        <ClearableTextField
                           value={pkg.price}
-                          onChange={(e) =>
+                          onChange={(v) =>
                             update({
-                              packages: updatePackage(packages, pkg.id, {
-                                price: e.target.value,
-                              }),
+                              packages: updatePackage(packages, pkg.id, { price: v }),
                             })
                           }
                         />
                       </div>
                       <div>
                         <label className={labelClass()}>Duration</label>
-                        <input
-                          className={inputClass()}
+                        <ClearableTextField
                           value={pkg.duration}
-                          onChange={(e) =>
+                          onChange={(v) =>
                             update({
-                              packages: updatePackage(packages, pkg.id, {
-                                duration: e.target.value,
-                              }),
+                              packages: updatePackage(packages, pkg.id, { duration: v }),
                             })
                           }
                           placeholder="e.g. 2 hr coverage"
@@ -215,14 +202,12 @@ export function StepPricing({ data, update }: StepPricingProps) {
                     </div>
                     <div>
                       <label className={labelClass()}>Details</label>
-                      <textarea
-                        className={`${inputClass()} min-h-[72px]`}
+                      <ClearableTextarea
+                        className="min-h-[72px]"
                         value={pkg.details}
-                        onChange={(e) =>
+                        onChange={(v) =>
                           update({
-                            packages: updatePackage(packages, pkg.id, {
-                              details: e.target.value,
-                            }),
+                            packages: updatePackage(packages, pkg.id, { details: v }),
                           })
                         }
                         placeholder="What's included"
@@ -267,15 +252,20 @@ export function StepPricing({ data, update }: StepPricingProps) {
               Offer discounts
             </label>
             {data.offerDiscounts && (
-              <div className="space-y-3 border-t border-neutral-100 pt-3">
+              <div className="space-y-4 border-t border-neutral-100 pt-3">
+                <div>
+                  <label className={labelClass()}>Discount name</label>
+                  <ClearableTextField
+                    value={data.discountLabel}
+                    onChange={(v) => update({ discountLabel: v })}
+                    placeholder="e.g. Easter discount, Summer sale"
+                  />
+                </div>
                 <div>
                   <label className={labelClass()}>Percentage off (e.g. 10%)</label>
-                  <input
-                    className={inputClass()}
+                  <ClearableTextField
                     value={data.discountPercentage}
-                    onChange={(e) =>
-                      update({ discountPercentage: e.target.value })
-                    }
+                    onChange={(v) => update({ discountPercentage: v })}
                     placeholder="10"
                   />
                   <p className="mt-1 text-xs text-neutral-500">
@@ -283,47 +273,34 @@ export function StepPricing({ data, update }: StepPricingProps) {
                   </p>
                 </div>
                 <div>
-                  <label className={labelClass()}>Discount name (shown to clients)</label>
-                  <input
-                    className={inputClass()}
-                    value={data.discountLabel}
-                    onChange={(e) => update({ discountLabel: e.target.value })}
-                    placeholder="e.g. Easter discount, Summer sale"
-                  />
-                </div>
-                <div>
                   <label className={labelClass()}>
                     Bulk booking (e.g. 10% off over £500)
                   </label>
                   <div className="flex flex-col gap-2 sm:flex-row">
-                    <input
-                      className={`${inputClass()} min-w-0 flex-1`}
+                    <ClearableTextField
+                      className="min-w-0 flex-1"
                       placeholder="Threshold £"
                       value={data.bulkDiscountThreshold}
-                      onChange={(e) =>
-                        update({ bulkDiscountThreshold: e.target.value })
-                      }
+                      onChange={(v) => update({ bulkDiscountThreshold: v })}
                     />
-                    <input
-                      className={`${inputClass()} min-w-0 flex-1`}
+                    <ClearableTextField
+                      className="min-w-0 flex-1"
                       placeholder="% off"
                       value={data.bulkDiscountPercent}
-                      onChange={(e) =>
-                        update({ bulkDiscountPercent: e.target.value })
-                      }
+                      onChange={(v) => update({ bulkDiscountPercent: v })}
                     />
                   </div>
                 </div>
                 <div>
                   <label className={labelClass()}>Off-peak (e.g. winter %)</label>
-                  <input
-                    className={inputClass()}
+                  <ClearableTextField
                     value={data.offPeakDiscountPercent}
-                    onChange={(e) =>
-                      update({ offPeakDiscountPercent: e.target.value })
-                    }
+                    onChange={(v) => update({ offPeakDiscountPercent: v })}
                   />
                 </div>
+                <p className="text-xs text-neutral-500">
+                  Fill in at least one discount option above.
+                </p>
               </div>
             )}
           </div>

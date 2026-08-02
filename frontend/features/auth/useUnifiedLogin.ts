@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { getMe } from "@/lib/auth-api";
+import { getApiErrorDetail } from "@/lib/api-errors";
 import { LOGIN_CREDENTIALS_MISMATCH, SESSION_VERIFY_FAILED } from "@/lib/auth-messages";
 import { resolvePostAuthPath } from "@/features/auth/authRouting";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
@@ -19,11 +20,13 @@ export function useUnifiedLogin() {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [needsVerification, setNeedsVerification] = useState(false);
 
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     setFieldErrors({});
+    setNeedsVerification(false);
     const parsed = parseForm(loginSchema, { email: email.trim(), password });
     if (!parsed.ok) {
       setFieldErrors(parsed.fieldErrors);
@@ -33,9 +36,13 @@ export function useUnifiedLogin() {
     setSubmitting(true);
     try {
       await signIn(parsed.data.email, parsed.data.password);
-    } catch {
+    } catch (err: unknown) {
       track(MixpanelEvents.login_failed, { reason: "credentials" });
-      setError(LOGIN_CREDENTIALS_MISMATCH);
+      const detail = getApiErrorDetail(err) ?? LOGIN_CREDENTIALS_MISMATCH;
+      setError(detail);
+      if (/verify your email/i.test(detail)) {
+        setNeedsVerification(true);
+      }
       setSubmitting(false);
       return;
     }
@@ -77,5 +84,6 @@ export function useUnifiedLogin() {
     postAuthQuery,
     isAuthenticated,
     userType: user?.user_type,
+    needsVerification,
   };
 }

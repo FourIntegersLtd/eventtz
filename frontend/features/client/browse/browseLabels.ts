@@ -1,5 +1,4 @@
 import {
-  EVENT_TYPE_IDS_ALL,
   EVENT_TYPE_OPTIONS,
   SERVICE_OPTIONS,
 } from "@/features/vendor/onboarding/constants";
@@ -30,10 +29,9 @@ function labelFromOptions(
 export function displayEventTypes(raw: string[]): string[] {
   if (raw.length === 0) return [];
   if (raw.includes("all")) {
-    return EVENT_TYPE_IDS_ALL.map(
-      (id) =>
-        EVENT_TYPE_OPTIONS.find((o) => o.value === id)?.label ?? humanizeSlug(id),
-    );
+    const allLabel =
+      EVENT_TYPE_OPTIONS.find((o) => o.value === "all")?.label ?? "All event types";
+    return [allLabel];
   }
   return raw
     .filter((t) => t !== "all")

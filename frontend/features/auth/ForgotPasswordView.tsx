@@ -62,7 +62,7 @@ export function ForgotPasswordView({ variant = "default" }: ForgotPasswordViewPr
           {isAdmin ? "Forgot admin password" : "Forgot password"}
         </h1>
         <p className="mt-1 text-sm text-neutral-500">
-          Enter your email and we&apos;ll send a one-click link to reset your password.
+          Enter the email on your account and we&apos;ll send a link to choose a new password.
         </p>
 
         {sentMessage ? (

@@ -32,7 +32,7 @@ export const STEP_COPY = {
   },
   5: {
     headline: "When are you available?",
-    subtext: "Your working days and how many bookings you take per day.",
+    subtext: "Choose your working days and how many bookings you can take each day.",
     daysHeadline: "Which days do you take bookings?",
     blockedHeadline: "Dates you're not available",
     blockedSubtext: "Optional.",
