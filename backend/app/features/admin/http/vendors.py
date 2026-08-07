@@ -69,6 +69,7 @@ def admin_vendor_insights(
         review_count=int(data.get("review_count") or 0),
         bookings_total=int(data.get("bookings_total") or 0),
         bookings_by_status=dict(data.get("bookings_by_status") or {}),
+        bookings_by_month=list(data.get("bookings_by_month") or []),
         open_disputes_on_bookings=int(data.get("open_disputes_on_bookings") or 0),
         explore_path=str(data.get("explore_path") or ""),
     )

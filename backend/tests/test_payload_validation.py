@@ -88,9 +88,12 @@ def test_submit_rejects_invalid_discount():
         )
 
 
-def test_validate_step_6_allows_empty_portfolio():
-    validate_step_fields(6, {"portfolioFileNames": []})
-    validate_step_fields(6, {})
+def test_validate_step_6_rejects_under_minimum():
+    with pytest.raises(ValidationError, match="at least 5"):
+        validate_step_fields(6, {"portfolioFileNames": []})
+    with pytest.raises(ValidationError, match="at least 5"):
+        validate_step_fields(6, {"portfolioFileNames": ["a", "b", "c", "d"]})
+    validate_step_fields(6, {"portfolioFileNames": ["a", "b", "c", "d", "e"]})
 
 
 def test_validate_step_6_rejects_over_cap():

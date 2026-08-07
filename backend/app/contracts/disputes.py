@@ -61,5 +61,6 @@ class AdminVendorInsightsResponse(BaseModel):
     review_count: int = 0
     bookings_total: int = 0
     bookings_by_status: dict[str, int] = Field(default_factory=dict)
+    bookings_by_month: list[dict[str, Any]] = Field(default_factory=list)
     open_disputes_on_bookings: int = 0
     explore_path: str = ""

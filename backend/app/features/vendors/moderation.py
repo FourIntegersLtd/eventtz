@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from typing import Any
 
 from app.core.config import get_settings
@@ -18,6 +19,13 @@ from app.features.vendors.profile import get_vendor_profile
 from app.features.email.dispatch import send_vendor_approval_email
 
 logger = get_logger(__name__)
+
+
+def _booking_month_key(iso: Any) -> str | None:
+    if not iso:
+        return None
+    s = str(iso).strip()
+    return s[:7] if len(s) >= 7 else None
 
 
 def _log_admin_list_zero_probe(client: Any) -> None:
@@ -228,6 +236,7 @@ def get_vendor_admin_insights(vendor_user_id: str) -> dict[str, Any]:
             "review_count": 0,
             "bookings_total": 0,
             "bookings_by_status": {},
+            "bookings_by_month": [],
             "open_disputes_on_bookings": 0,
             "explore_path": f"/client/browse/{vendor_user_id}",
         }
@@ -248,11 +257,12 @@ def get_vendor_admin_insights(vendor_user_id: str) -> dict[str, Any]:
         fa = None
 
     bookings_by_status: dict[str, int] = {}
+    bookings_by_month_map: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
     booking_ids: list[str] = []
     try:
         br = (
             client.table("booking_requests")
-            .select("id,status")
+            .select("id,status,created_at")
             .eq("vendor_user_id", vendor_user_id)
             .limit(5000)
             .execute()
@@ -264,8 +274,20 @@ def get_vendor_admin_insights(vendor_user_id: str) -> dict[str, Any]:
                 booking_ids.append(str(row["id"]))
             st = str(row.get("status") or "unknown")
             bookings_by_status[st] = bookings_by_status.get(st, 0) + 1
+            month_key = _booking_month_key(row.get("created_at"))
+            if month_key:
+                bookings_by_month_map[month_key][st] += 1
     except Exception as e:
         logger.warning("get_vendor_admin_insights bookings failed: %s", e, exc_info=True)
+
+    status_keys = sorted(bookings_by_status.keys())
+    bookings_by_month = [
+        {
+            "month": month,
+            **{status: int(bookings_by_month_map[month].get(status, 0)) for status in status_keys},
+        }
+        for month in sorted(bookings_by_month_map.keys())
+    ]
 
     open_disputes = 0
     if booking_ids:
@@ -292,6 +314,7 @@ def get_vendor_admin_insights(vendor_user_id: str) -> dict[str, Any]:
         "review_count": rc,
         "bookings_total": total,
         "bookings_by_status": bookings_by_status,
+        "bookings_by_month": bookings_by_month,
         "open_disputes_on_bookings": open_disputes,
         "explore_path": f"/client/browse/{vendor_user_id}",
     }

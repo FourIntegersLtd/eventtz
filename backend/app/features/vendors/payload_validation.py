@@ -16,6 +16,8 @@ MAX_MONEY_GBP = 1_000_000.0
 MIN_MONEY_GBP = 0.1
 MIN_MAX_BOOKINGS_PER_DAY = 1
 MAX_MAX_BOOKINGS_PER_DAY = 20
+MIN_PORTFOLIO_IMAGES = 5
+MAX_PORTFOLIO_IMAGES = 20
 
 _ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
@@ -303,8 +305,12 @@ def validate_step_fields(step: int, payload: dict[str, Any]) -> None:
     elif step == 6:
         names = payload.get("portfolioFileNames")
         count = len(names) if isinstance(names, list) else 0
-        if count > 20:
-            raise ValidationError("Step portfolio: maximum 20 images.")
+        if count < MIN_PORTFOLIO_IMAGES:
+            raise ValidationError(
+                f"Step portfolio: at least {MIN_PORTFOLIO_IMAGES} images required.",
+            )
+        if count > MAX_PORTFOLIO_IMAGES:
+            raise ValidationError(f"Step portfolio: maximum {MAX_PORTFOLIO_IMAGES} images.")
 
     elif step == 3:
         _validate_step_location(payload)
