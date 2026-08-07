@@ -111,7 +111,7 @@ export function VendorOnboarding() {
     refreshingStatus,
     statusCheckFeedback,
     submittedSummaryBusinessName: data.businessName,
-    portfolioPhotoCount,
+    portfolioPhotoCount: portfolioImageCount,
     needsMorePortfolioPhotos: canAddPortfolioWhilePending,
     onAddPortfolioPhotos,
     portfolioQuality,

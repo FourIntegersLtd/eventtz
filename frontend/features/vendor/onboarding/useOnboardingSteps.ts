@@ -70,7 +70,6 @@ export function useOnboardingSteps({
     profileStatus,
     approvalStatus,
     lockedPendingReview,
-    needsMorePortfolioPhotos,
     canAddPortfolioWhilePending,
     setFormError,
     applyVendorProfileResponse,
