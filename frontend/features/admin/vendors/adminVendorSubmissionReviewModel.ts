@@ -1,4 +1,4 @@
-import { SOCIAL_PLATFORM_OPTIONS, WEEKDAY_LABELS } from "@/features/vendor/onboarding/constants";
+import { MIN_PORTFOLIO_IMAGES, SOCIAL_PLATFORM_OPTIONS, WEEKDAY_LABELS } from "@/features/vendor/onboarding/constants";
 import {
   formatDiscountSummary,
   formatReviewBlockedDates,
@@ -332,13 +332,19 @@ export function buildAdminVendorSubmissionReviewModel(
       id: "media",
       title: "Portfolio & availability",
       items: [
-        portfolioUrls.length > 0
+        portfolioUrls.length >= MIN_PORTFOLIO_IMAGES
           ? pass(
               "portfolio",
               "Portfolio photos",
               `${portfolioUrls.length} photo${portfolioUrls.length === 1 ? "" : "s"}`,
             )
-          : warn("portfolio", "Portfolio photos", "None uploaded"),
+          : warn(
+              "portfolio",
+              "Portfolio photos",
+              portfolioUrls.length > 0
+                ? `${portfolioUrls.length} of ${MIN_PORTFOLIO_IMAGES} required`
+                : "None uploaded",
+            ),
         Array.isArray(data.availableWeekdays) && data.availableWeekdays.length > 0
           ? info(
               "availability",

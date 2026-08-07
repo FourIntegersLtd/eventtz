@@ -24,6 +24,7 @@ type PersistenceSlice = Pick<
   | "profileStatus"
   | "approvalStatus"
   | "lockedPendingReview"
+  | "canAddPortfolioWhilePending"
   | "formError"
   | "setFormError"
   | "applyVendorProfileResponse"
@@ -69,6 +70,8 @@ export function useOnboardingSteps({
     profileStatus,
     approvalStatus,
     lockedPendingReview,
+    needsMorePortfolioPhotos,
+    canAddPortfolioWhilePending,
     setFormError,
     applyVendorProfileResponse,
     persistAdditionalInfoFiles,
@@ -78,12 +81,13 @@ export function useOnboardingSteps({
 
   useEffect(() => {
     if (loadStatus !== "ready") return;
-    if (lockedPendingReview && step !== 9) {
+    if (lockedPendingReview && step !== 9 && !(step === 6 && canAddPortfolioWhilePending)) {
       setStep(9);
     }
-  }, [loadStatus, lockedPendingReview, step, setStep]);
+  }, [loadStatus, lockedPendingReview, canAddPortfolioWhilePending, step, setStep]);
 
   const primaryLabel = useMemo(() => {
+    if (canAddPortfolioWhilePending && step === 6) return "Save photos";
     if (isWalkthrough && step === 8) return "Finish walkthrough";
     if (profileStatus === "submitted" && approvalStatus === "approved") {
       return "Save changes";
@@ -91,7 +95,13 @@ export function useOnboardingSteps({
     if (step === 8) return "Confirm";
     if (step === 9) return "OK";
     return "Next";
-  }, [step, profileStatus, approvalStatus, isWalkthrough]);
+  }, [step, profileStatus, approvalStatus, isWalkthrough, canAddPortfolioWhilePending]);
+
+  const onAddPortfolioPhotos = useCallback(() => {
+    if (!canAddPortfolioWhilePending) return;
+    setFormError(null);
+    setStep(6);
+  }, [canAddPortfolioWhilePending, setFormError, setStep]);
 
   const onViewProfileReview = useCallback(() => {
     if (lockedPendingReview) return;
@@ -101,7 +111,7 @@ export function useOnboardingSteps({
 
   const goNext = useCallback(async () => {
     if (step === 9 || saving || loadStatus !== "ready" || authLoading) return;
-    if (lockedPendingReview) return;
+    if (lockedPendingReview && !(step === 6 && canAddPortfolioWhilePending)) return;
     if (phoneError && step === 1) {
       setFormError("Fix your phone number before continuing.");
       return;
@@ -136,7 +146,14 @@ export function useOnboardingSteps({
 
     const isLive = profileStatus === "submitted" && approvalStatus === "approved";
     const walkthroughFinish = isWalkthrough && step === 8 && isLive;
-    const nextStep = step === 8 ? (isLive && !isWalkthrough ? 8 : 9) : step + 1;
+    const portfolioFixSave = canAddPortfolioWhilePending && step === 6;
+    const nextStep = portfolioFixSave
+      ? 9
+      : step === 8
+        ? isLive && !isWalkthrough
+          ? 8
+          : 9
+        : step + 1;
     setSaving(true);
     setFormError(null);
     try {
@@ -160,6 +177,11 @@ export function useOnboardingSteps({
         status: step === 8 && !walkthroughFinish ? "submitted" : undefined,
       });
       applyVendorProfileResponse(res);
+      if (portfolioFixSave) {
+        showToast({ title: "Portfolio photos saved", tone: "success" });
+        setStep(9);
+        return;
+      }
       if (walkthroughFinish) {
         showToast({ title: "Walkthrough complete", tone: "success" });
         router.push("/vendor/settings");
@@ -200,6 +222,7 @@ export function useOnboardingSteps({
     loadStatus,
     authLoading,
     lockedPendingReview,
+    canAddPortfolioWhilePending,
     profileStatus,
     approvalStatus,
     businessNameError,
@@ -221,10 +244,13 @@ export function useOnboardingSteps({
 
   const goBack = useCallback(() => {
     setFormError(null);
-    if (lockedPendingReview) return;
+    if (lockedPendingReview) {
+      if (canAddPortfolioWhilePending && step === 6) setStep(9);
+      return;
+    }
     if (step <= 1 || step === 9) return;
     setStep((s) => s - 1);
-  }, [lockedPendingReview, step, setFormError, setStep]);
+  }, [lockedPendingReview, canAddPortfolioWhilePending, step, setFormError, setStep]);
 
   const goBackToReview = useCallback(() => {
     setFormError(null);
@@ -234,7 +260,12 @@ export function useOnboardingSteps({
 
   const navigateToStep = useCallback(
     (target: number) => {
-      if (lockedPendingReview) return;
+      if (lockedPendingReview) {
+        if (target !== 6 || !canAddPortfolioWhilePending) return;
+        setFormError(null);
+        setStep(6);
+        return;
+      }
       if (target < 1 || target > 8) return;
       setFormError(null);
       if (target >= 1 && target <= 7) {
@@ -245,7 +276,7 @@ export function useOnboardingSteps({
       }
       setStep(target);
     },
-    [lockedPendingReview, setFormError, setStep],
+    [lockedPendingReview, canAddPortfolioWhilePending, setFormError, setStep],
   );
 
   return {
@@ -255,6 +286,7 @@ export function useOnboardingSteps({
     setPhoneError,
     primaryLabel,
     onViewProfileReview,
+    onAddPortfolioPhotos,
     goNext,
     goBack,
     goBackToReview,

@@ -3,8 +3,10 @@ import {
   MAX_DISCOUNT_PCT,
   MAX_MONEY_GBP,
   MAX_MAX_BOOKINGS_PER_DAY,
+  MAX_PORTFOLIO_IMAGES,
   MIN_MAX_BOOKINGS_PER_DAY,
   MIN_MONEY_GBP,
+  MIN_PORTFOLIO_IMAGES,
 } from "@/features/vendor/onboarding/constants";
 import type { VendorOnboardingData } from "@/features/vendor/onboarding/types";
 import { portfolioFileKey } from "@/lib/portfolioFileKey";
@@ -12,7 +14,6 @@ import { phoneRequiredSchema } from "@/lib/validation/phone";
 import { parseMoneyNumber } from "@/lib/vendorDiscountDisplay";
 
 const BIO_MAX_WORDS = 60;
-const MAX_PORTFOLIO_IMAGES = 20;
 
 const vendorDataSchema = z.custom<VendorOnboardingData>(
   (d) => d != null && typeof d === "object",
@@ -57,6 +58,23 @@ function pctFieldError(raw: string, label: string): string | null {
 
 function addIssue(ctx: z.RefinementCtx, message: string) {
   ctx.addIssue({ code: z.ZodIssueCode.custom, message });
+}
+
+function portfolioImageCount(d: VendorOnboardingData): number {
+  return new Set([
+    ...d.portfolioFileNamesPersisted,
+    ...d.portfolioFiles.map((f) => portfolioFileKey(f)),
+  ]).size;
+}
+
+function addPortfolioImageCountIssues(d: VendorOnboardingData, ctx: z.RefinementCtx) {
+  const count = portfolioImageCount(d);
+  if (count < MIN_PORTFOLIO_IMAGES) {
+    addIssue(ctx, `At least ${MIN_PORTFOLIO_IMAGES} portfolio photos`);
+  }
+  if (count > MAX_PORTFOLIO_IMAGES) {
+    addIssue(ctx, `No more than ${MAX_PORTFOLIO_IMAGES} portfolio images`);
+  }
 }
 
 const step1Schema = vendorDataSchema.superRefine((d, ctx) => {
@@ -162,16 +180,11 @@ const step5Schema = vendorDataSchema.superRefine((d, ctx) => {
 });
 
 const step6Schema = vendorDataSchema.superRefine((d, ctx) => {
-  const portfolioUnique = new Set([
-    ...d.portfolioFileNamesPersisted,
-    ...d.portfolioFiles.map((f) => portfolioFileKey(f)),
-  ]);
-  if (portfolioUnique.size > MAX_PORTFOLIO_IMAGES) {
-    addIssue(ctx, "No more than 20 portfolio images");
-  }
+  addPortfolioImageCountIssues(d, ctx);
 });
 
 const step8Schema = vendorDataSchema.superRefine((d, ctx) => {
+  addPortfolioImageCountIssues(d, ctx);
   if (!d.confirmTruthful) addIssue(ctx, "Confirmation that details are truthful");
   if (!d.confirmTerms) addIssue(ctx, "Acceptance of Terms & Conditions");
   if (bioWordCount(d.aiBioDraft) > BIO_MAX_WORDS) {

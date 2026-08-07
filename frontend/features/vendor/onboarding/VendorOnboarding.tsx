@@ -6,7 +6,8 @@ import { portalCard, portalCardPaddingLg } from "@/components/portal-shell/porta
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { STEP_LABELS } from "./constants";
+import { MIN_PORTFOLIO_IMAGES, STEP_LABELS } from "./constants";
+import { portfolioApprovalBlockedCopy } from "./onboardingCopy";
 import { OnboardingStepContent } from "./OnboardingStepContent";
 import { OnboardingProgressHeader } from "./OnboardingProgressHeader";
 import { OnboardingWizardStepTitle } from "./ui/OnboardingWizardStepTitle";
@@ -38,6 +39,9 @@ export function VendorOnboarding() {
     accessDenied,
     accessDeniedMessage,
     lockedPendingReview,
+    portfolioImageCount,
+    needsMorePortfolioPhotos,
+    canAddPortfolioWhilePending,
     primaryLabel,
     profileStatus,
     setBusinessNameError,
@@ -46,6 +50,7 @@ export function VendorOnboarding() {
     onGenerateBioWithAI,
     generatingBio,
     onViewProfileReview,
+    onAddPortfolioPhotos,
     onRefreshStatus,
     goNext,
     goBack,
@@ -85,6 +90,9 @@ export function VendorOnboarding() {
     questionnaireTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [step, isLiveEdit]);
 
+  const portfolioBlockedCopy =
+    canAddPortfolioWhilePending ? portfolioApprovalBlockedCopy(portfolioImageCount) : null;
+
   const stepContentProps = {
     step,
     data,
@@ -103,6 +111,9 @@ export function VendorOnboarding() {
     refreshingStatus,
     statusCheckFeedback,
     submittedSummaryBusinessName: data.businessName,
+    portfolioPhotoCount,
+    needsMorePortfolioPhotos: canAddPortfolioWhilePending,
+    onAddPortfolioPhotos,
     portfolioQuality,
     portfolioQualityAccepted,
     onRemovePortfolioFile: removePortfolioFileAtIndex,
@@ -196,15 +207,30 @@ export function VendorOnboarding() {
         <div className="mb-8 rounded-2xl bg-amber-50 p-5 text-sm text-amber-950 shadow-sm ring-1 ring-amber-200/50">
           <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:text-left">
             <LottieIllustration asset="pendingReview" className="h-20 w-20 shrink-0" />
-            <div>
+            <div className="min-w-0">
               <strong className="font-semibold">
                 {approvalStatus === "banned"
                   ? "Your profile isn’t visible to clients right now."
-                  : "Thanks - we’re reviewing your profile."}
+                  : portfolioBlockedCopy
+                    ? portfolioBlockedCopy.bannerTitle
+                    : "Thanks - we’re reviewing your profile."}
               </strong>{" "}
               {approvalStatus === "banned"
                 ? "An admin has restricted this profile. You can’t edit it until that changes."
-                : "You can edit again after our review."}
+                : portfolioBlockedCopy
+                  ? portfolioBlockedCopy.bannerBody
+                  : "You can edit again after our review."}
+              {canAddPortfolioWhilePending && step === 9 && portfolioBlockedCopy ? (
+                <div className="mt-4 flex justify-center sm:justify-start">
+                  <button
+                    type="button"
+                    onClick={onAddPortfolioPhotos}
+                    className="inline-flex min-h-10 items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-95"
+                  >
+                    {portfolioBlockedCopy.ctaLabel}
+                  </button>
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
@@ -328,10 +354,12 @@ export function VendorOnboarding() {
             {step <= 8 && (
               <div className="mt-10 border-t border-neutral-100 pt-8">
                 <p className="mb-4 text-center text-xs text-neutral-500 sm:text-left">
-                  Close anytime. Your progress is saved.
+                  {lockedPendingReview && step === 6 && canAddPortfolioWhilePending
+                    ? `Please save once you've added at least ${MIN_PORTFOLIO_IMAGES} portfolio photos.`
+                    : "Close anytime. Your progress is saved."}
                 </p>
                 <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-                  {returnToReview && step < 8 ? (
+                  {returnToReview && step < 8 && !(lockedPendingReview && step === 6) ? (
                     <button
                       type="button"
                       onClick={goBackToReview}
@@ -341,14 +369,14 @@ export function VendorOnboarding() {
                     </button>
                   ) : null}
                   <div className="flex flex-1 items-stretch gap-3">
-                    {step > 1 ? (
+                    {step > 1 || (lockedPendingReview && step === 6) ? (
                       <button
                         type="button"
                         onClick={goBack}
                         className="flex min-h-11 flex-1 items-center justify-center gap-1 rounded-xl bg-neutral-50 px-5 py-3 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 sm:flex-none sm:min-w-[7.5rem]"
                       >
                         <ChevronLeft className="h-4 w-4" />
-                        Back
+                        {lockedPendingReview && step === 6 && canAddPortfolioWhilePending ? "Back to status" : "Back"}
                       </button>
                     ) : (
                       <span className="hidden min-w-[7.5rem] sm:inline-block" aria-hidden />

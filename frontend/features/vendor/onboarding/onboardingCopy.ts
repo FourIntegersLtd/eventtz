@@ -1,5 +1,7 @@
 /** Conversational copy for vendor onboarding steps. */
 
+import { MIN_PORTFOLIO_IMAGES } from "./constants";
+
 export const STEP_COPY = {
   1: {
     lead: "Let's get started",
@@ -40,7 +42,7 @@ export const STEP_COPY = {
   },
   6: {
     headline: "Show your best work",
-    subtext: "Photos are optional - add them now or later.",
+    subtext: `Upload at least ${MIN_PORTFOLIO_IMAGES} photos so clients can see your work.`,
   },
   7: {
     headline: "Anything else?",
@@ -51,3 +53,20 @@ export const STEP_COPY = {
     subtext: "Check everything before you submit.",
   },
 } as const;
+
+/** Shown to submitted vendors who still need portfolio photos before admin approval. */
+export function portfolioApprovalBlockedCopy(photoCount: number) {
+  const remaining = Math.max(0, MIN_PORTFOLIO_IMAGES - photoCount);
+  return {
+    bannerTitle: "Almost there — please add your portfolio photos",
+    bannerBody: `Thank you for submitting your profile. Before we can finish our review, please upload at least ${MIN_PORTFOLIO_IMAGES} portfolio photos. You have ${photoCount} of ${MIN_PORTFOLIO_IMAGES} so far${
+      remaining > 0 ? ` — just ${remaining} more to go` : ""
+    }.`,
+    submittedHeading: "One more step before approval",
+    submittedBody: `Thanks for submitting — we're nearly ready to review your profile. Please add at least ${MIN_PORTFOLIO_IMAGES} portfolio photos so we can approve you. You currently have ${photoCount} of ${MIN_PORTFOLIO_IMAGES}.`,
+    cardTitle: "Please add your portfolio photos",
+    cardBody: `To approve your profile, we need at least ${MIN_PORTFOLIO_IMAGES} photos of your work. Please add ${remaining > 0 ? remaining : MIN_PORTFOLIO_IMAGES} more when you can — it only takes a few minutes.`,
+    ctaLabel: "Add portfolio photos",
+    checkStatusHint: "Once your photos are uploaded, we'll be able to continue with your review.",
+  };
+}

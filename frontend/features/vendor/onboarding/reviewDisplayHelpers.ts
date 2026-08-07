@@ -1,6 +1,7 @@
-import { EVENT_TYPE_OPTIONS } from "@/features/vendor/onboarding/constants";
+import { EVENT_TYPE_OPTIONS, MIN_PORTFOLIO_IMAGES } from "@/features/vendor/onboarding/constants";
 import type { VendorOnboardingData } from "@/features/vendor/onboarding/types";
 import { displayEventTypes, displayServicesOffered } from "@/features/client/browse/browseLabels";
+import { portfolioFileKey } from "@/lib/portfolioFileKey";
 
 export function formatReviewServices(values: string[]): string {
   if (values.length === 0) return "-";
@@ -86,6 +87,17 @@ export function hasPortfolioContent(data: VendorOnboardingData): boolean {
     data.portfolioVideoNamesPersisted.length > 0 ||
     data.socialLinks.length > 0
   );
+}
+
+export function portfolioImageCountFromData(data: VendorOnboardingData): number {
+  return new Set([
+    ...data.portfolioFileNamesPersisted,
+    ...data.portfolioFiles.map((file) => portfolioFileKey(file)),
+  ]).size;
+}
+
+export function needsMorePortfolioPhotos(data: VendorOnboardingData): boolean {
+  return portfolioImageCountFromData(data) < MIN_PORTFOLIO_IMAGES;
 }
 
 export function formatReviewBlockedDates(dates: string[]): string | null {

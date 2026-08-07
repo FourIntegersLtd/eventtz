@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ImagePlus, Trash2, Video, X } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { portfolioFileKey } from "@/lib/portfolioFileKey";
-import { SOCIAL_PLATFORM_OPTIONS } from "../constants";
+import { MAX_PORTFOLIO_IMAGES, MIN_PORTFOLIO_IMAGES, SOCIAL_PLATFORM_OPTIONS } from "../constants";
 import type { PortfolioImageQualityRow } from "../useVendorOnboardingController";
 import {
   createVendorSocialLink,
@@ -136,7 +136,7 @@ export function StepPortfolio({
     const skippedDuplicates: string[] = [];
     for (const f of images) {
       const key = portfolioFileKey(f);
-      if (existingKeys.size + existingPersistedUrls.size >= 20) break;
+      if (existingKeys.size + existingPersistedUrls.size >= MAX_PORTFOLIO_IMAGES) break;
       if (existingKeys.has(key)) {
         skippedDuplicates.push(f.name);
         continue;
@@ -160,7 +160,7 @@ export function StepPortfolio({
 
   return (
     <div className="space-y-8">
-      <OnboardingSubQuestion headline="Upload your portfolio photos (optional)" indexOffset={0}>
+      <OnboardingSubQuestion headline="Upload your portfolio photos" indexOffset={0}>
         <div
           className={`rounded-xl border-2 border-dashed p-8 text-center transition ${
             dragOver
@@ -211,9 +211,15 @@ export function StepPortfolio({
             </span>
           </label>
           <p className="mt-1 text-xs text-neutral-500">
-            Optional · up to 20
+            At least {MIN_PORTFOLIO_IMAGES} · up to {MAX_PORTFOLIO_IMAGES}
             {totalCount > 0 ? ` · ${totalCount} selected` : ""}
           </p>
+          {totalCount > 0 && totalCount < MIN_PORTFOLIO_IMAGES ? (
+            <p className="mt-2 text-xs font-medium text-amber-800">
+              Add {MIN_PORTFOLIO_IMAGES - totalCount} more photo
+              {MIN_PORTFOLIO_IMAGES - totalCount === 1 ? "" : "s"} to continue.
+            </p>
+          ) : null}
           {duplicateNotice ? (
             <p className="mt-2 text-xs font-medium text-amber-800">{duplicateNotice}</p>
           ) : null}

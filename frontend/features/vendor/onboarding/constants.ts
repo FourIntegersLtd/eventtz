@@ -48,6 +48,8 @@ export const MAX_DISCOUNT_PCT = 100;
 export const MAX_MONEY_GBP = 1_000_000;
 export const MIN_MAX_BOOKINGS_PER_DAY = 1;
 export const MAX_MAX_BOOKINGS_PER_DAY = 20;
+export const MIN_PORTFOLIO_IMAGES = 5;
+export const MAX_PORTFOLIO_IMAGES = 20;
 
 export const RADIUS_OPTIONS: { value: string; label: string; context: string }[] = [
   { value: "under_50", label: "Under 50 miles", context: "About a 1-hour drive" },

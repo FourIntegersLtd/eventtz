@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { CheckCircle2, Info, TriangleAlert, XCircle } from "lucide-react";
 import type { VendorApprovalStatus } from "@/lib/domain-types";
+import { portfolioApprovalBlockedCopy } from "@/features/vendor/onboarding/onboardingCopy";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -17,6 +18,9 @@ type StepSubmittedProps = {
   statusCheckFeedback?: VendorStatusCheckFeedback | null;
   /** Shown under the heading so vendors see their saved business name while locked. */
   businessName?: string;
+  portfolioPhotoCount?: number;
+  needsMorePortfolioPhotos?: boolean;
+  onAddPortfolioPhotos?: () => void;
 };
 
 const FEEDBACK_STYLES: Record<
@@ -71,21 +75,32 @@ export function StepSubmitted({
   refreshing = false,
   statusCheckFeedback = null,
   businessName,
+  portfolioPhotoCount = 0,
+  needsMorePortfolioPhotos = false,
+  onAddPortfolioPhotos,
 }: StepSubmittedProps) {
   const approved = approvalStatus === "approved";
   const banned = approvalStatus === "banned";
+  const portfolioBlocked = needsMorePortfolioPhotos && !approved && !banned;
+  const blockedCopy = portfolioBlocked
+    ? portfolioApprovalBlockedCopy(portfolioPhotoCount)
+    : null;
 
   const heading = approved
     ? "You're approved"
     : banned
       ? "Profile not visible"
-      : "Profile submitted";
+      : portfolioBlocked
+        ? blockedCopy!.submittedHeading
+        : "Profile submitted";
 
   const statusCopy = approved
     ? "Your profile is live. Head to your dashboard to manage bookings and enquiries."
     : banned
       ? "Your profile isn't visible to clients. Contact support if you believe this is a mistake."
-      : "We're reviewing your profile. This usually takes 1–3 business days — we'll email you when you're live.";
+      : portfolioBlocked
+        ? blockedCopy!.submittedBody
+        : "We're reviewing your profile. This usually takes 1–3 business days — we'll email you when you're live.";
 
   return (
     <div className="space-y-6 py-4 text-center">
@@ -141,12 +156,35 @@ export function StepSubmitted({
         </>
       ) : (
         <>
-          <AnimatedStepItem index={2}>
+          {needsMorePortfolioPhotos && onAddPortfolioPhotos && blockedCopy ? (
+            <AnimatedStepItem index={2}>
+              <div className="mx-auto max-w-md rounded-xl bg-amber-50 px-4 py-4 text-left ring-1 ring-amber-200/70">
+                <p className="text-sm font-semibold text-amber-950">
+                  {blockedCopy.cardTitle}
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-amber-900/90">
+                  {blockedCopy.cardBody}
+                </p>
+                <button
+                  type="button"
+                  onClick={onAddPortfolioPhotos}
+                  className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-white shadow-sm hover:opacity-95 sm:w-auto sm:min-w-[12rem]"
+                >
+                  {blockedCopy.ctaLabel}
+                </button>
+              </div>
+            </AnimatedStepItem>
+          ) : null}
+          <AnimatedStepItem index={needsMorePortfolioPhotos ? 3 : 2}>
             <button
               type="button"
               disabled={refreshing}
               onClick={onRefreshStatus}
-              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm hover:opacity-95 disabled:opacity-60 sm:mx-auto sm:w-auto sm:min-w-[12rem]"
+              className={`inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold shadow-sm hover:opacity-95 disabled:opacity-60 sm:mx-auto sm:w-auto sm:min-w-[12rem] ${
+                needsMorePortfolioPhotos
+                  ? "border border-neutral-200 bg-white text-neutral-800 hover:bg-neutral-50"
+                  : "bg-primary text-white"
+              }`}
             >
               {refreshing ? (
                 <>
@@ -158,11 +196,13 @@ export function StepSubmitted({
               )}
             </button>
             <p className="mx-auto mt-3 max-w-md text-xs text-neutral-500">
-              Tap to refresh — we&apos;ll show the latest review status here.
+              {needsMorePortfolioPhotos && blockedCopy
+                ? blockedCopy.checkStatusHint
+                : "Tap to refresh — we'll show the latest review status here."}
             </p>
           </AnimatedStepItem>
           {statusCheckFeedback ? (
-            <AnimatedStepItem index={3}>
+            <AnimatedStepItem index={needsMorePortfolioPhotos ? 4 : 3}>
               <StatusCheckFeedbackBanner feedback={statusCheckFeedback} />
             </AnimatedStepItem>
           ) : null}

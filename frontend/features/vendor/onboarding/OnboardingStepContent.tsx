@@ -35,6 +35,9 @@ type Props = {
   refreshingStatus?: boolean;
   statusCheckFeedback?: VendorStatusCheckFeedback | null;
   submittedSummaryBusinessName?: string;
+  portfolioPhotoCount?: number;
+  needsMorePortfolioPhotos?: boolean;
+  onAddPortfolioPhotos?: () => void;
   portfolioQuality: Record<string, PortfolioImageQualityRow>;
   portfolioQualityAccepted: Record<string, boolean>;
   onRemovePortfolioFile: (index: number) => void;
@@ -85,6 +88,9 @@ export function OnboardingStepContent({
   refreshingStatus,
   statusCheckFeedback,
   submittedSummaryBusinessName,
+  portfolioPhotoCount,
+  needsMorePortfolioPhotos,
+  onAddPortfolioPhotos,
   portfolioQuality,
   portfolioQualityAccepted,
   onRemovePortfolioFile,
@@ -190,6 +196,9 @@ export function OnboardingStepContent({
           refreshing={refreshingStatus}
           statusCheckFeedback={statusCheckFeedback}
           businessName={submittedSummaryBusinessName}
+          portfolioPhotoCount={portfolioPhotoCount}
+          needsMorePortfolioPhotos={needsMorePortfolioPhotos}
+          onAddPortfolioPhotos={onAddPortfolioPhotos}
         />
       );
     default:

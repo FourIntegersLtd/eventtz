@@ -17,7 +17,11 @@ import {
   vendorOnboardingAiErrorMessage,
 } from "@/lib/vendorOnboardingAiApi";
 import { buildDraftBio } from "./onboardingLogic";
-import { normalizePublicBioText } from "./reviewDisplayHelpers";
+import {
+  needsMorePortfolioPhotos as dataNeedsMorePortfolioPhotos,
+  normalizePublicBioText,
+  portfolioImageCountFromData,
+} from "./reviewDisplayHelpers";
 import { mapLegacyOnboardingStep } from "./onboardingProgress";
 import {
   mergePayloadIntoVendorData,
@@ -68,6 +72,24 @@ export function useOnboardingPersistence({
       (approvalStatus === "pending" || approvalStatus === "banned")
     );
   }, [profileStatus, approvalStatus]);
+
+  const portfolioImageCount = useMemo(
+    () => portfolioImageCountFromData(data),
+    [data],
+  );
+
+  const needsMorePortfolioPhotos = useMemo(
+    () => dataNeedsMorePortfolioPhotos(data),
+    [data],
+  );
+
+  const canAddPortfolioWhilePending = useMemo(
+    () =>
+      profileStatus === "submitted" &&
+      approvalStatus === "pending" &&
+      needsMorePortfolioPhotos,
+    [profileStatus, approvalStatus, needsMorePortfolioPhotos],
+  );
 
   const applyVendorProfileResponse = useCallback(
     (res: Awaited<ReturnType<typeof fetchVendorProfile>>) => {
@@ -300,6 +322,9 @@ export function useOnboardingPersistence({
     accessDenied,
     accessDeniedMessage,
     lockedPendingReview,
+    portfolioImageCount,
+    needsMorePortfolioPhotos,
+    canAddPortfolioWhilePending,
     applyVendorProfileResponse,
     onRegenerateBio,
     onGenerateBioWithAI,
