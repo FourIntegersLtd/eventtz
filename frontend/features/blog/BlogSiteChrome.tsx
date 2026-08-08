@@ -23,7 +23,7 @@ export function BlogSiteChrome({ children }: BlogSiteChromeProps) {
             priority
             className="inline-flex shrink-0 items-center"
           />
-          <nav className="flex items-center gap-4 text-sm font-medium text-neutral-700">
+          <nav className="flex shrink-0 items-center gap-3 text-xs font-medium text-neutral-700 sm:gap-4 sm:text-sm">
             <Link href="/blog" className="transition hover:text-primary">
               Blog
             </Link>

@@ -43,12 +43,12 @@ export function BlogIndexView() {
   }, []);
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 pb-16 pt-8 sm:px-6 sm:pt-12 lg:px-8">
-      <header className="mb-8 space-y-2 text-left sm:mb-12 sm:space-y-3">
+    <div className="mx-auto w-full max-w-7xl px-4 pb-20 pt-10 sm:px-6 sm:pb-16 sm:pt-12 lg:px-8">
+      <header className="mb-10 space-y-3 text-left sm:mb-12 sm:space-y-3">
         <h1 className="font-heading text-3xl font-semibold tracking-tight text-neutral-900 sm:text-4xl lg:text-5xl">
           Blog
         </h1>
-        <p className="max-w-2xl text-sm text-neutral-600 sm:text-base lg:text-lg">
+        <p className="max-w-2xl text-base leading-relaxed text-neutral-600 sm:text-base lg:text-lg">
           Stories, tips, and updates from the Eventtz team.
         </p>
       </header>
@@ -68,9 +68,9 @@ export function BlogIndexView() {
           {posts.map((post) => (
             <li key={post.id} className="min-w-0">
               <article className="h-full">
-                <Link href={`/blog/${post.slug}`} className="group flex h-full flex-col">
+                <Link href={`/blog/${post.slug}`} className="group flex h-full flex-col gap-4 sm:gap-3">
                   {post.cover_image_url ? (
-                    <div className="mb-4 aspect-[16/10] overflow-hidden rounded-2xl bg-neutral-100">
+                    <div className="aspect-[16/10] overflow-hidden rounded-2xl bg-neutral-100 sm:rounded-2xl">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={post.cover_image_url}
@@ -79,30 +79,32 @@ export function BlogIndexView() {
                       />
                     </div>
                   ) : (
-                    <div className="mb-4 aspect-[16/10] rounded-2xl bg-primary-soft/60 ring-1 ring-primary-border/40" />
+                    <div className="aspect-[16/10] rounded-2xl bg-primary-soft/60 ring-1 ring-primary-border/40" />
                   )}
-                  <BlogByline
-                    publishedAt={formatPublished(post.published_at)}
-                    publishedAtIso={post.published_at}
-                    authorName={post.author_name}
-                  />
-                  <h2 className="mt-2 font-heading text-lg font-semibold leading-snug text-neutral-900 transition group-hover:text-primary sm:text-xl">
-                    {post.title}
-                  </h2>
-                  {(() => {
-                    const blurb = (post.subtitle || post.excerpt || "").trim();
-                    if (
-                      !blurb ||
-                      blurb.toLowerCase() === post.title.trim().toLowerCase()
-                    ) {
-                      return null;
-                    }
-                    return (
-                      <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-neutral-600 sm:text-[0.9375rem]">
-                        {blurb}
-                      </p>
-                    );
-                  })()}
+                  <div className="flex flex-col gap-2 sm:gap-1.5">
+                    <BlogByline
+                      publishedAt={formatPublished(post.published_at)}
+                      publishedAtIso={post.published_at}
+                      authorName={post.author_name}
+                    />
+                    <h2 className="font-heading text-xl font-semibold leading-snug text-neutral-900 transition group-hover:text-primary sm:text-xl">
+                      {post.title}
+                    </h2>
+                    {(() => {
+                      const blurb = (post.subtitle || post.excerpt || "").trim();
+                      if (
+                        !blurb ||
+                        blurb.toLowerCase() === post.title.trim().toLowerCase()
+                      ) {
+                        return null;
+                      }
+                      return (
+                        <p className="line-clamp-3 text-[0.9375rem] leading-relaxed text-neutral-600 sm:text-[0.9375rem]">
+                          {blurb}
+                        </p>
+                      );
+                    })()}
+                  </div>
                 </Link>
               </article>
             </li>
