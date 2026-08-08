@@ -2,7 +2,6 @@
 
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import { BulletList, ListItem, ListKeymap, OrderedList } from "@tiptap/extension-list";
@@ -12,15 +11,16 @@ import {
   Heading1,
   Heading2,
   Heading3,
-  ImageIcon,
   Italic,
   Link as LinkIcon,
   List,
   ListOrdered,
   Quote,
 } from "lucide-react";
-import { useRef } from "react";
+import { useCallback, useRef, useState } from "react";
+import type { Editor } from "@tiptap/core";
 import { uploadImage } from "@/lib/mediaApi";
+import { BlogImage } from "@/features/admin/blog/blogImageExtension";
 
 type BlogEditorProps = {
   initialJson: Record<string, unknown> | null;
@@ -40,13 +40,19 @@ function normalizeDoc(json: Record<string, unknown> | null): Record<string, unkn
   return json;
 }
 
+function imageFilesFromList(files: FileList | File[]): File[] {
+  return Array.from(files).filter((f) => f.type.startsWith("image/"));
+}
+
 function ToolbarButton({
   active,
+  disabled,
   onAction,
   label,
   children,
 }: {
   active?: boolean;
+  disabled?: boolean;
   onAction: () => void;
   label: string;
   children: React.ReactNode;
@@ -56,12 +62,12 @@ function ToolbarButton({
       type="button"
       aria-label={label}
       title={label}
-      // Run on pointerdown + preventDefault so TipTap keeps the cursor position.
+      disabled={disabled}
       onPointerDown={(e) => {
         e.preventDefault();
-        onAction();
+        if (!disabled) onAction();
       }}
-      className={`inline-flex h-8 min-w-8 items-center justify-center rounded-md px-1.5 text-sm transition ${
+      className={`inline-flex h-8 min-w-8 items-center justify-center rounded-md px-1.5 text-sm transition disabled:cursor-not-allowed disabled:opacity-40 ${
         active ? "bg-primary/15 text-primary" : "text-neutral-600 hover:bg-neutral-100"
       }`}
     >
@@ -71,8 +77,26 @@ function ToolbarButton({
 }
 
 export function BlogRichTextEditor({ initialJson, onChange }: BlogEditorProps) {
-  const fileRef = useRef<HTMLInputElement>(null);
-  const uploadingRef = useRef(false);
+  const [uploadingCount, setUploadingCount] = useState(0);
+  const [dragOver, setDragOver] = useState(false);
+  const editorRef = useRef<Editor | null>(null);
+
+  const insertImages = useCallback(async (files: FileList | File[], ed: Editor) => {
+    const images = imageFilesFromList(files);
+    if (images.length === 0) return;
+
+    setUploadingCount((n) => n + images.length);
+    for (const file of images) {
+      try {
+        const uploaded = await uploadImage(file);
+        ed.chain().focus().setImage({ src: uploaded.public_url }).run();
+      } catch {
+        // Skip failed uploads; admin can retry.
+      } finally {
+        setUploadingCount((n) => Math.max(0, n - 1));
+      }
+    }
+  }, []);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -80,7 +104,6 @@ export function BlogRichTextEditor({ initialJson, onChange }: BlogEditorProps) {
     extensions: [
       StarterKit.configure({
         heading: { levels: [1, 2, 3] },
-        // Register list/quote explicitly below (avoids silent StarterKit miss).
         bulletList: false,
         orderedList: false,
         listItem: false,
@@ -92,14 +115,14 @@ export function BlogRichTextEditor({ initialJson, onChange }: BlogEditorProps) {
       OrderedList.configure({ keepMarks: true }),
       ListKeymap,
       Blockquote,
-      Image.configure({ allowBase64: false }),
+      BlogImage.configure({ allowBase64: false, inline: false }),
       Link.configure({
         openOnClick: false,
         autolink: true,
         HTMLAttributes: { rel: "noopener noreferrer", target: "_blank" },
       }),
       Placeholder.configure({
-        placeholder: "Write here… Highlight a line, then click H1 / list / quote.",
+        placeholder: "Write here…",
       }),
     ],
     content: normalizeDoc(initialJson),
@@ -108,8 +131,21 @@ export function BlogRichTextEditor({ initialJson, onChange }: BlogEditorProps) {
         class:
           "prose-blog min-h-[22rem] max-w-none px-1 py-2 text-left text-[1.05rem] leading-relaxed text-neutral-900 outline-none focus:outline-none",
       },
+      handleDrop: (view, event, _slice, moved) => {
+        if (moved || !editorRef.current) return false;
+        const files = imageFilesFromList(event.dataTransfer?.files ?? []);
+        if (files.length === 0) return false;
+        event.preventDefault();
+        const pos = view.posAtCoords({ left: event.clientX, top: event.clientY })?.pos;
+        if (pos != null) {
+          editorRef.current.chain().focus().setTextSelection(pos).run();
+        }
+        void insertImages(files, editorRef.current);
+        return true;
+      },
     },
     onCreate: ({ editor: ed }) => {
+      editorRef.current = ed;
       onChange({
         json: ed.getJSON() as Record<string, unknown>,
         html: ed.getHTML(),
@@ -123,18 +159,13 @@ export function BlogRichTextEditor({ initialJson, onChange }: BlogEditorProps) {
     },
   });
 
-  const insertImage = async (file: File) => {
-    if (!editor || uploadingRef.current) return;
-    uploadingRef.current = true;
-    try {
-      const uploaded = await uploadImage(file);
-      editor.chain().focus().setImage({ src: uploaded.public_url }).run();
-    } finally {
-      uploadingRef.current = false;
-    }
-  };
+  if (editor && editorRef.current !== editor) {
+    editorRef.current = editor;
+  }
 
   if (!editor) return null;
+
+  const uploading = uploadingCount > 0;
 
   return (
     <div className="rounded-xl border border-neutral-200 bg-white text-left">
@@ -211,26 +242,25 @@ export function BlogRichTextEditor({ initialJson, onChange }: BlogEditorProps) {
         >
           <LinkIcon className="h-4 w-4" />
         </ToolbarButton>
-        <ToolbarButton label="Image" onAction={() => fileRef.current?.click()}>
-          <ImageIcon className="h-4 w-4" />
-        </ToolbarButton>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            e.target.value = "";
-            if (f) void insertImage(f);
-          }}
-        />
+        {uploading ? (
+          <span className="px-2 text-xs text-neutral-500">Uploading image…</span>
+        ) : null}
       </div>
-      <p className="border-b border-neutral-100 px-3 py-1.5 text-xs text-neutral-500">
-        Tip: click in a line, then Quote / Bullet / Number. Or type{" "}
-        <kbd className="rounded bg-neutral-100 px-1">-</kbd> then space for a bullet list.
-      </p>
-      <div className="px-4 py-3 text-left">
+      <div
+        className={`px-4 py-3 text-left transition ${
+          dragOver ? "rounded-lg bg-primary/[0.04] ring-2 ring-primary/20 ring-inset" : ""
+        }`}
+        onDragEnter={(e) => {
+          if (e.dataTransfer?.types.includes("Files")) setDragOver(true);
+        }}
+        onDragLeave={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOver(false);
+        }}
+        onDragOver={(e) => {
+          if (e.dataTransfer?.types.includes("Files")) e.preventDefault();
+        }}
+        onDrop={() => setDragOver(false)}
+      >
         <EditorContent editor={editor} />
       </div>
     </div>

@@ -323,7 +323,10 @@ export function AdminBlogEditorView({ postId }: AdminBlogEditorViewProps) {
       <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
         <div className="px-5 py-4 sm:px-6 sm:py-5">
           <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">Body</h2>
-          <p className="mt-0.5 text-[13px] text-neutral-400">Main post content.</p>
+          <p className="mt-0.5 text-[13px] text-neutral-400">
+            Drag image files into the editor. Best inline size: 1200×675 (landscape) or 800×800 max
+            for square graphics — they display up to ~75% width and ~320px tall.
+          </p>
         </div>
         <div className="border-t border-neutral-100 px-5 py-4 sm:px-6">
           {bodyJson !== null || !loading ? (
