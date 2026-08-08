@@ -36,6 +36,23 @@ def test_sanitize_keeps_safe_content():
     assert 'rel="noopener noreferrer"' in html
 
 
+def test_sanitize_keeps_figure_with_caption_and_order():
+    html = sanitize_blog_html(
+        '<p>Before</p>'
+        '<figure class="blog-figure">'
+        '<img src="https://cdn.example/one.jpg" alt="One" loading="lazy" />'
+        '<figcaption>First photo</figcaption>'
+        '</figure>'
+        '<p>Between</p>'
+        '<img src="https://cdn.example/two.jpg" alt="Two" />',
+    )
+    assert html.index("Before") < html.index("one.jpg") < html.index("Between") < html.index("two.jpg")
+    assert "<figure" in html
+    assert "<figcaption>" in html
+    assert "First photo" in html
+    assert 'class="blog-figure"' in html
+
+
 @patch("app.features.blog.service.get_settings")
 def test_create_publish_public_visibility(mock_settings):
     mock_settings.return_value.local_auth_mode = True

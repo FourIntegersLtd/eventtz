@@ -25,13 +25,16 @@ _ALLOWED_TAGS = frozenset(
         "h4",
         "a",
         "img",
+        "figure",
+        "figcaption",
         "span",
     }
 )
 
 _ALLOWED_ATTRS: dict[str, frozenset[str]] = {
     "a": frozenset({"href", "title", "rel", "target"}),
-    "img": frozenset({"src", "alt", "title"}),
+    "img": frozenset({"src", "alt", "title", "loading"}),
+    "figure": frozenset({"class"}),
 }
 
 
@@ -84,6 +87,13 @@ class _SanitizeParser(HTMLParser):
                 if not safe:
                     continue
                 kept.append(f'src="{_escape_attr(safe)}"')
+                continue
+            if tag_l == "img" and n == "loading" and val.lower() == "lazy":
+                kept.append('loading="lazy"')
+                continue
+            if tag_l == "figure" and n == "class":
+                if val.strip() == "blog-figure":
+                    kept.append('class="blog-figure"')
                 continue
             if n == "target":
                 if val.lower() != "_blank":
