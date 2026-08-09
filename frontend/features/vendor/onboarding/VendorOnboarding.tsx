@@ -6,7 +6,7 @@ import { portalCard, portalCardPaddingLg } from "@/components/portal-shell/porta
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { MIN_PORTFOLIO_IMAGES, STEP_LABELS } from "./constants";
+import { MIN_PORTFOLIO_IMAGES } from "./constants";
 import { portfolioApprovalBlockedCopy } from "./onboardingCopy";
 import { OnboardingStepContent } from "./OnboardingStepContent";
 import { OnboardingProgressHeader } from "./OnboardingProgressHeader";
@@ -44,7 +44,6 @@ export function VendorOnboarding() {
     accessDeniedMessage,
     lockedPendingReview,
     portfolioImageCount,
-    needsMorePortfolioPhotos,
     canAddPortfolioWhilePending,
     primaryLabel,
     profileStatus,
@@ -194,12 +193,6 @@ export function VendorOnboarding() {
   }
 
   const reviewsActive = pathname.startsWith("/vendor/profile/reviews");
-  const navItemClass = (active: boolean) =>
-    `inline-flex shrink-0 items-center whitespace-nowrap rounded-xl px-3 py-2.5 text-left text-sm font-medium outline-none transition focus-visible:ring-2 focus-visible:ring-primary/50 lg:block lg:w-full ${
-      active
-        ? "bg-primary/10 text-primary"
-        : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
-    }`;
   const profilePhotoProps = {
     firstName: data.firstName,
     lastName: data.lastName,
@@ -292,28 +285,12 @@ export function VendorOnboarding() {
             <aside className="hidden min-w-0 lg:block lg:sticky lg:top-4">
               <div className="space-y-3">
                 <VendorProfilePhotoField variant="sidebar" {...profilePhotoProps} />
-                <nav className="overflow-hidden rounded-2xl border border-neutral-100 bg-white p-2">
-                  <div className="flex flex-col space-y-0.5">
-                    {STEP_LABELS.slice(0, 8).map((label, i) => {
-                      const n = i + 1;
-                      const active = n === step;
-                      return (
-                        <button
-                          key={n}
-                          type="button"
-                          onClick={() => navigateToStep(n)}
-                          className={navItemClass(active)}
-                        >
-                          {label}
-                        </button>
-                      );
-                    })}
-                    <div className="my-1.5 border-t border-neutral-100" aria-hidden />
-                    <Link href="/vendor/profile/reviews" className={navItemClass(reviewsActive)}>
-                      Client reviews
-                    </Link>
-                  </div>
-                </nav>
+                <VendorProfileSectionTabs
+                  orientation="vertical"
+                  step={step}
+                  reviewsActive={reviewsActive}
+                  onNavigateToStep={navigateToStep}
+                />
               </div>
             </aside>
 
