@@ -61,7 +61,7 @@ export function VendorPayoutCard({ status, loading = false }: VendorPayoutCardPr
     >
       <div className="absolute inset-0 bg-gradient-to-br from-[#2d1247] via-[#3e1964] to-[#6b3fa0]" />
       <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
-      <div className="pointer-events-none absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
+      <div className="pointer-events-none absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-white/10 blur-2xl"/>
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.18)_0%,transparent_42%,rgba(255,255,255,0.06)_100%)]" />
 
       <div className="relative flex min-h-[240px] flex-col justify-between p-6 sm:min-h-[260px] sm:p-8">
