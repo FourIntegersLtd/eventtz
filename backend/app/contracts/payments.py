@@ -18,6 +18,28 @@ class VendorPaymentsStatusResponse(BaseModel):
     payouts_enabled: bool = False
 
 
+class VendorPayoutRow(BaseModel):
+    """One booking's vendor share - never the client total (which includes Eventtz fee)."""
+
+    booking_id: str
+    event_name: str
+    event_date: str | None = None
+    client_display_name: str | None = None
+    amount_gbp: float
+    amount_label: str
+    status: str  # paid_out | awaiting_payout
+    paid_out_at: str | None = None
+
+
+class VendorPayoutHistoryResponse(BaseModel):
+    success: bool = True
+    payouts: list[VendorPayoutRow] = Field(default_factory=list)
+    total_paid_out_gbp: float = 0.0
+    total_paid_out_label: str = "GBP 0"
+    total_awaiting_gbp: float = 0.0
+    total_awaiting_label: str = "GBP 0"
+
+
 class VendorAnalyticsResponse(BaseModel):
     success: bool = True
     period_days: int = 90

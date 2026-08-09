@@ -17,6 +17,7 @@ from app.features.email.dispatch import (
     dispatch_booking_notification,
     send_admin_payout_stuck_email,
 )
+from app.features.bookings.completion_rules import both_parties_confirmed_awaiting_payout
 from app.features.payments import stripe as stripe_service
 
 
@@ -86,13 +87,24 @@ def _finalize_completion(row: dict[str, Any]) -> dict[str, Any]:
             "Payout amount is missing for this booking. Please contact support.",
         )
 
+    source_charge = stripe_service.resolve_source_charge_id(
+        charge_id=row.get("stripe_charge_id"),
+        payment_intent_id=row.get("stripe_payment_intent_id"),
+    )
+    if not source_charge:
+        logger.warning(
+            "No stripe_charge_id for booking=%s; payout transfer may fail if platform balance is empty",
+            booking_id,
+        )
+
     try:
         # Checkout collects the full client payment on the platform; the vendor share stays
-        # held until completion - Transfer moves that held balance to their Connect account.
+        # held until completion - Transfer moves that charge's funds to their Connect account.
         transfer_id = stripe_service.create_transfer(
             destination_account_id=str(vendor_stripe["stripe_account_id"]),
             amount_gbp=amount_gbp,
             booking_id=booking_id,
+            source_transaction=source_charge,
         )
     except Exception as e:
         logger.exception("Stripe transfer failed booking=%s vendor=%s", booking_id, vendor_id)
@@ -182,6 +194,8 @@ def _confirm_completion(booking_id: str, *, actor: str, user_id: str) -> dict[st
     other_ts_col = "vendor_completion_confirmed_at" if actor == "client" else "client_completion_confirmed_at"
 
     if row.get(ts_col):
+        if both_parties_confirmed_awaiting_payout(row):
+            return _finalize_completion(row)
         return _serialize_completion_state(row)
 
     upd = (

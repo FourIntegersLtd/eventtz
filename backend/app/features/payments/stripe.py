@@ -470,6 +470,37 @@ def retrieve_payment_intent(payment_intent_id: str) -> Any:
     return _stripe().PaymentIntent.retrieve(payment_intent_id, expand=["latest_charge"])
 
 
+def resolve_source_charge_id(
+    *,
+    charge_id: str | None,
+    payment_intent_id: str | None,
+) -> str | None:
+    """Return the Stripe Charge id to fund a delayed Connect Transfer.
+
+    Transfers without ``source_transaction`` draw from the platform's available
+    balance, which fails when automatic payouts have already swept the Checkout
+    charge. Linking the transfer to the original charge avoids that.
+    """
+    cid = str(charge_id or "").strip()
+    if cid.startswith("ch_"):
+        return cid
+    pi_id = str(payment_intent_id or "").strip()
+    if not pi_id.startswith("pi_"):
+        return None
+    try:
+        pi = retrieve_payment_intent(pi_id)
+        pi_dict = pi if isinstance(pi, dict) else stripe_object_to_dict(pi)
+        latest_charge = pi_dict.get("latest_charge")
+        if isinstance(latest_charge, dict):
+            out = latest_charge.get("id")
+            return str(out) if out else None
+        if isinstance(latest_charge, str) and latest_charge.startswith("ch_"):
+            return latest_charge
+    except Exception:
+        logger.exception("Failed to resolve charge from PaymentIntent %s", pi_id)
+    return None
+
+
 def find_existing_transfer_id(booking_id: str) -> str | None:
     """Return an existing Stripe Transfer for this booking, if any (by transfer_group)."""
     group = f"booking_{booking_id}"
@@ -486,13 +517,35 @@ def find_existing_transfer_id(booking_id: str) -> str | None:
     return None
 
 
+def _transfer_idempotency_key(
+    *,
+    booking_id: str,
+    amount_pence: int,
+    destination: str,
+    source_transaction: str | None,
+) -> str:
+    """Stripe keys are bound to exact params - include funding source so charge-backed retries
+    don't collide with an earlier failed platform-balance attempt for the same booking."""
+    base = f"transfer-{booking_id}-{amount_pence}-{destination}"
+    src = str(source_transaction or "").strip()
+    if src.startswith("ch_"):
+        return f"{base}-src-{src}"
+    return base
+
+
 def create_transfer(
     *,
     destination_account_id: str,
     amount_gbp: float,
     booking_id: str,
+    source_transaction: str | None = None,
 ) -> str:
-    """Pay the vendor from Eventtz's Stripe balance into their connected account.
+    """Pay the vendor from the client's Checkout charge into their Connect account.
+
+    When ``source_transaction`` is set (the booking's ``stripe_charge_id``), Stripe
+    funds the transfer from that charge even if the platform balance is empty because
+    automatic payouts already swept it. Without it, the transfer needs available
+    platform balance and can fail with "insufficient funds".
 
     If we already paid this booking, return that earlier payment id.
     The "don't send twice" key includes amount and destination so a retry with
@@ -511,15 +564,25 @@ def create_transfer(
     if amount_pence < 1:
         raise ValueError("Transfer amount must be at least £0.01.")
     dest = destination_account_id.strip()
-    try:
-        transfer = _stripe().Transfer.create(
-            amount=amount_pence,
-            currency="gbp",
+    src = str(source_transaction or "").strip()
+    charge_id = src if src.startswith("ch_") else None
+    create_kwargs: dict[str, Any] = {
+        "amount": amount_pence,
+        "currency": "gbp",
+        "destination": dest,
+        "transfer_group": f"booking_{booking_id}",
+        "metadata": {"booking_id": booking_id},
+        "idempotency_key": _transfer_idempotency_key(
+            booking_id=booking_id,
+            amount_pence=amount_pence,
             destination=dest,
-            transfer_group=f"booking_{booking_id}",
-            metadata={"booking_id": booking_id},
-            idempotency_key=f"transfer-{booking_id}-{amount_pence}-{dest}",
-        )
+            source_transaction=charge_id,
+        ),
+    }
+    if charge_id:
+        create_kwargs["source_transaction"] = charge_id
+    try:
+        transfer = _stripe().Transfer.create(**create_kwargs)
         return str(transfer["id"])
     except stripe.IdempotencyError:
         reclaimed = find_existing_transfer_id(booking_id)

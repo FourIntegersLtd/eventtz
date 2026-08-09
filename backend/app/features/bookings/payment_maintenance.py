@@ -7,6 +7,7 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.features.bookings.completion_rules import (
+    both_parties_confirmed_awaiting_payout,
     compute_payout_auto_release_at,
     event_day_over,
 )
@@ -92,12 +93,30 @@ def maybe_send_completion_reminder_for_row(row: dict[str, Any]) -> bool:
     return True
 
 
+def _retry_stuck_mutual_completion_payout(row: dict[str, Any]) -> bool:
+    """Both parties confirmed but payout is still ``paid`` - retry the Transfer."""
+    if not both_parties_confirmed_awaiting_payout(row):
+        return False
+    booking_id = str(row.get("id") or "")
+    try:
+        result = _finalize_completion(row)
+    except ValueError as e:
+        logger.warning("stuck payout retry failed booking=%s: %s", booking_id, e)
+        return False
+    except Exception:
+        logger.exception("stuck payout retry failed booking=%s", booking_id)
+        return False
+    return str((result or {}).get("payment_status") or "") == "payout_released"
+
+
 def touch_booking_completion_side_effects(row: dict[str, Any]) -> bool:
     """For one booking (detail page or hourly job): send a reminder, then pay the vendor if due."""
     try:
         maybe_send_completion_reminder_for_row(row)
     except Exception:
         logger.exception("completion reminder failed booking=%s", row.get("id"))
+    if _retry_stuck_mutual_completion_payout(row):
+        return True
     try:
         return _auto_release_payout_row(row)
     except ValueError:

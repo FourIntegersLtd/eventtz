@@ -8,7 +8,7 @@ from typing import Any
 from app.core.constants import BOOKING_SERVICE_FEE_PERCENT
 
 
-def _fmt_gbp(amount: float) -> str:
+def format_gbp(amount: float) -> str:
     if amount != amount:  # NaN
         return "GBP 0.00"
     s = f"{amount:.2f}"
@@ -116,10 +116,10 @@ def build_pricing_breakdown(
         "service_fee_gbp": fee,
         "client_total_gbp": client_total,
         "has_pricing_tbc": has_tbc_lines,
-        "vendor_portion_label": _fmt_gbp(vendor_portion),
-        "service_fee_label": _fmt_gbp(fee),
-        "client_total_label": _fmt_gbp(client_total),
-        "line_items_subtotal_label": _fmt_gbp(li_sum),
+        "vendor_portion_label": format_gbp(vendor_portion),
+        "service_fee_label": format_gbp(fee),
+        "client_total_label": format_gbp(client_total),
+        "line_items_subtotal_label": format_gbp(li_sum),
     }
 
 

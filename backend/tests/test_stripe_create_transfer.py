@@ -43,6 +43,63 @@ def test_create_transfer_uses_param_bound_idempotency_key(mock_stripe):
     assert kwargs["destination"] == "acct_abc"
     assert kwargs["idempotency_key"] == "transfer-booking-2-1234-acct_abc"
     assert kwargs["transfer_group"] == "booking_booking-2"
+    assert "source_transaction" not in kwargs
+
+
+@patch("app.features.payments.stripe._stripe")
+def test_create_transfer_passes_source_transaction(mock_stripe):
+    mock_stripe.return_value.Transfer.list.return_value = SimpleNamespace(data=[])
+    mock_stripe.return_value.Transfer.create.return_value = {"id": "tr_src"}
+
+    tid = stripe_service.create_transfer(
+        destination_account_id="acct_abc",
+        amount_gbp=12.34,
+        booking_id="booking-2b",
+        source_transaction="ch_checkout123",
+    )
+
+    assert tid == "tr_src"
+    kwargs = mock_stripe.return_value.Transfer.create.call_args.kwargs
+    assert kwargs["source_transaction"] == "ch_checkout123"
+
+
+@patch("app.features.payments.stripe.retrieve_payment_intent")
+def test_resolve_source_charge_id_prefers_stored_charge(mock_retrieve):
+    out = stripe_service.resolve_source_charge_id(
+        charge_id="ch_saved",
+        payment_intent_id="pi_ignored",
+    )
+    assert out == "ch_saved"
+    mock_retrieve.assert_not_called()
+
+
+@patch("app.features.payments.stripe.retrieve_payment_intent")
+def test_resolve_source_charge_id_from_payment_intent(mock_retrieve):
+    mock_retrieve.return_value = {"latest_charge": "ch_from_pi"}
+
+    out = stripe_service.resolve_source_charge_id(
+        charge_id=None,
+        payment_intent_id="pi_123",
+    )
+
+    assert out == "ch_from_pi"
+    mock_retrieve.assert_called_once_with("pi_123")
+
+
+@patch("app.features.payments.stripe._stripe")
+def test_create_transfer_source_transaction_uses_distinct_idempotency_key(mock_stripe):
+    mock_stripe.return_value.Transfer.list.return_value = SimpleNamespace(data=[])
+    mock_stripe.return_value.Transfer.create.return_value = {"id": "tr_src"}
+
+    stripe_service.create_transfer(
+        destination_account_id="acct_abc",
+        amount_gbp=12.34,
+        booking_id="booking-2b",
+        source_transaction="ch_checkout123",
+    )
+
+    kwargs = mock_stripe.return_value.Transfer.create.call_args.kwargs
+    assert kwargs["idempotency_key"] == "transfer-booking-2b-1234-acct_abc-src-ch_checkout123"
 
 
 @patch("app.features.payments.stripe._stripe")

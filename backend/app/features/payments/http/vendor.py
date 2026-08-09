@@ -1,4 +1,4 @@
-"""HTTP routes for vendor payout setup via Stripe."""
+"""HTTP routes for vendor payout setup via Stripe and the vendor payout ledger."""
 
 from __future__ import annotations
 
@@ -6,7 +6,12 @@ from fastapi import APIRouter, Request, Response
 
 from app.features.auth.http.guards import require_vendor
 from app.core.logging import get_logger
-from app.contracts.payments import VendorPaymentsConnectResponse, VendorPaymentsStatusResponse
+from app.contracts.payments import (
+    VendorPaymentsConnectResponse,
+    VendorPaymentsStatusResponse,
+    VendorPayoutHistoryResponse,
+)
+from app.features.bookings.payout_history import list_vendor_payouts
 from app.features.payments.stripe import create_connect_onboarding_link, sync_connect_account_status
 
 router = APIRouter(prefix="/vendor/payments", tags=["vendor-payments"])
@@ -31,3 +36,11 @@ def get_status(request: Request, response: Response) -> VendorPaymentsStatusResp
     uid = str(user.get("id") or "")
     data = sync_connect_account_status(uid)
     return VendorPaymentsStatusResponse(**data)
+
+
+@router.get("/history", response_model=VendorPayoutHistoryResponse)
+def get_payout_history(request: Request, response: Response) -> VendorPayoutHistoryResponse:
+    """Vendor earnings ledger: their share only, not the client total Eventtz charged."""
+    user = require_vendor(request, response)
+    uid = str(user.get("id") or "")
+    return VendorPayoutHistoryResponse(**list_vendor_payouts(uid))

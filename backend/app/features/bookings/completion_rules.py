@@ -59,3 +59,14 @@ def completion_waiting_on(row: dict[str, Any]) -> str | None:
     if not client_done and not vendor_done:
         return "both"
     return "client" if not client_done else "vendor"
+
+
+def both_parties_confirmed_awaiting_payout(row: dict[str, Any]) -> bool:
+    """Both sides confirmed but the Stripe Transfer has not completed yet."""
+    if str(row.get("status") or "") != "accepted":
+        return False
+    if str(row.get("payment_status") or "") != "paid":
+        return False
+    return bool(row.get("client_completion_confirmed_at")) and bool(
+        row.get("vendor_completion_confirmed_at")
+    )
