@@ -15,7 +15,7 @@ import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 const TABS = [
   { id: "account", label: "Payout account" },
-  { id: "history", label: "Payment history" },
+  { id: "history", label: "Payout history" },
 ] as const;
 
 type VendorPaymentsTabId = (typeof TABS)[number]["id"];
