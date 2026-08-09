@@ -60,10 +60,9 @@ export function UnifiedRegisterView() {
             <h1 className="font-heading text-2xl font-semibold text-neutral-900">
               Check your email
             </h1>
-            <p className="mt-3 text-sm text-neutral-600">{message}</p>
-            <p className="mt-2 text-sm text-neutral-500">
-              Open the link we sent to <span className="font-medium text-neutral-800">{email}</span>{" "}
-              to verify your address, then sign in.
+            <p className="mt-3 text-sm text-neutral-600">
+              Account created. Open the link we sent to{" "}
+              <span className="font-medium text-neutral-800">{email}</span>, then sign in.
             </p>
             <Button
               type="button"
