@@ -8,9 +8,7 @@ export default function ClientVendorDetailPage() {
   return (
     <Suspense
       fallback={
-        <main className="min-h-screen bg-auth-bg px-4 py-10">
-          <LoadingState label="Loading vendor…" variant="page" branded />
-        </main>
+        <LoadingState label="Loading vendor…" variant="centered" branded />
       }
     >
       <ClientVendorBrowseDetailView />

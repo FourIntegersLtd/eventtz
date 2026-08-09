@@ -132,11 +132,8 @@ export function ClientVendorBrowseDetailView() {
   );
 
   if (!userId) {
-    return (
-      <MarketplaceBrowseShell width="detail">
-        <p className="text-center text-sm text-neutral-600">Invalid link.</p>
-      </MarketplaceBrowseShell>
-    );
+    const invalid = <p className="text-center text-sm text-neutral-600">Invalid link.</p>;
+    return isClient ? invalid : <MarketplaceBrowseShell width="detail">{invalid}</MarketplaceBrowseShell>;
   }
 
   const mainContent = (() => {
@@ -231,7 +228,12 @@ export function ClientVendorBrowseDetailView() {
     );
   })();
 
-  return (
+  return isClient ? (
+    <>
+      {headerBar}
+      {mainContent}
+    </>
+  ) : (
     <MarketplaceBrowseShell width="detail">
       {headerBar}
       {mainContent}
