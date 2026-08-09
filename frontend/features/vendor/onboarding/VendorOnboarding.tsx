@@ -12,6 +12,7 @@ import { OnboardingStepContent } from "./OnboardingStepContent";
 import { OnboardingProgressHeader } from "./OnboardingProgressHeader";
 import { OnboardingWizardStepTitle } from "./ui/OnboardingWizardStepTitle";
 import { VendorProfilePhotoField } from "./VendorProfilePhotoField";
+import { VendorProfileSectionTabs } from "./VendorProfileSectionTabs";
 import { useVendorOnboardingController } from "./useVendorOnboardingController";
 import { Button } from "@/components/ui/Button";
 import { LoadingState } from "@/components/ui/LoadingState";
@@ -192,6 +193,23 @@ export function VendorOnboarding() {
     );
   }
 
+  const reviewsActive = pathname.startsWith("/vendor/profile/reviews");
+  const navItemClass = (active: boolean) =>
+    `inline-flex shrink-0 items-center whitespace-nowrap rounded-xl px-3 py-2.5 text-left text-sm font-medium outline-none transition focus-visible:ring-2 focus-visible:ring-primary/50 lg:block lg:w-full ${
+      active
+        ? "bg-primary/10 text-primary"
+        : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
+    }`;
+  const profilePhotoProps = {
+    firstName: data.firstName,
+    lastName: data.lastName,
+    profileImageUrl: data.profileImageUrl,
+    editable: true as const,
+    uploading: uploadingProfileImage,
+    error: profileImageError,
+    onUpload: onUploadProfileImage,
+  };
+
   return (
     <div
       className={`w-full text-neutral-900 ${isLiveEdit ? "max-w-6xl" : "max-w-5xl"}`}
@@ -251,8 +269,17 @@ export function VendorOnboarding() {
       </Modal>
 
       {isLiveEdit ? (
-        <div className="space-y-6">
-          <header>
+        <div className="space-y-4 lg:space-y-6">
+          <div className="space-y-4 lg:hidden">
+            <VendorProfilePhotoField variant="header" {...profilePhotoProps} />
+            <VendorProfileSectionTabs
+              step={step}
+              reviewsActive={reviewsActive}
+              onNavigateToStep={navigateToStep}
+            />
+          </div>
+
+          <header className="hidden lg:block">
             <h1 className="font-heading text-2xl font-semibold tracking-tight text-neutral-900">
               Profile
             </h1>
@@ -262,71 +289,39 @@ export function VendorOnboarding() {
           </header>
 
           <div className="grid items-start gap-6 lg:grid-cols-[minmax(12rem,14rem)_minmax(0,1fr)]">
-            <aside className="min-w-0 lg:sticky lg:top-4">
+            <aside className="hidden min-w-0 lg:block lg:sticky lg:top-4">
               <div className="space-y-3">
-                <VendorProfilePhotoField
-                  variant="sidebar"
-                  firstName={data.firstName}
-                  lastName={data.lastName}
-                  profileImageUrl={data.profileImageUrl}
-                  editable
-                  uploading={uploadingProfileImage}
-                  error={profileImageError}
-                  onUpload={onUploadProfileImage}
-                />
-              <nav className="overflow-hidden rounded-2xl border border-neutral-100 bg-white p-2">
-                <div className="flex space-x-1 overflow-x-auto md:flex-col md:space-x-0 md:space-y-0.5">
-                  {STEP_LABELS.slice(0, 7).map((label, i) => {
-                    const n = i + 1;
-                    const active = n === step;
-                    return (
-                      <button
-                        key={n}
-                        type="button"
-                        onClick={() => navigateToStep(n)}
-                        className={`whitespace-nowrap rounded-xl px-3 py-2.5 text-left text-sm font-medium outline-none transition focus-visible:ring-2 focus-visible:ring-primary/50 ${
-                          active
-                            ? "bg-primary/10 text-primary"
-                            : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
-                        }`}
-                      >
-                        {label}
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="my-1.5 border-t border-neutral-100" />
-                <Link
-                  href="/vendor/profile/reviews"
-                  className={`block whitespace-nowrap rounded-xl px-3 py-2.5 text-left text-sm font-medium outline-none transition focus-visible:ring-2 focus-visible:ring-primary/50 ${
-                    pathname.startsWith("/vendor/profile/reviews")
-                      ? "bg-primary/10 text-primary"
-                      : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
-                  }`}
-                >
-                  Client reviews
-                </Link>
-                {step !== 8 ? (
-                  <>
-                    <div className="my-1.5 border-t border-neutral-100" />
-                    <button
-                      type="button"
-                      onClick={() => navigateToStep(8)}
-                      className="w-full whitespace-nowrap rounded-xl px-3 py-2.5 text-left text-sm font-medium text-primary/80 outline-none transition hover:bg-neutral-50 hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/50"
-                    >
-                      ← Back to review
-                    </button>
-                  </>
-                ) : null}
-              </nav>
+                <VendorProfilePhotoField variant="sidebar" {...profilePhotoProps} />
+                <nav className="overflow-hidden rounded-2xl border border-neutral-100 bg-white p-2">
+                  <div className="flex flex-col space-y-0.5">
+                    {STEP_LABELS.slice(0, 8).map((label, i) => {
+                      const n = i + 1;
+                      const active = n === step;
+                      return (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => navigateToStep(n)}
+                          className={navItemClass(active)}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                    <div className="my-1.5 border-t border-neutral-100" aria-hidden />
+                    <Link href="/vendor/profile/reviews" className={navItemClass(reviewsActive)}>
+                      Client reviews
+                    </Link>
+                  </div>
+                </nav>
               </div>
             </aside>
 
-            <div className="min-w-0 space-y-6">
+            <div className="min-w-0 space-y-4 lg:space-y-6">
               <div key={step} className="animate-onboarding-panel">
                 <OnboardingStepContent {...stepContentProps} />
               </div>
-              <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+              <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white lg:sticky lg:bottom-4">
                 <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                   <p className="text-[13px] text-neutral-400">
                     Updates apply to your public profile when you save.
