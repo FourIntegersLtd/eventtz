@@ -9,6 +9,7 @@ import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import type { VendorStatusCheckFeedback } from "../types";
 import { AnimatedStepItem } from "../ui/AnimatedStepItem";
+import { VendorProfilePhotoField } from "../VendorProfilePhotoField";
 
 type StepSubmittedProps = {
   approvalStatus: VendorApprovalStatus;
@@ -22,9 +23,16 @@ type StepSubmittedProps = {
   statusCheckFeedback?: VendorStatusCheckFeedback | null;
   /** Shown under the heading so vendors see their saved business name while locked. */
   businessName?: string;
+  firstName?: string;
+  lastName?: string;
+  profileImageUrl?: string;
   portfolioPhotoCount?: number;
   needsMorePortfolioPhotos?: boolean;
   onAddPortfolioPhotos?: () => void;
+  uploadingProfileImage?: boolean;
+  profileImageError?: string | null;
+  onUploadProfileImage?: (file: File) => void | Promise<void>;
+  profilePhotoEditable?: boolean;
 };
 
 const FEEDBACK_STYLES: Record<
@@ -81,9 +89,16 @@ export function StepSubmitted({
   refreshing = false,
   statusCheckFeedback = null,
   businessName,
+  firstName = "",
+  lastName = "",
+  profileImageUrl = "",
   portfolioPhotoCount = 0,
   needsMorePortfolioPhotos = false,
   onAddPortfolioPhotos,
+  uploadingProfileImage = false,
+  profileImageError = null,
+  onUploadProfileImage,
+  profilePhotoEditable = false,
 }: StepSubmittedProps) {
   const approved = approvalStatus === "approved";
   const banned = approvalStatus === "banned";
@@ -148,6 +163,19 @@ export function StepSubmitted({
           {statusCopy}
         </p>
       </AnimatedStepItem>
+      {!banned && onUploadProfileImage ? (
+        <div className="py-1">
+          <VendorProfilePhotoField
+            firstName={firstName}
+            lastName={lastName}
+            profileImageUrl={profileImageUrl}
+            editable={profilePhotoEditable}
+            uploading={uploadingProfileImage}
+            error={profileImageError}
+            onUpload={onUploadProfileImage}
+          />
+        </div>
+      ) : null}
       {awaitingPayouts ? (
         <>
           <AnimatedStepItem index={2}>

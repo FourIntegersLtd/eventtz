@@ -103,10 +103,9 @@ export function useOnboardingSteps({
   }, [canAddPortfolioWhilePending, setFormError, setStep]);
 
   const onViewProfileReview = useCallback(() => {
-    if (lockedPendingReview) return;
     setFormError(null);
     setStep(8);
-  }, [lockedPendingReview, setFormError, setStep]);
+  }, [setFormError, setStep]);
 
   const goNext = useCallback(async () => {
     if (step === 9 || saving || loadStatus !== "ready" || authLoading) return;
@@ -244,7 +243,14 @@ export function useOnboardingSteps({
   const goBack = useCallback(() => {
     setFormError(null);
     if (lockedPendingReview) {
-      if (canAddPortfolioWhilePending && step === 6) setStep(9);
+      if (canAddPortfolioWhilePending && step === 6) {
+        setStep(9);
+        return;
+      }
+      if (step === 8) {
+        setStep(9);
+        return;
+      }
       return;
     }
     if (step <= 1 || step === 9) return;
@@ -259,8 +265,13 @@ export function useOnboardingSteps({
 
   const navigateToStep = useCallback(
     (target: number) => {
-      if (lockedPendingReview) {
-        if (target !== 6 || !canAddPortfolioWhilePending) return;
+    if (lockedPendingReview) {
+      if (target === 8) {
+        setFormError(null);
+        setStep(8);
+        return;
+      }
+      if (target !== 6 || !canAddPortfolioWhilePending) return;
         setFormError(null);
         setStep(6);
         return;

@@ -25,8 +25,10 @@ type UseOnboardingMediaOptions = {
   setData: Dispatch<SetStateAction<VendorOnboardingData>>;
   update: (patch: Partial<VendorOnboardingData>) => void;
   userId: string | undefined;
+  profileStatus: string;
   showToast: ReturnType<typeof useToast>["showToast"];
   setFormError: (error: string | null) => void;
+  persistProfileImageUrl?: (url: string) => Promise<void>;
 };
 
 export function useOnboardingMedia({
@@ -35,8 +37,10 @@ export function useOnboardingMedia({
   setData,
   update,
   userId,
+  profileStatus,
   showToast,
   setFormError,
+  persistProfileImageUrl,
 }: UseOnboardingMediaOptions) {
   const [portfolioQuality, setPortfolioQuality] = useState<
     Record<string, PortfolioImageQualityRow>
@@ -211,6 +215,9 @@ export function useOnboardingMedia({
       try {
         const uploaded = await uploadImage(file);
         setData((prev) => ({ ...prev, profileImageUrl: uploaded.public_url }));
+        if (profileStatus === "submitted" && persistProfileImageUrl) {
+          await persistProfileImageUrl(uploaded.public_url);
+        }
       } catch {
         setProfileImageError(
           "Could not upload profile image. Check your connection and try again.",
@@ -219,7 +226,7 @@ export function useOnboardingMedia({
         setUploadingProfileImage(false);
       }
     },
-    [userId, setData],
+    [userId, setData, profileStatus, persistProfileImageUrl],
   );
 
   const [uploadingDoc, setUploadingDoc] = useState<

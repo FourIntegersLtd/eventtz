@@ -11,6 +11,7 @@ import { portfolioApprovalBlockedCopy } from "./onboardingCopy";
 import { OnboardingStepContent } from "./OnboardingStepContent";
 import { OnboardingProgressHeader } from "./OnboardingProgressHeader";
 import { OnboardingWizardStepTitle } from "./ui/OnboardingWizardStepTitle";
+import { VendorProfilePhotoField } from "./VendorProfilePhotoField";
 import { useVendorOnboardingController } from "./useVendorOnboardingController";
 import { Button } from "@/components/ui/Button";
 import { LoadingState } from "@/components/ui/LoadingState";
@@ -135,6 +136,7 @@ export function VendorOnboarding() {
     profileImageError,
     onUploadProfileImage,
     isLiveEdit,
+    lockedPendingReview,
   };
 
   if (authLoading || loadStatus === "loading") {
@@ -261,6 +263,17 @@ export function VendorOnboarding() {
 
           <div className="grid items-start gap-6 lg:grid-cols-[minmax(12rem,14rem)_minmax(0,1fr)]">
             <aside className="min-w-0 lg:sticky lg:top-4">
+              <div className="space-y-3">
+                <VendorProfilePhotoField
+                  variant="sidebar"
+                  firstName={data.firstName}
+                  lastName={data.lastName}
+                  profileImageUrl={data.profileImageUrl}
+                  editable
+                  uploading={uploadingProfileImage}
+                  error={profileImageError}
+                  onUpload={onUploadProfileImage}
+                />
               <nav className="overflow-hidden rounded-2xl border border-neutral-100 bg-white p-2">
                 <div className="flex space-x-1 overflow-x-auto md:flex-col md:space-x-0 md:space-y-0.5">
                   {STEP_LABELS.slice(0, 7).map((label, i) => {
@@ -306,6 +319,7 @@ export function VendorOnboarding() {
                   </>
                 ) : null}
               </nav>
+              </div>
             </aside>
 
             <div className="min-w-0 space-y-6">
@@ -350,7 +364,9 @@ export function VendorOnboarding() {
                   <p className="text-right text-xs text-neutral-500">
                     {lockedPendingReview && step === 6 && canAddPortfolioWhilePending
                       ? `Please save once you've added at least ${MIN_PORTFOLIO_IMAGES} portfolio photos.`
-                      : "Close anytime. Your progress is saved."}
+                      : lockedPendingReview && step === 8
+                        ? "You can update your profile photo here. Other details stay locked until review finishes."
+                        : "Close anytime. Your progress is saved."}
                   </p>
                   <div className="flex flex-wrap items-center justify-end gap-3">
                     {returnToReview && step < 8 && !(lockedPendingReview && step === 6) ? (
@@ -362,26 +378,28 @@ export function VendorOnboarding() {
                         Back to review
                       </button>
                     ) : null}
-                    {step > 1 || (lockedPendingReview && step === 6) ? (
+                    {step > 1 || (lockedPendingReview && (step === 6 || step === 8)) ? (
                       <button
                         type="button"
                         onClick={goBack}
                         className="flex min-h-11 items-center justify-center gap-1 rounded-xl bg-neutral-50 px-5 py-3 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 sm:min-w-[7.5rem]"
                       >
                         <ChevronLeft className="h-4 w-4" />
-                        {lockedPendingReview && step === 6 && canAddPortfolioWhilePending
+                        {lockedPendingReview && (step === 6 || step === 8)
                           ? "Back to status"
                           : "Back"}
                       </button>
                     ) : null}
-                    <button
-                      type="button"
-                      onClick={() => void goNext()}
-                      disabled={saving}
-                      className="min-h-11 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:opacity-90 disabled:opacity-60 sm:min-w-[7.5rem]"
-                    >
-                      {saving ? "Saving…" : primaryLabel}
-                    </button>
+                    {!(lockedPendingReview && step === 8) ? (
+                      <button
+                        type="button"
+                        onClick={() => void goNext()}
+                        disabled={saving}
+                        className="min-h-11 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:opacity-90 disabled:opacity-60 sm:min-w-[7.5rem]"
+                      >
+                        {saving ? "Saving…" : primaryLabel}
+                      </button>
+                    ) : null}
                   </div>
                 </div>
               </div>

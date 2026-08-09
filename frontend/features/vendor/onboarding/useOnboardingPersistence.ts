@@ -327,6 +327,42 @@ export function useOnboardingPersistence({
     }
   }, [user?.email, applyVendorProfileResponse, showToast]);
 
+  const persistProfileImageUrl = useCallback(
+    async (url: string) => {
+      if (approvalStatus === "banned") return;
+      const nextData = { ...data, profileImageUrl: url };
+      setData(nextData);
+      setSaving(true);
+      setFormError(null);
+      try {
+        const res = await saveVendorProfile({
+          current_step: step,
+          payload: vendorDataToPayload(nextData),
+        });
+        applyVendorProfileResponse(res);
+        showToast({ title: "Profile photo updated", tone: "success" });
+      } catch (e) {
+        setFormError(
+          getApiErrorDetail(e) ??
+            "Photo uploaded but could not save to your profile. Try again.",
+        );
+        throw e;
+      } finally {
+        setSaving(false);
+      }
+    },
+    [
+      approvalStatus,
+      data,
+      step,
+      applyVendorProfileResponse,
+      showToast,
+      setData,
+      setSaving,
+      setFormError,
+    ],
+  );
+
   return {
     data,
     setData,
@@ -356,6 +392,7 @@ export function useOnboardingPersistence({
     onGenerateBioWithAI,
     onRefreshStatus,
     persistAdditionalInfoFiles,
+    persistProfileImageUrl,
     userId: user?.id,
   };
 }

@@ -61,6 +61,7 @@ type Props = {
   onUploadProfileImage: (file: File) => void | Promise<void>;
   /** Post-approval profile editor - Settings-style sectioned cards, not wizard mega-card. */
   isLiveEdit?: boolean;
+  lockedPendingReview?: boolean;
 };
 
 function LiveEditStepShell({ children }: { children: ReactNode }) {
@@ -112,6 +113,7 @@ export function OnboardingStepContent({
   profileImageError,
   onUploadProfileImage,
   isLiveEdit = false,
+  lockedPendingReview = false,
 }: Props) {
   const wrapLive = (node: ReactNode) =>
     isLiveEdit ? (
@@ -189,6 +191,8 @@ export function OnboardingStepContent({
           profileImageError={profileImageError}
           onUploadProfileImage={onUploadProfileImage}
           isLiveEdit={isLiveEdit}
+          readOnly={!isLiveEdit && lockedPendingReview}
+          profilePhotoEditable={approvalStatus !== "banned"}
         />
       );
     case 9:
@@ -202,9 +206,16 @@ export function OnboardingStepContent({
           refreshing={refreshingStatus}
           statusCheckFeedback={statusCheckFeedback}
           businessName={submittedSummaryBusinessName}
+          firstName={data.firstName}
+          lastName={data.lastName}
+          profileImageUrl={data.profileImageUrl}
           portfolioPhotoCount={portfolioPhotoCount}
           needsMorePortfolioPhotos={needsMorePortfolioPhotos}
           onAddPortfolioPhotos={onAddPortfolioPhotos}
+          uploadingProfileImage={uploadingProfileImage}
+          profileImageError={profileImageError}
+          onUploadProfileImage={onUploadProfileImage}
+          profilePhotoEditable={approvalStatus !== "banned"}
         />
       );
     default:

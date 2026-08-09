@@ -1,8 +1,7 @@
 "use client";
 
-import { useRef, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { Pencil } from "lucide-react";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import {
   SOCIAL_PLATFORM_OPTIONS,
   WEEKDAY_LABELS,
@@ -26,9 +25,10 @@ import type {
   VendorOnboardingData,
   VendorOnboardingUpdate,
 } from "../types";
-import { ClearableTextarea, inputClass, labelClass } from "./form-primitives";
+import { ClearableTextarea, labelClass } from "./form-primitives";
 import { uploadedFileDisplayName } from "../uploadedFileDisplayName";
 import { AnimatedStepItem } from "../ui/AnimatedStepItem";
+import { VendorProfilePhotoField } from "../VendorProfilePhotoField";
 
 const BIO_MAX_WORDS = 60;
 
@@ -168,6 +168,8 @@ export type StepReviewProps = {
   isLiveEdit?: boolean;
   /** Admin / audit view — same layout as step 8, no edits or uploads. */
   readOnly?: boolean;
+  /** Allow profile photo changes even when the rest of the review is read-only. */
+  profilePhotoEditable?: boolean;
 };
 
 export function StepReview({
@@ -182,8 +184,8 @@ export function StepReview({
   onUploadProfileImage,
   isLiveEdit = false,
   readOnly = false,
+  profilePhotoEditable = false,
 }: StepReviewProps) {
-  const profileImageInputRef = useRef<HTMLInputElement>(null);
   const radiusLabel =
     radiusOptionsForMarket(getMarket(data.countryCode)).find(
       (o) => o.value === data.travelRadius,
@@ -229,77 +231,16 @@ export function StepReview({
       p.title.trim() || p.price.trim() || p.details.trim() || p.duration.trim(),
   );
 
-  const profilePhotoBlock = readOnly ? (
-    <div className="flex flex-col items-center gap-2">
-      {data.profileImageUrl ? (
-        <>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={data.profileImageUrl}
-            alt="Profile"
-            className="h-24 w-24 rounded-full border border-neutral-100 object-cover object-center"
-          />
-        </>
-      ) : (
-        <div className="flex h-24 w-24 items-center justify-center rounded-full bg-primary text-2xl font-semibold text-white">
-          {(data.firstName[0] ?? "?") + (data.lastName[0] ?? "")}
-        </div>
-      )}
-      <p className="max-w-xs text-center text-xs text-neutral-500">
-        This photo appears first on your public profile.
-      </p>
-    </div>
-  ) : (
-    <div className="flex flex-col items-center gap-2">
-      <div className="relative">
-        {data.profileImageUrl ? (
-          <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={data.profileImageUrl}
-              alt="Profile"
-              className="h-24 w-24 rounded-full border border-neutral-100 object-cover object-center"
-            />
-          </>
-        ) : (
-          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-primary text-2xl font-semibold text-white">
-            {(data.firstName[0] ?? "?") + (data.lastName[0] ?? "")}
-          </div>
-        )}
-        <input
-          ref={profileImageInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          disabled={uploadingProfileImage}
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) void onUploadProfileImage(f);
-            e.target.value = "";
-          }}
-        />
-        <button
-          type="button"
-          aria-label="Edit profile image"
-          disabled={uploadingProfileImage}
-          onClick={() => profileImageInputRef.current?.click()}
-          className="absolute -bottom-1 -right-1 inline-flex h-8 w-8 items-center justify-center rounded-full border border-neutral-100 bg-white text-neutral-600 hover:bg-neutral-50 disabled:opacity-60"
-        >
-          {uploadingProfileImage ? (
-            <LoadingSpinner size="sm" />
-          ) : (
-            <Pencil className="h-4 w-4" />
-          )}
-        </button>
-      </div>
-      <p className="max-w-xs text-center text-xs text-neutral-500">
-        This photo appears first on your public profile. Tap the pencil to upload or
-        change it.
-      </p>
-      {profileImageError ? (
-        <p className="text-xs text-red-600">{profileImageError}</p>
-      ) : null}
-    </div>
+  const profilePhotoBlock = (
+    <VendorProfilePhotoField
+      firstName={data.firstName}
+      lastName={data.lastName}
+      profileImageUrl={data.profileImageUrl}
+      editable={profilePhotoEditable || !readOnly}
+      uploading={uploadingProfileImage}
+      error={profileImageError}
+      onUpload={onUploadProfileImage}
+    />
   );
 
   const bioBlock = readOnly ? (

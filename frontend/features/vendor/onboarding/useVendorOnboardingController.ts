@@ -28,8 +28,10 @@ export function useVendorOnboardingController(options?: { isWalkthrough?: boolea
     setData: persistence.setData,
     update: persistence.update,
     userId: persistence.userId,
+    profileStatus: persistence.profileStatus,
     showToast,
     setFormError: persistence.setFormError,
+    persistProfileImageUrl: persistence.persistProfileImageUrl,
   });
 
   const steps = useOnboardingSteps({
