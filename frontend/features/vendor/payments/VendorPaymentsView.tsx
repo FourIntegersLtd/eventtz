@@ -1,11 +1,10 @@
 "use client";
 
-import { portalCard, portalCardPadding } from "@/components/portal-shell/portalTheme";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CheckCircle2, CreditCard } from "lucide-react";
-import { Button } from "@/components/ui/Button";
-import { LoadingState } from "@/components/ui/LoadingState";
+import { SettingsTabs } from "@/features/settings/SettingsTabs";
+import { VendorPaymentHistory } from "@/features/vendor/payments/VendorPaymentHistory";
+import { VendorPayoutAccountPanel } from "@/features/vendor/payments/VendorPayoutAccountPanel";
 import {
   fetchStripePaymentsStatus,
   getApiErrorDetail,
@@ -14,6 +13,20 @@ import {
 } from "@/lib/vendorPaymentsApi";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
+const TABS = [
+  { id: "account", label: "Payout account" },
+  { id: "history", label: "Payment history" },
+] as const;
+
+type VendorPaymentsTabId = (typeof TABS)[number]["id"];
+
+function resolvePaymentsTab(value: string | null): VendorPaymentsTabId {
+  if (value && TABS.some((tab) => tab.id === value)) {
+    return value as VendorPaymentsTabId;
+  }
+  return "account";
+}
+
 /**
  * Standalone payout status + Stripe Connect entry point, reachable from the
  * portal nav at any time (and from Accept booking when payouts are not ready).
@@ -21,6 +34,11 @@ import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 export function VendorPaymentsView() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const tab = useMemo(
+    (): VendorPaymentsTabId => resolvePaymentsTab(searchParams.get("tab")),
+    [searchParams],
+  );
+
   const [status, setStatus] = useState<VendorPaymentsStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
@@ -47,8 +65,11 @@ export function VendorPaymentsView() {
     if (stripeParam !== "return" && stripeParam !== "refresh") return;
     const params = new URLSearchParams(searchParams.toString());
     params.delete("stripe");
+    if (!params.get("tab")) {
+      params.set("tab", "account");
+    }
     const next = params.toString();
-    router.replace(next ? `/vendor/payments?${next}` : "/vendor/payments");
+    router.replace(next ? `/vendor/payments?${next}` : "/vendor/payments?tab=account");
     void (async () => {
       await refresh();
       if (stripeParam === "return") {
@@ -63,9 +84,6 @@ export function VendorPaymentsView() {
       }
     })();
   }, [searchParams, router, refresh]);
-
-  const started = Boolean(status?.stripe_account_id);
-  const payoutsReady = Boolean(status?.charges_enabled && status?.payouts_enabled);
 
   const onConnect = async () => {
     setConnecting(true);
@@ -83,56 +101,23 @@ export function VendorPaymentsView() {
     }
   };
 
+  const activeLabel = TABS.find((item) => item.id === tab)?.label;
+
   return (
-    <div className="max-w-2xl space-y-6">
-      <div className={`${portalCard} ${portalCardPadding}`}>
-        <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <CreditCard className="h-5 w-5" aria-hidden />
-          </span>
-          <div className="min-w-0">
-            <h2 className="font-heading text-lg font-semibold text-neutral-900">
-              Get paid for your bookings
-            </h2>
-          </div>
-        </div>
+    <div className="w-full min-w-0 max-w-6xl space-y-6">
+      <SettingsTabs tabs={TABS} activeId={tab} basePath="/vendor/payments" />
 
-        {loading ? (
-          <LoadingState label="Loading payout status…" variant="inline" className="mt-5" />
-        ) : payoutsReady ? (
-          <div className="mt-5">
-            <p className="flex items-center gap-2 text-sm font-medium text-primary">
-              <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
-              Stripe verified. You can receive payouts.
-            </p>
-            <button
-              type="button"
-              disabled={connecting}
-              onClick={() => void onConnect()}
-              className="mt-4 text-sm font-medium text-neutral-600 underline-offset-2 hover:text-neutral-900 hover:underline disabled:opacity-60"
-            >
-              {connecting ? "Opening Stripe…" : "Update bank details on Stripe"}
-            </button>
-          </div>
+      <div role="tabpanel" aria-label={activeLabel}>
+        {tab === "account" ? (
+          <VendorPayoutAccountPanel
+            status={status}
+            loading={loading}
+            connecting={connecting}
+            error={error}
+            onConnect={() => void onConnect()}
+          />
         ) : (
-          <div className="mt-5">
-            <Button variant="primary" loading={connecting} onClick={() => void onConnect()} className="w-full sm:w-auto">
-              {connecting
-                ? "Opening Stripe…"
-                : started
-                  ? "Continue payout setup"
-                  : "Set up payouts"}
-            </Button>
-
-            {error ? <p className="mt-4 text-sm font-medium text-red-700">{error}</p> : null}
-
-            {!error && started ? (
-              <p className="mt-4 flex items-center gap-2 text-sm font-medium text-amber-700">
-                <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
-                Finish payout setup to receive payments.
-              </p>
-            ) : null}
-          </div>
+          <VendorPaymentHistory />
         )}
       </div>
     </div>
