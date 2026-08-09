@@ -111,6 +111,15 @@ export const PAYMENT_FLOW_COPY = {
   /** Cancelled + refunded booking state (vendor). */
   cancelledRefundedVendor:
     "This booking was cancelled. The client's payment was refunded in full.",
+  /** Both sides confirmed but payout transfer is still processing or retrying. */
+  payoutPendingVendor: {
+    title: "Payout not released yet",
+    body: "You and the client both confirmed this event. We're releasing your payout now — tap below if nothing has changed after a minute.",
+  },
+  payoutPendingClient: {
+    title: "Paying your vendor",
+    body: "You've both confirmed the event went well. We're releasing the vendor's payout now — this usually takes a moment.",
+  },
 } as const;
 
 /** Closed booking outcomes shown on detail views (declined / cancelled without refund). */
@@ -198,3 +207,20 @@ export const ADMIN_CONFIRM_COPY = {
     confirmLabel: "Show",
   },
 } as const;
+
+type CompletionTimestamps = {
+  status: string;
+  payment_status: string;
+  client_completion_confirmed_at?: string | null;
+  vendor_completion_confirmed_at?: string | null;
+};
+
+/** Both parties confirmed but the vendor payout has not been released yet. */
+export function isPayoutReleasePending(detail: CompletionTimestamps): boolean {
+  return (
+    detail.status === "accepted" &&
+    detail.payment_status === "paid" &&
+    Boolean(detail.client_completion_confirmed_at) &&
+    Boolean(detail.vendor_completion_confirmed_at)
+  );
+}

@@ -2,19 +2,22 @@
 
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { BookingCompletionBanner } from "@/features/bookings/BookingCompletionBanner";
-import { PAYMENT_FLOW_COPY } from "@/features/bookings/bookingConfirmCopy";
+import { BookingPayoutPendingBanner } from "@/features/bookings/BookingPayoutPendingBanner";
+import { isPayoutReleasePending, PAYMENT_FLOW_COPY } from "@/features/bookings/bookingConfirmCopy";
 import type { VendorBookingDetail } from "@/lib/vendorBookingsApi";
 
 type VendorBookingDetailExtrasProps = {
   detail: VendorBookingDetail;
   actionBusy: boolean;
   onConfirmComplete: () => void;
+  onRetryPayout: () => void;
 };
 
 export function VendorBookingDetailExtras({
   detail,
   actionBusy,
   onConfirmComplete,
+  onRetryPayout,
 }: VendorBookingDetailExtrasProps) {
   return (
     <>
@@ -38,6 +41,15 @@ export function VendorBookingDetailExtras({
         confirmDisabled={actionBusy}
         onConfirm={onConfirmComplete}
       />
+
+      {isPayoutReleasePending(detail) ? (
+        <BookingPayoutPendingBanner
+          viewer="vendor"
+          onRetryRelease={onRetryPayout}
+          retryDisabled={actionBusy}
+          retryLoading={actionBusy}
+        />
+      ) : null}
 
       {detail.status === "cancelled" &&
       (detail.payment_status === "refunded" || detail.payment_status === "partially_refunded") ? (

@@ -6,7 +6,8 @@ import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { resolveWasClientTotalLabel } from "@/features/bookings/bookingPriceLabels";
 import { BookingPriceUpdateBanner } from "@/features/bookings/BookingPriceUpdateBanner";
 import { BookingCompletionBanner } from "@/features/bookings/BookingCompletionBanner";
-import { PAYMENT_FLOW_COPY } from "@/features/bookings/bookingConfirmCopy";
+import { BookingPayoutPendingBanner } from "@/features/bookings/BookingPayoutPendingBanner";
+import { isPayoutReleasePending, PAYMENT_FLOW_COPY } from "@/features/bookings/bookingConfirmCopy";
 import type { ClientBookingDetail } from "@/lib/clientBookingsApi";
 
 type ClientBookingDetailExtrasProps = {
@@ -94,6 +95,10 @@ export function ClientBookingDetailExtras({
         confirmDisabled={actionBusy || confirmingCompletion}
         onConfirm={onConfirmComplete}
       />
+
+      {isPayoutReleasePending(detail) ? (
+        <BookingPayoutPendingBanner viewer="client" />
+      ) : null}
 
       {showCancelledRefunded ? (
         <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-950">

@@ -104,6 +104,7 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
                       detail={v.detail}
                       actionBusy={v.actionBusy}
                       onConfirmComplete={() => v.setConfirmAction("complete")}
+                      onRetryPayout={() => void v.applyConfirmCompletion()}
                     />
                   ) : undefined,
                   footerSection: v.showClientResponseFlow && v.detail ? (
