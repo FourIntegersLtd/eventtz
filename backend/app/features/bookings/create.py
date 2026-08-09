@@ -32,6 +32,7 @@ from app.features.vendors.list_pricing import (
     compute_automatic_discount_lines,
     resolve_line_items,
 )
+from app.features.vendors.moderation import get_approved_vendor_payload
 from app.features.auth.accounts import assert_user_not_suspended
 
 logger = get_logger(__name__)
