@@ -35,6 +35,32 @@ logger = get_logger(__name__)
 _BIO_MAX_WORDS = 60
 
 
+def _sync_stripe_connect_flags_if_linked(user_id: str, row: dict[str, Any]) -> dict[str, Any]:
+    """Refresh Connect capability flags from Stripe before we derive payouts_verified.
+
+    Webhooks (`account.updated`) are the primary production path, but profile loads
+    must not show stale "finish payout setup" after a vendor already completed Stripe.
+    """
+    if get_settings().local_auth_mode:
+        return row
+    if not row.get("stripe_account_id"):
+        return row
+    if not get_settings().stripe_secret_key.strip():
+        return row
+    try:
+        from app.features.payments.stripe import sync_connect_account_status
+
+        synced = sync_connect_account_status(user_id)
+        updated = dict(row)
+        updated["stripe_account_id"] = synced.get("stripe_account_id")
+        updated["stripe_charges_enabled"] = synced.get("charges_enabled")
+        updated["stripe_payouts_enabled"] = synced.get("payouts_enabled")
+        return updated
+    except Exception:
+        logger.warning("Stripe Connect sync on profile load failed user=%s", user_id, exc_info=True)
+        return row
+
+
 def _with_visibility_flags(row: dict[str, Any]) -> dict[str, Any]:
     """Annotate a vendor row so the vendor can see why they are or aren't live."""
     row["payouts_verified"] = vendor_payouts_verified(row)
@@ -100,6 +126,7 @@ def get_vendor_profile(user_id: str) -> dict[str, Any] | None:
     out = data[0] if isinstance(data, list) else data
     if isinstance(out, dict):
         out.setdefault("approval_status", "pending")
+        out = _sync_stripe_connect_flags_if_linked(user_id, out)
         return _with_visibility_flags(out)
     return out
 
