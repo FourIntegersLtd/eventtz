@@ -6,13 +6,14 @@ import { ExternalLink } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { VendorApprovalStatusBadge } from "@/components/ui/VendorApprovalStatusBadge";
+import { VendorPayoutStatusBadge } from "@/components/ui/VendorPayoutStatusBadge";
 import { VendorProfileStatusBadge } from "@/components/ui/VendorProfileStatusBadge";
 import {
   fetchAdminVendorInsights,
   type AdminVendorInsights,
   type AdminVendorRow,
 } from "@/lib/adminVendorsApi";
-import type { VendorApprovalStatus } from "@/lib/domain-types";
+import type { VendorApprovalStatus, VendorListingOverride } from "@/lib/domain-types";
 import { VendorDetailsApprovalSection } from "./VendorDetailsApprovalSection";
 import { VendorDetailsInsightsSection } from "./VendorDetailsInsightsSection";
 import { VendorDetailsOverviewSection } from "./VendorDetailsOverviewSection";
@@ -27,7 +28,12 @@ type VendorDetailsModalProps = {
   vendor: AdminVendorRow | null;
   busyId: string | null;
   onClose: () => void;
-  onSetApproval: (userId: string, status: VendorApprovalStatus) => void;
+  onSetApproval: (userId: string, status: VendorApprovalStatus) => Promise<boolean>;
+  onSetListingOverride: (
+    userId: string,
+    override: VendorListingOverride,
+    reason?: string,
+  ) => Promise<boolean>;
 };
 
 export function VendorDetailsModal({
@@ -35,6 +41,7 @@ export function VendorDetailsModal({
   busyId,
   onClose,
   onSetApproval,
+  onSetListingOverride,
 }: VendorDetailsModalProps) {
   const [tab, setTab] = useState<VendorDetailsTabId>("profile");
   const [insights, setInsights] = useState<AdminVendorInsights | null>(null);
@@ -103,8 +110,13 @@ export function VendorDetailsModal({
               ))}
             </div>
             <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-              <VendorApprovalStatusBadge status={vendor.approval_status} />
-              <VendorProfileStatusBadge status={vendor.status} />
+              {tab !== "actions" ? (
+                <>
+                  <VendorApprovalStatusBadge status={vendor.approval_status} />
+                  <VendorProfileStatusBadge status={vendor.status} />
+                  <VendorPayoutStatusBadge verified={vendor.payouts_verified} />
+                </>
+              ) : null}
               <Link
                 href={insights?.explore_path ?? `/client/browse/${vendor.user_id}`}
                 target="_blank"
@@ -136,6 +148,7 @@ export function VendorDetailsModal({
               vendor={vendor}
               busyId={busyId}
               onSetApproval={onSetApproval}
+              onSetListingOverride={onSetListingOverride}
             />
           ) : null}
         </div>

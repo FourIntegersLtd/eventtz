@@ -223,7 +223,7 @@ export function BookingDetailPanel({
           />
           {booking.paidAtLabel ? (
             <div className="mt-3 flex flex-wrap items-center gap-3 rounded-2xl bg-emerald-50/70 px-5 py-3.5 text-sm ring-1 ring-emerald-200/70">
-              <LottieIllustration asset="successCheck" className="h-10 w-10 shrink-0" ariaLabel="" />
+              <LottieIllustration asset="successCheck" size="inline" ariaLabel="" />
               <span className="font-semibold text-emerald-900">Paid</span>
               <span className="text-neutral-600">recorded {booking.paidAtLabel}</span>
             </div>

@@ -17,9 +17,10 @@ type LoadingSpinnerProps = {
 
 /** Shared inline spinner - use inside buttons, inputs, and compact rows. */
 export function LoadingSpinner({ size = "md", className = "" }: LoadingSpinnerProps) {
+  const colorClass = className.includes("text-") ? "" : "text-primary";
   return (
     <Loader2
-      className={`animate-spin text-primary ${SIZE_CLASS[size]} ${className}`.trim()}
+      className={`animate-spin ${colorClass} ${SIZE_CLASS[size]} ${className}`.trim()}
       aria-hidden
     />
   );

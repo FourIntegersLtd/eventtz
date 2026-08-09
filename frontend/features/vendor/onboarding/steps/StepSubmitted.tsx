@@ -12,6 +12,10 @@ import { AnimatedStepItem } from "../ui/AnimatedStepItem";
 
 type StepSubmittedProps = {
   approvalStatus: VendorApprovalStatus;
+  /** Live on client explore. False while approved means clients cannot see them yet. */
+  listingVisible?: boolean;
+  /** Separates "finish payout setup" from "an admin has paused your listing". */
+  payoutsVerified?: boolean;
   onViewProfileReview: () => void;
   onRefreshStatus: () => void;
   refreshing?: boolean;
@@ -70,6 +74,8 @@ function StatusCheckFeedbackBanner({ feedback }: { feedback: VendorStatusCheckFe
 
 export function StepSubmitted({
   approvalStatus,
+  listingVisible = false,
+  payoutsVerified = false,
   onViewProfileReview,
   onRefreshStatus,
   refreshing = false,
@@ -81,33 +87,53 @@ export function StepSubmitted({
 }: StepSubmittedProps) {
   const approved = approvalStatus === "approved";
   const banned = approvalStatus === "banned";
+  // Admin said yes, but Stripe hasn't verified payouts, so clients still can't see them.
+  const awaitingPayouts = approved && !listingVisible && !payoutsVerified;
+  // Payouts are fine, so an admin is holding the listing back - don't send them to Stripe.
+  const listingPaused = approved && !listingVisible && payoutsVerified;
   const portfolioBlocked = needsMorePortfolioPhotos && !approved && !banned;
   const blockedCopy = portfolioBlocked
     ? portfolioApprovalBlockedCopy(portfolioPhotoCount)
     : null;
 
-  const heading = approved
-    ? "You're approved"
-    : banned
-      ? "Profile not visible"
-      : portfolioBlocked
-        ? blockedCopy!.submittedHeading
-        : "Profile submitted";
+  const heading = awaitingPayouts
+    ? "Approved - one step left"
+    : listingPaused
+      ? "Profile temporarily hidden"
+      : approved
+        ? "You're approved"
+        : banned
+          ? "Profile not visible"
+          : portfolioBlocked
+            ? blockedCopy!.submittedHeading
+            : "Profile submitted";
 
-  const statusCopy = approved
-    ? "Your profile is live. Head to your dashboard to manage bookings and enquiries."
-    : banned
-      ? "Your profile isn't visible to clients. Contact support if you believe this is a mistake."
-      : portfolioBlocked
-        ? blockedCopy!.submittedBody
-        : "We're reviewing your profile. This usually takes 1–3 business days — we'll email you when you're live.";
+  const statusCopy = awaitingPayouts
+    ? "Set up your payout details to go live. Until they're verified, your profile stays hidden from clients."
+    : listingPaused
+      ? "Our team has paused your listing while they take another look. We'll email you as soon as it's back up."
+      : approved
+        ? "Your profile is live. Head to your dashboard to manage bookings and enquiries."
+        : banned
+          ? "Your profile isn't visible to clients. Contact support if you believe this is a mistake."
+          : portfolioBlocked
+            ? blockedCopy!.submittedBody
+            : "We're reviewing your profile. This usually takes 1–3 business days. We'll email you when you're live.";
 
   return (
     <div className="space-y-6 py-4 text-center">
       <AnimatedStepItem index={0}>
         <LottieIllustration
-          asset={approved ? "successCheck" : banned ? "failure" : "pendingReview"}
-          className="mx-auto h-28 w-28"
+          asset={
+            awaitingPayouts || listingPaused
+              ? "pendingReview"
+              : approved
+                ? "successCheck"
+                : banned
+                  ? "failure"
+                  : "pendingReview"
+          }
+          size="status"
           ariaLabel=""
         />
       </AnimatedStepItem>
@@ -122,24 +148,55 @@ export function StepSubmitted({
           {statusCopy}
         </p>
       </AnimatedStepItem>
-      {approved ? (
-        <AnimatedStepItem index={2}>
-          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Link
-              href="/vendor/dashboard"
-              className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm hover:opacity-95 sm:w-auto sm:min-w-[12rem]"
-            >
-              Go to dashboard
-            </Link>
-            <button
-              type="button"
-              onClick={onViewProfileReview}
-              className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-primary bg-white px-6 py-3 text-sm font-semibold text-primary shadow-sm hover:bg-neutral-50 sm:w-auto sm:min-w-[12rem]"
-            >
-              View profile review
-            </button>
-          </div>
-        </AnimatedStepItem>
+      {awaitingPayouts ? (
+        <>
+          <AnimatedStepItem index={2}>
+            <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+              <Link
+                href="/vendor/payments"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm hover:opacity-95 sm:w-auto sm:min-w-[12rem]"
+              >
+                Set up payouts
+              </Link>
+              <Link
+                href="/vendor/dashboard"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-primary bg-white px-6 py-3 text-sm font-semibold text-primary shadow-sm hover:bg-neutral-50 sm:w-auto sm:min-w-[12rem]"
+              >
+                Go to dashboard
+              </Link>
+            </div>
+          </AnimatedStepItem>
+          {statusCheckFeedback ? (
+            <AnimatedStepItem index={3}>
+              <StatusCheckFeedbackBanner feedback={statusCheckFeedback} />
+            </AnimatedStepItem>
+          ) : null}
+        </>
+      ) : approved ? (
+        <>
+          <AnimatedStepItem index={2}>
+            <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+              <Link
+                href="/vendor/dashboard"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm hover:opacity-95 sm:w-auto sm:min-w-[12rem]"
+              >
+                Go to dashboard
+              </Link>
+              <button
+                type="button"
+                onClick={onViewProfileReview}
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-primary bg-white px-6 py-3 text-sm font-semibold text-primary shadow-sm hover:bg-neutral-50 sm:w-auto sm:min-w-[12rem]"
+              >
+                View profile review
+              </button>
+            </div>
+          </AnimatedStepItem>
+          {listingPaused && statusCheckFeedback ? (
+            <AnimatedStepItem index={3}>
+              <StatusCheckFeedbackBanner feedback={statusCheckFeedback} />
+            </AnimatedStepItem>
+          ) : null}
+        </>
       ) : banned ? (
         <>
           <AnimatedStepItem index={2}>
@@ -198,7 +255,7 @@ export function StepSubmitted({
             <p className="mx-auto mt-3 max-w-md text-xs text-neutral-500">
               {needsMorePortfolioPhotos && blockedCopy
                 ? blockedCopy.checkStatusHint
-                : "Tap to refresh — we'll show the latest review status here."}
+                : "Tap to refresh. We'll show the latest review status here."}
             </p>
           </AnimatedStepItem>
           {statusCheckFeedback ? (

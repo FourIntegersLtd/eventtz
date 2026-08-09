@@ -347,7 +347,7 @@ export function StepReview({
             Use quick template
           </button>
           <p className="mt-1.5 text-[11px] leading-snug text-neutral-500">
-            Inserts a ready-made paragraph instantly — no AI, easy to edit.
+            Inserts a ready-made paragraph instantly. No AI, easy to edit.
           </p>
         </div>
       </div>

@@ -100,6 +100,7 @@ export const MixpanelEvents = {
 
   // Admin
   admin_vendor_approval_set: "admin_vendor_approval_set",
+  admin_vendor_listing_override_set: "admin_vendor_listing_override_set",
   admin_dispute_status_changed: "admin_dispute_status_changed",
   admin_dispute_resolved: "admin_dispute_resolved",
 } as const;

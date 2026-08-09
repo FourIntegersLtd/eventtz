@@ -12,7 +12,7 @@ export function CelebrationSummary({ plan }: CelebrationSummaryProps) {
   const meta = celebrationMetaLine(plan);
   return (
     <header className="min-w-0">
-      <LottieIllustration asset="allCaughtUp" className="mb-3 h-20 w-20 sm:h-24 sm:w-24" ariaLabel="" />
+      <LottieIllustration asset="allCaughtUp" size="status" className="mb-3" ariaLabel="" />
       <h2 className="font-heading text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl">
         {plan.celebration.title}
       </h2>

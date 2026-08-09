@@ -25,6 +25,7 @@ export function AdminVendorsView() {
     selectedVendor,
     setSelectedUserId,
     setApproval,
+    setListingOverride,
     search,
     setSearch,
     approvalStatus,
@@ -127,7 +128,8 @@ export function AdminVendorsView() {
         vendor={selectedVendor}
         busyId={busyId}
         onClose={() => setSelectedUserId(null)}
-        onSetApproval={(userId, status) => void setApproval(userId, status)}
+        onSetApproval={setApproval}
+        onSetListingOverride={setListingOverride}
       />
     </div>
   );

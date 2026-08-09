@@ -14,7 +14,7 @@ export function LottieFailureInline({ message, className = "" }: LottieFailureIn
       role="alert"
       className={`flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-900 ${className}`.trim()}
     >
-      <LottieIllustration asset="failure" className="h-10 w-10 shrink-0" ariaLabel="" />
+      <LottieIllustration asset="failure" size="inline" ariaLabel="" />
       <p className="whitespace-pre-wrap leading-relaxed">{message}</p>
     </div>
   );

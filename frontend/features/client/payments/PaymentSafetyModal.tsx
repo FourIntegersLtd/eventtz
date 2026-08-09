@@ -40,7 +40,7 @@ export function PaymentSafetyModal({
       }
     >
       <div className="space-y-3 text-sm leading-relaxed text-neutral-700">
-        <LottieIllustration asset="paymentSecure" className="mb-1 h-24 w-24" />
+        <LottieIllustration asset="paymentSecure" size="status" className="mb-1" />
         <p>{PAYMENT_SAFETY_COPY.intro}</p>
         <ul className="list-disc space-y-2 pl-5">
           {PAYMENT_SAFETY_COPY.points.map((point) => (

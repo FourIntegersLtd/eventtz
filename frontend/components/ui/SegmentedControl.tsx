@@ -8,6 +8,9 @@ export type SegmentedControlOption<T extends string> = {
   label: string;
   /** Optional count shown next to the label, e.g. pending request count. */
   count?: number;
+  disabled?: boolean;
+  /** Native title tooltip - useful when an option is disabled. */
+  hint?: string;
 };
 
 export type SegmentedControlProps<T extends string> = {
@@ -15,6 +18,8 @@ export type SegmentedControlProps<T extends string> = {
   value: T;
   onChange: (value: T) => void;
   className?: string;
+  /** Each segment grows to fill the row evenly. */
+  stretch?: boolean;
   "aria-label": string;
 };
 
@@ -28,6 +33,7 @@ export function SegmentedControl<T extends string>({
   value,
   onChange,
   className = "",
+  stretch = false,
   ...aria
 }: SegmentedControlProps<T>) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -50,22 +56,32 @@ export function SegmentedControl<T extends string>({
       role="tablist"
       aria-label={aria["aria-label"]}
       onKeyDown={onKeyDown}
-      className={`inline-flex max-w-full flex-wrap items-center gap-1 overflow-x-auto border border-neutral-200 bg-neutral-100 p-1 ${RADIUS.md} ${className}`.trim()}
+      className={`${stretch ? "flex w-full" : "inline-flex max-w-full flex-wrap"} items-center gap-1 overflow-x-auto border border-neutral-200 bg-neutral-100 p-1 ${RADIUS.md} ${className}`.trim()}
     >
       {options.map((option) => {
         const active = option.value === value;
+        const disabled = Boolean(option.disabled);
         return (
           <button
             key={option.value}
             type="button"
             role="tab"
             aria-selected={active}
+            aria-disabled={disabled}
+            title={option.hint}
             tabIndex={active ? 0 : -1}
-            onClick={() => onChange(option.value)}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-medium transition duration-150 ease-out min-h-11 ${FOCUS_RING} ${
-              active
-                ? "bg-white text-neutral-900 shadow-sm"
-                : "text-neutral-600 hover:text-neutral-900"
+            disabled={disabled}
+            onClick={() => {
+              if (!disabled) onChange(option.value);
+            }}
+            className={`inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-medium transition duration-150 ease-out min-h-11 ${FOCUS_RING} ${
+              stretch ? "min-w-0 flex-1" : ""
+            } ${
+              disabled
+                ? "cursor-not-allowed opacity-45"
+                : active
+                  ? "bg-white text-neutral-900 shadow-sm"
+                  : "text-neutral-600 hover:text-neutral-900"
             }`}
           >
             <span className="truncate">{option.label}</span>

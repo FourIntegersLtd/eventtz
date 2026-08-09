@@ -53,7 +53,7 @@ export function LoadingState({
       {showLottie ? (
         <LottieAnimation
           src={lottieSrc(lottieAsset)}
-          className="h-20 w-20 sm:h-24 sm:w-24"
+          className="h-28 w-28 sm:h-32 sm:w-32"
           ariaLabel={label}
         />
       ) : (

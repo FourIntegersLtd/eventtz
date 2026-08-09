@@ -59,6 +59,8 @@ export function useOnboardingPersistence({
   const [generatingBio, setGeneratingBio] = useState(false);
   const [profileStatus, setProfileStatus] = useState<string>("draft");
   const [approvalStatus, setApprovalStatus] = useState<VendorApprovalStatus>("pending");
+  const [listingVisible, setListingVisible] = useState(false);
+  const [payoutsVerified, setPayoutsVerified] = useState(false);
   const [refreshingStatus, setRefreshingStatus] = useState(false);
   const [statusCheckFeedback, setStatusCheckFeedback] = useState<VendorStatusCheckFeedback | null>(
     null,
@@ -101,6 +103,8 @@ export function useOnboardingPersistence({
       } else {
         setApprovalStatus("pending");
       }
+      setListingVisible(Boolean(res.listing_visible));
+      setPayoutsVerified(Boolean(res.payouts_verified));
     },
     [],
   );
@@ -257,7 +261,27 @@ export function useOnboardingPersistence({
         email: merged.email?.trim() || user.email || "",
         password: "",
       });
-      if (res.approval_status === "approved") {
+      if (res.approval_status === "approved" && !res.listing_visible && !res.payouts_verified) {
+        setStatusCheckFeedback({
+          tone: "warning",
+          title: "Approved - one step left",
+          description:
+            "Finish payout setup so clients can find and book you. Your profile stays hidden until then.",
+        });
+        showToast({
+          title: "Approved - finish payout setup",
+          description: "Your profile goes live once your payout details are verified.",
+          tone: "neutral",
+        });
+      } else if (res.approval_status === "approved" && !res.listing_visible) {
+        // Payouts are fine, so this is an admin holding the listing back.
+        setStatusCheckFeedback({
+          tone: "warning",
+          title: "Profile temporarily hidden",
+          description:
+            "Our team has paused your listing while they take another look. We'll email you as soon as it's back up.",
+        });
+      } else if (res.approval_status === "approved") {
         setStatusCheckFeedback({
           tone: "success",
           title: "You're approved!",
@@ -265,7 +289,7 @@ export function useOnboardingPersistence({
         });
         showToast({
           title: "You're approved!",
-          description: "Your dashboard is ready — welcome to Eventtz.",
+          description: "Your dashboard is ready. Welcome to Eventtz.",
           tone: "success",
         });
       } else if (res.approval_status === "banned") {
@@ -278,7 +302,7 @@ export function useOnboardingPersistence({
         setStatusCheckFeedback({
           tone: "info",
           title: "Still under review",
-          description: "No change yet — we'll email you when your profile goes live (usually 1–3 business days).",
+          description: "No change yet. We'll email you when your profile goes live (usually 1–3 business days).",
         });
         showToast({
           title: "Still under review",
@@ -317,6 +341,8 @@ export function useOnboardingPersistence({
     generatingBio,
     profileStatus,
     approvalStatus,
+    listingVisible,
+    payoutsVerified,
     refreshingStatus,
     statusCheckFeedback,
     accessDenied,

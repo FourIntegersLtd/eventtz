@@ -5,6 +5,7 @@ import { portalCard, portalCardPadding } from "@/components/portal-shell/portalT
 import { useMemo, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
 import { formatEventDate, shortDateLabel } from "@/lib/dateFormat";
 import { AttentionFeedCard } from "@/features/dashboard/AttentionFeedCard";
 import { LottieFailurePanel } from "@/components/ui/LottieFailurePanel";
@@ -37,11 +38,36 @@ export function VendorDashboardView() {
     bookingsByDate,
     upcomingAgenda,
     errorMessage,
+    payoutsReady,
+    payoutsConnecting,
+    connectPayouts,
   } = useVendorDashboard(Boolean(user?.id));
 
   const attentionItems = useMemo<AttentionItem[]>(() => {
     if (loadStatus !== "ready") return [];
     const items: AttentionItem[] = [];
+
+    if (payoutsReady === false) {
+      items.push({
+        id: "payout-setup",
+        priority: 0,
+        tone: "urgent",
+        title: "Set up payouts",
+        subtitle: "Connect Stripe to accept bookings and get paid securely",
+        href: "/vendor/payments",
+        trailing: (
+          <Button
+            variant="primary"
+            size="sm"
+            loading={payoutsConnecting}
+            onClick={() => void connectPayouts("/vendor/payments")}
+          >
+            {payoutsConnecting ? "Opening Stripe…" : "Set up"}
+          </Button>
+        ),
+      });
+    }
+
     const pendingBookingIds = new Set(needsResponse.map((b) => b.id));
 
     for (const b of needsResponse) {
@@ -120,7 +146,17 @@ export function VendorDashboardView() {
     }
 
     return items;
-  }, [loadStatus, needsResponse, activeBookings, chatUnread, updates, upcomingAgenda]);
+  }, [
+    loadStatus,
+    payoutsReady,
+    payoutsConnecting,
+    connectPayouts,
+    needsResponse,
+    activeBookings,
+    chatUnread,
+    updates,
+    upcomingAgenda,
+  ]);
 
   return (
     <div className="w-full min-w-0 max-w-full space-y-6 pt-2">
@@ -132,7 +168,12 @@ export function VendorDashboardView() {
         />
       )}
 
-      <VendorPayoutSetupBanner />
+      <VendorPayoutSetupBanner
+        payoutsReady={payoutsReady}
+        loading={loadStatus === "loading"}
+        connecting={payoutsConnecting}
+        onConnect={() => void connectPayouts("/vendor/payments")}
+      />
 
       <div className="grid w-full min-w-0 grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
         <div className="min-w-0 space-y-6 lg:col-span-2">

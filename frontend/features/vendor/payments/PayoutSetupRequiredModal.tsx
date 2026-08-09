@@ -36,13 +36,13 @@ export function PayoutSetupRequiredModal({
             Not now
           </Button>
           <Button variant="primary" loading={connecting} onClick={onCompleteSetup}>
-            Complete payout setup
+            {connecting ? "Opening Stripe…" : "Complete payout setup"}
           </Button>
         </div>
       }
     >
       <div className="space-y-3 text-sm leading-relaxed text-neutral-700">
-        <LottieIllustration asset="paymentSecure" className="h-24 w-24" />
+        <LottieIllustration asset="paymentSecure" size="status" />
         <p>
           To receive secure payments through Eventzz, you need to complete payout setup.
         </p>

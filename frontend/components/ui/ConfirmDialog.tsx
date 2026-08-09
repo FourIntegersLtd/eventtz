@@ -61,7 +61,7 @@ export function ConfirmDialog({
       }
     >
       {lottie ? (
-        <LottieIllustration asset={lottie} className="mb-3 h-24 w-24 sm:h-28 sm:w-28" />
+        <LottieIllustration asset={lottie} size="status" className="mb-3" />
       ) : null}
       {description ? <p className="text-sm text-neutral-700">{description}</p> : null}
     </Modal>

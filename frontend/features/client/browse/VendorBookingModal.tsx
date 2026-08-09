@@ -275,7 +275,7 @@ export function VendorBookingModal({
     >
       {submitResult?.type === "success" ? (
         <div className="flex flex-col items-center gap-3 text-center">
-          <LottieIllustration asset="successCheck" className="h-24 w-24" ariaLabel="" />
+          <LottieIllustration asset="successCheck" size="status" ariaLabel="" />
           <p className="text-sm leading-relaxed text-neutral-700">
             Your booking request was sent to {vendorDisplayName}. They&apos;ll respond in your
             bookings inbox.
@@ -283,7 +283,7 @@ export function VendorBookingModal({
         </div>
       ) : submitResult?.type === "error" ? (
         <div className="flex flex-col items-center gap-3 text-center">
-          <LottieIllustration asset="failure" className="h-24 w-24" ariaLabel="" />
+          <LottieIllustration asset="failure" size="status" ariaLabel="" />
           <p className="text-sm leading-relaxed text-red-900">{submitResult.message}</p>
         </div>
       ) : null}

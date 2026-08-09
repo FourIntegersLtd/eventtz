@@ -7,6 +7,13 @@ import { installVisibilityRefresh } from "@/lib/useVisibilityRefresh";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 import { fetchVendorBookingNotificationsUnreadCount } from "@/lib/vendorNotificationsApi";
 import { fetchVendorNotificationsFeed, type NotificationFeedItem } from "@/lib/notificationsFeedApi";
+import {
+  fetchStripePaymentsStatus,
+  postConnectStripeAccount,
+  type VendorPaymentsStatus,
+} from "@/lib/vendorPaymentsApi";
+import { isVendorPayoutsReady } from "@/features/vendor/payments/useVendorPayoutsReady";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 function dateKeyFromIso(iso: string | null | undefined): string | null {
   if (!iso || iso.length < 10) return null;
@@ -43,6 +50,8 @@ export type VendorDashboardState = {
   upcomingAgenda: VendorBookingListItem[];
   bookingsByDate: VendorBookingsByDate;
   errorMessage: string | null;
+  /** `null` when payout status could not be loaded. */
+  payoutsReady: boolean | null;
 };
 
 const initial: VendorDashboardState = {
@@ -58,20 +67,38 @@ const initial: VendorDashboardState = {
   upcomingAgenda: [],
   bookingsByDate: {},
   errorMessage: null,
+  payoutsReady: null,
 };
 
 export function useVendorDashboard(enabled: boolean) {
   const [state, setState] = useState<VendorDashboardState>(initial);
+  const [payoutsConnecting, setPayoutsConnecting] = useState(false);
+
+  const connectPayouts = useCallback(async (returnPath: string) => {
+    setPayoutsConnecting(true);
+    try {
+      track(MixpanelEvents.vendor_payout_setup_started, {
+        source: returnPath.includes("/bookings") ? "bookings" : "payments",
+        return_path: returnPath,
+      });
+      const { onboarding_url } = await postConnectStripeAccount(returnPath);
+      window.location.href = onboarding_url;
+    } catch {
+      setPayoutsConnecting(false);
+    }
+  }, []);
 
   const load = useCallback(async () => {
     if (!enabled) return;
     setState((s) => ({ ...s, loadStatus: "loading", errorMessage: null }));
     try {
-      const [active, chatUnread, bookingNotificationsUnread, updates] = await Promise.all([
+      const [active, chatUnread, bookingNotificationsUnread, updates, paymentsStatus] =
+        await Promise.all([
         fetchVendorBookings("active"),
         fetchChatUnreadCount(),
         fetchVendorBookingNotificationsUnreadCount(),
         fetchVendorNotificationsFeed(),
+        fetchStripePaymentsStatus().catch((): VendorPaymentsStatus | null => null),
       ]);
       const pendingBookingsCount = active.filter((b) => b.status === "pending").length;
       const needsResponse = active.filter((b) => b.status === "pending").slice(0, 3);
@@ -125,6 +152,7 @@ export function useVendorDashboard(enabled: boolean) {
         upcomingAgenda,
         bookingsByDate,
         errorMessage: null,
+        payoutsReady: paymentsStatus ? isVendorPayoutsReady(paymentsStatus) : null,
       });
     } catch {
       setState({
@@ -152,5 +180,5 @@ export function useVendorDashboard(enabled: boolean) {
     [enabled, load],
   );
 
-  return { ...state, reload: load };
+  return { ...state, payoutsConnecting, connectPayouts, reload: load };
 }

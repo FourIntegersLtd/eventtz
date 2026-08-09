@@ -116,7 +116,11 @@ export function VendorPaymentsView() {
         ) : (
           <div className="mt-5">
             <Button variant="primary" loading={connecting} onClick={() => void onConnect()} className="w-full sm:w-auto">
-              {started ? "Continue payout setup" : "Set up payouts"}
+              {connecting
+                ? "Opening Stripe…"
+                : started
+                  ? "Continue payout setup"
+                  : "Set up payouts"}
             </Button>
 
             {error ? <p className="mt-4 text-sm font-medium text-red-700">{error}</p> : null}

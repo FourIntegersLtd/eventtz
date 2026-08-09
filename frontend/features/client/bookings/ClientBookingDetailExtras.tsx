@@ -71,11 +71,12 @@ export function ClientBookingDetailExtras({
           }`}
         >
           {paymentBanner === "success" && !paymentSyncError ? (
-            <LottieIllustration asset="successCheck" className="mb-2 h-20 w-20" />
+            <LottieIllustration asset="successCheck" size="status" className="mb-2" />
           ) : paymentBanner === "cancelled" || paymentSyncError ? (
             <LottieIllustration
               asset={paymentSyncError ? "failure" : "pendingReview"}
-              className="mb-2 h-20 w-20"
+              size="status"
+              className="mb-2"
             />
           ) : null}
           {checkoutReturnMessage}
@@ -96,7 +97,7 @@ export function ClientBookingDetailExtras({
 
       {showCancelledRefunded ? (
         <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-950">
-          <LottieIllustration asset="pendingReview" className="mb-2 h-20 w-20" />
+          <LottieIllustration asset="pendingReview" size="status" className="mb-2" />
           {PAYMENT_FLOW_COPY.cancelledRefunded}
         </div>
       ) : null}

@@ -4,10 +4,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   fetchAdminVendors,
   patchVendorApproval,
+  patchVendorListingOverride,
   type AdminVendorRow,
   type AdminVendorsQuery,
 } from "@/lib/adminVendorsApi";
-import type { VendorApprovalStatus } from "@/lib/domain-types";
+import { getApiErrorDetail } from "@/lib/api-errors";
+import type { VendorApprovalStatus, VendorListingOverride } from "@/lib/domain-types";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 export function useAdminVendors() {
@@ -53,6 +55,7 @@ export function useAdminVendors() {
   const setApproval = useCallback(
     async (userId: string, approval_status: VendorApprovalStatus) => {
       setBusyId(userId);
+      setError(null);
       try {
         await patchVendorApproval(userId, approval_status);
         track(MixpanelEvents.admin_vendor_approval_set, {
@@ -60,8 +63,32 @@ export function useAdminVendors() {
           approval_status,
         });
         await load();
+        return true;
       } catch {
         setError("Could not update approval.");
+        return false;
+      } finally {
+        setBusyId(null);
+      }
+    },
+    [load],
+  );
+
+  const setListingOverride = useCallback(
+    async (userId: string, listing_override: VendorListingOverride, reason?: string) => {
+      setBusyId(userId);
+      setError(null);
+      try {
+        await patchVendorListingOverride(userId, listing_override, reason);
+        track(MixpanelEvents.admin_vendor_listing_override_set, {
+          vendor_user_id: userId,
+          listing_override,
+        });
+        await load();
+        return true;
+      } catch (e) {
+        setError(getApiErrorDetail(e) ?? "Could not update listing visibility.");
+        return false;
       } finally {
         setBusyId(null);
       }
@@ -87,6 +114,7 @@ export function useAdminVendors() {
     selectedVendor,
     setSelectedUserId,
     setApproval,
+    setListingOverride,
     search,
     setSearch,
     approvalStatus,

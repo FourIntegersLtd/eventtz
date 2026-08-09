@@ -38,7 +38,7 @@ export function BookingPriceUpdateBanner({
     <div className="overflow-hidden rounded-2xl border border-amber-200/80 bg-amber-50/40">
       <div className="px-5 py-4">
         <div className="flex items-start gap-3">
-          <LottieIllustration asset="pendingReview" className="h-14 w-14 shrink-0" ariaLabel="" />
+          <LottieIllustration asset="pendingReview" size="inline" ariaLabel="" />
           <p className="pt-1 text-[15px] font-semibold tracking-tight text-neutral-900">
             New price from your vendor
           </p>

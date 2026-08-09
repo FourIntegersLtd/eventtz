@@ -16,6 +16,32 @@ export type VendorProfileStatusMeta = {
   badgeClassName: string;
 };
 
+/**
+ * Stripe Connect readiness. Marketplace visibility needs admin approval AND
+ * "verified" here, so an approved vendor stays hidden while this is "unverified".
+ */
+export type VendorPayoutStatus = "verified" | "unverified";
+
+export type VendorPayoutStatusMeta = {
+  status: VendorPayoutStatus;
+  label: string;
+  badgeClassName: string;
+};
+
+/**
+ * Admin override on top of the automatic visibility rule. "visible" waives the
+ * Stripe payout requirement for a vendor vetted another way; "hidden" takes a
+ * listing down without the lock-out of a ban. Approval still wins over both.
+ */
+export type VendorListingOverride = "auto" | "visible" | "hidden";
+
+export type VendorListingOverrideMeta = {
+  override: VendorListingOverride;
+  label: string;
+  description: string;
+  badgeClassName: string;
+};
+
 export const VENDOR_APPROVAL_STATUS_META: Record<VendorApprovalStatus, VendorApprovalStatusMeta> = {
   pending: {
     status: "pending",
@@ -52,7 +78,45 @@ export const VENDOR_PROFILE_STATUS_META: Record<VendorProfileStatus, VendorProfi
   },
 };
 
+export const VENDOR_PAYOUT_STATUS_META: Record<VendorPayoutStatus, VendorPayoutStatusMeta> = {
+  verified: {
+    status: "verified",
+    label: "Verified",
+    badgeClassName: "bg-emerald-100 text-emerald-900",
+  },
+  unverified: {
+    status: "unverified",
+    label: "Not verified",
+    badgeClassName: "bg-amber-100 text-amber-900",
+  },
+};
+
+export const VENDOR_LISTING_OVERRIDE_META: Record<
+  VendorListingOverride,
+  VendorListingOverrideMeta
+> = {
+  auto: {
+    override: "auto",
+    label: "Automatic",
+    description: "Stripe decides when they go live.",
+    badgeClassName: "bg-neutral-100 text-neutral-700",
+  },
+  visible: {
+    override: "visible",
+    label: "Publish anyway",
+    description: "Skip Stripe; clients can find, book, and pay.",
+    badgeClassName: "bg-sky-100 text-sky-900",
+  },
+  hidden: {
+    override: "hidden",
+    label: "Hide listing",
+    description: "Off the marketplace; the vendor keeps portal access.",
+    badgeClassName: "bg-red-100 text-red-900",
+  },
+};
+
 const KNOWN_VENDOR_APPROVAL = new Set<string>(Object.keys(VENDOR_APPROVAL_STATUS_META));
+const KNOWN_LISTING_OVERRIDE = new Set<string>(Object.keys(VENDOR_LISTING_OVERRIDE_META));
 const KNOWN_VENDOR_PROFILE = new Set<string>(Object.keys(VENDOR_PROFILE_STATUS_META));
 
 export function getVendorApprovalStatusMeta(raw: string): VendorApprovalStatusMeta {
@@ -63,6 +127,18 @@ export function getVendorApprovalStatusMeta(raw: string): VendorApprovalStatusMe
 export function getVendorProfileStatusMeta(raw: string): VendorProfileStatusMeta {
   const status = KNOWN_VENDOR_PROFILE.has(raw) ? (raw as VendorProfileStatus) : "draft";
   return VENDOR_PROFILE_STATUS_META[status];
+}
+
+export function getVendorPayoutStatusMeta(verified: boolean | undefined): VendorPayoutStatusMeta {
+  return VENDOR_PAYOUT_STATUS_META[verified ? "verified" : "unverified"];
+}
+
+export function getVendorListingOverride(raw: string | undefined): VendorListingOverride {
+  return raw && KNOWN_LISTING_OVERRIDE.has(raw) ? (raw as VendorListingOverride) : "auto";
+}
+
+export function getVendorListingOverrideMeta(raw: string | undefined): VendorListingOverrideMeta {
+  return VENDOR_LISTING_OVERRIDE_META[getVendorListingOverride(raw)];
 }
 
 // ---------------------------------------------------------------------------

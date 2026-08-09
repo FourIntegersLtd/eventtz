@@ -54,6 +54,8 @@ export function useVendorOnboardingController(options?: { isWalkthrough?: boolea
     saving: persistence.saving,
     generatingBio: persistence.generatingBio,
     approvalStatus: persistence.approvalStatus,
+    listingVisible: persistence.listingVisible,
+    payoutsVerified: persistence.payoutsVerified,
     refreshingStatus: persistence.refreshingStatus,
     statusCheckFeedback: persistence.statusCheckFeedback,
     accessDenied: persistence.accessDenied,

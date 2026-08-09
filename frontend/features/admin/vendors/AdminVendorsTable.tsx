@@ -3,6 +3,7 @@
 import type { AdminVendorRow } from "@/lib/adminVendorsApi";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { VendorApprovalStatusBadge } from "@/components/ui/VendorApprovalStatusBadge";
+import { VendorPayoutStatusBadge } from "@/components/ui/VendorPayoutStatusBadge";
 import { VendorProfileStatusBadge } from "@/components/ui/VendorProfileStatusBadge";
 import {
   AdminTable,
@@ -13,6 +14,10 @@ import {
   AdminTableHeaderCell,
   AdminTableRow,
 } from "@/features/admin/components/AdminTable";
+import {
+  getVendorListingOverride,
+  VENDOR_LISTING_OVERRIDE_META,
+} from "@/lib/domain-types";
 import { payloadStr } from "./vendorFormatters";
 
 type AdminVendorsTableProps = {
@@ -29,12 +34,13 @@ export function AdminVendorsTable({ rows, onSelect }: AdminVendorsTableProps) {
 
   return (
     <AdminTable>
-      <AdminTableElement className="min-w-[42rem]">
+      <AdminTableElement className="min-w-[48rem]">
         <AdminTableHead>
           <AdminTableHeaderCell className="min-w-[11rem]">Email</AdminTableHeaderCell>
           <AdminTableHeaderCell className="min-w-[8rem]">Business</AdminTableHeaderCell>
           <AdminTableHeaderCell>Form</AdminTableHeaderCell>
           <AdminTableHeaderCell>Approval</AdminTableHeaderCell>
+          <AdminTableHeaderCell>Payouts</AdminTableHeaderCell>
           <AdminTableHeaderCell>Updated</AdminTableHeaderCell>
           <AdminTableHeaderCell className="text-right">Action</AdminTableHeaderCell>
         </AdminTableHead>
@@ -45,10 +51,13 @@ export function AdminVendorsTable({ rows, onSelect }: AdminVendorsTableProps) {
             const email = r.email ?? "-";
             const updated = r.updated_at ? new Date(r.updated_at).toLocaleString() : "-";
             const pending = r.approval_status === "pending";
+            // Approved but not live: admin acted, Stripe hasn't verified them yet.
+            const approvedNotLive = r.approval_status === "approved" && !r.listing_visible;
+            const override = getVendorListingOverride(r.listing_override);
             return (
               <AdminTableRow
                 key={r.user_id}
-                className={pending ? "bg-amber-50/40" : undefined}
+                className={pending || approvedNotLive ? "bg-amber-50/40" : undefined}
               >
                 <AdminTableCell className="min-w-[11rem] max-w-[14rem]">
                   <span className="block truncate" title={email}>
@@ -65,6 +74,18 @@ export function AdminVendorsTable({ rows, onSelect }: AdminVendorsTableProps) {
                 </AdminTableCell>
                 <AdminTableCell className="whitespace-nowrap">
                   <VendorApprovalStatusBadge status={r.approval_status} />
+                </AdminTableCell>
+                <AdminTableCell className="whitespace-nowrap">
+                  <VendorPayoutStatusBadge verified={r.payouts_verified} />
+                  {override !== "auto" ? (
+                    <span
+                      className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${VENDOR_LISTING_OVERRIDE_META[override].badgeClassName}`}
+                    >
+                      {VENDOR_LISTING_OVERRIDE_META[override].label}
+                    </span>
+                  ) : approvedNotLive ? (
+                    <span className="mt-1 block text-xs text-amber-800">Hidden from clients</span>
+                  ) : null}
                 </AdminTableCell>
                 <AdminTableCell className="whitespace-nowrap text-neutral-500">{updated}</AdminTableCell>
                 <AdminTableCell className="whitespace-nowrap text-right">

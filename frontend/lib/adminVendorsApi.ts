@@ -1,5 +1,9 @@
 import api from "@/lib/axios";
-import type { VendorApprovalStatus, VendorProfileStatus } from "@/lib/domain-types";
+import type {
+  VendorApprovalStatus,
+  VendorListingOverride,
+  VendorProfileStatus,
+} from "@/lib/domain-types";
 
 export type AdminVendorRow = {
   id: string | null;
@@ -11,6 +15,16 @@ export type AdminVendorRow = {
   payload: Record<string, unknown>;
   created_at?: string;
   updated_at?: string;
+  stripe_account_id?: string | null;
+  stripe_charges_enabled?: boolean;
+  stripe_payouts_enabled?: boolean;
+  /** Stripe Connect can both charge and pay out for this vendor. */
+  payouts_verified?: boolean;
+  /** The vendor is live on client explore right now. */
+  listing_visible?: boolean;
+  /** Admin override on top of the automatic approval + Stripe rule. */
+  listing_override?: VendorListingOverride | string;
+  listing_override_reason?: string | null;
 };
 
 export type AdminVendorsQuery = {
@@ -61,6 +75,24 @@ export async function patchVendorApproval(
   await api.patch(`/api/v1/admin/vendors/${userId}/approval`, {
     approval_status,
   });
+}
+
+export async function patchVendorListingOverride(
+  userId: string,
+  listing_override: VendorListingOverride,
+  reason?: string,
+): Promise<{ listing_override: VendorListingOverride | string; listing_visible: boolean }> {
+  const { data } = await api.patch<{
+    listing_override: VendorListingOverride | string;
+    listing_visible: boolean;
+  }>(`/api/v1/admin/vendors/${userId}/listing-override`, {
+    listing_override,
+    reason: reason?.trim() || undefined,
+  });
+  return {
+    listing_override: data.listing_override ?? listing_override,
+    listing_visible: Boolean(data.listing_visible),
+  };
 }
 
 export type AdminVendorBookingsByMonthRow = {

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { AlertTriangle, ChevronRight, type LucideIcon } from "lucide-react";
 import { SectionBlock, ContentCard } from "@/components/ui/SectionBlock";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { adminCard } from "@/features/admin/adminTheme";
 import type { AdminBookingSupportMeta } from "@/lib/adminPlatformApi";
 import { shortId } from "./adminBookingDetailUtils";
@@ -72,18 +73,7 @@ export type SupportAction = {
 };
 
 export function ActionTooltip({ hint, children }: { hint: string; children: React.ReactNode }) {
-  return (
-    <div className="group relative">
-      {children}
-      <div
-        role="tooltip"
-        className="pointer-events-none absolute bottom-[calc(100%+6px)] left-1/2 z-30 hidden w-52 -translate-x-1/2 rounded-lg bg-neutral-900 px-2.5 py-2 text-[11px] leading-snug text-white shadow-lg group-hover:block"
-      >
-        {hint}
-        <span className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-neutral-900" />
-      </div>
-    </div>
-  );
+  return <Tooltip hint={hint}>{children}</Tooltip>;
 }
 
 export function CompactActionRow({

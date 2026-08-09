@@ -34,6 +34,8 @@ export function VendorOnboarding() {
     loadStatus,
     saving,
     approvalStatus,
+    listingVisible,
+    payoutsVerified,
     refreshingStatus,
     statusCheckFeedback,
     accessDenied,
@@ -106,6 +108,8 @@ export function VendorOnboarding() {
     generatingBio,
     onNavigateToStep: navigateToStep,
     approvalStatus,
+    listingVisible,
+    payoutsVerified,
     onViewProfileReview,
     onRefreshStatus: () => void onRefreshStatus(),
     refreshingStatus,
@@ -203,10 +207,10 @@ export function VendorOnboarding() {
           </Link>
         </div>
       )}
-      {lockedPendingReview && (
+      {lockedPendingReview && step !== 9 && (
         <div className="mb-8 rounded-2xl bg-amber-50 p-5 text-sm text-amber-950 shadow-sm ring-1 ring-amber-200/50">
           <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:text-left">
-            <LottieIllustration asset="pendingReview" className="h-20 w-20 shrink-0" />
+            <LottieIllustration asset="pendingReview" size="status" className="shrink-0" />
             <div className="min-w-0">
               <strong className="font-semibold">
                 {approvalStatus === "banned"
@@ -220,17 +224,6 @@ export function VendorOnboarding() {
                 : portfolioBlockedCopy
                   ? portfolioBlockedCopy.bannerBody
                   : "You can edit again after our review."}
-              {canAddPortfolioWhilePending && step === 9 && portfolioBlockedCopy ? (
-                <div className="mt-4 flex justify-center sm:justify-start">
-                  <button
-                    type="button"
-                    onClick={onAddPortfolioPhotos}
-                    className="inline-flex min-h-10 items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-95"
-                  >
-                    {portfolioBlockedCopy.ctaLabel}
-                  </button>
-                </div>
-              ) : null}
             </div>
           </div>
         </div>

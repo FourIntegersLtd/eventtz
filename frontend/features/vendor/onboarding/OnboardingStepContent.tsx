@@ -30,6 +30,8 @@ type Props = {
   generatingBio?: boolean;
   onNavigateToStep: (step: number) => void;
   approvalStatus: VendorApprovalStatus;
+  listingVisible?: boolean;
+  payoutsVerified?: boolean;
   onViewProfileReview: () => void;
   onRefreshStatus: () => void;
   refreshingStatus?: boolean;
@@ -83,6 +85,8 @@ export function OnboardingStepContent({
   generatingBio,
   onNavigateToStep,
   approvalStatus,
+  listingVisible,
+  payoutsVerified,
   onViewProfileReview,
   onRefreshStatus,
   refreshingStatus,
@@ -191,6 +195,8 @@ export function OnboardingStepContent({
       return (
         <StepSubmitted
           approvalStatus={approvalStatus}
+          listingVisible={listingVisible}
+          payoutsVerified={payoutsVerified}
           onViewProfileReview={onViewProfileReview}
           onRefreshStatus={onRefreshStatus}
           refreshing={refreshingStatus}

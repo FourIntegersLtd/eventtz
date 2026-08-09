@@ -48,7 +48,7 @@ export function BookingCompletionBanner({
         <div className="flex min-w-0 items-start gap-3">
           <LottieIllustration
             asset={viewerNeedsToConfirm ? "pendingReview" : "successCheck"}
-            className="h-14 w-14 shrink-0"
+            className="h-16 w-16 shrink-0"
             ariaLabel=""
           />
           <div className="min-w-0">

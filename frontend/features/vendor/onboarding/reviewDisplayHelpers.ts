@@ -56,7 +56,7 @@ export function formatDiscountSummary(data: VendorOnboardingData): string[] {
     lines.push(`${data.offPeakDiscountPercent.trim()}% off off-peak dates`);
   }
   if (lines.length === 0) {
-    lines.push("Discounts enabled — add details on the Pricing step.");
+    lines.push("Discounts enabled. Add details on the Pricing step.");
   }
   return lines;
 }

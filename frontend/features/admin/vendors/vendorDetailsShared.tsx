@@ -218,11 +218,70 @@ export function QuickLinkRow({
   );
 }
 
+export function VendorActionOptionRow({
+  icon: Icon,
+  title,
+  description,
+  selected,
+  disabled = false,
+  tone = "neutral",
+  onSelect,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  description: string;
+  selected: boolean;
+  disabled?: boolean;
+  tone?: "neutral" | "success" | "danger" | "warning";
+  onSelect: () => void;
+}) {
+  const iconClass =
+    tone === "success"
+      ? "bg-emerald-50 text-emerald-700"
+      : tone === "danger"
+        ? "bg-red-50 text-red-700"
+        : tone === "warning"
+          ? "bg-amber-50 text-amber-800"
+          : "bg-neutral-100 text-neutral-600";
+
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onSelect}
+      className={`flex w-full items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition ${
+        selected
+          ? "border-primary/30 bg-primary/[0.04] ring-1 ring-primary/20"
+          : "border-transparent hover:border-neutral-200 hover:bg-neutral-50/80"
+      } disabled:cursor-not-allowed disabled:opacity-45`}
+    >
+      <span
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${iconClass}`}
+      >
+        <Icon className="h-4 w-4" aria-hidden />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-medium text-neutral-900">{title}</span>
+        <span className="mt-0.5 block text-xs leading-relaxed text-neutral-500">{description}</span>
+      </span>
+      <span
+        className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
+          selected ? "border-primary bg-primary" : "border-neutral-300 bg-white"
+        }`}
+        aria-hidden
+      >
+        {selected ? <span className="h-1.5 w-1.5 rounded-full bg-white" /> : null}
+      </span>
+    </button>
+  );
+}
+
 export function ApprovalCard({
   title,
   icon: Icon,
   variant,
   isCurrent,
+  selected = false,
   disabled,
   loading,
   onClick,
@@ -231,6 +290,8 @@ export function ApprovalCard({
   icon: React.ComponentType<{ className?: string }>;
   variant: "primary" | "secondary" | "destructive";
   isCurrent: boolean;
+  /** Picked but not saved yet - for choices that need a confirm step. */
+  selected?: boolean;
   disabled?: boolean;
   loading?: boolean;
   onClick: () => void;
@@ -242,26 +303,33 @@ export function ApprovalCard({
         ? "bg-red-50 text-red-700"
         : "bg-neutral-100 text-neutral-600";
 
-  const ringClass = isCurrent
-    ? variant === "primary"
-      ? "border-emerald-300 bg-emerald-50/50 ring-2 ring-emerald-200/80"
-      : variant === "destructive"
-        ? "border-red-300 bg-red-50/50 ring-2 ring-red-200/80"
-        : "border-neutral-300 bg-neutral-50/80 ring-2 ring-neutral-200/80"
-    : "border-neutral-200/80 bg-transparent hover:border-neutral-300 hover:bg-neutral-50/50";
+  const ringClass = selected
+    ? "border-primary bg-primary/5 ring-2 ring-primary/30"
+    : isCurrent
+      ? variant === "primary"
+        ? "border-emerald-300 bg-emerald-50/50 ring-2 ring-emerald-200/80"
+        : variant === "destructive"
+          ? "border-red-300 bg-red-50/50 ring-2 ring-red-200/80"
+          : "border-neutral-300 bg-neutral-50/80 ring-2 ring-neutral-200/80"
+      : "border-neutral-200/80 bg-transparent hover:border-neutral-300 hover:bg-neutral-50/50";
 
   return (
     <button
       type="button"
-      disabled={disabled || isCurrent}
+      disabled={disabled || (isCurrent && !selected)}
       onClick={onClick}
-      className={`flex flex-col items-center gap-3 rounded-xl border p-5 text-center transition disabled:cursor-default disabled:opacity-100 ${ringClass}`}
+      className={`flex h-full w-full flex-col items-center gap-3 rounded-xl border p-5 text-center transition disabled:cursor-default disabled:opacity-100 ${ringClass}`}
     >
       <span className={`flex h-11 w-11 items-center justify-center rounded-xl ${iconTone}`}>
         <Icon className="h-5 w-5" aria-hidden />
       </span>
       <span className="font-medium text-neutral-900">{title}</span>
-      {isCurrent ? (
+      {selected ? (
+        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-primary">
+          <CheckCircle2 className="h-3 w-3" aria-hidden />
+          Selected
+        </span>
+      ) : isCurrent ? (
         <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-600">
           <CheckCircle2 className="h-3 w-3" aria-hidden />
           Active

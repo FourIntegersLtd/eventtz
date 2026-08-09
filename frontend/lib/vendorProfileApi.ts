@@ -11,6 +11,10 @@ export type VendorProfileResponse = {
   approval_status?: VendorApprovalStatus | string;
   payload: Record<string, unknown>;
   updated_at?: string;
+  /** Stripe Connect can both charge and pay out for this vendor. */
+  payouts_verified?: boolean;
+  /** Approved AND payouts verified. False while approved means clients cannot see them yet. */
+  listing_visible?: boolean;
 };
 
 export function isVendorProfileForbiddenError(error: unknown): boolean {

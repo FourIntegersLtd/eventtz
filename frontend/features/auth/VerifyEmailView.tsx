@@ -94,12 +94,12 @@ export function VerifyEmailView() {
         <Card padding="lg" className="w-full max-w-md">
           {status === "success" ? (
             <>
-              <LottieIllustration asset="successCheck" className="mx-auto mb-3 h-20 w-20" />
+              <LottieIllustration asset="successCheck" size="status" className="mb-4" />
               <h1 className="font-heading text-2xl font-semibold text-neutral-900">
                 Email verified
               </h1>
               <p className="mt-3 text-sm text-neutral-600">
-                {message ?? "You're all set — sign in with your email and password."}
+                {message ?? "You're all set. Sign in with your email and password."}
               </p>
               <Link
                 href="/login"
@@ -110,6 +110,11 @@ export function VerifyEmailView() {
             </>
           ) : (
             <>
+              <LottieIllustration
+                asset={status === "missing" ? "pendingReview" : "failure"}
+                size="status"
+                className="mb-4"
+              />
               <h1 className="font-heading text-2xl font-semibold text-neutral-900">
                 {status === "missing" ? "Verify your email" : verifyErrorTitle(message)}
               </h1>

@@ -50,7 +50,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       {...rest}
     >
       {loading ? (
-        <LoadingSpinner size="sm" />
+        <LoadingSpinner size="sm" className="text-current" />
       ) : icon ? (
         <span className="shrink-0">{icon}</span>
       ) : null}
