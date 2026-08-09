@@ -350,6 +350,37 @@ def get_vendor_admin_insights(vendor_user_id: str) -> dict[str, Any]:
     }
 
 
+def _notify_vendor_approval_change(
+    user_id: str,
+    row: dict[str, Any] | None,
+    *,
+    approval_status: str,
+    previous_status: str | None,
+) -> None:
+    """Email the vendor, but only when an admin actually changed their approval state.
+
+    Pass the row read back *after* the update: the listing flags on it pick which of the
+    three approved emails goes out (live / finish payouts / listing paused), so a
+    pre-update row would send the wrong one. Email failures never fail the moderation
+    action - the admin's decision is already saved.
+    """
+    if not row or previous_status == approval_status:
+        return
+    payload = row.get("payload") if isinstance(row.get("payload"), dict) else {}
+    business_name = payload.get("businessName")
+    try:
+        send_vendor_approval_email(
+            vendor_user_id=user_id,
+            vendor_email=None,
+            approval_status=approval_status,
+            business_name=business_name.strip() if isinstance(business_name, str) else None,
+            listing_visible=bool(row.get("listing_visible")),
+            payouts_verified=bool(row.get("payouts_verified")),
+        )
+    except Exception:
+        logger.warning("vendor approval email failed user=%s", user_id, exc_info=True)
+
+
 def set_vendor_approval(user_id: str, approval_status: str) -> dict[str, Any] | None:
     if approval_status not in ("pending", "approved", "banned"):
         raise ValueError("approval_status must be pending, approved, or banned")
@@ -359,24 +390,14 @@ def set_vendor_approval(user_id: str, approval_status: str) -> dict[str, Any] | 
         row = local_vendors.get(user_id)
         if not row:
             return None
-        row = {**row, "approval_status": approval_status}
-        local_vendors[user_id] = row
+        local_vendors[user_id] = {**row, "approval_status": approval_status}
         row = get_vendor_profile(user_id)
-        if row and prev_status != approval_status:
-            payload = row.get("payload") if isinstance(row.get("payload"), dict) else {}
-            bn = payload.get("businessName")
-            business_name = bn.strip() if isinstance(bn, str) else None
-            try:
-                send_vendor_approval_email(
-                    vendor_user_id=user_id,
-                    vendor_email=None,
-                    approval_status=approval_status,
-                    business_name=business_name,
-                    listing_visible=bool(row.get("listing_visible")),
-                    payouts_verified=bool(row.get("payouts_verified")),
-                )
-            except Exception:
-                logger.warning("vendor approval email failed user=%s", user_id, exc_info=True)
+        _notify_vendor_approval_change(
+            user_id,
+            row,
+            approval_status=approval_status,
+            previous_status=prev_status,
+        )
         return row
     try:
         get_client().table("vendors").update({"approval_status": approval_status}).eq("user_id", user_id).execute()
@@ -391,21 +412,12 @@ def set_vendor_approval(user_id: str, approval_status: str) -> dict[str, Any] | 
             "vendors.approval_status column is missing. Run backend/sql/004_vendors_approval_status.sql."
         ) from e
     row = get_vendor_profile(user_id)
-    if row and prev_status != approval_status:
-        payload = row.get("payload") if isinstance(row.get("payload"), dict) else {}
-        bn = payload.get("businessName")
-        business_name = bn.strip() if isinstance(bn, str) else None
-        try:
-            send_vendor_approval_email(
-                vendor_user_id=user_id,
-                vendor_email=None,
-                approval_status=approval_status,
-                business_name=business_name,
-                listing_visible=bool(row.get("listing_visible")),
-                payouts_verified=bool(row.get("payouts_verified")),
-            )
-        except Exception:
-            logger.warning("vendor approval email failed user=%s", user_id, exc_info=True)
+    _notify_vendor_approval_change(
+        user_id,
+        row,
+        approval_status=approval_status,
+        previous_status=prev_status,
+    )
     return row
 
 

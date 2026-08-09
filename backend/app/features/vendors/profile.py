@@ -35,29 +35,16 @@ logger = get_logger(__name__)
 _BIO_MAX_WORDS = 60
 
 
-def _sync_stripe_connect_flags_if_linked(user_id: str, row: dict[str, Any]) -> dict[str, Any]:
-    """Refresh Connect capability flags from Stripe before we derive payouts_verified.
+def _refresh_payout_flags(user_id: str, row: dict[str, Any]) -> dict[str, Any]:
+    """Best-effort Stripe refresh of the row's payout columns; never fails a profile read."""
+    # Imported here, not at module scope, so the Stripe SDK stays out of startup for
+    # deployments without Stripe configured (same reason as payments/http/webhooks.py).
+    from app.features.payments.stripe import refresh_pending_connect_flags
 
-    Webhooks (`account.updated`) are the primary production path, but profile loads
-    must not show stale "finish payout setup" after a vendor already completed Stripe.
-    """
-    if get_settings().local_auth_mode:
-        return row
-    if not row.get("stripe_account_id"):
-        return row
-    if not get_settings().stripe_secret_key.strip():
-        return row
     try:
-        from app.features.payments.stripe import sync_connect_account_status
-
-        synced = sync_connect_account_status(user_id)
-        updated = dict(row)
-        updated["stripe_account_id"] = synced.get("stripe_account_id")
-        updated["stripe_charges_enabled"] = synced.get("charges_enabled")
-        updated["stripe_payouts_enabled"] = synced.get("payouts_enabled")
-        return updated
+        return refresh_pending_connect_flags(user_id, row)
     except Exception:
-        logger.warning("Stripe Connect sync on profile load failed user=%s", user_id, exc_info=True)
+        logger.warning("Stripe Connect refresh failed user=%s - using stored flags", user_id, exc_info=True)
         return row
 
 
@@ -92,7 +79,14 @@ def _validate_and_normalize_payload(payload: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
-def get_vendor_profile(user_id: str) -> dict[str, Any] | None:
+def get_vendor_profile(user_id: str, *, refresh_payouts: bool = False) -> dict[str, Any] | None:
+    """Read a vendor row and annotate it with the derived listing flags.
+
+    Set `refresh_payouts` on the vendor's own profile screen, where showing a stale
+    "finish payout setup" after they already completed Stripe is the visible bug. The
+    refresh writes through to the vendor row, so every other caller can stay on stored
+    values instead of paying for a Stripe round trip.
+    """
     if get_settings().local_auth_mode:
         row = local_vendors.get(user_id)
         return _with_visibility_flags(row) if row else None
@@ -126,7 +120,8 @@ def get_vendor_profile(user_id: str) -> dict[str, Any] | None:
     out = data[0] if isinstance(data, list) else data
     if isinstance(out, dict):
         out.setdefault("approval_status", "pending")
-        out = _sync_stripe_connect_flags_if_linked(user_id, out)
+        if refresh_payouts:
+            out = _refresh_payout_flags(user_id, out)
         return _with_visibility_flags(out)
     return out
 

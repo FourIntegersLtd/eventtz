@@ -27,7 +27,9 @@ def get_vendor_profile_state(request: Request, response: Response) -> VendorProf
         uid,
         user.get("user_type"),
     )
-    row = get_vendor_profile(uid)
+    # The vendor's own screen is where a stale payout status is visible, so pay for the
+    # Stripe refresh here rather than on every read of this row elsewhere.
+    row = get_vendor_profile(uid, refresh_payouts=True)
     if row:
         logger.info(
             "GET /vendor/profile found row user_id=%s status=%s approval_status=%s current_step=%s",

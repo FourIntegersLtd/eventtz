@@ -355,6 +355,35 @@ def sync_connect_account_status(vendor_user_id: str) -> dict[str, Any]:
     }
 
 
+def refresh_pending_connect_flags(vendor_user_id: str, row: dict[str, Any]) -> dict[str, Any]:
+    """Return `row` with its `stripe_*` columns refreshed, but only while onboarding is unfinished.
+
+    `sync_connect_account_status` writes the fresh flags back to the vendor row, so every
+    other reader of that vendor sees the corrected values without making its own Stripe
+    call. Callers get a new dict; `row` is left untouched.
+
+    Skipped - returning `row` unchanged - when there is nothing Stripe could tell us:
+    offline development, no Stripe key, no Connect account yet, or an account that is
+    already fully enabled (from then on the `account.updated` webhook keeps it current,
+    and a call per page load would only add latency).
+    """
+    settings = get_settings()
+    if settings.local_auth_mode or not settings.stripe_secret_key.strip():
+        return row
+    if not row.get("stripe_account_id"):
+        return row
+    if row.get("stripe_charges_enabled") and row.get("stripe_payouts_enabled"):
+        return row
+
+    status = sync_connect_account_status(vendor_user_id)
+    return {
+        **row,
+        "stripe_account_id": status["stripe_account_id"],
+        "stripe_charges_enabled": status["charges_enabled"],
+        "stripe_payouts_enabled": status["payouts_enabled"],
+    }
+
+
 def sync_connect_account_status_by_account_id(account_id: str) -> str | None:
     """Like sync_connect_account_status, but looked up by Stripe account id (for account.updated webhooks)."""
     res = (
