@@ -456,7 +456,7 @@ export function MarketplaceExploreView({
       ) : visibleCards.length === 0 && !isPlanMode ? (
         <LottieEmptyPanel
           className="mt-6"
-          lottie={savedOnly ? "emptyInbox" : "searchNoResults"}
+          variant={savedOnly ? "favorites" : "vendors"}
           title={savedOnly ? "No saved vendors yet" : "No vendors match these filters"}
           description={
             savedOnly
@@ -534,7 +534,7 @@ export function MarketplaceExploreView({
                 </div>
                 {sectionCards.length === 0 ? (
                   <LottieEmptyPanel
-                    lottie="emptyInbox"
+                    variant="vendors"
                     title="No vendors for this yet"
                     description="Try another category or check back as we add more vendors."
                   />

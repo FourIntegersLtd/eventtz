@@ -97,7 +97,7 @@ export function RecommendationSection({
       {!primary ? (
         <LottieEmptyPanel
           className="mt-3 border-0 bg-transparent py-4"
-          lottie="emptyInbox"
+          variant="vendors"
           title={recommendation.empty_reason || "No vendors found for this category yet."}
         />
       ) : (

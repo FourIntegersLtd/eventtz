@@ -98,7 +98,7 @@ export function ChatPortalView({ portal, selectedConversationId }: ChatPortalVie
               ) : rows.length === 0 ? (
                 <EmptyState
                   className="border-0 py-16"
-                  lottie="emptyInbox"
+                  variant="messages"
                   title="No conversations yet"
                 />
               ) : (
@@ -212,7 +212,7 @@ export function ChatPortalView({ portal, selectedConversationId }: ChatPortalVie
           >
             <EmptyState
               className="border-0"
-              lottie="emptyMessages"
+              variant="messages"
               title={rows.length === 0 ? "No conversations yet" : "Select a conversation"}
             />
           </div>

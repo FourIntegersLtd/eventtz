@@ -13,7 +13,7 @@ export const LOTTIE_ASSETS = {
   successCheck: "/animations/success-check.json",
   /** Trophy - all caught up, celebration, onboarding finish. */
   allCaughtUp: "/animations/all-caught-up.json",
-  /** Mail / paper-plane - empty lists, select prompts, no bookings. */
+  /** @deprecated Mail envelope - do not use; pick an EmptyState `variant` instead. */
   emptyInbox: "/animations/empty-mail.json",
   /** Astronaut - 404 / not found. */
   notFound: "/animations/not-found.json",
@@ -27,7 +27,7 @@ export const LOTTIE_ASSETS = {
   pendingReview: "/animations/pending-review.json",
   /** Friendly mascot - auth welcome / soft empty hero (not for destructive confirms). */
   welcome: "/animations/welcome.json",
-  /** Mail / paper-plane - empty chat thread, “read messages first” gate. */
+  /** @deprecated Same envelope as emptyInbox - use EmptyState `variant="messages"`. */
   emptyMessages: "/animations/empty-chat.json",
   /** Search character + magnifier - filter / search no results. */
   searchNoResults: "/animations/search-empty.json",
@@ -36,6 +36,12 @@ export const LOTTIE_ASSETS = {
 } as const;
 
 export type LottieAssetKey = keyof typeof LOTTIE_ASSETS;
+
+/** Empty-state illustrations only - never the branded loader or mail envelope catch-alls. */
+export type EmptyLottieAssetKey = Exclude<
+  LottieAssetKey,
+  "loading" | "failure" | "emptyInbox" | "emptyMessages"
+>;
 
 export function lottieSrc(key: LottieAssetKey): string {
   return LOTTIE_ASSETS[key];

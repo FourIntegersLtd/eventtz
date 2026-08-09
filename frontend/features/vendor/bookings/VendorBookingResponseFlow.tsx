@@ -174,7 +174,6 @@ export function VendorBookingResponseFlow({
         cancelLabel={unreadCopy.cancelLabel}
         confirmLabel={unreadGateConfirmLabel}
         confirmVariant="primary"
-        lottie="emptyMessages"
         onCancel={() => {
           setUnreadGateOpen(false);
           setPendingDecision(null);

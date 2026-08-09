@@ -85,7 +85,7 @@ export function AdminDashboardCharts({ summary }: AdminDashboardChartsProps) {
               <AdminInfoHint label="Booking pipeline" info={DASHBOARD_CHART_INFO.pipeline} />
             </div>
             {pipelineTotal === 0 ? (
-              <EmptyState className="border-0 py-8" title="No bookings yet" lottie="emptyInbox" />
+              <EmptyState className="border-0 py-8" title="No bookings yet" variant="bookings" />
             ) : (
               <AdminDonutChart data={pipelineData} />
             )}

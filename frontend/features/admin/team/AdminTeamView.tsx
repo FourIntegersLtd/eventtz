@@ -102,7 +102,7 @@ export function AdminTeamView() {
       />
 
       {members.length === 0 ? (
-        <EmptyState title="No admins yet" lottie="emptyInbox" />
+        <EmptyState title="No admins yet" variant="team" />
       ) : (
         <AdminTable>
           <AdminTableElement>

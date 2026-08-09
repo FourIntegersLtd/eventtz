@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, FileText, Receipt } from "lucide-react";
+import { ChevronRight, FileText, MessageSquare, Receipt } from "lucide-react";
 import { portalCard } from "@/components/portal-shell/portalTheme";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { BackLink } from "@/components/ui/BackLink";
@@ -10,8 +10,8 @@ import { Button } from "@/components/ui/Button";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { LottieFailurePanel } from "@/components/ui/LottieFailurePanel";
-import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { MotionStaggerItem } from "@/components/ui/MotionStaggerItem";
+import { EMPTY_STATE_ICON_CLASS } from "@/lib/emptyStateVariants";
 import { MessageComposer } from "@/features/chat/MessageComposer";
 import { VendorQuoteFormModal } from "@/features/vendor/quotes/VendorQuoteFormModal";
 import { formatDateTime } from "@/lib/dateFormat";
@@ -292,7 +292,7 @@ export function ChatThreadView({
       >
         {messages.length === 0 ? (
           <div className="m-auto flex max-w-xs flex-col items-center gap-3 text-center">
-            <LottieIllustration asset="emptyMessages" className="h-24 w-24" />
+            <MessageSquare className={EMPTY_STATE_ICON_CLASS} strokeWidth={1.75} aria-hidden />
             <p className="text-sm text-neutral-500">No messages yet. Send the first one below.</p>
           </div>
         ) : (

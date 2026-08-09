@@ -136,7 +136,7 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
           </div>
         ) : conversations.length === 0 ? (
           <EmptyState
-            lottie="emptyInbox"
+            variant="support"
             title="No support threads yet"
             description="Compose a message to open threads with clients or vendors."
             className="m-4"

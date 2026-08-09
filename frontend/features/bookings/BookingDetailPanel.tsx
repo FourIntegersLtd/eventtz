@@ -90,7 +90,7 @@ export function BookingDetailPanel({
   if (!booking) {
     return (
       <div className={`${portalPanelShell} items-center justify-center`}>
-        <EmptyState title={emptyTitle} className="border-0" lottie="emptyInbox" />
+        <EmptyState title={emptyTitle} className="border-0" variant="bookings" />
       </div>
     );
   }

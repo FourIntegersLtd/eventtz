@@ -41,7 +41,7 @@ export function VendorPaymentHistory() {
   if (rows.length === 0) {
     return (
       <LottieEmptyPanel
-        lottie="emptyInbox"
+        variant="payments"
         title="No payments yet"
         description="When a client pays for a booking, it will show up here with the payout status."
       />

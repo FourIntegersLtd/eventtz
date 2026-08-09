@@ -121,7 +121,7 @@ export function BookingListPanel({
         ) : rows.length === 0 ? (
           <EmptyState
             className="border-0 py-14"
-            lottie="emptyInbox"
+            variant="bookings"
             title={emptyTitle}
           />
         ) : eventGroups && eventGroups.length > 0 ? (
