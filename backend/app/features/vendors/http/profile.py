@@ -47,6 +47,8 @@ def get_vendor_profile_state(request: Request, response: Response) -> VendorProf
         approval_status=row.get("approval_status", "pending"),
         payload=row.get("payload") or {},
         updated_at=row.get("updated_at"),
+        payouts_verified=bool(row.get("payouts_verified")),
+        listing_visible=bool(row.get("listing_visible")),
     )
 
 
@@ -98,6 +100,8 @@ def put_vendor_profile_state(
         approval_status=row.get("approval_status", "pending"),
         payload=row.get("payload") or {},
         updated_at=row.get("updated_at"),
+        payouts_verified=bool(row.get("payouts_verified")),
+        listing_visible=bool(row.get("listing_visible")),
     )
 
 

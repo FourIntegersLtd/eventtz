@@ -4,7 +4,16 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from app.contracts.types import VendorApprovalStatus, VendorProfileStatus
+from app.contracts.types import (
+    VendorApprovalStatus,
+    VendorListingOverride,
+    VendorProfileStatus,
+)
+
+_LISTING_OVERRIDE_DESCRIPTION = (
+    "auto = approval and Stripe decide; visible = admin waives the Stripe payout "
+    "requirement; hidden = admin has taken the listing down without banning."
+)
 
 
 class VendorProfilePutBody(BaseModel):
@@ -23,6 +32,21 @@ class VendorProfileState(BaseModel):
     approval_status: VendorApprovalStatus | str = "pending"
     payload: dict[str, Any] = Field(default_factory=dict)
     updated_at: str | None = None
+    payouts_verified: bool = Field(
+        default=False,
+        description="Stripe Connect can both charge and pay out for this vendor.",
+    )
+    listing_visible: bool = Field(
+        default=False,
+        description=(
+            "Live on client explore. Normally approved AND payouts verified, but an "
+            "admin override can force it either way."
+        ),
+    )
+    listing_override: VendorListingOverride | str = Field(
+        default="auto",
+        description=_LISTING_OVERRIDE_DESCRIPTION,
+    )
 
 
 class VendorBusinessNameAvailabilityResponse(BaseModel):
@@ -51,6 +75,25 @@ class AdminVendorRow(BaseModel):
     payload: dict[str, Any] = Field(default_factory=dict)
     created_at: str | None = None
     updated_at: str | None = None
+    stripe_account_id: str | None = None
+    stripe_charges_enabled: bool = False
+    stripe_payouts_enabled: bool = False
+    payouts_verified: bool = Field(
+        default=False,
+        description="Stripe Connect can both charge and pay out for this vendor.",
+    )
+    listing_visible: bool = Field(
+        default=False,
+        description="The vendor is live on client explore right now.",
+    )
+    listing_override: VendorListingOverride | str = Field(
+        default="auto",
+        description=_LISTING_OVERRIDE_DESCRIPTION,
+    )
+    listing_override_reason: str | None = Field(
+        default=None,
+        description="Why an admin overrode this vendor's listing.",
+    )
 
 
 class AdminVendorsListResponse(BaseModel):
@@ -65,6 +108,24 @@ class AdminVendorApprovalResponse(BaseModel):
     success: bool = True
     user_id: str
     approval_status: VendorApprovalStatus | str
+
+
+class AdminVendorListingOverrideBody(BaseModel):
+    listing_override: VendorListingOverride = Field(
+        description=_LISTING_OVERRIDE_DESCRIPTION,
+    )
+    reason: str | None = Field(
+        default=None,
+        max_length=500,
+        description="Required unless returning the vendor to auto - kept in the audit log.",
+    )
+
+
+class AdminVendorListingOverrideResponse(BaseModel):
+    success: bool = True
+    user_id: str
+    listing_override: VendorListingOverride | str
+    listing_visible: bool = False
 
 
 class ExploreVendorRow(BaseModel):

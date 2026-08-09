@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from datetime import datetime, timezone
 from typing import Any
 
 from app.core.config import get_settings
@@ -16,6 +17,16 @@ from app.core.db import (
     local_vendors,
 )
 from app.features.vendors.profile import get_vendor_profile
+from app.features.vendors.visibility import (
+    LISTING_OVERRIDES,
+    LISTING_OVERRIDE_COLS,
+    PUBLIC_LISTING_STRIPE_COLS,
+    apply_public_listing_filters,
+    is_missing_public_listing_column,
+    listing_override_of,
+    row_is_publicly_listable,
+    vendor_payouts_verified,
+)
 from app.features.email.dispatch import send_vendor_approval_email
 
 logger = get_logger(__name__)
@@ -86,6 +97,13 @@ def list_vendors_for_admin(
                     "payload": payload,
                     "created_at": row.get("created_at"),
                     "updated_at": row.get("updated_at"),
+                    "stripe_account_id": row.get("stripe_account_id"),
+                    "stripe_charges_enabled": bool(row.get("stripe_charges_enabled")),
+                    "stripe_payouts_enabled": bool(row.get("stripe_payouts_enabled")),
+                    "payouts_verified": vendor_payouts_verified(row),
+                    "listing_visible": row_is_publicly_listable(row),
+                    "listing_override": listing_override_of(row),
+                    "listing_override_reason": row.get("listing_override_reason"),
                 }
             )
         term = (q or "").strip().lower()
@@ -143,34 +161,39 @@ def list_vendors_for_admin(
             return [], 0
         match_ids = list(id_set)
 
-    vendor_select = "id,user_id,status,approval_status,current_step,payload,created_at,updated_at"
-    try:
+    base_cols = "id,user_id,status,approval_status,current_step,payload,created_at,updated_at"
+    listing_cols = ",".join((*PUBLIC_LISTING_STRIPE_COLS, *LISTING_OVERRIDE_COLS))
+
+    def _run(select_cols: str) -> Any:
         query = apply_recent_first_order(
-            client.table("vendors").select(vendor_select, count="exact"),
+            client.table("vendors").select(select_cols, count="exact"),
             column="updated_at",
         )
-    except Exception:
-        vendor_select = "id,user_id,status,current_step,payload,created_at,updated_at"
-        query = apply_recent_first_order(
-            client.table("vendors").select(vendor_select, count="exact"),
-            column="updated_at",
-        )
-
-    if match_ids is not None:
-        query = query.in_("user_id", match_ids)
-    if approval_status and approval_status.strip():
-        query = query.eq("approval_status", approval_status.strip())
-    if status and status.strip():
-        query = query.eq("status", status.strip())
+        if match_ids is not None:
+            query = query.in_("user_id", match_ids)
+        if approval_status and approval_status.strip():
+            query = query.eq("approval_status", approval_status.strip())
+        if status and status.strip():
+            query = query.eq("status", status.strip())
+        return query.range(offset, offset + limit - 1).execute()
 
     try:
-        res = query.range(offset, offset + limit - 1).execute()
+        res = _run(f"{base_cols},{listing_cols}")
     except Exception as e:
         if is_missing_approval_status_column(e) and approval_status:
             logger.warning("list_vendors_for_admin approval filter skipped: %s", e)
             return [], 0
-        logger.warning("list_vendors_for_admin failed: %s", e, exc_info=True)
-        return [], 0
+        if not is_missing_public_listing_column(e):
+            logger.warning("list_vendors_for_admin failed: %s", e, exc_info=True)
+            return [], 0
+        # Stripe/override columns lag behind the code: still show the roster rather
+        # than an empty admin console, just without the listing detail.
+        logger.warning("list_vendors_for_admin listing columns missing; run sql/061-062. %s", e)
+        try:
+            res = _run(base_cols)
+        except Exception as inner:
+            logger.warning("list_vendors_for_admin failed: %s", inner, exc_info=True)
+            return [], 0
 
     vdata = [r for r in (getattr(res, "data", None) or []) if isinstance(r, dict)]
     total = int(getattr(res, "count", None) or len(vdata))
@@ -197,6 +220,13 @@ def list_vendors_for_admin(
                 "payload": payload,
                 "created_at": vrow.get("created_at"),
                 "updated_at": vrow.get("updated_at"),
+                "stripe_account_id": vrow.get("stripe_account_id"),
+                "stripe_charges_enabled": bool(vrow.get("stripe_charges_enabled")),
+                "stripe_payouts_enabled": bool(vrow.get("stripe_payouts_enabled")),
+                "payouts_verified": vendor_payouts_verified(vrow),
+                "listing_visible": row_is_publicly_listable(vrow),
+                "listing_override": listing_override_of(vrow),
+                "listing_override_reason": vrow.get("listing_override_reason"),
             }
         )
     return rows, total
@@ -355,10 +385,59 @@ def set_vendor_approval(user_id: str, approval_status: str) -> dict[str, Any] | 
                 vendor_email=None,
                 approval_status=approval_status,
                 business_name=business_name,
+                payouts_verified=bool(row.get("payouts_verified")),
             )
         except Exception:
             logger.warning("vendor approval email failed user=%s", user_id, exc_info=True)
     return row
+
+
+def set_vendor_listing_override(
+    user_id: str,
+    listing_override: str,
+    *,
+    reason: str | None = None,
+    admin_user_id: str | None = None,
+) -> dict[str, Any] | None:
+    """Force a vendor's marketplace listing on or off, or hand it back to the automatic rule.
+
+    `visible` waives the Stripe requirement for a vendor Eventtz has vetted another way;
+    `hidden` takes a listing down without a ban. Neither can list an unapproved or banned
+    vendor - approval is checked first, everywhere the rule is applied.
+    """
+    if listing_override not in LISTING_OVERRIDES:
+        raise ValueError("listing_override must be auto, visible, or hidden")
+    clean_reason = (reason or "").strip() or None
+    if listing_override != "auto" and not clean_reason:
+        raise ValueError("Give a reason when overriding a vendor's listing.")
+
+    if get_settings().local_auth_mode:
+        row = local_vendors.get(user_id)
+        if not row:
+            return None
+        row = {
+            **row,
+            "listing_override": listing_override,
+            "listing_override_reason": clean_reason,
+        }
+        local_vendors[user_id] = row
+        return row
+
+    update = {
+        "listing_override": listing_override,
+        "listing_override_reason": clean_reason,
+        "listing_override_by": admin_user_id or None,
+        "listing_override_at": datetime.now(timezone.utc).isoformat(),
+    }
+    try:
+        get_client().table("vendors").update(update).eq("user_id", user_id).execute()
+    except Exception as e:
+        if is_missing_public_listing_column(e):
+            raise RuntimeError(
+                "vendors.listing_override column is missing. Run backend/sql/062_vendor_listing_override.sql."
+            ) from e
+        raise
+    return get_vendor_profile(user_id)
 
 
 def list_approved_vendors_for_explore(
@@ -374,7 +453,7 @@ def list_approved_vendors_for_explore(
         out: list[dict[str, Any]] = []
         country = normalize_country_code(country_code)
         for uid, row in local_vendors.items():
-            if row.get("approval_status") != "approved":
+            if not row_is_publicly_listable(row):
                 continue
             if vendor_user_ids is not None and uid not in vendor_user_ids:
                 continue
@@ -403,11 +482,9 @@ def list_approved_vendors_for_explore(
     country = normalize_country_code(country_code)
     try:
         query = apply_recent_first_order(
-            get_client()
-            .table("vendors")
-            .select(select_cols)
-            .eq("approval_status", "approved")
-            .eq("country_code", country),
+            apply_public_listing_filters(
+                get_client().table("vendors").select(select_cols),
+            ).eq("country_code", country),
             column="updated_at",
         )
         if vendor_user_ids:
@@ -423,8 +500,7 @@ def list_approved_vendors_for_explore(
             query = query.ilike("base_city_normalized", f"%{city}%")
         res = query.execute()
     except Exception as e:
-        err = str(e).lower()
-        if "min_list_price_gbp" in err or "services_offered" in err or "country_code" in err or "42703" in err:
+        if is_missing_public_listing_column(e):
             query = apply_recent_first_order(
                 get_client()
                 .table("vendors")
@@ -470,10 +546,10 @@ def list_approved_vendors_for_explore(
 
 
 def get_approved_vendor_for_explore_by_id(vendor_user_id: str) -> dict[str, Any] | None:
-    """One approved vendor for the browse detail page (direct lookup, not a full list scan)."""
+    """One listable vendor for the browse detail page (direct lookup, not a full list scan)."""
     if get_settings().local_auth_mode:
-        row = local_vendors.get(vendor_user_id)
-        if not row or row.get("approval_status") != "approved":
+        row = local_vendors.get(vendor_user_id) or {}
+        if not row_is_publicly_listable(row):
             return None
         payload = row.get("payload") if isinstance(row.get("payload"), dict) else {}
         return {
@@ -486,16 +562,17 @@ def get_approved_vendor_for_explore_by_id(vendor_user_id: str) -> dict[str, Any]
         }
     try:
         res = (
-            get_client()
-            .table("vendors")
-            .select("user_id,status,approval_status,payload,updated_at")
-            .eq("user_id", vendor_user_id)
-            .eq("approval_status", "approved")
+            apply_public_listing_filters(
+                get_client()
+                .table("vendors")
+                .select("user_id,status,approval_status,payload,updated_at")
+                .eq("user_id", vendor_user_id),
+            )
             .limit(1)
             .execute()
         )
     except Exception as e:
-        if is_missing_approval_status_column(e):
+        if is_missing_approval_status_column(e) or is_missing_public_listing_column(e):
             return None
         raise
     rows = getattr(res, "data", None) or []
@@ -522,21 +599,19 @@ def get_approved_vendor_for_explore_by_id(vendor_user_id: str) -> dict[str, Any]
 
 
 def get_approved_vendor_payload(vendor_user_id: str) -> dict[str, Any] | None:
-    """Onboarding profile JSON for an approved vendor, or None if they cannot be booked."""
+    """Onboarding profile JSON for a listable vendor, or None if they cannot be booked."""
     if get_settings().local_auth_mode:
-        row = local_vendors.get(vendor_user_id)
-        if not row or row.get("approval_status") != "approved":
+        row = local_vendors.get(vendor_user_id) or {}
+        if not row_is_publicly_listable(row):
             return None
         p = row.get("payload")
         return p if isinstance(p, dict) else {}
 
     try:
         res = (
-            get_client()
-            .table("vendors")
-            .select("payload")
-            .eq("user_id", vendor_user_id)
-            .eq("approval_status", "approved")
+            apply_public_listing_filters(
+                get_client().table("vendors").select("payload").eq("user_id", vendor_user_id),
+            )
             .limit(1)
             .execute()
         )
@@ -551,17 +626,14 @@ def get_approved_vendor_payload(vendor_user_id: str) -> dict[str, Any] | None:
 
 
 def vendor_is_bookable_for_explore(vendor_user_id: str) -> bool:
-    """True when the vendor is approved and clients can book or message them."""
+    """True when the vendor is approved, Stripe-verified, and clients can book or message them."""
     if get_settings().local_auth_mode:
-        row = local_vendors.get(vendor_user_id)
-        return bool(row and row.get("approval_status") == "approved")
+        return row_is_publicly_listable(local_vendors.get(vendor_user_id))
     try:
         res = (
-            get_client()
-            .table("vendors")
-            .select("user_id")
-            .eq("user_id", vendor_user_id)
-            .eq("approval_status", "approved")
+            apply_public_listing_filters(
+                get_client().table("vendors").select("user_id").eq("user_id", vendor_user_id),
+            )
             .limit(1)
             .execute()
         )

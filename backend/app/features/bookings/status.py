@@ -25,7 +25,9 @@ from app.features.bookings.funnel import (
     apply_decline_update,
     mark_customer_cancelled_failure,
 )
+from app.features.bookings.payment_shared import _get_vendor_stripe_fields
 from app.features.email.dispatch import dispatch_booking_notification
+from app.features.vendors.visibility import payout_gate_waived
 
 
 def _guard_cancel_money_state(booking_id: str, *, status: str, payment_status: str) -> None:
@@ -78,20 +80,15 @@ def _cancel_audit_fields(cancelled_by: str) -> dict[str, str]:
 def _vendor_payouts_ready(vendor_user_id: str) -> bool:
     """True when Stripe Connect can charge and pay out (required before accept).
 
-    Why gate here: marketplace visibility only needs admin approval; Accept is when
-    Eventtz must be able to Collect + Transfer, so customers never wait on Connect mid-pay.
+    Why gate here: Accept is when Eventtz commits to Collect + Transfer, so customers
+    never wait on Connect mid-pay. An admin listing waiver lifts the gate for a vendor
+    vetted another way - the client's money is still held by Eventtz until completion.
     """
-    res = (
-        get_client()
-        .table("vendors")
-        .select("stripe_account_id,stripe_charges_enabled,stripe_payouts_enabled")
-        .eq("user_id", vendor_user_id)
-        .limit(1)
-        .execute()
-    )
-    row = one_row(res)
+    row = _get_vendor_stripe_fields(vendor_user_id)
     if row is None:
         return False
+    if payout_gate_waived(row):
+        return True
     return bool(
         row.get("stripe_account_id")
         and row.get("stripe_charges_enabled")

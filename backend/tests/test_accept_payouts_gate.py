@@ -12,7 +12,7 @@ from app.features.bookings.status import (
 )
 
 
-@patch("app.features.bookings.status.get_client")
+@patch("app.features.bookings.payment_shared.get_client")
 def test_vendor_payouts_ready_requires_charges_and_payouts(mock_get_client):
     mock_client = MagicMock()
     mock_get_client.return_value = mock_client
@@ -42,6 +42,40 @@ def test_vendor_payouts_ready_requires_charges_and_payouts(mock_get_client):
         ],
     )
     assert _vendor_payouts_ready("v1") is True
+
+
+@patch("app.features.bookings.payment_shared.get_client")
+def test_admin_listing_waiver_lets_vendor_accept_without_stripe(mock_get_client):
+    mock_client = MagicMock()
+    mock_get_client.return_value = mock_client
+    mock_table = MagicMock()
+    mock_client.table.return_value = mock_table
+    mock_table.select.return_value = mock_table
+    mock_table.eq.return_value = mock_table
+    mock_table.limit.return_value = mock_table
+    mock_table.execute.return_value = MagicMock(
+        data=[
+            {
+                "stripe_account_id": None,
+                "stripe_charges_enabled": False,
+                "stripe_payouts_enabled": False,
+                "listing_override": "visible",
+            },
+        ],
+    )
+    assert _vendor_payouts_ready("v1") is True
+
+    mock_table.execute.return_value = MagicMock(
+        data=[
+            {
+                "stripe_account_id": None,
+                "stripe_charges_enabled": False,
+                "stripe_payouts_enabled": False,
+                "listing_override": "hidden",
+            },
+        ],
+    )
+    assert _vendor_payouts_ready("v1") is False
 
 
 @patch("app.features.bookings.status._vendor_payouts_ready", return_value=False)

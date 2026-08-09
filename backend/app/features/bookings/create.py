@@ -177,7 +177,7 @@ def create_booking_request(
     if not _vendor_is_approved_for_explore(vendor_user_id):
         raise ValueError(
             "This vendor is not available for booking right now. "
-            "They may be unlisted or not yet approved.",
+            "They may be unlisted, not yet approved, or still setting up payouts.",
         )
 
     assert_user_not_suspended(client_user_id)
@@ -201,7 +201,7 @@ def create_booking_request(
     if payload is None:
         raise ValueError(
             "This vendor is not available for booking right now. "
-            "They may be unlisted or not yet approved.",
+            "They may be unlisted, not yet approved, or still setting up payouts.",
         )
 
     _enforce_max_bookings_per_day(vendor_user_id, payload, event_date, event_end_date)
@@ -343,7 +343,8 @@ def create_vendor_quote_booking_request(
 
     if not _vendor_is_approved_for_explore(vendor_user_id):
         raise ValueError(
-            "Your vendor profile is not available for bookings right now.",
+            "Your vendor profile is not available for bookings right now. "
+            "Finish payout setup to appear to clients and send quotes.",
         )
 
     assert_user_not_suspended(vendor_user_id)

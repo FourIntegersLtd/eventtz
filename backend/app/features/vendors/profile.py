@@ -21,10 +21,26 @@ from app.features.vendors.payload_validation import (
     normalize_payload_fields,
     validate_payload_for_progress,
 )
+from app.features.vendors.visibility import (
+    LISTING_OVERRIDE_COLS,
+    PUBLIC_LISTING_STRIPE_COLS,
+    is_missing_public_listing_column,
+    listing_override_of,
+    row_is_publicly_listable,
+    vendor_payouts_verified,
+)
 
 logger = get_logger(__name__)
 
 _BIO_MAX_WORDS = 60
+
+
+def _with_visibility_flags(row: dict[str, Any]) -> dict[str, Any]:
+    """Annotate a vendor row so the vendor can see why they are or aren't live."""
+    row["payouts_verified"] = vendor_payouts_verified(row)
+    row["listing_visible"] = row_is_publicly_listable(row)
+    row["listing_override"] = listing_override_of(row)
+    return row
 
 
 def _clamp_bio_words(text: str, max_words: int = _BIO_MAX_WORDS) -> str:
@@ -52,34 +68,39 @@ def _validate_and_normalize_payload(payload: dict[str, Any]) -> dict[str, Any]:
 
 def get_vendor_profile(user_id: str) -> dict[str, Any] | None:
     if get_settings().local_auth_mode:
-        return local_vendors.get(user_id)
+        row = local_vendors.get(user_id)
+        return _with_visibility_flags(row) if row else None
+    base_cols = "id,user_id,status,approval_status,current_step,payload,created_at,updated_at"
+    listing_cols = ",".join((*PUBLIC_LISTING_STRIPE_COLS, *LISTING_OVERRIDE_COLS))
+
+    def _select(columns: str) -> Any:
+        return (
+            get_client()
+            .table("vendors")
+            .select(columns)
+            .eq("user_id", user_id)
+            .limit(1)
+            .execute()
+        )
+
     try:
-        res = (
-            get_client()
-            .table("vendors")
-            .select("id,user_id,status,approval_status,current_step,payload,created_at,updated_at")
-            .eq("user_id", user_id)
-            .limit(1)
-            .execute()
-        )
+        res = _select(f"{base_cols},{listing_cols}")
     except Exception as e:
-        if not is_missing_approval_status_column(e):
+        if is_missing_public_listing_column(e):
+            logger.warning("vendors listing columns missing; run backend/sql/061-062. %s", e)
+            res = _select(base_cols)
+        elif is_missing_approval_status_column(e):
+            logger.warning("vendors.approval_status missing; run backend/sql/004_vendors_approval_status.sql")
+            res = _select("id,user_id,status,current_step,payload,created_at,updated_at")
+        else:
             raise
-        logger.warning("vendors.approval_status missing; run backend/sql/004_vendors_approval_status.sql")
-        res = (
-            get_client()
-            .table("vendors")
-            .select("id,user_id,status,current_step,payload,created_at,updated_at")
-            .eq("user_id", user_id)
-            .limit(1)
-            .execute()
-        )
     data = getattr(res, "data", None)
     if not data:
         return None
     out = data[0] if isinstance(data, list) else data
     if isinstance(out, dict):
         out.setdefault("approval_status", "pending")
+        return _with_visibility_flags(out)
     return out
 
 

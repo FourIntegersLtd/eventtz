@@ -214,25 +214,28 @@ class EmailService:
         approval_status: str,
         business_name: str | None,
         login_url: str,
+        payouts_verified: bool = True,
     ) -> bool:
         biz = (business_name or "").strip()
-        if approval_status == "approved":
+        subject_name = biz or "your profile"
+        if approval_status == "approved" and not payouts_verified:
+            # Approved, but hidden until Stripe verifies payouts - don't say "live".
+            headline = "Your vendor profile is approved"
+            subtitle = "One step left before clients can find you."
+            body = (
+                f"Good news: {subject_name} passed our review.\n\n"
+                "Before you go live, set up your payout details so we can pay you for bookings. "
+                "Until they are verified, your profile stays hidden from clients. "
+                "It usually takes 2-3 minutes, and you go live automatically once it is done."
+            )
+        elif approval_status == "approved":
             headline = "Your vendor profile is approved"
             subtitle = "You are live on Eventtz."
-            if biz:
-                body = (
-                    f"Congratulations: {biz} is now live on Eventtz.\n\n"
-                    "Clients can find you and send booking requests. "
-                    "Keep your availability and portfolio up to date, "
-                    "and connect Stripe if you have not already so you can get paid."
-                )
-            else:
-                body = (
-                    "Congratulations: your profile is now live on Eventtz.\n\n"
-                    "Clients can find you and send booking requests. "
-                    "Keep your availability and portfolio up to date, "
-                    "and connect Stripe if you have not already so you can get paid."
-                )
+            body = (
+                f"Congratulations: {subject_name} is now live on Eventtz.\n\n"
+                "Clients can find you and send booking requests. "
+                "Keep your availability and portfolio up to date."
+            )
         elif approval_status == "banned":
             headline = "Your vendor account was suspended"
             subtitle = "You cannot receive new bookings right now."

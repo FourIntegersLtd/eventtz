@@ -8,6 +8,8 @@ from app.contracts.disputes import AdminVendorInsightsResponse
 from app.contracts.vendor import (
     AdminVendorApprovalBody,
     AdminVendorApprovalResponse,
+    AdminVendorListingOverrideBody,
+    AdminVendorListingOverrideResponse,
     AdminVendorsListResponse,
 )
 from app.features.admin.audit import insert_admin_audit_log
@@ -15,6 +17,7 @@ from app.features.vendors.moderation import (
     get_vendor_admin_insights,
     list_vendors_for_admin,
     set_vendor_approval,
+    set_vendor_listing_override,
 )
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -108,4 +111,54 @@ def admin_set_vendor_approval(
         success=True,
         user_id=user_id,
         approval_status=row.get("approval_status", body.approval_status),
+    )
+
+
+@router.patch(
+    "/vendors/{user_id}/listing-override",
+    response_model=AdminVendorListingOverrideResponse,
+)
+def admin_set_vendor_listing_override(
+    user_id: str,
+    body: AdminVendorListingOverrideBody,
+    request: Request,
+    response: Response,
+) -> AdminVendorListingOverrideResponse:
+    """Force an approved vendor's listing on or off, overriding the Stripe payout gate."""
+    user = require_admin(request, response)
+    logger.info(
+        "PATCH /admin/vendors/%s/listing-override admin_user_id=%s next_override=%s",
+        user_id,
+        user.get("id"),
+        body.listing_override,
+    )
+    try:
+        row = set_vendor_listing_override(
+            user_id,
+            body.listing_override,
+            reason=body.reason,
+            admin_user_id=str(user.get("id") or "") or None,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
+    if not row:
+        raise HTTPException(status_code=404, detail="Vendor profile not found")
+    insert_admin_audit_log(
+        admin_user_id=str(user.get("id") or ""),
+        action="vendor.listing_override",
+        entity_type="vendor",
+        entity_id=user_id,
+        payload={
+            "listing_override": body.listing_override,
+            "reason": body.reason,
+            "listing_visible": bool(row.get("listing_visible")),
+        },
+    )
+    return AdminVendorListingOverrideResponse(
+        success=True,
+        user_id=user_id,
+        listing_override=row.get("listing_override", body.listing_override),
+        listing_visible=bool(row.get("listing_visible")),
     )

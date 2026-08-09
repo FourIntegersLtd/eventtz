@@ -25,9 +25,7 @@ GENERIC_RESEND_MESSAGE = (
     "If an account exists for that email and still needs verification, "
     "we sent a new link. Check your inbox (and spam) for an email from Eventtz."
 )
-SIGNUP_VERIFY_MESSAGE = (
-    "Account created. Check your email for a link to verify your address before you sign in."
-)
+SIGNUP_VERIFY_MESSAGE = "Account created."
 UNVERIFIED_LOGIN_DETAIL = (
     "Verify your email before signing in. Check your inbox for the link we sent, "
     "or request a new one."
@@ -325,38 +323,8 @@ def resend_email_verification(*, email: str, client_ip: str | None = None) -> st
     return GENERIC_RESEND_MESSAGE
 
 
-def verify_email_with_token(
-    *,
-    token: str,
-    client_ip: str | None = None,
-) -> dict[str, Any]:
-    """
-    Consume token, mark verified, return {user, session, user_type} for cookie setup.
-    Raises ValueError with a user-safe message on failure.
-    """
-    _assert_verify_rate(client_ip)
-    raw = (token or "").strip()
-    if not raw or len(raw) < 20:
-        raise ValueError("This verification link is invalid or has expired. Request a new one.")
-
-    row = _find_token_row(_hash_token(raw))
-    if not row:
-        raise ValueError("This verification link is invalid or has expired. Request a new one.")
-    if row.get("used_at"):
-        raise ValueError("This verification link has already been used. You can sign in.")
-    expires = _parse_expires(row.get("expires_at"))
-    if expires is None or expires < _now():
-        raise ValueError("This verification link is invalid or has expired. Request a new one.")
-
-    user_id = str(row.get("user_id") or "")
-    token_id = str(row.get("id") or "")
-    if not user_id or not token_id:
-        raise ValueError("This verification link is invalid or has expired. Request a new one.")
-
-    mark_email_verified(user_id)
-    _mark_token_used(token_id)
-    _invalidate_unused_tokens(user_id)
-
+def _verify_success_payload(user_id: str) -> dict[str, Any]:
+    """Return user/session payload after email is verified (first verify or idempotent retry)."""
     if local_auth_store.enabled():
         email = local_auth_store.email_for_user_id(user_id)
         if not email:
@@ -388,15 +356,53 @@ def verify_email_with_token(
     if not email:
         raise ValueError("Could not verify email. Try again.")
 
-    confirm_supabase_email(user_id)
-    send_welcome_email(email=email, user_type=user_type)
-
-    # Session: password unknown after verify-from-email - return user without auto login
-    # unless we can create a session. Prefer requiring sign-in after verify for security
-    # (password not available). User asked "before they can login" - so verify then go to login.
     return {
         "user": {"id": user_id, "email": email, "user_type": user_type},
         "session": None,
         "user_type": user_type,
         "email": email,
     }
+
+
+def verify_email_with_token(
+    *,
+    token: str,
+    client_ip: str | None = None,
+) -> dict[str, Any]:
+    """
+    Consume token, mark verified, return {user, session, user_type} for cookie setup.
+    Raises ValueError with a user-safe message on failure.
+    """
+    _assert_verify_rate(client_ip)
+    raw = (token or "").strip()
+    if not raw or len(raw) < 20:
+        raise ValueError("This verification link is invalid or has expired. Request a new one.")
+
+    row = _find_token_row(_hash_token(raw))
+    if not row:
+        raise ValueError("This verification link is invalid or has expired. Request a new one.")
+
+    user_id = str(row.get("user_id") or "")
+    if row.get("used_at"):
+        # Idempotent: link opened twice (email prefetch, React Strict Mode, user refresh).
+        if user_id and is_email_verified(user_id):
+            return _verify_success_payload(user_id)
+        raise ValueError("This verification link is invalid or has expired. Request a new one.")
+
+    expires = _parse_expires(row.get("expires_at"))
+    if expires is None or expires < _now():
+        raise ValueError("This verification link is invalid or has expired. Request a new one.")
+
+    token_id = str(row.get("id") or "")
+    if not user_id or not token_id:
+        raise ValueError("This verification link is invalid or has expired. Request a new one.")
+
+    mark_email_verified(user_id)
+    _mark_token_used(token_id)
+    _invalidate_unused_tokens(user_id)
+
+    payload = _verify_success_payload(user_id)
+    if not local_auth_store.enabled():
+        confirm_supabase_email(user_id)
+        send_welcome_email(email=str(payload["email"]), user_type=str(payload["user_type"]))
+    return payload

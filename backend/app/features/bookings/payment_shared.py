@@ -11,6 +11,7 @@ from app.core.logging import get_logger
 from app.features.email.dispatch import dispatch_booking_notification
 from app.features.payments import stripe as stripe_service
 from app.features.realtime.sse import notify_user
+from app.features.vendors.visibility import is_missing_public_listing_column
 
 logger = get_logger(__name__)
 
@@ -28,15 +29,29 @@ def _notify_pair(client_user_id: str, vendor_user_id: str) -> None:
         notify_user(vendor_user_id, "booking_changed")
 
 
+_VENDOR_STRIPE_COLS = "stripe_account_id,stripe_charges_enabled,stripe_payouts_enabled"
+
+
 def _get_vendor_stripe_fields(vendor_user_id: str) -> dict[str, Any] | None:
-    res = (
-        get_client()
-        .table("vendors")
-        .select("stripe_account_id,stripe_charges_enabled,stripe_payouts_enabled")
-        .eq("user_id", vendor_user_id)
-        .limit(1)
-        .execute()
-    )
+    """Stripe flags plus the admin listing override that can waive them."""
+
+    def _select(columns: str) -> Any:
+        return (
+            get_client()
+            .table("vendors")
+            .select(columns)
+            .eq("user_id", vendor_user_id)
+            .limit(1)
+            .execute()
+        )
+
+    try:
+        res = _select(f"{_VENDOR_STRIPE_COLS},listing_override")
+    except Exception as e:
+        if not is_missing_public_listing_column(e):
+            raise
+        logger.warning("vendors.listing_override missing; run sql/062. %s", e)
+        res = _select(_VENDOR_STRIPE_COLS)
     rows = getattr(res, "data", None) or []
     if not rows or not isinstance(rows[0], dict):
         return None

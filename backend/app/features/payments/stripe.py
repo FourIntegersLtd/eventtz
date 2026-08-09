@@ -13,6 +13,7 @@ import stripe
 from app.core.config import get_settings
 from app.core.logging import get_logger
 from app.core.db import get_db as get_client
+from app.core.phone_validation import phone_digits_only
 
 logger = get_logger(__name__)
 
@@ -97,16 +98,93 @@ def _is_orphan_connect_account_error(exc: BaseException) -> bool:
             "not connected to your platform" in msg
             or "does not exist" in msg
             or "does not have access to account" in msg
+            or "no such account" in msg
         )
     return False
 
 
-def _create_connect_express_account(vendor_user_id: str, row: dict[str, Any] | None) -> str:
+def _payload_str(payload: dict[str, Any], key: str) -> str | None:
+    value = payload.get(key)
+    if isinstance(value, str) and value.strip():
+        return value.strip()
+    return None
+
+
+def _normalize_phone_for_stripe(phone: str | None) -> str | None:
+    """Best-effort E.164 for prefill only; skip anything we can't confidently convert.
+
+    Stripe rejects malformed phone numbers, so an unrecognised format is left blank
+    rather than risk failing account creation - the vendor can still fill it in on
+    Stripe's onboarding form.
+    """
+    if not phone:
+        return None
+    trimmed = phone.strip()
+    if not trimmed:
+        return None
+    if trimmed.startswith("+"):
+        digits = phone_digits_only(trimmed)
+        return f"+{digits}" if digits else None
+    digits = phone_digits_only(trimmed)
+    if trimmed.startswith("0") and 10 <= len(digits) <= 11:
+        return f"+44{digits[1:]}"
+    return None
+
+
+def _build_connect_prefill(
+    vendor_user_id: str,
+    row: dict[str, Any] | None,
+) -> tuple[str | None, dict[str, Any], dict[str, Any]]:
+    """Build the (email, individual, business_profile) prefill from data we already have.
+
+    Only usable at Account.create time - Stripe blocks the platform from editing an
+    Express account's identity fields via Account.modify once it exists (see caller).
+    """
     email = _get_user_email(vendor_user_id)
-    business_name = None
-    if row and isinstance(row.get("payload"), dict):
-        bn = row["payload"].get("businessName")
-        business_name = bn.strip() if isinstance(bn, str) and bn.strip() else None
+    payload = row.get("payload") if row and isinstance(row.get("payload"), dict) else {}
+    business_name = _payload_str(payload, "businessName")
+
+    individual: dict[str, Any] = {}
+    if email:
+        individual["email"] = email
+    first_name = _payload_str(payload, "firstName")
+    if first_name:
+        individual["first_name"] = first_name
+    last_name = _payload_str(payload, "lastName")
+    if last_name:
+        individual["last_name"] = last_name
+    phone = _normalize_phone_for_stripe(_payload_str(payload, "phone"))
+    if phone:
+        individual["phone"] = phone
+
+    address: dict[str, Any] = {}
+    base_city = _payload_str(payload, "baseCity")
+    if base_city:
+        address["city"] = base_city
+    region = _payload_str(payload, "region")
+    if region:
+        address["state"] = region
+    postal_code = _payload_str(payload, "postalCode")
+    if postal_code:
+        address["postal_code"] = postal_code
+    if address:
+        address["country"] = "GB"
+        individual["address"] = address
+
+    business_profile = {"name": business_name} if business_name else {}
+    return email, individual, business_profile
+
+
+def _create_connect_express_account(vendor_user_id: str, row: dict[str, Any] | None) -> str:
+    """Create a fresh Stripe Express account, prefilled with data we already have.
+
+    This is the only place prefill can happen: Stripe lets the platform set
+    `individual` / `business_profile` at Account.create time, but permanently blocks
+    any later Account.modify to those fields ("This application does not have the
+    required permissions for the parameter 'individual'") - after creation, only the
+    vendor can edit them, via Stripe's own onboarding UI or Express dashboard.
+    """
+    email, individual, business_profile = _build_connect_prefill(vendor_user_id, row)
     account = _stripe().Account.create(
         type="express",
         country="GB",
@@ -116,7 +194,8 @@ def _create_connect_express_account(vendor_user_id: str, row: dict[str, Any] | N
             "transfers": {"requested": True},
         },
         business_type="individual",
-        business_profile={"name": business_name} if business_name else None,
+        business_profile=business_profile or None,
+        individual=individual or None,
     )
     account_id = str(account["id"])
     get_client().table("vendors").update({"stripe_account_id": account_id}).eq(
@@ -171,32 +250,30 @@ def create_connect_onboarding_link(vendor_user_id: str, return_path: str = "/ven
     if not account_id:
         account_id = _create_connect_express_account(vendor_user_id, row)
 
-    settings = get_settings()
     safe_path = _safe_connect_return_path(return_path)
     try:
-        link = _stripe().AccountLink.create(
-            account=account_id,
-            refresh_url=f"{settings.frontend_url}{safe_path}?stripe=refresh",
-            return_url=f"{settings.frontend_url}{safe_path}?stripe=return",
-            type="account_onboarding",
-        )
+        return _create_account_link_url(account_id, safe_path)
     except Exception as e:
-        if _is_orphan_connect_account_error(e):
-            logger.warning(
-                "Stripe rejected account link vendor=%s account=%s - recreating",
-                vendor_user_id,
-                account_id,
-            )
-            _clear_vendor_stripe_connect(vendor_user_id)
-            account_id = _create_connect_express_account(vendor_user_id, row)
-            link = _stripe().AccountLink.create(
-                account=account_id,
-                refresh_url=f"{settings.frontend_url}{safe_path}?stripe=refresh",
-                return_url=f"{settings.frontend_url}{safe_path}?stripe=return",
-                type="account_onboarding",
-            )
-        else:
+        if not _is_orphan_connect_account_error(e):
             raise
+        logger.warning(
+            "Stripe rejected account link vendor=%s account=%s - recreating",
+            vendor_user_id,
+            account_id,
+        )
+        _clear_vendor_stripe_connect(vendor_user_id)
+        account_id = _create_connect_express_account(vendor_user_id, row)
+        return _create_account_link_url(account_id, safe_path)
+
+
+def _create_account_link_url(account_id: str, safe_path: str) -> str:
+    settings = get_settings()
+    link = _stripe().AccountLink.create(
+        account=account_id,
+        refresh_url=f"{settings.frontend_url}{safe_path}?stripe=refresh",
+        return_url=f"{settings.frontend_url}{safe_path}?stripe=return",
+        type="account_onboarding",
+    )
     return str(link["url"])
 
 
@@ -274,6 +351,12 @@ def create_checkout_session(
         "vendor_amount_gbp": f"{vendor_amount_gbp:.2f}",
         "service_fee_gbp": f"{service_fee_gbp:.2f}",
     }
+    client_email = _get_user_email(client_user_id)
+    session_kwargs: dict[str, Any] = {}
+    if client_email:
+        # Prefills the email field on Stripe's hosted Checkout page so the client
+        # doesn't have to retype an address we already have on file.
+        session_kwargs["customer_email"] = client_email
     session = _stripe().checkout.Session.create(
         mode="payment",
         line_items=[
@@ -297,6 +380,7 @@ def create_checkout_session(
         # Don't reuse a fixed "don't send twice" key here: starting checkout doesn't
         # take payment, and reusing a key can hand back an old expired link.
         # Paying the vendor and refunds do use those keys because they can't be undone.
+        **session_kwargs,
     )
     return {"id": str(session["id"]), "url": str(session["url"])}
 

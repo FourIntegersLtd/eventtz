@@ -42,7 +42,6 @@ def _claim_completion_reminder_sent(booking_id: str) -> bool:
             .update({"completion_reminder_sent_at": _now_iso()})
             .eq("id", booking_id)
             .is_("completion_reminder_sent_at", "null")
-            .select("id")
             .execute()
         )
     except Exception:

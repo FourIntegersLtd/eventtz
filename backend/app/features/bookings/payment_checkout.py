@@ -7,6 +7,7 @@ from app.features.bookings.payment_shared import _get_vendor_stripe_fields, get_
 from app.features.bookings.pricing_refresh import refresh_booking_pricing
 from app.features.payments import stripe as stripe_service
 from app.features.vendors.moderation import get_approved_vendor_payload
+from app.features.vendors.visibility import payout_gate_waived
 
 
 def create_checkout_session_for_booking(client_user_id: str, booking_id: str) -> str:
@@ -35,7 +36,13 @@ def create_checkout_session_for_booking(client_user_id: str, booking_id: str) ->
 
     vendor_id = str(row.get("vendor_user_id") or "")
     vendor_stripe = _get_vendor_stripe_fields(vendor_id) or {}
-    if not vendor_stripe.get("stripe_account_id") or not vendor_stripe.get("stripe_charges_enabled"):
+    charges_ready = bool(vendor_stripe.get("stripe_account_id")) and bool(
+        vendor_stripe.get("stripe_charges_enabled"),
+    )
+    # An admin waiver is safe here: Checkout collects into Eventtz's own balance and
+    # never touches the vendor's Connect account. Only the completion Transfer does,
+    # and that already holds the money until their account is ready.
+    if not charges_ready and not payout_gate_waived(vendor_stripe):
         raise ValueError(
             "This vendor hasn't finished setting up payouts yet. Try again once they have.",
         )

@@ -7,8 +7,29 @@ from supabase_auth.errors import AuthApiError
 
 from app.core.logging import get_logger
 from app.core.db import get_supabase_auth_client
+from app.features.auth import local_store as local_auth_store
 
 logger = get_logger(__name__)
+
+_SIGNUP_EMAIL_EXISTS = (
+    "An account with this email already exists. "
+    "Try signing in instead, or use Forgot password to set a new one."
+)
+
+
+def _normalize_email(email: str) -> str:
+    return local_auth_store.normalize_email(email)
+
+
+def _signup_is_existing_user(user: Any) -> bool:
+    """Supabase returns a fake user (empty identities) when email already exists."""
+    identities = getattr(user, "identities", None)
+    if identities is None and hasattr(user, "model_dump"):
+        try:
+            identities = user.model_dump().get("identities")
+        except Exception:
+            identities = None
+    return isinstance(identities, list) and len(identities) == 0
 
 
 def _user_info(user: Any) -> dict[str, Any]:
@@ -37,6 +58,7 @@ class SupabaseAuthService:
         self._client = client or get_supabase_auth_client()
 
     def sign_up(self, email: str, password: str, options: dict | None = None) -> dict:
+        email = _normalize_email(email)
         logger.info("sign_up started email=%s", email)
         try:
             creds: dict = {"email": email, "password": password}
@@ -48,6 +70,9 @@ class SupabaseAuthService:
             if not user:
                 logger.warning("sign_up finished without user email=%s", email)
                 return {"success": False, "error": "We couldn't create your account. Please try again."}
+            if _signup_is_existing_user(user):
+                logger.info("sign_up rejected email=%s (already registered)", email)
+                return {"success": False, "error": _SIGNUP_EMAIL_EXISTS}
             if session:
                 logger.info(
                     "sign_up success email=%s user_id=%s has_session=true",
@@ -73,13 +98,8 @@ class SupabaseAuthService:
         except AuthApiError as e:
             err = str(e).lower()
             if "already registered" in err or "already been registered" in err:
-                return {
-                    "success": False,
-                    "error": (
-                        "An account with this email already exists. "
-                        "Try signing in instead, or contact support if you need help."
-                    ),
-                }
+                logger.info("sign_up rejected email=%s (already registered)", email)
+                return {"success": False, "error": _SIGNUP_EMAIL_EXISTS}
             logger.info("sign_up rejected email=%s error=%s", email, e)
             return {
                 "success": False,
@@ -93,6 +113,7 @@ class SupabaseAuthService:
             }
 
     def sign_in_with_password(self, email: str, password: str) -> dict[str, Any]:
+        email = _normalize_email(email)
         logger.info("sign_in started email=%s", email)
         try:
             response = self._client.auth.sign_in_with_password(
@@ -113,7 +134,20 @@ class SupabaseAuthService:
             err = str(e).lower()
             if "invalid login credentials" in err or "invalid credentials" in err:
                 logger.info("sign_in rejected email=%s (invalid credentials)", email)
-                return {"success": False, "error": "We couldn't sign you in with those details. Check your email and password, then try again."}
+                return {
+                    "success": False,
+                    "error": (
+                        "We couldn't sign you in with those details. "
+                        "If you recently registered again with this email, use the password "
+                        "from your first sign-up, or reset your password."
+                    ),
+                }
+            if "email not confirmed" in err:
+                logger.info("sign_in rejected email=%s (email not confirmed)", email)
+                return {
+                    "success": False,
+                    "error": "Confirm your email before signing in. Check your inbox for the verification link.",
+                }
             logger.info("sign_in rejected email=%s error=%s", email, e)
             return {
                 "success": False,
