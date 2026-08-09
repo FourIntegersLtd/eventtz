@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   fetchStripePaymentsStatus,
+  getApiErrorDetail,
   postConnectStripeAccount,
   type VendorPaymentsStatus,
 } from "@/lib/vendorPaymentsApi";
@@ -53,8 +54,8 @@ export function useVendorPayoutsReady(enabled = true) {
       });
       const { onboarding_url } = await postConnectStripeAccount(returnPath);
       window.location.href = onboarding_url;
-    } catch {
-      setError("We couldn't start payout setup. Please try again.");
+    } catch (err) {
+      setError(getApiErrorDetail(err) ?? "We couldn't start payout setup. Please try again.");
       setConnecting(false);
     }
   }, []);

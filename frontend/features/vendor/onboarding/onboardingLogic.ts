@@ -39,8 +39,8 @@ export function buildDraftBio(d: VendorOnboardingData, variant: number): string 
   const biz = d.businessName || "Our business";
   const draft =
     variant % 2 === 0
-      ? `${biz} brings ${services} to ${events} across ${city}. We focus on cultural detail, reliable communication, and memorable experiences.`
-      : `Based in ${city}, ${biz} specialises in ${services} for ${events}, with professional delivery and warm, collaborative planning from enquiry to event day.`;
+      ? `${biz} is based in ${city} — we provide ${services} for ${events}. Setup and clear communication come as standard. Tell us your date and guest list; we'll get back to you quickly.`
+      : `Looking for ${services} in ${city}? At ${biz} we cover ${events} with reliable delivery and attention to detail. Message us with your plans — we'd love to help you pull it off.`;
   return normalizePublicBioText(clampBioWords(draft));
 }
 

@@ -346,39 +346,39 @@ export function VendorOnboarding() {
 
             {step <= 8 && (
               <div className="mt-10 border-t border-neutral-100 pt-8">
-                <p className="mb-4 text-center text-xs text-neutral-500 sm:text-left">
-                  {lockedPendingReview && step === 6 && canAddPortfolioWhilePending
-                    ? `Please save once you've added at least ${MIN_PORTFOLIO_IMAGES} portfolio photos.`
-                    : "Close anytime. Your progress is saved."}
-                </p>
-                <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-                  {returnToReview && step < 8 && !(lockedPendingReview && step === 6) ? (
-                    <button
-                      type="button"
-                      onClick={goBackToReview}
-                      className="min-h-11 w-full rounded-xl border border-primary/20 bg-primary/5 px-5 py-3 text-sm font-semibold text-primary transition hover:bg-primary/10 sm:order-first sm:w-auto sm:min-w-[9rem]"
-                    >
-                      Back to review
-                    </button>
-                  ) : null}
-                  <div className="flex flex-1 items-stretch gap-3">
+                <div className="flex flex-col items-end gap-3">
+                  <p className="text-right text-xs text-neutral-500">
+                    {lockedPendingReview && step === 6 && canAddPortfolioWhilePending
+                      ? `Please save once you've added at least ${MIN_PORTFOLIO_IMAGES} portfolio photos.`
+                      : "Close anytime. Your progress is saved."}
+                  </p>
+                  <div className="flex flex-wrap items-center justify-end gap-3">
+                    {returnToReview && step < 8 && !(lockedPendingReview && step === 6) ? (
+                      <button
+                        type="button"
+                        onClick={goBackToReview}
+                        className="min-h-11 rounded-xl border border-primary/20 bg-primary/5 px-5 py-3 text-sm font-semibold text-primary transition hover:bg-primary/10 sm:min-w-[9rem]"
+                      >
+                        Back to review
+                      </button>
+                    ) : null}
                     {step > 1 || (lockedPendingReview && step === 6) ? (
                       <button
                         type="button"
                         onClick={goBack}
-                        className="flex min-h-11 flex-1 items-center justify-center gap-1 rounded-xl bg-neutral-50 px-5 py-3 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 sm:flex-none sm:min-w-[7.5rem]"
+                        className="flex min-h-11 items-center justify-center gap-1 rounded-xl bg-neutral-50 px-5 py-3 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 sm:min-w-[7.5rem]"
                       >
                         <ChevronLeft className="h-4 w-4" />
-                        {lockedPendingReview && step === 6 && canAddPortfolioWhilePending ? "Back to status" : "Back"}
+                        {lockedPendingReview && step === 6 && canAddPortfolioWhilePending
+                          ? "Back to status"
+                          : "Back"}
                       </button>
-                    ) : (
-                      <span className="hidden min-w-[7.5rem] sm:inline-block" aria-hidden />
-                    )}
+                    ) : null}
                     <button
                       type="button"
                       onClick={() => void goNext()}
                       disabled={saving}
-                      className="min-h-11 flex-1 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:opacity-90 disabled:opacity-60 sm:min-w-[7.5rem] sm:flex-none"
+                      className="min-h-11 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:opacity-90 disabled:opacity-60 sm:min-w-[7.5rem]"
                     >
                       {saving ? "Saving…" : primaryLabel}
                     </button>

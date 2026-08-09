@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { LoadingState } from "@/components/ui/LoadingState";
 import {
   fetchStripePaymentsStatus,
+  getApiErrorDetail,
   postConnectStripeAccount,
   type VendorPaymentsStatus,
 } from "@/lib/vendorPaymentsApi";
@@ -76,8 +77,8 @@ export function VendorPaymentsView() {
       });
       const { onboarding_url } = await postConnectStripeAccount("/vendor/payments");
       window.location.href = onboarding_url;
-    } catch {
-      setError("We couldn't start payout setup. Please try again.");
+    } catch (err) {
+      setError(getApiErrorDetail(err) ?? "We couldn't start payout setup. Please try again.");
       setConnecting(false);
     }
   };
