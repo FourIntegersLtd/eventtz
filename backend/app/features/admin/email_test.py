@@ -39,9 +39,15 @@ def _static_templates() -> list[EmailTestTemplate]:
         ),
         EmailTestTemplate(
             "vendor.approved",
-            "Vendor approved",
+            "Vendor approved (live)",
             "Account",
-            "Vendor profile approved and live.",
+            "Vendor approved with Stripe verified — live on the marketplace.",
+        ),
+        EmailTestTemplate(
+            "vendor.approved_pending_payouts",
+            "Vendor approved (payout setup)",
+            "Account",
+            "Vendor approved but hidden until Stripe payout setup completes.",
         ),
         EmailTestTemplate(
             "vendor.pending",
@@ -148,13 +154,39 @@ def send_email_test(*, template_id: str, to_email: str) -> tuple[bool, str | Non
 
     if tid.startswith("vendor."):
         status = tid.split(".", 1)[1]
-        if status not in {"approved", "pending", "banned"}:
+        if status == "approved":
+            ok = svc.send_vendor_approval_status(
+                to_email=email,
+                approval_status="approved",
+                business_name=SAMPLE_BUSINESS,
+                login_url=f"{base}/signin",
+                payments_url=f"{base}/vendor/payments",
+                dashboard_url=f"{base}/vendor/dashboard",
+                listing_visible=True,
+                payouts_verified=True,
+            )
+            return ok, None if ok else "Email was not sent. Check RESEND_API_KEY and logs."
+        if status == "approved_pending_payouts":
+            ok = svc.send_vendor_approval_status(
+                to_email=email,
+                approval_status="approved",
+                business_name=SAMPLE_BUSINESS,
+                login_url=f"{base}/signin",
+                payments_url=f"{base}/vendor/payments",
+                dashboard_url=f"{base}/vendor/dashboard",
+                listing_visible=False,
+                payouts_verified=False,
+            )
+            return ok, None if ok else "Email was not sent. Check RESEND_API_KEY and logs."
+        if status not in {"pending", "banned"}:
             raise ValueError("Unknown email template.")
         ok = svc.send_vendor_approval_status(
             to_email=email,
             approval_status=status,
             business_name=SAMPLE_BUSINESS,
             login_url=f"{base}/signin",
+            payments_url=f"{base}/vendor/payments",
+            dashboard_url=f"{base}/vendor/dashboard",
         )
         return ok, None if ok else "Email was not sent. Check RESEND_API_KEY and logs."
 

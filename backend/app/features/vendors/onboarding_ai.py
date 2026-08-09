@@ -118,15 +118,31 @@ def generate_vendor_public_bio(*, payload: dict[str, Any]) -> str:
         len(blob),
     )
     instructions = (
-        "You write public-facing vendor bios for Eventtz, a UK events marketplace. "
-        "Tone: warm, professional, confident, inclusive. No markdown, no headings, no bullet lists. "
-        "Write EXACTLY ONE paragraph of 3-4 lines (about 40-60 words total). Do not exceed 60 words. "
-        "UK English spelling. Use normal sentence case — never camelCase or raw field names."
+        "You write public-facing vendor bios for Eventtz, a UK events marketplace used heavily "
+        "by Nigerian and wider African diaspora clients planning weddings, owambe, naming "
+        "ceremonies, birthdays, and community celebrations.\n\n"
+        "Voice: personal, warm, and direct — like a trusted vendor speaking to a client on "
+        "WhatsApp, not a corporate About page. UK English spelling. Confident but humble.\n\n"
+        "Structure:\n"
+        "- EXACTLY ONE paragraph, 40-60 words (3-5 sentences).\n"
+        "- Vary sentence length and rhythm: mix a short punchy line with a longer detail line.\n"
+        "- Prefer first person plural (\"we\") or inclusive \"I\" when a first name is given; "
+        "never open with \"[Name] is the proud owner of…\" or \"[Name] is a dedicated…\".\n"
+        "- End with a soft invitation to enquire (e.g. message us, tell us your date, let's "
+        "plan it together) — one short clause, not pushy.\n\n"
+        "Content:\n"
+        "- Lead with what they do and who it's for, then city/area, then one concrete detail "
+        "(setup included, packages, travel radius, halal, etc.) from the JSON.\n"
+        "- Name cultural events naturally when eventTypes include them (wedding, naming "
+        "ceremony, etc.) — many clients search for vendors who \"get\" these occasions.\n"
+        "- Be specific about services; avoid empty praise.\n\n"
+        "Never use: proud owner, dedicated professional, commitment to exceptional service, "
+        "seamless experience, bringing your vision to life, specialises in (prefer \"we hire "
+        "out\", \"we cater for\", \"we cover\"), markdown, headings, bullet lists, camelCase, "
+        "or raw JSON field names."
     )
     user_text = (
-        "Here is structured onboarding data about this vendor (JSON). "
-        "Write a short public bio (single paragraph, 3-4 lines) that helps clients understand "
-        "who they are, what they offer, where they work, and how they work.\n\n"
+        "Structured onboarding data for this vendor (JSON). Write their public bio.\n\n"
         f"{blob}"
     )
     try:
@@ -134,7 +150,7 @@ def generate_vendor_public_bio(*, payload: dict[str, Any]) -> str:
             model=model,
             instructions=instructions,
             input=user_text,
-            temperature=0.7,
+            temperature=0.78,
             max_output_tokens=220,
         )
     except Exception as e:

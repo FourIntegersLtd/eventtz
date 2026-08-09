@@ -361,6 +361,22 @@ def set_vendor_approval(user_id: str, approval_status: str) -> dict[str, Any] | 
             return None
         row = {**row, "approval_status": approval_status}
         local_vendors[user_id] = row
+        row = get_vendor_profile(user_id)
+        if row and prev_status != approval_status:
+            payload = row.get("payload") if isinstance(row.get("payload"), dict) else {}
+            bn = payload.get("businessName")
+            business_name = bn.strip() if isinstance(bn, str) else None
+            try:
+                send_vendor_approval_email(
+                    vendor_user_id=user_id,
+                    vendor_email=None,
+                    approval_status=approval_status,
+                    business_name=business_name,
+                    listing_visible=bool(row.get("listing_visible")),
+                    payouts_verified=bool(row.get("payouts_verified")),
+                )
+            except Exception:
+                logger.warning("vendor approval email failed user=%s", user_id, exc_info=True)
         return row
     try:
         get_client().table("vendors").update({"approval_status": approval_status}).eq("user_id", user_id).execute()
@@ -385,6 +401,7 @@ def set_vendor_approval(user_id: str, approval_status: str) -> dict[str, Any] | 
                 vendor_email=None,
                 approval_status=approval_status,
                 business_name=business_name,
+                listing_visible=bool(row.get("listing_visible")),
                 payouts_verified=bool(row.get("payouts_verified")),
             )
         except Exception:

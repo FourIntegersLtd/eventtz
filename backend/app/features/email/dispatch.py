@@ -228,7 +228,8 @@ def send_vendor_approval_email(
     vendor_email: str | None,
     approval_status: str,
     business_name: str | None,
-    payouts_verified: bool = True,
+    listing_visible: bool = False,
+    payouts_verified: bool = False,
 ) -> bool:
     if not vendor_email or "@" not in vendor_email:
         emails = user_emails_by_id([vendor_user_id])
@@ -241,6 +242,9 @@ def send_vendor_approval_email(
         approval_status=approval_status,
         business_name=business_name,
         login_url=login_url,
+        payments_url=public_email_url("/vendor/payments"),
+        dashboard_url=public_email_url("/vendor/dashboard"),
+        listing_visible=listing_visible,
         payouts_verified=payouts_verified,
     )
 

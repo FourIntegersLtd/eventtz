@@ -203,3 +203,49 @@ def test_send_welcome_email_skips_local_auth(mock_settings):
     from app.features.email.dispatch import send_welcome_email
 
     assert send_welcome_email(email="a@example.com", user_type="client") is False
+
+
+@patch("app.features.email.service.resend_send", return_value=True)
+def test_vendor_approval_email_live_when_listing_visible(mock_resend):
+    svc = EmailService()
+    ok = svc.send_vendor_approval_status(
+        to_email="vendor@example.com",
+        approval_status="approved",
+        business_name="YHK Ltd",
+        login_url="https://eventtz.com/signin",
+        payments_url="https://eventtz.com/vendor/payments",
+        dashboard_url="https://eventtz.com/vendor/dashboard",
+        listing_visible=True,
+        payouts_verified=True,
+    )
+    assert ok is True
+    html = mock_resend.call_args.kwargs["html"]
+    text = mock_resend.call_args.kwargs["text"]
+    assert "You are live on Eventtz" in html
+    assert "You are live on Eventtz" in text
+    assert "One step left" not in html
+    assert "https://eventtz.com/vendor/dashboard" in html
+    assert "Go to dashboard" in html
+
+
+@patch("app.features.email.service.resend_send", return_value=True)
+def test_vendor_approval_email_not_live_without_payouts(mock_resend):
+    svc = EmailService()
+    ok = svc.send_vendor_approval_status(
+        to_email="vendor@example.com",
+        approval_status="approved",
+        business_name="YHK Ltd",
+        login_url="https://eventtz.com/signin",
+        payments_url="https://eventtz.com/vendor/payments",
+        dashboard_url="https://eventtz.com/vendor/dashboard",
+        listing_visible=False,
+        payouts_verified=False,
+    )
+    assert ok is True
+    html = mock_resend.call_args.kwargs["html"]
+    text = mock_resend.call_args.kwargs["text"]
+    assert "One step left before clients can find you" in html
+    assert "You are live on Eventtz" not in html
+    assert "stays hidden from clients" in text
+    assert "https://eventtz.com/vendor/payments" in html
+    assert "Set up payouts" in html

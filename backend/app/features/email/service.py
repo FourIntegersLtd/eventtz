@@ -214,11 +214,26 @@ class EmailService:
         approval_status: str,
         business_name: str | None,
         login_url: str,
-        payouts_verified: bool = True,
+        payments_url: str,
+        dashboard_url: str,
+        listing_visible: bool = False,
+        payouts_verified: bool = False,
     ) -> bool:
         biz = (business_name or "").strip()
         subject_name = biz or "your profile"
-        if approval_status == "approved" and not payouts_verified:
+        action_url = login_url
+        action_label = "Open Eventtz"
+        if approval_status == "approved" and listing_visible:
+            headline = "Your vendor profile is approved"
+            subtitle = "You are live on Eventtz."
+            body = (
+                f"Congratulations: {subject_name} is now live on Eventtz.\n\n"
+                "Clients can find you and send booking requests. "
+                "Keep your availability and portfolio up to date."
+            )
+            action_url = dashboard_url or login_url
+            action_label = "Go to dashboard"
+        elif approval_status == "approved" and not payouts_verified:
             # Approved, but hidden until Stripe verifies payouts - don't say "live".
             headline = "Your vendor profile is approved"
             subtitle = "One step left before clients can find you."
@@ -228,13 +243,16 @@ class EmailService:
                 "Until they are verified, your profile stays hidden from clients. "
                 "It usually takes 2-3 minutes, and you go live automatically once it is done."
             )
+            action_url = payments_url or login_url
+            action_label = "Set up payouts"
         elif approval_status == "approved":
+            # Payouts are fine; an admin has paused the public listing.
             headline = "Your vendor profile is approved"
-            subtitle = "You are live on Eventtz."
+            subtitle = "Your listing is temporarily hidden."
             body = (
-                f"Congratulations: {subject_name} is now live on Eventtz.\n\n"
-                "Clients can find you and send booking requests. "
-                "Keep your availability and portfolio up to date."
+                f"Good news: {subject_name} passed our review.\n\n"
+                "Our team has paused your public listing for now. "
+                "We will email you when clients can find you again."
             )
         elif approval_status == "banned":
             headline = "Your vendor account was suspended"
@@ -258,8 +276,8 @@ class EmailService:
             headline=headline,
             subtitle=subtitle,
             body=body,
-            action_url=login_url,
-            action_label="Open Eventtz",
+            action_url=action_url,
+            action_label=action_label,
         )
         html = render_template("booking/notification.html", ctx)
         text = render_template("booking/notification.txt", ctx)

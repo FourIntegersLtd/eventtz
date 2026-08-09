@@ -11,6 +11,7 @@ from typing import Any
 import stripe
 
 from app.core.config import get_settings
+from app.core.errors import ServiceUnavailableError
 from app.core.logging import get_logger
 from app.core.db import get_db as get_client
 from app.core.phone_validation import phone_digits_only
@@ -103,6 +104,40 @@ def _is_orphan_connect_account_error(exc: BaseException) -> bool:
     return False
 
 
+def _is_platform_connect_setup_error(exc: BaseException) -> bool:
+    """True when Eventtz's own Stripe platform account cannot create Connect accounts yet."""
+    if isinstance(exc, stripe.InvalidRequestError):
+        msg = str(getattr(exc, "user_message", None) or exc).lower()
+        return (
+            "must be activated" in msg
+            or "complete your account setup" in msg
+            or "complete your platform profile" in msg
+            or "platform profile" in msg
+            or "create live connected accounts" in msg
+            or "connect/accounts/overview" in msg
+            or "connect is not enabled" in msg
+            or "signed up for connect" in msg
+        )
+    if isinstance(exc, stripe.PermissionError):
+        msg = str(exc).lower()
+        return "connect" in msg and "platform" in msg
+    return False
+
+
+def _raise_if_platform_connect_unavailable(exc: BaseException) -> None:
+    if not _is_platform_connect_setup_error(exc):
+        return
+    logger.error(
+        "Stripe Connect unavailable - activate the platform Stripe account before vendor onboarding: %s",
+        exc,
+    )
+    raise ServiceUnavailableError(
+        "Payout setup is temporarily unavailable while we finish payment setup on Eventtz. "
+        "Please try again in a little while, or contact support if this continues.",
+        code="stripe_connect_unavailable",
+    ) from exc
+
+
 def _payload_str(payload: dict[str, Any], key: str) -> str | None:
     value = payload.get(key)
     if isinstance(value, str) and value.strip():
@@ -185,18 +220,22 @@ def _create_connect_express_account(vendor_user_id: str, row: dict[str, Any] | N
     vendor can edit them, via Stripe's own onboarding UI or Express dashboard.
     """
     email, individual, business_profile = _build_connect_prefill(vendor_user_id, row)
-    account = _stripe().Account.create(
-        type="express",
-        country="GB",
-        email=email or None,
-        capabilities={
-            "card_payments": {"requested": True},
-            "transfers": {"requested": True},
-        },
-        business_type="individual",
-        business_profile=business_profile or None,
-        individual=individual or None,
-    )
+    try:
+        account = _stripe().Account.create(
+            type="express",
+            country="GB",
+            email=email or None,
+            capabilities={
+                "card_payments": {"requested": True},
+                "transfers": {"requested": True},
+            },
+            business_type="individual",
+            business_profile=business_profile or None,
+            individual=individual or None,
+        )
+    except Exception as e:
+        _raise_if_platform_connect_unavailable(e)
+        raise
     account_id = str(account["id"])
     get_client().table("vendors").update({"stripe_account_id": account_id}).eq(
         "user_id",
@@ -268,12 +307,16 @@ def create_connect_onboarding_link(vendor_user_id: str, return_path: str = "/ven
 
 def _create_account_link_url(account_id: str, safe_path: str) -> str:
     settings = get_settings()
-    link = _stripe().AccountLink.create(
-        account=account_id,
-        refresh_url=f"{settings.frontend_url}{safe_path}?stripe=refresh",
-        return_url=f"{settings.frontend_url}{safe_path}?stripe=return",
-        type="account_onboarding",
-    )
+    try:
+        link = _stripe().AccountLink.create(
+            account=account_id,
+            refresh_url=f"{settings.frontend_url}{safe_path}?stripe=refresh",
+            return_url=f"{settings.frontend_url}{safe_path}?stripe=return",
+            type="account_onboarding",
+        )
+    except Exception as e:
+        _raise_if_platform_connect_unavailable(e)
+        raise
     return str(link["url"])
 
 
