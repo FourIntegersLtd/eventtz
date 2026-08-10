@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { Link2 } from "lucide-react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { Instagram, Link2, User, type LucideIcon } from "lucide-react";
+import { CopyReferralLinkButton } from "@/features/admin/referrals/CopyReferralLinkButton";
 import { BackLink } from "@/components/ui/BackLink";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -26,7 +27,26 @@ import {
   type ShoutoutFilter,
 } from "@/lib/adminReferralsApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
-import { PUBLIC_SITE_URL } from "@/lib/siteUrl";
+
+function CreatorDetailRow({
+  icon: Icon,
+  label,
+  children,
+}: {
+  icon: LucideIcon;
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" aria-hidden />
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-medium text-neutral-500">{label}</p>
+        <div className="mt-0.5 text-sm text-neutral-900">{children}</div>
+      </div>
+    </div>
+  );
+}
 
 const SHOUTOUT_OPTIONS = [
   { value: "all" as const, label: "All" },
@@ -53,6 +73,7 @@ export function AdminReferralSignupsView({ partnerId }: AdminReferralSignupsView
   const [error, setError] = useState<string | null>(null);
   const [shoutoutFilter, setShoutoutFilter] = useState<ShoutoutFilter>("all");
   const [toggleBusyId, setToggleBusyId] = useState<string | null>(null);
+  const [copyNote, setCopyNote] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
@@ -118,24 +139,37 @@ export function AdminReferralSignupsView({ partnerId }: AdminReferralSignupsView
   return (
     <div className="space-y-4">
       {error ? <AdminErrorBanner message={error} /> : null}
+      {copyNote ? (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          {copyNote}
+        </div>
+      ) : null}
       <BackLink href="/admin/referrals" label="Back to creators" />
 
-      <div className="rounded-xl border border-neutral-200 bg-white p-4">
-        <h2 className="font-heading text-lg font-semibold text-neutral-900">{partner.display_name}</h2>
-        {partner.instagram_handle ? (
-          <p className="mt-1 text-sm text-neutral-600">{partner.instagram_handle}</p>
-        ) : null}
-        <button
-          type="button"
-          className="mt-3 inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
-          onClick={() => void navigator.clipboard.writeText(partner.referral_link)}
-        >
-          <Link2 className="h-4 w-4" aria-hidden />
-          {partner.referral_link}
-        </button>
-        <p className="mt-2 text-xs text-neutral-500">
-          Links always use the live site ({PUBLIC_SITE_URL}).
-        </p>
+      <div className="rounded-xl border border-neutral-200 bg-white p-4 sm:p-5">
+        <div className="space-y-4">
+          <CreatorDetailRow icon={User} label="Creator name">
+            <span className="font-semibold">{partner.display_name}</span>
+          </CreatorDetailRow>
+
+          <CreatorDetailRow icon={Instagram} label="Instagram handle">
+            {partner.instagram_handle ? (
+              <span>{partner.instagram_handle}</span>
+            ) : (
+              <span className="text-neutral-400">Not set</span>
+            )}
+          </CreatorDetailRow>
+
+          <CreatorDetailRow icon={Link2} label="Vendor signup link">
+            <p className="break-all text-neutral-700">{partner.referral_link}</p>
+            <div className="mt-2">
+              <CopyReferralLinkButton
+                link={partner.referral_link}
+                onCopied={() => setCopyNote("Vendor signup link copied.")}
+              />
+            </div>
+          </CreatorDetailRow>
+        </div>
       </div>
 
       <SegmentedControl

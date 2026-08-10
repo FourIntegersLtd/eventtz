@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { Link2, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { AdminCreateReferralPartnerModal } from "@/features/admin/referrals/AdminCreateReferralPartnerModal";
+import { CopyReferralLinkButton } from "@/features/admin/referrals/CopyReferralLinkButton";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import { AdminPageHeader } from "@/features/admin/components/AdminPageHeader";
@@ -19,16 +20,13 @@ import {
   AdminTableRow,
 } from "@/features/admin/components/AdminTable";
 import { fetchReferralPartners, type ReferralPartner } from "@/lib/adminReferralsApi";
+import { copyToClipboard } from "@/lib/copyToClipboard";
 
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "—";
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-}
-
-async function copyText(text: string): Promise<void> {
-  await navigator.clipboard.writeText(text);
 }
 
 export function AdminReferralsView() {
@@ -53,6 +51,10 @@ export function AdminReferralsView() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const onLinkCopied = (partnerName: string) => {
+    setCopyNote(`Link copied for ${partnerName}.`);
+  };
 
   if (loading) {
     return <AdminLoadingState label="Loading referrals…" />;
@@ -80,7 +82,8 @@ export function AdminReferralsView() {
         isOpen={createOpen}
         onClose={() => setCreateOpen(false)}
         onCreated={(partner) => {
-          setCopyNote(`Created link for ${partner.display_name}.`);
+          void copyToClipboard(partner.referral_link);
+          setCopyNote(`Link copied for ${partner.display_name}.`);
           void load();
         }}
       />
@@ -97,11 +100,11 @@ export function AdminReferralsView() {
         />
       ) : (
         <AdminTable>
-          <AdminTableElement className="min-w-[44rem]">
+          <AdminTableElement className="min-w-[48rem]">
             <AdminTableHead>
               <AdminTableHeaderCell>Creator</AdminTableHeaderCell>
               <AdminTableHeaderCell>Instagram</AdminTableHeaderCell>
-              <AdminTableHeaderCell>Link</AdminTableHeaderCell>
+              <AdminTableHeaderCell className="min-w-[16rem]">Vendor signup link</AdminTableHeaderCell>
               <AdminTableHeaderCell>Status</AdminTableHeaderCell>
               <AdminTableHeaderCell>Created</AdminTableHeaderCell>
               <AdminTableHeaderCell className="text-right">Actions</AdminTableHeaderCell>
@@ -112,18 +115,15 @@ export function AdminReferralsView() {
                   <AdminTableCell className="font-medium text-neutral-900">{p.display_name}</AdminTableCell>
                   <AdminTableCell>{p.instagram_handle || "—"}</AdminTableCell>
                   <AdminTableCell>
-                    <button
-                      type="button"
-                      className="inline-flex max-w-[14rem] items-center gap-1 truncate text-left text-sm text-primary hover:underline"
-                      onClick={() => {
-                        void copyText(p.referral_link).then(() =>
-                          setCopyNote(`Copied link for ${p.display_name}.`),
-                        );
-                      }}
-                    >
-                      <Link2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                      <span className="truncate">{p.referral_link}</span>
-                    </button>
+                    <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
+                      <span className="truncate text-xs text-neutral-600 sm:max-w-[14rem]" title={p.referral_link}>
+                        {p.referral_link}
+                      </span>
+                      <CopyReferralLinkButton
+                        link={p.referral_link}
+                        onCopied={() => onLinkCopied(p.display_name)}
+                      />
+                    </div>
                   </AdminTableCell>
                   <AdminTableCell>{p.is_active ? "Active" : "Inactive"}</AdminTableCell>
                   <AdminTableCell>{formatDate(p.created_at)}</AdminTableCell>
