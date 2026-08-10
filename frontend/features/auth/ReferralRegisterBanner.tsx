@@ -22,23 +22,15 @@ export function ReferralRegisterBanner({ displayName, slug, className = "" }: Re
 
   return (
     <div
-      className={`rounded-2xl bg-gradient-to-br from-primary/12 via-primary/[0.07] to-amber-50/90 px-4 py-4 ring-2 ring-primary/25 sm:px-5 sm:py-5 ${className}`.trim()}
+      className={`rounded-2xl bg-gradient-to-br from-primary/12 via-primary/[0.07] to-amber-50/90 px-4 py-4 text-center ring-2 ring-primary/25 sm:px-5 sm:py-5 ${className}`.trim()}
       role="status"
       aria-live="polite"
     >
-      <div className="flex items-center gap-3 sm:gap-4">
-        <LottieIllustration asset="welcome" className="mx-0 h-20 w-20 shrink-0 sm:h-24 sm:w-24" ariaLabel="" />
-        <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">Creator referral</p>
-          <p className="mt-1 font-heading text-lg font-semibold leading-snug text-neutral-900 sm:text-xl">
-            You&apos;re joining via{" "}
-            <span className="text-primary">{creatorName}</span>
-          </p>
-          <p className="mt-1.5 text-sm leading-relaxed text-neutral-700">
-            Register as a vendor through this creator&apos;s invite link.
-          </p>
-        </div>
-      </div>
+      <LottieIllustration asset="welcome" className="mx-auto h-20 w-20 sm:h-24 sm:w-24" ariaLabel="" />
+      <p className="mt-3 text-[11px] font-semibold uppercase tracking-wide text-primary">Creator referral</p>
+      <p className="mt-1 font-heading text-lg font-semibold leading-snug text-neutral-900 sm:text-xl">
+        You&apos;re joining via <span className="text-primary">{creatorName}</span>
+      </p>
     </div>
   );
 }
