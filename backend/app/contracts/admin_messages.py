@@ -69,5 +69,14 @@ class AdminSupportMessageCreateResponse(BaseModel):
     message: AdminSupportMessageRow
 
 
+class AdminSupportMessageEditBody(BaseModel):
+    body: str = Field(min_length=1, max_length=5000)
+
+
+class AdminSupportMessageEditResponse(BaseModel):
+    success: bool = True
+    message: AdminSupportMessageRow
+
+
 class AdminSupportMarkReadResponse(BaseModel):
     success: bool = True

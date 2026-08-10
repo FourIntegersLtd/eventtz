@@ -288,6 +288,41 @@ class EmailService:
             text=text,
         )
 
+    def send_vendor_returned_for_edits(
+        self,
+        *,
+        to_email: str,
+        business_name: str | None,
+        onboarding_url: str,
+    ) -> bool:
+        biz = (business_name or "").strip()
+        subject_name = biz or "your profile"
+        headline = "Your profile needs a few updates"
+        subtitle = "Please complete your details before we can approve you."
+        body = (
+            f"We have reviewed {subject_name} and need a few updates before we can approve "
+            "your vendor profile on Eventtz.\n\n"
+            "Your profile is unlocked so you can edit it now. We have sent the details in "
+            "Eventtz Support in your account — sign in to read what is missing, update your "
+            "profile, and resubmit when you are ready."
+        )
+        ctx = transactional_email_context(
+            subject=headline,
+            headline=headline,
+            subtitle=subtitle,
+            body=body,
+            action_url=onboarding_url,
+            action_label="Update your profile",
+        )
+        html = render_template("booking/notification.html", ctx)
+        text = render_template("booking/notification.txt", ctx)
+        return resend_send(
+            to=[to_email],
+            subject=f"{headline} | {APP_NAME}",
+            html=html,
+            text=text,
+        )
+
     def send_team_invite(
         self,
         *,

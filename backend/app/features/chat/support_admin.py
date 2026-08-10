@@ -6,7 +6,7 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.errors import NotFoundError, ServiceUnavailableError
+from app.core.errors import ForbiddenError, NotFoundError, ServiceUnavailableError
 from app.core.db import apply_recent_first_order, get_db as get_client
 from app.features.auth.lookup import user_emails_by_id
 from app.features.realtime.sse import notify_user
@@ -217,6 +217,105 @@ def list_messages_for_admin_support(conversation_id: str, *, limit: int = 200) -
             },
         )
     return out
+
+
+def admin_edit_support_message(
+    *,
+    conversation_id: str,
+    message_id: str,
+    admin_user_id: str,
+    body: str,
+) -> dict[str, Any]:
+    conv = get_support_conversation_for_admin(conversation_id)
+    if not conv:
+        raise NotFoundError("Support conversation not found.")
+
+    text = body.strip()
+    if not text:
+        raise ValueError("Message cannot be empty.")
+    if len(text) > MAX_MESSAGE_LEN:
+        raise ValueError(f"Message is too long (max {MAX_MESSAGE_LEN} characters).")
+
+    if get_settings().local_auth_mode:
+        return {
+            "id": message_id,
+            "sender_user_id": admin_user_id,
+            "body": text,
+            "created_at": _now_iso(),
+            "metadata": {"kind": "admin", "edited_at": _now_iso()},
+        }
+
+    client = get_client()
+    try:
+        res = (
+            client.table("messages")
+            .select("id,sender_user_id,body,created_at,metadata")
+            .eq("id", message_id)
+            .eq("conversation_id", conversation_id)
+            .limit(1)
+            .execute()
+        )
+    except Exception as e:
+        logger.exception("chat: load message for edit failed")
+        raise ServiceUnavailableError("Could not load message.") from e
+
+    data = getattr(res, "data", None) or []
+    if not data or not isinstance(data[0], dict):
+        raise NotFoundError("Message not found.")
+
+    row = data[0]
+    support_uid = _str_id(conv.get("support_user_id"))
+    sender = _str_id(row.get("sender_user_id"))
+    if support_uid and sender == support_uid:
+        raise ForbiddenError("Only staff messages can be edited.")
+    if sender != admin_user_id:
+        raise ForbiddenError("You can only edit messages you sent.")
+
+    metadata = row.get("metadata")
+    meta: dict[str, Any] = dict(metadata) if isinstance(metadata, dict) else {"kind": "admin"}
+    meta["kind"] = "admin"
+    meta["edited_at"] = _now_iso()
+
+    try:
+        upd = (
+            client.table("messages")
+            .update({"body": text, "metadata": meta})
+            .eq("id", message_id)
+            .eq("conversation_id", conversation_id)
+            .execute()
+        )
+    except Exception as e:
+        msg = str(e).lower()
+        if "metadata" in msg and ("does not exist" in msg or "42703" in msg):
+            try:
+                upd = (
+                    client.table("messages")
+                    .update({"body": text})
+                    .eq("id", message_id)
+                    .eq("conversation_id", conversation_id)
+                    .execute()
+                )
+            except Exception as e2:
+                logger.exception("chat: edit message failed")
+                raise ServiceUnavailableError("Could not update message.") from e2
+        else:
+            logger.exception("chat: edit message failed")
+            raise ServiceUnavailableError("Could not update message.") from e
+
+    upd_data = getattr(upd, "data", None) or []
+    updated = upd_data[0] if upd_data and isinstance(upd_data[0], dict) else row
+    peer = support_uid
+    # In-app SSE refresh only — never sends email (unlike vendor unsubmit / compose flows).
+    if peer:
+        notify_user(peer, "chat_unread_changed")
+
+    return {
+        "id": _str_id(updated.get("id") or message_id),
+        "sender_user_id": sender,
+        "body": str(updated.get("body") or text),
+        "created_at": updated.get("created_at") or row.get("created_at"),
+        "metadata": meta,
+    }
 
 
 def admin_reply_support_message(

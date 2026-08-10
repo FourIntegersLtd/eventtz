@@ -110,6 +110,28 @@ class AdminVendorApprovalResponse(BaseModel):
     approval_status: VendorApprovalStatus | str
 
 
+class AdminVendorUnsubmitResponse(BaseModel):
+    success: bool = True
+    user_id: str
+    status: VendorProfileStatus | str
+    email_sent: bool = Field(
+        default=False,
+        description="True when the return-for-edits email was dispatched.",
+    )
+
+
+class AdminVendorUnsubmitBody(BaseModel):
+    message: str | None = Field(
+        default=None,
+        max_length=5000,
+        description="Optional note included in the vendor email (e.g. missing checklist items).",
+    )
+    send_email: bool = Field(
+        default=True,
+        description="Send the vendor a return-for-edits email when true.",
+    )
+
+
 class AdminVendorListingOverrideBody(BaseModel):
     listing_override: VendorListingOverride = Field(
         description=_LISTING_OVERRIDE_DESCRIPTION,

@@ -16,13 +16,17 @@ from app.contracts.admin_messages import (
     AdminSupportMarkReadResponse,
     AdminSupportMessageCreateBody,
     AdminSupportMessageCreateResponse,
+    AdminSupportMessageEditBody,
+    AdminSupportMessageEditResponse,
     AdminSupportMessageRow,
     AdminSupportMessagesListResponse,
 )
 from app.features.admin.audit import insert_admin_audit_log
+from app.features.admin.permissions import validate_admin_message_send_permissions
 from app.features.admin.client_ops import list_client_user_ids_for_broadcast
 from app.features.auth.http.guards import require_admin
 from app.features.chat.service import (
+    admin_edit_support_message,
     admin_reply_support_message,
     admin_send_support_message,
     get_support_conversation_for_admin,
@@ -77,6 +81,7 @@ def admin_messages_send(
     body: AdminMessageSendBody,
 ) -> AdminMessageSendResponse:
     admin = require_admin(request, response)
+    validate_admin_message_send_permissions(admin, body.audience)
     admin_id = str(admin.get("id") or "")
     recipients = _resolve_recipient_ids(body)
     try:
@@ -200,6 +205,49 @@ def admin_messages_reply(
         payload={},
     )
     return AdminSupportMessageCreateResponse(
+        message=AdminSupportMessageRow.model_validate(msg),
+    )
+
+
+@router.patch(
+    "/messages/conversations/{conversation_id}/messages/{message_id}",
+    response_model=AdminSupportMessageEditResponse,
+)
+def admin_messages_edit(
+    conversation_id: str,
+    message_id: str,
+    request: Request,
+    response: Response,
+    body: AdminSupportMessageEditBody,
+) -> AdminSupportMessageEditResponse:
+    admin = require_admin(request, response)
+    admin_id = str(admin.get("id") or "")
+    try:
+        msg = admin_edit_support_message(
+            conversation_id=conversation_id,
+            message_id=message_id,
+            admin_user_id=admin_id,
+            body=body.body,
+        )
+    except Exception as e:
+        from app.core.errors import ForbiddenError, NotFoundError
+
+        if isinstance(e, NotFoundError):
+            raise HTTPException(status_code=404, detail=str(e)) from e
+        if isinstance(e, ForbiddenError):
+            raise HTTPException(status_code=403, detail=str(e)) from e
+        if isinstance(e, ValueError):
+            raise HTTPException(status_code=400, detail=str(e)) from e
+        raise HTTPException(status_code=503, detail="Could not update message.") from e
+
+    insert_admin_audit_log(
+        admin_user_id=admin_id,
+        action="chat.admin_edit",
+        entity_type="message",
+        entity_id=message_id,
+        payload={"conversation_id": conversation_id},
+    )
+    return AdminSupportMessageEditResponse(
         message=AdminSupportMessageRow.model_validate(msg),
     )
 

@@ -8,10 +8,16 @@ from app.core.config import get_settings
 from app.core.logging import get_logger
 from app.core.errors import ForbiddenError, NotFoundError, ServiceUnavailableError
 from app.core.db import apply_recent_first_order, get_db as get_client
-from app.features.auth.lookup import user_emails_by_id, vendor_display_names_by_id
+from app.features.auth.lookup import (
+    client_display_names_by_id,
+    user_types_by_id,
+    vendor_display_names_by_id,
+)
 from app.features.realtime.sse import notify_user
 
 from app.features.chat.chat_shared import (
+    ADMIN_SENDER_DISPLAY,
+    ADMIN_SENDER_USER_ID,
     LOCAL_CONVERSATION_ID,
     MAX_MESSAGE_LEN,
     _conversation_kind,
@@ -25,6 +31,22 @@ from app.features.chat.chat_shared import (
 )
 
 logger = get_logger(__name__)
+
+
+def _client_peer_labels(client_ids: list[str]) -> dict[str, str]:
+    """Vendor-facing labels for client peers; never expose admin personal emails."""
+    unique = list({cid for cid in client_ids if cid})
+    if not unique:
+        return {}
+    types = user_types_by_id(unique)
+    names = client_display_names_by_id(unique)
+    out: dict[str, str] = {}
+    for uid in unique:
+        if types.get(uid) == "admin":
+            out[uid] = ADMIN_SENDER_DISPLAY
+        else:
+            out[uid] = names.get(uid, "Client")
+    return out
 
 
 def _assert_vendor_exists(vendor_user_id: str) -> None:
@@ -214,7 +236,7 @@ def list_conversations_for_user(user_id: str, *, role: str) -> list[dict[str, An
         client_ids.append(_str_id(row.get("client_user_id")))
 
     vnames = vendor_display_names_by_id(list({i for i in vendor_ids if i}))
-    emails = user_emails_by_id(list({i for i in client_ids if i}))
+    client_labels = _client_peer_labels(list({i for i in client_ids if i}))
 
     out: list[dict[str, Any]] = []
     for row in rows:
@@ -230,7 +252,7 @@ def list_conversations_for_user(user_id: str, *, role: str) -> list[dict[str, An
         if is_client:
             peer_names = {peer: vnames.get(peer, "Vendor")}
         else:
-            peer_names = {peer: emails.get(peer, "Client")}
+            peer_names = {peer: client_labels.get(peer, "Client")}
         out.append(_row_to_conversation_list_item(row, user_id, peer_names))
     _ = role  # role kept for call-site clarity (client vs vendor portal)
     return out
@@ -281,7 +303,7 @@ def get_conversation_for_user(conversation_id: str, user_id: str) -> dict[str, A
         peer_names = vendor_display_names_by_id([v])
         pname = peer_names.get(v, "Vendor")
     else:
-        peer_names = user_emails_by_id([c])
+        peer_names = _client_peer_labels([c])
         pname = peer_names.get(c, "Client")
     return _row_to_conversation_list_item(row, user_id, {peer: pname})
 
@@ -323,20 +345,25 @@ def list_messages_for_user(
         logger.exception("chat: list messages failed")
         return []
     rows = list(reversed(rows))
+    is_support = _conversation_kind(conv) == "support"
+    support_uid = _str_id(conv.get("support_user_id")) if is_support else ""
     out: list[dict[str, Any]] = []
     for row in rows:
         if not isinstance(row, dict):
             continue
         metadata = row.get("metadata")
-        out.append(
-            {
-                "id": _str_id(row.get("id")),
-                "sender_user_id": _str_id(row.get("sender_user_id")),
-                "body": str(row.get("body") or ""),
-                "created_at": row.get("created_at"),
-                "metadata": metadata if isinstance(metadata, dict) else None,
-            },
-        )
+        sender = _str_id(row.get("sender_user_id"))
+        item: dict[str, Any] = {
+            "id": _str_id(row.get("id")),
+            "sender_user_id": sender,
+            "body": str(row.get("body") or ""),
+            "created_at": row.get("created_at"),
+            "metadata": metadata if isinstance(metadata, dict) else None,
+        }
+        if is_support and support_uid and sender != support_uid:
+            item["sender_user_id"] = ADMIN_SENDER_USER_ID
+            item["sender_display_name"] = ADMIN_SENDER_DISPLAY
+        out.append(item)
     return out
 
 

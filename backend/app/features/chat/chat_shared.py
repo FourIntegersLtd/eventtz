@@ -16,6 +16,8 @@ MAX_MESSAGE_LEN = 5000
 LOCAL_CONVERSATION_ID = "00000000-0000-4000-8000-000000000c01"
 SUPPORT_PEER_DISPLAY = "Eventtz Support"
 SUPPORT_PEER_USER_ID = "eventtz-support"
+ADMIN_SENDER_DISPLAY = "Eventtz Admin"
+ADMIN_SENDER_USER_ID = "eventtz-admin"
 
 ConversationKind = Literal["dm", "support"]
 

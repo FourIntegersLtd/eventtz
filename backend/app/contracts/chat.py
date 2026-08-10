@@ -48,6 +48,8 @@ class MessageRow(BaseModel):
     sender_user_id: str
     body: str
     created_at: str | None = None
+    #: Masked staff label on support threads (e.g. "Eventtz Admin") - never a personal email.
+    sender_display_name: str | None = None
     #: Extra data for rich messages, e.g. a quote card
     #: ({"kind": "quote", "booking_request_id": ..., "event_name": ..., "total_label": ..., "status": ...}).
     metadata: dict[str, Any] | None = None

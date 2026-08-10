@@ -36,6 +36,24 @@ def vendor_display_names_by_id(vendor_ids: list[str]) -> dict[str, str]:
     return out
 
 
+def user_types_by_id(user_ids: list[str]) -> dict[str, str]:
+    """Map user id -> user_type (client | vendor | admin)."""
+    if not user_ids or get_settings().local_auth_mode:
+        return {}
+    try:
+        user_rows = user_repository.list_by_ids(user_ids, columns="id,user_type")
+    except Exception:
+        logger.exception("user_lookup: batch load user types failed")
+        return {}
+    out: dict[str, str] = {}
+    for row in user_rows:
+        uid = str(row.get("id") or "")
+        if not uid:
+            continue
+        out[uid] = str(row.get("user_type") or "").strip().lower()
+    return out
+
+
 def user_emails_by_id(user_ids: list[str], *, fallback: str = "Client") -> dict[str, str]:
     if not user_ids or get_settings().local_auth_mode:
         return {}

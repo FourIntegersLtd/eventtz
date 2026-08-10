@@ -16,6 +16,37 @@ def assert_super_admin(user: dict[str, Any], *, detail: str | None = None) -> No
         raise HTTPException(status_code=403, detail=detail or SUPER_ADMIN_ONLY_DETAIL)
 
 
+def validate_listing_override_permissions(
+    user: dict[str, Any],
+    listing_override: str,
+) -> None:
+    """Support admins may revert to automatic; force publish/hide is super_admin only."""
+    if is_super_admin_user(user):
+        return
+    if listing_override in ("visible", "hidden"):
+        raise HTTPException(
+            status_code=403,
+            detail="Only super admins can force a vendor listing visible or hidden.",
+        )
+
+
+def validate_admin_message_send_permissions(
+    user: dict[str, Any],
+    audience: str | None,
+) -> None:
+    """Targeted recipient sends are for any admin; audience broadcasts are super_admin only."""
+    if audience is None:
+        return
+    if audience not in ("clients", "vendors", "users"):
+        return
+    if is_super_admin_user(user):
+        return
+    raise HTTPException(
+        status_code=403,
+        detail="Only super admins can broadcast support messages to all clients, vendors, or users.",
+    )
+
+
 def validate_dispute_patch_permissions(
     user: dict[str, Any],
     patch_fields: dict[str, Any],

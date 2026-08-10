@@ -2,7 +2,8 @@
 
 from fastapi import APIRouter, HTTPException, Query, Request, Response
 
-from app.features.auth.http.guards import require_admin, require_super_admin
+from app.features.admin.permissions import validate_listing_override_permissions
+from app.features.auth.http.guards import require_admin
 from app.core.logging import get_logger
 from app.contracts.disputes import AdminVendorInsightsResponse
 from app.contracts.vendor import (
@@ -10,6 +11,8 @@ from app.contracts.vendor import (
     AdminVendorApprovalResponse,
     AdminVendorListingOverrideBody,
     AdminVendorListingOverrideResponse,
+    AdminVendorUnsubmitBody,
+    AdminVendorUnsubmitResponse,
     AdminVendorsListResponse,
 )
 from app.features.admin.audit import insert_admin_audit_log
@@ -18,6 +21,7 @@ from app.features.vendors.moderation import (
     list_vendors_for_admin,
     set_vendor_approval,
     set_vendor_listing_override,
+    unsubmit_vendor_profile,
 )
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -114,6 +118,50 @@ def admin_set_vendor_approval(
     )
 
 
+@router.patch("/vendors/{user_id}/unsubmit", response_model=AdminVendorUnsubmitResponse)
+def admin_unsubmit_vendor(
+    user_id: str,
+    body: AdminVendorUnsubmitBody,
+    request: Request,
+    response: Response,
+) -> AdminVendorUnsubmitResponse:
+    user = require_admin(request, response)
+    logger.info(
+        "PATCH /admin/vendors/%s/unsubmit admin_user_id=%s send_email=%s",
+        user_id,
+        user.get("id"),
+        body.send_email,
+    )
+    try:
+        row, email_sent = unsubmit_vendor_profile(
+            user_id,
+            send_email=body.send_email,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    if not row:
+        raise HTTPException(status_code=404, detail="Vendor profile not found")
+    audit_payload: dict[str, object] = {
+        "status": row.get("status", "draft"),
+        "email_sent": email_sent,
+    }
+    if body.message and body.message.strip():
+        audit_payload["message_preview"] = body.message.strip()[:200]
+    insert_admin_audit_log(
+        admin_user_id=str(user.get("id") or ""),
+        action="vendor.unsubmit",
+        entity_type="vendor",
+        entity_id=user_id,
+        payload=audit_payload,
+    )
+    return AdminVendorUnsubmitResponse(
+        success=True,
+        user_id=user_id,
+        status=row.get("status", "draft"),
+        email_sent=email_sent,
+    )
+
+
 @router.patch(
     "/vendors/{user_id}/listing-override",
     response_model=AdminVendorListingOverrideResponse,
@@ -126,6 +174,7 @@ def admin_set_vendor_listing_override(
 ) -> AdminVendorListingOverrideResponse:
     """Force an approved vendor's listing on or off, overriding the Stripe payout gate."""
     user = require_admin(request, response)
+    validate_listing_override_permissions(user, body.listing_override)
     logger.info(
         "PATCH /admin/vendors/%s/listing-override admin_user_id=%s next_override=%s",
         user_id,

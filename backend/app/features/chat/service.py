@@ -6,6 +6,8 @@ Re-export facade - import from here for stable public API.
 from __future__ import annotations
 
 from app.features.chat.chat_shared import (
+    ADMIN_SENDER_DISPLAY,
+    ADMIN_SENDER_USER_ID,
     LOCAL_CONVERSATION_ID,
     MAX_MESSAGE_LEN,
     SUPPORT_PEER_DISPLAY,
@@ -26,6 +28,7 @@ from app.features.chat.dm import (
     send_quote_message,
 )
 from app.features.chat.support_admin import (
+    admin_edit_support_message,
     admin_reply_support_message,
     admin_send_support_message,
     get_or_create_support_conversation,
@@ -36,12 +39,15 @@ from app.features.chat.support_admin import (
 )
 
 __all__ = [
+    "ADMIN_SENDER_DISPLAY",
+    "ADMIN_SENDER_USER_ID",
     "LOCAL_CONVERSATION_ID",
     "MAX_MESSAGE_LEN",
     "SUPPORT_PEER_DISPLAY",
     "SUPPORT_PEER_USER_ID",
     "ConversationKind",
     "_assert_vendor_exists",
+    "admin_edit_support_message",
     "admin_reply_support_message",
     "admin_send_support_message",
     "assert_conversation_matches_pair",
