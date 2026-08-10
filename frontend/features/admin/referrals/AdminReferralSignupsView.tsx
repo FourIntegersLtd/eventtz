@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { Instagram, Link2, User, type LucideIcon } from "lucide-react";
+import { Instagram, Link2, type LucideIcon } from "lucide-react";
+import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { CopyReferralLinkButton } from "@/features/admin/referrals/CopyReferralLinkButton";
 import { BackLink } from "@/components/ui/BackLink";
 import { ButtonLink } from "@/components/ui/ButtonLink";
@@ -147,11 +148,14 @@ export function AdminReferralSignupsView({ partnerId }: AdminReferralSignupsView
       <BackLink href="/admin/referrals" label="Back to creators" />
 
       <div className="rounded-xl border border-neutral-200 bg-white p-4 sm:p-5">
+        <div className="mb-4 flex flex-col items-center gap-3 border-b border-neutral-100 pb-4 sm:flex-row sm:items-center">
+          <LottieIllustration asset="welcome" size="status" className="mx-0 h-24 w-24 shrink-0 sm:h-28 sm:w-28" ariaLabel="" />
+          <div className="min-w-0 text-center sm:text-left">
+            <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">Creator referral</p>
+            <p className="font-heading text-lg font-semibold text-neutral-900">{partner.display_name}</p>
+          </div>
+        </div>
         <div className="space-y-4">
-          <CreatorDetailRow icon={User} label="Creator name">
-            <span className="font-semibold">{partner.display_name}</span>
-          </CreatorDetailRow>
-
           <CreatorDetailRow icon={Instagram} label="Instagram handle">
             {partner.instagram_handle ? (
               <span>{partner.instagram_handle}</span>
@@ -161,8 +165,8 @@ export function AdminReferralSignupsView({ partnerId }: AdminReferralSignupsView
           </CreatorDetailRow>
 
           <CreatorDetailRow icon={Link2} label="Vendor signup link">
-            <p className="break-all text-neutral-700">{partner.referral_link}</p>
-            <div className="mt-2">
+            <div className="flex items-start gap-1.5">
+              <p className="min-w-0 flex-1 break-all text-neutral-700">{partner.referral_link}</p>
               <CopyReferralLinkButton
                 link={partner.referral_link}
                 onCopied={() => setCopyNote("Vendor signup link copied.")}

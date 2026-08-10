@@ -115,8 +115,8 @@ export function AdminReferralsView() {
                   <AdminTableCell className="font-medium text-neutral-900">{p.display_name}</AdminTableCell>
                   <AdminTableCell>{p.instagram_handle || "—"}</AdminTableCell>
                   <AdminTableCell>
-                    <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
-                      <span className="truncate text-xs text-neutral-600 sm:max-w-[14rem]" title={p.referral_link}>
+                    <div className="flex min-w-0 items-center gap-1">
+                      <span className="min-w-0 truncate text-xs text-neutral-600" title={p.referral_link}>
                         {p.referral_link}
                       </span>
                       <CopyReferralLinkButton

@@ -9,6 +9,7 @@ import { Select } from "@/components/ui/Select";
 import { TextField } from "@/components/ui/TextField";
 import { PasswordField } from "@/components/ui/PasswordField";
 import { dashboardPathForUserType } from "@/features/auth/authRouting";
+import { ReferralRegisterBanner } from "@/features/auth/ReferralRegisterBanner";
 import { useUnifiedRegister } from "@/features/auth/useUnifiedRegister";
 import { resendVerification } from "@/lib/auth-api";
 import { getApiErrorDetail } from "@/lib/api-errors";
@@ -31,6 +32,7 @@ export function UnifiedRegisterView() {
     userType,
     referralDisplayName,
     referralLocked,
+    referralSlug,
   } = useUnifiedRegister();
 
   const [resendBusy, setResendBusy] = useState(false);
@@ -59,9 +61,14 @@ export function UnifiedRegisterView() {
       <Card padding="lg" className="w-full max-w-md">
         {awaitingVerification ? (
           <>
-            <h1 className="font-heading text-2xl font-semibold text-neutral-900">
-              Check your email
-            </h1>
+            {referralLocked && referralSlug ? (
+              <ReferralRegisterBanner
+                displayName={referralDisplayName}
+                slug={referralSlug}
+                className="mb-5"
+              />
+            ) : null}
+            <h1 className="font-heading text-2xl font-semibold text-neutral-900">Check your email</h1>
             <p className="mt-3 text-sm text-neutral-600">
               Account created. Open the link we sent to{" "}
               <span className="font-medium text-neutral-800">{email}</span>, then sign in.
@@ -93,20 +100,17 @@ export function UnifiedRegisterView() {
         ) : (
           <>
             <h1 className="font-heading text-2xl font-semibold text-neutral-900">
-              Create your account
+              {referralLocked ? "Create your vendor account" : "Create your account"}
             </h1>
-            <p className="mt-1 text-sm text-neutral-500">
-              {referralLocked
-                ? "Create your vendor account to join Eventtz."
-                : "Choose an account type to get started."}
-            </p>
-            {referralDisplayName ? (
-              <p className="mt-3 rounded-xl bg-primary/5 px-3 py-2 text-sm text-neutral-700 ring-1 ring-primary/10">
-                You&apos;re joining via <span className="font-medium">{referralDisplayName}</span>
-              </p>
+            {!referralLocked ? (
+              <p className="mt-1 text-sm text-neutral-500">Choose an account type to get started.</p>
             ) : null}
 
             <form onSubmit={onSubmit} className="mt-6 space-y-4">
+              {referralLocked && referralSlug ? (
+                <ReferralRegisterBanner displayName={referralDisplayName} slug={referralSlug} />
+              ) : null}
+
               {referralLocked ? (
                 <input type="hidden" name="accountType" value="vendor" />
               ) : (
