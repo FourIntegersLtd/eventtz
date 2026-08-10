@@ -4,6 +4,7 @@ import Link from "next/link";
 import {
   BookOpen,
   LayoutDashboard,
+  Link2,
   LogOut,
   Mail,
   Menu,
@@ -45,6 +46,7 @@ const ADMIN_NAV: readonly AdminNavItem[] = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/commerce?tab=bookings", label: "Commerce", icon: Receipt },
   { href: "/admin/directory?tab=vendors", label: "Directory", icon: Users },
+  { href: "/admin/referrals", label: "Referrals", icon: Link2 },
   { href: "/admin/messages?tab=inbox", label: "Messages", icon: MessageSquare, id: "messages" },
   { href: "/admin/blog", label: "Blog", icon: BookOpen },
   { href: "/admin/trust?tab=disputes", label: "Trust & safety", icon: Shield },
@@ -68,6 +70,9 @@ function navItemActive(pathname: string, itemHref: string): boolean {
   }
   if (itemHref.startsWith("/admin/directory")) {
     return pathname === "/admin/directory" || pathname.startsWith("/admin/directory/");
+  }
+  if (itemHref.startsWith("/admin/referrals")) {
+    return pathname === "/admin/referrals" || pathname.startsWith("/admin/referrals/");
   }
   if (itemHref.startsWith("/admin/trust")) {
     return pathname === "/admin/trust" || pathname.startsWith("/admin/trust/");

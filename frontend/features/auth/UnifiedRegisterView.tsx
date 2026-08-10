@@ -29,6 +29,8 @@ export function UnifiedRegisterView() {
     postAuthQuery,
     isAuthenticated,
     userType,
+    referralDisplayName,
+    referralLocked,
   } = useUnifiedRegister();
 
   const [resendBusy, setResendBusy] = useState(false);
@@ -93,17 +95,30 @@ export function UnifiedRegisterView() {
             <h1 className="font-heading text-2xl font-semibold text-neutral-900">
               Create your account
             </h1>
-            <p className="mt-1 text-sm text-neutral-500">Choose an account type to get started.</p>
+            <p className="mt-1 text-sm text-neutral-500">
+              {referralLocked
+                ? "Create your vendor account to join Eventtz."
+                : "Choose an account type to get started."}
+            </p>
+            {referralDisplayName ? (
+              <p className="mt-3 rounded-xl bg-primary/5 px-3 py-2 text-sm text-neutral-700 ring-1 ring-primary/10">
+                You&apos;re joining via <span className="font-medium">{referralDisplayName}</span>
+              </p>
+            ) : null}
 
             <form onSubmit={onSubmit} className="mt-6 space-y-4">
-              <Select
-                label="I am a…"
-                value={accountType}
-                onChange={(e) => setAccountType(e.target.value === "vendor" ? "vendor" : "client")}
-              >
-                <option value="client">Client</option>
-                <option value="vendor">Vendor</option>
-              </Select>
+              {referralLocked ? (
+                <input type="hidden" name="accountType" value="vendor" />
+              ) : (
+                <Select
+                  label="I am a…"
+                  value={accountType}
+                  onChange={(e) => setAccountType(e.target.value === "vendor" ? "vendor" : "client")}
+                >
+                  <option value="client">Client</option>
+                  <option value="vendor">Vendor</option>
+                </Select>
+              )}
 
               <TextField
                 label="Email"

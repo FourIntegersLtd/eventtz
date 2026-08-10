@@ -7,6 +7,10 @@ import { SIGNUP_GENERIC_ERROR } from "@/lib/auth-messages";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { resolvePostAuthPath } from "@/features/auth/authRouting";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
+import {
+  captureReferralFromSearchParams,
+  fetchReferralPartnerDisplayName,
+} from "@/lib/referralAttribution";
 import { parseForm, registerSchema } from "@/lib/validation";
 
 export type RegisterAccountType = "client" | "vendor";
@@ -20,19 +24,39 @@ export function useUnifiedRegister() {
   const searchParams = useSearchParams();
   const { signUp, isAuthenticated, user } = useAuth();
   const typeParam = searchParams.get("type");
+  const [referralSlug, setReferralSlug] = useState<string | null>(null);
+  useEffect(() => {
+    setReferralSlug(captureReferralFromSearchParams(searchParams));
+  }, [searchParams]);
+  const referralLocked = Boolean(referralSlug);
   const postAuthQuery = useMemo(() => {
     const next = searchParams.get("next");
     return next ? `next=${encodeURIComponent(next)}` : "";
   }, [searchParams]);
   const [accountType, setAccountType] = useState<RegisterAccountType>(() =>
-    accountTypeFromQuery(typeParam),
+    referralSlug ? "vendor" : accountTypeFromQuery(typeParam),
   );
-  // `/register` and `/register?type=vendor` are the same route segment, so nav
-  // links between them (e.g. "Become a vendor" <-> "Create account") don't
-  // remount this hook - re-sync the dropdown whenever the `type` param itself changes.
+  const [referralDisplayName, setReferralDisplayName] = useState<string | null>(null);
   useEffect(() => {
+    if (referralSlug) {
+      setAccountType("vendor");
+      return;
+    }
     setAccountType(accountTypeFromQuery(typeParam));
-  }, [typeParam]);
+  }, [typeParam, referralSlug]);
+  useEffect(() => {
+    if (!referralSlug) {
+      setReferralDisplayName(null);
+      return;
+    }
+    let cancelled = false;
+    void fetchReferralPartnerDisplayName(referralSlug).then((name) => {
+      if (!cancelled) setReferralDisplayName(name);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [referralSlug]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -59,6 +83,7 @@ export function useUnifiedRegister() {
     try {
       const result = await signUp(parsed.data.email, parsed.data.password, {
         userType: parsed.data.accountType,
+        referralCode: parsed.data.accountType === "vendor" ? referralSlug ?? undefined : undefined,
       });
       if (result.message) {
         setMessage(result.message);
@@ -85,6 +110,7 @@ export function useUnifiedRegister() {
   return {
     accountType,
     setAccountType: (value: RegisterAccountType) => {
+      if (referralLocked) return;
       setAccountType(value);
       clearFieldError("accountType");
     },
@@ -106,5 +132,8 @@ export function useUnifiedRegister() {
     postAuthQuery,
     isAuthenticated,
     userType: user?.user_type,
+    referralSlug,
+    referralDisplayName,
+    referralLocked,
   };
 }

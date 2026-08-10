@@ -27,7 +27,7 @@ type AuthContextValue = {
   signUp: (
     email: string,
     password: string,
-    opts?: { userType?: Extract<UserType, "client" | "vendor"> },
+    opts?: { userType?: Extract<UserType, "client" | "vendor">; referralCode?: string },
   ) => Promise<{ message?: string | null }>;
   signOut: () => Promise<void>;
   refreshUser: () => Promise<void>;
