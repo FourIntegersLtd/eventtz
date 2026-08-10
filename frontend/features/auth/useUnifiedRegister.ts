@@ -133,7 +133,6 @@ export function useUnifiedRegister() {
     isAuthenticated,
     userType: user?.user_type,
     referralSlug,
-    referralSlug,
     referralDisplayName,
     referralLocked,
   };
