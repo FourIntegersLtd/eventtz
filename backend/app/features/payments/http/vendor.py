@@ -12,7 +12,10 @@ from app.contracts.payments import (
     VendorPayoutHistoryResponse,
 )
 from app.features.bookings.payout_history import list_vendor_payouts
-from app.features.payments.stripe import create_connect_onboarding_link, sync_connect_account_status
+from app.features.payments.stripe import (
+    create_connect_onboarding_link,
+    get_vendor_connect_status_response,
+)
 
 router = APIRouter(prefix="/vendor/payments", tags=["vendor-payments"])
 logger = get_logger(__name__)
@@ -34,7 +37,7 @@ def post_connect_account(
 def get_status(request: Request, response: Response) -> VendorPaymentsStatusResponse:
     user = require_vendor(request, response)
     uid = str(user.get("id") or "")
-    data = sync_connect_account_status(uid)
+    data = get_vendor_connect_status_response(uid)
     return VendorPaymentsStatusResponse(**data)
 
 

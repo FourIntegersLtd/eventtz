@@ -68,18 +68,78 @@ def _get_user_email(user_id: str) -> str | None:
     return None
 
 
-def get_connect_status(vendor_user_id: str) -> dict[str, Any]:
-    """Read the vendor's Connect state from the database (no Stripe API call)."""
-    row = _get_vendor_row(vendor_user_id) or {}
+def _connect_status_from_row(row: dict[str, Any] | None) -> dict[str, Any]:
+    data = row or {}
     return {
-        "stripe_account_id": row.get("stripe_account_id"),
-        "charges_enabled": bool(row.get("stripe_charges_enabled")),
-        "payouts_enabled": bool(row.get("stripe_payouts_enabled")),
+        "stripe_account_id": data.get("stripe_account_id"),
+        "charges_enabled": bool(data.get("stripe_charges_enabled")),
+        "payouts_enabled": bool(data.get("stripe_payouts_enabled")),
     }
 
 
-def _clear_vendor_stripe_connect(vendor_user_id: str) -> None:
-    """Remove a Connect account id that no longer exists on the current Stripe account or key."""
+def get_connect_status(vendor_user_id: str) -> dict[str, Any]:
+    """Read the vendor's Connect state from the database (no Stripe API call)."""
+    return _connect_status_from_row(_get_vendor_row(vendor_user_id))
+
+
+def vendor_has_payout_history(vendor_user_id: str) -> bool:
+    """True when this vendor has at least one booking with a released Stripe Transfer."""
+    try:
+        res = (
+            get_client()
+            .table("booking_requests")
+            .select("id")
+            .eq("vendor_user_id", vendor_user_id)
+            .not_.is_("stripe_transfer_id", "null")
+            .limit(1)
+            .execute()
+        )
+    except Exception:
+        logger.warning(
+            "vendor_has_payout_history lookup failed vendor=%s",
+            vendor_user_id,
+            exc_info=True,
+        )
+        return False
+    rows = getattr(res, "data", None) or []
+    return bool(rows)
+
+
+def _clear_vendor_stripe_connect(
+    vendor_user_id: str,
+    *,
+    trigger: str,
+    stripe_error: str | None = None,
+    admin_user_id: str | None = None,
+) -> bool:
+    """Remove a Connect account id that no longer exists on the current Stripe platform.
+
+    Returns True when cleared, False when blocked (e.g. vendor has payout history).
+    """
+    row = _get_vendor_row(vendor_user_id) or {}
+    previous_account_id = row.get("stripe_account_id")
+
+    if vendor_has_payout_history(vendor_user_id):
+        logger.error(
+            "Refused to clear Stripe Connect vendor=%s account=%s trigger=%s "
+            "reason=payout_history_exists error=%s",
+            vendor_user_id,
+            previous_account_id,
+            trigger,
+            stripe_error,
+        )
+        return False
+
+    if not previous_account_id:
+        return False
+
+    logger.warning(
+        "Clearing Stripe Connect vendor=%s account=%s trigger=%s error=%s",
+        vendor_user_id,
+        previous_account_id,
+        trigger,
+        stripe_error,
+    )
     get_client().table("vendors").update(
         {
             "stripe_account_id": None,
@@ -88,11 +148,28 @@ def _clear_vendor_stripe_connect(vendor_user_id: str) -> None:
         },
     ).eq("user_id", vendor_user_id).execute()
 
+    from app.features.admin.audit import insert_admin_audit_log
+
+    insert_admin_audit_log(
+        admin_user_id=admin_user_id or "",
+        action="vendor.stripe_connect_cleared",
+        entity_type="vendor",
+        entity_id=vendor_user_id,
+        payload={
+            "trigger": trigger,
+            "previous_stripe_account_id": previous_account_id,
+            "stripe_error": (stripe_error or "")[:500] or None,
+        },
+    )
+    return True
+
 
 def _is_orphan_connect_account_error(exc: BaseException) -> bool:
-    """True when the stored acct_... belongs to another Stripe account or was deleted."""
-    if isinstance(exc, stripe.PermissionError):
-        return True
+    """True only when Stripe explicitly says the stored acct_... is gone or not on this platform.
+
+    PermissionError alone is NOT treated as orphan — that often means test/live key mismatch
+    and must not wipe a vendor who already received payouts.
+    """
     if isinstance(exc, stripe.InvalidRequestError):
         msg = str(getattr(exc, "user_message", None) or exc).lower()
         return (
@@ -276,13 +353,41 @@ def create_connect_onboarding_link(vendor_user_id: str, return_path: str = "/ven
             _stripe().Account.retrieve(account_id)
         except Exception as e:
             if _is_orphan_connect_account_error(e):
+                if vendor_has_payout_history(vendor_user_id):
+                    logger.error(
+                        "Connect onboarding blocked: orphan account but payout history "
+                        "vendor=%s account=%s",
+                        vendor_user_id,
+                        account_id,
+                    )
+                    raise ServiceUnavailableError(
+                        "Your payout account needs a manual review before reconnecting. "
+                        "Please contact Eventtz support.",
+                        code="stripe_connect_restore_required",
+                    ) from e
                 logger.warning(
                     "Stale Stripe Connect account vendor=%s account=%s - recreating",
                     vendor_user_id,
                     account_id,
                 )
-                _clear_vendor_stripe_connect(vendor_user_id)
-                account_id = None
+                if _clear_vendor_stripe_connect(
+                    vendor_user_id,
+                    trigger="connect_onboarding.retrieve",
+                    stripe_error=str(e),
+                ):
+                    account_id = None
+            elif isinstance(e, stripe.PermissionError):
+                logger.error(
+                    "Stripe PermissionError retrieving Connect account vendor=%s account=%s: %s",
+                    vendor_user_id,
+                    account_id,
+                    e,
+                )
+                raise ServiceUnavailableError(
+                    "We could not reach Stripe to verify your payout account. "
+                    "Please try again shortly or contact support if this continues.",
+                    code="stripe_connect_sync_failed",
+                ) from e
             else:
                 raise
 
@@ -294,14 +399,36 @@ def create_connect_onboarding_link(vendor_user_id: str, return_path: str = "/ven
         return _create_account_link_url(account_id, safe_path)
     except Exception as e:
         if not _is_orphan_connect_account_error(e):
+            if isinstance(e, stripe.PermissionError):
+                logger.error(
+                    "Stripe PermissionError creating account link vendor=%s account=%s: %s",
+                    vendor_user_id,
+                    account_id,
+                    e,
+                )
+                raise ServiceUnavailableError(
+                    "We could not reach Stripe to continue payout setup. "
+                    "Please try again shortly or contact support if this continues.",
+                    code="stripe_connect_sync_failed",
+                ) from e
             raise
+        if vendor_has_payout_history(vendor_user_id):
+            raise ServiceUnavailableError(
+                "Your payout account needs a manual review before reconnecting. "
+                "Please contact Eventtz support.",
+                code="stripe_connect_restore_required",
+            ) from e
         logger.warning(
             "Stripe rejected account link vendor=%s account=%s - recreating",
             vendor_user_id,
             account_id,
         )
-        _clear_vendor_stripe_connect(vendor_user_id)
-        account_id = _create_connect_express_account(vendor_user_id, row)
+        if _clear_vendor_stripe_connect(
+            vendor_user_id,
+            trigger="connect_onboarding.account_link",
+            stripe_error=str(e),
+        ):
+            account_id = _create_connect_express_account(vendor_user_id, row)
         return _create_account_link_url(account_id, safe_path)
 
 
@@ -323,21 +450,35 @@ def _create_account_link_url(account_id: str, safe_path: str) -> str:
 def sync_connect_account_status(vendor_user_id: str) -> dict[str, Any]:
     """Fetch charges_enabled and payouts_enabled from Stripe and save them on the vendor row."""
     row = _get_vendor_row(vendor_user_id)
-    account_id = row.get("stripe_account_id") if row else None
-    if not account_id:
-        return {"stripe_account_id": None, "charges_enabled": False, "payouts_enabled": False}
+    if not row or not row.get("stripe_account_id"):
+        return _connect_status_from_row(row)
+
+    account_id = str(row.get("stripe_account_id") or "")
 
     try:
         account = stripe_object_to_dict(_stripe().Account.retrieve(account_id))
     except Exception as e:
         if _is_orphan_connect_account_error(e):
             logger.warning(
-                "Stale Stripe Connect account vendor=%s account=%s - clearing",
+                "Stale Stripe Connect account vendor=%s account=%s - attempting clear",
                 vendor_user_id,
                 account_id,
             )
-            _clear_vendor_stripe_connect(vendor_user_id)
-            return {"stripe_account_id": None, "charges_enabled": False, "payouts_enabled": False}
+            if _clear_vendor_stripe_connect(
+                vendor_user_id,
+                trigger="sync_connect_account_status",
+                stripe_error=str(e),
+            ):
+                return _connect_status_from_row(None)
+            return _connect_status_from_row(row)
+        if isinstance(e, stripe.PermissionError):
+            logger.error(
+                "Stripe PermissionError syncing Connect vendor=%s account=%s: %s",
+                vendor_user_id,
+                account_id,
+                e,
+            )
+            return _connect_status_from_row(row)
         raise
 
     charges_enabled = bool(account.get("charges_enabled"))
@@ -352,6 +493,71 @@ def sync_connect_account_status(vendor_user_id: str) -> dict[str, Any]:
         "stripe_account_id": account_id,
         "charges_enabled": charges_enabled,
         "payouts_enabled": payouts_enabled,
+    }
+
+
+def get_vendor_connect_status_response(vendor_user_id: str) -> dict[str, Any]:
+    """Vendor-facing Connect status: read DB first; sync from Stripe only while onboarding."""
+    row = _get_vendor_row(vendor_user_id)
+    if not row or not row.get("stripe_account_id"):
+        return _connect_status_from_row(row)
+    if row.get("stripe_charges_enabled") and row.get("stripe_payouts_enabled"):
+        return _connect_status_from_row(row)
+    settings = get_settings()
+    if settings.local_auth_mode or not settings.stripe_secret_key.strip():
+        return _connect_status_from_row(row)
+    return sync_connect_account_status(vendor_user_id)
+
+
+def restore_vendor_connect_from_payout_history(vendor_user_id: str) -> dict[str, Any]:
+    """Recover stripe_account_id from the vendor's latest Stripe Transfer destination."""
+    settings = get_settings()
+    if settings.local_auth_mode or not settings.stripe_secret_key.strip():
+        raise ValueError("Stripe is not configured.")
+
+    res = (
+        get_client()
+        .table("booking_requests")
+        .select("stripe_transfer_id")
+        .eq("vendor_user_id", vendor_user_id)
+        .not_.is_("stripe_transfer_id", "null")
+        .order("paid_at", desc=True)
+        .limit(1)
+        .execute()
+    )
+    rows = getattr(res, "data", None) or []
+    if not rows or not isinstance(rows[0], dict):
+        raise ValueError("No payout transfer found for this vendor.")
+    transfer_id = str(rows[0].get("stripe_transfer_id") or "").strip()
+    if not transfer_id:
+        raise ValueError("No payout transfer found for this vendor.")
+
+    transfer = stripe_object_to_dict(_stripe().Transfer.retrieve(transfer_id))
+    destination = str(transfer.get("destination") or "").strip()
+    if not destination.startswith("acct_"):
+        raise ValueError("Could not resolve Connect account from the payout transfer.")
+
+    account = stripe_object_to_dict(_stripe().Account.retrieve(destination))
+    charges_enabled = bool(account.get("charges_enabled"))
+    payouts_enabled = bool(account.get("payouts_enabled"))
+    get_client().table("vendors").update(
+        {
+            "stripe_account_id": destination,
+            "stripe_charges_enabled": charges_enabled,
+            "stripe_payouts_enabled": payouts_enabled,
+        },
+    ).eq("user_id", vendor_user_id).execute()
+    logger.info(
+        "Restored Stripe Connect vendor=%s account=%s from transfer=%s",
+        vendor_user_id,
+        destination,
+        transfer_id,
+    )
+    return {
+        "stripe_account_id": destination,
+        "charges_enabled": charges_enabled,
+        "payouts_enabled": payouts_enabled,
+        "restored_from_transfer_id": transfer_id,
     }
 
 

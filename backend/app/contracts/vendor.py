@@ -150,6 +150,15 @@ class AdminVendorListingOverrideResponse(BaseModel):
     listing_visible: bool = False
 
 
+class AdminVendorRestoreStripeConnectResponse(BaseModel):
+    success: bool = True
+    user_id: str
+    stripe_account_id: str | None = None
+    stripe_charges_enabled: bool = False
+    stripe_payouts_enabled: bool = False
+    restored_from_transfer_id: str | None = None
+
+
 class ExploreVendorRow(BaseModel):
     user_id: str
     email: str | None = None

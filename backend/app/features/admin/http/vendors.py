@@ -3,7 +3,7 @@
 from fastapi import APIRouter, HTTPException, Query, Request, Response
 
 from app.features.admin.permissions import validate_listing_override_permissions
-from app.features.auth.http.guards import require_admin
+from app.features.auth.http.guards import require_admin, require_super_admin
 from app.core.logging import get_logger
 from app.contracts.disputes import AdminVendorInsightsResponse
 from app.contracts.vendor import (
@@ -11,11 +11,13 @@ from app.contracts.vendor import (
     AdminVendorApprovalResponse,
     AdminVendorListingOverrideBody,
     AdminVendorListingOverrideResponse,
+    AdminVendorRestoreStripeConnectResponse,
     AdminVendorUnsubmitBody,
     AdminVendorUnsubmitResponse,
     AdminVendorsListResponse,
 )
 from app.features.admin.audit import insert_admin_audit_log
+from app.features.payments.stripe import restore_vendor_connect_from_payout_history
 from app.features.vendors.moderation import (
     get_vendor_admin_insights,
     list_vendors_for_admin,
@@ -210,4 +212,43 @@ def admin_set_vendor_listing_override(
         user_id=user_id,
         listing_override=row.get("listing_override", body.listing_override),
         listing_visible=bool(row.get("listing_visible")),
+    )
+
+
+@router.post(
+    "/vendors/{user_id}/restore-stripe-connect",
+    response_model=AdminVendorRestoreStripeConnectResponse,
+)
+def admin_restore_vendor_stripe_connect(
+    user_id: str,
+    request: Request,
+    response: Response,
+) -> AdminVendorRestoreStripeConnectResponse:
+    """Super admin: restore Connect account id from the vendor's latest payout transfer."""
+    admin = require_super_admin(request, response)
+    admin_id = str(admin.get("id") or "")
+    try:
+        result = restore_vendor_connect_from_payout_history(user_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception as e:
+        logger.warning("restore-stripe-connect failed vendor=%s: %s", user_id, e, exc_info=True)
+        raise HTTPException(status_code=502, detail="Could not restore Stripe Connect.") from e
+    insert_admin_audit_log(
+        admin_user_id=admin_id,
+        action="vendor.stripe_connect_restored",
+        entity_type="vendor",
+        entity_id=user_id,
+        payload={
+            "stripe_account_id": result.get("stripe_account_id"),
+            "restored_from_transfer_id": result.get("restored_from_transfer_id"),
+        },
+    )
+    return AdminVendorRestoreStripeConnectResponse(
+        success=True,
+        user_id=user_id,
+        stripe_account_id=result.get("stripe_account_id"),
+        stripe_charges_enabled=bool(result.get("charges_enabled")),
+        stripe_payouts_enabled=bool(result.get("payouts_enabled")),
+        restored_from_transfer_id=result.get("restored_from_transfer_id"),
     )
