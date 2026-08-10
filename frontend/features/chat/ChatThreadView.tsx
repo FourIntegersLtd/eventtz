@@ -13,6 +13,7 @@ import { LottieFailurePanel } from "@/components/ui/LottieFailurePanel";
 import { MotionStaggerItem } from "@/components/ui/MotionStaggerItem";
 import { EMPTY_STATE_ICON_CLASS } from "@/lib/emptyStateVariants";
 import { MessageComposer } from "@/features/chat/MessageComposer";
+import { LinkifyMessageBody } from "@/lib/linkifyMessageBody";
 import { VendorQuoteFormModal } from "@/features/vendor/quotes/VendorQuoteFormModal";
 import { formatDateTime } from "@/lib/dateFormat";
 import { getApiErrorDetail } from "@/lib/api-errors";
@@ -352,7 +353,12 @@ export function ChatThreadView({
                         : "rounded-bl-md bg-white text-neutral-900 ring-1 ring-neutral-200/70"
                     }`}
                   >
-                    <p className="whitespace-pre-wrap break-words">{m.body}</p>
+                    {!mine && m.sender_display_name ? (
+                      <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
+                        {m.sender_display_name}
+                      </p>
+                    ) : null}
+                    <LinkifyMessageBody body={m.body} className="whitespace-pre-wrap break-words" />
                     <p
                       className={`mt-1.5 text-[11px] tabular-nums ${
                         mine ? "text-primary/55" : "text-neutral-400"

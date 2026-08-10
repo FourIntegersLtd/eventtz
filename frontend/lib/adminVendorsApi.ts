@@ -77,6 +77,30 @@ export async function patchVendorApproval(
   });
 }
 
+export type AdminVendorUnsubmitResult = {
+  status: string;
+  email_sent: boolean;
+};
+
+export async function patchVendorUnsubmit(
+  userId: string,
+  options: { message?: string; sendEmail?: boolean } = {},
+): Promise<AdminVendorUnsubmitResult> {
+  const { data } = await api.patch<{
+    success: boolean;
+    user_id: string;
+    status: string;
+    email_sent: boolean;
+  }>(`/api/v1/admin/vendors/${userId}/unsubmit`, {
+    message: options.message?.trim() || undefined,
+    send_email: options.sendEmail ?? true,
+  });
+  return {
+    status: data.status ?? "draft",
+    email_sent: Boolean(data.email_sent),
+  };
+}
+
 export async function patchVendorListingOverride(
   userId: string,
   listing_override: VendorListingOverride,

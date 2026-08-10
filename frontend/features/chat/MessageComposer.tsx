@@ -20,6 +20,8 @@ type MessageComposerProps = {
   sendLabel?: string;
   /** When false, Enter does not send (Shift+Enter still newline). Default true for thread. */
   enterToSend?: boolean;
+  /** When false, hide the inline send button (parent supplies its own). Default true. */
+  showSendButton?: boolean;
   className?: string;
   textareaClassName?: string;
 };
@@ -38,6 +40,7 @@ export function MessageComposer({
   variant = "thread",
   sendLabel = "Send",
   enterToSend = variant === "thread",
+  showSendButton = true,
   className = "",
   textareaClassName = "",
 }: MessageComposerProps) {
@@ -89,31 +92,31 @@ export function MessageComposer({
             <span className="text-xs text-neutral-400">
               {value.length}/{MESSAGE_MAX_LEN}
             </span>
-            <Button
-              variant="primary"
-              icon={<Send className="h-4 w-4" aria-hidden />}
-              disabled={!canSend}
-              loading={loading}
-              onClick={onSend}
-            >
-              {sendLabel}
-            </Button>
+            {showSendButton ? (
+              <Button
+                variant="primary"
+                icon={<Send className="h-4 w-4" aria-hidden />}
+                disabled={!canSend}
+                loading={loading}
+                onClick={onSend}
+              >
+                {sendLabel}
+              </Button>
+            ) : null}
           </div>
-        ) : (
-          <>
-            <Button
-              variant="primary"
-              size="md"
-              loading={loading}
-              disabled={!canSend}
-              icon={<Send className="h-4 w-4" aria-hidden />}
-              onClick={onSend}
-              className="shrink-0"
-            >
-              {sendLabel}
-            </Button>
-          </>
-        )}
+        ) : showSendButton ? (
+          <Button
+            variant="primary"
+            size="md"
+            loading={loading}
+            disabled={!canSend}
+            icon={<Send className="h-4 w-4" aria-hidden />}
+            onClick={onSend}
+            className="shrink-0"
+          >
+            {sendLabel}
+          </Button>
+        ) : null}
       </div>
       {variant === "thread" ? (
         <p className="mt-1.5 text-right text-[11px] tabular-nums text-neutral-400">

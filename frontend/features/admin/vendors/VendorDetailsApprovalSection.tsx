@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ContentCard } from "@/components/ui/SectionBlock";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { useAdminPermissions } from "@/features/admin/useAdminPermissions";
 import type { AdminVendorRow } from "@/lib/adminVendorsApi";
 import type { VendorApprovalStatus, VendorListingOverride } from "@/lib/domain-types";
 import {
@@ -39,6 +40,12 @@ export function VendorDetailsApprovalSection({
   onSetApproval,
   onSetListingOverride,
 }: Props) {
+  const {
+    canApproveVendors,
+    canBanVendors,
+    canOverrideVendorListing,
+    canResetVendorListingOverride,
+  } = useAdminPermissions();
   const approved = vendor.approval_status === "approved";
   const payoutsVerified = Boolean(vendor.payouts_verified);
   const currentOverride = getVendorListingOverride(vendor.listing_override);
@@ -92,11 +99,13 @@ export function VendorDetailsApprovalSection({
       return;
     }
     if (override === "auto") {
+      if (!canResetVendorListingOverride) return;
       setPendingOverride(null);
       setReason("");
       void onSetListingOverride(vendor.user_id, "auto");
       return;
     }
+    if (!canOverrideVendorListing) return;
     setPendingOverride(override);
   };
 
@@ -142,7 +151,7 @@ export function VendorDetailsApprovalSection({
               icon={Clock}
               variant="secondary"
               isCurrent={currentApproval === "pending"}
-              disabled={busy}
+              disabled={busy || !canApproveVendors}
               loading={busy}
               onClick={() => selectApproval("pending")}
             />
@@ -153,7 +162,7 @@ export function VendorDetailsApprovalSection({
               icon={CheckCircle2}
               variant="primary"
               isCurrent={currentApproval === "approved"}
-              disabled={busy}
+              disabled={busy || !canApproveVendors}
               loading={busy}
               onClick={() => selectApproval("approved")}
             />
@@ -164,7 +173,7 @@ export function VendorDetailsApprovalSection({
               icon={Ban}
               variant="destructive"
               isCurrent={currentApproval === "banned"}
-              disabled={busy}
+              disabled={busy || !canBanVendors}
               loading={busy}
               onClick={() => selectApproval("banned")}
             />
@@ -189,25 +198,35 @@ export function VendorDetailsApprovalSection({
             title={VENDOR_LISTING_OVERRIDE_META.auto.label}
             description={VENDOR_LISTING_OVERRIDE_META.auto.description}
             selected={draftOverride === "auto"}
+            disabled={!canResetVendorListingOverride}
             onSelect={() => selectListing("auto")}
           />
-          <VendorActionOptionRow
-            icon={Eye}
-            title={VENDOR_LISTING_OVERRIDE_META.visible.label}
-            description={VENDOR_LISTING_OVERRIDE_META.visible.description}
-            tone="success"
-            selected={draftOverride === "visible"}
-            disabled={!approved}
-            onSelect={() => selectListing("visible")}
-          />
-          <VendorActionOptionRow
-            icon={EyeOff}
-            title={VENDOR_LISTING_OVERRIDE_META.hidden.label}
-            description={VENDOR_LISTING_OVERRIDE_META.hidden.description}
-            tone="warning"
-            selected={draftOverride === "hidden"}
-            onSelect={() => selectListing("hidden")}
-          />
+          {canOverrideVendorListing ? (
+            <>
+              <VendorActionOptionRow
+                icon={Eye}
+                title={VENDOR_LISTING_OVERRIDE_META.visible.label}
+                description={VENDOR_LISTING_OVERRIDE_META.visible.description}
+                tone="success"
+                selected={draftOverride === "visible"}
+                disabled={!approved}
+                onSelect={() => selectListing("visible")}
+              />
+              <VendorActionOptionRow
+                icon={EyeOff}
+                title={VENDOR_LISTING_OVERRIDE_META.hidden.label}
+                description={VENDOR_LISTING_OVERRIDE_META.hidden.description}
+                tone="warning"
+                selected={draftOverride === "hidden"}
+                onSelect={() => selectListing("hidden")}
+              />
+            </>
+          ) : (
+            <p className="px-3 py-2 text-xs leading-relaxed text-neutral-500">
+              Publish anyway and Hide listing require a super admin. You can still revert to{" "}
+              <strong>Automatic</strong> when a listing override is active.
+            </p>
+          )}
         </div>
 
         {listingDirty ? (

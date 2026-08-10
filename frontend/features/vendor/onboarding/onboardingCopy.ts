@@ -30,6 +30,8 @@ export const STEP_COPY = {
     subtext: "Add packages so clients can compare.",
     fixedRatesHeadline: "Hourly or daily rates?",
     packagesHeadline: "What packages do you offer?",
+    packagesHint:
+      "Add as many packages as you offer — most vendors list 2–4. Name and price required per package.",
     bookingHeadline: "Any discounts?",
   },
   5: {

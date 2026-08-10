@@ -26,6 +26,8 @@ export function AdminVendorsView() {
     setSelectedUserId,
     setApproval,
     setListingOverride,
+    unsubmitVendor,
+    reportError,
     search,
     setSearch,
     approvalStatus,
@@ -130,6 +132,8 @@ export function AdminVendorsView() {
         onClose={() => setSelectedUserId(null)}
         onSetApproval={setApproval}
         onSetListingOverride={setListingOverride}
+        onUnsubmit={unsubmitVendor}
+        onReportError={reportError}
       />
     </div>
   );

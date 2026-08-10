@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { ChevronDown, Plus, Trash2 } from "lucide-react";
 import { STEP_COPY } from "../onboardingCopy";
 import {
@@ -25,12 +26,40 @@ function updatePackage(
   return packages.map((p) => (p.id === id ? { ...p, ...patch } : p));
 }
 
+function AddPackageButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-primary/30 bg-primary/5 px-4 py-3 text-sm font-semibold text-primary transition hover:bg-primary/10"
+    >
+      <Plus className="h-4 w-4" strokeWidth={2.5} aria-hidden />
+      Add another package
+    </button>
+  );
+}
+
 export function StepPricing({ data, update }: StepPricingProps) {
   const copy = STEP_COPY[4];
   const { packages } = data;
+  const scrollToPackageId = useRef<string | null>(null);
+
+  useEffect(() => {
+    const id = scrollToPackageId.current;
+    if (!id) return;
+    scrollToPackageId.current = null;
+    requestAnimationFrame(() => {
+      document.getElementById(`package-${id}`)?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    });
+  }, [packages.length]);
 
   const addPackage = () => {
-    update({ packages: [...packages, createVendorPackage()] });
+    const newPkg = createVendorPackage();
+    scrollToPackageId.current = newPkg.id;
+    update({ packages: [...packages, newPkg] });
   };
 
   const removePackage = (id: string) => {
@@ -85,17 +114,7 @@ export function StepPricing({ data, update }: StepPricingProps) {
         </div>
       </OnboardingSubQuestion>
       <OnboardingSubQuestion headline={copy.packagesHeadline} indexOffset={6}>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-xs text-neutral-500">Name and price required per package.</p>
-          <button
-            type="button"
-            onClick={addPackage}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-primary bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10"
-          >
-            <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
-            Add package
-          </button>
-        </div>
+        <p className="text-xs text-neutral-500">{copy.packagesHint}</p>
         <div className="mt-4 space-y-3">
           {packages.map((pkg, index) => {
             const hasPartial =
@@ -116,8 +135,9 @@ export function StepPricing({ data, update }: StepPricingProps) {
             return (
               <details
                 key={pkg.id}
+                id={`package-${pkg.id}`}
                 open
-                className="group rounded-lg border border-neutral-100 bg-neutral-50/80"
+                className="group scroll-mt-4 rounded-lg border border-neutral-100 bg-neutral-50/80"
               >
                 <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
                   <div className="min-w-0 flex-1">
@@ -238,6 +258,7 @@ export function StepPricing({ data, update }: StepPricingProps) {
               </details>
             );
           })}
+          <AddPackageButton onClick={addPackage} />
         </div>
       </OnboardingSubQuestion>
       <AnimatedStepItem index={9}>

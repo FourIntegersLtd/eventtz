@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
+import { useAdminPermissions } from "@/features/admin/useAdminPermissions";
 import { patchAdminDispute, type AdminDisputeCase } from "@/lib/adminPlatformApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { adminPartialRefundSchema, parseForm } from "@/lib/validation";
@@ -22,6 +23,7 @@ type DisputeResolveModalProps = {
 };
 
 export function DisputeResolveModal({ dispute, onClose, onResolved }: DisputeResolveModalProps) {
+  const { canResolveDisputesFinancially } = useAdminPermissions();
   const [action, setAction] = useState<NonNullable<AdminDisputeCase["resolution_action"]>>(
     "release_to_vendor",
   );
@@ -31,6 +33,10 @@ export function DisputeResolveModal({ dispute, onClose, onResolved }: DisputeRes
   const [error, setError] = useState<string | null>(null);
 
   const submit = async () => {
+    if (!canResolveDisputesFinancially) {
+      setError("Only super admins can resolve disputes with a financial outcome.");
+      return;
+    }
     setError(null);
     let refundAmountGbp: number | null = null;
     if (action === "partial_refund") {
@@ -72,6 +78,10 @@ export function DisputeResolveModal({ dispute, onClose, onResolved }: DisputeRes
       setBusy(false);
     }
   };
+
+  if (!canResolveDisputesFinancially) {
+    return null;
+  }
 
   return (
     <Modal

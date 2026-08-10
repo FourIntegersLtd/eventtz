@@ -1,17 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Pencil, X } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import { adminCard } from "@/features/admin/adminTheme";
-import { MessageComposer } from "@/features/chat/MessageComposer";
+import { MessageComposer, MESSAGE_MAX_LEN } from "@/features/chat/MessageComposer";
+import { LinkifyMessageBody } from "@/lib/linkifyMessageBody";
 import { formatDateTime } from "@/lib/dateFormat";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import {
   fetchAdminSupportConversations,
   fetchAdminSupportMessages,
+  patchAdminSupportMessage,
   postAdminSupportConversationRead,
   postAdminSupportMessage,
   type AdminSupportConversation,
@@ -20,10 +24,22 @@ import {
 import { CHAT_UNREAD_CLEARED_EVENT } from "@/lib/chatApi";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 
+const STAFF_BUBBLE =
+  "rounded-2xl rounded-br-md bg-primary-muted text-neutral-900 ring-1 ring-primary/10";
+const STAFF_EDIT_PANEL =
+  "w-full rounded-2xl bg-primary-muted px-4 py-3 text-sm text-neutral-900 ring-1 ring-primary/15";
+
 type AdminMessagesInboxViewProps = {
   /** Fired when conversation list unread totals change (for tab badge). */
   onUnreadTotalChange?: (total: number) => void;
 };
+
+function messageEditedAt(m: AdminSupportMessage): string | null {
+  const meta = m.metadata;
+  if (!meta || typeof meta !== "object") return null;
+  const edited = (meta as { edited_at?: unknown }).edited_at;
+  return typeof edited === "string" && edited.trim() ? edited : null;
+}
 
 export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInboxViewProps) {
   const { user } = useAuth();
@@ -36,6 +52,18 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
   const [messages, setMessages] = useState<AdminSupportMessage[]>([]);
   const [threadDraft, setThreadDraft] = useState("");
   const [threadSending, setThreadSending] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
+  const editTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (!editingId) return;
+    const el = editTextareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.max(el.scrollHeight, 200)}px`;
+  }, [editDraft, editingId]);
 
   const unreadTotal = useMemo(
     () => conversations.reduce((sum, c) => sum + (c.unread_count || 0), 0),
@@ -91,9 +119,15 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
 
   useRealtimeRefresh("chat:data_refresh", refreshAll, [refreshAll]);
 
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditDraft("");
+  };
+
   const openThread = async (id: string) => {
     setActiveId(id);
     setThreadDraft("");
+    cancelEdit();
     try {
       const msgs = await fetchAdminSupportMessages(id);
       setMessages(msgs);
@@ -119,6 +153,21 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
       setError(getApiErrorDetail(e) ?? "Could not send reply.");
     } finally {
       setThreadSending(false);
+    }
+  };
+
+  const saveEdit = async () => {
+    if (!activeId || !editingId || !editDraft.trim() || editSaving) return;
+    setEditSaving(true);
+    setError(null);
+    try {
+      const updated = await patchAdminSupportMessage(activeId, editingId, editDraft.trim());
+      setMessages((prev) => prev.map((m) => (m.id === editingId ? updated : m)));
+      cancelEdit();
+    } catch (e: unknown) {
+      setError(getApiErrorDetail(e) ?? "Could not save edit.");
+    } finally {
+      setEditSaving(false);
     }
   };
 
@@ -192,34 +241,107 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
                 const staff =
                   m.sender_user_id === adminId ||
                   (m.metadata && (m.metadata as { kind?: string }).kind === "admin");
+                const ownMessage = m.sender_user_id === adminId;
+                const isEditing = editingId === m.id;
+                const editedAt = messageEditedAt(m);
+
                 return (
-                  <li key={m.id} className={`flex ${staff ? "justify-end" : "justify-start"}`}>
-                    <div
-                      className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
-                        staff ? "bg-primary text-white" : "bg-neutral-100 text-neutral-900"
-                      }`}
-                    >
-                      <p className="whitespace-pre-wrap break-words">{m.body}</p>
-                      <p
-                        className={`mt-1 text-[10px] tabular-nums ${
-                          staff ? "text-white/70" : "text-neutral-500"
+                  <li
+                    key={m.id}
+                    className={`flex w-full ${isEditing ? "" : staff ? "justify-end" : "justify-start"}`}
+                  >
+                    {isEditing ? (
+                      <div className={STAFF_EDIT_PANEL}>
+                        <textarea
+                          ref={editTextareaRef}
+                          value={editDraft}
+                          onChange={(e) =>
+                            setEditDraft(e.target.value.slice(0, MESSAGE_MAX_LEN))
+                          }
+                          rows={1}
+                          className="min-h-[12rem] w-full resize-y rounded-lg border border-primary/15 bg-white px-3 py-3 text-sm leading-relaxed text-neutral-900 placeholder:text-neutral-400 focus:border-primary/30 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          aria-label="Edit message"
+                        />
+                        <div className="mt-3 flex items-center justify-between gap-3">
+                          <span className="text-[11px] tabular-nums text-neutral-500">
+                            {editDraft.length}/{MESSAGE_MAX_LEN}
+                          </span>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={cancelEdit}
+                              disabled={editSaving}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              loading={editSaving}
+                              disabled={!editDraft.trim()}
+                              onClick={() => void saveEdit()}
+                            >
+                              Save changes
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        className={`group relative max-w-[85%] px-3 py-2 text-sm ${
+                          staff ? STAFF_BUBBLE : "rounded-2xl bg-neutral-100 text-neutral-900"
                         }`}
                       >
-                        {m.created_at ? formatDateTime(m.created_at) : ""}
-                      </p>
-                    </div>
+                        {ownMessage ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingId(m.id);
+                              setEditDraft(m.body);
+                            }}
+                            className="absolute right-2 top-2 rounded p-1 text-neutral-400 opacity-0 transition hover:bg-primary/10 hover:text-primary group-hover:opacity-100"
+                            aria-label="Edit message"
+                          >
+                            <Pencil className="h-3.5 w-3.5" aria-hidden />
+                          </button>
+                        ) : null}
+                        <LinkifyMessageBody
+                          body={m.body}
+                          className={`whitespace-pre-wrap break-words ${ownMessage ? "pr-6" : ""}`}
+                        />
+                        <p className="mt-1 text-[10px] tabular-nums text-neutral-500">
+                          {m.created_at ? formatDateTime(m.created_at) : ""}
+                          {editedAt ? " · Edited" : ""}
+                        </p>
+                      </div>
+                    )}
                   </li>
                 );
               })}
             </ul>
             <div className="border-t border-neutral-100 px-4 py-3">
-              <MessageComposer
-                value={threadDraft}
-                onChange={setThreadDraft}
-                onSend={() => void reply()}
-                loading={threadSending}
-                placeholder="Reply as Eventtz Support…"
-              />
+              {editingId ? (
+                <div className="flex items-center justify-between gap-2 rounded-lg bg-neutral-50 px-3 py-2 text-sm text-neutral-600">
+                  <span>Editing a message — save or cancel above.</span>
+                  <button
+                    type="button"
+                    onClick={cancelEdit}
+                    className="rounded p-1 text-neutral-500 hover:bg-neutral-200 hover:text-neutral-800"
+                    aria-label="Cancel edit"
+                  >
+                    <X className="h-4 w-4" aria-hidden />
+                  </button>
+                </div>
+              ) : (
+                <MessageComposer
+                  value={threadDraft}
+                  onChange={setThreadDraft}
+                  onSend={() => void reply()}
+                  loading={threadSending}
+                  placeholder="Reply as Eventtz Support…"
+                />
+              )}
             </div>
           </>
         )}

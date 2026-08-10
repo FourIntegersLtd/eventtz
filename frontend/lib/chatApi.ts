@@ -25,6 +25,8 @@ export type ChatMessage = {
   sender_user_id: string;
   body: string;
   created_at: string | null;
+  /** Staff label on support threads (e.g. Eventtz Admin) — never a personal email. */
+  sender_display_name?: string | null;
   /** Present for system cards (e.g. a sent quote) - render a rich card instead of plain text. */
   metadata: ChatQuoteMetadata | Record<string, unknown> | null;
 };

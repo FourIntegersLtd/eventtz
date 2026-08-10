@@ -5,12 +5,16 @@ import type { AdminVendorRow } from "@/lib/adminVendorsApi";
 import { AdminVendorSubmissionReview } from "./AdminVendorSubmissionReview";
 import { adminVendorToOnboardingData } from "./adminVendorOnboardingData";
 import { buildAdminVendorSubmissionReviewModel } from "./adminVendorSubmissionReviewModel";
+import type { AdminVendorUnsubmitHandler } from "./vendorUnsubmitTypes";
 
 type Props = {
   vendor: AdminVendorRow;
+  busyId?: string | null;
+  onUnsubmit?: AdminVendorUnsubmitHandler;
+  onReportError?: (message: string) => void;
 };
 
-export function VendorDetailsOverviewSection({ vendor }: Props) {
+export function VendorDetailsOverviewSection({ vendor, busyId, onUnsubmit, onReportError }: Props) {
   const model = useMemo(() => {
     try {
       const data = adminVendorToOnboardingData(vendor);
@@ -29,5 +33,13 @@ export function VendorDetailsOverviewSection({ vendor }: Props) {
     );
   }
 
-  return <AdminVendorSubmissionReview model={model} />;
+  return (
+    <AdminVendorSubmissionReview
+      model={model}
+      vendor={vendor}
+      busyId={busyId}
+      onUnsubmit={onUnsubmit}
+      onReportError={onReportError}
+    />
+  );
 }

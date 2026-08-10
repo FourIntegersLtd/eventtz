@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
+import { useAdminPermissions } from "@/features/admin/useAdminPermissions";
 import { MessageComposer } from "@/features/chat/MessageComposer";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import {
@@ -15,6 +16,7 @@ import { adminComposeMessageSchema, parseForm } from "@/lib/validation";
 type RecipientMode = "selected" | AdminMessageAudience;
 
 export function AdminMessagesComposeView() {
+  const { canBroadcastMessages } = useAdminPermissions();
   const [mode, setMode] = useState<RecipientMode>("selected");
   const [draft, setDraft] = useState("");
   const [query, setQuery] = useState("");
@@ -27,6 +29,12 @@ export function AdminMessagesComposeView() {
   const [resultsOpen, setResultsOpen] = useState(false);
   const searchWrapRef = useRef<HTMLDivElement>(null);
   const searchSeq = useRef(0);
+
+  useEffect(() => {
+    if (!canBroadcastMessages && mode !== "selected") {
+      setMode("selected");
+    }
+  }, [canBroadcastMessages, mode]);
 
   useEffect(() => {
     const onPointerDown = (e: MouseEvent) => {
@@ -119,6 +127,19 @@ export function AdminMessagesComposeView() {
     }
   };
 
+  const recipientModes = (
+    [
+      ["selected", "Selected users"],
+      ...(canBroadcastMessages
+        ? ([
+            ["clients", "All clients"],
+            ["vendors", "All vendors"],
+            ["users", "All users"],
+          ] as const)
+        : []),
+    ] as const
+  );
+
   return (
     <div className="space-y-6">
       {error ? <AdminErrorBanner message={error} /> : null}
@@ -130,7 +151,8 @@ export function AdminMessagesComposeView() {
         <div className="px-5 py-4 sm:px-6 sm:py-5">
           <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">Recipients</h2>
           <p className="mt-0.5 text-[13px] text-neutral-400">
-            Choose specific users or broadcast to a whole audience.
+            Choose specific users
+            {canBroadcastMessages ? " or broadcast to a whole audience" : ""}.
           </p>
         </div>
 
@@ -138,14 +160,7 @@ export function AdminMessagesComposeView() {
           <fieldset className="px-5 py-4 sm:px-6">
             <legend className="sr-only">Recipient mode</legend>
             <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
-              {(
-                [
-                  ["selected", "Selected users"],
-                  ["clients", "All clients"],
-                  ["vendors", "All vendors"],
-                  ["users", "All users"],
-                ] as const
-              ).map(([value, label]) => (
+              {recipientModes.map(([value, label]) => (
                 <label key={value} className="inline-flex items-center gap-2 text-neutral-700">
                   <input
                     type="radio"
@@ -157,6 +172,12 @@ export function AdminMessagesComposeView() {
                 </label>
               ))}
             </div>
+            {!canBroadcastMessages ? (
+              <p className="mt-3 text-xs leading-relaxed text-neutral-500">
+                Platform-wide broadcasts require a super admin. You can still message selected
+                users from directory search.
+              </p>
+            ) : null}
           </fieldset>
 
           {mode === "selected" ? (

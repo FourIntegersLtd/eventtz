@@ -7,6 +7,7 @@ import { fetchAdminChatMessages, type AdminChatMessageItem } from "@/lib/adminPl
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import { adminCard } from "@/features/admin/adminTheme";
+import { LinkifyMessageBody } from "@/lib/linkifyMessageBody";
 
 const VENDOR_BUBBLE = "border border-primary/35 bg-primary/[0.15] text-neutral-900";
 const CLIENT_BUBBLE = "border border-neutral-200 bg-white text-neutral-900";
@@ -161,7 +162,10 @@ export function AdminChatThread({ conversationId, className = "", compact = fals
             {messages.map((m) => (
               <li key={m.id} className={`${adminCard} px-3 py-2 text-sm`}>
                 <p className="font-mono text-[10px] text-neutral-500">{m.sender_user_id}</p>
-                <p className="mt-1 whitespace-pre-wrap break-words text-neutral-900">{m.body}</p>
+                <LinkifyMessageBody
+                  body={m.body}
+                  className="mt-1 whitespace-pre-wrap break-words text-neutral-900"
+                />
                 <p className="mt-1.5 text-[10px] text-neutral-400">{formatTime(m.created_at)}</p>
               </li>
             ))}
@@ -200,7 +204,10 @@ export function AdminChatThread({ conversationId, className = "", compact = fals
                       <p className={`text-[10px] font-semibold uppercase tracking-wide ${headerClass}`}>
                         {fromClient ? `${clientLabel} · Client` : `${vendorLabel} · Vendor`}
                       </p>
-                      <p className="mt-1 whitespace-pre-wrap break-words text-neutral-900">{m.body}</p>
+                      <LinkifyMessageBody
+                  body={m.body}
+                  className="mt-1 whitespace-pre-wrap break-words text-neutral-900"
+                />
                       <p className="mt-1.5 font-mono text-[10px] text-neutral-400">
                         {formatTime(m.created_at)}
                       </p>

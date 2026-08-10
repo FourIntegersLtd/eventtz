@@ -14,6 +14,7 @@ import {
   type AdminVendorRow,
 } from "@/lib/adminVendorsApi";
 import type { VendorApprovalStatus, VendorListingOverride } from "@/lib/domain-types";
+import type { AdminVendorUnsubmitHandler } from "./vendorUnsubmitTypes";
 import { VendorDetailsApprovalSection } from "./VendorDetailsApprovalSection";
 import { VendorDetailsInsightsSection } from "./VendorDetailsInsightsSection";
 import { VendorDetailsOverviewSection } from "./VendorDetailsOverviewSection";
@@ -34,6 +35,8 @@ type VendorDetailsModalProps = {
     override: VendorListingOverride,
     reason?: string,
   ) => Promise<boolean>;
+  onUnsubmit: AdminVendorUnsubmitHandler;
+  onReportError?: (message: string) => void;
 };
 
 export function VendorDetailsModal({
@@ -42,6 +45,8 @@ export function VendorDetailsModal({
   onClose,
   onSetApproval,
   onSetListingOverride,
+  onUnsubmit,
+  onReportError,
 }: VendorDetailsModalProps) {
   const [tab, setTab] = useState<VendorDetailsTabId>("profile");
   const [insights, setInsights] = useState<AdminVendorInsights | null>(null);
@@ -130,7 +135,12 @@ export function VendorDetailsModal({
           </div>
 
           {tab === "profile" ? (
-            <VendorDetailsOverviewSection vendor={vendor} />
+            <VendorDetailsOverviewSection
+              vendor={vendor}
+              busyId={busyId}
+              onUnsubmit={onUnsubmit}
+              onReportError={onReportError}
+            />
           ) : null}
 
           {tab === "insights" ? (

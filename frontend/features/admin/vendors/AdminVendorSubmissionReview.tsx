@@ -1,8 +1,10 @@
 "use client";
 
 import { CheckCircle2, XCircle } from "lucide-react";
+import type { AdminVendorRow } from "@/lib/adminVendorsApi";
 import { TagPills } from "./vendorDetailsShared";
 import { AdminVendorSubmissionChecklist } from "./AdminVendorSubmissionChecklist";
+import { AdminVendorSubmissionActions } from "./AdminVendorSubmissionActions";
 import { AdminVendorSubmissionMediaRail } from "./AdminVendorSubmissionMediaRail";
 import {
   DetailSection,
@@ -17,6 +19,7 @@ import type {
   AdminSubmissionField,
   AdminVendorSubmissionReviewModel,
 } from "./adminVendorSubmissionReviewModel";
+import type { AdminVendorUnsubmitHandler } from "./vendorUnsubmitTypes";
 
 function ConfirmationRow({ label, accepted }: { label: string; accepted: boolean }) {
   return (
@@ -46,9 +49,13 @@ function splitPortfolioFields(fields: AdminSubmissionField[]) {
 
 type Props = {
   model: AdminVendorSubmissionReviewModel;
+  vendor?: AdminVendorRow;
+  busyId?: string | null;
+  onUnsubmit?: AdminVendorUnsubmitHandler;
+  onReportError?: (message: string) => void;
 };
 
-export function AdminVendorSubmissionReview({ model }: Props) {
+export function AdminVendorSubmissionReview({ model, vendor, busyId, onUnsubmit, onReportError }: Props) {
   const checklistGroups = model.checklistGroups ?? [];
   const reachFields = model.reachFields ?? [];
   const locationFields = model.locationFields ?? [];
@@ -79,7 +86,19 @@ export function AdminVendorSubmissionReview({ model }: Props) {
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start">
       <div className="min-w-0 space-y-8">
-        <AdminVendorSubmissionChecklist groups={checklistGroups} />
+        <div className="space-y-4">
+          <AdminVendorSubmissionChecklist groups={checklistGroups} />
+          {vendor && onUnsubmit ? (
+            <AdminVendorSubmissionActions
+              vendor={vendor}
+              checklistGroups={checklistGroups}
+              businessName={model.businessName}
+              busyId={busyId ?? null}
+              onUnsubmit={onUnsubmit}
+              onReportError={onReportError}
+            />
+          ) : null}
+        </div>
 
         <div className="space-y-8">
           <DetailSection

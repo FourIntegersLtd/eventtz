@@ -9,3 +9,13 @@ export function publicSiteUrl(path: string): string {
 export function referralRegisterUrl(slug: string): string {
   return publicSiteUrl(`/vendor/register?ref=${encodeURIComponent(slug)}`);
 }
+
+/** Vendor profile editor (onboarding wizard lives at `/vendor/profile`). */
+export function vendorProfileUrl(): string {
+  return publicSiteUrl("/vendor/profile");
+}
+
+/** @deprecated Prefer `vendorProfileUrl` — `/vendor/onboarding` only redirects to profile. */
+export function vendorOnboardingUrl(): string {
+  return vendorProfileUrl();
+}

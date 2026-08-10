@@ -6,6 +6,7 @@ import type {
   AdminSubmissionChecklistGroup,
   AdminSubmissionChecklistItem,
 } from "./adminVendorSubmissionReviewModel";
+import { getMissingChecklistGroups } from "./adminVendorSubmissionReviewModel";
 
 const GROUP_SECTION_IDS: Record<string, string> = {
   identity: "submission-identity",
@@ -34,12 +35,7 @@ function ChecklistRow({ item }: { item: AdminSubmissionChecklistItem }) {
 }
 
 function missingItems(groups: AdminSubmissionChecklistGroup[]): AdminSubmissionChecklistGroup[] {
-  return (groups ?? [])
-    .map((group) => ({
-      ...group,
-      items: (group.items ?? []).filter((item) => item.status === "warn"),
-    }))
-    .filter((group) => group.items.length > 0);
+  return getMissingChecklistGroups(groups);
 }
 
 type Props = {

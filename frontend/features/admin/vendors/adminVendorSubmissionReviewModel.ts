@@ -22,6 +22,7 @@ import {
   type BrowsePricingSharedContext,
 } from "@/features/client/browse/vendorBrowseDetailModel";
 import { vendorDataToPayload } from "@/features/vendor/onboarding/serializeVendorPayload";
+import { vendorProfileUrl } from "@/lib/siteUrl";
 
 export type AdminSubmissionField = {
   label: string;
@@ -81,6 +82,66 @@ export type AdminVendorSubmissionReviewModel = {
   confirmations: AdminSubmissionConfirmation[];
   checklistGroups: AdminSubmissionChecklistGroup[];
 };
+
+export function getMissingChecklistGroups(
+  groups: AdminSubmissionChecklistGroup[],
+): AdminSubmissionChecklistGroup[] {
+  return (groups ?? [])
+    .map((group) => ({
+      ...group,
+      items: (group.items ?? []).filter((item) => item.status === "warn"),
+    }))
+    .filter((group) => group.items.length > 0);
+}
+
+export function countMissingChecklistItems(groups: AdminSubmissionChecklistGroup[]): number {
+  return getMissingChecklistGroups(groups).reduce((sum, group) => sum + group.items.length, 0);
+}
+
+export function buildMissingChecklistMessage(options: {
+  businessName?: string | null;
+  groups: AdminSubmissionChecklistGroup[];
+  onboardingUrl?: string;
+}): string {
+  const missingGroups = getMissingChecklistGroups(options.groups);
+  const name = String(options.businessName ?? "").trim() || "there";
+  const profileUrl = options.onboardingUrl ?? vendorProfileUrl();
+
+  const lines = missingGroups.flatMap((group) =>
+    group.items.map((item) => `• ${item.label} — ${item.detail}`),
+  );
+
+  const closing = [
+    "We have also temporarily unsubmitted your application so you can complete your profile on Eventtz.",
+    "",
+    `Update your profile at ${profileUrl} and resubmit when you're ready.`,
+    "",
+    "If you have questions, reply here and we'll help.",
+    "",
+    "Kind regards,",
+    "The Eventtz Admin team",
+  ];
+
+  if (lines.length === 0) {
+    return [
+      `Hi ${name},`,
+      "",
+      "Thanks for submitting your vendor profile on Eventtz. We need a few updates before we can approve you.",
+      "",
+      ...closing,
+    ].join("\n");
+  }
+
+  return [
+    `Hi ${name},`,
+    "",
+    "Thanks for submitting your vendor profile on Eventtz. Before we can approve you, please complete the following:",
+    "",
+    ...lines,
+    "",
+    ...closing,
+  ].join("\n");
+}
 
 const DELIVERY_LABELS: Record<string, string> = {
   travel_to_client: "Travels to client",

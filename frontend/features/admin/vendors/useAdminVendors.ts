@@ -5,7 +5,9 @@ import {
   fetchAdminVendors,
   patchVendorApproval,
   patchVendorListingOverride,
+  patchVendorUnsubmit,
   type AdminVendorRow,
+  type AdminVendorUnsubmitResult,
   type AdminVendorsQuery,
 } from "@/lib/adminVendorsApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
@@ -96,6 +98,31 @@ export function useAdminVendors() {
     [load],
   );
 
+  const unsubmitVendor = useCallback(
+    async (
+      userId: string,
+      options?: { message?: string },
+    ): Promise<AdminVendorUnsubmitResult | null> => {
+      setBusyId(userId);
+      setError(null);
+      try {
+        const result = await patchVendorUnsubmit(userId, { message: options?.message });
+        await load();
+        return result;
+      } catch (e) {
+        setError(getApiErrorDetail(e) ?? "Could not return vendor to draft.");
+        return null;
+      } finally {
+        setBusyId(null);
+      }
+    },
+    [load],
+  );
+
+  const reportError = useCallback((message: string) => {
+    setError(message);
+  }, []);
+
   const selectedVendor = useMemo(
     () => rows.find((r) => r.user_id === selectedUserId) ?? null,
     [rows, selectedUserId],
@@ -115,6 +142,8 @@ export function useAdminVendors() {
     setSelectedUserId,
     setApproval,
     setListingOverride,
+    unsubmitVendor,
+    reportError,
     search,
     setSearch,
     approvalStatus,

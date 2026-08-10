@@ -70,6 +70,18 @@ export async function postAdminSupportMessage(
   return data.message;
 }
 
+export async function patchAdminSupportMessage(
+  conversationId: string,
+  messageId: string,
+  body: string,
+): Promise<AdminSupportMessage> {
+  const { data } = await api.patch<{ message: AdminSupportMessage }>(
+    `${prefix()}/conversations/${encodeURIComponent(conversationId)}/messages/${encodeURIComponent(messageId)}`,
+    { body },
+  );
+  return data.message;
+}
+
 export async function postAdminSupportConversationRead(conversationId: string): Promise<void> {
   await api.post(`${prefix()}/conversations/${encodeURIComponent(conversationId)}/read`);
 }

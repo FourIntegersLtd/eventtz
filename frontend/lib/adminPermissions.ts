@@ -27,6 +27,32 @@ export function canRunBookingSupportActions(user: AdminUser): boolean {
   return isSuperAdmin(user);
 }
 
+/** Approve or return a vendor to pending review. */
+export function canApproveVendors(user: AdminUser): boolean {
+  return isAdminUser(user);
+}
+
+/** Permanently ban a vendor (portal lock-out). */
+export function canBanVendors(user: AdminUser): boolean {
+  return isAdminUser(user);
+}
+
+/** Force publish or hide an approved vendor listing (bypasses Stripe payout gate). */
+export function canOverrideVendorListing(user: AdminUser): boolean {
+  return isSuperAdmin(user);
+}
+
+/** Revert listing override to automatic rules. */
+export function canResetVendorListingOverride(user: AdminUser): boolean {
+  return isAdminUser(user);
+}
+
+/** Broadcast support messages to all clients, vendors, or users. */
+export function canBroadcastMessages(user: AdminUser): boolean {
+  return isSuperAdmin(user);
+}
+
+/** Any vendor moderation access (directory, review queue). */
 export function canModerateVendors(user: AdminUser): boolean {
   return isAdminUser(user);
 }
