@@ -99,7 +99,10 @@ def test_create_transfer_source_transaction_uses_distinct_idempotency_key(mock_s
     )
 
     kwargs = mock_stripe.return_value.Transfer.create.call_args.kwargs
-    assert kwargs["idempotency_key"] == "transfer-booking-2b-1234-acct_abc-src-ch_checkout123"
+    assert (
+        kwargs["idempotency_key"]
+        == "transfer-booking-2b-1234-acct_abc-src-ch_checkout123"
+    )
 
 
 @patch("app.features.payments.stripe._stripe")

@@ -25,6 +25,8 @@ from app.features.payments.http import webhooks as stripe_webhooks
 from app.features.client_events.http import routes as client_events
 from app.features.planner.http import routes as client_planner
 from app.features.realtime.http import routes as realtime
+from app.features.referrals.http import admin as admin_referrals
+from app.features.referrals.http import public as public_referrals
 from app.features.settings.http import client_onboarding as client_onboarding_settings
 from app.features.settings.http import routes as user_settings
 from app.features.vendors.http import explore as vendors_explore
@@ -63,3 +65,5 @@ api_router.include_router(vendor_payments.router)
 api_router.include_router(media.router)
 api_router.include_router(realtime.router)
 api_router.include_router(stripe_webhooks.router)
+api_router.include_router(admin_referrals.router)
+api_router.include_router(public_referrals.router)

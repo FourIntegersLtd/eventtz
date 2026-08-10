@@ -22,6 +22,7 @@ class SignupRequest(BaseModel):
     email: str = Field(min_length=3)
     password: str = Field(min_length=6)
     user_type: Literal["client", "vendor"] = "client"
+    referral_code: str | None = None
     options: dict | None = None
 
 
@@ -145,6 +146,10 @@ async def signup(
         except ValueError:
             raise HTTPException(status_code=400, detail="That email is already registered. Try signing in.") from None
         clear_session_cookies(response)
+        if body.user_type == "vendor" and body.referral_code:
+            from app.features.referrals.attribution import try_attribute_vendor_signup
+
+            try_attribute_vendor_signup(user_id=str(user["id"]), referral_code=body.referral_code)
         try:
             issue_email_verification(
                 user_id=str(user["id"]),
@@ -181,6 +186,10 @@ async def signup(
                 body.user_type,
                 clear_email_verified=True,
             )
+            if body.user_type == "vendor" and body.referral_code:
+                from app.features.referrals.attribution import try_attribute_vendor_signup
+
+                try_attribute_vendor_signup(user_id=str(uid), referral_code=body.referral_code)
             confirm_supabase_email(str(uid))
             try:
                 issue_email_verification(
