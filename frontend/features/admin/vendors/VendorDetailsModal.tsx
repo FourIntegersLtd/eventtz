@@ -35,6 +35,7 @@ type VendorDetailsModalProps = {
     override: VendorListingOverride,
     reason?: string,
   ) => Promise<boolean>;
+  onRestoreStripe?: (userId: string) => Promise<boolean>;
   onUnsubmit: AdminVendorUnsubmitHandler;
   onReportError?: (message: string) => void;
 };
@@ -45,6 +46,7 @@ export function VendorDetailsModal({
   onClose,
   onSetApproval,
   onSetListingOverride,
+  onRestoreStripe,
   onUnsubmit,
   onReportError,
 }: VendorDetailsModalProps) {
@@ -159,6 +161,7 @@ export function VendorDetailsModal({
               busyId={busyId}
               onSetApproval={onSetApproval}
               onSetListingOverride={onSetListingOverride}
+              onRestoreStripe={onRestoreStripe}
             />
           ) : null}
         </div>

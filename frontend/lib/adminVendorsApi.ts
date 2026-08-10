@@ -119,6 +119,30 @@ export async function patchVendorListingOverride(
   };
 }
 
+export type AdminVendorRestoreStripeResult = {
+  stripe_account_id: string | null;
+  stripe_charges_enabled: boolean;
+  stripe_payouts_enabled: boolean;
+  restored_from_transfer_id: string | null;
+};
+
+export async function restoreAdminVendorStripeConnect(
+  userId: string,
+): Promise<AdminVendorRestoreStripeResult> {
+  const { data } = await api.post<{
+    stripe_account_id: string | null;
+    stripe_charges_enabled: boolean;
+    stripe_payouts_enabled: boolean;
+    restored_from_transfer_id: string | null;
+  }>(`/api/v1/admin/vendors/${userId}/restore-stripe-connect`);
+  return {
+    stripe_account_id: data.stripe_account_id ?? null,
+    stripe_charges_enabled: Boolean(data.stripe_charges_enabled),
+    stripe_payouts_enabled: Boolean(data.stripe_payouts_enabled),
+    restored_from_transfer_id: data.restored_from_transfer_id ?? null,
+  };
+}
+
 export type AdminVendorBookingsByMonthRow = {
   month: string;
   [status: string]: string | number;

@@ -6,6 +6,7 @@ import {
   patchVendorApproval,
   patchVendorListingOverride,
   patchVendorUnsubmit,
+  restoreAdminVendorStripeConnect,
   type AdminVendorRow,
   type AdminVendorUnsubmitResult,
   type AdminVendorsQuery,
@@ -98,6 +99,24 @@ export function useAdminVendors() {
     [load],
   );
 
+  const restoreStripeConnect = useCallback(
+    async (userId: string) => {
+      setBusyId(userId);
+      setError(null);
+      try {
+        await restoreAdminVendorStripeConnect(userId);
+        await load();
+        return true;
+      } catch (e) {
+        setError(getApiErrorDetail(e) ?? "Could not restore Stripe Connect.");
+        throw e;
+      } finally {
+        setBusyId(null);
+      }
+    },
+    [load],
+  );
+
   const unsubmitVendor = useCallback(
     async (
       userId: string,
@@ -142,6 +161,7 @@ export function useAdminVendors() {
     setSelectedUserId,
     setApproval,
     setListingOverride,
+    restoreStripeConnect,
     unsubmitVendor,
     reportError,
     search,

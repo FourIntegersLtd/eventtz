@@ -14,6 +14,7 @@ import {
   VENDOR_LISTING_OVERRIDE_META,
 } from "@/lib/domain-types";
 import { VendorMarketplaceStatusBanner } from "./VendorMarketplaceStatusBanner";
+import { VendorStripeConnectSection } from "./VendorStripeConnectSection";
 import { VendorPanelSection } from "./vendorDetailsPanel";
 import { ApprovalCard, VendorActionOptionRow } from "./vendorDetailsShared";
 
@@ -26,6 +27,7 @@ type Props = {
     override: VendorListingOverride,
     reason?: string,
   ) => Promise<boolean>;
+  onRestoreStripe?: (userId: string) => Promise<boolean>;
 };
 
 const APPROVAL_HINTS: Record<VendorApprovalStatus, string> = {
@@ -39,6 +41,7 @@ export function VendorDetailsApprovalSection({
   busyId,
   onSetApproval,
   onSetListingOverride,
+  onRestoreStripe,
 }: Props) {
   const {
     canApproveVendors,
@@ -129,6 +132,12 @@ export function VendorDetailsApprovalSection({
   return (
     <div className={`space-y-6 ${busy ? "pointer-events-none opacity-60" : ""}`}>
       <VendorMarketplaceStatusBanner vendor={vendor} />
+
+      <VendorStripeConnectSection
+        vendor={vendor}
+        busy={busy}
+        onRestoreStripe={onRestoreStripe}
+      />
 
       <VendorPanelSection
         title="Review decision"
