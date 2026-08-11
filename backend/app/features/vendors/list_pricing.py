@@ -116,7 +116,8 @@ def _normalize_packages(payload: dict[str, Any]) -> list[RawPackage]:
 
 
 def _is_complete_package(pkg: RawPackage) -> bool:
-    return bool(pkg.title and pkg.price)
+    details = pkg.details.strip()
+    return bool(pkg.title and pkg.price and len(details) >= 40)
 
 
 def _services_feature_lines(payload: dict[str, Any]) -> list[str]:
@@ -127,11 +128,7 @@ def _services_feature_lines(payload: dict[str, Any]) -> list[str]:
 
 
 def _package_description(pkg: RawPackage) -> str:
-    if pkg.details.strip():
-        return pkg.details.strip()
-    return (
-        "The vendor listed this package with a price - ask what's included when you get in touch."
-    )
+    return pkg.details.strip()
 
 
 @dataclass(frozen=True)

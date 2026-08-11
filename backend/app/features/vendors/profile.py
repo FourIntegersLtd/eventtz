@@ -32,7 +32,7 @@ from app.features.vendors.visibility import (
 
 logger = get_logger(__name__)
 
-_BIO_MAX_WORDS = 60
+_BIO_MAX_WORDS = 100
 
 
 def _refresh_payout_flags(user_id: str, row: dict[str, Any]) -> dict[str, Any]:

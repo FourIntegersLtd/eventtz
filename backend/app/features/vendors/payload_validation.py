@@ -10,6 +10,10 @@ from app.core.errors import ValidationError
 from app.core.phone_validation import is_valid_phone_number
 from app.features.vendors.markets import DEFAULT_COUNTRY_CODE, is_market_enabled, normalize_country_code
 from app.features.vendors.list_pricing import parse_money_gbp
+from app.features.vendors.package_quality import (
+    validate_package_fields,
+    validate_packages_for_payload,
+)
 
 MAX_DISCOUNT_PCT = 100.0
 MAX_MONEY_GBP = 1_000_000.0
@@ -256,24 +260,17 @@ def validate_step_fields(step: int, payload: dict[str, Any]) -> None:
         pkgs = payload.get("packages")
         if isinstance(pkgs, list):
             for pkg in pkgs:
-                if not isinstance(pkg, dict):
-                    continue
-                title = _coerce_str(pkg, "title").strip()
-                price = _coerce_str(pkg, "price").strip()
-                if title or price or _coerce_str(pkg, "details").strip():
-                    if not title or not price:
-                        raise ValidationError(
-                            "Step pricing: each package needs a name and price.",
-                        )
-                    _money_in_range(price, "Package price", required=True)
+                if isinstance(pkg, dict):
+                    validate_package_fields(pkg, strict=True)
+                    price = _coerce_str(pkg, "price").strip()
+                    if price:
+                        _money_in_range(price, "Package price", required=True)
+        validate_packages_for_payload(payload, on_submit=False, require_service_packages=True)
         has_rate = bool(_coerce_str(payload, "hourlyRate").strip()) or bool(
             _coerce_str(payload, "dailyRate").strip(),
         )
         has_pkg = isinstance(pkgs, list) and any(
-            isinstance(p, dict)
-            and _coerce_str(p, "title").strip()
-            and _coerce_str(p, "price").strip()
-            for p in pkgs
+            isinstance(p, dict) and _coerce_str(p, "price").strip() for p in pkgs
         )
         if not has_rate and not has_pkg:
             raise ValidationError(
@@ -348,6 +345,7 @@ def validate_payload_for_progress(
         svcs = payload.get("servicesOffered")
         if not isinstance(svcs, list) or not any(str(x).strip() for x in svcs):
             raise ValidationError("Select at least one service before submit.")
+        validate_packages_for_payload(payload, on_submit=True)
         return
 
     if current_step > previous_step and previous_step >= 1:

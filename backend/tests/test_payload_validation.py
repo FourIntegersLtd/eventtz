@@ -11,6 +11,10 @@ from app.features.vendors.payload_validation import (
     validate_step_fields,
 )
 
+PACKAGE_DETAILS = (
+    "Full wedding coverage with edited digital gallery and online sharing for clients."
+)
+
 
 def test_normalize_clamps_discount_on_same_step_save():
     payload = {"offerDiscounts": True, "discountPercentage": "150"}
@@ -20,8 +24,9 @@ def test_normalize_clamps_discount_on_same_step_save():
 
 def test_validate_step_4_rejects_high_discount():
     payload = {
-        "packages": [{"title": "Gold", "price": "500"}],
+        "packages": [{"title": "Gold", "price": "500", "details": PACKAGE_DETAILS}],
         "offerDiscounts": True,
+        "discountLabel": "Summer sale",
         "discountPercentage": "150",
     }
     with pytest.raises(ValidationError, match="0 and 100"):
@@ -36,7 +41,7 @@ def test_validate_step_5_rejects_max_bookings_over_cap():
 
 def test_validate_payload_for_progress_on_advance():
     payload = {
-        "packages": [{"title": "Gold", "price": "500"}],
+        "packages": [{"title": "Gold", "price": "500", "details": PACKAGE_DETAILS}],
         "availableWeekdays": ["Mon"],
         "maxBookingsPerDay": "2",
         "portfolioFileNames": ["a", "b", "c", "d", "e"],
@@ -51,11 +56,12 @@ def test_validate_payload_for_progress_on_advance():
 
 def test_multi_step_advance_validates_skipped_steps():
     payload = {
-        "packages": [{"title": "Gold", "price": "500"}],
+        "packages": [{"title": "Gold", "price": "500", "details": PACKAGE_DETAILS}],
         "availableWeekdays": ["Mon"],
         "maxBookingsPerDay": "2",
         "portfolioFileNames": ["a", "b", "c", "d", "e"],
         "offerDiscounts": True,
+        "discountLabel": "Summer sale",
         "discountPercentage": "200",
     }
     with pytest.raises(ValidationError, match="0 and 100"):
@@ -71,12 +77,14 @@ def test_submit_rejects_invalid_discount():
     payload = {
         "businessName": "Biz",
         "baseCity": "London",
-        "servicesOffered": ["catering"],
-        "packages": [{"title": "Gold", "price": "500"}],
+        "servicesOffered": ["photography"],
+        "packages": [{"title": "Gold", "price": "500", "details": PACKAGE_DETAILS}],
         "availableWeekdays": ["Mon"],
         "maxBookingsPerDay": "2",
         "portfolioFileNames": ["a", "b", "c", "d", "e"],
+        "profileImageUrl": "https://x.supabase.co/storage/v1/object/public/eventtz-images/users/u1/p.jpg",
         "offerDiscounts": True,
+        "discountLabel": "Summer sale",
         "discountPercentage": "200",
     }
     with pytest.raises(ValidationError):
@@ -129,7 +137,7 @@ def test_validate_payload_for_progress_step_1():
 def test_validate_step_4_rejects_zero_price():
     payload = {
         "hourlyRate": "0",
-        "packages": [{"title": "Gold", "price": "500"}],
+        "packages": [{"title": "Gold", "price": "500", "details": PACKAGE_DETAILS}],
     }
     with pytest.raises(ValidationError, match="at least"):
         validate_step_fields(4, payload)
@@ -137,11 +145,19 @@ def test_validate_step_4_rejects_zero_price():
 
 def test_validate_step_4_requires_discount_option_when_enabled():
     payload = {
-        "packages": [{"title": "Gold", "price": "500"}],
+        "packages": [{"title": "Gold", "price": "500", "details": PACKAGE_DETAILS}],
         "offerDiscounts": True,
         "discountLabel": "Summer sale",
     }
     with pytest.raises(ValidationError, match="at least one discount"):
+        validate_step_fields(4, payload)
+
+
+def test_validate_step_4_rejects_short_package_details():
+    payload = {
+        "packages": [{"title": "Gold", "price": "500", "details": "Too short"}],
+    }
+    with pytest.raises(ValidationError, match="what's included"):
         validate_step_fields(4, payload)
 
 

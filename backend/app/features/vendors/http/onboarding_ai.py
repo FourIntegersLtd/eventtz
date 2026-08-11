@@ -11,10 +11,13 @@ from app.contracts.vendor_onboarding_ai import (
     AnalyzePortfolioImageResponse,
     GenerateVendorBioBody,
     GenerateVendorBioResponse,
+    ReviewVendorPackagesBody,
+    ReviewVendorPackagesResponse,
 )
 from app.features.vendors.onboarding_ai import (
     analyze_portfolio_image,
     generate_vendor_public_bio,
+    review_vendor_packages,
 )
 
 router = APIRouter(prefix="/vendor/onboarding/ai", tags=["vendor-onboarding-ai"])
@@ -27,6 +30,15 @@ def post_generate_vendor_bio(
 ) -> GenerateVendorBioResponse:
     bio = generate_vendor_public_bio(payload=dict(body.payload or {}))
     return GenerateVendorBioResponse(bio=bio)
+
+
+@router.post("/review-packages", response_model=ReviewVendorPackagesResponse)
+def post_review_vendor_packages(
+    body: ReviewVendorPackagesBody,
+    _vendor: Annotated[dict[str, Any], Depends(require_vendor_dep)],
+) -> ReviewVendorPackagesResponse:
+    result = review_vendor_packages(payload=dict(body.payload or {}))
+    return ReviewVendorPackagesResponse(**result)
 
 
 @router.post("/analyze-portfolio-image", response_model=AnalyzePortfolioImageResponse)
