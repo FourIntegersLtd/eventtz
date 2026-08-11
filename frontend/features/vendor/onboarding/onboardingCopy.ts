@@ -27,11 +27,12 @@ export const STEP_COPY = {
   },
   4: {
     headline: "How do you price your work?",
-    subtext: "Add packages so clients can compare.",
-    fixedRatesHeadline: "Hourly or daily rates?",
-    packagesHeadline: "What packages do you offer?",
+    subtext:
+      "Each package is one bookable option with a name, price, and what's included — so clients know what they're buying.",
+    fixedRatesHeadline: "Hourly or daily rates? (optional)",
+    packagesHeadline: "Your packages",
     packagesHint:
-      "Add as many packages as you offer — most vendors list 2–4. Name and price required per package.",
+      "Add one package per option you offer. Each needs a clear name, price, and what's included. Use AI review below for tailored suggestions.",
     bookingHeadline: "Any discounts?",
   },
   5: {

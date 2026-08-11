@@ -70,7 +70,6 @@ export function useVendorOnboardingController(options?: { isWalkthrough?: boolea
     profileStatus: persistence.profileStatus,
     setBusinessNameError: steps.setBusinessNameError,
     setPhoneError: steps.setPhoneError,
-    onRegenerateBio: persistence.onRegenerateBio,
     onGenerateBioWithAI: persistence.onGenerateBioWithAI,
     onViewProfileReview: steps.onViewProfileReview,
     onAddPortfolioPhotos: steps.onAddPortfolioPhotos,

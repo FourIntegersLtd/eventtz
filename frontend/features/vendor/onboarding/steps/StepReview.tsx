@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode } from "react";
-import { Pencil } from "lucide-react";
+import { Pencil, Sparkles } from "lucide-react";
 import {
   SOCIAL_PLATFORM_OPTIONS,
   WEEKDAY_LABELS,
@@ -30,7 +30,7 @@ import { uploadedFileDisplayName } from "../uploadedFileDisplayName";
 import { AnimatedStepItem } from "../ui/AnimatedStepItem";
 import { VendorProfilePhotoField } from "../VendorProfilePhotoField";
 
-const BIO_MAX_WORDS = 60;
+const BIO_MAX_WORDS = 100;
 
 function yesNo(value: boolean): string {
   return value ? "Yes" : "No";
@@ -158,7 +158,6 @@ function FieldList({
 export type StepReviewProps = {
   data: VendorOnboardingData;
   update: VendorOnboardingUpdate;
-  onRegenerateBio: () => void;
   onGenerateBioWithAI: () => void | Promise<void>;
   generatingBio?: boolean;
   onNavigateToStep: (step: number) => void;
@@ -175,7 +174,6 @@ export type StepReviewProps = {
 export function StepReview({
   data,
   update,
-  onRegenerateBio,
   onGenerateBioWithAI,
   generatingBio,
   onNavigateToStep,
@@ -264,33 +262,16 @@ export function StepReview({
       >
         {wordCount}/{BIO_MAX_WORDS} words
       </p>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="flex flex-col">
-          <button
-            type="button"
-            disabled={generatingBio}
-            onClick={() => void onGenerateBioWithAI()}
-            className="inline-flex min-h-[42px] w-full items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {generatingBio ? "Generating…" : "Generate bio with AI"}
-          </button>
-          <p className="mt-1.5 text-[11px] leading-snug text-neutral-500">
-            Writes a tailored bio from your full profile using AI (takes a few seconds).
-          </p>
-        </div>
-        <div className="flex flex-col">
-          <button
-            type="button"
-            disabled={generatingBio}
-            onClick={onRegenerateBio}
-            className="inline-flex min-h-[42px] w-full items-center justify-center rounded-lg border border-primary/25 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            Use quick template
-          </button>
-          <p className="mt-1.5 text-[11px] leading-snug text-neutral-500">
-            Inserts a ready-made paragraph instantly. No AI, easy to edit.
-          </p>
-        </div>
+      <div className="flex justify-end">
+        <button
+          type="button"
+          disabled={generatingBio}
+          onClick={() => void onGenerateBioWithAI()}
+          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <Sparkles className="h-4 w-4" aria-hidden />
+          {generatingBio ? "Generating…" : "Generate bio with AI"}
+        </button>
       </div>
     </div>
   );

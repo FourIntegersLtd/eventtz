@@ -16,7 +16,6 @@ import {
   postGenerateVendorBio,
   vendorOnboardingAiErrorMessage,
 } from "@/lib/vendorOnboardingAiApi";
-import { buildDraftBio } from "./onboardingLogic";
 import {
   needsMorePortfolioPhotos as dataNeedsMorePortfolioPhotos,
   normalizePublicBioText,
@@ -53,7 +52,7 @@ export function useOnboardingPersistence({
       setFormErrorAlertKey((key) => key + 1);
     }
   }, []);
-  const [bioVariant, setBioVariant] = useState(0);
+  const bioVariant = 0;
   const [loadStatus, setLoadStatus] = useState<"loading" | "ready" | "error">("loading");
   const [saving, setSaving] = useState(false);
   const [generatingBio, setGeneratingBio] = useState(false);
@@ -169,17 +168,6 @@ export function useOnboardingPersistence({
     },
     [lockedPendingReview],
   );
-
-  const onRegenerateBio = useCallback(() => {
-    setBioVariant((v) => {
-      const next = v + 1;
-      setData((prev) => ({
-        ...prev,
-        aiBioDraft: buildDraftBio(prev, next),
-      }));
-      return next;
-    });
-  }, []);
 
   const onGenerateBioWithAI = useCallback(async () => {
     if (lockedPendingReview) return;
@@ -388,7 +376,6 @@ export function useOnboardingPersistence({
     needsMorePortfolioPhotos,
     canAddPortfolioWhilePending,
     applyVendorProfileResponse,
-    onRegenerateBio,
     onGenerateBioWithAI,
     onRefreshStatus,
     persistAdditionalInfoFiles,

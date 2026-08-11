@@ -1,5 +1,11 @@
 import { MIN_PORTFOLIO_IMAGES, SOCIAL_PLATFORM_OPTIONS, WEEKDAY_LABELS } from "@/features/vendor/onboarding/constants";
 import {
+  countCompletePackages,
+  isCompletePackage,
+  isConfiguredPackage,
+  MIN_PACKAGE_DESCRIPTION_CHARS,
+} from "@/features/vendor/onboarding/packageQuality";
+import {
   formatDiscountSummary,
   formatReviewBlockedDates,
   formatReviewEventTypes,
@@ -43,7 +49,7 @@ export type AdminSubmissionConfirmation = {
   accepted: boolean;
 };
 
-export type AdminSubmissionChecklistStatus = "pass" | "warn" | "info";
+export type AdminSubmissionChecklistStatus = "pass" | "warn" | "fail" | "info";
 
 export type AdminSubmissionChecklistItem = {
   id: string;
@@ -89,7 +95,9 @@ export function getMissingChecklistGroups(
   return (groups ?? [])
     .map((group) => ({
       ...group,
-      items: (group.items ?? []).filter((item) => item.status === "warn"),
+      items: (group.items ?? []).filter(
+        (item) => item.status === "warn" || item.status === "fail",
+      ),
     }))
     .filter((group) => group.items.length > 0);
 }
@@ -217,8 +225,47 @@ function warn(id: string, label: string, detail: string): AdminSubmissionCheckli
   return checklistItem(id, label, detail, "warn");
 }
 
+function fail(id: string, label: string, detail: string): AdminSubmissionChecklistItem {
+  return checklistItem(id, label, detail, "fail");
+}
+
 function info(id: string, label: string, detail: string): AdminSubmissionChecklistItem {
   return checklistItem(id, label, detail, "info");
+}
+
+function buildPackageChecklistItems(
+  packageList: Array<{ title?: string; price?: string; details?: string; duration?: string }>,
+): AdminSubmissionChecklistItem[] {
+  const configured = packageList.filter((p) => isConfiguredPackage(p));
+  if (configured.length === 0) {
+    return [warn("packages", "Packages", "None submitted")];
+  }
+  const completeCount = countCompletePackages(configured);
+  const qualitySummary = `${completeCount}/${configured.length} packages complete`;
+  const items: AdminSubmissionChecklistItem[] = [
+    completeCount === configured.length
+      ? pass("package-quality", "Package quality", qualitySummary)
+      : warn("package-quality", "Package quality", qualitySummary),
+  ];
+  for (const pkg of configured) {
+    const title = String(pkg.title ?? "").trim() || "Untitled package";
+    const price = String(pkg.price ?? "").trim();
+    const details = String(pkg.details ?? "").trim();
+    if (isCompletePackage(pkg)) {
+      items.push(
+        pass(`package-${title}`, `Package: ${title}`, "Name, price, and what's included"),
+      );
+      continue;
+    }
+    let detail = `${title}: incomplete`;
+    if (!title || title.length < 3) detail = `${title}: needs a clear name`;
+    else if (!price) detail = `${title}: missing price`;
+    else if (details.length < MIN_PACKAGE_DESCRIPTION_CHARS) {
+      detail = `${title}: needs what's included (min ${MIN_PACKAGE_DESCRIPTION_CHARS} chars)`;
+    }
+    items.push(fail(`package-${title}`, `Package: ${title}`, detail));
+  }
+  return items;
 }
 
 function splitLabels(csv: string): string[] {
@@ -330,7 +377,7 @@ export function buildAdminVendorSubmissionReviewModel(
       items: [
         profileImageUrl
           ? pass("profile-photo", "Profile photo", "Uploaded")
-          : warn("profile-photo", "Profile photo", "Not uploaded"),
+          : fail("profile-photo", "Profile photo", "Required before approval"),
         fullName !== "-"
           ? pass("contact-name", "Contact name", fullName)
           : warn("contact-name", "Contact name", "Missing"),
@@ -373,13 +420,7 @@ export function buildAdminVendorSubmissionReviewModel(
         daily
           ? pass("daily", "Daily rate", `£${daily}`)
           : info("daily", "Daily rate", "Not set"),
-        configuredPackages.length > 0
-          ? pass(
-              "packages",
-              "Packages",
-              `${configuredPackages.length} package${configuredPackages.length === 1 ? "" : "s"} listed`,
-            )
-          : warn("packages", "Packages", "None submitted"),
+        ...buildPackageChecklistItems(packageList),
         data.offerDiscounts
           ? info(
               "discounts",

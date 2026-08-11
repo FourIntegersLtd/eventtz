@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { portalCard, portalCardPaddingLg } from "@/components/portal-shell/portalTheme";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
@@ -11,6 +11,7 @@ import { portfolioApprovalBlockedCopy } from "./onboardingCopy";
 import { OnboardingStepContent } from "./OnboardingStepContent";
 import { OnboardingProgressHeader } from "./OnboardingProgressHeader";
 import { OnboardingWizardStepTitle } from "./ui/OnboardingWizardStepTitle";
+import { OnboardingStepInfoModal } from "./ui/OnboardingStepInfoModal";
 import { VendorProfilePhotoField } from "./VendorProfilePhotoField";
 import { VendorProfileSectionTabs } from "./VendorProfileSectionTabs";
 import { useVendorOnboardingController } from "./useVendorOnboardingController";
@@ -49,7 +50,6 @@ export function VendorOnboarding() {
     profileStatus,
     setBusinessNameError,
     setPhoneError,
-    onRegenerateBio,
     onGenerateBioWithAI,
     generatingBio,
     onViewProfileReview,
@@ -86,6 +86,7 @@ export function VendorOnboarding() {
 
   const isLiveEdit = !useWizardLayout;
   const questionnaireTopRef = useRef<HTMLDivElement>(null);
+  const [stepInfoOpen, setStepInfoOpen] = useState(false);
 
   useEffect(() => {
     if (isLiveEdit || step > 8) return;
@@ -104,7 +105,6 @@ export function VendorOnboarding() {
     setBusinessNameError,
     phoneError,
     setPhoneError,
-    onRegenerateBio,
     onGenerateBioWithAI,
     generatingBio,
     onNavigateToStep: navigateToStep,
@@ -137,6 +137,7 @@ export function VendorOnboarding() {
     onUploadProfileImage,
     isLiveEdit,
     lockedPendingReview,
+    onOpenStepInfo: () => setStepInfoOpen(true),
   };
 
   if (authLoading || loadStatus === "loading") {
@@ -261,6 +262,13 @@ export function VendorOnboarding() {
         ) : null}
       </Modal>
 
+      <OnboardingStepInfoModal
+        step={step}
+        servicesOffered={data.servicesOffered}
+        isOpen={stepInfoOpen}
+        onClose={() => setStepInfoOpen(false)}
+      />
+
       {isLiveEdit ? (
         <div className="space-y-4 lg:space-y-6">
           <div className="space-y-4 lg:hidden">
@@ -325,7 +333,13 @@ export function VendorOnboarding() {
             </div>
           )}
           <div className={`${portalCard} ${portalCardPaddingLg}`}>
-            {step <= 8 ? <OnboardingWizardStepTitle step={step} /> : null}
+            {step <= 8 ? (
+              <OnboardingWizardStepTitle
+                step={step}
+                servicesOffered={data.servicesOffered}
+                onOpenStepInfo={() => setStepInfoOpen(true)}
+              />
+            ) : null}
             <div key={step} className="animate-onboarding-panel">
               <OnboardingStepContent {...stepContentProps} />
             </div>

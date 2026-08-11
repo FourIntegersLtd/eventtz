@@ -22,6 +22,41 @@ export type AnalyzePortfolioImageResult = {
   summary: string;
 };
 
+export type PackageCoachPackageFeedback = {
+  package_id?: string | null;
+  package_title: string;
+  items: string[];
+  suggested_title?: string | null;
+  suggested_details?: string | null;
+  suggested_duration?: string | null;
+};
+
+export type PackageCoachTip = {
+  severity: "tip" | "suggestion" | string;
+  package_id?: string | null;
+  package_title?: string | null;
+  code: string;
+  message: string;
+};
+
+export type PackageCoachResult = {
+  overall_ok: boolean;
+  summary?: string;
+  package_feedback: PackageCoachPackageFeedback[];
+  tips?: PackageCoachTip[];
+  applied_package_ids?: string[];
+};
+
+export async function postReviewVendorPackages(
+  payload: Record<string, unknown>,
+): Promise<PackageCoachResult> {
+  const res = await api.post<PackageCoachResult>(
+    "/api/v1/vendor/onboarding/ai/review-packages",
+    { payload },
+  );
+  return res.data;
+}
+
 export async function postAnalyzePortfolioImage(
   file: File,
 ): Promise<AnalyzePortfolioImageResult> {

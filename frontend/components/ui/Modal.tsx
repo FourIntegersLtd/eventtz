@@ -1,7 +1,8 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { FOCUS_RING, MODAL_PANEL, MOTION, TOUCH_TARGET } from "@/components/ui/tokens";
 import { usePrefersReducedMotion } from "@/lib/usePrefersReducedMotion";
@@ -33,6 +34,11 @@ export function Modal({
   zIndexClassName = "z-50",
 }: ModalProps) {
   const reduceMotion = usePrefersReducedMotion();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -40,7 +46,12 @@ export function Modal({
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
   }, [isOpen, onClose]);
 
   const transition = {
@@ -48,7 +59,9 @@ export function Modal({
     ease: [0.22, 1, 0.36, 1] as const,
   };
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <AnimatePresence initial={false}>
       {isOpen ? (
         <div key="modal-overlay" className={`fixed inset-0 ${zIndexClassName}`}>
@@ -71,9 +84,9 @@ export function Modal({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={reduceMotion ? undefined : { opacity: 0, scale: 0.98, y: 4 }}
               transition={transition}
-              className={`my-auto w-full rounded-2xl bg-white shadow-xl ${MODAL_PANEL} ${maxWidthClassName}`}
+              className={`my-auto flex w-full max-h-[min(90dvh,720px)] flex-col overflow-hidden rounded-2xl bg-white shadow-xl ${MODAL_PANEL} ${maxWidthClassName}`}
             >
-              <div className="flex items-center justify-between gap-3 border-b border-neutral-100 bg-white px-4 py-3 sm:px-5 sm:py-4">
+              <div className="flex shrink-0 items-center justify-between gap-3 border-b border-neutral-100 bg-white px-4 py-3 sm:px-5 sm:py-4">
                 <h2
                   id="modal-title"
                   className="font-heading min-w-0 flex-1 pr-2 text-base font-semibold text-neutral-900 sm:text-lg"
@@ -90,18 +103,21 @@ export function Modal({
               </div>
               {children ? (
                 <div
-                  className={`${bodyMaxHeightClassName} overflow-y-auto bg-neutral-50 px-4 py-4 sm:px-5 ${bodyClassName ?? ""}`.trim()}
+                  className={`min-h-0 flex-1 overflow-y-auto bg-neutral-50 px-4 py-4 sm:px-5 sm:py-5 ${bodyMaxHeightClassName} ${bodyClassName ?? ""}`.trim()}
                 >
                   {children}
                 </div>
               ) : null}
               {footer ? (
-                <div className="border-t border-neutral-100 bg-white px-4 py-3 sm:px-5 sm:py-4">{footer}</div>
+                <div className="shrink-0 border-t border-neutral-100 bg-white px-4 py-3 sm:px-5 sm:py-4">
+                  {footer}
+                </div>
               ) : null}
             </motion.div>
           </div>
         </div>
       ) : null}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }

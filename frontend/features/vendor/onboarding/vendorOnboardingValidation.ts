@@ -11,9 +11,17 @@ import {
 import type { VendorOnboardingData } from "@/features/vendor/onboarding/types";
 import { portfolioFileKey } from "@/lib/portfolioFileKey";
 import { phoneRequiredSchema } from "@/lib/validation/phone";
+import {
+  countCompletePackages,
+  isConfiguredPackage,
+  isCompletePackage,
+  packageValidationErrors,
+  requiresAtLeastOnePackage,
+  servicesRequiringPackages,
+} from "@/features/vendor/onboarding/packageQuality";
 import { parseMoneyNumber } from "@/lib/vendorDiscountDisplay";
 
-const BIO_MAX_WORDS = 60;
+const BIO_MAX_WORDS = 100;
 
 const vendorDataSchema = z.custom<VendorOnboardingData>(
   (d) => d != null && typeof d === "object",
@@ -113,16 +121,24 @@ const step4Schema = vendorDataSchema.superRefine((d, ctx) => {
   const dailyErr = moneyFieldError(d.dailyRate, "Daily rate");
   if (dailyErr) addIssue(ctx, dailyErr);
 
+  const completePackages = d.packages.filter(
+    (p) => isConfiguredPackage(p) && isCompletePackage(p),
+  );
   const hasPackagePrice = d.packages.some((p) => p.price.trim());
   if (!d.hourlyRate.trim() && !d.dailyRate.trim() && !hasPackagePrice) {
     addIssue(ctx, "At least one rate or package price");
   }
 
+  if (requiresAtLeastOnePackage(d.servicesOffered) && completePackages.length === 0) {
+    const labels = servicesRequiringPackages(d.servicesOffered).join(", ");
+    addIssue(ctx, `Add at least one complete package for ${labels}`);
+  }
+
   for (const p of d.packages) {
-    const hasAny =
-      p.title.trim() || p.price.trim() || p.details.trim() || p.duration.trim();
-    if (hasAny && (!p.title.trim() || !p.price.trim())) {
-      addIssue(ctx, "Each package needs a name and a price");
+    if (!isConfiguredPackage(p)) continue;
+    const pkgErrors = packageValidationErrors(p, { strict: true });
+    if (pkgErrors.length > 0) {
+      addIssue(ctx, pkgErrors[0]!);
       break;
     }
     if (p.price.trim()) {
@@ -185,6 +201,24 @@ const step6Schema = vendorDataSchema.superRefine((d, ctx) => {
 
 const step8Schema = vendorDataSchema.superRefine((d, ctx) => {
   addPortfolioImageCountIssues(d, ctx);
+  if (!d.profileImageUrl.trim()) {
+    addIssue(ctx, "Add a profile photo before submitting");
+  }
+  if (requiresAtLeastOnePackage(d.servicesOffered)) {
+    const complete = countCompletePackages(d.packages);
+    if (complete === 0) {
+      const labels = servicesRequiringPackages(d.servicesOffered).join(", ");
+      addIssue(ctx, `Add at least one complete package for ${labels}`);
+    }
+  }
+  for (const p of d.packages) {
+    if (!isConfiguredPackage(p)) continue;
+    const pkgErrors = packageValidationErrors(p, { strict: true });
+    if (pkgErrors.length > 0) {
+      addIssue(ctx, pkgErrors[0]!);
+      break;
+    }
+  }
   if (!d.confirmTruthful) addIssue(ctx, "Confirmation that details are truthful");
   if (!d.confirmTerms) addIssue(ctx, "Acceptance of Terms & Conditions");
   if (bioWordCount(d.aiBioDraft) > BIO_MAX_WORDS) {

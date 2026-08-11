@@ -5,7 +5,7 @@ import { displayServicesOffered } from "@/features/client/browse/browseLabels";
 import { normalizePublicBioText } from "@/features/vendor/onboarding/reviewDisplayHelpers";
 import { vendorOnboardingStepErrors } from "@/features/vendor/onboarding/vendorOnboardingValidation";
 
-const BIO_MAX_WORDS = 60;
+const BIO_MAX_WORDS = 100;
 
 function formatEventTypesForBio(types: string[]): string {
   if (types.length === 0) return "celebrations";
@@ -18,7 +18,7 @@ function formatEventTypesForBio(types: string[]): string {
     .join(", ");
 }
 
-/** Caps a bio to a single paragraph of ~60 words, on a whole-word boundary. */
+/** Caps a bio to a single paragraph of ~100 words, on a whole-word boundary. */
 export function clampBioWords(text: string, maxWords: number = BIO_MAX_WORDS): string {
   const words = text.trim().split(/\s+/).filter(Boolean);
   if (words.length <= maxWords) return text.trim();

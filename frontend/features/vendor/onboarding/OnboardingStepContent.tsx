@@ -25,7 +25,6 @@ type Props = {
   setBusinessNameError: (v: string | null) => void;
   phoneError: string | null;
   setPhoneError: (v: string | null) => void;
-  onRegenerateBio: () => void;
   onGenerateBioWithAI: () => void | Promise<void>;
   generatingBio?: boolean;
   onNavigateToStep: (step: number) => void;
@@ -62,6 +61,7 @@ type Props = {
   /** Post-approval profile editor - Settings-style sectioned cards, not wizard mega-card. */
   isLiveEdit?: boolean;
   lockedPendingReview?: boolean;
+  onOpenStepInfo?: () => void;
 };
 
 function LiveEditStepShell({ children }: { children: ReactNode }) {
@@ -81,7 +81,6 @@ export function OnboardingStepContent({
   setBusinessNameError,
   phoneError,
   setPhoneError,
-  onRegenerateBio,
   onGenerateBioWithAI,
   generatingBio,
   onNavigateToStep,
@@ -114,11 +113,18 @@ export function OnboardingStepContent({
   onUploadProfileImage,
   isLiveEdit = false,
   lockedPendingReview = false,
+  onOpenStepInfo,
 }: Props) {
   const wrapLive = (node: ReactNode) =>
     isLiveEdit ? (
       <LiveEditStepShell>
-        {step >= 1 && step <= 8 ? <OnboardingWizardStepTitle step={step} /> : null}
+        {step >= 1 && step <= 8 ? (
+          <OnboardingWizardStepTitle
+            step={step}
+            servicesOffered={data.servicesOffered}
+            onOpenStepInfo={onOpenStepInfo}
+          />
+        ) : null}
         {node}
       </LiveEditStepShell>
     ) : (
@@ -183,7 +189,6 @@ export function OnboardingStepContent({
         <StepReview
           data={data}
           update={update}
-          onRegenerateBio={onRegenerateBio}
           onGenerateBioWithAI={onGenerateBioWithAI}
           generatingBio={generatingBio}
           onNavigateToStep={onNavigateToStep}

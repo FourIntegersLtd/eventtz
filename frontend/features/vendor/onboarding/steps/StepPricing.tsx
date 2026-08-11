@@ -1,16 +1,28 @@
-import { useEffect, useRef } from "react";
+"use client";
+
+import { useEffect, useState } from "react";
 import { ChevronDown, Plus, Trash2 } from "lucide-react";
 import { STEP_COPY } from "../onboardingCopy";
+import {
+  packageIncludedPlaceholder,
+  packageNamePlaceholder,
+} from "../packageExamples";
+import {
+  isConfiguredPackage,
+  MIN_PACKAGE_DESCRIPTION_CHARS,
+  packageValidationErrors,
+} from "../packageQuality";
 import {
   createVendorPackage,
   type VendorOnboardingData,
   type VendorOnboardingUpdate,
   type VendorPackageItem,
 } from "../types";
-import {
-  OnboardingSubQuestion,
-} from "../ui/OnboardingQuestionLayout";
+import { OnboardingSubQuestion } from "../ui/OnboardingQuestionLayout";
 import { AnimatedStepItem } from "../ui/AnimatedStepItem";
+import { PackageCoachPanel, usePackageCoach } from "../ui/PackageCoachPanel";
+import { PackageExamplesModal } from "../ui/PackageExamplesModal";
+import { consumeCoachScrollTarget } from "../packageCoachApply";
 import { labelClass, ClearableTextField, ClearableTextarea } from "./form-primitives";
 
 export type StepPricingProps = {
@@ -42,24 +54,54 @@ function AddPackageButton({ onClick }: { onClick: () => void }) {
 export function StepPricing({ data, update }: StepPricingProps) {
   const copy = STEP_COPY[4];
   const { packages } = data;
-  const scrollToPackageId = useRef<string | null>(null);
+  const [scrollTargetId, setScrollTargetId] = useState<string | null>(null);
+  const [highlightedPackageIds, setHighlightedPackageIds] = useState<string[]>([]);
+  const primaryService = data.servicesOffered[0];
+
+  const scrollToPackages = (ids: string[]) => {
+    if (ids.length === 0) return;
+    setScrollTargetId(ids[0]!);
+    setHighlightedPackageIds(ids);
+    window.setTimeout(() => setHighlightedPackageIds([]), 8000);
+  };
+
+  const coach = usePackageCoach(data, update, {
+    onApplied: scrollToPackages,
+  });
 
   useEffect(() => {
-    const id = scrollToPackageId.current;
-    if (!id) return;
-    scrollToPackageId.current = null;
+    const appliedIds = coach.result?.applied_package_ids;
+    if (!appliedIds?.length) return;
+    setHighlightedPackageIds(appliedIds);
+    const timer = window.setTimeout(() => setHighlightedPackageIds([]), 8000);
+    return () => window.clearTimeout(timer);
+  }, [coach.result?.applied_package_ids]);
+
+  useEffect(() => {
+    const { scrollToId, highlightIds } = consumeCoachScrollTarget();
+    if (scrollToId) {
+      setScrollTargetId(scrollToId);
+      setHighlightedPackageIds(highlightIds.length ? highlightIds : [scrollToId]);
+      window.setTimeout(() => setHighlightedPackageIds([]), 8000);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!scrollTargetId) return;
+    const id = scrollTargetId;
     requestAnimationFrame(() => {
       document.getElementById(`package-${id}`)?.scrollIntoView({
         behavior: "smooth",
-        block: "nearest",
+        block: "center",
       });
+      setScrollTargetId(null);
     });
-  }, [packages.length]);
+  }, [scrollTargetId, packages]);
 
   const addPackage = () => {
     const newPkg = createVendorPackage();
-    scrollToPackageId.current = newPkg.id;
     update({ packages: [...packages, newPkg] });
+    setScrollTargetId(newPkg.id);
   };
 
   const removePackage = (id: string) => {
@@ -95,9 +137,7 @@ export function StepPricing({ data, update }: StepPricingProps) {
             <input
               type="checkbox"
               checked={data.useDefaultTravelHourly}
-              onChange={(e) =>
-                update({ useDefaultTravelHourly: e.target.checked })
-              }
+              onChange={(e) => update({ useDefaultTravelHourly: e.target.checked })}
             />
             Use default travel rule for hourly work
           </label>
@@ -105,25 +145,20 @@ export function StepPricing({ data, update }: StepPricingProps) {
             <input
               type="checkbox"
               checked={data.useDefaultTravelDaily}
-              onChange={(e) =>
-                update({ useDefaultTravelDaily: e.target.checked })
-              }
+              onChange={(e) => update({ useDefaultTravelDaily: e.target.checked })}
             />
             Use default travel rule for daily work
           </label>
         </div>
       </OnboardingSubQuestion>
+
       <OnboardingSubQuestion headline={copy.packagesHeadline} indexOffset={6}>
-        <p className="text-xs text-neutral-500">{copy.packagesHint}</p>
+        <PackageExamplesModal servicesOffered={data.servicesOffered} />
+        <p className="mt-4 text-xs text-neutral-500">{copy.packagesHint}</p>
         <div className="mt-4 space-y-3">
           {packages.map((pkg, index) => {
-            const hasPartial =
-              !!(
-                pkg.title.trim() ||
-                pkg.price.trim() ||
-                pkg.details.trim() ||
-                pkg.duration.trim()
-              );
+            const hasPartial = isConfiguredPackage(pkg);
+            const fieldErrors = packageValidationErrors(pkg, { strict: true });
             const displayTitle = pkg.title.trim()
               ? pkg.title.trim()
               : hasPartial && !pkg.title.trim()
@@ -131,13 +166,18 @@ export function StepPricing({ data, update }: StepPricingProps) {
                 : `Package ${index + 1}`;
             const pricePart = pkg.price.trim() ? `£${pkg.price.trim()}` : null;
             const durationPart = pkg.duration.trim() ? pkg.duration.trim() : "";
+            const missingDetails =
+              hasPartial && pkg.price.trim() && pkg.details.trim().length < MIN_PACKAGE_DESCRIPTION_CHARS;
+            const isHighlighted = highlightedPackageIds.includes(pkg.id);
 
             return (
               <details
                 key={pkg.id}
                 id={`package-${pkg.id}`}
                 open
-                className="group scroll-mt-4 rounded-lg border border-neutral-100 bg-neutral-50/80"
+                className={`group scroll-mt-4 rounded-lg bg-neutral-50/80 ${
+                  isHighlighted ? "border border-emerald-400" : "border border-neutral-100"
+                }`}
               >
                 <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
                   <div className="min-w-0 flex-1">
@@ -155,6 +195,9 @@ export function StepPricing({ data, update }: StepPricingProps) {
                         ) : (
                           <span className="text-neutral-400">-</span>
                         ))}
+                      {missingDetails ? (
+                        <span className="text-amber-700"> · What's included required</span>
+                      ) : null}
                       {durationPart ? (
                         <span className="text-neutral-500"> · {durationPart}</span>
                       ) : null}
@@ -184,7 +227,7 @@ export function StepPricing({ data, update }: StepPricingProps) {
                 <div className="border-t px-4 py-4">
                   <div className="space-y-4">
                     <div>
-                      <label className={labelClass()}>Package name</label>
+                      <label className={labelClass()}>Package name *</label>
                       <ClearableTextField
                         value={pkg.title}
                         onChange={(v) =>
@@ -192,12 +235,12 @@ export function StepPricing({ data, update }: StepPricingProps) {
                             packages: updatePackage(packages, pkg.id, { title: v }),
                           })
                         }
-                        placeholder="e.g. Gold wedding package"
+                        placeholder={packageNamePlaceholder(primaryService)}
                       />
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div>
-                        <label className={labelClass()}>Price (£)</label>
+                        <label className={labelClass()}>Price (£) *</label>
                         <ClearableTextField
                           value={pkg.price}
                           onChange={(v) =>
@@ -208,7 +251,7 @@ export function StepPricing({ data, update }: StepPricingProps) {
                         />
                       </div>
                       <div>
-                        <label className={labelClass()}>Duration</label>
+                        <label className={labelClass()}>Duration (optional)</label>
                         <ClearableTextField
                           value={pkg.duration}
                           onChange={(v) =>
@@ -221,17 +264,20 @@ export function StepPricing({ data, update }: StepPricingProps) {
                       </div>
                     </div>
                     <div>
-                      <label className={labelClass()}>Details</label>
+                      <label className={labelClass()}>What&apos;s included *</label>
                       <ClearableTextarea
-                        className="min-h-[72px]"
+                        className="min-h-[88px]"
                         value={pkg.details}
                         onChange={(v) =>
                           update({
                             packages: updatePackage(packages, pkg.id, { details: v }),
                           })
                         }
-                        placeholder="What's included"
+                        placeholder={packageIncludedPlaceholder(primaryService)}
                       />
+                      {fieldErrors.length > 0 ? (
+                        <p className="mt-1 text-xs text-amber-800">{fieldErrors[0]}</p>
+                      ) : null}
                     </div>
                     <label className="flex items-start gap-2 text-sm text-neutral-800">
                       <input
@@ -260,7 +306,15 @@ export function StepPricing({ data, update }: StepPricingProps) {
           })}
           <AddPackageButton onClick={addPackage} />
         </div>
+        <PackageCoachPanel
+          className="mt-4"
+          result={coach.result}
+          loading={coach.loading}
+          error={coach.error}
+          onCheck={coach.runCheck}
+        />
       </OnboardingSubQuestion>
+
       <AnimatedStepItem index={9}>
         <OnboardingSubQuestion headline={copy.bookingHeadline} indexOffset={0}>
           <div className="space-y-3">
