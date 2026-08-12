@@ -6,7 +6,6 @@ import { ArrowRight } from "lucide-react";
 import type { ReactNode } from "react";
 
 import {
-  LANDING_SCREENSHOT_FRAME_CLASS,
   LANDING_SCREENSHOT_FRAMELESS_CLASS,
 } from "@/features/landing/LandingFeatureSplit";
 import { LandingSection } from "@/features/landing/LandingSection";
@@ -80,10 +79,7 @@ function StepScreenshot({
     </div>
   );
 
-  const frameClass =
-    layout === "stacked"
-      ? LANDING_SCREENSHOT_FRAMELESS_CLASS
-      : LANDING_SCREENSHOT_FRAME_CLASS;
+  const frameClass = LANDING_SCREENSHOT_FRAMELESS_CLASS;
 
   if (layout === "inline") {
     return <div className={frameClass}>{frame}</div>;
@@ -171,7 +167,7 @@ export function LandingScrollFeatureShowcase({
       <div className="mt-4 lg:mt-5 lg:grid lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)] lg:gap-8 xl:gap-10">
         <div className="relative hidden lg:block">
           <div className="sticky top-[7.5rem] flex min-h-[calc(100dvh-7.5rem)] w-full items-center">
-            <div className={`relative aspect-[16/10] w-full ${LANDING_SCREENSHOT_FRAME_CLASS}`}>
+            <div className={`relative aspect-[16/10] w-full ${LANDING_SCREENSHOT_FRAMELESS_CLASS}`}>
               {steps.map((step, index) => (
                 <StepScreenshot
                   key={step.id}
@@ -216,7 +212,7 @@ export function LandingScrollFeatureShowcase({
                   {step.description}
                 </p>
 
-                <div className="mt-5 max-h-[40dvh] overflow-hidden rounded-2xl lg:hidden">
+                <div className="mt-5 max-h-[40dvh] overflow-hidden lg:hidden">
                   <StepScreenshot
                     step={step}
                     fallback={imageFallbacks?.[step.id]}
