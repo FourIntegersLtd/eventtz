@@ -11,6 +11,9 @@ from app.contracts.vendor import (
     AdminVendorApprovalResponse,
     AdminVendorListingOverrideBody,
     AdminVendorListingOverrideResponse,
+    AdminVendorProfileNudgeBody,
+    AdminVendorProfileNudgeFailure,
+    AdminVendorProfileNudgeResponse,
     AdminVendorRestoreStripeConnectResponse,
     AdminVendorUnsubmitBody,
     AdminVendorUnsubmitResponse,
@@ -21,6 +24,7 @@ from app.features.payments.stripe import restore_vendor_connect_from_payout_hist
 from app.features.vendors.moderation import (
     get_vendor_admin_insights,
     list_vendors_for_admin,
+    nudge_draft_vendors_to_complete_profile,
     set_vendor_approval,
     set_vendor_listing_override,
     unsubmit_vendor_profile,
@@ -138,6 +142,7 @@ def admin_unsubmit_vendor(
         row, email_sent = unsubmit_vendor_profile(
             user_id,
             send_email=body.send_email,
+            admin_message=body.message,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -161,6 +166,47 @@ def admin_unsubmit_vendor(
         user_id=user_id,
         status=row.get("status", "draft"),
         email_sent=email_sent,
+    )
+
+
+@router.post("/vendors/nudge-profile-complete", response_model=AdminVendorProfileNudgeResponse)
+def admin_nudge_draft_vendors_profile(
+    body: AdminVendorProfileNudgeBody,
+    request: Request,
+    response: Response,
+) -> AdminVendorProfileNudgeResponse:
+    user = require_admin(request, response)
+    logger.info(
+        "POST /admin/vendors/nudge-profile-complete admin_user_id=%s count=%s",
+        user.get("id"),
+        len(body.user_ids),
+    )
+    result = nudge_draft_vendors_to_complete_profile(body.user_ids)
+    insert_admin_audit_log(
+        admin_user_id=str(user.get("id") or ""),
+        action="vendor.profile_nudge",
+        entity_type="vendor",
+        entity_id=None,
+        payload={
+            "user_ids": body.user_ids[:20],
+            "sent": result.get("sent", 0),
+            "skipped": result.get("skipped", 0),
+            "failure_count": len(result.get("failures") or []),
+        },
+    )
+    failures = [
+        AdminVendorProfileNudgeFailure(
+            user_id=str(item.get("user_id") or ""),
+            error=str(item.get("error") or ""),
+        )
+        for item in (result.get("failures") or [])
+        if isinstance(item, dict)
+    ]
+    return AdminVendorProfileNudgeResponse(
+        success=True,
+        sent=int(result.get("sent") or 0),
+        skipped=int(result.get("skipped") or 0),
+        failures=failures,
     )
 
 

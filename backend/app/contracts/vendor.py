@@ -159,6 +159,26 @@ class AdminVendorRestoreStripeConnectResponse(BaseModel):
     restored_from_transfer_id: str | None = None
 
 
+class AdminVendorProfileNudgeBody(BaseModel):
+    user_ids: list[str] = Field(
+        min_length=1,
+        max_length=100,
+        description="Vendor user ids with draft profiles to nudge by email.",
+    )
+
+
+class AdminVendorProfileNudgeFailure(BaseModel):
+    user_id: str
+    error: str
+
+
+class AdminVendorProfileNudgeResponse(BaseModel):
+    success: bool = True
+    sent: int = 0
+    skipped: int = 0
+    failures: list[AdminVendorProfileNudgeFailure] = Field(default_factory=list)
+
+
 class ExploreVendorRow(BaseModel):
     user_id: str
     email: str | None = None

@@ -107,3 +107,26 @@ def test_unsubmit_sends_return_email(mock_mod_settings, mock_profile_settings, m
         assert email_sent is True
     finally:
         _cleanup()
+
+
+@patch("app.features.vendors.moderation.send_vendor_returned_for_edits_email")
+@patch("app.features.vendors.profile.get_settings")
+@patch("app.features.vendors.moderation.get_settings")
+def test_unsubmit_passes_admin_message_to_email(
+    mock_mod_settings, mock_profile_settings, mock_email
+):
+    mock_mod_settings.return_value.local_auth_mode = True
+    mock_profile_settings.return_value.local_auth_mode = True
+    mock_email.return_value = True
+    _seed()
+    try:
+        message = "Please add a profile photo and complete your packages."
+        unsubmit_vendor_profile(_USER, send_email=True, admin_message=message)
+        mock_email.assert_called_once_with(
+            vendor_user_id=_USER,
+            vendor_email=None,
+            business_name="Scenery Studios",
+            admin_message=message,
+        )
+    finally:
+        _cleanup()

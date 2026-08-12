@@ -206,6 +206,75 @@ def test_send_welcome_email_skips_local_auth(mock_settings):
 
 
 @patch("app.features.email.service.resend_send", return_value=True)
+def test_vendor_returned_for_edits_email_includes_admin_message(mock_resend):
+    svc = EmailService()
+    ok = svc.send_vendor_returned_for_edits(
+        to_email="vendor@example.com",
+        business_name="Scenery Studios",
+        onboarding_url="https://eventtz.com/vendor/profile",
+        admin_message="Please add a profile photo.\n\nUpdate your profile when ready.",
+    )
+    assert ok is True
+    text = mock_resend.call_args.kwargs["text"]
+    assert "Please add a profile photo." in text
+    assert "Scenery Studios" in text
+    assert "Your profile is unlocked" in text
+    assert "Eventtz Support" in text
+
+
+@patch("app.features.email.service.resend_send", return_value=True)
+def test_vendor_returned_for_edits_email_without_admin_message(mock_resend):
+    svc = EmailService()
+    ok = svc.send_vendor_returned_for_edits(
+        to_email="vendor@example.com",
+        business_name="Scenery Studios",
+        onboarding_url="https://eventtz.com/vendor/profile",
+    )
+    assert ok is True
+    text = mock_resend.call_args.kwargs["text"]
+    assert "Sign in to read what is missing in Eventtz Support" in text
+
+
+@patch("app.features.email.dispatch.get_email_service")
+@patch("app.features.email.dispatch.user_emails_by_id")
+def test_send_vendor_returned_for_edits_email_resolves_recipient(mock_lookup, mock_get_svc):
+    mock_lookup.return_value = {"vendor-1": "vendor@example.com"}
+    svc = MagicMock()
+    svc.send_vendor_returned_for_edits.return_value = True
+    mock_get_svc.return_value = svc
+    from app.features.email.dispatch import send_vendor_returned_for_edits_email
+
+    ok = send_vendor_returned_for_edits_email(
+        vendor_user_id="vendor-1",
+        vendor_email=None,
+        business_name="Scenery Studios",
+        admin_message="Add your packages.",
+    )
+    assert ok is True
+    mock_lookup.assert_called_once_with(["vendor-1"])
+    svc.send_vendor_returned_for_edits.assert_called_once_with(
+        to_email="vendor@example.com",
+        business_name="Scenery Studios",
+        onboarding_url="https://www.eventtz.com/vendor/profile",
+        admin_message="Add your packages.",
+    )
+
+
+@patch("app.features.email.dispatch.user_emails_by_id", return_value={})
+def test_send_vendor_returned_for_edits_email_skips_without_address(mock_lookup):
+    from app.features.email.dispatch import send_vendor_returned_for_edits_email
+
+    ok = send_vendor_returned_for_edits_email(
+        vendor_user_id="vendor-1",
+        vendor_email=None,
+        business_name="Scenery Studios",
+        admin_message="Add your packages.",
+    )
+    assert ok is False
+    mock_lookup.assert_called_once_with(["vendor-1"])
+
+
+@patch("app.features.email.service.resend_send", return_value=True)
 def test_vendor_approval_email_live_when_listing_visible(mock_resend):
     svc = EmailService()
     ok = svc.send_vendor_approval_status(

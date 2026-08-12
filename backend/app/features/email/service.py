@@ -294,18 +294,31 @@ class EmailService:
         to_email: str,
         business_name: str | None,
         onboarding_url: str,
+        admin_message: str | None = None,
     ) -> bool:
         biz = (business_name or "").strip()
         subject_name = biz or "your profile"
         headline = "Your profile needs a few updates"
         subtitle = "Please complete your details before we can approve you."
-        body = (
+        intro = (
             f"We have reviewed {subject_name} and need a few updates before we can approve "
-            "your vendor profile on Eventtz.\n\n"
-            "Your profile is unlocked so you can edit it now. We have sent the details in "
-            "Eventtz Support in your account — sign in to read what is missing, update your "
-            "profile, and resubmit when you are ready."
+            "your vendor profile on Eventtz."
         )
+        note = (admin_message or "").strip()
+        if note:
+            body = (
+                f"{intro}\n\n"
+                f"{note}\n\n"
+                "Your profile is unlocked so you can edit it now. Use the button below to "
+                "update your profile and resubmit when you are ready.\n\n"
+                "You can also find this message in Eventtz Support in your account."
+            )
+        else:
+            body = (
+                f"{intro}\n\n"
+                "Your profile is unlocked so you can edit it now. Sign in to read what is "
+                "missing in Eventtz Support, update your profile, and resubmit when you are ready."
+            )
         ctx = transactional_email_context(
             subject=headline,
             headline=headline,
@@ -313,6 +326,52 @@ class EmailService:
             body=body,
             action_url=onboarding_url,
             action_label="Update your profile",
+        )
+        html = render_template("booking/notification.html", ctx)
+        text = render_template("booking/notification.txt", ctx)
+        return resend_send(
+            to=[to_email],
+            subject=f"{headline} | {APP_NAME}",
+            html=html,
+            text=text,
+        )
+
+    def send_vendor_complete_profile_nudge(
+        self,
+        *,
+        to_email: str,
+        business_name: str | None,
+        onboarding_url: str,
+    ) -> bool:
+        biz = (business_name or "").strip()
+        name = biz or display_name_from_email(to_email)
+        headline = "Thank you for joining Eventtz"
+        subtitle = (
+            "Eventtz is where clients find you, and where you keep bookings, messages "
+            "and payments in one calm place."
+        )
+        body = (
+            f"Hi {name},\n\n"
+            "Thank you for joining Eventtz. We are happy to have you on board.\n\n"
+            "You have started your vendor profile but have not submitted it yet. When you "
+            "have a quiet moment, finishing your application helps clients discover you with "
+            "confidence.\n\n"
+            "Once you are live on Eventtz, you can:\n"
+            "• Show clients your services and prices upfront\n"
+            "• Receive booking requests with the date, venue and details in one place\n"
+            "• Message clients and agree quotes without switching apps\n"
+            "• Get paid securely through Stripe when a booking is confirmed\n\n"
+            "Add your photos, services and packages, then submit when you are ready. "
+            "Our team will review your application.\n\n"
+            f"Questions? Reply to this email or write us at {EMAIL_SUPPORT_ADDRESS}."
+        )
+        ctx = transactional_email_context(
+            subject=headline,
+            headline=headline,
+            subtitle=subtitle,
+            body=body,
+            action_url=onboarding_url,
+            action_label="Complete your profile",
         )
         html = render_template("booking/notification.html", ctx)
         text = render_template("booking/notification.txt", ctx)

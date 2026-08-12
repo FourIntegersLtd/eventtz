@@ -227,6 +227,7 @@ def send_vendor_returned_for_edits_email(
     vendor_user_id: str,
     vendor_email: str | None,
     business_name: str | None,
+    admin_message: str | None = None,
 ) -> bool:
     if not vendor_email or "@" not in vendor_email:
         emails = user_emails_by_id([vendor_user_id])
@@ -235,6 +236,26 @@ def send_vendor_returned_for_edits_email(
         return False
     onboarding_url = public_email_url("/vendor/profile")
     return get_email_service().send_vendor_returned_for_edits(
+        to_email=vendor_email,
+        business_name=business_name,
+        onboarding_url=onboarding_url,
+        admin_message=admin_message,
+    )
+
+
+def send_vendor_complete_profile_nudge_email(
+    *,
+    vendor_user_id: str,
+    vendor_email: str | None,
+    business_name: str | None,
+) -> bool:
+    if not vendor_email or "@" not in vendor_email:
+        emails = user_emails_by_id([vendor_user_id])
+        vendor_email = emails.get(vendor_user_id)
+    if not vendor_email or "@" not in vendor_email:
+        return False
+    onboarding_url = public_email_url("/vendor/profile")
+    return get_email_service().send_vendor_complete_profile_nudge(
         to_email=vendor_email,
         business_name=business_name,
         onboarding_url=onboarding_url,

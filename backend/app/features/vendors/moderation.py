@@ -27,7 +27,11 @@ from app.features.vendors.visibility import (
     row_is_publicly_listable,
     vendor_payouts_verified,
 )
-from app.features.email.dispatch import send_vendor_approval_email, send_vendor_returned_for_edits_email
+from app.features.email.dispatch import (
+    send_vendor_approval_email,
+    send_vendor_complete_profile_nudge_email,
+    send_vendor_returned_for_edits_email,
+)
 
 logger = get_logger(__name__)
 
@@ -384,6 +388,8 @@ def _notify_vendor_approval_change(
 def _notify_vendor_returned_for_edits(
     user_id: str,
     row: dict[str, Any] | None,
+    *,
+    admin_message: str | None = None,
 ) -> bool:
     if not row:
         return False
@@ -394,16 +400,62 @@ def _notify_vendor_returned_for_edits(
             vendor_user_id=user_id,
             vendor_email=None,
             business_name=business_name.strip() if isinstance(business_name, str) else None,
+            admin_message=admin_message,
         )
     except Exception:
         logger.warning("vendor return-for-edits email failed user=%s", user_id, exc_info=True)
         return False
 
 
+def nudge_draft_vendors_to_complete_profile(user_ids: list[str]) -> dict[str, Any]:
+    """Email draft vendors encouraging them to finish and submit their profile."""
+    seen: set[str] = set()
+    sent = 0
+    skipped = 0
+    failures: list[dict[str, str]] = []
+
+    for raw_id in user_ids:
+        user_id = str(raw_id or "").strip()
+        if not user_id or user_id in seen:
+            continue
+        seen.add(user_id)
+
+        row = get_vendor_profile(user_id)
+        if not row:
+            failures.append({"user_id": user_id, "error": "Vendor profile not found."})
+            continue
+
+        status = str(row.get("status") or "draft")
+        if status != "draft":
+            skipped += 1
+            continue
+
+        payload = row.get("payload") if isinstance(row.get("payload"), dict) else {}
+        business_name = payload.get("businessName")
+        try:
+            ok = send_vendor_complete_profile_nudge_email(
+                vendor_user_id=user_id,
+                vendor_email=row.get("email") if isinstance(row.get("email"), str) else None,
+                business_name=business_name.strip() if isinstance(business_name, str) else None,
+            )
+        except Exception:
+            logger.warning("vendor profile nudge email failed user=%s", user_id, exc_info=True)
+            failures.append({"user_id": user_id, "error": "Email could not be sent."})
+            continue
+
+        if ok:
+            sent += 1
+        else:
+            failures.append({"user_id": user_id, "error": "No email address on file."})
+
+    return {"sent": sent, "skipped": skipped, "failures": failures}
+
+
 def unsubmit_vendor_profile(
     user_id: str,
     *,
     send_email: bool = True,
+    admin_message: str | None = None,
 ) -> tuple[dict[str, Any] | None, bool]:
     """Return a submitted vendor profile to draft so they can edit onboarding again."""
     row = get_vendor_profile(user_id)
@@ -420,12 +472,16 @@ def unsubmit_vendor_profile(
         local_vendors[user_id] = {**row, "status": "draft"}
         updated = get_vendor_profile(user_id)
         if send_email and updated:
-            email_sent = _notify_vendor_returned_for_edits(user_id, updated)
+            email_sent = _notify_vendor_returned_for_edits(
+                user_id, updated, admin_message=admin_message
+            )
         return updated, email_sent
     get_client().table("vendors").update({"status": "draft"}).eq("user_id", user_id).execute()
     updated = get_vendor_profile(user_id)
     if send_email and updated:
-        email_sent = _notify_vendor_returned_for_edits(user_id, updated)
+        email_sent = _notify_vendor_returned_for_edits(
+            user_id, updated, admin_message=admin_message
+        )
     return updated, email_sent
 
 
