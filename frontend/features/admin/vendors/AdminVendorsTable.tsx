@@ -22,20 +22,48 @@ import { payloadStr } from "./vendorFormatters";
 
 type AdminVendorsTableProps = {
   rows: AdminVendorRow[];
+  selectedUserIds: string[];
+  draftUserIdsOnPage: string[];
+  onToggleSelected: (userId: string, selected: boolean) => void;
+  onSelectAllDraft: () => void;
+  onClearDraftOnPage: () => void;
   onSelect: (userId: string) => void;
 };
 
-export function AdminVendorsTable({ rows, onSelect }: AdminVendorsTableProps) {
+export function AdminVendorsTable({
+  rows,
+  selectedUserIds,
+  draftUserIdsOnPage,
+  onToggleSelected,
+  onSelectAllDraft,
+  onClearDraftOnPage,
+  onSelect,
+}: AdminVendorsTableProps) {
   if (rows.length === 0) {
     return (
       <EmptyState title="No vendor profiles yet" lottie="searchNoResults" />
     );
   }
 
+  const allDraftSelected =
+    draftUserIdsOnPage.length > 0 &&
+    draftUserIdsOnPage.every((id) => selectedUserIds.includes(id));
+
   return (
     <AdminTable>
-      <AdminTableElement className="min-w-[48rem]">
+      <AdminTableElement className="min-w-[50rem]">
         <AdminTableHead>
+          <AdminTableHeaderCell className="w-10">
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-neutral-300"
+              checked={allDraftSelected}
+              disabled={draftUserIdsOnPage.length === 0}
+              onChange={() => (allDraftSelected ? onClearDraftOnPage() : onSelectAllDraft())}
+              aria-label="Select all draft vendors on this page"
+              title="Select draft vendors on this page"
+            />
+          </AdminTableHeaderCell>
           <AdminTableHeaderCell className="min-w-[11rem]">Email</AdminTableHeaderCell>
           <AdminTableHeaderCell className="min-w-[8rem]">Business</AdminTableHeaderCell>
           <AdminTableHeaderCell>Form</AdminTableHeaderCell>
@@ -51,14 +79,26 @@ export function AdminVendorsTable({ rows, onSelect }: AdminVendorsTableProps) {
             const email = r.email ?? "-";
             const updated = r.updated_at ? new Date(r.updated_at).toLocaleString() : "-";
             const pending = r.approval_status === "pending";
-            // Approved but not live: admin acted, Stripe hasn't verified them yet.
+            const isDraft = r.status === "draft";
             const approvedNotLive = r.approval_status === "approved" && !r.listing_visible;
             const override = getVendorListingOverride(r.listing_override);
+            const selected = selectedUserIds.includes(r.user_id);
             return (
               <AdminTableRow
                 key={r.user_id}
                 className={pending || approvedNotLive ? "bg-amber-50/40" : undefined}
               >
+                <AdminTableCell className="w-10">
+                  {isDraft ? (
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-neutral-300"
+                      checked={selected}
+                      onChange={(e) => onToggleSelected(r.user_id, e.target.checked)}
+                      aria-label={`Select ${email}`}
+                    />
+                  ) : null}
+                </AdminTableCell>
                 <AdminTableCell className="min-w-[11rem] max-w-[14rem]">
                   <span className="block truncate" title={email}>
                     {email}

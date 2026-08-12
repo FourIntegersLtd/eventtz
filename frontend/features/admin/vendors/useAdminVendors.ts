@@ -10,6 +10,8 @@ import {
   type AdminVendorRow,
   type AdminVendorUnsubmitResult,
   type AdminVendorsQuery,
+  postAdminVendorProfileNudge,
+  type AdminVendorProfileNudgeResult,
 } from "@/lib/adminVendorsApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import type { VendorApprovalStatus, VendorListingOverride } from "@/lib/domain-types";
@@ -27,6 +29,13 @@ export function useAdminVendors() {
   const [search, setSearch] = useState("");
   const [approvalStatus, setApprovalStatus] = useState("");
   const [profileStatus, setProfileStatus] = useState("");
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [nudgeBusy, setNudgeBusy] = useState(false);
+
+  const draftUserIdsOnPage = useMemo(
+    () => rows.filter((r) => r.status === "draft").map((r) => r.user_id),
+    [rows],
+  );
 
   const load = useCallback(async () => {
     setError(null);
@@ -43,6 +52,9 @@ export function useAdminVendors() {
       setTotal(res.total);
       setSelectedUserId((prev) =>
         prev && res.vendors.some((r) => r.user_id === prev) ? prev : null,
+      );
+      setSelectedUserIds((prev) =>
+        prev.filter((id) => res.vendors.some((r) => r.user_id === id)),
       );
     } catch {
       setError("Could not load vendors.");
@@ -142,6 +154,47 @@ export function useAdminVendors() {
     setError(message);
   }, []);
 
+  const toggleSelectedUserId = useCallback((userId: string, selected: boolean) => {
+    setSelectedUserIds((prev) => {
+      if (selected) return prev.includes(userId) ? prev : [...prev, userId];
+      return prev.filter((id) => id !== userId);
+    });
+  }, []);
+
+  const selectAllDraftOnPage = useCallback(() => {
+    setSelectedUserIds((prev) => [...new Set([...prev, ...draftUserIdsOnPage])]);
+  }, [draftUserIdsOnPage]);
+
+  const clearDraftOnPage = useCallback(() => {
+    const draftSet = new Set(draftUserIdsOnPage);
+    setSelectedUserIds((prev) => prev.filter((id) => !draftSet.has(id)));
+  }, [draftUserIdsOnPage]);
+
+  const clearSelection = useCallback(() => {
+    setSelectedUserIds([]);
+  }, []);
+
+  const nudgeDraftVendors = useCallback(async (): Promise<
+    | { kind: "result"; result: AdminVendorProfileNudgeResult }
+    | { kind: "error"; message: string }
+    | null
+  > => {
+    if (selectedUserIds.length === 0) return null;
+    setNudgeBusy(true);
+    setError(null);
+    try {
+      const result = await postAdminVendorProfileNudge(selectedUserIds);
+      setSelectedUserIds([]);
+      return { kind: "result", result };
+    } catch (e) {
+      const message = getApiErrorDetail(e) ?? "Could not send profile reminder emails.";
+      setError(message);
+      return { kind: "error", message };
+    } finally {
+      setNudgeBusy(false);
+    }
+  }, [selectedUserIds]);
+
   const selectedVendor = useMemo(
     () => rows.find((r) => r.user_id === selectedUserId) ?? null,
     [rows, selectedUserId],
@@ -170,5 +223,13 @@ export function useAdminVendors() {
     setApprovalStatus,
     profileStatus,
     setProfileStatus,
+    selectedUserIds,
+    draftUserIdsOnPage,
+    toggleSelectedUserId,
+    selectAllDraftOnPage,
+    clearDraftOnPage,
+    clearSelection,
+    nudgeDraftVendors,
+    nudgeBusy,
   };
 }

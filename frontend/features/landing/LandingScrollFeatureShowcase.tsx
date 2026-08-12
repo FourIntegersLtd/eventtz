@@ -5,14 +5,10 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import type { ReactNode } from "react";
 
-import {
-  LANDING_SCREENSHOT_FRAMELESS_CLASS,
-} from "@/features/landing/LandingFeatureSplit";
 import { LandingSection } from "@/features/landing/LandingSection";
 import {
   LANDING_SCREENSHOT_DEFAULT_HEIGHT,
   LANDING_SCREENSHOT_DEFAULT_WIDTH,
-  LANDING_SCREENSHOT_FILL_CLASS,
   LANDING_SCREENSHOT_NATURAL_CLASS,
   LANDING_SPLIT_SCREENSHOT_SIZES,
 } from "@/features/landing/landingScreenshotConfig";
@@ -30,7 +26,7 @@ type LandingScrollFeatureShowcaseProps = {
   id?: string;
   eyebrow?: string;
   title: string;
-  description: string;
+  description?: string;
   summary?: string;
   steps: LandingScrollFeatureStep[];
   imageFallbacks?: Partial<Record<string, ReactNode>>;
@@ -52,14 +48,16 @@ function StepScreenshot({
   layout?: "stacked" | "inline";
 }) {
   const imageClassName =
-    layout === "inline" ? LANDING_SCREENSHOT_NATURAL_CLASS : LANDING_SCREENSHOT_FILL_CLASS;
+    layout === "inline"
+      ? LANDING_SCREENSHOT_NATURAL_CLASS
+      : "h-full w-full object-contain object-top";
 
   const frame = (
     <div
       className={
         layout === "inline"
           ? "w-full leading-[0]"
-          : "h-full w-full overflow-hidden leading-[0]"
+          : "h-full w-full leading-[0]"
       }
     >
       {step.imageSrc ? (
@@ -74,15 +72,13 @@ function StepScreenshot({
           unoptimized
         />
       ) : (
-        <div className="bg-white">{fallback}</div>
+        fallback
       )}
     </div>
   );
 
-  const frameClass = LANDING_SCREENSHOT_FRAMELESS_CLASS;
-
   if (layout === "inline") {
-    return <div className={frameClass}>{frame}</div>;
+    return frame;
   }
 
   return (
@@ -94,7 +90,7 @@ function StepScreenshot({
       }`}
       aria-hidden={!visible}
     >
-      <div className={`h-full w-full ${frameClass}`}>{frame}</div>
+      {frame}
     </div>
   );
 }
@@ -126,9 +122,11 @@ export function LandingScrollFeatureShowcase({
         <h2 className={`${LANDING_FEATURE_HEADLINE_CLASS} text-balance ${eyebrow ? "mt-2.5" : ""}`}>
           {title}
         </h2>
-        <p className={`${LANDING_FEATURE_BODY_CLASS} mx-auto hidden max-w-3xl text-pretty md:block`}>
-          {description}
-        </p>
+        {description ? (
+          <p className={`${LANDING_FEATURE_BODY_CLASS} mx-auto hidden max-w-3xl text-pretty md:block`}>
+            {description}
+          </p>
+        ) : null}
       </div>
 
       <div
@@ -167,7 +165,7 @@ export function LandingScrollFeatureShowcase({
       <div className="mt-4 lg:mt-5 lg:grid lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)] lg:gap-8 xl:gap-10">
         <div className="relative hidden lg:block">
           <div className="sticky top-[7.5rem] flex min-h-[calc(100dvh-7.5rem)] w-full items-center">
-            <div className={`relative aspect-[16/10] w-full ${LANDING_SCREENSHOT_FRAMELESS_CLASS}`}>
+            <div className="relative aspect-[16/10] w-full">
               {steps.map((step, index) => (
                 <StepScreenshot
                   key={step.id}
@@ -221,12 +219,6 @@ export function LandingScrollFeatureShowcase({
                     layout="inline"
                   />
                 </div>
-
-                {step.quote ? (
-                  <blockquote className="mt-6 hidden border-l-2 border-primary/25 pl-4 text-sm italic leading-relaxed text-neutral-500 sm:text-base lg:block">
-                    &ldquo;{step.quote}&rdquo;
-                  </blockquote>
-                ) : null}
 
                 {step.ctaHref && step.ctaLabel ? (
                   <Link

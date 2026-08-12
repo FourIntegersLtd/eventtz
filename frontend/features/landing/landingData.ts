@@ -297,9 +297,7 @@ export type LandingValuePillar = {
 
 export const WHY_EVENTTZ_SECTION = {
   eyebrow: "Why Eventtz",
-  title: "The vendors exist, the booking lives in the group chat",
-  description:
-    "You can find great vendors, but dates, prices, and payment still get lost in DMs and screenshots. Eventtz helps you find trusted vendors and handle payments safely, all in one place",
+  title: "Eventtz helps you find trusted vendors and book them in one place",
 } as const;
 
 export const WHY_EVENTTZ_PILLARS: LandingValuePillar[] = [
@@ -348,9 +346,9 @@ export type LandingScrollFeatureStep = {
 
 export const PRICING_TRUST_SECTION: LandingScreenshotSection = {
   eyebrow: "Browse",
-  title: "See the price before the DM",
+  title: "See prices before you message",
   description:
-    "Every listing shows services and sale prices upfront, so you can compare vendors before you send a message",
+    "Vendors list their services and prices on their profile. Compare what you get and what it costs before you send a message.",
   screenshotSrc: "/images/landing-images/pricing.png",
   ctaHref: "/client/browse",
   ctaLabel: "Browse vendors",
@@ -358,9 +356,9 @@ export const PRICING_TRUST_SECTION: LandingScreenshotSection = {
 
 export const BOOK_SECTION: LandingScreenshotSection = {
   eyebrow: "Request",
-  title: "One request stays on the record",
+  title: "Send a booking request",
   description:
-    "Pick your service, add your date and venue, and send a request that lives on one booking from day one",
+    "Choose a service, add your date, time, and venue, and send the request.",
   screenshotSrc: "/images/landing-images/book.png",
   ctaHref: "/client/browse",
   ctaLabel: "Browse vendors",
@@ -368,9 +366,9 @@ export const BOOK_SECTION: LandingScreenshotSection = {
 
 export const CHAT_SECTION: LandingScreenshotSection = {
   eyebrow: "Agree",
-  title: "Sort the details in one thread",
+  title: "Chat and agree the details",
   description:
-    "Message the vendor, tweak the service, and get a clear quote back, all in the same conversation instead of scattered DMs",
+    "Ask questions, change the service if you need to, and get an updated quote back.",
   screenshotSrc: "/images/landing-images/chat.png",
   ctaHref: "/client/browse",
   ctaLabel: "Browse vendors",
@@ -378,9 +376,9 @@ export const CHAT_SECTION: LandingScreenshotSection = {
 
 export const QUOTE_SECTION: LandingScreenshotSection = {
   eyebrow: "Confirm",
-  title: "They confirm before you pay",
+  title: "Vendor confirms, then you pay",
   description:
-    "The vendor checks your details and locks in the price before checkout, so you're never paying blind",
+    "The vendor checks your request and confirms the final price. You pay only after they have accepted, not before you know what you are booking.",
   screenshotSrc: "/images/landing-images/quote.png",
   ctaHref: "/client/browse",
   ctaLabel: "Browse vendors",
@@ -388,11 +386,9 @@ export const QUOTE_SECTION: LandingScreenshotSection = {
 
 export const CLIENT_JOURNEY_SCROLL_SECTION = {
   eyebrow: "How booking works",
-  title: "From browsing to booked, all in one place",
-  description:
-    "Compare vendors, finalise the details, and pay when you're ready - no more endless messages",
+  title: "Browse, request, agree, and pay in one place",
   summary:
-    "See prices before you message anyone. Pick who you like, chat through the details, and pay when you're both happy",
+    "No chasing prices in DMs. No lost messages. The whole booking stays on Eventtz from start to finish.",
 } as const;
 
 export const CLIENT_JOURNEY_SCROLL_STEPS: LandingScrollFeatureStep[] = [
@@ -401,7 +397,6 @@ export const CLIENT_JOURNEY_SCROLL_STEPS: LandingScrollFeatureStep[] = [
     stepLabel: "Browse",
     title: PRICING_TRUST_SECTION.title,
     description: PRICING_TRUST_SECTION.description,
-    quote: "I keep having to send a DM just to get prices",
     imageSrc: PRICING_TRUST_SECTION.screenshotSrc,
     imageAlt: "Vendor profile with service pricing and discounts on Eventtz",
     ctaHref: PRICING_TRUST_SECTION.ctaHref,
@@ -413,7 +408,6 @@ export const CLIENT_JOURNEY_SCROLL_STEPS: LandingScrollFeatureStep[] = [
     stepLabel: "Request",
     title: BOOK_SECTION.title,
     description: BOOK_SECTION.description,
-    quote: "I've been chasing the caterer on WhatsApp for weeks",
     imageSrc: BOOK_SECTION.screenshotSrc,
     imageAlt: "Request a booking on Eventtz",
     ctaHref: BOOK_SECTION.ctaHref,
@@ -425,7 +419,6 @@ export const CLIENT_JOURNEY_SCROLL_STEPS: LandingScrollFeatureStep[] = [
     stepLabel: "Agree",
     title: CHAT_SECTION.title,
     description: CHAT_SECTION.description,
-    quote: "Every question turned into three more messages somewhere else",
     imageSrc: CHAT_SECTION.screenshotSrc,
     imageAlt: "Chat conversation with a vendor quote on Eventtz",
     ctaHref: CHAT_SECTION.ctaHref,
@@ -437,7 +430,6 @@ export const CLIENT_JOURNEY_SCROLL_STEPS: LandingScrollFeatureStep[] = [
     stepLabel: "Confirm",
     title: QUOTE_SECTION.title,
     description: QUOTE_SECTION.description,
-    quote: "They want a deposit. I've never worked with them before",
     imageSrc: QUOTE_SECTION.screenshotSrc,
     imageAlt: "Vendor booking with accept and reject on Eventtz",
     ctaHref: QUOTE_SECTION.ctaHref,
@@ -502,7 +494,7 @@ export const BOOKING_RECORD_JOURNEY: LandingJourneyStep[] = [
 
 export const FAQ_SECTION = {
   eyebrow: "FAQ",
-  title: "Planning in the group chat? That's where things get lost",
+  title: "Common questions about booking on Eventtz",
 } as const;
 
 export const FEATURED_VENDORS_SECTION = {

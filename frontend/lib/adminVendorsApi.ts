@@ -164,3 +164,26 @@ export async function fetchAdminVendorInsights(userId: string): Promise<AdminVen
   const { data } = await api.get<AdminVendorInsights>(`/api/v1/admin/vendors/${userId}/insights`);
   return data;
 }
+
+export type AdminVendorProfileNudgeResult = {
+  sent: number;
+  skipped: number;
+  failures: { user_id: string; error: string }[];
+};
+
+export async function postAdminVendorProfileNudge(
+  userIds: string[],
+): Promise<AdminVendorProfileNudgeResult> {
+  const { data } = await api.post<{
+    sent: number;
+    skipped: number;
+    failures?: { user_id: string; error: string }[];
+  }>("/api/v1/admin/vendors/nudge-profile-complete", {
+    user_ids: userIds,
+  });
+  return {
+    sent: data.sent ?? 0,
+    skipped: data.skipped ?? 0,
+    failures: data.failures ?? [],
+  };
+}

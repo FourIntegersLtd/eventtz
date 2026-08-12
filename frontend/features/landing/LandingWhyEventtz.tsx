@@ -22,9 +22,6 @@ export function LandingWhyEventtz() {
         <h2 className="font-heading mt-2 text-2xl font-semibold tracking-tight text-neutral-900 sm:mt-3 sm:text-3xl lg:text-4xl">
           {WHY_EVENTTZ_SECTION.title}
         </h2>
-        <p className="mx-auto mt-2 max-w-2xl text-sm leading-relaxed text-neutral-600 sm:mt-3 sm:text-base">
-          {WHY_EVENTTZ_SECTION.description}
-        </p>
         <span className="mx-auto mt-4 block h-px w-12 bg-primary/40" aria-hidden />
       </div>
 

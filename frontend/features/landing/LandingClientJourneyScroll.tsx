@@ -12,7 +12,6 @@ export function LandingClientJourneyScroll() {
       id="booking-journey"
       eyebrow={CLIENT_JOURNEY_SCROLL_SECTION.eyebrow}
       title={CLIENT_JOURNEY_SCROLL_SECTION.title}
-      description={CLIENT_JOURNEY_SCROLL_SECTION.description}
       summary={CLIENT_JOURNEY_SCROLL_SECTION.summary}
       steps={CLIENT_JOURNEY_SCROLL_STEPS}
       tablistAriaLabel="Client booking journey steps"

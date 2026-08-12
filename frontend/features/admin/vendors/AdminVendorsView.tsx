@@ -1,6 +1,7 @@
 "use client";
 
 import { EmptyState } from "@/components/ui/EmptyState";
+import { useToast } from "@/components/ui/Toast";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminFilterBar } from "@/features/admin/components/AdminFilterBar";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
@@ -8,11 +9,47 @@ import { AdminPageHeader } from "@/features/admin/components/AdminPageHeader";
 import { AdminVendorsTable } from "@/features/admin/vendors/AdminVendorsTable";
 import { useAdminVendors } from "@/features/admin/vendors/useAdminVendors";
 import { VendorDetailsModal } from "@/features/admin/vendors/VendorDetailsModal";
+import type { AdminVendorProfileNudgeResult } from "@/lib/adminVendorsApi";
 
 const APPROVAL_STATUSES = ["", "pending", "approved", "banned"];
 const PROFILE_STATUSES = ["", "draft", "submitted", "complete"];
 
+function profileNudgeToastCopy(result: AdminVendorProfileNudgeResult): {
+  title: string;
+  description: string;
+  tone: "success" | "error" | "neutral";
+} {
+  const { sent, skipped, failures } = result;
+  const parts: string[] = [];
+
+  if (sent > 0) {
+    parts.push(`Sent ${sent} email${sent === 1 ? "" : "s"}.`);
+  }
+  if (skipped > 0) {
+    parts.push(`${skipped} skipped (not draft).`);
+  }
+  if (failures.length > 0) {
+    const reasons = [...new Set(failures.map((f) => f.error).filter(Boolean))];
+    const reasonHint = reasons.length > 0 ? ` ${reasons.join("; ")}.` : "";
+    parts.push(`${failures.length} failed.${reasonHint}`);
+  }
+
+  const description = parts.join(" ") || "No emails were sent.";
+
+  if (sent > 0 && failures.length === 0) {
+    return { title: "Profile emails sent", description, tone: "success" };
+  }
+  if (sent > 0) {
+    return { title: "Profile emails partly sent", description, tone: "neutral" };
+  }
+  if (failures.length > 0 || skipped > 0) {
+    return { title: "Could not send profile emails", description, tone: "error" };
+  }
+  return { title: "No profile emails sent", description, tone: "neutral" };
+}
+
 export function AdminVendorsView() {
+  const { showToast } = useToast();
   const {
     rows,
     total,
@@ -35,6 +72,13 @@ export function AdminVendorsView() {
     setApprovalStatus,
     profileStatus,
     setProfileStatus,
+    selectedUserIds,
+    draftUserIdsOnPage,
+    toggleSelectedUserId,
+    selectAllDraftOnPage,
+    clearDraftOnPage,
+    nudgeDraftVendors,
+    nudgeBusy,
   } = useAdminVendors();
 
   const canPrev = offset > 0;
@@ -94,13 +138,58 @@ export function AdminVendorsView() {
         </label>
       </AdminFilterBar>
 
+      {selectedUserIds.length > 0 ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3">
+          <p className="text-sm text-neutral-700">
+            {selectedUserIds.length} draft vendor{selectedUserIds.length === 1 ? "" : "s"} selected
+          </p>
+          <button
+            type="button"
+            disabled={nudgeBusy}
+            onClick={() => {
+              void (async () => {
+                const outcome = await nudgeDraftVendors();
+                if (!outcome) return;
+                if (outcome.kind === "error") {
+                  showToast({
+                    title: "Could not send profile emails",
+                    description: outcome.message,
+                    tone: "error",
+                    durationMs: 7000,
+                  });
+                  return;
+                }
+                const toast = profileNudgeToastCopy(outcome.result);
+                showToast({
+                  title: toast.title,
+                  description: toast.description,
+                  tone: toast.tone,
+                  durationMs: toast.tone === "error" ? 7000 : 6000,
+                });
+              })();
+            }}
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {nudgeBusy ? "Sending…" : "Send complete profile email"}
+          </button>
+        </div>
+      ) : null}
+
       {loading ? (
         <AdminLoadingState label="Loading vendors…" />
       ) : rows.length === 0 ? (
         <EmptyState title="No vendors match your filters" lottie="searchNoResults" />
       ) : (
         <>
-          <AdminVendorsTable rows={rows} onSelect={setSelectedUserId} />
+          <AdminVendorsTable
+            rows={rows}
+            selectedUserIds={selectedUserIds}
+            draftUserIdsOnPage={draftUserIdsOnPage}
+            onToggleSelected={toggleSelectedUserId}
+            onSelectAllDraft={selectAllDraftOnPage}
+            onClearDraftOnPage={clearDraftOnPage}
+            onSelect={setSelectedUserId}
+          />
           <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-neutral-600">
             <span>
               Showing {rows.length ? offset + 1 : 0}-{offset + rows.length} of {total}
