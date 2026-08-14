@@ -2,6 +2,8 @@
 
 Personal 30-day software engineering course using the real Eventtz codebase.
 
+**Course branch:** `cursor/engineering-course-28c8` (all days — do not split per lesson)
+
 **Curriculum map:** [CURRICULUM.md](./CURRICULUM.md)  
 **Lesson spin-offs:** [lessons/](./lessons/)
 
@@ -95,7 +97,7 @@ _(To be filled in during/after the lesson.)_
 
 ### Improvements made
 
-- Day 2 lesson delivered on `cursor/day1-system-architecture-db2a` (same branch as Day 1).
+- Day 2 lesson delivered on `cursor/engineering-course-28c8` (renamed from `cursor/day1-system-architecture-db2a`).
 - Added Day 2 terms to `GLOSSARY.md`.
 
 ### Lesson status

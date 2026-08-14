@@ -11,6 +11,10 @@
 3. Open a **new Cursor chat**, paste that day's prompt, and complete the lesson there.
 4. Return here to pick the next day. Track progress in `docs/engineering/PROGRESS.md`.
 
+**Git branch (all 30 days):** `cursor/engineering-course-28c8`
+
+All lesson progress, glossary updates, and course docs live on this **one branch** for the full four weeks. Do not create a separate branch per day — that splits the learning history. Cloud agents and local work should check out this branch before updating `docs/engineering/`.
+
 ---
 
 ## Course outcomes (end of Week 4)
