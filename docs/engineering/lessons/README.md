@@ -13,3 +13,5 @@
 When you finish a day, update `docs/engineering/PROGRESS.md` in that chat or here.
 
 **For agents:** Never open a new branch per lesson. Commit course doc updates to `cursor/engineering-course-28c8` and push there.
+
+**Every lesson must include:** (1) concept, (2) code trace through real files, (3) hands-on rep — see [CURRICULUM.md](../CURRICULUM.md#three-layers-every-day-concept--code). Optional bug-fix reference: [CODEBASE_MAP.md](../CODEBASE_MAP.md).

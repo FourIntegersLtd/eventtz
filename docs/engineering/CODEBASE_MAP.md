@@ -1,0 +1,112 @@
+# Eventtz codebase map (for tracing & bug fixes)
+
+Quick reference when a lesson says "trace the path" or you have a bug to fix.  
+**Start here, then grep.** One concept per day — this file is your compass, not the lesson.
+
+---
+
+## Bug-fix workflow (use every time)
+
+1. **What broke?** UI wrong text, API error, payment stuck, etc.
+2. **Which portal?** client / vendor / admin / public
+3. **Find the page** → `frontend/app/...`
+4. **Find the API call** → `frontend/lib/*Api.ts`
+5. **Find the route** → `backend/app/http/router.py` → `features/*/http/`
+6. **Find business logic** → `backend/app/features/<area>/`
+7. **Find data** → `backend/sql/` (schema) + Supabase tables
+8. **Run a test** → `backend/tests/` or `frontend/**/*.test.ts`
+
+---
+
+## Top-level layout
+
+| Path | What lives here |
+|------|-----------------|
+| `frontend/app/` | Next.js pages (URLs users visit) |
+| `frontend/features/` | UI components + view logic per product area |
+| `frontend/lib/` | API clients (`clientBookingsApi.ts`), shared types (`domain-types.ts`) |
+| `backend/app/main.py` | FastAPI app entry |
+| `backend/app/http/router.py` | Registers all API routers |
+| `backend/app/features/` | Business logic — **most bugs live here** |
+| `backend/app/contracts/` | Request/response shapes (Pydantic) |
+| `backend/app/core/` | Config, DB client, logging, errors |
+| `backend/sql/` | Postgres migrations (source of truth for tables) |
+| `backend/tests/` | pytest |
+
+---
+
+## Common flows (file chains)
+
+### Client creates booking enquiry
+
+```
+frontend (book flow UI)
+  → frontend/lib/clientBookingsApi.ts  POST /api/v1/client/booking-requests
+  → backend/app/features/bookings/http/client.py  post_booking_request
+  → backend/app/features/bookings/create.py  create_booking_request
+  → backend/app/features/vendors/list_pricing.py  resolve_line_items
+  → DB table booking_requests (line_items snapshot)
+```
+
+### Client views booking detail
+
+```
+clientBookingsApi.ts  GET .../booking-requests/{id}
+  → bookings/http/client.py
+  → bookings/queries.py  get_booking_request_for_client
+  → reads booking_requests.line_items (snapshot, not live vendor catalog)
+```
+
+### Vendor accepts / declines
+
+```
+vendorBookingsApi.ts  PATCH .../status
+  → bookings/http/vendor.py
+  → bookings/status.py
+```
+
+### Login / session
+
+```
+frontend auth provider
+  → backend/app/features/auth/
+```
+
+### Stripe payment
+
+```
+clientBookingsApi / bookingCheckoutApi
+  → bookings/payment_*.py
+  → backend/app/features/payments/stripe.py
+  → webhooks
+```
+
+---
+
+## Where *not* to put logic
+
+| Avoid | Put it in |
+|-------|-----------|
+| Price rules in React components | `backend/app/features/...` |
+| SQL in frontend | `backend/sql/` + feature module |
+| Business rules in `page.tsx` | `features/<area>/` + API |
+| Duplicated types | `contracts/` (backend) + `domain-types.ts` (frontend) |
+
+---
+
+## Useful commands
+
+```bash
+# Backend tests (from backend/)
+poetry run pytest tests/test_checkout_finalize.py -v
+
+# Grep for a symbol
+rg "resolve_line_items" backend/
+
+# Find API route
+rg "booking-requests" backend/app/features/bookings/http/
+```
+
+---
+
+*Updated as part of curriculum v2 — concept + code trace + hands-on reps.*

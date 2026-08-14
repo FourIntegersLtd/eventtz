@@ -72,7 +72,7 @@ Before you write routes or SQL, name the **nouns** in the problem (entities), ho
 
 ### What I understood
 
-_(To be filled in after you explain the concept back in your own words.)_
+_(Discussed £200 → £300 scenario: snapshot locks enquiry at £200/GBP 210; vendor night edit does not change pending booking. Formal explain-back pending — Step 11.)_
 
 ### What I struggled with
 
@@ -99,6 +99,17 @@ _(To be filled in during/after the lesson.)_
 
 - Day 2 lesson delivered on `cursor/engineering-course-28c8` (renamed from `cursor/day1-system-architecture-db2a`).
 - Added Day 2 terms to `GLOSSARY.md`.
+- Curriculum v2: mandatory code trace + hands-on reps (see `CURRICULUM.md`).
+
+### Code trace (Day 2)
+
+`clientBookingsApi.ts` → `bookings/http/client.py` → `create.py` → `list_pricing.resolve_line_items` → `booking_requests.line_items`
+
+### Hands-on rep (Day 2)
+
+- [ ] Open `create.py` and find where `line_items` is written to the row
+- [ ] Open `010_booking_requests.sql` and read the table comment
+- [ ] Answer: if vendor changes price tonight, which column still shows £200?
 
 ### Lesson status
 

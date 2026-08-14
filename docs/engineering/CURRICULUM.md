@@ -2,7 +2,9 @@
 
 **For:** Self-taught developer (doctor background) learning production-grade engineering through the real Eventtz codebase.
 
-**Teaching style:** Plain English first → technical term → Eventtz example. One major idea per day.
+**Teaching style:** Plain English first → technical term → Eventtz example → **trace real code** → **hands-on rep**. One major idea per day.
+
+**You will touch code.** This course is not concepts-only. By Week 4 you should be able to open a bug report, find the file, trace the path, and propose or make a fix. Concepts explain *why*; code reps build *muscle memory*.
 
 **How to use this course**
 
@@ -34,6 +36,43 @@ You should be able to look at Eventtz (or any new app) and answer:
 | How would I know something broke? | Use logs, metrics, alerts |
 | How would I recover? | Backups, migrations, disaster recovery |
 | Is this over-engineered? | Choose the simplest architecture that fits the problem |
+| Can I fix a bug myself? | Trace UI → API → feature → DB; read tests; run pytest/vitest |
+
+---
+
+## Three layers every day (concept + code)
+
+Each lesson has **three layers**. All three are required — not optional extras.
+
+| Layer | What you do | Goal |
+|-------|-------------|------|
+| **1. Concept** | Plain English + one-sentence definition | Know *why* the idea exists |
+| **2. Code trace** | Follow real files: UI → `*Api.ts` → `http/` → `features/` → SQL | Know *where* things live |
+| **3. Hands-on rep** | Guided exercise (see week progression below) | Build skill to debug and change code |
+
+**Rule:** If a day ends without you opening at least 2–4 real files and naming what each does, the day is not complete.
+
+### Hands-on progression by week
+
+| Week | Code rep focus | Example tasks |
+|------|----------------|---------------|
+| **1** (Days 1–7) | **Read & trace** — follow a request path; name files | Trace booking create; find where `line_items` is written; run `/health` |
+| **2** (Days 8–14) | **Follow auth & external calls** — guards, Stripe, webhooks | Find `require_client`; trace a webhook handler; grep for a secret env var |
+| **3** (Days 15–21) | **Run tests & logs** — pytest, vitest, read failures | Run one backend test; break a test on purpose; read a log line to a bug |
+| **4** (Days 22–30) | **Debug & fix** — small real or simulated bugs | Fix a typo/guard; add a test; propose a one-file patch |
+
+**Writing new features** is not the main goal of Week 1–2. **Reading structure and tracing flows** is — that's how you fix bugs later. Full "build a feature" practice peaks in Days 20, 26–27, and 30.
+
+### When do we *write* code?
+
+| Situation | Write code? |
+|-----------|-------------|
+| Daily lesson (Week 1–2) | Usually **no** — trace, annotate, answer "what file next?" |
+| Daily lesson (Week 3+) | Often **yes** — run tests, small edits, add a log line |
+| You say "implement it" or "help me fix this bug" | **Yes** — pair on a real change |
+| Improve Eventtz verdict = "Fix now" | **Optional** — only if you want to ship a fix that day |
+
+You do **not** need to rewrite the whole curriculum or all 30 spin-off files. The rules below apply to **every** day automatically.
 
 ---
 
@@ -110,15 +149,18 @@ Each lesson follows this format:
 1. Today's idea (plain English + one-sentence definition)
 2. Why should I care? (analogy + Eventtz)
 3. Find it in Eventtz (search repo, show real files)
-4. Walk through one example step by step
+4. **Code trace** — walk one path file-by-file (UI → API → feature → DB where relevant)
 5. Teach the technical term
-6. Break it (realistic problem — you guess first)
-7. Teach through questions (one at a time, hints not answers)
-8. Show the solution (Eventtz code + what could still go wrong)
-9. Compare alternatives (simplest first, when to upgrade)
-10. Improve Eventtz (Fix now / Improve later / Leave it alone)
-11. Check understanding (explain back in your own words)
-12. Update `PROGRESS.md` and `GLOSSARY.md`
+6. **Hands-on rep** — you do something in the repo (trace, grep, run test, or small edit — see week table above)
+7. Break it (realistic problem — you guess first)
+8. Teach through questions (one at a time, hints not answers)
+9. Show the solution (Eventtz code + what could still go wrong)
+10. Compare alternatives (simplest first, when to upgrade)
+11. Improve Eventtz (Fix now / Improve later / Leave it alone)
+12. Check understanding (explain back in your own words)
+13. Update `PROGRESS.md` and `GLOSSARY.md` (include **files traced** and **hands-on rep done**)
+
+> **Note:** Steps were expanded from 12 → 13 to make code trace and hands-on reps explicit. Spin-off prompts still say "12 steps" — they mean this structure.
 
 ---
 
@@ -164,8 +206,8 @@ Copy the prompt from the matching file and paste into a **new chat**:
 ## Prerequisites assumed
 
 - You can read TypeScript and Python at a basic level
-- You have run Eventtz locally (frontend + backend) or are willing to explore the repo read-only
-- You complete each day's "explain back" before moving on
+- You will **run Eventtz locally** (frontend + backend) by Week 2 at the latest — tracing in the repo alone is not enough to fix bugs
+- You complete each day's **code trace**, **hands-on rep**, and **explain back** before moving on
 
 ---
 
@@ -177,3 +219,4 @@ Copy the prompt from the matching file and paste into a **new chat**:
 | `docs/engineering/lessons/day-XX.md` | Spin-off prompt per day |
 | `docs/engineering/PROGRESS.md` | Your notes per day |
 | `docs/engineering/GLOSSARY.md` | Terms in plain English |
+| `docs/engineering/CODEBASE_MAP.md` | Quick file-finder for tracing (optional reference) |
