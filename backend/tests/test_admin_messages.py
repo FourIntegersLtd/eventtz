@@ -27,11 +27,12 @@ def test_get_or_create_support_conversation_local(mock_settings):
     assert row["peer_display_name"] == SUPPORT_PEER_DISPLAY
 
 
+@patch("app.features.chat.support_admin.send_support_new_message_email")
 @patch("app.features.chat.support_admin.notify_user")
 @patch("app.features.chat.support_admin.insert_message")
 @patch("app.features.chat.support_admin.get_or_create_support_conversation")
 @patch("app.features.chat.support_admin.get_settings")
-def test_admin_send_fan_out(mock_settings, mock_get_conv, mock_insert, _notify):
+def test_admin_send_fan_out(mock_settings, mock_get_conv, mock_insert, _notify, mock_email):
     mock_settings.return_value.local_auth_mode = False
     mock_get_conv.side_effect = lambda uid: {"id": f"conv-{uid}", "support_user_id": uid}
     mock_insert.return_value = {"id": "m1", "sender_user_id": "admin-1", "body": "Hello", "created_at": None}
@@ -45,6 +46,9 @@ def test_admin_send_fan_out(mock_settings, mock_get_conv, mock_insert, _notify):
     assert result["conversation_ids"] == ["conv-u1", "conv-u2"]
     assert mock_insert.call_count == 2
     assert mock_insert.call_args.kwargs["metadata"] == {"kind": "admin"}
+    assert mock_email.call_count == 2
+    mock_email.assert_any_call(recipient_user_id="u1", conversation_id="conv-u1")
+    mock_email.assert_any_call(recipient_user_id="u2", conversation_id="conv-u2")
 
 
 @patch("app.features.chat.dm.get_settings")

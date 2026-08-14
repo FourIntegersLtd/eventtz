@@ -7,7 +7,7 @@ from typing import Literal
 from app.core.config import get_settings
 from app.core.db import get_db as get_client
 from app.core.logging import get_logger
-from app.features.auth.lookup import user_emails_by_id
+from app.features.auth.lookup import user_emails_by_id, user_types_by_id
 from app.features.email.admin_recipients import admin_notify_recipients
 from app.features.email.branding import email_public_base, ensure_public_email_url, public_email_url
 from app.features.email.service import get_email_service
@@ -219,6 +219,50 @@ def send_admin_payout_stuck_email(
         vendor_user_id=vendor_user_id,
         error_hint=error_hint,
         to=admin_notify_recipients(),
+    )
+
+
+def send_support_new_message_email(
+    *,
+    recipient_user_id: str,
+    conversation_id: str | None = None,
+) -> bool:
+    """Email a client or vendor when Eventtz Support sends them an in-app message."""
+    if get_settings().local_auth_mode:
+        return False
+
+    uid = (recipient_user_id or "").strip()
+    if not uid:
+        return False
+
+    user_type = user_types_by_id([uid]).get(uid, "")
+    if user_type == "vendor":
+        portal = "vendor"
+    elif user_type == "client":
+        portal = "client"
+    else:
+        logger.info(
+            "send_support_new_message_email skip: unsupported user_type user=%s type=%s",
+            uid,
+            user_type or "unknown",
+        )
+        return False
+
+    emails = user_emails_by_id([uid])
+    to_email = emails.get(uid, "").strip()
+    if not to_email or "@" not in to_email:
+        logger.info("send_support_new_message_email skip: no address user=%s", uid)
+        return False
+
+    cid = (conversation_id or "").strip()
+    if cid:
+        messages_url = public_email_url(f"/{portal}/messages/{cid}")
+    else:
+        messages_url = public_email_url(f"/{portal}/messages")
+
+    return get_email_service().send_support_new_message(
+        to_email=to_email,
+        messages_url=messages_url,
     )
 
 

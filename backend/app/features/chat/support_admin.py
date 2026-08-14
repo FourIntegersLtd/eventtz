@@ -9,6 +9,7 @@ from app.core.logging import get_logger
 from app.core.errors import ForbiddenError, NotFoundError, ServiceUnavailableError
 from app.core.db import apply_recent_first_order, get_db as get_client
 from app.features.auth.lookup import user_emails_by_id
+from app.features.email.dispatch import send_support_new_message_email
 from app.features.realtime.sse import notify_user
 
 from app.features.chat.chat_shared import (
@@ -24,6 +25,21 @@ from app.features.chat.chat_shared import (
 )
 
 logger = get_logger(__name__)
+
+
+def _email_support_message_recipient(*, recipient_user_id: str, conversation_id: str) -> None:
+    try:
+        send_support_new_message_email(
+            recipient_user_id=recipient_user_id,
+            conversation_id=conversation_id,
+        )
+    except Exception:
+        logger.warning(
+            "chat: support message email failed recipient=%s conv=%s",
+            recipient_user_id,
+            conversation_id,
+            exc_info=True,
+        )
 
 
 def get_or_create_support_conversation(user_id: str) -> dict[str, Any]:
@@ -126,6 +142,7 @@ def admin_send_support_message(
             )
             conversation_ids.append(cid)
             notify_user(uid, "chat_unread_changed")
+            _email_support_message_recipient(recipient_user_id=uid, conversation_id=cid)
         except Exception as e:
             logger.warning("chat: admin send failed recipient=%s: %s", uid, e, exc_info=True)
             failures.append({"user_id": uid, "error": str(e) or "Failed to send."})
@@ -305,7 +322,6 @@ def admin_edit_support_message(
     upd_data = getattr(upd, "data", None) or []
     updated = upd_data[0] if upd_data and isinstance(upd_data[0], dict) else row
     peer = support_uid
-    # In-app SSE refresh only — never sends email (unlike vendor unsubmit / compose flows).
     if peer:
         notify_user(peer, "chat_unread_changed")
 
@@ -336,6 +352,7 @@ def admin_reply_support_message(
     peer = _str_id(conv.get("support_user_id") or conv.get("peer_user_id"))
     if peer:
         notify_user(peer, "chat_unread_changed")
+        _email_support_message_recipient(recipient_user_id=peer, conversation_id=conversation_id)
     notify_user(admin_user_id, "chat_unread_changed")
     return msg
 

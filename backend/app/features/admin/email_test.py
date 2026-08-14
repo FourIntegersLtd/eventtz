@@ -74,6 +74,12 @@ def _static_templates() -> list[EmailTestTemplate]:
             "Client account suspended.",
         ),
         EmailTestTemplate(
+            "support.new_message",
+            "Support: new message",
+            "Account",
+            "Email when Eventtz Support sends a client or vendor an in-app message.",
+        ),
+        EmailTestTemplate(
             "admin.contact_submitted",
             "Admin: contact submitted",
             "Admin alerts",
@@ -196,6 +202,13 @@ def send_email_test(*, template_id: str, to_email: str) -> tuple[bool, str | Non
 
     if tid == "client.suspended":
         ok = svc.send_client_suspended(to_email=email, support_url=f"{base}/contact")
+        return ok, None if ok else "Email was not sent. Check RESEND_API_KEY and logs."
+
+    if tid == "support.new_message":
+        ok = svc.send_support_new_message(
+            to_email=email,
+            messages_url=f"{base}/vendor/messages",
+        )
         return ok, None if ok else "Email was not sent. Check RESEND_API_KEY and logs."
 
     if tid == "admin.contact_submitted":

@@ -667,6 +667,35 @@ class EmailService:
         subject = f"{headline} | {APP_NAME}"
         return resend_send(to=[to_email], subject=subject, html=html, text=text)
 
+    def send_support_new_message(
+        self,
+        *,
+        to_email: str,
+        messages_url: str,
+    ) -> bool:
+        headline = "You have a new message"
+        subtitle = "From Eventtz Support"
+        body = (
+            "Eventtz Support sent you a message.\n\n"
+            "Sign in to read it and reply in your Messages inbox."
+        )
+        ctx = transactional_email_context(
+            subject=headline,
+            headline=headline,
+            subtitle=subtitle,
+            body=body,
+            action_url=ensure_public_email_url(messages_url),
+            action_label="View message",
+        )
+        html = render_template("booking/notification.html", ctx)
+        text = render_template("booking/notification.txt", ctx)
+        return resend_send(
+            to=[to_email],
+            subject=f"{headline} | {APP_NAME}",
+            html=html,
+            text=text,
+        )
+
     def send_admin_welcome(
         self,
         *,
