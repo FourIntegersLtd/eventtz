@@ -102,4 +102,4 @@ _(To be filled in during/after the lesson.)_
 
 ### Lesson status
 
-**In progress** — waiting for break-it answer (Step 6) and explain-back (Step 11).
+**In progress** — break-it understood (Steps 6–10 delivered). Waiting for Step 11 explain-back to mark complete.
