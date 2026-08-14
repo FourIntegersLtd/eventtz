@@ -44,12 +44,13 @@ Quick reference when a lesson says "trace the path" or you have a bug to fix.
 ### Client creates booking enquiry
 
 ```
-frontend (book flow UI)
-  → frontend/lib/clientBookingsApi.ts  POST /api/v1/client/booking-requests
-  → backend/app/features/bookings/http/client.py  post_booking_request
-  → backend/app/features/bookings/create.py  create_booking_request
-  → backend/app/features/vendors/list_pricing.py  resolve_line_items
-  → DB table booking_requests (line_items snapshot)
+VendorBookingModal.tsx
+  → clientBookingsApi.ts  CreateBookingRequestPayload (selected_option_ids only)
+  → contracts/booking.py  CreateBookingRequestBody / BookingRequestCreated
+  → bookings/http/client.py  post_booking_request
+  → bookings/create.py  create_booking_request → row_out dict → .table("booking_requests").insert()
+  → contracts/booking.py  BookingLineItemIn shape inside line_items snapshot
+  → list_pricing.py  resolve_line_items (builds line item dicts from vendor payload)
 ```
 
 ### Client views booking detail
