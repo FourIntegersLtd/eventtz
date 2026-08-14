@@ -9,12 +9,16 @@ Quick reference when a lesson says "trace the path" or you have a bug to fix.
 
 1. **What broke?** UI wrong text, API error, payment stuck, etc.
 2. **Which portal?** client / vendor / admin / public
-3. **Find the page** → `frontend/app/...`
-4. **Find the API call** → `frontend/lib/*Api.ts`
-5. **Find the route** → `backend/app/http/router.py` → `features/*/http/`
-6. **Find business logic** → `backend/app/features/<area>/`
-7. **Find data** → `backend/sql/` (schema) + Supabase tables
-8. **Run a test** → `backend/tests/` or `frontend/**/*.test.ts`
+3. **Find the page** → `frontend/app/...` or `frontend/features/...`
+4. **Find the types** → `frontend/lib/domain-types.ts`, `*Api.ts` payload/response types
+5. **Find the API call** → `frontend/lib/*Api.ts`
+6. **Find the contract** → `backend/app/contracts/*.py` (request/response models)
+7. **Find the route** → `features/*/http/` (thin handler)
+8. **Find business logic** → `backend/app/features/<area>/` (reads/writes via `get_db()`)
+9. **Schema only if needed** → `backend/sql/` (migrations day or delete/FK bugs)
+10. **Run a test** → `backend/tests/` or `frontend/**/*.test.ts`
+
+> **Prefer models over SQL** in explanations. Say "the `booking_requests` table" in prose; show `ClientBookingDetail` or `create.py` inserts instead of `CREATE TABLE`.
 
 ---
 

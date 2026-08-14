@@ -2,7 +2,9 @@
 
 **For:** Self-taught developer (doctor background) learning production-grade engineering through the real Eventtz codebase.
 
-**Teaching style:** Plain English first → technical term → Eventtz example → **trace real code** → **hands-on rep**. One major idea per day.
+**Teaching style:** Plain English first → technical term → **models & contracts** (TypeScript + Pydantic) → trace feature code → hands-on rep. One major idea per day.
+
+**Learner preference — models over SQL:** Explain data through **Pydantic contracts** (`backend/app/contracts/`), **domain types** (`frontend/lib/domain-types.ts`), and **feature code** (`get_db().table(...).insert/select`). Do **not** lead with raw `.sql` migration files unless the day is specifically about migrations (Days 5, 29) or the learner asks to see schema SQL.
 
 **You will touch code.** This course is not concepts-only. By Week 4 you should be able to open a bug report, find the file, trace the path, and propose or make a fix. Concepts explain *why*; code reps build *muscle memory*.
 
@@ -47,7 +49,7 @@ Each lesson has **three layers**. All three are required — not optional extras
 | Layer | What you do | Goal |
 |-------|-------------|------|
 | **1. Concept** | Plain English + one-sentence definition | Know *why* the idea exists |
-| **2. Code trace** | Follow real files: UI → `*Api.ts` → `http/` → `features/` → SQL | Know *where* things live |
+| **2. Code trace** | Follow real files: UI → `*Api.ts` → `http/` → `features/` → **contracts/models** → `get_db()` calls | Know *where* things live |
 | **3. Hands-on rep** | Guided exercise (see week progression below) | Build skill to debug and change code |
 
 **Rule:** If a day ends without you opening at least 2–4 real files and naming what each does, the day is not complete.
