@@ -19,9 +19,12 @@ You are auditing naming across the Eventtz Python backend for clarity and consis
 - Branch: `cursor/engineering-course-28c8`
 - Propose changes in small PR-sized batches (one feature area at a time)
 
+**Learner preference — descriptive names:** Variables, functions, and parameters must be **understandable immediately** — full words, no cryptic abbreviations. See `docs/engineering/NAMING.md`. When teaching or reviewing code, expand bad names in explanations even if the source code hasn't been renamed yet.
+
 ## What to audit
 
-### 1. Functions
+### 0. Core principle
+**Names must be descriptive and immediately understandable.** If the learner would ask "what is this?", flag it and suggest a plain-English rename.
 - Public functions: verb phrases (`create_booking_request`, `get_booking_request_for_client`)
 - Private helpers: leading `_` only when truly internal
 - Same action → same verb (`get_` vs `fetch_` vs `load_` — pick one pattern per layer)
