@@ -26,3 +26,27 @@ Format: **term** — plain-English meaning.
 **Monolith** — One main backend application that handles many features (Eventtz today is a monolith — one FastAPI app with many feature folders).
 
 **Deployment** — Putting the running software onto servers so real users can reach it (Eventtz: backend on Railway, frontend on a Next.js host).
+
+---
+
+## Day 2
+
+**Entity** — A thing in the system with its own identity that persists over time (e.g. a user, a vendor account, a booking request).
+
+**Relationship** — How two entities connect (e.g. a booking *belongs to* a client user and a vendor user via foreign keys).
+
+**Domain boundary** — A line around one area of the product; one feature or team owns the data and rules inside it (e.g. vendor profile vs booking commerce).
+
+**Snapshot data** — A copy of fields saved at a point in time so later edits at the source do not rewrite history (Eventtz: `booking_requests.line_items`).
+
+**Live data** — Values read from the current authoritative source when needed (Eventtz: vendor display name fetched when rendering a list).
+
+**Contract** — A typed description of data crossing an API boundary (Eventtz: Pydantic models in `backend/app/contracts/`).
+
+**Domain types** — Shared TypeScript types so client and vendor UIs use the same vocabulary (Eventtz: `frontend/lib/domain-types.ts`).
+
+**JSONB** — A Postgres column type for structured JSON; Eventtz uses it for flexible blobs like `line_items` and `vendors.payload`.
+
+**Catalog domain** — Vendor listing and profile data (packages, rates in `vendors.payload`) — vendors can edit this freely.
+
+**Commerce domain** — Booking lifecycle (`booking_requests`, payments, adjustments) — must preserve what was agreed at enquiry time.

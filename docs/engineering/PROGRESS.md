@@ -55,3 +55,49 @@ _(To be filled in during/after the lesson.)_
 ### Lesson status
 
 **In progress** — waiting for learner to answer quiz questions and explain the concept back.
+
+---
+
+## Day 2 — How to model a real-world problem?
+
+**Date started:** 2026-08-14
+
+### Concept
+
+Before you write routes or SQL, name the **nouns** in the problem (entities), how they connect (relationships), and which feature owns each noun (domain boundaries). Then decide: should this field stay **live** (read from source) or be a **snapshot** (frozen at a moment in time)?
+
+**One-sentence definition:** Domain modeling is naming what exists, how it relates, and what must not change when the source data changes later.
+
+### What I understood
+
+_(To be filled in after you explain the concept back in your own words.)_
+
+### What I struggled with
+
+_(To be filled in during/after the lesson.)_
+
+### Important Eventtz code
+
+| Area | Location | Role |
+|------|----------|------|
+| Users + vendors schema | `backend/sql/001_users_and_vendor_onboarding.sql` | Core entities; vendor profile in `vendors.payload` JSONB |
+| Booking schema | `backend/sql/010_booking_requests.sql` | Commerce entity; `line_items` JSONB snapshot |
+| Line item contract | `backend/app/contracts/booking.py` | `BookingLineItemIn` — API shape for a package row |
+| Resolve catalog → snapshot | `backend/app/features/vendors/list_pricing.py` | `resolve_line_items()` reads live vendor payload |
+| Persist snapshot | `backend/app/features/bookings/create.py` | Copies resolved `line_items` onto the booking row |
+| Shared UI vocabulary | `frontend/lib/domain-types.ts` | Booking status, pricing breakdown types |
+
+### Decisions made
+
+- **Leave it alone:** `booking_requests.line_items` as JSONB snapshot — correct for deal integrity when vendors edit packages.
+- **Leave it alone:** FKs to `users` for client/vendor — live identity; display names can be re-fetched.
+- **Improve later:** If disputes need audit trails, consider immutable adjustment history (already partially modeled via `vendor_adjustments`).
+
+### Improvements made
+
+- Day 2 lesson delivered on `cursor/day1-system-architecture-db2a` (same branch as Day 1).
+- Added Day 2 terms to `GLOSSARY.md`.
+
+### Lesson status
+
+**In progress** — waiting for break-it answer (Step 6) and explain-back (Step 11).
