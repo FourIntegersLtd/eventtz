@@ -60,6 +60,10 @@ class Settings(BaseSettings):
     marketplace_search_ai_cache_ttl_seconds: int = 3600
     #: Max number of those search results to keep in memory.
     marketplace_search_ai_cache_max_entries: int = 500
+    #: How long (seconds) to reuse vendor co-pilot brief LLM narration before regenerating.
+    openai_copilot_brief_cache_ttl_seconds: int = 1800
+    #: Max number of brief narration entries to keep in memory per worker.
+    openai_copilot_brief_cache_max_entries: int = 200
 
     #: Key for looking up UK addresses (Ordnance Survey Places). Leave blank if unused.
     os_places_api_key: str = ""
