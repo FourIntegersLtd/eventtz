@@ -142,7 +142,7 @@ Notable flows:
 
 - **Bookings & payments** - `features/bookings/*`, `lib/clientBookingsApi.ts`, Stripe Checkout via `lib/bookingCheckoutApi.ts`
 - **AI Event Planner** - `/client/planner`, `features/client/planner/`, `lib/clientPlannerApi.ts`
-- **Help Center** - `/client/help`, `/vendor/help`, `lib/helpApi.ts`
+- **Help Center** - `HelpWidget` FAB on client/vendor/admin portals (`features/help/HelpWidget.tsx`, `lib/helpApi.ts`). Standalone `/client/help` and `/vendor/help` redirect to dashboard; use the **?** button for browse + Ask AI.
 - **Support chat** - `/client/messages` (DM + “Eventtz Support”); admin inbox at `/admin/messages`
 
 Admin roles (`super_admin` vs `admin`) are enforced in UI via `lib/adminPermissions.ts` and `lib/adminRole.ts`; backend is authoritative.
