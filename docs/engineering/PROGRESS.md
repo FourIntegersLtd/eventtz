@@ -60,19 +60,20 @@ _(To be filled in during/after the lesson.)_
 
 ---
 
-## Day 2 — How to model a real-world problem?
+## Day 2 — How to model a real-world problem? (v2 redo)
 
-**Date started:** 2026-08-14
+**Date started:** 2026-08-14  
+**Curriculum:** v2 — concept + code trace + hands-on rep required
 
 ### Concept
 
-Before you write routes or SQL, name the **nouns** in the problem (entities), how they connect (relationships), and which feature owns each noun (domain boundaries). Then decide: should this field stay **live** (read from source) or be a **snapshot** (frozen at a moment in time)?
+Before you write routes or SQL, name the **nouns** (entities), how they connect (relationships), which feature owns each noun (domain boundaries), and what must be **snapshotted** vs read **live**.
 
 **One-sentence definition:** Domain modeling is naming what exists, how it relates, and what must not change when the source data changes later.
 
 ### What I understood
 
-_(Discussed £200 → £300 scenario: snapshot locks enquiry at £200/GBP 210; vendor night edit does not change pending booking. Formal explain-back pending — Step 11.)_
+_(To be filled in after v2 redo — Step 11 explain-back.)_
 
 ### What I struggled with
 
@@ -85,32 +86,42 @@ _(To be filled in during/after the lesson.)_
 | Users + vendors schema | `backend/sql/001_users_and_vendor_onboarding.sql` | Core entities; vendor profile in `vendors.payload` JSONB |
 | Booking schema | `backend/sql/010_booking_requests.sql` | Commerce entity; `line_items` JSONB snapshot |
 | Line item contract | `backend/app/contracts/booking.py` | `BookingLineItemIn` — API shape for a package row |
+| Frontend API call | `frontend/lib/clientBookingsApi.ts` | `postBookingRequest` — sends IDs only, not prices |
+| HTTP handler | `backend/app/features/bookings/http/client.py` | `post_booking_request` route |
 | Resolve catalog → snapshot | `backend/app/features/vendors/list_pricing.py` | `resolve_line_items()` reads live vendor payload |
-| Persist snapshot | `backend/app/features/bookings/create.py` | Copies resolved `line_items` onto the booking row |
-| Shared UI vocabulary | `frontend/lib/domain-types.ts` | Booking status, pricing breakdown types |
+| Persist snapshot | `backend/app/features/bookings/create.py` | Copies `line_items` onto the booking row |
+| Detail read | `backend/app/features/bookings/queries.py` | Reads stored `line_items`, does not re-join vendor |
+| Shared UI vocabulary | `frontend/lib/domain-types.ts` | `BookingLineItem`, status types |
+| Bug-fix compass | `docs/engineering/CODEBASE_MAP.md` | Full path chains |
+
+### Code trace (Day 2 v2) — complete this with teacher
+
+File chain for **client booking enquiry**:
+
+1. [ ] `frontend/lib/clientBookingsApi.ts` — `postBookingRequest` (payload has `selected_option_ids`, no price)
+2. [ ] `backend/app/features/bookings/http/client.py` — `post_booking_request`
+3. [ ] `backend/app/features/bookings/create.py` — `create_booking_request` → writes `line_items`
+4. [ ] `backend/app/features/vendors/list_pricing.py` — `resolve_line_items`
+5. [ ] `backend/sql/010_booking_requests.sql` — `line_items jsonb` column + comment
+
+### Hands-on rep (Day 2 v2)
+
+- [ ] Open each file above and confirm what step it does
+- [ ] In `CreateBookingRequestBody` / `clientBookingsApi.ts`: confirm browser cannot send `unit_price_gbp`
+- [ ] Answer: vendor changes package to £300 tonight — which DB column still shows £200?
+- [ ] `rg "resolve_line_items" backend/` — how many call sites? (create only, not read)
 
 ### Decisions made
 
-- **Leave it alone:** `booking_requests.line_items` as JSONB snapshot — correct for deal integrity when vendors edit packages.
-- **Leave it alone:** FKs to `users` for client/vendor — live identity; display names can be re-fetched.
-- **Improve later:** If disputes need audit trails, consider immutable adjustment history (already partially modeled via `vendor_adjustments`).
+- **Leave it alone:** `line_items` JSONB snapshot at create time
+- **Leave it alone:** FKs to `users` for live identity
+- **Improve later:** normalized `booking_line_items` table only if reporting needs it
 
 ### Improvements made
 
-- Day 2 lesson delivered on `cursor/engineering-course-28c8` (renamed from `cursor/day1-system-architecture-db2a`).
-- Added Day 2 terms to `GLOSSARY.md`.
-- Curriculum v2: mandatory code trace + hands-on reps (see `CURRICULUM.md`).
-
-### Code trace (Day 2)
-
-`clientBookingsApi.ts` → `bookings/http/client.py` → `create.py` → `list_pricing.resolve_line_items` → `booking_requests.line_items`
-
-### Hands-on rep (Day 2)
-
-- [ ] Open `create.py` and find where `line_items` is written to the row
-- [ ] Open `010_booking_requests.sql` and read the table comment
-- [ ] Answer: if vendor changes price tonight, which column still shows £200?
+- Day 2 v1 (concepts only) superseded by v2 redo
+- Curriculum v2 + `CODEBASE_MAP.md` added
 
 ### Lesson status
 
-**In progress** — break-it understood (Steps 6–10 delivered). Waiting for Step 11 explain-back to mark complete.
+**In progress (v2 redo)** — code trace + hands-on rep + Step 11 explain-back pending.
