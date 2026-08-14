@@ -3,6 +3,8 @@
 Quick reference when a lesson says "trace the path" or you have a bug to fix.  
 **Start here, then grep.** One concept per day — this file is your compass, not the lesson.
 
+**Format for lessons:** Always show the route as a numbered list of **full repo paths** before any code. Learner follows on GitHub top to bottom.
+
 ---
 
 ## Bug-fix workflow (use every time)

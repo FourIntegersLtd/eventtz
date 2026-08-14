@@ -6,6 +6,8 @@
 
 **Learner preference — models over SQL:** Explain data through **Pydantic contracts** (`backend/app/contracts/`), **domain types** (`frontend/lib/domain-types.ts`), and **feature code** (`get_db().table(...).insert/select`). Do **not** lead with raw `.sql` migration files unless the day is specifically about migrations (Days 5, 29) or the learner asks to see schema SQL.
 
+**Learner preference — complete route:** When showing code, always print the **full path chain first** (every file from UI to database client), then cite snippets with repo-root paths so the learner can open each file on GitHub and follow in order.
+
 **You will touch code.** This course is not concepts-only. By Week 4 you should be able to open a bug report, find the file, trace the path, and propose or make a fix. Concepts explain *why*; code reps build *muscle memory*.
 
 **How to use this course**
