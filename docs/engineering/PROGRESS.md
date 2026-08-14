@@ -2,6 +2,9 @@
 
 Personal 30-day software engineering course using the real Eventtz codebase.
 
+**Curriculum map:** [CURRICULUM.md](./CURRICULUM.md)  
+**Lesson spin-offs:** [lessons/](./lessons/)
+
 ---
 
 ## Day 1 — What is system architecture?
