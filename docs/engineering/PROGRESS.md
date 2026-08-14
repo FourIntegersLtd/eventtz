@@ -73,55 +73,70 @@ Before you write routes or SQL, name the **nouns** (entities), how they connect 
 
 ### What I understood
 
-_(To be filled in after v2 redo — Step 11 explain-back.)_
+Domain modeling: entities, relationships, domain boundaries, snapshot (`line_items`) vs live (FK to `users`). £200 package stays on booking when vendor edits catalog to £300. Code trace: UI → `clientBookingsApi` → `client.py` → `create.py` → `list_pricing` → `booking_requests`.
 
 ### What I struggled with
 
-_(To be filled in during/after the lesson.)_
+_(Optional — fill in later.)_
+
+### Code trace (Day 2 v2)
+
+1. [x] `frontend/lib/clientBookingsApi.ts`
+2. [x] `backend/app/features/bookings/http/client.py`
+3. [x] `backend/app/features/bookings/create.py`
+4. [x] `backend/app/features/vendors/list_pricing.py`
+5. [x] `backend/sql/010_booking_requests.sql`
+
+### Hands-on rep (Day 2 v2)
+
+- [x] Code trace delivered in lesson (exit ticket skipped per learner request)
+
+### Lesson status
+
+**Complete** — 2026-08-14 (v2 redo; explain-back skipped on request).
+
+---
+
+## Day 3 — How databases actually work?
+
+**Date started:** 2026-08-14  
+**Curriculum:** v2
+
+### Concept
+
+A database stores **tables** of **rows** and **columns** with strict **types**. Each row has a **primary key** (unique id). **Foreign keys** link tables and define what happens on delete (`CASCADE`, `SET NULL`, `RESTRICT`). Eventtz schema lives in `backend/sql/`; the backend talks to Postgres through Supabase via `get_db()`.
+
+**One-sentence definition:** A database is typed, permanent storage where tables relate to each other through keys and rules enforced by Postgres.
+
+### What I understood
+
+_(Lesson delivered — fill in when ready.)_
 
 ### Important Eventtz code
 
 | Area | Location | Role |
 |------|----------|------|
-| Users + vendors schema | `backend/sql/001_users_and_vendor_onboarding.sql` | Core entities; vendor profile in `vendors.payload` JSONB |
-| Booking schema | `backend/sql/010_booking_requests.sql` | Commerce entity; `line_items` JSONB snapshot |
-| Line item contract | `backend/app/contracts/booking.py` | `BookingLineItemIn` — API shape for a package row |
-| Frontend API call | `frontend/lib/clientBookingsApi.ts` | `postBookingRequest` — sends IDs only, not prices |
-| HTTP handler | `backend/app/features/bookings/http/client.py` | `post_booking_request` route |
-| Resolve catalog → snapshot | `backend/app/features/vendors/list_pricing.py` | `resolve_line_items()` reads live vendor payload |
-| Persist snapshot | `backend/app/features/bookings/create.py` | Copies `line_items` onto the booking row |
-| Detail read | `backend/app/features/bookings/queries.py` | Reads stored `line_items`, does not re-join vendor |
-| Shared UI vocabulary | `frontend/lib/domain-types.ts` | `BookingLineItem`, status types |
-| Bug-fix compass | `docs/engineering/CODEBASE_MAP.md` | Full path chains |
+| Schema migrations | `backend/sql/001_*.sql`, `010_*.sql`, … | Source of truth for tables |
+| DB client | `backend/app/core/db.py` | `get_db()` → Supabase service client |
+| Insert example | `backend/app/features/bookings/create.py` | `.table("booking_requests").insert(...)` |
+| FK + CASCADE | `backend/sql/010_booking_requests.sql` | `client_user_id` / `vendor_user_id` → `users` |
+| Delete bug fix | `backend/sql/063_fix_user_delete_fk_constraints.sql` | CASCADE vs SET NULL vs RESTRICT |
+| Row helpers | `backend/app/core/db.py` | `rows()`, `one_row()` parse query results |
 
-### Code trace (Day 2 v2) — complete this with teacher
+### Code trace (Day 3)
 
-File chain for **client booking enquiry**:
+`create.py` insert → `get_db()` → Supabase PostgREST → Postgres `booking_requests` table (columns + FK constraints)
 
-1. [ ] `frontend/lib/clientBookingsApi.ts` — `postBookingRequest` (payload has `selected_option_ids`, no price)
-2. [ ] `backend/app/features/bookings/http/client.py` — `post_booking_request`
-3. [ ] `backend/app/features/bookings/create.py` — `create_booking_request` → writes `line_items`
-4. [ ] `backend/app/features/vendors/list_pricing.py` — `resolve_line_items`
-5. [ ] `backend/sql/010_booking_requests.sql` — `line_items jsonb` column + comment
+### Break-it answer
 
-### Hands-on rep (Day 2 v2)
-
-- [ ] Open each file above and confirm what step it does
-- [ ] In `CreateBookingRequestBody` / `clientBookingsApi.ts`: confirm browser cannot send `unit_price_gbp`
-- [ ] Answer: vendor changes package to £300 tonight — which DB column still shows £200?
-- [ ] `rg "resolve_line_items" backend/` — how many call sites? (create only, not read)
+Delete `auth.users` row → cascades to `public.users` → cascades to `booking_requests` where that user is client or vendor (and related rows in reviews, chat, etc.). `ON DELETE SET NULL` keeps the row but clears the FK; `RESTRICT` blocks the delete.
 
 ### Decisions made
 
-- **Leave it alone:** `line_items` JSONB snapshot at create time
-- **Leave it alone:** FKs to `users` for live identity
-- **Improve later:** normalized `booking_line_items` table only if reporting needs it
-
-### Improvements made
-
-- Day 2 v1 (concepts only) superseded by v2 redo
-- Curriculum v2 + `CODEBASE_MAP.md` added
+- **Leave it alone:** Numbered SQL migrations in `backend/sql/`
+- **Leave it alone:** Service-role Supabase client in backend only
+- **Improve later:** Soft-delete users instead of hard delete for audit (product decision)
 
 ### Lesson status
 
-**In progress (v2 redo)** — code trace + hands-on rep + Step 11 explain-back pending.
+**Complete** — 2026-08-14 (lesson delivered; explain-back optional).

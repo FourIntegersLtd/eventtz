@@ -50,3 +50,31 @@ Format: **term** — plain-English meaning.
 **Catalog domain** — Vendor listing and profile data (packages, rates in `vendors.payload`) — vendors can edit this freely.
 
 **Commerce domain** — Booking lifecycle (`booking_requests`, payments, adjustments) — must preserve what was agreed at enquiry time.
+
+---
+
+## Day 3
+
+**Table** — A named collection of rows in the database (e.g. `booking_requests`, `users`).
+
+**Row** — One record in a table (e.g. a single booking enquiry).
+
+**Column** — One field on every row (e.g. `event_date`, `line_items`).
+
+**Primary key (PK)** — The column(s) that uniquely identify a row (Eventtz: usually `id uuid`).
+
+**Foreign key (FK)** — A column that points at another table's primary key (e.g. `client_user_id` → `users.id`).
+
+**Postgres / PostgreSQL** — The relational database Eventtz uses, hosted via Supabase.
+
+**Migration** — A numbered SQL file in `backend/sql/` that creates or changes tables (the schema history).
+
+**Supabase client** — Python client in `get_db()` that sends queries to Postgres over HTTP (PostgREST).
+
+**ON DELETE CASCADE** — When parent row is deleted, child rows are deleted too (e.g. delete user → delete their bookings).
+
+**ON DELETE SET NULL** — When parent is deleted, FK column becomes `NULL` (row survives, link broken).
+
+**ON DELETE RESTRICT** — Blocks deleting the parent if children still exist (default if not specified).
+
+**JSONB** _(reinforced)_ — Postgres column type for JSON; still a column with a type, just flexible inside.
