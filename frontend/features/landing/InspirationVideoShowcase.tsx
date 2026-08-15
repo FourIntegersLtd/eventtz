@@ -8,6 +8,7 @@ import { LANDING_SECTION_CONTENT_MT } from "@/features/landing/landingSectionSty
 import { prefetchLandingVideo } from "@/lib/landingVideo";
 
 const AUTO_MS = 3500;
+const AUTO_MS_MOBILE = 4500;
 
 type InspirationVideoShowcaseProps = {
   videos: GalleryVideo[];
@@ -93,12 +94,13 @@ export function InspirationVideoShowcase({ videos }: InspirationVideoShowcasePro
 
   useEffect(() => {
     if (reduceMotion || total <= 1 || !inView) return;
+    const intervalMs = isMobile ? AUTO_MS_MOBILE : AUTO_MS;
     const id = window.setInterval(() => {
       setActiveIndex((i) => (i + 1) % total);
       setProgressKey((k) => k + 1);
-    }, AUTO_MS);
+    }, intervalMs);
     return () => window.clearInterval(id);
-  }, [inView, reduceMotion, total]);
+  }, [inView, isMobile, reduceMotion, total]);
 
   useEffect(() => {
     if (!inView || total === 0) return;
@@ -111,7 +113,7 @@ export function InspirationVideoShowcase({ videos }: InspirationVideoShowcasePro
   if (total === 0 || !active) return null;
 
   return (
-    <div ref={containerRef} className={`relative overflow-x-clip ${LANDING_SECTION_CONTENT_MT}`}>
+    <div ref={containerRef} className={`relative overflow-x-clip ${isMobile ? "mt-6" : LANDING_SECTION_CONTENT_MT}`}>
       <div className="relative w-full md:left-1/2 md:w-screen md:max-w-[100vw] md:-translate-x-1/2 md:px-8">
         {!isMobile ? (
           <>
@@ -129,7 +131,7 @@ export function InspirationVideoShowcase({ videos }: InspirationVideoShowcasePro
         <div
           className={`relative mx-auto max-w-6xl ${
             isMobile
-              ? "aspect-[16/10] w-full touch-pan-y"
+              ? "aspect-[4/3] max-h-[min(52vw,240px)] w-full touch-pan-x"
               : "h-[min(52vw,580px)] [perspective:1600px]"
           }`}
           style={isMobile ? undefined : { transformStyle: "preserve-3d" }}
@@ -179,7 +181,7 @@ export function InspirationVideoShowcase({ videos }: InspirationVideoShowcasePro
                   onClick={isActive ? undefined : () => goTo(index)}
                   className={`w-full shadow-2xl ${
                     isMobile
-                      ? "aspect-[16/10] rounded-xl shadow-primary/15 ring-1 ring-primary-border"
+                      ? "aspect-[4/3] max-h-[min(52vw,240px)] rounded-xl shadow-primary/15 ring-1 ring-primary-border"
                       : `aspect-[21/9] sm:aspect-[2.35/1] ${
                           isActive
                             ? "rounded-2xl shadow-primary/20 ring-1 ring-primary-border sm:rounded-3xl"
@@ -194,32 +196,46 @@ export function InspirationVideoShowcase({ videos }: InspirationVideoShowcasePro
           <button
             type="button"
             onClick={goPrev}
-            className="absolute left-0 top-1/2 z-30 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-primary-border bg-white/95 text-primary shadow-primary-soft backdrop-blur-sm transition hover:bg-primary-soft sm:left-2 sm:h-12 sm:w-12"
+            className={`absolute left-0 top-1/2 z-30 flex -translate-y-1/2 items-center justify-center rounded-full border border-primary-border bg-white/95 text-primary shadow-primary-soft backdrop-blur-sm transition hover:bg-primary-soft sm:left-2 ${
+              isMobile ? "h-8 w-8" : "h-10 w-10 sm:h-12 sm:w-12"
+            }`}
             aria-label="Previous celebration"
           >
-            <ChevronLeft className="h-5 w-5" strokeWidth={2} />
+            <ChevronLeft className={isMobile ? "h-4 w-4" : "h-5 w-5"} strokeWidth={2} />
           </button>
           <button
             type="button"
             onClick={goNext}
-            className="absolute right-0 top-1/2 z-30 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-primary-border bg-white/95 text-primary shadow-primary-soft backdrop-blur-sm transition hover:bg-primary-soft sm:right-2 sm:h-12 sm:w-12"
+            className={`absolute right-0 top-1/2 z-30 flex -translate-y-1/2 items-center justify-center rounded-full border border-primary-border bg-white/95 text-primary shadow-primary-soft backdrop-blur-sm transition hover:bg-primary-soft sm:right-2 ${
+              isMobile ? "h-8 w-8" : "h-10 w-10 sm:h-12 sm:w-12"
+            }`}
             aria-label="Next celebration"
           >
-            <ChevronRight className="h-5 w-5" strokeWidth={2} />
+            <ChevronRight className={isMobile ? "h-4 w-4" : "h-5 w-5"} strokeWidth={2} />
           </button>
         </div>
 
         {/* Active title + counter */}
-        <div className="mx-auto mt-6 flex max-w-5xl flex-col gap-4 sm:mt-10 sm:flex-row sm:items-end sm:justify-between">
-          <div className="min-w-0">
-            <p className="text-xs font-semibold tabular-nums tracking-[0.25em] text-primary/50">
-              {String(activeIndex + 1).padStart(2, "0")}{" "}
-              <span className="text-primary/25">/</span>{" "}
-              {String(total).padStart(2, "0")}
-            </p>
+        <div
+          className={`mx-auto flex max-w-5xl flex-col gap-4 sm:mt-10 sm:flex-row sm:items-end sm:justify-between ${
+            isMobile ? "mt-4" : "mt-6"
+          }`}
+        >
+          <div className="min-w-0 text-center sm:text-left">
+            {!isMobile ? (
+              <p className="text-xs font-semibold tabular-nums tracking-[0.25em] text-primary/50">
+                {String(activeIndex + 1).padStart(2, "0")}{" "}
+                <span className="text-primary/25">/</span>{" "}
+                {String(total).padStart(2, "0")}
+              </p>
+            ) : null}
             <h3
               key={active.src}
-              className="font-heading mt-2 text-2xl font-semibold tracking-tight text-primary sm:text-4xl md:text-5xl animate-inspiration-title"
+              className={`font-heading font-semibold tracking-tight text-primary animate-inspiration-title ${
+                isMobile
+                  ? "mt-0 text-lg"
+                  : "mt-2 text-2xl sm:text-4xl md:text-5xl"
+              }`}
             >
               {active.eventName}
             </h3>
@@ -244,13 +260,35 @@ export function InspirationVideoShowcase({ videos }: InspirationVideoShowcasePro
           </div>
         </div>
 
-        {/* Auto-advance progress */}
+        {isMobile && total > 1 ? (
+          <div className="mx-auto mt-3 flex max-w-5xl justify-center gap-1.5">
+            {videos.map((video, index) => (
+              <button
+                key={video.src}
+                type="button"
+                onClick={() => goTo(index)}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  index === activeIndex ? "w-5 bg-primary" : "w-1.5 bg-primary/25"
+                }`}
+                aria-label={`Show ${video.eventName}`}
+                aria-current={index === activeIndex ? "true" : undefined}
+              />
+            ))}
+          </div>
+        ) : null}
+
         {!reduceMotion && total > 1 ? (
-          <div className="mx-auto mt-6 h-0.5 max-w-5xl overflow-hidden rounded-full bg-primary-border/60">
+          <div
+            className={`mx-auto overflow-hidden rounded-full bg-primary-border/60 ${
+              isMobile ? "mt-4 h-0.5 max-w-[8rem]" : "mt-6 h-0.5 max-w-5xl"
+            }`}
+          >
             <div
               key={progressKey}
               className="h-full origin-left bg-gradient-to-r from-primary to-accent-gold animate-inspiration-progress"
-              style={{ animationDuration: `${AUTO_MS}ms` }}
+              style={{
+                animationDuration: `${isMobile ? AUTO_MS_MOBILE : AUTO_MS}ms`,
+              }}
             />
           </div>
         ) : null}
