@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { UserPlus } from "lucide-react";
+import { useToast } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -35,6 +36,7 @@ function roleLabel(role: AdminTeamMember["admin_role"]): string {
 
 export function AdminTeamView() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [members, setMembers] = useState<AdminTeamMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -97,6 +99,7 @@ export function AdminTeamView() {
         onClose={() => setCreateOpen(false)}
         onCreated={(message) => {
           setSuccessMessage(message);
+          showToast({ title: "Admin created", description: message, tone: "success" });
           void load();
         }}
       />
@@ -137,8 +140,15 @@ export function AdminTeamView() {
                               try {
                                 await patchAdminTeamMember(m.user_id, { admin_role: next });
                                 await load();
+                                showToast({
+                                  title: "Role updated",
+                                  description: roleLabel(next),
+                                  tone: "success",
+                                });
                               } catch (err: unknown) {
-                                setError(getApiErrorDetail(err) ?? "Could not update role.");
+                                const message = getApiErrorDetail(err) ?? "Could not update role.";
+                                setError(message);
+                                showToast({ title: "Role update failed", description: message, tone: "error" });
                               } finally {
                                 setRowBusy(null);
                               }
@@ -172,8 +182,15 @@ export function AdminTeamView() {
                               try {
                                 const result = await sendAdminPasswordResetLink(m.user_id);
                                 setSuccessMessage(result.message);
+                                showToast({
+                                  title: "Reset link sent",
+                                  description: result.message,
+                                  tone: "success",
+                                });
                               } catch (err: unknown) {
-                                setError(getApiErrorDetail(err) ?? "Could not send reset link.");
+                                const message = getApiErrorDetail(err) ?? "Could not send reset link.";
+                                setError(message);
+                                showToast({ title: "Reset link failed", description: message, tone: "error" });
                               } finally {
                                 setRowBusy(null);
                               }
@@ -185,8 +202,14 @@ export function AdminTeamView() {
                                   account_suspended: !m.account_suspended,
                                 });
                                 await load();
+                                showToast({
+                                  title: m.account_suspended ? "Admin reactivated" : "Admin suspended",
+                                  tone: "success",
+                                });
                               } catch (err: unknown) {
-                                setError(getApiErrorDetail(err) ?? "Could not update status.");
+                                const message = getApiErrorDetail(err) ?? "Could not update status.";
+                                setError(message);
+                                showToast({ title: "Status update failed", description: message, tone: "error" });
                               } finally {
                                 setRowBusy(null);
                               }
@@ -196,9 +219,16 @@ export function AdminTeamView() {
                               try {
                                 const result = await deleteAdminTeamMember(m.user_id);
                                 setSuccessMessage(result.message);
+                                showToast({
+                                  title: "Admin removed",
+                                  description: result.message,
+                                  tone: "success",
+                                });
                                 await load();
                               } catch (err: unknown) {
-                                setError(getApiErrorDetail(err) ?? "Could not delete admin.");
+                                const message = getApiErrorDetail(err) ?? "Could not delete admin.";
+                                setError(message);
+                                showToast({ title: "Delete failed", description: message, tone: "error" });
                               } finally {
                                 setRowBusy(null);
                               }

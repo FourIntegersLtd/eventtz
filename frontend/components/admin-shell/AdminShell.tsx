@@ -54,7 +54,7 @@ const ADMIN_NAV: readonly AdminNavItem[] = [
   { href: "/admin/settings", label: "Settings", icon: Settings },
   { href: "/admin/team", label: "Team", icon: UserCog },
   { href: "/admin/audit", label: "Activity log", icon: ScrollText },
-  { href: "/admin/email", label: "Email testing", icon: Mail, superAdminOnly: true },
+  { href: "/admin/email", label: "Email health", icon: Mail, superAdminOnly: true },
 ];
 
 function navItemActive(pathname: string, itemHref: string): boolean {

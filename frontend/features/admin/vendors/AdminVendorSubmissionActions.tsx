@@ -5,7 +5,15 @@ import { RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
-import { MessageComposer } from "@/features/chat/MessageComposer";
+import {
+  emptySupportDraft,
+  isSupportDraftValid,
+  SupportMessageComposer,
+} from "@/features/admin/messages/SupportMessageComposer";
+import {
+  plainTextToSupportHtml,
+  type SupportRichTextChange,
+} from "@/features/admin/messages/SupportRichTextEditor";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { sendAdminMessages } from "@/lib/adminMessagesApi";
 import type { AdminVendorRow } from "@/lib/adminVendorsApi";
@@ -43,7 +51,8 @@ export function AdminVendorSubmissionActions({
   const { showToast } = useToast();
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [messageDraft, setMessageDraft] = useState("");
+  const [messageDraft, setMessageDraft] = useState<SupportRichTextChange>(emptySupportDraft());
+  const [composerKey, setComposerKey] = useState(0);
   const [actionLoading, setActionLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
@@ -58,21 +67,21 @@ export function AdminVendorSubmissionActions({
 
   const openReturnModal = useCallback(() => {
     setLocalError(null);
-    setMessageDraft(defaultMessage);
+    setMessageDraft(emptySupportDraft());
+    setComposerKey((k) => k + 1);
     setModalOpen(true);
-  }, [defaultMessage]);
+  }, []);
 
   const handleReturnSubmit = useCallback(async () => {
-    const body = messageDraft.trim();
-    if (!body) return;
+    if (!isSupportDraftValid(messageDraft.textLength)) return;
     setActionLoading(true);
     setLocalError(null);
     try {
-      const unsubmit = await onUnsubmit(vendor.user_id, { message: body });
+      const unsubmit = await onUnsubmit(vendor.user_id, { message: messageDraft.html });
       if (!unsubmit) return;
       const result = await sendAdminMessages({
         recipient_user_ids: [vendor.user_id],
-        body,
+        body: messageDraft.html,
       });
       if ((result.sent ?? 0) < 1) {
         const failure = result.failures?.[0]?.error;
@@ -171,7 +180,7 @@ export function AdminVendorSubmissionActions({
             <Button
               variant="primary"
               loading={actionLoading}
-              disabled={!messageDraft.trim()}
+              disabled={!isSupportDraftValid(messageDraft.textLength)}
               onClick={() => void handleReturnSubmit()}
             >
               Return &amp; send message
@@ -188,16 +197,17 @@ export function AdminVendorSubmissionActions({
             {localError}
           </p>
         ) : null}
-        <MessageComposer
-          value={messageDraft}
+        <SupportMessageComposer
+          key={composerKey}
+          html={messageDraft.html}
+          textLength={messageDraft.textLength}
+          initialHtml={plainTextToSupportHtml(defaultMessage)}
           onChange={setMessageDraft}
           onSend={() => void handleReturnSubmit()}
           loading={actionLoading}
-          variant="compose"
-          rows={12}
           placeholder="Explain what the vendor needs to complete…"
-          enterToSend={false}
           showSendButton={false}
+          minHeightClass="min-h-[12rem]"
         />
       </Modal>
     </>

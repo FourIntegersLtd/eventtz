@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useToast } from "@/components/ui/Toast";
 import { updateClientOnboarding } from "@/lib/clientOnboardingApi";
 
 type ClientOnboardingContextValue = {
@@ -17,6 +18,7 @@ const ClientOnboardingContext = createContext<ClientOnboardingContextValue | nul
 
 export function ClientOnboardingProvider({ children }: { children: ReactNode }) {
   const { user, refreshUser } = useAuth();
+  const { showToast } = useToast();
   const [dismissedAuto, setDismissedAuto] = useState(false);
   const [replayOpen, setReplayOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -58,9 +60,13 @@ export function ClientOnboardingProvider({ children }: { children: ReactNode }) 
       }
       await refreshUser();
     } catch {
-      // Non-blocking.
+      showToast({
+        title: "Could not finish onboarding",
+        description: "Please try again.",
+        tone: "error",
+      });
     }
-  }, [dismiss, refreshUser, user?.client_onboarding_completed]);
+  }, [dismiss, refreshUser, showToast, user?.client_onboarding_completed]);
 
   const value = useMemo<ClientOnboardingContextValue>(
     () => ({

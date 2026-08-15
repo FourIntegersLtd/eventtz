@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { useToast } from "@/components/ui/Toast";
 import { DateInput } from "@/components/ui/DateInput";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { getApiErrorDetail } from "@/lib/api-errors";
@@ -69,6 +70,7 @@ export function MultiVendorEnquireModal({
   onClose,
   onSuccess,
 }: MultiVendorEnquireModalProps) {
+  const { showToast } = useToast();
   const [eventName, setEventName] = useState(initialPrefill?.eventName ?? "");
   const [eventDate, setEventDate] = useState(
     searchPrefill?.eventDate?.trim() ||
@@ -192,6 +194,22 @@ export function MultiVendorEnquireModal({
       setSubmitting(false);
       if (createdIds.length === 0) {
         setError(failures.join("\n") || "Could not send any requests.");
+        showToast({
+          title: "Requests not sent",
+          description: failures[0] ?? "Could not send any requests.",
+          tone: "error",
+        });
+        return;
+      }
+      if (failures.length > 0) {
+        setError(
+          `Sent ${createdIds.length} of ${optionIdsByVendor.length} requests.\n\n${failures.join("\n")}`,
+        );
+        showToast({
+          title: `${createdIds.length} of ${optionIdsByVendor.length} requests sent`,
+          description: `${failures.length} could not be sent. See details in the form.`,
+          tone: "error",
+        });
         return;
       }
       track(MixpanelEvents.multi_enquiry_created, {

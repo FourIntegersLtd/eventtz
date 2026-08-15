@@ -1,10 +1,12 @@
 "use client";
 
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useToast } from "@/components/ui/Toast";
 import { ADMIN_CONFIRM_COPY } from "@/features/bookings/bookingConfirmCopy";
 import { AccountStatusBadge } from "@/components/badges/AccountStatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { patchClientSuspended, type AdminClientRow } from "@/lib/adminPlatformApi";
+import { getApiErrorDetail } from "@/lib/api-errors";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminFilterBar } from "@/features/admin/components/AdminFilterBar";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
@@ -24,6 +26,7 @@ import { useState } from "react";
 
 export function AdminClientsView() {
   const { canSuspendClients } = useAdminPermissions();
+  const { showToast } = useToast();
   const {
     rows,
     total,
@@ -46,12 +49,19 @@ export function AdminClientsView() {
 
   const toggleSuspended = async (row: AdminClientRow) => {
     setBusyId(row.user_id);
+    const nextSuspended = !row.account_suspended;
     try {
-      await patchClientSuspended(row.user_id, !row.account_suspended);
+      await patchClientSuspended(row.user_id, nextSuspended);
       setConfirmTarget(null);
       await reload();
-    } catch {
-      // error surfaced via hook on next load
+      showToast({
+        title: nextSuspended ? "Client suspended" : "Client unsuspended",
+        description: row.email ?? undefined,
+        tone: "success",
+      });
+    } catch (e: unknown) {
+      const message = getApiErrorDetail(e) ?? "Could not update client status.";
+      showToast({ title: "Update failed", description: message, tone: "error" });
     } finally {
       setBusyId(null);
     }

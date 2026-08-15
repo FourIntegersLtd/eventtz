@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useToast } from "@/components/ui/Toast";
 import {
   addClientFavorite,
   fetchClientFavoriteVendorIds,
@@ -38,6 +39,7 @@ function clearLocalIds() {
 
 export function useMarketplaceBookmarks() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const isClient = user?.user_type === "client";
   const clientId = isClient ? String(user?.id || "") : "";
 
@@ -104,6 +106,11 @@ export function useMarketplaceBookmarks() {
               else next.delete(vendorUserId);
               return next;
             });
+            showToast({
+              title: wasSaved ? "Could not remove favorite" : "Could not save favorite",
+              description: "Please try again.",
+              tone: "error",
+            });
           }
         })();
       } else {
@@ -115,7 +122,7 @@ export function useMarketplaceBookmarks() {
         );
       }
     },
-    [saved, isClient, clientId],
+    [saved, isClient, clientId, showToast],
   );
 
   const isSaved = useCallback(

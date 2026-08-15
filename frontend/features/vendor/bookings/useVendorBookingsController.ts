@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useToast } from "@/components/ui/Toast";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import type { BookingDetailAction } from "@/features/bookings/bookingViewModel";
 import { useParticipantBookingsScaffold } from "@/features/bookings/useParticipantBookingsScaffold";
@@ -39,6 +40,7 @@ type UseVendorBookingsControllerArgs = {
 export function useVendorBookingsController({ selectedBookingId }: UseVendorBookingsControllerArgs) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { showToast } = useToast();
   const listStatusFilter = searchParams.get("status") ?? "";
   const urlTab = searchParams.get("tab");
 
@@ -132,6 +134,10 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
             : MixpanelEvents.vendor_booking_declined,
           { booking_id: id },
         );
+        showToast({
+          title: next === "accepted" ? "Booking accepted" : "Booking declined",
+          tone: "success",
+        });
         bumpDetail();
       } catch (e: unknown) {
         const msg = getApiErrorDetail(e) ?? "Could not update this booking.";
@@ -146,7 +152,7 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
         setPendingAction(null);
       }
     },
-    [detail, bumpDetail, setActionError],
+    [detail, bumpDetail, setActionError, showToast],
   );
 
   const requestAccept = useCallback(() => {
@@ -216,6 +222,7 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
     try {
       await patchVendorBookingStatus(detail.booking_request_id, "cancelled");
       track(MixpanelEvents.vendor_quote_withdrawn, { booking_id: detail.booking_request_id });
+      showToast({ title: "Quote withdrawn", tone: "success" });
       bumpDetail();
     } catch (e: unknown) {
       setActionError(getApiErrorDetail(e) ?? "Could not withdraw this quote.");
@@ -233,6 +240,7 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
     try {
       await patchVendorBookingStatus(detail.booking_request_id, "cancelled");
       track(MixpanelEvents.vendor_booking_cancelled, { booking_id: detail.booking_request_id });
+      showToast({ title: "Booking cancelled", tone: "success" });
       bumpDetail();
     } catch (e: unknown) {
       setActionError(getApiErrorDetail(e) ?? "Could not cancel this booking.");
@@ -250,6 +258,7 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
     try {
       await postVendorConfirmCompletion(detail.booking_request_id);
       track(MixpanelEvents.vendor_booking_completed, { booking_id: detail.booking_request_id });
+      showToast({ title: "Completion confirmed", tone: "success" });
       bumpDetail();
     } catch (e: unknown) {
       setActionError(getApiErrorDetail(e) ?? "Could not confirm completion.");
@@ -292,6 +301,7 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
         booking_id: detail.booking_request_id,
         line_count: parsed.length,
       });
+      showToast({ title: "Updated price sent", tone: "success" });
     } catch (e: unknown) {
       setActionError(getApiErrorDetail(e) ?? "Could not send the updated price.");
     } finally {

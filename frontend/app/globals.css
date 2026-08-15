@@ -713,6 +713,98 @@ body::-webkit-scrollbar:vertical {
   pointer-events: none;
 }
 
+/* Admin support / chat HTML messages (sanitized server-side). */
+.message-prose {
+  max-width: none;
+  font-size: 0.875rem;
+  line-height: 1.625;
+  color: inherit;
+}
+
+.message-prose > * + * {
+  margin-top: 0.5rem;
+}
+
+.message-prose p {
+  margin: 0;
+}
+
+.message-prose strong,
+.message-prose b {
+  font-weight: 600;
+}
+
+.message-prose em,
+.message-prose i {
+  font-style: italic;
+}
+
+.message-prose a {
+  font-weight: 500;
+  color: rgb(62 25 100);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.message-prose blockquote {
+  margin: 0;
+  padding-left: 0.75rem;
+  border-left: 3px solid rgb(62 25 100 / 0.25);
+  color: rgb(82 82 82);
+}
+
+.message-prose ul,
+.message-prose ol {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.message-prose ul {
+  list-style-type: disc;
+}
+
+.message-prose ol {
+  list-style-type: decimal;
+}
+
+.message-prose li + li {
+  margin-top: 0.25rem;
+}
+
+.prose-message {
+  outline: none;
+}
+
+.prose-message p {
+  margin: 0;
+}
+
+.prose-message ul,
+.prose-message ol {
+  margin: 0.5rem 0;
+  padding-left: 1.25rem;
+}
+
+.prose-message blockquote {
+  margin: 0.5rem 0;
+  padding-left: 0.75rem;
+  border-left: 3px solid rgb(62 25 100 / 0.25);
+}
+
+.prose-message a {
+  color: rgb(62 25 100);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose-message .is-empty::before {
+  color: rgb(163 163 163);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
 /* Scrollable pane: stays within parent height (vertical scrollbar hidden globally). */
 .scroll-pane {
   overflow-y: auto;

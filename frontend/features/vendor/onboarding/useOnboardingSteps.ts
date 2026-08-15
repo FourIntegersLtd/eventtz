@@ -204,6 +204,7 @@ export function useOnboardingSteps({
       } else {
         if (step === 8 && !walkthroughFinish) {
           track(MixpanelEvents.vendor_onboarding_submitted);
+          showToast({ title: "Submitted for review", tone: "success" });
         }
         setStep(nextStep);
         if (nextStep === 8) {

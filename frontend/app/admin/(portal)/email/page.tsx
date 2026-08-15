@@ -5,7 +5,7 @@ import { AdminEmailTestingView } from "@/features/admin/email/AdminEmailTestingV
 
 export default function AdminEmailTestingPage() {
   return (
-    <AdminConsolePage title="Email testing">
+    <AdminConsolePage title="Email health">
       <AdminEmailTestingView />
     </AdminConsolePage>
   );

@@ -2,9 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
+import { useToast } from "@/components/ui/Toast";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { useAdminPermissions } from "@/features/admin/useAdminPermissions";
-import { MessageComposer } from "@/features/chat/MessageComposer";
+import {
+  emptySupportDraft,
+  SupportMessageComposer,
+} from "@/features/admin/messages/SupportMessageComposer";
+import type { SupportRichTextChange } from "@/features/admin/messages/SupportRichTextEditor";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import {
   sendAdminMessages,
@@ -17,8 +22,10 @@ type RecipientMode = "selected" | AdminMessageAudience;
 
 export function AdminMessagesComposeView() {
   const { canBroadcastMessages } = useAdminPermissions();
+  const { showToast } = useToast();
   const [mode, setMode] = useState<RecipientMode>("selected");
-  const [draft, setDraft] = useState("");
+  const [draft, setDraft] = useState<SupportRichTextChange>(emptySupportDraft());
+  const [composerKey, setComposerKey] = useState(0);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<AdminDirectoryUser[]>([]);
   const [hits, setHits] = useState<AdminDirectoryUser[]>([]);
@@ -91,12 +98,14 @@ export function AdminMessagesComposeView() {
   const sendCompose = async () => {
     if (sending) return;
     const parsed = parseForm(adminComposeMessageSchema, {
-      body: draft,
+      body: draft.html,
+      textLength: draft.textLength,
       audience: mode,
       recipientCount: selected.length,
     });
     if (!parsed.ok) {
       setError(parsed.formError);
+      showToast({ title: "Check the message", description: parsed.formError, tone: "error" });
       return;
     }
     setSending(true);
@@ -110,18 +119,25 @@ export function AdminMessagesComposeView() {
           : { audience: mode }),
       });
       const failN = result.failures?.length ?? 0;
-      setSuccess(
-        failN
-          ? `Sent to ${result.sent} recipient${result.sent === 1 ? "" : "s"} (${failN} failed).`
-          : `Sent to ${result.sent} recipient${result.sent === 1 ? "" : "s"}.`,
-      );
-      setDraft("");
+      const successMessage = failN
+        ? `Sent to ${result.sent} recipient${result.sent === 1 ? "" : "s"} (${failN} failed).`
+        : `Sent to ${result.sent} recipient${result.sent === 1 ? "" : "s"}.`;
+      setSuccess(successMessage);
+      showToast({
+        title: failN ? "Messages partly sent" : "Messages sent",
+        description: successMessage,
+        tone: failN ? "error" : "success",
+      });
+      setDraft(emptySupportDraft());
+      setComposerKey((k) => k + 1);
       if (mode === "selected") {
         setSelected([]);
         setQuery("");
       }
     } catch (e: unknown) {
-      setError(getApiErrorDetail(e) ?? "Could not send messages.");
+      const message = getApiErrorDetail(e) ?? "Could not send messages.";
+      setError(message);
+      showToast({ title: "Could not send messages", description: message, tone: "error" });
     } finally {
       setSending(false);
     }
@@ -266,16 +282,16 @@ export function AdminMessagesComposeView() {
           <p className="mt-0.5 text-[13px] text-neutral-400">Sent as Eventtz support.</p>
         </div>
         <div className="border-t border-neutral-100 px-5 py-4 sm:px-6">
-          <MessageComposer
-            variant="compose"
-            value={draft}
+          <SupportMessageComposer
+            key={composerKey}
+            html={draft.html}
+            textLength={draft.textLength}
             onChange={setDraft}
             onSend={() => void sendCompose()}
             loading={sending}
-            rows={6}
             placeholder="Write a support message…"
             sendLabel="Send"
-            enterToSend={false}
+            minHeightClass="min-h-[10rem]"
           />
         </div>
       </section>

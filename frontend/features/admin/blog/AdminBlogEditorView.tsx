@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { useToast } from "@/components/ui/Toast";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import { BlogRichTextEditor } from "@/features/admin/blog/BlogRichTextEditor";
@@ -29,6 +30,7 @@ const inputClass =
 
 export function AdminBlogEditorView({ postId }: AdminBlogEditorViewProps) {
   const router = useRouter();
+  const { showToast } = useToast();
   const coverRef = useRef<HTMLInputElement>(null);
   const [post, setPost] = useState<BlogPostAdminDetail | null>(null);
   const [title, setTitle] = useState("");
@@ -148,6 +150,7 @@ export function AdminBlogEditorView({ postId }: AdminBlogEditorViewProps) {
     try {
       const uploaded = await uploadImage(file);
       setCoverUrl(uploaded.public_url);
+      showToast({ title: "Cover image uploaded", tone: "success" });
     } catch (e: unknown) {
       setError(getApiErrorDetail(e) ?? "Could not upload cover.");
     }

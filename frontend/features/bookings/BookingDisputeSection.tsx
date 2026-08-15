@@ -4,6 +4,7 @@ import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Drawer } from "@/components/ui/Drawer";
+import { useToast } from "@/components/ui/Toast";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -43,6 +44,7 @@ export function BookingDisputeSection({
   bookingStatus,
   presentation = "inline",
 }: Props) {
+  const { showToast } = useToast();
   const [disputes, setDisputes] = useState<ParticipantDispute[]>([]);
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState("");
@@ -112,6 +114,7 @@ export function BookingDisputeSection({
         booking_id: bookingId,
         dispute_id: created.id,
       });
+      showToast({ title: "Dispute opened", tone: "success" });
       setDisputes((prev) => [created, ...prev.filter((x) => x.id !== created.id)]);
       setSummary("");
       setSubmitConfirmOpen(false);

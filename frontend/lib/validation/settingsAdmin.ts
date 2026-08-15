@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { emailSchema, messageBodySchema, moneyGbpSchema, phoneOptionalSchema, preferredNameSchema } from "@/lib/validation/common";
+import { refineSupportMessageTextLength } from "@/lib/validation/supportMessage";
+import { emailSchema, moneyGbpSchema, phoneOptionalSchema, preferredNameSchema } from "@/lib/validation/common";
 
 export const preferredNameFormSchema = z.object({
   preferredName: preferredNameSchema,
@@ -19,18 +20,26 @@ export const adminPartialRefundSchema = z.object({
   note: z.string().trim().max(8000).optional().default(""),
 });
 
-export const adminEmailTestSchema = z.object({
-  templateId: z.string().trim().min(1, "Choose a template."),
-  toEmail: emailSchema,
-});
+export const adminEmailTestSchema = z
+  .object({
+    templateId: z.string().trim().min(1, "Choose a layout."),
+    toEmail: emailSchema,
+    messageHtml: z.string(),
+    textLength: z.number().int().nonnegative(),
+  })
+  .superRefine((val, ctx) => {
+    refineSupportMessageTextLength(val.textLength, ctx, "messageHtml");
+  });
 
 export const adminComposeMessageSchema = z
   .object({
-    body: messageBodySchema({ min: 1, max: 5000 }),
+    body: z.string(),
+    textLength: z.number().int().nonnegative(),
     audience: z.enum(["selected", "clients", "vendors", "users"]),
     recipientCount: z.number().int().nonnegative(),
   })
   .superRefine((val, ctx) => {
+    refineSupportMessageTextLength(val.textLength, ctx, "body");
     if (val.audience === "selected" && val.recipientCount < 1) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

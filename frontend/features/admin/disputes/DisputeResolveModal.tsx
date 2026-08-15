@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useToast } from "@/components/ui/Toast";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
@@ -24,6 +25,7 @@ type DisputeResolveModalProps = {
 
 export function DisputeResolveModal({ dispute, onClose, onResolved }: DisputeResolveModalProps) {
   const { canResolveDisputesFinancially } = useAdminPermissions();
+  const { showToast } = useToast();
   const [action, setAction] = useState<NonNullable<AdminDisputeCase["resolution_action"]>>(
     "release_to_vendor",
   );
@@ -71,9 +73,12 @@ export function DisputeResolveModal({ dispute, onClose, onResolved }: DisputeRes
         resolution_action: action,
         refund_amount_gbp: refundAmountGbp ?? undefined,
       });
+      showToast({ title: "Dispute resolved", description: resolutionActionLabel(action), tone: "success" });
       onResolved();
     } catch (e: unknown) {
-      setError(getApiErrorDetail(e) ?? "Could not resolve this dispute.");
+      const message = getApiErrorDetail(e) ?? "Could not resolve this dispute.";
+      setError(message);
+      showToast({ title: "Resolve failed", description: message, tone: "error" });
     } finally {
       setBusy(false);
     }

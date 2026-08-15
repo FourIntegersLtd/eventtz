@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { useToast } from "@/components/ui/Toast";
 import { Modal } from "@/components/ui/Modal";
 import {
   postCopilotDraftReply,
@@ -15,6 +16,7 @@ type Props = {
 };
 
 export function VendorDraftReplyPanel({ bookingId, onUseDraft }: Props) {
+  const { showToast } = useToast();
   const [open, setOpen] = useState(false);
   const [intent, setIntent] = useState<"accept" | "decline" | "clarify">("accept");
   const [draft, setDraft] = useState("");
@@ -97,6 +99,7 @@ export function VendorDraftReplyPanel({ bookingId, onUseDraft }: Props) {
                   size="sm"
                   onClick={() => {
                     onUseDraft(draft.trim());
+                    showToast({ title: "Draft added to chat", tone: "success" });
                     setOpen(false);
                   }}
                 >
