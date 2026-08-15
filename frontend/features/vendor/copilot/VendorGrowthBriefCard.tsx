@@ -103,7 +103,7 @@ export function VendorGrowthBriefCard({ onOpenCopilot }: Props) {
               Suggested actions
             </p>
             {brief.suggested_actions.map((action, i) => (
-              <ActionButton key={`${action.kind}-${i}`} action={action} />
+              <ActionButton key={`${action.action_type}-${i}`} action={action} />
             ))}
           </div>
         ) : null}

@@ -30,7 +30,7 @@ export type HelpArticleDetail = HelpArticleListItem & {
   related_slugs: string[];
 };
 
-export type HelpAskMessage = { role: "user" | "assistant"; content: string };
+export type HelpAskMessage = { message_role: "user" | "assistant"; content: string };
 
 export type HelpAskResponse = {
   answer_markdown: string;

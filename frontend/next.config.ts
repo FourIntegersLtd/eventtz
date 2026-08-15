@@ -34,6 +34,111 @@ const nextConfig: NextConfig = {
         destination: "/forgot-password?portal=admin",
         permanent: false,
       },
+      // Legacy admin index + tab aliases
+      {
+        source: "/admin",
+        destination: "/admin/dashboard",
+        permanent: false,
+      },
+      {
+        source: "/admin/vendors",
+        destination: "/admin/directory?tab=vendors",
+        permanent: false,
+      },
+      {
+        source: "/admin/clients",
+        destination: "/admin/directory?tab=clients",
+        permanent: false,
+      },
+      {
+        source: "/admin/bookings",
+        destination: "/admin/commerce?tab=bookings",
+        permanent: false,
+      },
+      {
+        source: "/admin/financials",
+        destination: "/admin/commerce?tab=financials",
+        permanent: false,
+      },
+      {
+        source: "/admin/disputes",
+        destination: "/admin/trust?tab=disputes",
+        permanent: false,
+      },
+      {
+        source: "/admin/reviews",
+        destination: "/admin/trust?tab=reviews",
+        permanent: false,
+      },
+      {
+        source: "/admin/chat",
+        destination: "/admin/trust?tab=disputes",
+        permanent: false,
+      },
+      // Admin login — preserve ?next= or default to admin dashboard
+      {
+        source: "/admin/login",
+        has: [{ type: "query", key: "next" }],
+        destination: "/login",
+        permanent: false,
+      },
+      {
+        source: "/admin/login",
+        destination: "/login?next=/admin/dashboard",
+        permanent: false,
+      },
+      // Unified auth aliases
+      {
+        source: "/client/login",
+        destination: "/login",
+        permanent: false,
+      },
+      {
+        source: "/client/register",
+        destination: "/register?type=client",
+        permanent: false,
+      },
+      {
+        source: "/vendor/login",
+        destination: "/login",
+        permanent: false,
+      },
+      {
+        source: "/vendor/register",
+        destination: "/register?type=vendor",
+        permanent: false,
+      },
+      {
+        source: "/vendor/onboarding",
+        destination: "/vendor/profile",
+        permanent: false,
+      },
+      // Marketplace + help bookmarks
+      {
+        source: "/explore",
+        destination: "/client/browse",
+        permanent: false,
+      },
+      {
+        source: "/client/help",
+        destination: "/client/dashboard",
+        permanent: false,
+      },
+      {
+        source: "/client/help/:path*",
+        destination: "/client/dashboard",
+        permanent: false,
+      },
+      {
+        source: "/vendor/help",
+        destination: "/vendor/dashboard",
+        permanent: false,
+      },
+      {
+        source: "/vendor/help/:path*",
+        destination: "/vendor/dashboard",
+        permanent: false,
+      },
     ];
   },
   async headers() {

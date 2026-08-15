@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Drawer } from "@/components/ui/Drawer";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { CONVERSATION_START_FAILED } from "@/lib/chat-messages";
 import { CHAT_UNREAD_CLEARED_EVENT, postConversation, postMessage } from "@/lib/chatApi";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { chatMessageSchema, parseForm } from "@/lib/validation";
@@ -83,7 +84,7 @@ export function ChatDrawer({
       setActiveConversationId(conv.id);
       onConversationCreated?.(conv.id);
     } catch (e: unknown) {
-      setError(getApiErrorDetail(e) ?? "Could not start the conversation.");
+      setError(getApiErrorDetail(e) ?? CONVERSATION_START_FAILED);
     } finally {
       setBusy(false);
     }

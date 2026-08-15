@@ -8,8 +8,8 @@ import { AuthPageShell } from "@/components/auth/AuthPageShell";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { PasswordField } from "@/components/ui/PasswordField";
-import { adminPageBg, adminCard } from "@/features/admin/adminTheme";
-import { dashboardPathForUserType } from "@/features/auth/authRouting";
+import { adminPageBg, adminCard } from "@/components/admin-shell/adminTheme";
+import { dashboardPathForUserType, loginPathWithNext } from "@/features/auth/authRouting";
 import { getMe, resetPassword } from "@/lib/auth-api";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
@@ -39,6 +39,7 @@ export function ResetPasswordView({ variant = "default" }: ResetPasswordViewProp
   const [submitting, setSubmitting] = useState(false);
 
   const forgotHref = isAdmin ? "/forgot-password?portal=admin" : "/forgot-password";
+  const adminSignInHref = loginPathWithNext("/admin/dashboard");
   const shellClassName = isAdmin ? adminPageBg : undefined;
   const cardClassName = isAdmin
     ? `${adminCard} w-full max-w-md p-6 pb-8 sm:p-8 sm:pb-10`
@@ -49,9 +50,9 @@ export function ResetPasswordView({ variant = "default" }: ResetPasswordViewProp
   if (!token) {
     return (
       <AuthPageShell
-        logoHref={isAdmin ? "/admin/login" : "/"}
+        logoHref={isAdmin ? adminSignInHref : "/"}
         className={shellClassName}
-        backHref={isAdmin ? "/admin/login" : "/"}
+        backHref={isAdmin ? adminSignInHref : "/"}
         backLabel={isAdmin ? "Back to sign in" : "Back to home"}
       >
         <Card padding={isAdmin ? "none" : "lg"} className={cardClassName}>
@@ -101,9 +102,9 @@ export function ResetPasswordView({ variant = "default" }: ResetPasswordViewProp
 
   return (
     <AuthPageShell
-      logoHref={isAdmin ? "/admin/login" : "/"}
+      logoHref={isAdmin ? adminSignInHref : "/"}
       className={shellClassName}
-      backHref={isAdmin ? "/admin/login" : "/"}
+      backHref={isAdmin ? adminSignInHref : "/"}
       backLabel={isAdmin ? "Back to sign in" : "Back to home"}
     >
       <Card padding={isAdmin ? "none" : "lg"} className={cardClassName}>

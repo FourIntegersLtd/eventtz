@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getApiErrorDetail, postBookingCheckout } from "@/lib/bookingCheckoutApi";
+import { BOOKING_NOT_FOUND, COULD_NOT_START_CHECKOUT } from "@/lib/booking-messages";
 import {
   fetchClientBookingDetail,
   patchClientBookingVenue,
@@ -34,7 +35,7 @@ export function useClientBookingPay(bookingId: string | undefined) {
         setPhase("safety");
       } catch (e: unknown) {
         if (!cancelled) {
-          setError(getApiErrorDetail(e) ?? "Could not load this booking.");
+          setError(getApiErrorDetail(e) ?? BOOKING_NOT_FOUND);
           setPhase("error");
         }
       }
@@ -55,7 +56,7 @@ export function useClientBookingPay(bookingId: string | undefined) {
       window.location.href = checkoutUrl;
     } catch (e: unknown) {
       track(MixpanelEvents.booking_checkout_failed, { booking_id: bookingId });
-      setError(getApiErrorDetail(e) ?? "We couldn't start payment. Please try again.");
+      setError(getApiErrorDetail(e) ?? COULD_NOT_START_CHECKOUT);
       setPhase("safety");
       setBusy(false);
     }

@@ -10,6 +10,7 @@ import { PasswordField } from "@/components/ui/PasswordField";
 import { useToast } from "@/components/ui/Toast";
 import { changePassword } from "@/lib/auth-api";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { GENERIC_AUTH_ERROR } from "@/lib/auth-messages";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { adminPasswordSchema, changePasswordSchema, parseForm } from "@/lib/validation";
 import { z } from "zod";
@@ -85,19 +86,19 @@ export function ChangePasswordModal({
     }
     setSaving(true);
     try {
-      await changePassword(parsed.data.currentPassword, parsed.data.newPassword);
+      const result = await changePassword(parsed.data.currentPassword, parsed.data.newPassword);
       track(MixpanelEvents.password_changed);
       reset();
       onClose();
       showToast({
         title: "Password updated",
-        description: "Sign in again with your new password.",
+        description: result.message,
         tone: "success",
       });
       await signOut();
       router.replace(signInPath);
     } catch (err: unknown) {
-      setError(getApiErrorDetail(err) ?? "Could not update password. Try again.");
+      setError(getApiErrorDetail(err) ?? GENERIC_AUTH_ERROR);
     } finally {
       setSaving(false);
     }

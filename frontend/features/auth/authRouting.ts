@@ -31,6 +31,16 @@ export function isNextPathAllowedForUserType(nextPath: string, userType: UserTyp
   );
 }
 
+/** Whether `nextPath` targets the admin console (used to enforce admin-only sign-in). */
+export function isAdminLoginIntent(nextPath: string | null | undefined): boolean {
+  return Boolean(nextPath?.startsWith("/admin"));
+}
+
+/** Login URL that returns the user to a protected route after auth. */
+export function loginPathWithNext(nextPath: string): string {
+  return `/login?next=${encodeURIComponent(nextPath)}`;
+}
+
 /** Safe post-auth redirect target: honors `next` only when it matches the resolved role. */
 export function resolvePostAuthPath(nextPath: string | null, userType: UserType | undefined): string {
   if (nextPath && nextPath.startsWith("/") && isNextPathAllowedForUserType(nextPath, userType)) {

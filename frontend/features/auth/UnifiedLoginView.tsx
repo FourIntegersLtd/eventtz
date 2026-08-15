@@ -9,6 +9,7 @@ import { TextField } from "@/components/ui/TextField";
 import { PasswordField } from "@/components/ui/PasswordField";
 import { dashboardPathForUserType } from "@/features/auth/authRouting";
 import { useUnifiedLogin } from "@/features/auth/useUnifiedLogin";
+import { GENERIC_AUTH_ERROR } from "@/lib/auth-messages";
 import { resendVerification } from "@/lib/auth-api";
 import { getApiErrorDetail } from "@/lib/api-errors";
 
@@ -42,7 +43,7 @@ export function UnifiedLoginView() {
       const res = await resendVerification(email.trim());
       setResendNote(res.message);
     } catch (e: unknown) {
-      setResendNote(getApiErrorDetail(e) ?? "Could not send a new link. Try again later.");
+      setResendNote(getApiErrorDetail(e) ?? GENERIC_AUTH_ERROR);
     } finally {
       setResendBusy(false);
     }

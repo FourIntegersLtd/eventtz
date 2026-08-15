@@ -2,7 +2,7 @@
 
 import { ContentCard } from "@/components/ui/SectionBlock";
 import { contentCardPadding } from "@/components/ui/sectionBlockTokens";
-import { SubmittedMediaViewer } from "@/components/ui/SubmittedMediaViewer";
+import { SubmittedMediaViewer } from "@/features/admin/vendors/SubmittedMediaViewer";
 import type { SubmittedMediaBundle } from "@/lib/submittedMediaUtils";
 
 type Props = {

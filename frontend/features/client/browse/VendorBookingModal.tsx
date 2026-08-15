@@ -227,12 +227,12 @@ export function VendorBookingModal({
     })
       .then((created) => {
         track(MixpanelEvents.enquiry_created, {
-          booking_id: created.id,
+          booking_id: created.booking_request_id,
           vendor_user_id: vendorUserId,
           option_count: parsed.data.selectedOptionIds.length,
           source: "single",
         });
-        setSubmitResult({ type: "success", bookingId: created.id });
+        setSubmitResult({ type: "success", bookingId: created.booking_request_id });
         setSubmitting(false);
       })
       .catch((err: unknown) => {

@@ -31,8 +31,8 @@ export type VendorReviewSummary = {
 };
 
 export type VendorBookingListItem = {
-  id: string;
-  status: string;
+  booking_request_id: string;
+  booking_status: string;
   event_name: string;
   event_date: string;
   event_end_date: string | null;
@@ -59,8 +59,8 @@ export type VendorBookingsListResponse = {
 };
 
 export type VendorBookingDetail = {
-  id: string;
-  status: string;
+  booking_request_id: string;
+  booking_status: string;
   event_name: string;
   event_date: string;
   event_end_date: string | null;
@@ -79,7 +79,7 @@ export type VendorBookingDetail = {
   created_at: string | null;
   /** Set automatically when payment succeeds (e.g. Stripe webhook). */
   paid_at: string | null;
-  /** Money lifecycle, independent of `status`: unpaid/pending/paid/refunded/partially_refunded/payout_released. */
+  /** Money lifecycle, independent of `booking_status`: unpaid/pending/paid/refunded/partially_refunded/payout_released. */
   payment_status: string;
   client_completion_confirmed_at: string | null;
   vendor_completion_confirmed_at: string | null;
@@ -102,8 +102,8 @@ export type VendorBookingDetailResponse = {
 
 export type VendorBookingStatusResponse = {
   success: boolean;
-  id: string;
-  status: string;
+  booking_request_id: string;
+  booking_status: string;
 };
 
 export type VendorBookingsListParams = {
@@ -136,11 +136,11 @@ export async function fetchVendorBookings(
 
 export async function patchVendorBookingStatus(
   bookingId: string,
-  status: "accepted" | "declined" | "cancelled",
+  bookingStatus: "accepted" | "declined" | "cancelled",
 ): Promise<VendorBookingStatusResponse> {
   const { data } = await api.patch<VendorBookingStatusResponse>(
     `/api/v1/vendor/booking-requests/${bookingId}/status`,
-    { status },
+    { booking_status: bookingStatus },
   );
   return data;
 }
@@ -170,16 +170,16 @@ export type PostVendorQuoteBody = {
 
 export async function postVendorQuote(
   body: PostVendorQuoteBody,
-): Promise<{ id: string; status: string; created_at: string | null }> {
+): Promise<{ booking_request_id: string; booking_status: string; created_at: string | null }> {
   const { data } = await api.post<{
     success: boolean;
-    id: string;
-    status: string;
+    booking_request_id: string;
+    booking_status: string;
     created_at: string | null;
   }>("/api/v1/vendor/booking-requests/vendor-quote", body);
   return {
-    id: data.id,
-    status: data.status,
+    booking_request_id: data.booking_request_id,
+    booking_status: data.booking_status,
     created_at: data.created_at ?? null,
   };
 }
@@ -194,7 +194,7 @@ export async function fetchVendorBookingDetail(
 }
 
 export type VendorAdjustmentInput = {
-  tag: string;
+  adjustment_category: string;
   label: string;
   amount_gbp: number;
 };

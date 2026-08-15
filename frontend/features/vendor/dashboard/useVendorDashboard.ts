@@ -8,7 +8,7 @@ import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 import { fetchVendorBookingNotificationsUnreadCount } from "@/lib/vendorNotificationsApi";
 import { fetchVendorNotificationsFeed, type NotificationFeedItem } from "@/lib/notificationsFeedApi";
 import {
-  fetchStripePaymentsStatus,
+  fetchVendorStripeConnectStatus,
   postConnectStripeAccount,
   type VendorPaymentsStatus,
 } from "@/lib/vendorPaymentsApi";
@@ -98,15 +98,15 @@ export function useVendorDashboard(enabled: boolean) {
         fetchChatUnreadCount(),
         fetchVendorBookingNotificationsUnreadCount(),
         fetchVendorNotificationsFeed(),
-        fetchStripePaymentsStatus().catch((): VendorPaymentsStatus | null => null),
+        fetchVendorStripeConnectStatus().catch((): VendorPaymentsStatus | null => null),
       ]);
-      const pendingBookingsCount = active.filter((b) => b.status === "pending").length;
-      const needsResponse = active.filter((b) => b.status === "pending").slice(0, 3);
+      const pendingBookingsCount = active.filter((b) => b.booking_status === "pending").length;
+      const needsResponse = active.filter((b) => b.booking_status === "pending").slice(0, 3);
 
       const todayKey = localDateKey(new Date());
       const todayAtNoon = noonUtcSafeDateFromKey(todayKey);
 
-      const accepted = active.filter((b) => b.status === "accepted");
+      const accepted = active.filter((b) => b.booking_status === "accepted");
       const acceptedUpcoming = accepted.filter((b) => {
         const startKey = dateKeyFromIso(b.event_date);
         if (!startKey) return false;

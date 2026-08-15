@@ -9,10 +9,10 @@ export type AdminVendorRow = {
   id: string | null;
   user_id: string;
   email: string | null;
-  status: VendorProfileStatus | string;
+  onboarding_status: VendorProfileStatus | string;
   approval_status: VendorApprovalStatus | string;
   current_step: number | null;
-  payload: Record<string, unknown>;
+  profile_form_data: Record<string, unknown>;
   created_at?: string;
   updated_at?: string;
   stripe_account_id?: string | null;

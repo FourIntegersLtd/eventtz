@@ -28,7 +28,7 @@ export function VendorDraftReplyPanel({ bookingId, onUseDraft }: Props) {
     setError(null);
     setOpen(true);
     try {
-      const res = await postCopilotDraftReply({ booking_id: bookingId, intent: nextIntent });
+      const res = await postCopilotDraftReply({ booking_request_id: bookingId, intent: nextIntent });
       setDraft(res.draft_message);
       setTips(res.tips ?? []);
     } catch (e: unknown) {

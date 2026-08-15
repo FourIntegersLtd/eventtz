@@ -6,7 +6,7 @@ export type BookingPricing = {
   line_items_subtotal_gbp: number;
   vendor_adjustments: {
     id: string;
-    tag: string;
+    adjustment_category: string;
     label: string;
     amount_gbp: number;
   }[];
@@ -182,7 +182,7 @@ export function BookingPricingBreakdown({
                 <li key={a.id} className="flex justify-between gap-2 text-sm text-neutral-800">
                   <span className="flex min-w-0 items-center gap-2">
                     <span className="rounded-md bg-neutral-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-neutral-600">
-                      {a.tag}
+                      {a.adjustment_category}
                     </span>
                     <span className="truncate">{a.label}</span>
                   </span>

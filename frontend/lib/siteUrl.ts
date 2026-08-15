@@ -14,8 +14,3 @@ export function referralRegisterUrl(slug: string): string {
 export function vendorProfileUrl(): string {
   return publicSiteUrl("/vendor/profile");
 }
-
-/** @deprecated Prefer `vendorProfileUrl` — `/vendor/onboarding` only redirects to profile. */
-export function vendorOnboardingUrl(): string {
-  return vendorProfileUrl();
-}

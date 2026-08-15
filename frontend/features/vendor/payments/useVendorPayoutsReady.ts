@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
-  fetchStripePaymentsStatus,
+  fetchVendorStripeConnectStatus,
   getApiErrorDetail,
   postConnectStripeAccount,
   type VendorPaymentsStatus,
@@ -28,7 +28,7 @@ export function useVendorPayoutsReady(enabled = true) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetchStripePaymentsStatus();
+      const res = await fetchVendorStripeConnectStatus();
       setStatus(res);
       return res;
     } catch {

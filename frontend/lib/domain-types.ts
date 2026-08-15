@@ -153,7 +153,7 @@ export type BookingInitiator = "client" | "vendor";
 
 export type VendorAdjustmentItem = {
   id: string;
-  tag: string;
+  adjustment_category: string;
   label: string;
   amount_gbp: number;
 };
@@ -277,8 +277,8 @@ export type ParticipantBookingsListGroup = "active" | "closed" | "completed";
 
 export type ConfirmCompletionResponse = {
   success: boolean;
-  id: string;
-  status: string;
+  booking_request_id: string;
+  booking_status: string;
   payment_status: string;
   awaiting_other_party: boolean;
 };

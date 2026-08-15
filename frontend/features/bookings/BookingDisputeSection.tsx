@@ -19,7 +19,7 @@ import {
 import {
   canOpenDisputeForBookingStatus,
 } from "@/lib/bookingDisputeHelpers";
-import { ParticipantDisputeStatusBadge } from "@/components/ui/ParticipantDisputeStatusBadge";
+import { ParticipantDisputeStatusBadge } from "@/components/badges/ParticipantDisputeStatusBadge";
 import type { PortalRole } from "@/components/portal-shell/portalNav";
 import { portalRoute } from "@/components/portal-shell/portalNav";
 import { BOOKING_CONFIRM_COPY } from "@/features/bookings/bookingConfirmCopy";

@@ -10,6 +10,7 @@ export type AuthUser = {
   /** Present for admin accounts: super_admin can manage the team. */
   admin_role?: "super_admin" | "admin" | null;
   account_suspended?: boolean;
+  email_verified?: boolean;
   /** Client accounts: what they want to be called (shown to vendors). */
   preferred_name?: string | null;
   /** Client accounts: first-visit portal onboarding done (or skipped). */

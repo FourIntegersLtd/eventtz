@@ -24,7 +24,7 @@ export function RequireVendorApproved({ children }: RequireVendorApprovedProps) 
       try {
         const res = await fetchVendorProfile();
         if (cancelled) return;
-        const approved = res.status === "submitted" && res.approval_status === "approved";
+        const approved = res.onboarding_status === "submitted" && res.approval_status === "approved";
         if (approved) {
           setState("approved");
         } else {

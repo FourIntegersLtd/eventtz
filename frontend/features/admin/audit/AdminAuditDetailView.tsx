@@ -111,7 +111,7 @@ export function AdminAuditDetailView({ entryId }: Props) {
                 Technical record
               </summary>
               <pre className="max-h-96 overflow-auto border-t border-neutral-100 bg-neutral-50 px-5 py-4 font-mono text-xs text-neutral-700">
-                {JSON.stringify(entry.payload, null, 2)}
+                {JSON.stringify(entry.audit_event_details, null, 2)}
               </pre>
             </details>
           ) : null}

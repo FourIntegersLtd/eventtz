@@ -111,7 +111,7 @@ export function VendorBookingResponseFlow({
   if (step === "adjust") {
     return (
       <VendorBookingResponseAdjustments
-        key={`${detail.id}-${adjustKey}`}
+        key={`${detail.booking_request_id}-${adjustKey}`}
         pricing={detail.pricing}
         initialLines={adjustInitialLines}
         actionBusy={actionBusy}
@@ -170,7 +170,7 @@ export function VendorBookingResponseFlow({
           </button>
         </div>
         <VendorDraftReplyPanel
-          bookingId={detail.id}
+          bookingId={detail.booking_request_id}
           onUseDraft={
             onUseDraftInChat
               ? (message) => {

@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { fetchAdminChatMessages, type AdminChatMessageItem } from "@/lib/adminPlatformApi";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
-import { adminCard } from "@/features/admin/adminTheme";
+import { adminCard } from "@/components/admin-shell/adminTheme";
 import { LinkifyMessageBody } from "@/lib/linkifyMessageBody";
 
 const VENDOR_BUBBLE = "border border-primary/35 bg-primary/[0.15] text-neutral-900";

@@ -8,7 +8,7 @@ import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieEmptyPanel } from "@/components/ui/LottieEmptyPanel";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { MotionStaggerItem } from "@/components/ui/MotionStaggerItem";
-import { VendorPortfolioCover } from "@/components/vendor/VendorPortfolioCover";
+import { VendorPortfolioCover } from "@/features/vendors/display/VendorPortfolioCover";
 import { displayEventTypes, displayServicesOffered } from "@/features/client/browse/browseLabels";
 import { marketLocationFallback } from "@/lib/markets";
 
@@ -59,7 +59,7 @@ export function ApprovedVendorsSection({
         <>
           <div className="mt-5 grid grid-cols-1 items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {displayVendors.map((v, index) => {
-              const p = v.payload ?? {};
+              const p = v.profile_form_data ?? {};
               const biz = (typeof p.businessName === "string" && p.businessName) || "Unnamed business";
               const city =
                 (typeof p.baseCity === "string" && p.baseCity) ||

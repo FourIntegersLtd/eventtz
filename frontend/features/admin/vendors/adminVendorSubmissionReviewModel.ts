@@ -292,7 +292,7 @@ export function buildAdminVendorSubmissionReviewModel(
   const vendorPayload = vendorDataToPayload(data);
   const pricingOptions = buildBrowsePricingOptions({
     user_id: "",
-    payload: vendorPayload,
+    profile_form_data: vendorPayload,
   });
   const pricingSharedContext = extractBrowsePricingSharedContext(vendorPayload, pricingOptions);
 

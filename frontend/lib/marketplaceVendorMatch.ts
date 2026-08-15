@@ -83,8 +83,8 @@ export function vendorMatchesMarketplaceSearch(
 ): MarketplaceVendorMatchResult {
   const reasons: string[] = [];
   const payload =
-    typeof vendor.payload === "object" && vendor.payload !== null && !Array.isArray(vendor.payload)
-      ? (vendor.payload as Record<string, unknown>)
+    typeof vendor.profile_form_data === "object" && vendor.profile_form_data !== null && !Array.isArray(vendor.profile_form_data)
+      ? (vendor.profile_form_data as Record<string, unknown>)
       : {};
 
   const typeFilters = state.types.filter(Boolean);

@@ -47,9 +47,9 @@ export function LandingReviewsSection() {
           if (collected.length >= MAX_REVIEWS) break;
           try {
             const res = await fetchVendorPublicReviews(vendor.user_id);
-            const payload = vendor.payload ?? {};
+            const profileFormData = vendor.profile_form_data ?? {};
             const vendorName =
-              (typeof payload.businessName === "string" && payload.businessName.trim()) ||
+              (typeof profileFormData.businessName === "string" && profileFormData.businessName.trim()) ||
               "Event vendor";
 
             for (const review of res.reviews) {

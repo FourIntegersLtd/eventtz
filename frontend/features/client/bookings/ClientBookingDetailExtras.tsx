@@ -86,7 +86,7 @@ export function ClientBookingDetailExtras({
 
       <BookingCompletionBanner
         viewer="client"
-        status={detail.status}
+        status={detail.booking_status}
         paymentStatus={detail.payment_status}
         eventDate={detail.event_date}
         eventEndDate={detail.event_end_date}

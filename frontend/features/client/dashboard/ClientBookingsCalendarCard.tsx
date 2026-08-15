@@ -12,11 +12,11 @@ type Props = {
 
 export function ClientBookingsCalendarCard({ bookingsByDate, agendaRows, onSelectDate }: Props) {
   const agenda: CalendarAgendaItem[] = agendaRows.map((b) => ({
-    id: b.id,
+    id: b.booking_request_id,
     title: b.event_name,
     subtitle: b.vendor_display_name,
     date_key: b.event_date.slice(0, 10),
-    href: `/client/bookings/${encodeURIComponent(b.id)}`,
+    href: `/client/bookings/${encodeURIComponent(b.booking_request_id)}`,
   }));
 
   return (

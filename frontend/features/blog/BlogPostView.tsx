@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { BlogByline } from "@/features/blog/BlogByline";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
+import { POST_NOT_FOUND } from "@/lib/blog-messages";
 import { fetchPublishedBlogPost, type BlogPostPublicDetail } from "@/lib/blogApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
 
@@ -39,7 +40,7 @@ export function BlogPostView({ slug }: BlogPostViewProps) {
       } catch (e: unknown) {
         if (!cancelled) {
           setPost(null);
-          setError(getApiErrorDetail(e) ?? "Post not found.");
+          setError(getApiErrorDetail(e) ?? POST_NOT_FOUND);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -62,7 +63,7 @@ export function BlogPostView({ slug }: BlogPostViewProps) {
     return (
       <div className="mx-auto flex max-w-4xl flex-col items-center space-y-4 px-4 py-16 text-center sm:px-6 lg:px-8">
         <LottieIllustration asset="notFound" className="h-32 w-32" />
-        <p className="text-neutral-700">{error ?? "Post not found."}</p>
+        <p className="text-neutral-700">{error ?? POST_NOT_FOUND}</p>
         <Link href="/blog" className="text-sm font-medium text-primary hover:underline">
           Back to blog
         </Link>

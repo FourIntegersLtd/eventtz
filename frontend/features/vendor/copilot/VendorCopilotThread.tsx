@@ -70,12 +70,12 @@ export function VendorCopilotThread({
       const res = await askVendorCopilot({
         question: q,
         history,
-        booking_id: bookingId ?? undefined,
+        booking_request_id: bookingId ?? undefined,
       });
       setHistory((h) => [
         ...h,
-        { role: "user", content: q },
-        { role: "assistant", content: res.answer_markdown },
+        { message_role: "user", content: q },
+        { message_role: "assistant", content: res.answer_markdown },
       ]);
       setThread((t) => [
         ...t,

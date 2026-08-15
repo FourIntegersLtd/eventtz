@@ -5,8 +5,8 @@ import { FormEvent, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { getMe } from "@/lib/auth-api";
 import { getApiErrorDetail } from "@/lib/api-errors";
-import { LOGIN_CREDENTIALS_MISMATCH, SESSION_VERIFY_FAILED } from "@/lib/auth-messages";
-import { resolvePostAuthPath } from "@/features/auth/authRouting";
+import { GENERIC_AUTH_ERROR, SESSION_VERIFY_FAILED, wrongAdminPortalMessage } from "@/lib/auth-messages";
+import { isAdminLoginIntent, resolvePostAuthPath } from "@/features/auth/authRouting";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { loginSchema, parseForm } from "@/lib/validation";
 
@@ -14,7 +14,7 @@ export function useUnifiedLogin() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const postAuthQuery = useMemo(() => searchParams.toString(), [searchParams]);
-  const { signIn, isAuthenticated, user } = useAuth();
+  const { signIn, signOut, isAuthenticated, user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +38,7 @@ export function useUnifiedLogin() {
       await signIn(parsed.data.email, parsed.data.password);
     } catch (err: unknown) {
       track(MixpanelEvents.login_failed, { reason: "credentials" });
-      const detail = getApiErrorDetail(err) ?? LOGIN_CREDENTIALS_MISMATCH;
+      const detail = getApiErrorDetail(err) ?? GENERIC_AUTH_ERROR;
       setError(detail);
       if (/verify your email/i.test(detail)) {
         setNeedsVerification(true);
@@ -48,7 +48,13 @@ export function useUnifiedLogin() {
     }
     try {
       const me = await getMe();
-      router.push(resolvePostAuthPath(searchParams.get("next"), me.user_type));
+      const nextPath = searchParams.get("next");
+      if (isAdminLoginIntent(nextPath) && me.user_type !== "admin") {
+        await signOut();
+        setError(wrongAdminPortalMessage(me.user_type));
+        return;
+      }
+      router.push(resolvePostAuthPath(nextPath, me.user_type));
     } catch {
       track(MixpanelEvents.login_failed, { reason: "session_verify" });
       setError(SESSION_VERIFY_FAILED);

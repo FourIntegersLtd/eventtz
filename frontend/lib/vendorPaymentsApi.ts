@@ -41,7 +41,7 @@ export async function postConnectStripeAccount(
   return data;
 }
 
-export async function fetchStripePaymentsStatus(): Promise<VendorPaymentsStatus> {
+export async function fetchVendorStripeConnectStatus(): Promise<VendorPaymentsStatus> {
   const { data } = await api.get<VendorPaymentsStatus>("/api/v1/vendor/payments/status");
   return data;
 }

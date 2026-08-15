@@ -18,7 +18,7 @@ import {
 } from "../reviewDisplayHelpers";
 import { getMarket } from "@/lib/markets";
 import { radiusOptionsForMarket } from "@/lib/photonLocationAutocomplete";
-import { VendorPortfolioThumbGrid } from "@/components/vendor/VendorPortfolioThumbGrid";
+import { VendorPortfolioThumbGrid } from "@/features/vendors/display/VendorPortfolioThumbGrid";
 import { portfolioImageUrlsFromPayload } from "@/lib/vendorPortfolioImages";
 import type {
   TravelDeliveryPolicy,

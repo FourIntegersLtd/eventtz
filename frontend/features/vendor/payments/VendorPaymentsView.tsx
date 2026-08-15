@@ -6,7 +6,7 @@ import { SettingsTabs } from "@/features/settings/SettingsTabs";
 import { VendorPaymentHistory } from "@/features/vendor/payments/VendorPaymentHistory";
 import { VendorPayoutAccountPanel } from "@/features/vendor/payments/VendorPayoutAccountPanel";
 import {
-  fetchStripePaymentsStatus,
+  fetchVendorStripeConnectStatus,
   getApiErrorDetail,
   postConnectStripeAccount,
   type VendorPaymentsStatus,
@@ -47,7 +47,7 @@ export function VendorPaymentsView() {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetchStripePaymentsStatus();
+      const res = await fetchVendorStripeConnectStatus();
       setStatus(res);
     } catch {
       setError("Could not load your payout status.");
@@ -74,7 +74,7 @@ export function VendorPaymentsView() {
       await refresh();
       if (stripeParam === "return") {
         try {
-          const res = await fetchStripePaymentsStatus();
+          const res = await fetchVendorStripeConnectStatus();
           if (res.charges_enabled && res.payouts_enabled) {
             track(MixpanelEvents.vendor_payouts_ready, { source: "payments" });
           }

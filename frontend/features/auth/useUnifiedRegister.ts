@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { SIGNUP_GENERIC_ERROR } from "@/lib/auth-messages";
+import { GENERIC_AUTH_ERROR } from "@/lib/auth-messages";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { resolvePostAuthPath } from "@/features/auth/authRouting";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
@@ -92,7 +92,7 @@ export function useUnifiedRegister() {
       }
     } catch (err: unknown) {
       track(MixpanelEvents.register_failed, { user_type: accountType });
-      setError(getApiErrorDetail(err) ?? SIGNUP_GENERIC_ERROR);
+      setError(getApiErrorDetail(err) ?? GENERIC_AUTH_ERROR);
     } finally {
       setSubmitting(false);
     }

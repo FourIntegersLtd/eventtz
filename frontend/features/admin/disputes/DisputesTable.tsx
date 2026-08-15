@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { ParticipantDisputeStatusBadge } from "@/components/ui/ParticipantDisputeStatusBadge";
+import { ParticipantDisputeStatusBadge } from "@/components/badges/ParticipantDisputeStatusBadge";
 import {
   AdminTable,
   AdminTableBody,

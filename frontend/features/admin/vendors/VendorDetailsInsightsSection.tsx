@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { StarRating } from "@/components/ui/StarRating";
-import { VendorProfileStatusBadge } from "@/components/ui/VendorProfileStatusBadge";
+import { VendorProfileStatusBadge } from "@/components/badges/VendorProfileStatusBadge";
 import { adminTrustReviewsHref } from "@/features/admin/reviews/reviewFormatters";
 import type { AdminVendorInsights, AdminVendorRow } from "@/lib/adminVendorsApi";
 import { VendorPanelCard, VendorPanelSection } from "./vendorDetailsPanel";
@@ -143,7 +143,7 @@ export function VendorDetailsInsightsSection({
               <MetricRow
                 label="Onboarding"
                 value={`Step ${vendor.current_step ?? "-"}`}
-                sub={<VendorProfileStatusBadge status={vendor.status} />}
+                sub={<VendorProfileStatusBadge status={vendor.onboarding_status} />}
               />
             </div>
           </VendorPanelCard>

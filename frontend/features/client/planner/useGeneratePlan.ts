@@ -4,12 +4,13 @@ import { useCallback, useState } from "react";
 import {
   createCelebrationPlan,
   fetchCelebrationPlan,
-  listCelebrationPlans,
+  listClientPlans,
   replacePlanRecommendation,
   type CelebrationPlanListItem,
   type CelebrationPlanResponse,
 } from "@/lib/clientPlannerApi";
 import { getApiErrorCode, getApiErrorDetail } from "@/lib/api-errors";
+import { PLAN_BUILD_FAILED, SIMPLE_INTENT } from "@/lib/planner-messages";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 export type GeneratePlanState = {
@@ -30,7 +31,7 @@ export function useGeneratePlan() {
 
   const refreshList = useCallback(async () => {
     try {
-      const plans = await listCelebrationPlans();
+      const plans = await listClientPlans();
       setRecentPlans(plans.filter((p) => p.status === "active"));
     } catch {
       /* list is secondary */
@@ -58,10 +59,10 @@ export function useGeneratePlan() {
       const code = getApiErrorCode(err);
       if (code === "simple_intent") {
         setSimpleIntent(true);
-        setError(getApiErrorDetail(err) || "Try Browse for a simple vendor search.");
+        setError(getApiErrorDetail(err) || SIMPLE_INTENT);
         track(MixpanelEvents.planner_simple_intent_redirect);
       } else {
-        setError(getApiErrorDetail(err) || "Could not build your plan right now.");
+        setError(getApiErrorDetail(err) || PLAN_BUILD_FAILED);
         track(MixpanelEvents.planner_generate_failed);
       }
       setPlan(null);

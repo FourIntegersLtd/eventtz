@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { VendorPayoutStatusBadge } from "@/components/ui/VendorPayoutStatusBadge";
+import { VendorPayoutStatusBadge } from "@/components/badges/VendorPayoutStatusBadge";
 import { useAdminPermissions } from "@/features/admin/useAdminPermissions";
 import type { AdminVendorRow } from "@/lib/adminVendorsApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { COULD_NOT_RESTORE_STRIPE_CONNECT } from "@/lib/admin-messages";
 
 type Props = {
   vendor: AdminVendorRow;
@@ -41,7 +42,7 @@ export function VendorStripeConnectSection({ vendor, busy, onRestoreStripe }: Pr
         setRestoreSuccess("Stripe Connect restored from the latest payout transfer.");
       }
     } catch (e: unknown) {
-      setRestoreError(getApiErrorDetail(e) ?? "Could not restore Stripe Connect.");
+      setRestoreError(getApiErrorDetail(e) ?? COULD_NOT_RESTORE_STRIPE_CONNECT);
     } finally {
       setRestoreBusy(false);
     }

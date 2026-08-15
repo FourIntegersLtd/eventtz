@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ButtonLink } from "@/components/ui/ButtonLink";
-import { VendorMetricsStrip } from "@/components/vendor/VendorMetricsStrip";
+import { VendorMetricsStrip } from "@/features/vendors/display/VendorMetricsStrip";
 import type { ExploreVendor } from "@/lib/clientExploreApi";
 import { displayEventTypes, displayServicesOffered } from "./browseLabels";
 import { buildBrowseVendorProfileFacts } from "./browseVendorFacts";
@@ -29,10 +29,10 @@ import {
   portfolioImageUrlsFromPayload,
 } from "./vendorBrowseDetailModel";
 import { VendorReviewsSection } from "./VendorReviewsSection";
-import { BrowsePricingOptionCard } from "@/components/vendor/BrowsePricingOptionCard";
-import { BrowsePricingPackagesSection } from "@/components/vendor/BrowsePricingPackagesSection";
-import { BrowsePricingSharedInfo } from "@/components/vendor/BrowsePricingSharedInfo";
-import { PortfolioImageGallery } from "@/components/ui/PortfolioImageGallery";
+import { BrowsePricingOptionCard } from "@/features/vendors/display/BrowsePricingOptionCard";
+import { BrowsePricingPackagesSection } from "@/features/vendors/display/BrowsePricingPackagesSection";
+import { BrowsePricingSharedInfo } from "@/features/vendors/display/BrowsePricingSharedInfo";
+import { PortfolioImageGallery } from "@/features/vendors/display/PortfolioImageGallery";
 import { marketLocationFallback } from "@/lib/markets";
 
 type VendorBrowseDetailBodyProps = {
@@ -66,7 +66,7 @@ export function VendorBrowseDetailBody({
   onContactVendor,
   detailReturnPath,
 }: VendorBrowseDetailBodyProps) {
-  const p = vendor.payload ?? {};
+  const p = vendor.profile_form_data ?? {};
   const businessName =
     payloadStr(p, "businessName").trim() || "Vendor";
   const facts = useMemo(() => buildBrowseVendorProfileFacts(p), [p]);

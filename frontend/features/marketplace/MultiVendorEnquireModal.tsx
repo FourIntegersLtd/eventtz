@@ -169,12 +169,12 @@ export function MultiVendorEnquireModal({
             },
             event_id: linkedEventId,
           });
-          createdIds.push(created.id);
+          createdIds.push(created.booking_request_id);
           if (created.event_id && !linkedEventId) {
             linkedEventId = created.event_id;
           }
           track(MixpanelEvents.enquiry_created, {
-            booking_id: created.id,
+            booking_id: created.booking_request_id,
             vendor_user_id: vendor.user_id,
             option_count: 1,
             source: enquirySource,

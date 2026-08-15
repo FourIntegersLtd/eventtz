@@ -13,7 +13,7 @@ export type CalendarAgendaItem = {
   href: string;
 };
 
-export type CalendarBookingsByDate<TItem extends { id: string }> = Record<string, TItem[]>;
+export type CalendarBookingsByDate<TItem extends { booking_request_id: string }> = Record<string, TItem[]>;
 
 function labelMonth(d: Date): string {
   return d.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
@@ -49,7 +49,7 @@ function weekdayIndexMonFirst(d: Date): number {
   return (d.getDay() + 6) % 7;
 }
 
-type Props<TItem extends { id: string }> = {
+type Props<TItem extends { booking_request_id: string }> = {
   title?: string;
   subtitle?: string;
   viewAllHref: string;
@@ -59,7 +59,7 @@ type Props<TItem extends { id: string }> = {
   onSelectDate: (dateKey: string) => void;
 };
 
-export function BookingsCalendarCard<TItem extends { id: string }>({
+export function BookingsCalendarCard<TItem extends { booking_request_id: string }>({
   title = "Calendar",
   subtitle,
   viewAllHref,

@@ -4,6 +4,7 @@ import { KeyRound, Mail, Shield } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/Button";
+import { loginPathWithNext } from "@/features/auth/authRouting";
 import { ChangePasswordModal } from "@/features/settings/ChangePasswordModal";
 import { resolveAdminRole } from "@/lib/adminRole";
 
@@ -76,7 +77,7 @@ export function AdminSettingsView() {
         isOpen={passwordOpen}
         onClose={() => setPasswordOpen(false)}
         passwordSchema="admin"
-        signInPath="/admin/login"
+        signInPath={loginPathWithNext("/admin/dashboard")}
       />
     </>
   );

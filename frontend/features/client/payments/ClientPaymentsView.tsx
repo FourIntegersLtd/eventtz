@@ -5,7 +5,7 @@ import Link from "next/link";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieEmptyPanel } from "@/components/ui/LottieEmptyPanel";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
-import { PaymentStatusBadge } from "@/components/ui/PaymentStatusBadge";
+import { PaymentStatusBadge } from "@/components/badges/PaymentStatusBadge";
 import { fetchClientBookings, type ClientBookingListItem } from "@/lib/clientBookingsApi";
 import { formatEventDate } from "@/lib/dateFormat";
 import { useReviewsQuery } from "@/features/reviews/useReviewsQuery";
@@ -46,9 +46,9 @@ export function ClientPaymentsView() {
   return (
     <ul className={`divide-y divide-neutral-100 ${portalCard}`}>
       {rows.map((b) => (
-        <li key={b.id}>
+        <li key={b.booking_request_id}>
           <Link
-            href={`/client/bookings/${b.id}`}
+            href={`/client/bookings/${b.booking_request_id}`}
             className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 transition hover:bg-neutral-50/80"
           >
             <div className="min-w-0">

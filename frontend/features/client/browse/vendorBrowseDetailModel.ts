@@ -228,7 +228,7 @@ export {
  * completed packages first; otherwise fixed hourly and/or daily rates.
  */
 export function buildBrowsePricingOptions(vendor: ExploreVendor): BrowsePricingOption[] {
-  const p = vendor.payload ?? {};
+  const p = vendor.profile_form_data ?? {};
   const hourly = parseMoneyNumber(coerceStr(p, "hourlyRate"));
   const daily = parseMoneyNumber(coerceStr(p, "dailyRate"));
 

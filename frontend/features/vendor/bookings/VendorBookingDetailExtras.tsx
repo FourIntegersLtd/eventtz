@@ -21,7 +21,7 @@ export function VendorBookingDetailExtras({
 }: VendorBookingDetailExtrasProps) {
   return (
     <>
-      {detail.status === "accepted" && detail.payment_status === "unpaid" ? (
+      {detail.booking_status === "accepted" && detail.payment_status === "unpaid" ? (
         <div className="rounded-2xl border border-neutral-100 bg-neutral-50 px-5 py-4">
           <p className="text-sm font-semibold text-neutral-900">Waiting on the client&apos;s payment</p>
           <p className="mt-1 text-[13px] text-neutral-600">
@@ -32,7 +32,7 @@ export function VendorBookingDetailExtras({
 
       <BookingCompletionBanner
         viewer="vendor"
-        status={detail.status}
+        status={detail.booking_status}
         paymentStatus={detail.payment_status}
         eventDate={detail.event_date}
         eventEndDate={detail.event_end_date}
@@ -51,7 +51,7 @@ export function VendorBookingDetailExtras({
         />
       ) : null}
 
-      {detail.status === "cancelled" &&
+      {detail.booking_status === "cancelled" &&
       (detail.payment_status === "refunded" || detail.payment_status === "partially_refunded") ? (
         <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-950">
           <LottieIllustration asset="pendingReview" size="status" className="mb-2" ariaLabel="" />

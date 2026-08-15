@@ -63,7 +63,7 @@ export function ClientVendorBrowseDetailView() {
   );
 
   const businessName = useMemo(() => {
-    const p = vendor?.payload ?? {};
+    const p = vendor?.profile_form_data ?? {};
     return payloadStr(p, "businessName").trim() || "Vendor";
   }, [vendor]);
 
@@ -108,7 +108,7 @@ export function ClientVendorBrowseDetailView() {
   }, [vendor, marketplaceSearch]);
 
   const vendorPayload = useMemo(() => {
-    const p = vendor?.payload;
+    const p = vendor?.profile_form_data;
     return typeof p === "object" && p !== null && !Array.isArray(p)
       ? (p as Record<string, unknown>)
       : undefined;

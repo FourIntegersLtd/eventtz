@@ -21,13 +21,14 @@ import {
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { loginPathWithNext } from "@/features/auth/authRouting";
 import { EventtzLogo } from "@/components/branding/EventtzLogo";
 import { Button } from "@/components/ui/Button";
 import {
   adminPageBg,
   adminSidebarActive,
   adminSidebarIdle,
-} from "@/features/admin/adminTheme";
+} from "@/components/admin-shell/adminTheme";
 import { resolveAdminRole, isSuperAdmin } from "@/lib/adminRole";
 import { fetchAdminSupportConversations } from "@/lib/adminMessagesApi";
 import { CHAT_UNREAD_CLEARED_EVENT } from "@/lib/chatApi";
@@ -237,7 +238,7 @@ export function AdminShell({ title, children }: AdminShellProps) {
 
   const signOutAdmin = async () => {
     await signOut();
-    router.replace("/admin/login");
+    router.replace(loginPathWithNext("/admin/dashboard"));
   };
 
   return (

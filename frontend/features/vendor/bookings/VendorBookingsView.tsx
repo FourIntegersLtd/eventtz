@@ -63,7 +63,7 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
           counterpartyUserId={v.detail.client_user_id ?? undefined}
           onConversationCreated={(conversationId) => {
             v.setDetail((d) =>
-              d && d.id === v.detail!.id ? { ...d, conversation_id: conversationId } : d,
+              d && d.booking_request_id === v.detail!.booking_request_id ? { ...d, conversation_id: conversationId } : d,
             );
           }}
         />
@@ -113,7 +113,7 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
                   ) : undefined,
                   footerSection: v.showClientResponseFlow && v.detail ? (
                     <VendorBookingResponseFlow
-                      key={`${v.detail.id}-${v.detail.vendor_adjustments.length}`}
+                      key={`${v.detail.booking_request_id}-${v.detail.vendor_adjustments.length}`}
                       detail={v.detail}
                       actionBusy={v.actionBusy}
                       adjSaving={v.adjSaving}
@@ -125,7 +125,7 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
                     />
                   ) : undefined,
                   afterSections:
-                    v.detail && v.detail.status === "completed" ? (
+                    v.detail && v.detail.booking_status === "completed" ? (
                       <BookingReviewPanel
                         title="Client review"
                         review={v.detail.review}
@@ -135,9 +135,9 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
                     ) : undefined,
                   disputeSection: v.detail ? (
                     <BookingDisputeSection
-                      bookingId={v.detail.id}
+                      bookingId={v.detail.booking_request_id}
                       role="vendor"
-                      bookingStatus={v.detail.status}
+                      bookingStatus={v.detail.booking_status}
                       presentation="drawer"
                     />
                   ) : (

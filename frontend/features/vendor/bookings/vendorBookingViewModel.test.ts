@@ -14,8 +14,8 @@ describe("formatMoney", () => {
 describe("toVendorBookingRowViewModel", () => {
   it("maps counterparty and initiator badge", () => {
     const row = {
-      id: "b1",
-      status: "pending",
+      booking_request_id: "b1",
+      booking_status: "pending",
       payment_status: "unpaid",
       event_name: "Wedding",
       event_date: "2026-08-01",

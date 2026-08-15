@@ -11,7 +11,7 @@ function vendor(
 ): ExploreVendorSearchRow {
   return {
     user_id: userId,
-    payload: {
+    profile_form_data: {
       businessName: `Vendor ${userId}`,
       packages,
     },

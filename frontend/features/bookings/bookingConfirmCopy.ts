@@ -209,7 +209,7 @@ export const ADMIN_CONFIRM_COPY = {
 } as const;
 
 type CompletionTimestamps = {
-  status: string;
+  booking_status: string;
   payment_status: string;
   client_completion_confirmed_at?: string | null;
   vendor_completion_confirmed_at?: string | null;
@@ -218,7 +218,7 @@ type CompletionTimestamps = {
 /** Both parties confirmed but the vendor payout has not been released yet. */
 export function isPayoutReleasePending(detail: CompletionTimestamps): boolean {
   return (
-    detail.status === "accepted" &&
+    detail.booking_status === "accepted" &&
     detail.payment_status === "paid" &&
     Boolean(detail.client_completion_confirmed_at) &&
     Boolean(detail.vendor_completion_confirmed_at)

@@ -21,7 +21,7 @@ import {
   User,
   Building2,
 } from "lucide-react";
-import { StatusBadge } from "@/components/ui/StatusBadge";
+import { StatusBadge } from "@/components/badges/StatusBadge";
 import type { AdminVendorRow } from "@/lib/adminVendorsApi";
 import type { BookingStatus } from "@/lib/domain-types";
 import { getBookingStatusMeta } from "@/lib/domain-types";
@@ -494,9 +494,9 @@ export type VendorProfileData = {
 };
 
 export function buildVendorProfileData(vendor: AdminVendorRow): VendorProfileData {
-  const p = vendor.payload ?? {};
+  const p = vendor.profile_form_data ?? {};
   const packages = Array.isArray(p.packages) ? p.packages : [];
-  const businessName = payloadStr(vendor.payload ?? {}, "businessName") || "Vendor details";
+  const businessName = payloadStr(vendor.profile_form_data ?? {}, "businessName") || "Vendor details";
   const portfolioUrls = portfolioImageUrlsFromPayload(p);
   const services = formatPayloadLabels(payloadStrArr(p, "servicesOffered"));
   const eventTypes = formatPayloadLabels(payloadStrArr(p, "eventTypes"));

@@ -10,15 +10,15 @@ export type CopilotActionKind =
   | "apply_package_patch";
 
 export type CopilotAction = {
-  kind: CopilotActionKind;
+  action_type: CopilotActionKind;
   title: string;
   rationale: string;
-  payload?: Record<string, unknown>;
+  action_data?: Record<string, unknown>;
   href?: string | null;
 };
 
 export type GrowthScoreLever = {
-  key: string;
+  metric_key: string;
   label: string;
   score: number;
   max_score: number;
@@ -51,7 +51,7 @@ export type VendorCopilotBrief = {
 };
 
 export type CopilotAskMessage = {
-  role: "user" | "assistant" | string;
+  message_role: "user" | "assistant" | string;
   content: string;
 };
 
@@ -144,24 +144,24 @@ export async function fetchVendorCopilotBrief(options: {
 export async function askVendorCopilot(body: {
   question: string;
   history?: CopilotAskMessage[];
-  booking_id?: string | null;
+  booking_request_id?: string | null;
 }): Promise<CopilotAskResult> {
   const res = await api.post<CopilotAskResult>("/api/v1/vendor/copilot/ask", body);
   return res.data;
 }
 
 export async function postCopilotReviewPackages(
-  payload: Record<string, unknown>,
+  profileFormData: Record<string, unknown>,
 ): Promise<CopilotReviewPackagesResult> {
   const res = await api.post<CopilotReviewPackagesResult>(
     "/api/v1/vendor/copilot/review-packages",
-    { payload },
+    { profile_form_data: profileFormData },
   );
   return res.data;
 }
 
 export async function postCopilotDraftReply(body: {
-  booking_id: string;
+  booking_request_id: string;
   intent: "accept" | "decline" | "clarify";
 }): Promise<CopilotDraftReplyResult> {
   const res = await api.post<CopilotDraftReplyResult>(

@@ -211,7 +211,7 @@ export function PortalShell({
         ]);
         setChatUnread(chatMessagesUnread);
         setBookingUnread(null);
-        setVendorBookingsPending(activeBookings.filter((b) => b.status === "pending").length);
+        setVendorBookingsPending(activeBookings.filter((b) => b.booking_status === "pending").length);
       }
     } catch {
       setBookingUnread(portal === "client" ? 0 : null);

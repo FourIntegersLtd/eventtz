@@ -1,8 +1,8 @@
 "use client";
 
 import { BackLink } from "@/components/ui/BackLink";
-import { StatusBadge } from "@/components/ui/StatusBadge";
-import { PaymentStatusBadge } from "@/components/ui/PaymentStatusBadge";
+import { StatusBadge } from "@/components/badges/StatusBadge";
+import { PaymentStatusBadge } from "@/components/badges/PaymentStatusBadge";
 import type { AdminBookingSupportMeta } from "@/lib/adminPlatformApi";
 import { NeedsAttentionBanner } from "./AdminBookingDetailShared";
 

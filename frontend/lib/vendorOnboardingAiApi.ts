@@ -7,11 +7,11 @@ export const SKIP_PORTFOLIO_IMAGE_ANALYSIS = true;
 export type GenerateVendorBioResult = { bio: string };
 
 export async function postGenerateVendorBio(
-  payload: Record<string, unknown>,
+  profileFormData: Record<string, unknown>,
 ): Promise<GenerateVendorBioResult> {
   const res = await api.post<GenerateVendorBioResult>(
     "/api/v1/vendor/onboarding/ai/generate-bio",
-    { payload },
+    { profile_form_data: profileFormData },
   );
   return res.data;
 }
@@ -48,11 +48,11 @@ export type PackageCoachResult = {
 };
 
 export async function postReviewVendorPackages(
-  payload: Record<string, unknown>,
+  profileFormData: Record<string, unknown>,
 ): Promise<PackageCoachResult> {
   const res = await api.post<PackageCoachResult>(
     "/api/v1/vendor/onboarding/ai/review-packages",
-    { payload },
+    { profile_form_data: profileFormData },
   );
   return res.data;
 }

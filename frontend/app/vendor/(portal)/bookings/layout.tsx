@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { PortalFillHeight } from "@/features/portal/PortalFillHeight";
+import { PortalFillHeight } from "@/components/portal-shell/PortalFillHeight";
 
 export default function VendorBookingsLayout({ children }: { children: ReactNode }) {
   return <PortalFillHeight>{children}</PortalFillHeight>;

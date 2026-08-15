@@ -34,7 +34,7 @@ export function AdminVendorSubmissionActions({
   onReportError,
 }: Props) {
   const submittedPending =
-    vendor.status === "submitted" && vendor.approval_status === "pending";
+    vendor.onboarding_status === "submitted" && vendor.approval_status === "pending";
   const missingCount = useMemo(
     () => countMissingChecklistItems(checklistGroups),
     [checklistGroups],
