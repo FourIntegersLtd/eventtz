@@ -9,6 +9,10 @@ import { StatusBadge } from "@/components/badges/StatusBadge";
 import { PaymentStatusBadge } from "@/components/badges/PaymentStatusBadge";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminFilterBar } from "@/features/admin/components/AdminFilterBar";
+import {
+  adminFilterControlClass,
+  adminFilterControlClassLg44,
+} from "@/features/admin/components/adminFilterControlClass";
 import { AdminFilterDateField } from "@/features/admin/components/AdminFilterDateField";
 import { AdminFilterDateRange } from "@/features/admin/components/AdminFilterDateRange";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
@@ -79,7 +83,7 @@ export function AdminBookingsView() {
               setOffset(0);
               setStatus(e.target.value);
             }}
-            className="mt-1 box-border block h-11 w-full max-w-full min-w-0 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm lg:w-44"
+            className={adminFilterControlClassLg44}
           >
             {STATUSES.map((s) => (
               <option key={s || "all"} value={s}>
@@ -96,7 +100,7 @@ export function AdminBookingsView() {
               setOffset(0);
               setSearch(e.target.value);
             }}
-            className="mt-1 box-border block h-11 w-full max-w-full min-w-0 rounded-lg border border-neutral-200 px-3 py-2 text-sm"
+            className={adminFilterControlClass}
             placeholder="Contains…"
           />
         </label>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { formControlClass } from "@/components/ui/tokens";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
@@ -168,7 +169,7 @@ export function AdminBookingSupportActionsPanel({
                 <select
                   value={cancelParty}
                   onChange={(e) => onCancelPartyChange(e.target.value as "client" | "vendor")}
-                  className="mt-1 w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm"
+                  className={formControlClass("mt-1")}
                 >
                   <option value="client">Client</option>
                   <option value="vendor">Vendor</option>
@@ -179,7 +180,7 @@ export function AdminBookingSupportActionsPanel({
                 <input
                   value={cancelReason}
                   onChange={(e) => onCancelReasonChange(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm"
+                  className={formControlClass("mt-1")}
                   placeholder="Why support is cancelling"
                 />
               </label>

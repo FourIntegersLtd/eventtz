@@ -13,6 +13,7 @@ import {
   AdminTableRow,
 } from "@/features/admin/components/AdminTable";
 import { AdminFilterBar } from "@/features/admin/components/AdminFilterBar";
+import { adminFilterControlClassSm } from "@/features/admin/components/adminFilterControlClass";
 import { type AdminDisputeCase } from "@/lib/adminPlatformApi";
 import {
   disputeBookingLabel,
@@ -41,7 +42,7 @@ export function DisputesTable({
           <select
             value={statusFilter}
             onChange={(e) => onStatusFilterChange(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm sm:w-48"
+            className={adminFilterControlClassSm}
           >
             <option value="all">All</option>
             <option value="open">Open / under review</option>

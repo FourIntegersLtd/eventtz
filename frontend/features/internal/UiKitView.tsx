@@ -38,7 +38,7 @@ export function UiKitView() {
 
   if (process.env.NODE_ENV === "production") {
     return (
-      <main className="min-h-screen px-6 py-16 text-center text-sm text-neutral-500">
+      <main className="min-h-dvh px-6 py-16 text-center text-sm text-neutral-500">
         Not available in production.
       </main>
     );

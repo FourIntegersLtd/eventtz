@@ -29,6 +29,7 @@ import {
   type AdminTeamMember,
 } from "@/lib/adminTeamApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { formControlClass } from "@/components/ui/tokens";
 
 function roleLabel(role: AdminTeamMember["admin_role"]): string {
   return role === "super_admin" ? "Super admin" : "Admin";
@@ -154,7 +155,7 @@ export function AdminTeamView() {
                               }
                             })();
                           }}
-                          className="rounded-lg border border-neutral-200 bg-white px-2 py-1.5 text-sm"
+                          className={formControlClass("px-2 py-1.5")}
                         >
                           <option value="admin">Admin</option>
                           <option value="super_admin">Super admin</option>

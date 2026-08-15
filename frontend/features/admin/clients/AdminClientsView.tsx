@@ -9,6 +9,10 @@ import { patchClientSuspended, type AdminClientRow } from "@/lib/adminPlatformAp
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminFilterBar } from "@/features/admin/components/AdminFilterBar";
+import {
+  adminFilterControlClass,
+  adminFilterControlClassLg44,
+} from "@/features/admin/components/adminFilterControlClass";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import { AdminPageHeader } from "@/features/admin/components/AdminPageHeader";
 import { useAdminClients } from "@/features/admin/clients/useAdminClients";
@@ -81,7 +85,7 @@ export function AdminClientsView() {
               setOffset(0);
               setSearch(e.target.value);
             }}
-            className="mt-1 box-border block h-11 w-full max-w-full min-w-0 rounded-lg border border-neutral-200 px-3 py-2 text-sm"
+            className={adminFilterControlClass}
             placeholder="Contains…"
           />
         </label>
@@ -93,7 +97,7 @@ export function AdminClientsView() {
               setOffset(0);
               setSuspendedFilter(e.target.value as "" | "true" | "false");
             }}
-            className="mt-1 box-border block h-11 w-full max-w-full min-w-0 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm lg:w-44"
+            className={adminFilterControlClassLg44}
           >
             <option value="">All</option>
             <option value="false">Active</option>

@@ -48,7 +48,7 @@ export function PlannerPromptHero({
             maxLength={2000}
             disabled={loading}
             placeholder={PLANNER_COPY.promptPlaceholder}
-            className="w-full resize-none rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
+            className="w-full resize-none rounded-xl border border-neutral-200 bg-white px-4 py-3 text-base text-neutral-900 shadow-sm outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/20 disabled:opacity-60 md:text-sm"
           />
         </label>
         <Button

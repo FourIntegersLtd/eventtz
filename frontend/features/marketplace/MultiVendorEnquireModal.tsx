@@ -273,7 +273,7 @@ export function MultiVendorEnquireModal({
         <label className="block text-sm">
           <span className="font-medium text-neutral-800">Event name</span>
           <input
-            className="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-sm"
+            className="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-base md:text-sm"
             value={eventName}
             onChange={(e) => setEventName(e.target.value)}
             placeholder="e.g. Summer garden party"
@@ -306,7 +306,7 @@ export function MultiVendorEnquireModal({
         <label className="block text-sm">
           <span className="font-medium text-neutral-800">Venue address (optional)</span>
           <input
-            className="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-sm"
+            className="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-base md:text-sm"
             value={venueAddress}
             onChange={(e) => setVenueAddress(e.target.value)}
             maxLength={500}
@@ -315,7 +315,7 @@ export function MultiVendorEnquireModal({
         <label className="block text-sm">
           <span className="font-medium text-neutral-800">Notes (optional)</span>
           <textarea
-            className="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-sm"
+            className="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-base md:text-sm"
             rows={3}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}

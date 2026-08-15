@@ -20,13 +20,13 @@ import {
 import { uploadImage } from "@/lib/mediaApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { adminBlogSaveSchema, parseForm } from "@/lib/validation";
+import { formControlClass } from "@/components/ui/tokens";
 
 type AdminBlogEditorViewProps = {
   postId: string;
 };
 
-const inputClass =
-  "w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20";
+const inputClass = formControlClass();
 
 export function AdminBlogEditorView({ postId }: AdminBlogEditorViewProps) {
   const router = useRouter();

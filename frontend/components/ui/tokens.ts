@@ -47,3 +47,14 @@ export const VIEWPORT_MIN = "min-h-dvh";
 
 /** Modal panel base width - max width comes from Modal's `maxWidthClassName`. */
 export const MODAL_PANEL = "w-full";
+
+/** Shared single-line / multi-line form control sizing (mobile-first 16px, 44px min height). */
+export const FORM_CONTROL =
+  "box-border w-full min-w-0 max-w-full min-h-11 rounded-lg border border-neutral-200 bg-white px-3 py-2.5 text-base text-neutral-900 outline-none transition md:text-sm";
+
+export const FORM_CONTROL_FOCUS = "focus:border-primary focus:ring-2 focus:ring-primary/20";
+
+/** Compose base + focus (+ optional extra) for raw inputs outside `components/ui/*`. */
+export function formControlClass(extra = ""): string {
+  return `${FORM_CONTROL} ${FORM_CONTROL_FOCUS} ${extra}`.trim();
+}

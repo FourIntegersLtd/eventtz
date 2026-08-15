@@ -138,7 +138,7 @@ export function HelpWidget({ audience }: Props) {
   if (!open) {
     const isVendor = audience === "vendor" && copilot != null;
     return (
-      <div className="fixed bottom-5 right-5 z-40">
+      <div className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-[max(1.25rem,env(safe-area-inset-right))] z-40">
         <button
           type="button"
           onClick={() => openWidget({ name: "home" })}
@@ -254,7 +254,7 @@ export function HelpWidget({ audience }: Props) {
       <button
         type="button"
         onClick={minimizeWidget}
-        className="fixed bottom-5 right-5 z-40 hidden h-12 w-12 items-center justify-center rounded-full bg-neutral-900 text-white shadow-lg transition hover:bg-neutral-800 sm:flex"
+        className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-[max(1.25rem,env(safe-area-inset-right))] z-40 hidden h-12 w-12 items-center justify-center rounded-full bg-neutral-900 text-white shadow-lg transition hover:bg-neutral-800 sm:flex"
         aria-label="Minimize help"
       >
         <ChevronDown className="h-6 w-6" aria-hidden strokeWidth={2.25} />
@@ -306,7 +306,7 @@ function HomePanel({
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             placeholder="Ask a question..."
-            className="w-full bg-white px-3.5 py-3.5 text-[15px] text-neutral-900 outline-none placeholder:text-neutral-400"
+            className="w-full bg-white px-3.5 py-3.5 text-base text-neutral-900 outline-none placeholder:text-neutral-400 md:text-[15px]"
           />
         </form>
       </div>
@@ -640,7 +640,7 @@ function ArticlePanel({
           value={ask}
           onChange={(e) => setAsk(e.target.value)}
           placeholder="Search our help center or ask AI"
-          className="w-full rounded-xl bg-neutral-100 px-4 py-3 text-[14px] text-neutral-900 outline-none placeholder:text-neutral-500 focus:ring-1 focus:ring-neutral-300"
+          className="w-full rounded-xl bg-neutral-100 px-4 py-3 text-base text-neutral-900 outline-none placeholder:text-neutral-500 focus:ring-1 focus:ring-neutral-300 md:text-sm"
         />
       </form>
     </div>

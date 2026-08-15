@@ -17,6 +17,7 @@ import {
   submitVendorContact,
   type ContactSubject,
 } from "@/lib/contactApi";
+import { formControlClass } from "@/components/ui/tokens";
 
 type Props = {
   role: PortalRole;
@@ -24,8 +25,7 @@ type Props = {
 
 const BOOKING_SUBJECTS = new Set<ContactSubject>(["booking_problem", "payments"]);
 
-const fieldClass =
-  "w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20";
+const fieldClass = formControlClass();
 
 export function ContactFormView({ role }: Props) {
   const { user } = useAuth();
@@ -105,7 +105,7 @@ export function ContactFormView({ role }: Props) {
               id="contact-email"
               readOnly
               value={user?.email ?? ""}
-              className="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-700"
+              className={formControlClass("bg-neutral-50 text-neutral-700")}
             />
           </div>
 

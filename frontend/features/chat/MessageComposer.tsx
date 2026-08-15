@@ -58,8 +58,8 @@ export function MessageComposer({
 
   const defaultTextarea =
     variant === "compose"
-      ? "w-full resize-y rounded-xl border border-neutral-200 bg-neutral-50/80 px-3 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
-      : "min-h-[72px] w-full min-w-0 flex-1 resize-none rounded-xl bg-neutral-50 px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 ring-1 ring-neutral-200/60 transition focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/25 disabled:opacity-60";
+      ? "w-full resize-y rounded-xl border border-neutral-200 bg-neutral-50/80 px-3 py-2.5 text-base text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60 md:text-sm"
+      : "min-h-[72px] w-full min-w-0 flex-1 resize-none rounded-xl bg-neutral-50 px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 ring-1 ring-neutral-200/60 transition focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/25 disabled:opacity-60 md:text-sm";
 
   return (
     <div className={className}>

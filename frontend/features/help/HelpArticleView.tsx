@@ -15,6 +15,7 @@ import {
 } from "@/lib/helpApi";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { helpBasePath, helpMarkdownToHtml } from "@/features/help/helpContent";
+import { formControlClass } from "@/components/ui/tokens";
 
 type Props = { audience: HelpAudience };
 
@@ -119,7 +120,7 @@ export function HelpArticleView({ audience }: Props) {
                 value={ask}
                 onChange={(e) => setAsk(e.target.value)}
                 placeholder="Search our help center or ask AI"
-                className="min-w-0 flex-1 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                className={formControlClass("min-w-0 flex-1 rounded-xl border-neutral-200 bg-neutral-50 focus:ring-1 focus:ring-primary")}
               />
               <button
                 type="submit"

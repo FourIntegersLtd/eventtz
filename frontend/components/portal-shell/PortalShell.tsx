@@ -377,7 +377,7 @@ export function PortalShell({
             aria-label="Close menu"
             onClick={closeMobile}
           />
-          <aside className="absolute right-0 top-0 flex h-dvh max-h-dvh w-[min(20rem,calc(100vw-2.5rem))] max-w-full flex-col bg-white p-5 shadow-2xl">
+          <aside className="absolute right-0 top-0 flex h-dvh max-h-dvh w-[min(20rem,calc(100vw-2.5rem))] max-w-full flex-col bg-white p-5 pt-[max(1.25rem,env(safe-area-inset-top))] pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl">
             <div className="flex shrink-0 items-center justify-between gap-2">
               <div onClick={closeMobile}>
                 <EventtzLogo variant="sidebar" href={logoHref} />

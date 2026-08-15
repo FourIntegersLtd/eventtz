@@ -2,7 +2,7 @@
 
 import { ChevronDown } from "lucide-react";
 import { forwardRef, useId, type SelectHTMLAttributes } from "react";
-import { FOCUS_RING, RADIUS } from "@/components/ui/tokens";
+import { FORM_CONTROL, FORM_CONTROL_FOCUS, FOCUS_RING } from "@/components/ui/tokens";
 
 export type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   label: string;
@@ -16,7 +16,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
   const generatedId = useId();
   const inputId = id ?? generatedId;
   return (
-    <div className="space-y-1.5">
+    <div className="min-w-0 space-y-1.5">
       <label htmlFor={inputId} className="block text-sm font-medium text-neutral-800">
         {label}
       </label>
@@ -25,8 +25,8 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
           ref={ref}
           id={inputId}
           aria-invalid={Boolean(error)}
-          className={`w-full appearance-none border bg-white px-3 py-2 pr-9 text-sm text-neutral-900 transition duration-150 ease-out ${RADIUS.sm} ${FOCUS_RING} ${
-            error ? "border-red-300" : "border-neutral-200"
+          className={`${FORM_CONTROL} ${FORM_CONTROL_FOCUS} appearance-none pr-9 ${FOCUS_RING} ${
+            error ? "border-red-300" : ""
           } ${className}`.trim()}
           {...rest}
         >

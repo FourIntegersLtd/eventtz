@@ -85,7 +85,7 @@ export function ClientBookingPayView({ bookingId }: ClientBookingPayViewProps) {
             disabled={busy}
             onChange={(e) => setVenueAddress(e.target.value)}
             placeholder="e.g. The Grand Hall, 12 Park Lane, London"
-            className="mt-1.5 w-full resize-y rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:bg-neutral-50 disabled:text-neutral-500"
+            className="mt-1.5 w-full resize-y rounded-lg border border-neutral-200 px-3 py-2 text-base text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:bg-neutral-50 disabled:text-neutral-500 md:text-sm"
           />
         </div>
         <div className="flex flex-wrap gap-3">

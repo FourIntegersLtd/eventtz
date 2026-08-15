@@ -14,6 +14,7 @@ import { ADMIN_CONFIRM_COPY } from "@/features/bookings/bookingConfirmCopy";
 import { patchAdminDispute, type AdminDisputeCase } from "@/lib/adminPlatformApi";
 import { fetchAdminTeam, type AdminTeamMember } from "@/lib/adminTeamApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { formControlClass } from "@/components/ui/tokens";
 import { DisputePartiesPanel } from "./DisputePartiesSummary";
 import {
   DISPUTE_STATUSES,
@@ -261,7 +262,7 @@ export function DisputeActionPanel({
                     setStatus(next);
                     onStatusSelect(next);
                   }}
-                  className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2.5 text-sm"
+                  className={formControlClass()}
                 >
                   {DISPUTE_STATUSES.map((s) => (
                     <option key={s} value={s}>
@@ -285,7 +286,7 @@ export function DisputeActionPanel({
                     const next = e.target.value || null;
                     void assignAdmin(next);
                   }}
-                  className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2.5 text-sm"
+                  className={formControlClass()}
                 >
                   <option value="">Unassigned</option>
                   {team
@@ -366,7 +367,7 @@ export function DisputeActionPanel({
                 value={sharedNote}
                 onChange={(e) => setSharedNote(e.target.value)}
                 rows={4}
-                className="mt-3 w-full rounded-lg border border-neutral-200 bg-white px-3 py-2.5 text-sm"
+                className={formControlClass("mt-3")}
                 placeholder="Your message…"
               />
               {(dispute.client_resolution_note ||

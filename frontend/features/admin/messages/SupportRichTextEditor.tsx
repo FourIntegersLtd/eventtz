@@ -105,7 +105,7 @@ export function SupportRichTextEditor({
     content: initialContent,
     editorProps: {
       attributes: {
-        class: `prose-message ${minHeightClass} max-w-none px-1 py-2 text-left text-sm leading-relaxed text-neutral-900 outline-none focus:outline-none`,
+        class: `prose-message ${minHeightClass} max-w-none px-1 py-2 text-left text-base leading-relaxed text-neutral-900 outline-none focus:outline-none md:text-sm`,
       },
     },
     onCreate: ({ editor: ed }) => {

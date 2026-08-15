@@ -5,6 +5,7 @@ import {
   vendorDisplayName,
 } from "@/features/bookings/multiVendorPackageSelection";
 import type { ExploreVendorSearchRow } from "@/lib/clientExploreApi";
+import { formControlClass } from "@/components/ui/tokens";
 
 type MultiVendorPackagePickerProps = {
   vendors: ExploreVendorSearchRow[];
@@ -49,7 +50,7 @@ export function MultiVendorPackagePicker({
                 <label className="block text-xs font-medium text-neutral-600">
                   Package
                   <select
-                    className="mt-1 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm text-neutral-900"
+                    className={formControlClass("mt-1 rounded-xl")}
                     value={selectedId}
                     onChange={(e) => onSelectOption(vendor.user_id, e.target.value)}
                   >

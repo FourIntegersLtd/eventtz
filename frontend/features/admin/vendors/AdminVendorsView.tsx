@@ -4,6 +4,10 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminFilterBar } from "@/features/admin/components/AdminFilterBar";
+import {
+  adminFilterControlClass,
+  adminFilterControlClassLg36,
+} from "@/features/admin/components/adminFilterControlClass";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import { AdminPageHeader } from "@/features/admin/components/AdminPageHeader";
 import { AdminVendorsTable } from "@/features/admin/vendors/AdminVendorsTable";
@@ -98,7 +102,7 @@ export function AdminVendorsView() {
               setOffset(0);
               setSearch(e.target.value);
             }}
-            className="mt-1 box-border block h-11 w-full max-w-full min-w-0 rounded-lg border border-neutral-200 px-3 py-2 text-sm"
+            className={adminFilterControlClass}
             placeholder="Contains…"
           />
         </label>
@@ -110,7 +114,7 @@ export function AdminVendorsView() {
               setOffset(0);
               setApprovalStatus(e.target.value);
             }}
-            className="mt-1 box-border block h-11 w-full max-w-full min-w-0 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm lg:w-36"
+            className={adminFilterControlClassLg36}
           >
             {APPROVAL_STATUSES.map((s) => (
               <option key={s || "all"} value={s}>
@@ -127,7 +131,7 @@ export function AdminVendorsView() {
               setOffset(0);
               setProfileStatus(e.target.value);
             }}
-            className="mt-1 box-border block h-11 w-full max-w-full min-w-0 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm lg:w-36"
+            className={adminFilterControlClassLg36}
           >
             {PROFILE_STATUSES.map((s) => (
               <option key={s || "all"} value={s}>

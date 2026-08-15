@@ -823,8 +823,9 @@ body::-webkit-scrollbar:vertical {
 
 .app-viewport-shell__mobile-nav {
   flex-shrink: 0;
-  height: 3.5rem;
-  min-height: 3.5rem;
+  box-sizing: border-box;
+  min-height: calc(3.5rem + env(safe-area-inset-top, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 .app-viewport-shell__body {
@@ -872,6 +873,13 @@ body::-webkit-scrollbar:vertical {
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+/* Mobile: keep last actions above the fixed Help FAB (h-12 + bottom-5) + home indicator */
+@media (max-width: 767px) {
+  .app-viewport-shell__main-scroll {
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 /* Custom day/month/year picker - avoids iOS native date input overflow */

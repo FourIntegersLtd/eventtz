@@ -17,6 +17,7 @@ import {
 } from "@/lib/adminMessagesApi";
 import { searchAdminDirectoryUsers, type AdminDirectoryUser } from "@/lib/adminPlatformApi";
 import { adminComposeMessageSchema, parseForm } from "@/lib/validation";
+import { formControlClass } from "@/components/ui/tokens";
 
 type RecipientMode = "selected" | AdminMessageAudience;
 
@@ -237,7 +238,7 @@ export function AdminMessagesComposeView() {
                   onFocus={() => setResultsOpen(true)}
                   placeholder="Search by email or name…"
                   autoComplete="off"
-                  className="w-full rounded-lg border border-neutral-200 bg-white py-2.5 pl-9 pr-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className={formControlClass("py-2.5 pl-9 pr-3")}
                   aria-label="Search recipients"
                   aria-expanded={resultsOpen && query.trim().length > 0}
                   aria-controls="admin-message-recipient-results"
