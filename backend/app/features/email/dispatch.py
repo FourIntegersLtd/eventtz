@@ -223,6 +223,8 @@ def send_support_new_message_email(
     *,
     recipient_user_id: str,
     conversation_id: str | None = None,
+    message_body: str | None = None,
+    message_body_html: str | None = None,
 ) -> bool:
     """Email a client or vendor when Eventtz Support sends them an in-app message."""
     uid = (recipient_user_id or "").strip()
@@ -257,6 +259,8 @@ def send_support_new_message_email(
     return get_email_service().send_support_new_message(
         to_email=to_email,
         messages_url=messages_url,
+        message_body=message_body,
+        message_body_html=message_body_html,
     )
 
 

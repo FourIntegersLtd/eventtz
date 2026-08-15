@@ -36,7 +36,13 @@
   {% endfor %}
 </table>
 {% endif %}
-{% if body %}
+{% if body_html %}
+<div style="margin: 0 0 18px; color: #2d2938; font-size: 15px; line-height: 1.6">{{ body_html | safe }}</div>
+{% elif body_plain %}
+<div style="margin: 0 0 18px; color: #2d2938; font-size: 15px; line-height: 1.6; white-space: pre-wrap">
+  {{ body_plain }}
+</div>
+{% elif body %}
 <div style="margin: 0 0 18px; color: #2d2938; font-size: 15px; line-height: 1.6; white-space: pre-wrap">
   {{ body }}
 </div>

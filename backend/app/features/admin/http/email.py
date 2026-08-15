@@ -49,6 +49,8 @@ def admin_email_test_send(
         delivered, message = send_email_test(
             template_id=body.template_id,
             to_email=body.to_email,
+            message_body=body.message_body,
+            message_body_html=body.message_body_html,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -61,6 +63,7 @@ def admin_email_test_send(
         audit_event_details={
             "to_email": body.to_email.strip().lower(),
             "delivered": delivered,
+            "message_chars": len((body.message_body or "").strip()),
         },
     )
 

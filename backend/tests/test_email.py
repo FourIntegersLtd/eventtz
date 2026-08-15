@@ -328,10 +328,42 @@ def test_send_support_new_message_email(mock_resend):
     ok = svc.send_support_new_message(
         to_email="vendor@example.com",
         messages_url="https://www.eventtz.com/vendor/messages/conv-1",
+        message_body="We fixed the profile editing issue. Thank you for reporting it.",
     )
     assert ok is True
     assert mock_resend.call_args.kwargs["to"] == ["vendor@example.com"]
     assert "You have a new message" in mock_resend.call_args.kwargs["subject"]
+    text = mock_resend.call_args.kwargs["text"]
+    assert "We fixed the profile editing issue" in text
+    assert "Sign in to read this thread and reply" in text
+
+
+@patch("app.features.email.service.resend_send", return_value=True)
+def test_send_support_new_message_email_with_html(mock_resend):
+    svc = EmailService()
+    ok = svc.send_support_new_message(
+        to_email="vendor@example.com",
+        messages_url="https://www.eventtz.com/vendor/messages/conv-1",
+        message_body="Please update your profile.",
+        message_body_html="<p>Please <strong>update</strong> your profile.</p>",
+    )
+    assert ok is True
+    html = mock_resend.call_args.kwargs["html"]
+    text = mock_resend.call_args.kwargs["text"]
+    assert "<strong>update</strong>" in html
+    assert "<strong>" not in text
+    assert "Please update your profile." in text
+    assert "Sign in to read this thread and reply" in text
+
+
+@patch("app.features.email.service.resend_send", return_value=True)
+def test_send_support_new_message_email_without_body(mock_resend):
+    svc = EmailService()
+    ok = svc.send_support_new_message(
+        to_email="vendor@example.com",
+        messages_url="https://www.eventtz.com/vendor/messages",
+    )
+    assert ok is True
     assert "Eventtz Support sent you a message" in mock_resend.call_args.kwargs["text"]
 
 
@@ -356,11 +388,14 @@ def test_send_support_new_message_email_dispatch_vendor(
     ok = send_support_new_message_email(
         recipient_user_id="vendor-1",
         conversation_id="conv-abc",
+        message_body="Hello from support",
     )
     assert ok is True
     svc.send_support_new_message.assert_called_once_with(
         to_email="vendor@example.com",
         messages_url="https://www.eventtz.com/vendor/messages/conv-abc",
+        message_body="Hello from support",
+        message_body_html=None,
     )
 
 
