@@ -15,7 +15,7 @@ import {
   SupportMessageComposer,
 } from "@/features/admin/messages/SupportMessageComposer";
 import type { SupportRichTextChange } from "@/features/admin/messages/SupportRichTextEditor";
-import { MessageBody } from "@/lib/renderMessageBody";
+import { isHtmlMessage, MessageBody } from "@/lib/renderMessageBody";
 import { formatDateTime } from "@/lib/dateFormat";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import {
@@ -310,7 +310,7 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
                           body={m.body}
                           metadata={m.metadata}
                           className={`break-words ${ownMessage ? "pr-6" : ""} ${
-                            m.metadata?.format === "html" ? "" : "whitespace-pre-wrap"
+                            isHtmlMessage(m.metadata) ? "" : "whitespace-pre-wrap"
                           }`}
                         />
                         <p className="mt-1 text-[10px] tabular-nums text-neutral-500">

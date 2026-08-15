@@ -3,8 +3,9 @@ import { LinkifyMessageBody } from "@/lib/linkifyMessageBody";
 
 type MessageMetadata = Record<string, unknown> | null | undefined;
 
-export function isHtmlMessage(metadata: MessageMetadata): boolean {
-  return metadata?.format === "html";
+export function isHtmlMessage(metadata: MessageMetadata | { kind?: string } | null): boolean {
+  if (!metadata || typeof metadata !== "object") return false;
+  return (metadata as Record<string, unknown>).format === "html";
 }
 
 type MessageBodyProps = {

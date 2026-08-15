@@ -13,7 +13,7 @@ import { LottieFailurePanel } from "@/components/ui/LottieFailurePanel";
 import { MotionStaggerItem } from "@/components/ui/MotionStaggerItem";
 import { EMPTY_STATE_ICON_CLASS } from "@/lib/emptyStateVariants";
 import { MessageComposer } from "@/features/chat/MessageComposer";
-import { MessageBody } from "@/lib/renderMessageBody";
+import { isHtmlMessage, MessageBody } from "@/lib/renderMessageBody";
 import { VendorQuoteFormModal } from "@/features/vendor/quotes/VendorQuoteFormModal";
 import { formatDateTime } from "@/lib/dateFormat";
 import { getApiErrorDetail } from "@/lib/api-errors";
@@ -371,7 +371,7 @@ export function ChatThreadView({
                       body={m.body}
                       metadata={m.metadata}
                       className={`break-words ${
-                        m.metadata?.format === "html" ? "" : "whitespace-pre-wrap"
+                        isHtmlMessage(m.metadata) ? "" : "whitespace-pre-wrap"
                       }`}
                     />
                     <p
