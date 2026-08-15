@@ -22,6 +22,8 @@ import { fetchVendorBookings } from "@/lib/vendorBookingsApi";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 import { NotificationBell } from "@/features/notifications/NotificationBell";
 import { HelpWidget } from "@/features/help/HelpWidget";
+import { VendorCopilotProvider } from "@/features/vendor/copilot/VendorCopilotContext";
+import { VendorCopilotWidget } from "@/features/vendor/copilot/VendorCopilotWidget";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   isPortalNavActive,
@@ -301,7 +303,7 @@ export function PortalShell({
     vendorBookingsPending,
   } as const;
 
-  return (
+  const shell = (
     <div className="app-viewport-shell w-full min-w-0 overflow-x-hidden bg-page-bg text-neutral-900">
       <ConfirmDialog
         isOpen={signOutOpen}
@@ -410,6 +412,13 @@ export function PortalShell({
       </div>
 
       <HelpWidget audience={portal} />
+      {portal === "vendor" ? <VendorCopilotWidget /> : null}
     </div>
   );
+
+  if (portal === "vendor") {
+    return <VendorCopilotProvider>{shell}</VendorCopilotProvider>;
+  }
+
+  return shell;
 }

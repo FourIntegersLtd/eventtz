@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { BOOKING_CONFIRM_COPY } from "@/features/bookings/bookingConfirmCopy";
 import { VendorBookingResponseAdjustments } from "@/features/vendor/bookings/VendorBookingResponseAdjustments";
+import { VendorDraftReplyPanel } from "@/features/vendor/copilot/VendorDraftReplyPanel";
 import {
   draftsFromDetail,
   friendlyMoneyLabel,
@@ -25,6 +26,8 @@ type VendorBookingResponseFlowProps = {
   onSendUpdatedPrice: (rows: AdjDraftRow[]) => void;
   /** Opens the booking chat drawer so the vendor can read unread client messages. */
   onOpenChat: () => void;
+  /** Prefill chat composer with an AI-drafted message. */
+  onUseDraftInChat?: (message: string) => void;
 };
 
 export function VendorBookingResponseFlow({
@@ -35,6 +38,7 @@ export function VendorBookingResponseFlow({
   onDecline,
   onSendUpdatedPrice,
   onOpenChat,
+  onUseDraftInChat,
 }: VendorBookingResponseFlowProps) {
   const listedTotal =
     detail.pricing?.client_total_label ??
@@ -165,6 +169,17 @@ export function VendorBookingResponseFlow({
             Can&apos;t take this one
           </button>
         </div>
+        <VendorDraftReplyPanel
+          bookingId={detail.id}
+          onUseDraft={
+            onUseDraftInChat
+              ? (message) => {
+                  onUseDraftInChat(message);
+                  onOpenChat();
+                }
+              : undefined
+          }
+        />
       </div>
 
       <ConfirmDialog

@@ -44,6 +44,10 @@ export function helpCategoryIcon(iconKey: string): LucideIcon {
   }
 }
 
+/** Tailwind prose classes for helpMarkdownToHtml output in co-pilot / help UI. */
+export const helpMarkdownProseClassName =
+  "[&_p]:mt-2 [&_p:first-child]:mt-0 [&_strong]:font-semibold [&_strong]:text-neutral-900 [&_h2]:mt-4 [&_h2]:text-base [&_h3]:mt-3 [&_h3]:text-sm [&_ul]:mt-2 [&_ol]:mt-2 [&_li]:leading-relaxed";
+
 /** Very small markdown → safe-ish HTML for help articles (headings, lists, bold, paragraphs). */
 export function helpMarkdownToHtml(md: string): string {
   const lines = md.replace(/\r\n/g, "\n").split("\n");

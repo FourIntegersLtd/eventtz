@@ -12,6 +12,7 @@ import { LottieFailurePanel } from "@/components/ui/LottieFailurePanel";
 import { dashboardNotificationUpdates } from "@/features/dashboard/attentionFeedHelpers";
 import type { AttentionItem } from "@/features/dashboard/attentionTypes";
 import { eventDayOver } from "@/features/bookings/eventDay";
+import { VendorGrowthGlanceTile } from "@/features/vendor/copilot/VendorGrowthGlanceTile";
 import { useVendorDashboard } from "./useVendorDashboard";
 import { VendorBookingsCalendarCard } from "./VendorBookingsCalendarCard";
 import { VendorPayoutSetupBanner } from "./VendorPayoutSetupBanner";
@@ -175,35 +176,36 @@ export function VendorDashboardView() {
         onConnect={() => void connectPayouts("/vendor/payments")}
       />
 
-      <div className="grid w-full min-w-0 grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
-        <div className="min-w-0 space-y-6 lg:col-span-2">
-          {loadStatus === "ready" ? (
-            <div className="grid w-full min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
-              <Link
-                href="/vendor/bookings?tab=active"
-                className={`flex min-w-0 w-full flex-col justify-between overflow-hidden ${portalCard} ${portalCardPadding} transition hover:shadow-md`}
-              >
-                <p className="text-base font-medium text-neutral-500">Active bookings</p>
-                <p className="mt-4 text-3xl font-semibold tracking-tight text-neutral-900 sm:text-4xl">
-                  {activeBookingsCount}
-                </p>
-              </Link>
-              <Link
-                href="/vendor/bookings?tab=active&status=pending"
-                className={`flex min-w-0 w-full flex-col justify-between overflow-hidden ${portalCard} ${portalCardPadding} transition hover:shadow-md`}
-              >
-                <p className="text-base font-medium text-neutral-500">Pending response</p>
-                <p
-                  className={`mt-4 text-3xl font-semibold tracking-tight sm:text-4xl ${
-                    pendingBookingsCount > 0 ? "text-amber-600" : "text-neutral-900"
-                  }`}
-                >
-                  {pendingBookingsCount}
-                </p>
-              </Link>
-            </div>
-          ) : null}
+      {loadStatus === "ready" ? (
+        <div className="grid w-full min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+          <Link
+            href="/vendor/bookings?tab=active"
+            className={`flex min-w-0 w-full flex-col justify-between overflow-hidden ${portalCard} ${portalCardPadding} transition hover:shadow-md`}
+          >
+            <p className="text-base font-medium text-neutral-500">Active bookings</p>
+            <p className="mt-4 text-3xl font-semibold tracking-tight text-neutral-900 sm:text-4xl">
+              {activeBookingsCount}
+            </p>
+          </Link>
+          <Link
+            href="/vendor/bookings?tab=active&status=pending"
+            className={`flex min-w-0 w-full flex-col justify-between overflow-hidden ${portalCard} ${portalCardPadding} transition hover:shadow-md`}
+          >
+            <p className="text-base font-medium text-neutral-500">Pending response</p>
+            <p
+              className={`mt-4 text-3xl font-semibold tracking-tight sm:text-4xl ${
+                pendingBookingsCount > 0 ? "text-amber-600" : "text-neutral-900"
+              }`}
+            >
+              {pendingBookingsCount}
+            </p>
+          </Link>
+          <VendorGrowthGlanceTile />
+        </div>
+      ) : null}
 
+      <div className="grid w-full min-w-0 grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
+        <div className="min-w-0 lg:col-span-2">
           <AttentionFeedCard
             items={attentionItems}
             loading={loadStatus === "loading"}

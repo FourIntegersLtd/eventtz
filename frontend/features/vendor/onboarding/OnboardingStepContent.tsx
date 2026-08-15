@@ -154,7 +154,13 @@ export function OnboardingStepContent({
     case 3:
       return wrapLive(<StepLocation data={data} update={update} />);
     case 4:
-      return wrapLive(<StepPricing data={data} update={update} />);
+      return wrapLive(
+        <StepPricing
+          data={data}
+          update={update}
+          usePostLaunchOptimizer={isLiveEdit && approvalStatus === "approved"}
+        />,
+      );
     case 5:
       return wrapLive(<StepAvailability data={data} update={update} />);
     case 6:

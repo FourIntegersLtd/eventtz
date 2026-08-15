@@ -22,6 +22,8 @@ type ChatDrawerProps = {
   counterpartyUserId?: string;
   /** Fires once a conversation is created from the first-message composer. */
   onConversationCreated?: (conversationId: string) => void;
+  /** Prefill the compose box (e.g. AI draft reply). */
+  initialDraft?: string | null;
 };
 
 /**
@@ -37,6 +39,7 @@ export function ChatDrawer({
   conversationId,
   counterpartyUserId,
   onConversationCreated,
+  initialDraft,
 }: ChatDrawerProps) {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(
     conversationId ?? null,
@@ -48,6 +51,12 @@ export function ChatDrawer({
   useEffect(() => {
     if (isOpen) setActiveConversationId(conversationId ?? null);
   }, [isOpen, conversationId]);
+
+  useEffect(() => {
+    if (isOpen && initialDraft?.trim()) {
+      setDraft(initialDraft.trim());
+    }
+  }, [isOpen, initialDraft]);
 
   const shortName = counterpartyName.trim().split(/\s+/)[0] || counterpartyName || "them";
 
@@ -83,7 +92,12 @@ export function ChatDrawer({
   return (
     <Drawer isOpen={isOpen} onClose={onClose} title={`Message ${counterpartyName || shortName}`}>
       {activeConversationId ? (
-        <ChatThreadView portal={portal} conversationId={activeConversationId} variant="drawer" />
+        <ChatThreadView
+          portal={portal}
+          conversationId={activeConversationId}
+          variant="drawer"
+          initialDraft={initialDraft}
+        />
       ) : (
         <div className="flex flex-col gap-3">
           <p className="text-sm text-neutral-600">

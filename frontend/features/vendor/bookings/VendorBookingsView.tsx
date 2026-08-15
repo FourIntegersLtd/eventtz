@@ -52,7 +52,11 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
       {v.detail ? (
         <ChatDrawer
           isOpen={v.chatOpen}
-          onClose={() => v.setChatOpen(false)}
+          onClose={() => {
+            v.setChatOpen(false);
+            v.setChatPrefill(null);
+          }}
+          initialDraft={v.chatPrefill}
           portal="vendor"
           counterpartyName={v.detail.client_email ?? "this client"}
           conversationId={v.detail.conversation_id}
@@ -117,6 +121,7 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
                       onDecline={() => void v.applyBookingStatus("declined")}
                       onSendUpdatedPrice={(rows) => void v.sendUpdatedPrice(rows)}
                       onOpenChat={() => v.setChatOpen(true)}
+                      onUseDraftInChat={(message) => v.setChatPrefill(message)}
                     />
                   ) : undefined,
                   afterSections:

@@ -39,6 +39,7 @@ type ChatThreadViewProps = {
   backLabel?: string;
   /** "page" (default) or "drawer" (no back link - Drawer chrome already has close). */
   variant?: "page" | "drawer";
+  initialDraft?: string | null;
 };
 
 function formatBubbleTime(iso: string | null | undefined): string {
@@ -67,6 +68,7 @@ export function ChatThreadView({
   backHref,
   backLabel = "Messages",
   variant = "page",
+  initialDraft,
 }: ChatThreadViewProps) {
   const isDrawer = variant === "drawer";
   const { user } = useAuth();
@@ -115,6 +117,12 @@ export function ChatThreadView({
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (initialDraft?.trim()) {
+      setDraft(initialDraft.trim());
+    }
+  }, [conversationId, initialDraft]);
 
   useEffect(() => {
     if (!quoteOpen || portal !== "vendor" || !conversationId) return;

@@ -75,6 +75,8 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
     getDetailStatus,
   });
 
+  const [chatPrefill, setChatPrefill] = useState<string | null>(null);
+
   useEffect(() => {
     if (urlTab === "active" || urlTab === "closed") {
       setTab(urlTab);
@@ -436,6 +438,8 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
     actionError,
     chatOpen,
     setChatOpen,
+    chatPrefill,
+    setChatPrefill,
     rows,
     viewModel,
     headerActions,

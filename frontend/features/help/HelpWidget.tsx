@@ -33,6 +33,8 @@ import {
   helpContactPath,
   helpMarkdownToHtml,
 } from "@/features/help/helpContent";
+import { useVendorCopilotOptional } from "@/features/vendor/copilot/VendorCopilotContext";
+import { VENDOR_COPILOT } from "@/features/vendor/copilot/copilotBranding";
 
 type View =
   | { name: "home" }
@@ -48,6 +50,7 @@ const iconBtn =
 
 export function HelpWidget({ audience }: Props) {
   const pathname = usePathname();
+  const copilot = useVendorCopilotOptional();
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [view, setView] = useState<View>({ name: "home" });
@@ -62,6 +65,7 @@ export function HelpWidget({ audience }: Props) {
   }, [pathname]);
 
   const openWidget = (next: View = { name: "home" }) => {
+    copilot?.closeCopilot();
     setView(next);
     setOpen(true);
     track(MixpanelEvents.help_opened, {
@@ -69,6 +73,14 @@ export function HelpWidget({ audience }: Props) {
       source: "widget",
       panel: next.name,
     });
+  };
+
+  const openGrowthCopilot = () => {
+    setOpen(false);
+    setExpanded(false);
+    setView({ name: "home" });
+    setDraft("");
+    copilot?.openCopilot({ name: "home" });
   };
 
   const closeWidget = () => {
@@ -123,15 +135,18 @@ export function HelpWidget({ audience }: Props) {
   const showBack = view.name !== "home";
 
   if (!open) {
+    const isVendor = audience === "vendor" && copilot != null;
     return (
-      <button
-        type="button"
-        onClick={() => openWidget({ name: "home" })}
-        className="fixed bottom-5 right-5 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-900 text-white shadow-lg transition hover:bg-neutral-800"
-        aria-label="Open help"
-      >
-        <CircleHelp className="h-6 w-6" aria-hidden strokeWidth={2.25} />
-      </button>
+      <div className="fixed bottom-5 right-5 z-40">
+        <button
+          type="button"
+          onClick={() => openWidget({ name: "home" })}
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-900 text-white shadow-lg transition hover:bg-neutral-800"
+          aria-label={isVendor ? VENDOR_COPILOT.openHelpLabel : "Open help"}
+        >
+          <CircleHelp className="h-6 w-6" aria-hidden strokeWidth={2.25} />
+        </button>
+      </div>
     );
   }
 
@@ -179,6 +194,7 @@ export function HelpWidget({ audience }: Props) {
               onBrowse={() => setView({ name: "browse" })}
               onContact={() => setOpen(false)}
               audience={audience}
+              onOpenGrowthCopilot={audience === "vendor" && copilot ? openGrowthCopilot : undefined}
             />
           ) : null}
           {view.name === "browse" ? (
@@ -254,6 +270,7 @@ function HomePanel({
   onBrowse,
   onContact,
   audience,
+  onOpenGrowthCopilot,
 }: {
   draft: string;
   setDraft: (v: string) => void;
@@ -262,6 +279,7 @@ function HomePanel({
   onBrowse: () => void;
   onContact: () => void;
   audience: HelpAudience;
+  onOpenGrowthCopilot?: () => void;
 }) {
   const heading =
     audience === "admin" ? "How can we help" : "How can we help";
@@ -293,7 +311,28 @@ function HomePanel({
       </div>
 
       <ul className="mt-2">
-        <li className={contactHref ? "border-b border-neutral-100" : undefined}>
+        {onOpenGrowthCopilot ? (
+          <li className="border-b border-neutral-100">
+            <button
+              type="button"
+              onClick={onOpenGrowthCopilot}
+              className="flex w-full items-center gap-3 py-3.5 text-left transition hover:bg-neutral-50"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <Sparkles className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[15px] font-medium text-neutral-900">{VENDOR_COPILOT.name}</span>
+                <span className="mt-0.5 block text-[13px] text-neutral-500">{VENDOR_COPILOT.tagline}</span>
+                <span className="mt-0.5 block text-[13px] text-primary underline decoration-primary underline-offset-2">
+                  {VENDOR_COPILOT.briefLink}
+                </span>
+              </span>
+              <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" strokeWidth={1.75} />
+            </button>
+          </li>
+        ) : null}
+        <li className={contactHref || onOpenGrowthCopilot ? "border-b border-neutral-100" : undefined}>
           <button
             type="button"
             onClick={onBrowse}
