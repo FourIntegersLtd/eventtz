@@ -23,7 +23,7 @@ _BASE_ROW = {
 @patch("app.features.vendors.moderation.get_db")
 @patch("app.features.vendors.moderation.get_vendor_profile")
 def test_unsubmit_submitted_pending_returns_draft(mock_get_profile, mock_get_db):
-    draft_row = {**_BASE_ROW, "status": "draft"}
+    draft_row = {**_BASE_ROW, "status": "draft", "current_step": 8}
     mock_get_profile.side_effect = [_BASE_ROW, draft_row]
     row, email_sent = unsubmit_vendor_profile(_USER, send_email=False)
     assert row is not None
@@ -31,7 +31,13 @@ def test_unsubmit_submitted_pending_returns_draft(mock_get_profile, mock_get_db)
     assert row["approval_status"] == "pending"
     assert row["current_step"] == 8
     assert email_sent is False
-    mock_get_db.return_value.table.return_value.update.assert_called_once()
+    update_call = mock_get_db.return_value.table.return_value.update
+    update_call.assert_called_once()
+    update_args = update_call.call_args[0][0]
+    assert update_args["status"] == "draft"
+    assert update_args["current_step"] == 8
+    assert isinstance(update_args.get("payload"), dict)
+    assert update_args["payload"].get("returnedForEditsAt")
 
 
 @patch("app.features.vendors.moderation.get_vendor_profile")

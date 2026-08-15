@@ -24,8 +24,8 @@ def test_payment_received_client_body_mentions_dispute_window() -> None:
     assert "48 hours" in PAYMENT_RECEIVED_CLIENT_BODY
     assert "report a problem" in PAYMENT_RECEIVED_CLIENT_BODY
     assert "Thank you for booking with Eventtz" in PAYMENT_RECEIVED_CLIENT_BODY
-    assert "-" not in PAYMENT_RECEIVED_CLIENT_BODY
-    assert "-" not in PAYMENT_RECEIVED_CLIENT_BODY
+    assert "\u2014" not in PAYMENT_RECEIVED_CLIENT_BODY
+    assert "\u2013" not in PAYMENT_RECEIVED_CLIENT_BODY
 
 
 def test_should_dedupe_booking_kind():
@@ -208,6 +208,7 @@ def test_vendor_returned_for_edits_email_includes_admin_message(mock_resend):
         to_email="vendor@example.com",
         business_name="Scenery Studios",
         onboarding_url="https://eventtz.com/vendor/profile",
+        messages_url="https://eventtz.com/vendor/messages",
         admin_message="Please add a profile photo.\n\nUpdate your profile when ready.",
     )
     assert ok is True
@@ -215,7 +216,10 @@ def test_vendor_returned_for_edits_email_includes_admin_message(mock_resend):
     assert "Please add a profile photo." in text
     assert "Scenery Studios" in text
     assert "Your profile is unlocked" in text
-    assert "Eventtz Support" in text
+    assert "Read message in Eventtz" in text
+    assert "https://eventtz.com/vendor/messages" in text
+    assert "Update your profile" in text
+    assert "https://eventtz.com/vendor/profile" in text
 
 
 @patch("app.features.email.service.resend_send", return_value=True)
@@ -225,6 +229,7 @@ def test_vendor_returned_for_edits_email_without_admin_message(mock_resend):
         to_email="vendor@example.com",
         business_name="Scenery Studios",
         onboarding_url="https://eventtz.com/vendor/profile",
+        messages_url="https://eventtz.com/vendor/messages",
     )
     assert ok is True
     text = mock_resend.call_args.kwargs["text"]
@@ -252,6 +257,7 @@ def test_send_vendor_returned_for_edits_email_resolves_recipient(mock_lookup, mo
         to_email="vendor@example.com",
         business_name="Scenery Studios",
         onboarding_url="https://www.eventtz.com/vendor/profile",
+        messages_url="https://www.eventtz.com/vendor/messages",
         admin_message="Add your packages.",
     )
 

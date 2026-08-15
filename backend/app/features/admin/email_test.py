@@ -46,7 +46,7 @@ def _static_templates() -> list[EmailTestTemplate]:
             "vendor.approved",
             "Vendor approved (live)",
             "Account",
-            "Vendor approved with Stripe verified — live on the marketplace.",
+            "Vendor approved with Stripe verified, live on the marketplace.",
         ),
         EmailTestTemplate(
             "vendor.approved_pending_payouts",

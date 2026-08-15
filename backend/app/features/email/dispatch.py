@@ -272,11 +272,11 @@ def send_vendor_returned_for_edits_email(
         vendor_email = emails.get(vendor_user_id)
     if not vendor_email or "@" not in vendor_email:
         return False
-    onboarding_url = public_email_url("/vendor/profile")
     return get_email_service().send_vendor_returned_for_edits(
         to_email=vendor_email,
         business_name=business_name,
-        onboarding_url=onboarding_url,
+        onboarding_url=public_email_url("/vendor/profile"),
+        messages_url=public_email_url("/vendor/messages"),
         admin_message=admin_message,
     )
 

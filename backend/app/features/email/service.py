@@ -294,6 +294,7 @@ class EmailService:
         to_email: str,
         business_name: str | None,
         onboarding_url: str,
+        messages_url: str,
         admin_message: str | None = None,
     ) -> bool:
         biz = (business_name or "").strip()
@@ -309,9 +310,8 @@ class EmailService:
             body = (
                 f"{intro}\n\n"
                 f"{note}\n\n"
-                "Your profile is unlocked so you can edit it now. Use the button below to "
-                "update your profile and resubmit when you are ready.\n\n"
-                "You can also find this message in Eventtz Support in your account."
+                "Your profile is unlocked so you can edit it now. Read the full message in "
+                "Eventtz Support, update your profile, and resubmit when you are ready."
             )
         else:
             body = (
@@ -324,8 +324,10 @@ class EmailService:
             headline=headline,
             subtitle=subtitle,
             body=body,
-            action_url=onboarding_url,
-            action_label="Update your profile",
+            action_url=messages_url,
+            action_label="Read message in Eventtz",
+            secondary_action_url=onboarding_url,
+            secondary_action_label="Update your profile",
         )
         html = render_template("booking/notification.html", ctx)
         text = render_template("booking/notification.txt", ctx)

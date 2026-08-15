@@ -43,7 +43,6 @@ class SignupRequest(BaseModel):
     password: str = Field(min_length=6)
     user_type: Literal["client", "vendor"] = "client"
     referral_code: str | None = None
-    options: dict | None = None
 
 
 class SignupResponse(BaseModel):
