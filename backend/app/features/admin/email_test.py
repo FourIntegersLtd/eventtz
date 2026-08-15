@@ -4,6 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from app.features.admin.messages import (
+    EMAIL_NOT_SENT_CHECK_LOGS,
+    INVALID_EMAIL_ADDRESS,
+    UNKNOWN_EMAIL_TEMPLATE,
+)
 from app.features.email.branding import email_public_base
 from app.features.email.service import get_email_service
 from app.features.notifications.copy import _COPY, _USE_STORED_BODY, Portal, format_booking_notification
@@ -141,22 +146,22 @@ def send_email_test(*, template_id: str, to_email: str) -> tuple[bool, str | Non
     """Send a sample email. Returns (delivered, message)."""
     tid = template_id.strip()
     if tid not in _template_ids():
-        raise ValueError("Unknown email template.")
+        raise ValueError(UNKNOWN_EMAIL_TEMPLATE)
 
     email = to_email.strip().lower()
     if not email or "@" not in email:
-        raise ValueError("Enter a valid email address.")
+        raise ValueError(INVALID_EMAIL_ADDRESS)
 
     svc = get_email_service()
     base = email_public_base()
 
     if tid == "welcome.client":
         ok = svc.send_welcome(to_email=email, user_type="client", display_name="Ada")
-        return ok, None if ok else "Email was not sent. Check RESEND_API_KEY and logs."
+        return ok, None if ok else EMAIL_NOT_SENT_CHECK_LOGS
 
     if tid == "welcome.vendor":
         ok = svc.send_welcome(to_email=email, user_type="vendor", display_name="Chidi")
-        return ok, None if ok else "Email was not sent. Check RESEND_API_KEY and logs."
+        return ok, None if ok else EMAIL_NOT_SENT_CHECK_LOGS
 
     if tid.startswith("vendor."):
         status = tid.split(".", 1)[1]
@@ -171,7 +176,7 @@ def send_email_test(*, template_id: str, to_email: str) -> tuple[bool, str | Non
                 listing_visible=True,
                 payouts_verified=True,
             )
-            return ok, None if ok else "Email was not sent. Check RESEND_API_KEY and logs."
+            return ok, None if ok else EMAIL_NOT_SENT_CHECK_LOGS
         if status == "approved_pending_payouts":
             ok = svc.send_vendor_approval_status(
                 to_email=email,
@@ -183,9 +188,9 @@ def send_email_test(*, template_id: str, to_email: str) -> tuple[bool, str | Non
                 listing_visible=False,
                 payouts_verified=False,
             )
-            return ok, None if ok else "Email was not sent. Check RESEND_API_KEY and logs."
+            return ok, None if ok else EMAIL_NOT_SENT_CHECK_LOGS
         if status not in {"pending", "banned"}:
-            raise ValueError("Unknown email template.")
+            raise ValueError(UNKNOWN_EMAIL_TEMPLATE)
         ok = svc.send_vendor_approval_status(
             to_email=email,
             approval_status=status,
@@ -194,22 +199,22 @@ def send_email_test(*, template_id: str, to_email: str) -> tuple[bool, str | Non
             payments_url=f"{base}/vendor/payments",
             dashboard_url=f"{base}/vendor/dashboard",
         )
-        return ok, None if ok else "Email was not sent. Check RESEND_API_KEY and logs."
+        return ok, None if ok else EMAIL_NOT_SENT_CHECK_LOGS
 
     if tid == "team_invite":
         ok = svc.send_team_invite(to_email=email, login_url=f"{base}/signin")
-        return ok, None if ok else "Email was not sent. Check RESEND_API_KEY and logs."
+        return ok, None if ok else EMAIL_NOT_SENT_CHECK_LOGS
 
     if tid == "client.suspended":
         ok = svc.send_client_suspended(to_email=email, support_url=f"{base}/contact")
-        return ok, None if ok else "Email was not sent. Check RESEND_API_KEY and logs."
+        return ok, None if ok else EMAIL_NOT_SENT_CHECK_LOGS
 
     if tid == "support.new_message":
         ok = svc.send_support_new_message(
             to_email=email,
             messages_url=f"{base}/vendor/messages",
         )
-        return ok, None if ok else "Email was not sent. Check RESEND_API_KEY and logs."
+        return ok, None if ok else EMAIL_NOT_SENT_CHECK_LOGS
 
     if tid == "admin.contact_submitted":
         ok = svc.send_admin_contact_submitted(
@@ -220,7 +225,7 @@ def send_email_test(*, template_id: str, to_email: str) -> tuple[bool, str | Non
             booking_id=TEST_BOOKING_ID,
             to=[email],
         )
-        return ok, None if ok else "Email was not sent. Check RESEND_API_KEY and logs."
+        return ok, None if ok else EMAIL_NOT_SENT_CHECK_LOGS
 
     if tid == "admin.dispute_opened":
         ok = svc.send_admin_dispute_opened(
@@ -231,7 +236,7 @@ def send_email_test(*, template_id: str, to_email: str) -> tuple[bool, str | Non
             to=[email],
             admin_url=f"{base}/admin/trust?tab=disputes",
         )
-        return ok, None if ok else "Email was not sent. Check RESEND_API_KEY and logs."
+        return ok, None if ok else EMAIL_NOT_SENT_CHECK_LOGS
 
     if tid == "admin.vendor_submitted":
         ok = svc.send_admin_vendor_submitted(
@@ -241,7 +246,7 @@ def send_email_test(*, template_id: str, to_email: str) -> tuple[bool, str | Non
             to=[email],
             admin_url=f"{base}/admin/directory?tab=vendors",
         )
-        return ok, None if ok else "Email was not sent. Check RESEND_API_KEY and logs."
+        return ok, None if ok else EMAIL_NOT_SENT_CHECK_LOGS
 
     if tid == "admin.refund_failed":
         ok = svc.send_admin_refund_failed(
@@ -249,7 +254,7 @@ def send_email_test(*, template_id: str, to_email: str) -> tuple[bool, str | Non
             error_hint="Sample Stripe error: charge already refunded.",
             to=[email],
         )
-        return ok, None if ok else "Email was not sent. Check RESEND_API_KEY and logs."
+        return ok, None if ok else EMAIL_NOT_SENT_CHECK_LOGS
 
     if tid == "admin.payout_stuck":
         ok = svc.send_admin_payout_stuck(
@@ -258,18 +263,18 @@ def send_email_test(*, template_id: str, to_email: str) -> tuple[bool, str | Non
             error_hint="Sample Stripe error: insufficient funds in platform balance.",
             to=[email],
         )
-        return ok, None if ok else "Email was not sent. Check RESEND_API_KEY and logs."
+        return ok, None if ok else EMAIL_NOT_SENT_CHECK_LOGS
 
     if tid.startswith("booking."):
         parts = tid.split(".", 2)
         if len(parts) != 3:
-            raise ValueError("Unknown email template.")
+            raise ValueError(UNKNOWN_EMAIL_TEMPLATE)
         _, kind, portal_raw = parts
         if portal_raw not in ("client", "vendor"):
-            raise ValueError("Unknown email template.")
+            raise ValueError(UNKNOWN_EMAIL_TEMPLATE)
         portal: Portal = portal_raw  # type: ignore[assignment]
         if kind not in _COPY or portal not in _COPY[kind]:
-            raise ValueError("Unknown email template.")
+            raise ValueError(UNKNOWN_EMAIL_TEMPLATE)
 
         stored = SAMPLE_STORED_BODY if kind in _USE_STORED_BODY else None
         headline, body = format_booking_notification(
@@ -290,6 +295,6 @@ def send_email_test(*, template_id: str, to_email: str) -> tuple[bool, str | Non
             action_url=action_url,
             skip_dedupe=True,
         )
-        return ok, None if ok else "Email was not sent. Check RESEND_API_KEY and logs."
+        return ok, None if ok else EMAIL_NOT_SENT_CHECK_LOGS
 
-    raise ValueError("Unknown email template.")
+    raise ValueError(UNKNOWN_EMAIL_TEMPLATE)

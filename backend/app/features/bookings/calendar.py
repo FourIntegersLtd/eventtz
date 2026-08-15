@@ -7,14 +7,15 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.db import get_db as get_client
+from app.core.db import get_db
 from app.features.vendors.moderation import (
-    get_approved_vendor_payload,
+    get_bookable_vendor_profile_form_data,
     vendor_is_bookable_for_explore,
 )
-from app.features.vendors.payload_validation import MAX_MAX_BOOKINGS_PER_DAY, MIN_MAX_BOOKINGS_PER_DAY
+from app.features.vendors.profile_form_validation import MAX_MAX_BOOKINGS_PER_DAY, MIN_MAX_BOOKINGS_PER_DAY
 from app.features.vendors.list_pricing import parse_money_gbp
 from app.features.vendors.search import assert_vendor_payload_allows_event_dates, iso_dates_in_event_range
+from app.features.bookings import messages as booking_messages
 
 logger = get_logger(__name__)
 
@@ -31,12 +32,10 @@ def booking_capacity_error_from_db(exc: BaseException) -> ValueError | None:
     cap = parts[2] if len(parts) > 2 else None
     if day_iso and cap:
         return ValueError(
-            f"This vendor already has the maximum number of bookings ({cap}) "
-            f"on {day_iso}. Choose another date or contact the vendor.",
+            booking_messages.max_bookings_on_date_detail(cap=int(cap), day_iso=day_iso),
         )
     return ValueError(
-        "This vendor already has the maximum number of bookings on that date. "
-        "Choose another date or contact the vendor.",
+        booking_messages.MAX_BOOKINGS_ON_DATE_FALLBACK,
     )
 
 
@@ -66,13 +65,10 @@ def _enforce_vendor_calendar(
     event_end_date: date | None,
 ) -> None:
     """Blocked dates and available weekdays from vendor onboarding (same rules as explore search)."""
-    if get_settings().local_auth_mode:
-        return
-    payload = get_approved_vendor_payload(vendor_user_id)
+    payload = get_bookable_vendor_profile_form_data(vendor_user_id)
     if not payload:
         raise ValueError(
-            "This vendor is not available for booking right now. "
-            "They may be unlisted or not yet approved.",
+            booking_messages.VENDOR_NOT_AVAILABLE_CALENDAR,
         )
     assert_vendor_payload_allows_event_dates(
         payload,
@@ -100,15 +96,12 @@ def _enforce_max_bookings_per_day(
     exclude_booking_id: str | None = None,
 ) -> None:
     """Reject when any day in the event range is at the vendor's daily cap."""
-    if get_settings().local_auth_mode:
-        return
-
     cap = _parse_max_bookings_from_payload(payload)
     days = iso_dates_in_event_range(event_date, event_end_date)
 
     try:
         res = (
-            get_client()
+            get_db()
             .table("booking_requests")
             .select("id,event_date,event_end_date,status")
             .eq("vendor_user_id", vendor_user_id)
@@ -118,7 +111,7 @@ def _enforce_max_bookings_per_day(
     except Exception as e:
         logger.warning("_enforce_max_bookings_per_day query failed: %s", e, exc_info=True)
         raise ValueError(
-            "Could not verify vendor availability for that date. Please try again.",
+            booking_messages.COULD_NOT_VERIFY_AVAILABILITY,
         ) from e
 
     rows = getattr(res, "data", None) or []
@@ -137,22 +130,19 @@ def _enforce_max_bookings_per_day(
                 count += 1
         if count >= cap:
             raise ValueError(
-                f"This vendor already has the maximum number of bookings ({cap}) "
-                f"on {day_iso}. Choose another date or contact the vendor.",
+                booking_messages.max_bookings_on_date_detail(cap=cap, day_iso=day_iso),
             )
 
 
 def vendor_can_initiate_chat(*, vendor_user_id: str, client_user_id: str) -> bool:
     """True when vendor and client have any booking relationship."""
-    if get_settings().local_auth_mode:
-        return False
     vid = (vendor_user_id or "").strip()
     cid = (client_user_id or "").strip()
     if not vid or not cid:
         return False
     try:
         res = (
-            get_client()
+            get_db()
             .table("booking_requests")
             .select("id")
             .eq("vendor_user_id", vid)

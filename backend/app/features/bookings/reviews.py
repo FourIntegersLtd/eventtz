@@ -8,8 +8,9 @@ from typing import Any
 from app.contracts.reviews import MAX_REVIEW_IMAGES, normalize_review_image_urls
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.db import apply_recent_first_order, get_db as get_client
-from app.features.auth.lookup import vendor_display_names_by_id
+from app.core.db import apply_recent_first_order, get_db
+from app.features.auth.user_vendor_display_lookup import vendor_display_names_by_id
+from app.features.bookings import messages as booking_messages
 
 logger = get_logger(__name__)
 
@@ -63,10 +64,10 @@ def featured_snippets_for_vendor_ids(
     Returns { vendor_id: { rating, body_excerpt, reviewer_display } }.
     """
     ids = [str(v).strip() for v in vendor_ids if str(v).strip()]
-    if not ids or get_settings().local_auth_mode:
+    if not ids:
         return {}
 
-    client = get_client()
+    client = get_db()
     try:
         q = apply_recent_first_order(
             client.table("booking_reviews")
@@ -132,9 +133,9 @@ def featured_snippets_for_vendor_ids(
 
 def get_review_stats_for_vendors(vendor_ids: list[str]) -> dict[str, dict[str, Any]]:
     """Returns { vendor_id: { review_count, average_rating } } for known ids."""
-    if get_settings().local_auth_mode or not vendor_ids:
+    if not vendor_ids:
         return {}
-    client = get_client()
+    client = get_db()
     try:
         res = (
             client.table("vendor_review_stats")
@@ -175,9 +176,7 @@ def _fetch_vendor_review_rows(
     limit: int,
     public_only: bool = True,
 ) -> list[dict[str, Any]]:
-    if get_settings().local_auth_mode:
-        return []
-    client = get_client()
+    client = get_db()
     cap = min(max(limit, 1), 200 if not public_only else 100)
     try:
         q = (
@@ -220,7 +219,7 @@ def _enrich_reviews_with_booking_context(
         sel += ", total_label"
     try:
         br = (
-            get_client()
+            get_db()
             .table("booking_requests")
             .select(sel)
             .in_("id", booking_ids[:200])
@@ -251,7 +250,7 @@ def _client_emails_for_review_rows(rows: list[dict[str, Any]]) -> dict[str, str]
         return emails
     try:
         ur = (
-            get_client()
+            get_db()
             .table("users")
             .select("id, email")
             .in_("id", client_ids[:200])
@@ -306,10 +305,7 @@ def list_public_reviews_for_vendor(
     """
     Returns (reviews, summary) where summary is { average_rating, review_count }.
     """
-    if get_settings().local_auth_mode:
-        return [], {"average_rating": None, "review_count": 0}
-
-    client = get_client()
+    client = get_db()
     stats = get_review_stats_for_vendors([vendor_user_id])
     sm = stats.get(vendor_user_id) or {"review_count": 0, "average_rating": None}
     summary = {
@@ -329,13 +325,7 @@ def list_reviews_for_vendor_owner(
     limit: int = 100,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Visible client reviews for the authenticated vendor (matches public profile)."""
-    if get_settings().local_auth_mode:
-        return [], {
-            "average_rating": None,
-            "review_count": 0,
-        }
-
-    client = get_client()
+    client = get_db()
     stats = get_review_stats_for_vendors([vendor_user_id])
     sm = stats.get(vendor_user_id) or {"review_count": 0, "average_rating": None}
     summary = {
@@ -357,10 +347,7 @@ def list_reviews_for_client(
     limit: int = 100,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Reviews this client has submitted."""
-    if get_settings().local_auth_mode:
-        return [], {"review_count": 0}
-
-    client = get_client()
+    client = get_db()
     sel = "id, rating, body, created_at, vendor_user_id, booking_request_id, image_urls"
 
     try:
@@ -415,12 +402,12 @@ def get_vendor_reviews_for_bookings(
     """
     Map booking_request_id -> review fields for the vendor (client-authored reviews).
     """
-    if get_settings().local_auth_mode or not vendor_user_id or not booking_ids:
+    if not vendor_user_id or not booking_ids:
         return {}
     ids = list({str(b) for b in booking_ids if b})
     if not ids:
         return {}
-    client = get_client()
+    client = get_db()
     try:
         q = (
             client.table("booking_reviews")
@@ -474,12 +461,12 @@ def get_vendor_review_for_booking(vendor_user_id: str, booking_id: str) -> dict[
 
 def get_client_reviewed_booking_ids(client_user_id: str, booking_ids: list[str]) -> set[str]:
     """Which booking ids this client has already reviewed - avoids an extra query per booking."""
-    if get_settings().local_auth_mode or not client_user_id:
+    if not client_user_id:
         return set()
     ids = list({str(b) for b in booking_ids if b})
     if not ids:
         return set()
-    client = get_client()
+    client = get_db()
     try:
         res = (
             client.table("booking_reviews")
@@ -499,9 +486,7 @@ def get_client_reviewed_booking_ids(client_user_id: str, booking_ids: list[str])
 
 
 def get_client_review_for_booking(booking_id: str, client_user_id: str) -> dict[str, Any] | None:
-    if get_settings().local_auth_mode:
-        return None
-    client = get_client()
+    client = get_db()
     try:
         res = (
             client.table("booking_reviews")
@@ -535,10 +520,7 @@ def create_booking_review(
     body: str,
     image_urls: list[str] | None = None,
 ) -> dict[str, Any]:
-    if get_settings().local_auth_mode:
-        raise ValueError("Reviews are unavailable in local auth mode.")
-
-    client = get_client()
+    client = get_db()
     res = (
         client.table("booking_requests")
         .select("id, status, client_user_id, vendor_user_id")
@@ -548,15 +530,15 @@ def create_booking_review(
     )
     data = getattr(res, "data", None) or []
     if not data or not isinstance(data[0], dict):
-        raise ValueError("Booking not found.")
+        raise ValueError(booking_messages.BOOKING_NOT_FOUND)
     row = data[0]
     if str(row.get("client_user_id") or "") != client_user_id:
-        raise ValueError("Booking not found.")
+        raise ValueError(booking_messages.BOOKING_NOT_FOUND)
     if str(row.get("status") or "") != "completed":
-        raise ValueError("You can only review a booking after it is marked complete.")
+        raise ValueError(booking_messages.REVIEW_AFTER_COMPLETE)
     vendor_id = str(row.get("vendor_user_id") or "")
     if not vendor_id:
-        raise ValueError("Invalid booking.")
+        raise ValueError(booking_messages.INVALID_BOOKING)
 
     dup = (
         client.table("booking_reviews")
@@ -566,17 +548,17 @@ def create_booking_review(
         .execute()
     )
     if getattr(dup, "data", None):
-        raise ValueError("You have already submitted a review for this booking.")
+        raise ValueError(booking_messages.REVIEW_ALREADY_SUBMITTED)
 
     text = body.strip()
     if len(text) < 10:
-        raise ValueError("Review must be at least 10 characters.")
+        raise ValueError(booking_messages.REVIEW_MIN_LENGTH)
     if len(text) > 4000:
-        raise ValueError("Review is too long.")
+        raise ValueError(booking_messages.REVIEW_TOO_LONG)
 
     photos = normalize_review_image_urls(image_urls)
     if len(photos) > MAX_REVIEW_IMAGES:
-        raise ValueError(f"You can attach up to {MAX_REVIEW_IMAGES} photos.")
+        raise ValueError(booking_messages.review_max_photos_detail(MAX_REVIEW_IMAGES))
 
     client.table("booking_reviews").insert(
         {
@@ -598,7 +580,7 @@ def create_booking_review(
     )
     ins_data = getattr(fetch, "data", None) or []
     if not ins_data or not isinstance(ins_data[0], dict):
-        raise ValueError("Could not save review.")
+        raise ValueError(booking_messages.COULD_NOT_SAVE_REVIEW)
 
     created = ins_data[0]
     try:

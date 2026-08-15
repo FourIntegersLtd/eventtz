@@ -101,7 +101,7 @@ def narration_cache_set(
         _NARRATION_CACHE[key] = (time.monotonic() + ttl, narration)
 
 
-def get_or_compute_narration(
+def get_or_compute_brief_narration(
     vendor_user_id: str,
     fingerprint: str,
     compute: Callable[[], BriefNarrationCacheEntry],

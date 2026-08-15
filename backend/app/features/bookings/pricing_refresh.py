@@ -6,6 +6,7 @@ from datetime import date
 from typing import Any
 
 from app.features.bookings.pricing import build_pricing_breakdown, persisted_booking_total_label
+from app.features.bookings import messages as booking_messages
 from app.features.vendors.list_pricing import reconcile_automatic_discount_lines
 
 
@@ -15,7 +16,7 @@ def _parse_event_date(row: dict[str, Any]) -> date:
         return raw
     if isinstance(raw, str) and raw.strip():
         return date.fromisoformat(raw.strip()[:10])
-    raise ValueError("Booking is missing a valid event date.")
+    raise ValueError(booking_messages.BOOKING_MISSING_EVENT_DATE)
 
 
 def refresh_booking_pricing(
@@ -39,10 +40,10 @@ def refresh_booking_pricing(
     pb = build_pricing_breakdown(line_items=line_items, vendor_adjustments=vendor_adjustments)
 
     if pb.get("has_pricing_tbc"):
-        raise ValueError("This booking still has prices to be confirmed before you can pay.")
+        raise ValueError(booking_messages.PRICES_TO_CONFIRM)
 
     if float(pb.get("vendor_portion_gbp") or 0) <= 0:
-        raise ValueError("Nothing to pay for this booking.")
+        raise ValueError(booking_messages.NOTHING_TO_PAY)
 
     return {
         "line_items": line_items,

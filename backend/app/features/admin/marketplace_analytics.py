@@ -7,7 +7,7 @@ from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
 from app.core.config import get_settings
-from app.core.db import get_db as get_client
+from app.core.db import get_db
 from app.core.logging import get_logger
 from app.features.admin.dashboard_queries import _PAID_PAYMENT_STATUSES
 
@@ -52,11 +52,9 @@ def _date_bounds(from_date: date | None, to_date: date | None) -> tuple[str, str
 
 
 def _load_client_enquiries(from_iso: str, to_iso: str) -> list[dict[str, Any]]:
-    if get_settings().local_auth_mode:
-        return []
     try:
         res = (
-            get_client()
+            get_db()
             .table("booking_requests")
             .select(_BOOKING_SELECT)
             .eq("initiator", "client")
@@ -74,7 +72,7 @@ def _load_client_enquiries(from_iso: str, to_iso: str) -> list[dict[str, Any]]:
 
 
 def _vendor_meta(vendor_ids: list[str]) -> dict[str, dict[str, Any]]:
-    if not vendor_ids or get_settings().local_auth_mode:
+    if not vendor_ids:
         return {}
     out: dict[str, dict[str, Any]] = {}
     try:
@@ -82,7 +80,7 @@ def _vendor_meta(vendor_ids: list[str]) -> dict[str, dict[str, Any]]:
         for i in range(0, len(vendor_ids), 100):
             chunk = vendor_ids[i : i + 100]
             res = (
-                get_client()
+                get_db()
                 .table("vendors")
                 .select("user_id,services_offered,base_city_normalized,approval_status,payload")
                 .in_("user_id", chunk)
@@ -125,11 +123,9 @@ def _location(vendor: dict[str, Any] | None, booking: dict[str, Any]) -> str:
 
 
 def _review_stats() -> tuple[float, int]:
-    if get_settings().local_auth_mode:
-        return 0.0, 0
     try:
         res = (
-            get_client()
+            get_db()
             .table("booking_reviews")
             .select("rating")
             .is_("hidden_at", "null")
@@ -150,14 +146,12 @@ def _review_stats() -> tuple[float, int]:
 
 
 def _vendor_counts() -> tuple[int, int]:
-    if get_settings().local_auth_mode:
-        return 0, 0
     try:
         total = (
-            get_client().table("vendors").select("user_id", count="exact").execute()
+            get_db().table("vendors").select("user_id", count="exact").execute()
         )
         approved = (
-            get_client()
+            get_db()
             .table("vendors")
             .select("user_id", count="exact")
             .eq("approval_status", "approved")
@@ -420,11 +414,9 @@ def _count_profile_views(from_day: str, to_iso: str) -> int:
 
 
 def _count_marketplace_events(event_name: str, from_day: str, to_iso: str) -> int:
-    if get_settings().local_auth_mode:
-        return 0
     try:
         res = (
-            get_client()
+            get_db()
             .table("marketplace_events")
             .select("id", count="exact")
             .eq("event_name", event_name)

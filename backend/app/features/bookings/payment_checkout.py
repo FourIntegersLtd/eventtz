@@ -3,19 +3,18 @@
 from __future__ import annotations
 
 from app.core.config import get_settings
-from app.features.bookings.payment_shared import _get_vendor_stripe_fields, get_client
+from app.core.db import get_db
+from app.features.bookings import messages as booking_messages
+from app.features.bookings.booking_payment_helpers import _get_vendor_stripe_fields
 from app.features.bookings.pricing_refresh import refresh_booking_pricing
 from app.features.payments import stripe as stripe_service
-from app.features.vendors.moderation import get_approved_vendor_payload
+from app.features.vendors.moderation import get_bookable_vendor_profile_form_data
 from app.features.vendors.visibility import payout_gate_waived
 
 
 def create_checkout_session_for_booking(client_user_id: str, booking_id: str) -> str:
     """Validate + recompute pricing server-side, then return a Stripe Checkout URL."""
-    if get_settings().local_auth_mode:
-        raise ValueError("Payments are not available in local auth mode.")
-
-    db = get_client()
+    db = get_db()
     res = (
         db.table("booking_requests")
         .select("*")
@@ -26,13 +25,13 @@ def create_checkout_session_for_booking(client_user_id: str, booking_id: str) ->
     )
     rows = getattr(res, "data", None) or []
     if not rows or not isinstance(rows[0], dict):
-        raise ValueError("Booking not found.")
+        raise ValueError(booking_messages.BOOKING_NOT_FOUND)
     row = rows[0]
 
     if str(row.get("status") or "") != "accepted":
-        raise ValueError("Only accepted bookings can be paid.")
+        raise ValueError(booking_messages.ONLY_ACCEPTED_CAN_BE_PAID)
     if str(row.get("payment_status") or "unpaid") not in ("unpaid", "pending"):
-        raise ValueError("This booking has already been paid.")
+        raise ValueError(booking_messages.BOOKING_ALREADY_PAID)
 
     vendor_id = str(row.get("vendor_user_id") or "")
     vendor_stripe = _get_vendor_stripe_fields(vendor_id) or {}
@@ -44,17 +43,17 @@ def create_checkout_session_for_booking(client_user_id: str, booking_id: str) ->
     # and that already holds the money until their account is ready.
     if not charges_ready and not payout_gate_waived(vendor_stripe):
         raise ValueError(
-            "This vendor hasn't finished setting up payouts yet. Try again once they have.",
+            booking_messages.VENDOR_PAYOUTS_NOT_READY,
         )
 
     line_items = row.get("line_items")
     if not isinstance(line_items, list):
         line_items = []
 
-    vendor_payload = get_approved_vendor_payload(vendor_id)
+    vendor_payload = get_bookable_vendor_profile_form_data(vendor_id)
     if not vendor_payload:
         raise ValueError(
-            "This vendor is not available for booking right now.",
+            booking_messages.VENDOR_NOT_AVAILABLE_SHORT,
         )
 
     refreshed = refresh_booking_pricing(row, vendor_payload)
@@ -72,12 +71,12 @@ def create_checkout_session_for_booking(client_user_id: str, booking_id: str) ->
     vendor_amount = float(pb["vendor_portion_gbp"])
     service_fee = float(pb["service_fee_gbp"])
     if client_total <= 0:
-        raise ValueError("Nothing to pay for this booking.")
+        raise ValueError(booking_messages.NOTHING_TO_PAY)
 
     ea = row.get("event_address")
     if not (isinstance(ea, str) and ea.strip()):
         raise ValueError(
-            "Add your event address on the booking before paying. Your vendor needs it to prepare.",
+            booking_messages.ADD_EVENT_ADDRESS_BEFORE_PAY,
         )
 
     session = stripe_service.create_checkout_session(
@@ -95,7 +94,7 @@ def create_checkout_session_for_booking(client_user_id: str, booking_id: str) ->
             "payment_status": "pending",
         },
     ).eq("id", booking_id).eq("client_user_id", client_user_id).execute()
-    from app.features.bookings.funnel import mark_payment_requested
+    from app.features.bookings.booking_funnel_timestamps import mark_payment_requested
 
     mark_payment_requested(booking_id)
     try:

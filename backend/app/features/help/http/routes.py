@@ -16,8 +16,9 @@ from app.contracts.help import (
 )
 from app.core.logging import get_logger
 from app.features.auth.http.guards import require_user
+from app.features.help import messages as help_messages
 from app.features.help import queries
-from app.features.help.assistant import ask_help
+from app.features.help.assistant import ask_help_assistant
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/help", tags=["help"])
@@ -31,9 +32,9 @@ def _resolve_audience(user: dict, requested: str | None) -> str:
             return requested
         return "admin"
     if ut not in ("client", "vendor"):
-        raise HTTPException(status_code=403, detail="Help Center is for signed-in portal users.")
+        raise HTTPException(status_code=403, detail=help_messages.PORTAL_USERS_ONLY)
     if requested and requested != ut:
-        raise HTTPException(status_code=403, detail="Audience must match your account type.")
+        raise HTTPException(status_code=403, detail=help_messages.AUDIENCE_MISMATCH)
     return ut
 
 
@@ -77,7 +78,7 @@ def get_help_article(
     aud = _resolve_audience(user, audience)
     row = queries.get_article_by_slug(slug=slug, audience=aud)
     if not row:
-        raise HTTPException(status_code=404, detail="Article not found.")
+        raise HTTPException(status_code=404, detail=help_messages.ARTICLE_NOT_FOUND)
     return HelpArticleResponse(article=HelpArticleDetail.model_validate(row))
 
 
@@ -91,9 +92,9 @@ def post_help_ask(
     aud = _resolve_audience(user, body.audience)
     q = (body.question or "").strip()
     if not q:
-        raise HTTPException(status_code=400, detail="Question is required.")
+        raise HTTPException(status_code=400, detail=help_messages.QUESTION_REQUIRED)
     try:
-        return ask_help(question=q, audience=aud, history=body.history)
+        return ask_help_assistant(question=q, audience=aud, history=body.history)
     except HTTPException as e:
         logger.warning(
             "help_ask: HTTP %s audience=%s detail=%s",
@@ -111,5 +112,5 @@ def post_help_ask(
         )
         raise HTTPException(
             status_code=503,
-            detail="The help assistant is unavailable right now. Please try again later.",
+            detail=help_messages.ASSISTANT_UNAVAILABLE,
         ) from e

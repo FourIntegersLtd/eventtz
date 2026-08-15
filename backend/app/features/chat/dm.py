@@ -7,18 +7,18 @@ from typing import Any
 from app.core.config import get_settings
 from app.core.logging import get_logger
 from app.core.errors import ForbiddenError, NotFoundError, ServiceUnavailableError
-from app.core.db import apply_recent_first_order, get_db as get_client
-from app.features.auth.lookup import (
+from app.core.db import apply_recent_first_order, get_db
+from app.features.auth.user_vendor_display_lookup import (
     client_display_names_by_id,
     user_types_by_id,
     vendor_display_names_by_id,
 )
 from app.features.realtime.sse import notify_user
 
-from app.features.chat.chat_shared import (
+from app.features.chat import messages as chat_messages
+from app.features.chat.chat_formatting_and_ids import (
     ADMIN_SENDER_DISPLAY,
     ADMIN_SENDER_USER_ID,
-    LOCAL_CONVERSATION_ID,
     MAX_MESSAGE_LEN,
     _conversation_kind,
     _count_unread_for_user,
@@ -45,16 +45,14 @@ def _client_peer_labels(client_ids: list[str]) -> dict[str, str]:
         if types.get(uid) == "admin":
             out[uid] = ADMIN_SENDER_DISPLAY
         else:
-            out[uid] = names.get(uid, "Client")
+            out[uid] = names.get(uid, chat_messages.CLIENT_DISPLAY_FALLBACK)
     return out
 
 
 def _assert_vendor_exists(vendor_user_id: str) -> None:
-    if get_settings().local_auth_mode:
-        return
     try:
         res = (
-            get_client()
+            get_db()
             .table("users")
             .select("id,user_type")
             .eq("id", vendor_user_id)
@@ -63,21 +61,19 @@ def _assert_vendor_exists(vendor_user_id: str) -> None:
         )
     except Exception:
         logger.exception("chat: load user for vendor check failed")
-        raise ValueError("Could not verify vendor.") from None
+        raise ValueError(chat_messages.VENDOR_VERIFY_FAILED) from None
     rows = getattr(res, "data", None) or []
     if not rows:
-        raise ValueError("Vendor not found.")
+        raise ValueError(chat_messages.VENDOR_NOT_FOUND)
     ut = rows[0].get("user_type") if isinstance(rows[0], dict) else None
     if str(ut) != "vendor":
-        raise ValueError("That user is not a vendor account.")
+        raise ValueError(chat_messages.NOT_VENDOR_ACCOUNT)
 
 
 def count_unread_chat_total(user_id: str) -> int:
-    if get_settings().local_auth_mode:
-        return 0
     try:
         res = (
-            get_client()
+            get_db()
             .table("conversations")
             .select(
                 "id,kind,client_user_id,vendor_user_id,support_user_id,"
@@ -109,28 +105,14 @@ def get_or_create_conversation(
     require_bookable_vendor: bool = True,
 ) -> dict[str, Any]:
     if client_user_id == vendor_user_id:
-        raise ValueError("You can't start a chat with yourself.")
+        raise ValueError(chat_messages.SELF_CHAT_FORBIDDEN)
     _assert_vendor_exists(vendor_user_id)
     if require_bookable_vendor:
         from app.features.vendors.moderation import vendor_is_bookable_for_explore
 
         if not vendor_is_bookable_for_explore(vendor_user_id):
-            raise ValueError("This vendor is not available for messages.")
-    if get_settings().local_auth_mode:
-        return {
-            "id": LOCAL_CONVERSATION_ID,
-            "kind": "dm",
-            "support_user_id": None,
-            "client_user_id": client_user_id,
-            "vendor_user_id": vendor_user_id,
-            "peer_user_id": vendor_user_id,
-            "peer_display_name": "Vendor",
-            "created_at": None,
-            "last_message_at": None,
-            "unread_count": 0,
-        }
-
-    client = get_client()
+            raise ValueError(chat_messages.VENDOR_UNAVAILABLE)
+    client = get_db()
     try:
         existing = (
             client.table("conversations")
@@ -154,7 +136,7 @@ def get_or_create_conversation(
             )
         except Exception as e2:
             logger.exception("chat: get conversation failed")
-            raise RuntimeError("Could not load conversation.") from e2
+            raise RuntimeError(chat_messages.CONVERSATION_LOAD_FAILED) from e2
         _ = e
     data = getattr(existing, "data", None) or []
     row: dict[str, Any]
@@ -188,25 +170,23 @@ def get_or_create_conversation(
                 )
             else:
                 logger.exception("chat: insert conversation failed")
-                raise RuntimeError("Could not start conversation.") from e
+                raise RuntimeError(chat_messages.CONVERSATION_START_FAILED) from e
         ins_data = getattr(ins, "data", None) or []
         if not ins_data or not isinstance(ins_data[0], dict):
-            raise RuntimeError("Could not start conversation.")
+            raise RuntimeError(chat_messages.CONVERSATION_START_FAILED)
         row = ins_data[0]
 
     vnames = vendor_display_names_by_id([vendor_user_id])
-    peer_name = vnames.get(vendor_user_id, "Vendor")
+    peer_name = vnames.get(vendor_user_id, chat_messages.VENDOR_DISPLAY_FALLBACK)
     out = _row_to_conversation_list_item(row, client_user_id, {vendor_user_id: peer_name})
     return out
 
 
 def list_conversations_for_user(user_id: str, *, role: str) -> list[dict[str, Any]]:
-    if get_settings().local_auth_mode:
-        return []
     try:
         res = (
             apply_recent_first_order(
-                get_client()
+                get_db()
                 .table("conversations")
                 .select("*")
                 .or_(
@@ -250,34 +230,18 @@ def list_conversations_for_user(user_id: str, *, role: str) -> list[dict[str, An
         is_client = user_id == c
         peer = v if is_client else c
         if is_client:
-            peer_names = {peer: vnames.get(peer, "Vendor")}
+            peer_names = {peer: vnames.get(peer, chat_messages.VENDOR_DISPLAY_FALLBACK)}
         else:
-            peer_names = {peer: client_labels.get(peer, "Client")}
+            peer_names = {peer: client_labels.get(peer, chat_messages.CLIENT_DISPLAY_FALLBACK)}
         out.append(_row_to_conversation_list_item(row, user_id, peer_names))
     _ = role  # role kept for call-site clarity (client vs vendor portal)
     return out
 
 
 def get_conversation_for_user(conversation_id: str, user_id: str) -> dict[str, Any] | None:
-    if get_settings().local_auth_mode:
-        if conversation_id != LOCAL_CONVERSATION_ID:
-            return None
-        vid = "00000000-0000-4000-8000-0000000000e01"
-        return {
-            "id": LOCAL_CONVERSATION_ID,
-            "kind": "dm",
-            "support_user_id": None,
-            "client_user_id": user_id,
-            "vendor_user_id": vid,
-            "peer_user_id": vid,
-            "peer_display_name": "Vendor (local)",
-            "created_at": None,
-            "last_message_at": None,
-            "unread_count": 0,
-        }
     try:
         res = (
-            get_client()
+            get_db()
             .table("conversations")
             .select("*")
             .eq("id", conversation_id)
@@ -301,10 +265,10 @@ def get_conversation_for_user(conversation_id: str, user_id: str) -> dict[str, A
     peer = v if user_id == c else c
     if user_id == c:
         peer_names = vendor_display_names_by_id([v])
-        pname = peer_names.get(v, "Vendor")
+        pname = peer_names.get(v, chat_messages.VENDOR_DISPLAY_FALLBACK)
     else:
         peer_names = _client_peer_labels([c])
-        pname = peer_names.get(c, "Client")
+        pname = peer_names.get(c, chat_messages.CLIENT_DISPLAY_FALLBACK)
     return _row_to_conversation_list_item(row, user_id, {peer: pname})
 
 
@@ -315,15 +279,10 @@ def list_messages_for_user(
     limit: int = 100,
 ) -> list[dict[str, Any]]:
     lim = max(1, min(limit, 200))
-    if get_settings().local_auth_mode:
-        if conversation_id != LOCAL_CONVERSATION_ID:
-            return []
-        return []
-
     conv = None
     try:
         res = (
-            get_client()
+            get_db()
             .table("conversations")
             .select("id,kind,client_user_id,vendor_user_id,support_user_id")
             .eq("id", conversation_id)
@@ -340,7 +299,7 @@ def list_messages_for_user(
         return []
 
     try:
-        rows = _messages_table_select(get_client(), conversation_id, limit=lim)
+        rows = _messages_table_select(get_db(), conversation_id, limit=lim)
     except Exception:
         logger.exception("chat: list messages failed")
         return []
@@ -370,22 +329,11 @@ def list_messages_for_user(
 def send_message(*, conversation_id: str, sender_user_id: str, body: str) -> dict[str, Any]:
     text = body.strip()
     if not text:
-        raise ValueError("Message cannot be empty.")
+        raise ValueError(chat_messages.MESSAGE_EMPTY)
     if len(text) > MAX_MESSAGE_LEN:
-        raise ValueError(f"Message is too long (max {MAX_MESSAGE_LEN} characters).")
+        raise ValueError(chat_messages.message_too_long_detail(MAX_MESSAGE_LEN))
 
-    if get_settings().local_auth_mode:
-        if conversation_id != LOCAL_CONVERSATION_ID:
-            raise ValueError("Conversation not found.")
-        return {
-            "id": "00000000-0000-4000-8000-000000000d01",
-            "sender_user_id": sender_user_id,
-            "body": text,
-            "created_at": _now_iso(),
-            "metadata": None,
-        }
-
-    client = get_client()
+    client = get_db()
     try:
         res = (
             client.table("conversations")
@@ -396,14 +344,14 @@ def send_message(*, conversation_id: str, sender_user_id: str, body: str) -> dic
         )
     except Exception as e:
         logger.exception("chat: send load conv failed")
-        raise RuntimeError("Could not send message.") from e
+        raise RuntimeError(chat_messages.SEND_MESSAGE_FAILED) from e
     data = getattr(res, "data", None) or []
     if not data or not isinstance(data[0], dict):
-        raise ValueError("Conversation not found.")
+        raise ValueError(chat_messages.CONVERSATION_NOT_FOUND)
     conv = data[0]
     role = _role_in_conversation(conv, sender_user_id)
     if not role:
-        raise ValueError("You are not part of this conversation.")
+        raise ValueError(chat_messages.NOT_IN_CONVERSATION)
 
     msg = insert_message(
         conversation_id=conversation_id,
@@ -430,10 +378,10 @@ def _maybe_mark_vendor_first_response_from_chat(
     if str(conv.get("kind") or "dm") != "dm":
         return
     try:
-        from app.features.bookings.funnel import mark_vendor_first_response
+        from app.features.bookings.booking_funnel_timestamps import mark_vendor_first_response
         from app.features.analytics.events import record_marketplace_event
 
-        client = get_client()
+        client = get_db()
         res = (
             client.table("booking_requests")
             .select("id,created_at,status")
@@ -472,9 +420,7 @@ def send_quote_message(
     total_label: str,
 ) -> None:
     """Add a system "quote sent" card to the thread. Best-effort."""
-    if get_settings().local_auth_mode:
-        return
-    fallback_body = f"Sent a custom quote - {event_name} ({total_label})"
+    fallback_body = chat_messages.quote_sent_body(event_name, total_label)
     metadata = {
         "kind": "quote",
         "booking_request_id": booking_request_id,
@@ -496,9 +442,7 @@ def send_quote_message(
 
 
 def mark_conversation_read(conversation_id: str, user_id: str) -> None:
-    if get_settings().local_auth_mode:
-        return
-    client = get_client()
+    client = get_db()
     try:
         res = (
             client.table("conversations")
@@ -509,14 +453,14 @@ def mark_conversation_read(conversation_id: str, user_id: str) -> None:
         )
     except Exception as e:
         logger.exception("chat: mark read load conv failed")
-        raise ServiceUnavailableError("Could not update read state.") from e
+        raise ServiceUnavailableError(chat_messages.READ_STATE_UPDATE_FAILED) from e
     data = getattr(res, "data", None) or []
     if not data or not isinstance(data[0], dict):
-        raise NotFoundError("Conversation not found.")
+        raise NotFoundError(chat_messages.CONVERSATION_NOT_FOUND)
     conv = data[0]
     role = _role_in_conversation(conv, user_id)
     if not role:
-        raise ForbiddenError("You are not part of this conversation.")
+        raise ForbiddenError(chat_messages.NOT_IN_CONVERSATION)
 
     now = _now_iso()
     if role == "support_user":
@@ -529,7 +473,7 @@ def mark_conversation_read(conversation_id: str, user_id: str) -> None:
         client.table("conversations").update({field: now}).eq("id", conversation_id).execute()
     except Exception as e:
         logger.exception("chat: mark read update failed")
-        raise ServiceUnavailableError("Could not update read state.") from e
+        raise ServiceUnavailableError(chat_messages.READ_STATE_UPDATE_FAILED) from e
 
 
 def assert_conversation_matches_pair(
@@ -539,13 +483,9 @@ def assert_conversation_matches_pair(
     vendor_user_id: str,
 ) -> None:
     """Raise ValueError if the conversation does not link exactly this client and vendor."""
-    if get_settings().local_auth_mode:
-        if conversation_id != LOCAL_CONVERSATION_ID:
-            raise ValueError("Conversation not found.")
-        return
     try:
         res = (
-            get_client()
+            get_db()
             .table("conversations")
             .select("id,kind,client_user_id,vendor_user_id")
             .eq("id", conversation_id)
@@ -554,14 +494,14 @@ def assert_conversation_matches_pair(
         )
     except Exception:
         logger.exception("chat: assert conversation pair failed")
-        raise ValueError("Could not verify conversation.") from None
+        raise ValueError(chat_messages.CONVERSATION_VERIFY_FAILED) from None
     data = getattr(res, "data", None) or []
     if not data or not isinstance(data[0], dict):
-        raise ValueError("Conversation not found.")
+        raise ValueError(chat_messages.CONVERSATION_NOT_FOUND)
     row = data[0]
     if _conversation_kind(row) != "dm":
-        raise ValueError("That conversation doesn't match this booking. Open Messages and try again.")
+        raise ValueError(chat_messages.BOOKING_CONVERSATION_MISMATCH)
     c = _str_id(row.get("client_user_id"))
     v = _str_id(row.get("vendor_user_id"))
     if c != client_user_id or v != vendor_user_id:
-        raise ValueError("That conversation doesn't match this booking. Open Messages and try again.")
+        raise ValueError(chat_messages.BOOKING_CONVERSATION_MISMATCH)

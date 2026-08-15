@@ -7,7 +7,7 @@ from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
 from app.core.config import get_settings
-from app.core.db import get_db as get_client
+from app.core.db import get_db
 from app.core.logging import get_logger
 from app.features.admin.dashboard_queries import _PAID_PAYMENT_STATUSES
 
@@ -29,14 +29,11 @@ def _month_key(iso: Any) -> str | None:
 
 
 def get_vendor_analytics(vendor_user_id: str, *, days: int = 90) -> dict[str, Any]:
-    if get_settings().local_auth_mode:
-        return {"success": True, "overview": {}, "series": {}, "funnel": {}}
-
     days = max(7, min(days, 365))
     start = (datetime.now(timezone.utc).date() - timedelta(days=days - 1)).isoformat()
     try:
         res = (
-            get_client()
+            get_db()
             .table("booking_requests")
             .select(
                 "id,status,payment_status,initiator,created_at,accepted_at,completed_at,"
@@ -87,7 +84,7 @@ def get_vendor_analytics(vendor_user_id: str, *, days: int = 90) -> dict[str, An
     ratings_by_month: dict[str, list[int]] = defaultdict(list)
     try:
         rev = (
-            get_client()
+            get_db()
             .table("booking_reviews")
             .select("rating,created_at")
             .eq("vendor_user_id", vendor_user_id)
@@ -128,7 +125,7 @@ def get_vendor_analytics(vendor_user_id: str, *, days: int = 90) -> dict[str, An
     profile_views = 0
     try:
         pv = (
-            get_client()
+            get_db()
             .table("marketplace_events")
             .select("id", count="exact")
             .eq("event_name", "vendor_profile_viewed")

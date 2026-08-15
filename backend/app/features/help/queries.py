@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.core.db import get_client
+from app.core.db import get_db
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -26,7 +26,7 @@ def _audience_filter(audience: str) -> list[str]:
 def list_categories(*, audience: str) -> list[dict[str, Any]]:
     try:
         res = (
-            get_client()
+            get_db()
             .table("help_categories")
             .select(_CAT_COLS)
             .eq("published", True)
@@ -42,7 +42,7 @@ def list_categories(*, audience: str) -> list[dict[str, Any]]:
     # Attach article counts
     try:
         art = (
-            get_client()
+            get_db()
             .table("help_articles")
             .select("id,category_id")
             .eq("published", True)
@@ -74,7 +74,7 @@ def list_articles(
     if category_slug:
         try:
             cres = (
-                get_client()
+                get_db()
                 .table("help_categories")
                 .select("id,slug,title")
                 .eq("slug", category_slug)
@@ -94,7 +94,7 @@ def list_articles(
 
     try:
         q = (
-            get_client()
+            get_db()
             .table("help_articles")
             .select(_ART_LIST_COLS)
             .eq("published", True)
@@ -113,7 +113,7 @@ def list_articles(
     if not category_id:
         try:
             cres = (
-                get_client()
+                get_db()
                 .table("help_categories")
                 .select("id,slug,title")
                 .eq("published", True)
@@ -147,7 +147,7 @@ def list_articles(
 def get_article_by_slug(*, slug: str, audience: str) -> dict[str, Any] | None:
     try:
         res = (
-            get_client()
+            get_db()
             .table("help_articles")
             .select(_ART_DETAIL_COLS)
             .eq("slug", slug)
@@ -168,7 +168,7 @@ def get_article_by_slug(*, slug: str, audience: str) -> dict[str, Any] | None:
     cat_title = None
     try:
         cres = (
-            get_client()
+            get_db()
             .table("help_categories")
             .select("slug,title")
             .eq("id", row["category_id"])
@@ -197,7 +197,7 @@ def list_all_published_for_audience(*, audience: str) -> list[dict[str, Any]]:
     """Full published set for retrieval (title, summary, body excerpt)."""
     try:
         res = (
-            get_client()
+            get_db()
             .table("help_articles")
             .select("slug,title,summary,body_md,audience,related_slugs")
             .eq("published", True)

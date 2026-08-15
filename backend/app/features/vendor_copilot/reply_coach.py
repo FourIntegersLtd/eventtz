@@ -27,10 +27,10 @@ def _business_name(payload: dict[str, Any]) -> str:
 def draft_enquiry_reply(
     *,
     vendor_user_id: str,
-    booking_id: str,
+    booking_request_id: str,
     intent: Literal["accept", "decline", "clarify"] = "accept",
 ) -> dict[str, Any]:
-    booking = get_booking_request_for_vendor(vendor_user_id, booking_id)
+    booking = get_booking_request_for_vendor(vendor_user_id, booking_request_id)
     if not booking:
         return {"draft_message": "", "tips": ["Booking not found."]}
 

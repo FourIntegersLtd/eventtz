@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 CopilotActionKind = Literal[
@@ -19,20 +19,24 @@ CopilotActionKind = Literal[
 
 
 class CopilotAction(BaseModel):
-    kind: CopilotActionKind
+    action_type: CopilotActionKind = Field(validation_alias="kind")
     title: str
     rationale: str
-    payload: dict[str, Any] = Field(default_factory=dict)
+    action_data: dict[str, Any] = Field(default_factory=dict, validation_alias="payload")
     href: str | None = None
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class GrowthScoreLever(BaseModel):
-    key: str
+    metric_key: str = Field(validation_alias="key")
     label: str
     score: int = Field(ge=0, le=100)
     max_score: int = Field(ge=1, le=100)
     status: Literal["good", "ok", "needs_work"]
     tip: str
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class GrowthScoreResponse(BaseModel):
@@ -60,14 +64,18 @@ class VendorCopilotBriefResponse(BaseModel):
 
 
 class CopilotAskMessage(BaseModel):
-    role: str = Field(description="user or assistant")
+    message_role: str = Field(description="user or assistant", validation_alias="role")
     content: str
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class CopilotAskRequest(BaseModel):
     question: str = Field(min_length=1, max_length=2000)
     history: list[CopilotAskMessage] = Field(default_factory=list, max_length=12)
-    booking_id: str | None = None
+    booking_request_id: str | None = Field(default=None, validation_alias="booking_id")
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class CopilotAskResponse(BaseModel):
@@ -78,7 +86,9 @@ class CopilotAskResponse(BaseModel):
 
 
 class CopilotReviewPackagesBody(BaseModel):
-    payload: dict[str, Any] = Field(default_factory=dict)
+    profile_form_data: dict[str, Any] = Field(default_factory=dict, validation_alias="payload")
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class CopilotReviewPackagesResponse(BaseModel):
@@ -88,8 +98,10 @@ class CopilotReviewPackagesResponse(BaseModel):
 
 
 class CopilotDraftReplyBody(BaseModel):
-    booking_id: str = Field(min_length=1)
+    booking_request_id: str = Field(min_length=1, validation_alias="booking_id")
     intent: Literal["accept", "decline", "clarify"] = "accept"
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class CopilotDraftReplyResponse(BaseModel):

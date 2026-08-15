@@ -13,7 +13,8 @@ import stripe
 from app.core.config import get_settings
 from app.core.errors import ServiceUnavailableError
 from app.core.logging import get_logger
-from app.core.db import get_db as get_client
+from app.core.db import get_db
+from app.features.payments import messages as payment_messages
 from app.core.phone_validation import phone_digits_only
 
 logger = get_logger(__name__)
@@ -43,7 +44,7 @@ def stripe_object_to_dict(obj: Any) -> dict[str, Any]:
 
 def _get_vendor_row(vendor_user_id: str) -> dict[str, Any] | None:
     res = (
-        get_client()
+        get_db()
         .table("vendors")
         .select("user_id,payload,stripe_account_id,stripe_charges_enabled,stripe_payouts_enabled")
         .eq("user_id", vendor_user_id)
@@ -58,7 +59,7 @@ def _get_vendor_row(vendor_user_id: str) -> dict[str, Any] | None:
 
 def _get_user_email(user_id: str) -> str | None:
     try:
-        res = get_client().table("users").select("email").eq("id", user_id).limit(1).execute()
+        res = get_db().table("users").select("email").eq("id", user_id).limit(1).execute()
     except Exception:
         logger.exception("stripe_service: load user email failed user=%s", user_id)
         return None
@@ -86,7 +87,7 @@ def vendor_has_payout_history(vendor_user_id: str) -> bool:
     """True when this vendor has at least one booking with a released Stripe Transfer."""
     try:
         res = (
-            get_client()
+            get_db()
             .table("booking_requests")
             .select("id")
             .eq("vendor_user_id", vendor_user_id)
@@ -140,7 +141,7 @@ def _clear_vendor_stripe_connect(
         trigger,
         stripe_error,
     )
-    get_client().table("vendors").update(
+    get_db().table("vendors").update(
         {
             "stripe_account_id": None,
             "stripe_charges_enabled": False,
@@ -155,7 +156,7 @@ def _clear_vendor_stripe_connect(
         action="vendor.stripe_connect_cleared",
         entity_type="vendor",
         entity_id=vendor_user_id,
-        payload={
+        audit_event_details={
             "trigger": trigger,
             "previous_stripe_account_id": previous_account_id,
             "stripe_error": (stripe_error or "")[:500] or None,
@@ -314,7 +315,7 @@ def _create_connect_express_account(vendor_user_id: str, row: dict[str, Any] | N
         _raise_if_platform_connect_unavailable(e)
         raise
     account_id = str(account["id"])
-    get_client().table("vendors").update({"stripe_account_id": account_id}).eq(
+    get_db().table("vendors").update({"stripe_account_id": account_id}).eq(
         "user_id",
         vendor_user_id,
     ).execute()
@@ -483,7 +484,7 @@ def sync_connect_account_status(vendor_user_id: str) -> dict[str, Any]:
 
     charges_enabled = bool(account.get("charges_enabled"))
     payouts_enabled = bool(account.get("payouts_enabled"))
-    get_client().table("vendors").update(
+    get_db().table("vendors").update(
         {
             "stripe_charges_enabled": charges_enabled,
             "stripe_payouts_enabled": payouts_enabled,
@@ -504,7 +505,7 @@ def get_vendor_connect_status_response(vendor_user_id: str) -> dict[str, Any]:
     if row.get("stripe_charges_enabled") and row.get("stripe_payouts_enabled"):
         return _connect_status_from_row(row)
     settings = get_settings()
-    if settings.local_auth_mode or not settings.stripe_secret_key.strip():
+    if not settings.stripe_secret_key.strip():
         return _connect_status_from_row(row)
     return sync_connect_account_status(vendor_user_id)
 
@@ -512,11 +513,11 @@ def get_vendor_connect_status_response(vendor_user_id: str) -> dict[str, Any]:
 def restore_vendor_connect_from_payout_history(vendor_user_id: str) -> dict[str, Any]:
     """Recover stripe_account_id from the vendor's latest Stripe Transfer destination."""
     settings = get_settings()
-    if settings.local_auth_mode or not settings.stripe_secret_key.strip():
-        raise ValueError("Stripe is not configured.")
+    if not settings.stripe_secret_key.strip():
+        raise ValueError(payment_messages.STRIPE_NOT_CONFIGURED)
 
     res = (
-        get_client()
+        get_db()
         .table("booking_requests")
         .select("stripe_transfer_id")
         .eq("vendor_user_id", vendor_user_id)
@@ -527,20 +528,20 @@ def restore_vendor_connect_from_payout_history(vendor_user_id: str) -> dict[str,
     )
     rows = getattr(res, "data", None) or []
     if not rows or not isinstance(rows[0], dict):
-        raise ValueError("No payout transfer found for this vendor.")
+        raise ValueError(payment_messages.PAYOUT_TRANSFER_NOT_FOUND)
     transfer_id = str(rows[0].get("stripe_transfer_id") or "").strip()
     if not transfer_id:
-        raise ValueError("No payout transfer found for this vendor.")
+        raise ValueError(payment_messages.PAYOUT_TRANSFER_NOT_FOUND)
 
     transfer = stripe_object_to_dict(_stripe().Transfer.retrieve(transfer_id))
     destination = str(transfer.get("destination") or "").strip()
     if not destination.startswith("acct_"):
-        raise ValueError("Could not resolve Connect account from the payout transfer.")
+        raise ValueError(payment_messages.CONNECT_ACCOUNT_RESOLVE_FAILED)
 
     account = stripe_object_to_dict(_stripe().Account.retrieve(destination))
     charges_enabled = bool(account.get("charges_enabled"))
     payouts_enabled = bool(account.get("payouts_enabled"))
-    get_client().table("vendors").update(
+    get_db().table("vendors").update(
         {
             "stripe_account_id": destination,
             "stripe_charges_enabled": charges_enabled,
@@ -574,7 +575,7 @@ def refresh_pending_connect_flags(vendor_user_id: str, row: dict[str, Any]) -> d
     and a call per page load would only add latency).
     """
     settings = get_settings()
-    if settings.local_auth_mode or not settings.stripe_secret_key.strip():
+    if not settings.stripe_secret_key.strip():
         return row
     if not row.get("stripe_account_id"):
         return row
@@ -593,7 +594,7 @@ def refresh_pending_connect_flags(vendor_user_id: str, row: dict[str, Any]) -> d
 def sync_connect_account_status_by_account_id(account_id: str) -> str | None:
     """Like sync_connect_account_status, but looked up by Stripe account id (for account.updated webhooks)."""
     res = (
-        get_client()
+        get_db()
         .table("vendors")
         .select("user_id")
         .eq("stripe_account_id", account_id)
@@ -768,7 +769,7 @@ def create_transfer(
 
     amount_pence = _to_pence(amount_gbp)
     if amount_pence < 1:
-        raise ValueError("Transfer amount must be at least £0.01.")
+        raise ValueError(payment_messages.TRANSFER_MIN_AMOUNT)
     dest = destination_account_id.strip()
     src = str(source_transaction or "").strip()
     charge_id = src if src.startswith("ch_") else None

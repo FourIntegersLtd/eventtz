@@ -1,4 +1,4 @@
-"""Shared helpers used by admin features."""
+"""Optional timestamp normalization for admin list/detail queries."""
 
 from __future__ import annotations
 

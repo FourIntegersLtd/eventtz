@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from app.core.config import get_settings
-from app.core.db import get_db as get_client
+from app.core.db import get_db
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -38,9 +38,6 @@ def get_market_demand_insights(
     days: int = 90,
 ) -> list[dict[str, Any]]:
     """Return up to 3 demand insights for vendor city + service categories."""
-    if get_settings().local_auth_mode:
-        return []
-
     days = max(14, min(days, 180))
     start = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
     city_norm = base_city.strip().lower()
@@ -52,7 +49,7 @@ def get_market_demand_insights(
 
     try:
         res = (
-            get_client()
+            get_db()
             .table("booking_requests")
             .select("id,created_at,event_name")
             .eq("initiator", "client")
@@ -69,7 +66,7 @@ def get_market_demand_insights(
 
     try:
         vendor_res = (
-            get_client()
+            get_db()
             .table("vendors")
             .select("user_id,payload,country_code")
             .eq("approval_status", "approved")

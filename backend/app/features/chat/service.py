@@ -5,10 +5,9 @@ Re-export facade - import from here for stable public API.
 
 from __future__ import annotations
 
-from app.features.chat.chat_shared import (
+from app.features.chat.chat_formatting_and_ids import (
     ADMIN_SENDER_DISPLAY,
     ADMIN_SENDER_USER_ID,
-    LOCAL_CONVERSATION_ID,
     MAX_MESSAGE_LEN,
     SUPPORT_PEER_DISPLAY,
     SUPPORT_PEER_USER_ID,
@@ -41,7 +40,6 @@ from app.features.chat.support_admin import (
 __all__ = [
     "ADMIN_SENDER_DISPLAY",
     "ADMIN_SENDER_USER_ID",
-    "LOCAL_CONVERSATION_ID",
     "MAX_MESSAGE_LEN",
     "SUPPORT_PEER_DISPLAY",
     "SUPPORT_PEER_USER_ID",

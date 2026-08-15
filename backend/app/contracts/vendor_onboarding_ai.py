@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 class GenerateVendorBioBody(BaseModel):
     """Profile details sent to the AI; we remove private fields before calling it."""
 
-    payload: dict[str, Any] = Field(default_factory=dict)
+    profile_form_data: dict[str, Any] = Field(default_factory=dict)
 
 
 class GenerateVendorBioResponse(BaseModel):
@@ -39,7 +39,7 @@ class PackageCoachPackageFeedback(BaseModel):
 
 
 class ReviewVendorPackagesBody(BaseModel):
-    payload: dict[str, Any] = Field(default_factory=dict)
+    profile_form_data: dict[str, Any] = Field(default_factory=dict)
 
 
 class ReviewVendorPackagesResponse(BaseModel):

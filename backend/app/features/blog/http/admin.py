@@ -16,6 +16,7 @@ from app.contracts.blog import (
 from app.core.errors import NotFoundError, ServiceUnavailableError
 from app.features.admin.audit import insert_admin_audit_log
 from app.features.auth.http.guards import require_admin
+from app.features.blog import messages as blog_messages
 from app.features.blog import service as blog_service
 
 router = APIRouter(prefix="/admin/blog", tags=["admin-blog"])
@@ -50,7 +51,7 @@ def admin_create_blog_post(
         action="blog.create",
         entity_type="blog_post",
         entity_id=row.get("id"),
-        payload={"slug": row.get("slug")},
+        audit_event_details={"slug": row.get("slug")},
     )
     return BlogPostAdminDetailResponse(post=BlogPostAdminDetail.model_validate(row))
 
@@ -64,7 +65,7 @@ def admin_get_blog_post(
     require_admin(request, response)
     row = blog_service.get_post_for_admin(post_id)
     if not row:
-        raise HTTPException(status_code=404, detail="Post not found.")
+        raise HTTPException(status_code=404, detail=blog_messages.POST_NOT_FOUND)
     return BlogPostAdminDetailResponse(post=BlogPostAdminDetail.model_validate(row))
 
 
@@ -88,7 +89,7 @@ def admin_update_blog_post(
         action="blog.update",
         entity_type="blog_post",
         entity_id=post_id,
-        payload={"fields": list(fields.keys())},
+        audit_event_details={"fields": list(fields.keys())},
     )
     return BlogPostAdminDetailResponse(post=BlogPostAdminDetail.model_validate(row))
 
@@ -111,7 +112,7 @@ def admin_publish_blog_post(
         action="blog.publish",
         entity_type="blog_post",
         entity_id=post_id,
-        payload={"slug": row.get("slug")},
+        audit_event_details={"slug": row.get("slug")},
     )
     return BlogPostAdminDetailResponse(post=BlogPostAdminDetail.model_validate(row))
 
@@ -134,7 +135,7 @@ def admin_unpublish_blog_post(
         action="blog.unpublish",
         entity_type="blog_post",
         entity_id=post_id,
-        payload={"slug": row.get("slug")},
+        audit_event_details={"slug": row.get("slug")},
     )
     return BlogPostAdminDetailResponse(post=BlogPostAdminDetail.model_validate(row))
 
@@ -157,6 +158,6 @@ def admin_delete_blog_post(
         action="blog.delete",
         entity_type="blog_post",
         entity_id=post_id,
-        payload={},
+        audit_event_details={},
     )
     return BlogPostDeleteResponse()

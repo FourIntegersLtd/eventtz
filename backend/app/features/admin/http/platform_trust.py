@@ -19,6 +19,12 @@ from app.contracts.admin import (
     AdminReviewsListResponse,
     AdminReviewVisibilityBody,
 )
+from app.features.admin.messages import (
+    COULD_NOT_UPDATE_REVIEW_VISIBILITY,
+    DISPUTE_NOT_FOUND,
+    NO_FIELDS_TO_UPDATE,
+    REVIEW_NOT_FOUND,
+)
 from app.features.admin.audit import insert_admin_audit_log
 from app.features.admin import (
     get_conversation_admin_meta,
@@ -112,7 +118,7 @@ def admin_patch_dispute(
     user = require_admin(request, response)
     patch_fields = body.model_dump(exclude_unset=True)
     if not patch_fields:
-        raise HTTPException(status_code=400, detail="No fields to update")
+        raise HTTPException(status_code=400, detail=NO_FIELDS_TO_UPDATE)
     validate_dispute_patch_permissions(user, patch_fields)
     try:
         row = patch_dispute_case(
@@ -131,13 +137,13 @@ def admin_patch_dispute(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     if not row:
-        raise HTTPException(status_code=404, detail="Dispute not found")
+        raise HTTPException(status_code=404, detail=DISPUTE_NOT_FOUND)
     insert_admin_audit_log(
         admin_user_id=str(user.get("id") or ""),
         action="dispute.patch",
         entity_type="dispute_case",
         entity_id=dispute_id,
-        payload=body.model_dump(exclude_unset=True),
+        audit_event_details=body.model_dump(exclude_unset=True),
     )
     return _dispute_row_to_model(enrich_dispute_row(row))
 
@@ -175,7 +181,7 @@ def admin_get_review(
     require_admin(request, response)
     row = get_review_for_admin(review_id)
     if not row:
-        raise HTTPException(status_code=404, detail="Review not found")
+        raise HTTPException(status_code=404, detail=REVIEW_NOT_FOUND)
     return AdminReviewDetailResponse(
         success=True,
         review=AdminReviewRow.model_validate(row),
@@ -192,13 +198,13 @@ def admin_review_visibility(
     user = require_admin(request, response)
     ok = set_review_hidden(review_id, body.hidden)
     if not ok:
-        raise HTTPException(status_code=400, detail="Could not update review visibility")
+        raise HTTPException(status_code=400, detail=COULD_NOT_UPDATE_REVIEW_VISIBILITY)
     insert_admin_audit_log(
         admin_user_id=str(user.get("id") or ""),
         action="review.hide" if body.hidden else "review.unhide",
         entity_type="booking_review",
         entity_id=review_id,
-        payload={"hidden": body.hidden},
+        audit_event_details={"hidden": body.hidden},
     )
     return {"success": True}
 
@@ -218,7 +224,7 @@ def admin_chat_messages(
         action="chat.view",
         entity_type="conversation",
         entity_id=conversation_id,
-        payload={},
+        audit_event_details={},
     )
     meta = get_conversation_admin_meta(conversation_id)
     msgs = get_conversation_messages_admin(conversation_id)

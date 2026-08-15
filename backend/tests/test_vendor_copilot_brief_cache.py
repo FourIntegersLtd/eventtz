@@ -4,7 +4,7 @@ from app.features.vendor_copilot.brief_cache import (
     BriefNarrationCacheEntry,
     clear_narration_cache_for_tests,
     compute_brief_fingerprint,
-    get_or_compute_narration,
+    get_or_compute_brief_narration,
     narration_cache_get,
 )
 
@@ -56,8 +56,8 @@ def test_narration_cache_hit_on_same_fingerprint():
         calls["n"] += 1
         return BriefNarrationCacheEntry(greeting="Hi", summary_markdown="Summary")
 
-    first, cached1 = get_or_compute_narration("vendor-1", fp, compute)
-    second, cached2 = get_or_compute_narration("vendor-1", fp, compute)
+    first, cached1 = get_or_compute_brief_narration("vendor-1", fp, compute)
+    second, cached2 = get_or_compute_brief_narration("vendor-1", fp, compute)
 
     assert calls["n"] == 1
     assert cached1 is False
@@ -76,8 +76,8 @@ def test_narration_cache_miss_when_fingerprint_changes():
         calls["n"] += 1
         return BriefNarrationCacheEntry(greeting=f"Hi {calls['n']}", summary_markdown="Summary")
 
-    get_or_compute_narration("vendor-1", fp_a, compute)
-    _, cached = get_or_compute_narration("vendor-1", fp_b, compute)
+    get_or_compute_brief_narration("vendor-1", fp_a, compute)
+    _, cached = get_or_compute_brief_narration("vendor-1", fp_b, compute)
 
     assert calls["n"] == 2
     assert cached is False

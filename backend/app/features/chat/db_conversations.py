@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.core.db import apply_recent_first_order, one_row, rows
+from app.core.db import apply_recent_first_order, first_row_from_query_result, rows_from_query_result
 from app.core.db import get_db
 
 
-def get_by_id(conversation_id: str, *, columns: str = "*") -> dict[str, Any] | None:
+def get_conversation_by_id(conversation_id: str, *, columns: str = "*") -> dict[str, Any] | None:
     res = (
         get_db()
         .table("conversations")
@@ -17,7 +17,7 @@ def get_by_id(conversation_id: str, *, columns: str = "*") -> dict[str, Any] | N
         .limit(1)
         .execute()
     )
-    return one_row(res)
+    return first_row_from_query_result(res)
 
 
 def list_for_user(user_id: str, *, columns: str = "*") -> list[dict[str, Any]]:
@@ -32,4 +32,4 @@ def list_for_user(user_id: str, *, columns: str = "*") -> list[dict[str, Any]]:
         )
         .execute()
     )
-    return rows(res)
+    return rows_from_query_result(res)

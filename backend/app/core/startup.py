@@ -10,17 +10,14 @@ logger = get_logger(__name__)
 
 def validate_settings(settings: Settings) -> None:
     """Stop early, or warn, if required keys are missing."""
-    if not settings.local_auth_mode:
-        if not settings.supabase_url.strip():
-            raise RuntimeError(
-                "SUPABASE_URL is required when LOCAL_AUTH_MODE is false. "
-                "Set it in backend/.env or enable LOCAL_AUTH_MODE for local dev."
-            )
-        if not settings.supabase_service_role_key.strip():
-            raise RuntimeError(
-                "SUPABASE_SERVICE_ROLE_KEY is required when "
-                "LOCAL_AUTH_MODE is false."
-            )
+    if not settings.supabase_url.strip():
+        raise RuntimeError(
+            "SUPABASE_URL is required. Set it in backend/.env."
+        )
+    if not settings.supabase_service_role_key.strip():
+        raise RuntimeError(
+            "SUPABASE_SERVICE_ROLE_KEY is required."
+        )
 
     if settings.is_production:
         if not settings.stripe_secret_key.strip():

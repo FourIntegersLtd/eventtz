@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -18,9 +18,19 @@ from app.features.chat.service import (
 )
 
 
-@patch("app.features.chat.support_admin.get_settings")
-def test_get_or_create_support_conversation_local(mock_settings):
-    mock_settings.return_value.local_auth_mode = True
+@patch("app.features.chat.support_admin.get_db")
+def test_get_or_create_support_conversation(mock_get_db):
+    client = MagicMock()
+    mock_get_db.return_value = client
+    client.table.return_value.select.return_value.eq.return_value.eq.return_value.limit.return_value.execute.return_value = MagicMock(
+        data=[{
+            "id": "conv-1",
+            "kind": "support",
+            "support_user_id": "user-abc",
+            "client_user_id": None,
+            "vendor_user_id": None,
+        }],
+    )
     row = get_or_create_support_conversation("user-abc")
     assert row["kind"] == "support"
     assert row["support_user_id"] == "user-abc"
@@ -31,9 +41,7 @@ def test_get_or_create_support_conversation_local(mock_settings):
 @patch("app.features.chat.support_admin.notify_user")
 @patch("app.features.chat.support_admin.insert_message")
 @patch("app.features.chat.support_admin.get_or_create_support_conversation")
-@patch("app.features.chat.support_admin.get_settings")
-def test_admin_send_fan_out(mock_settings, mock_get_conv, mock_insert, _notify, mock_email):
-    mock_settings.return_value.local_auth_mode = False
+def test_admin_send_fan_out(mock_get_conv, mock_insert, _notify, mock_email):
     mock_get_conv.side_effect = lambda uid: {"id": f"conv-{uid}", "support_user_id": uid}
     mock_insert.return_value = {"id": "m1", "sender_user_id": "admin-1", "body": "Hello", "created_at": None}
 
@@ -51,9 +59,13 @@ def test_admin_send_fan_out(mock_settings, mock_get_conv, mock_insert, _notify, 
     mock_email.assert_any_call(recipient_user_id="u2", conversation_id="conv-u2")
 
 
-@patch("app.features.chat.dm.get_settings")
-def test_send_message_rejects_non_participant_support(mock_settings):
-    mock_settings.return_value.local_auth_mode = True
+@patch("app.features.chat.dm.get_db")
+def test_send_message_rejects_non_participant_support(mock_get_db):
+    client = MagicMock()
+    mock_get_db.return_value = client
+    client.table.return_value.select.return_value.eq.return_value.limit.return_value.execute.return_value = MagicMock(
+        data=[],
+    )
     with pytest.raises(ValueError, match="Conversation not found"):
         send_message(
             conversation_id="not-local",
@@ -105,7 +117,11 @@ def test_admin_send_requires_admin(mock_require):
     mock_require.assert_called_once()
 
 
-@patch("app.features.chat.dm.get_settings")
-def test_list_conversations_local_empty(mock_settings):
-    mock_settings.return_value.local_auth_mode = True
+@patch("app.features.chat.dm.get_db")
+def test_list_conversations_empty(mock_get_db):
+    client = MagicMock()
+    mock_get_db.return_value = client
+    client.table.return_value.select.return_value.eq.return_value.neq.return_value.order.return_value.limit.return_value.execute.return_value = MagicMock(
+        data=[],
+    )
     assert list_conversations_for_user("u1", role="client") == []

@@ -18,9 +18,6 @@ logger = get_logger(__name__)
 _service_client: Client | None = None
 _auth_client: Client | None = None
 
-# Fake vendor rows kept in memory when running without a real database.
-local_vendors: dict[str, dict[str, Any]] = {}
-
 
 def _create_supabase_client() -> Client:
     settings = get_settings()
@@ -88,9 +85,18 @@ def get_db() -> Client:
     return get_supabase()
 
 
-def get_client() -> Client:
-    """Old name for ``get_db()`` - prefer ``get_db()`` in new code."""
-    return get_db()
+def rows_from_query_result(query_result: Any) -> list[dict[str, Any]]:
+    """Turn a query result into a list of row dicts (or ``[]`` if empty)."""
+    raw = getattr(query_result, "data", None)
+    if not isinstance(raw, list):
+        return []
+    return [r for r in raw if isinstance(r, dict)]
+
+
+def first_row_from_query_result(query_result: Any) -> dict[str, Any] | None:
+    """First row from a query result, or ``None`` if there isn't one."""
+    items = rows_from_query_result(query_result)
+    return items[0] if items else None
 
 
 def apply_recent_first_order(
@@ -107,20 +113,6 @@ def apply_recent_first_order(
     if final_tie_breaker and final_tie_breaker not in {column, tie_breaker}:
         q = q.order(final_tie_breaker, desc=True)
     return q
-
-
-def rows(res: Any) -> list[dict[str, Any]]:
-    """Turn a query result into a list of row dicts (or ``[]`` if empty)."""
-    raw = getattr(res, "data", None)
-    if not isinstance(raw, list):
-        return []
-    return [r for r in raw if isinstance(r, dict)]
-
-
-def one_row(res: Any) -> dict[str, Any] | None:
-    """First row from a query result, or ``None`` if there isn't one."""
-    items = rows(res)
-    return items[0] if items else None
 
 
 def is_missing_approval_status_column(err: Exception) -> bool:

@@ -8,6 +8,7 @@ from typing import Any
 from app.core.config import get_settings
 from app.core.errors import ValidationError
 from app.core.phone_validation import is_valid_phone_number
+from app.features.vendors import messages as vendor_messages
 from app.features.vendors.markets import DEFAULT_COUNTRY_CODE, is_market_enabled, normalize_country_code
 from app.features.vendors.list_pricing import parse_money_gbp
 from app.features.vendors.package_quality import (
@@ -181,73 +182,69 @@ def _pct_in_range(raw: str, label: str) -> None:
         return
     n = parse_money_gbp(raw)
     if n is None:
-        raise ValidationError(f"Step pricing: {label} must be a valid number.")
+        raise ValidationError(vendor_messages.step_pricing_label_valid_number(label))
     if n < 0 or n > MAX_DISCOUNT_PCT:
-        raise ValidationError(f"Step pricing: {label} must be between 0 and 100%.")
+        raise ValidationError(vendor_messages.step_pricing_label_between_pct(label))
 
 
 def _money_in_range(raw: str, label: str, *, required: bool = False) -> None:
     if not raw.strip():
         if required:
-            raise ValidationError(f"Step pricing: {label} is required.")
+            raise ValidationError(vendor_messages.step_pricing_label_required(label))
         return
     n = parse_money_gbp(raw)
     if n is None:
-        raise ValidationError(f"Step pricing: {label} must be a valid amount.")
+        raise ValidationError(vendor_messages.step_pricing_label_valid_amount(label))
     if n < MIN_MONEY_GBP or n > MAX_MONEY_GBP:
         if n < MIN_MONEY_GBP:
-            raise ValidationError(f"Step pricing: {label} must be at least £{MIN_MONEY_GBP:.2f}.")
-        raise ValidationError(f"Step pricing: {label} is out of allowed range.")
+            raise ValidationError(vendor_messages.step_pricing_label_min_gbp(label, MIN_MONEY_GBP))
+        raise ValidationError(vendor_messages.step_pricing_label_out_of_range(label))
 
 
 def _validate_step_location(payload: dict[str, Any]) -> None:
     country = normalize_country_code(_coerce_str(payload, "countryCode"))
     if not is_market_enabled(country):
-        raise ValidationError("Step location: select a supported country.")
+        raise ValidationError(vendor_messages.STEP_LOCATION_SUPPORTED_COUNTRY)
     if not _coerce_str(payload, "baseCity").strip():
-        raise ValidationError("Step location: base city is required.")
+        raise ValidationError(vendor_messages.STEP_LOCATION_BASE_CITY_REQUIRED)
     modes = payload.get("deliveryModes")
     if not isinstance(modes, list) or not any(str(x).strip() for x in modes):
-        raise ValidationError("Step location: pick at least one delivery option.")
+        raise ValidationError(vendor_messages.STEP_LOCATION_DELIVERY_OPTION)
     if not _coerce_str(payload, "travelRadius").strip():
-        raise ValidationError("Step location: select how far you travel.")
+        raise ValidationError(vendor_messages.STEP_LOCATION_TRAVEL_RADIUS)
     policy = _coerce_str(payload, "travelDeliveryPolicy").strip()
     if not policy:
-        raise ValidationError("Step location: select a travel / delivery policy.")
+        raise ValidationError(vendor_messages.STEP_LOCATION_TRAVEL_POLICY)
     if policy == "custom" and not _coerce_str(payload, "travelDeliveryPolicyCustomText").strip():
-        raise ValidationError("Step location: describe your custom travel / delivery rule.")
+        raise ValidationError(vendor_messages.STEP_LOCATION_CUSTOM_TRAVEL_RULE)
 
 
 def _validate_offer_discounts(payload: dict[str, Any]) -> None:
     if not payload.get("offerDiscounts"):
         return
     if not _coerce_str(payload, "discountLabel").strip():
-        raise ValidationError("Step pricing: discount name is required.")
+        raise ValidationError(vendor_messages.STEP_PRICING_DISCOUNT_NAME_REQUIRED)
     has_list = bool(_coerce_str(payload, "discountPercentage").strip())
     bulk_threshold = _coerce_str(payload, "bulkDiscountThreshold").strip()
     bulk_pct = _coerce_str(payload, "bulkDiscountPercent").strip()
     has_bulk = bool(bulk_threshold and bulk_pct)
     has_off_peak = bool(_coerce_str(payload, "offPeakDiscountPercent").strip())
     if not has_list and not has_bulk and not has_off_peak:
-        raise ValidationError("Step pricing: select at least one discount option.")
+        raise ValidationError(vendor_messages.STEP_PRICING_DISCOUNT_OPTION_REQUIRED)
     if (bulk_threshold and not bulk_pct) or (bulk_pct and not bulk_threshold):
-        raise ValidationError(
-            "Step pricing: bulk discount needs both a threshold and a percentage.",
-        )
+        raise ValidationError(vendor_messages.STEP_PRICING_BULK_DISCOUNT_THRESHOLD_AND_PCT)
 
 
 def _validate_step_account(payload: dict[str, Any]) -> None:
     if not _coerce_str(payload, "firstName").strip():
-        raise ValidationError("Step account: first name is required.")
+        raise ValidationError(vendor_messages.STEP_ACCOUNT_FIRST_NAME_REQUIRED)
     if not _coerce_str(payload, "lastName").strip():
-        raise ValidationError("Step account: last name is required.")
+        raise ValidationError(vendor_messages.STEP_ACCOUNT_LAST_NAME_REQUIRED)
     phone = _coerce_str(payload, "phone").strip()
     if not phone:
-        raise ValidationError("Step account: phone number is required.")
+        raise ValidationError(vendor_messages.STEP_ACCOUNT_PHONE_REQUIRED)
     if not is_valid_phone_number(phone):
-        raise ValidationError(
-            "Step account: enter a valid phone number (e.g. 07xxx xxxxxx or +44 7xxx xxxxxx).",
-        )
+        raise ValidationError(vendor_messages.STEP_ACCOUNT_PHONE_INVALID)
 
 
 def validate_step_fields(step: int, payload: dict[str, Any]) -> None:
@@ -273,9 +270,7 @@ def validate_step_fields(step: int, payload: dict[str, Any]) -> None:
             isinstance(p, dict) and _coerce_str(p, "price").strip() for p in pkgs
         )
         if not has_rate and not has_pkg:
-            raise ValidationError(
-                "Step pricing: add at least one rate or a package price.",
-            )
+            raise ValidationError(vendor_messages.STEP_PRICING_RATE_OR_PACKAGE)
         if payload.get("offerDiscounts"):
             _validate_offer_discounts(payload)
             _pct_in_range(_coerce_str(payload, "discountPercentage"), "List discount")
@@ -286,28 +281,32 @@ def validate_step_fields(step: int, payload: dict[str, Any]) -> None:
     elif step == 5:
         weekdays = payload.get("availableWeekdays")
         if not isinstance(weekdays, list) or len(weekdays) == 0:
-            raise ValidationError("Step availability: pick at least one weekday.")
+            raise ValidationError(vendor_messages.STEP_AVAILABILITY_WEEKDAY)
         n = _parse_max_bookings(_coerce_str(payload, "maxBookingsPerDay"))
         raw = _coerce_str(payload, "maxBookingsPerDay").strip()
         if raw:
             parsed = parse_money_gbp(raw)
             if parsed is None or parsed < MIN_MAX_BOOKINGS_PER_DAY or parsed > MAX_MAX_BOOKINGS_PER_DAY:
                 raise ValidationError(
-                    f"Step availability: max bookings per day must be "
-                    f"{MIN_MAX_BOOKINGS_PER_DAY}-{MAX_MAX_BOOKINGS_PER_DAY}.",
+                    vendor_messages.step_availability_max_bookings_range(
+                        MIN_MAX_BOOKINGS_PER_DAY,
+                        MAX_MAX_BOOKINGS_PER_DAY,
+                    ),
                 )
         if n < MIN_MAX_BOOKINGS_PER_DAY:
-            raise ValidationError("Step availability: set max bookings per day (min 1).")
+            raise ValidationError(vendor_messages.STEP_AVAILABILITY_MAX_BOOKINGS_MIN)
 
     elif step == 6:
         names = payload.get("portfolioFileNames")
         count = len(names) if isinstance(names, list) else 0
         if count < MIN_PORTFOLIO_IMAGES:
             raise ValidationError(
-                f"Step portfolio: at least {MIN_PORTFOLIO_IMAGES} images required.",
+                vendor_messages.step_portfolio_min_images_required(MIN_PORTFOLIO_IMAGES),
             )
         if count > MAX_PORTFOLIO_IMAGES:
-            raise ValidationError(f"Step portfolio: maximum {MAX_PORTFOLIO_IMAGES} images.")
+            raise ValidationError(
+                vendor_messages.step_portfolio_max_images(MAX_PORTFOLIO_IMAGES),
+            )
 
     elif step == 3:
         _validate_step_location(payload)
@@ -335,16 +334,16 @@ def validate_payload_for_progress(
         for s in range(1, 9):
             validate_step_fields(s, payload)
         if not _coerce_str(payload, "businessName").strip():
-            raise ValidationError("Business name is required before submit.")
+            raise ValidationError(vendor_messages.BUSINESS_NAME_REQUIRED_BEFORE_SUBMIT)
         _validate_step_account(payload)
         if not _coerce_str(payload, "countryCode").strip():
             payload = {**payload, "countryCode": DEFAULT_COUNTRY_CODE}
         _validate_step_location(payload)
         if not _coerce_str(payload, "baseCity").strip():
-            raise ValidationError("Base city is required before submit.")
+            raise ValidationError(vendor_messages.BASE_CITY_REQUIRED_BEFORE_SUBMIT)
         svcs = payload.get("servicesOffered")
         if not isinstance(svcs, list) or not any(str(x).strip() for x in svcs):
-            raise ValidationError("Select at least one service before submit.")
+            raise ValidationError(vendor_messages.SELECT_SERVICE_BEFORE_SUBMIT)
         validate_packages_for_payload(payload, on_submit=True)
         return
 

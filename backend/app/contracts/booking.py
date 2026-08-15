@@ -76,9 +76,11 @@ class BookingLineItemIn(BaseModel):
 
 class VendorAdjustmentItem(BaseModel):
     id: str
-    tag: str
+    adjustment_category: str = Field(validation_alias="tag")
     label: str
     amount_gbp: float
+
+    model_config = {"populate_by_name": True}
 
 
 class BookingPricingBreakdown(BaseModel):
@@ -97,10 +99,12 @@ class BookingPricingBreakdown(BaseModel):
 
 
 class VendorAdjustmentIn(BaseModel):
-    tag: str = Field(default="other", max_length=50)
+    adjustment_category: str = Field(default="other", max_length=50, validation_alias="tag")
     label: str = Field(min_length=1, max_length=200)
     #: Positive = extra cost; negative = discount (stored as signed GBP).
     amount_gbp: float = Field(ge=-1_000_000, le=1_000_000)
+
+    model_config = {"populate_by_name": True}
 
 
 class PutVendorBookingAdjustmentsBody(BaseModel):
@@ -173,15 +177,20 @@ class CreateVendorQuoteBody(BaseModel):
 
 class BookingRequestCreated(BaseModel):
     success: bool = True
-    id: str
-    status: Literal["pending", "accepted", "declined", "cancelled"] = "pending"
+    booking_request_id: str = Field(validation_alias="id")
+    booking_status: Literal["pending", "accepted", "declined", "cancelled"] = Field(
+        default="pending",
+        validation_alias="status",
+    )
     created_at: str | None = None
     event_id: str | None = None
 
+    model_config = {"populate_by_name": True}
+
 
 class VendorBookingListItem(BaseModel):
-    id: str
-    status: str
+    booking_request_id: str = Field(validation_alias="id")
+    booking_status: str = Field(validation_alias="status")
     event_name: str
     event_date: str
     event_end_date: str | None = None
@@ -198,6 +207,8 @@ class VendorBookingListItem(BaseModel):
     completion_waiting_on: Literal["client", "vendor", "both"] | None = None
     vendor_completion_confirmed_at: str | None = None
 
+    model_config = {"populate_by_name": True}
+
 
 class VendorBookingsListResponse(BaseModel):
     success: bool = True
@@ -205,8 +216,8 @@ class VendorBookingsListResponse(BaseModel):
 
 
 class VendorBookingDetail(BaseModel):
-    id: str
-    status: str
+    booking_request_id: str = Field(validation_alias="id")
+    booking_status: str = Field(validation_alias="status")
     event_name: str
     event_date: str
     event_end_date: str | None = None
@@ -234,6 +245,8 @@ class VendorBookingDetail(BaseModel):
     initiator: Literal["client", "vendor"] = "client"
     conversation_id: str | None = None
 
+    model_config = {"populate_by_name": True}
+
 
 class VendorBookingDetailResponse(BaseModel):
     success: bool = True
@@ -247,18 +260,22 @@ class PutVendorBookingAdjustmentsResponse(BaseModel):
 
 class VendorBookingStatusBody(BaseModel):
     #: Marking complete is a separate step where both parties must confirm (see confirm-completion routes).
-    status: Literal["accepted", "declined", "cancelled"]
+    booking_status: Literal["accepted", "declined", "cancelled"] = Field(validation_alias="status")
+
+    model_config = {"populate_by_name": True}
 
 
 class VendorBookingStatusResponse(BaseModel):
     success: bool = True
-    id: str
-    status: str
+    booking_request_id: str = Field(validation_alias="id")
+    booking_status: str = Field(validation_alias="status")
+
+    model_config = {"populate_by_name": True}
 
 
 class ClientBookingListItem(BaseModel):
-    id: str
-    status: str
+    booking_request_id: str = Field(validation_alias="id")
+    booking_status: str = Field(validation_alias="status")
     event_name: str
     event_date: str
     event_end_date: str | None = None
@@ -277,6 +294,8 @@ class ClientBookingListItem(BaseModel):
     event_id: str | None = None
     event_title: str | None = None
 
+    model_config = {"populate_by_name": True}
+
 
 class ClientBookingsListResponse(BaseModel):
     success: bool = True
@@ -284,8 +303,8 @@ class ClientBookingsListResponse(BaseModel):
 
 
 class ClientBookingDetail(BaseModel):
-    id: str
-    status: str
+    booking_request_id: str = Field(validation_alias="id")
+    booking_status: str = Field(validation_alias="status")
     vendor_user_id: str
     vendor_display_name: str
     event_name: str
@@ -314,9 +333,11 @@ class ClientBookingDetail(BaseModel):
     event_title: str | None = None
     counterparty_phone: str | None = None
 
+    model_config = {"populate_by_name": True}
+
 
 class ClientBookingStatusBody(BaseModel):
-    status: Literal["accepted", "declined"]
+    booking_status: Literal["accepted", "declined"] = Field(validation_alias="status")
     #: Required when accepting a vendor quote (initiator vendor); ignored when declining.
     event_postcode: str | None = Field(default=None, max_length=16)
     event_address: str | None = Field(default=None, max_length=500)
@@ -340,6 +361,8 @@ class ClientBookingStatusBody(BaseModel):
             s = v.strip()
             return s if s else None
         return None
+
+    model_config = {"populate_by_name": True}
 
 
 class UpdateBookingVenueBody(BaseModel):

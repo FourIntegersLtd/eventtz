@@ -1,20 +1,26 @@
-"""User account helpers: optionally sync to public.users; read role from the sign-in token for /me without an extra database trip."""
+"""User account helpers: optionally sync to public.users; build merged app user for API responses."""
 
 from __future__ import annotations
 
 from typing import Any
 
+from app.contracts.auth import AuthUser
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.db import get_db as get_client
-from app.contracts.types import UserType
+from app.core.db import get_db
+from app.contracts.types import AdminRole, UserType
+from app.features.auth import messages as auth_messages
 
 logger = get_logger(__name__)
 
 _VALID_USER_TYPES = frozenset({"client", "vendor", "admin"})
 
 
-def resolve_admin_role(profile: dict[str, Any] | None, email: str | None = None) -> str | None:
+def normalize_email(email: str) -> str:
+    return email.strip().lower()
+
+
+def resolve_admin_role(profile: dict[str, Any] | None, email: str | None = None) -> AdminRole | str | None:
     """Which admin_role applies for this admin user."""
     if profile and profile.get("user_type") != "admin":
         return None
@@ -30,13 +36,21 @@ def resolve_admin_role(profile: dict[str, Any] | None, email: str | None = None)
     return None
 
 
-def is_super_admin_user(user: dict[str, Any]) -> bool:
-    if user.get("user_type") != "admin":
+def is_super_admin_user(user: AuthUser | dict[str, Any]) -> bool:
+    if isinstance(user, AuthUser):
+        user_type = user.user_type
+        admin_role = user.admin_role
+        email = user.email
+    else:
+        user_type = user.get("user_type")
+        admin_role = user.get("admin_role")
+        email = user.get("email")
+    if user_type != "admin":
         return False
-    if user.get("admin_role") == "super_admin":
+    if admin_role == "super_admin":
         return True
-    email = str(user.get("email") or "").strip().lower()
-    return bool(email and email in get_settings().super_admin_emails_list)
+    em = str(email or "").strip().lower()
+    return bool(em and em in get_settings().super_admin_emails_list)
 
 
 def user_type_from_auth_metadatas(user: dict[str, Any]) -> str | None:
@@ -63,8 +77,6 @@ def upsert_user_profile(
     clear_email_verified: bool = False,
 ) -> None:
     """Optional: copy role into public.users for database joins (explore/admin). Never raises."""
-    if get_settings().local_auth_mode:
-        return
     if user_type not in ("client", "vendor", "admin"):
         logger.warning("upsert_user_profile skipped invalid user_type=%s", user_type)
         return
@@ -76,7 +88,7 @@ def upsert_user_profile(
     elif email_verified_at is not None:
         row["email_verified_at"] = email_verified_at
     try:
-        get_client().table("users").upsert(row).execute()
+        get_db().table("users").upsert(row).execute()
         logger.info("upsert_user_profile user_id=%s user_type=%s", user_id, user_type)
     except Exception:
         logger.exception(
@@ -86,10 +98,8 @@ def upsert_user_profile(
 
 
 def fetch_user_profile(user_id: str) -> dict[str, Any] | None:
-    if get_settings().local_auth_mode:
-        return None
     res = (
-        get_client()
+        get_db()
         .table("users")
         .select("id,email,user_type,admin_role,created_at,updated_at,account_suspended,email_verified_at")
         .eq("id", user_id)
@@ -103,13 +113,11 @@ def fetch_user_profile(user_id: str) -> dict[str, Any] | None:
 
 
 def fetch_user_profile_by_email(email: str) -> dict[str, Any] | None:
-    if get_settings().local_auth_mode:
-        return None
-    em = email.strip().lower()
+    em = normalize_email(email)
     if not em:
         return None
     res = (
-        get_client()
+        get_db()
         .table("users")
         .select("id,email,user_type,admin_role,created_at,updated_at,account_suspended,email_verified_at")
         .eq("email", em)
@@ -122,68 +130,87 @@ def fetch_user_profile_by_email(email: str) -> dict[str, Any] | None:
     return data[0] if isinstance(data, list) else data
 
 
-def hydrate_user_from_db(auth_user: dict[str, Any]) -> dict[str, Any]:
-    """
-    Build the API user dict: start from the signed-in Supabase user, then fill in
-    fields from public.users when available.
+def _metadata_dict(value: Any) -> dict[str, Any]:
+    return value if isinstance(value, dict) else {}
 
-    - user_type: token metadata by default; public.users wins when set to admin (staff
-      promotion may update the database before Supabase app_metadata catches up).
-    - account_suspended, admin_role: from public.users for admin accounts.
+
+def build_app_user(auth_user: dict[str, Any]) -> AuthUser:
+    """
+    Build the canonical API user: auth identity (Supabase/local) plus app fields
+    from public.users and client onboarding.
+
+    - user_type: JWT metadata by default; public.users wins when set to admin.
+    - account_suspended, admin_role, email_verified: from public.users.
+    - preferred_name, client_onboarding_completed: clients only.
     """
     uid = auth_user.get("id")
     if not uid:
-        return auth_user
+        return AuthUser(
+            id="",
+            email=auth_user.get("email"),
+            user_metadata=_metadata_dict(auth_user.get("user_metadata")),
+            app_metadata=_metadata_dict(auth_user.get("app_metadata")),
+        )
 
-    merged_user = {**auth_user}
-    if get_settings().local_auth_mode:
-        merged_user.setdefault("user_type", "client")
-        merged_user.setdefault("account_suspended", False)
-        merged_user.setdefault("preferred_name", None)
-        merged_user.setdefault("client_onboarding_completed", True)
-        merged_user["email_verified"] = bool(merged_user.get("email_verified_at")) or str(
-            merged_user.get("user_type") or "",
-        ) == "admin"
-        return merged_user
+    user_id = str(uid)
+    email = auth_user.get("email")
+    user_metadata = _metadata_dict(auth_user.get("user_metadata"))
+    app_metadata = _metadata_dict(auth_user.get("app_metadata"))
 
-    merged_user["user_type"] = user_type_from_auth_metadatas(merged_user) or "client"
-    db_profile = fetch_user_profile(str(uid))
+    user_type = user_type_from_auth_metadatas(auth_user) or "client"
+    db_profile = fetch_user_profile(user_id)
+    account_suspended = False
+    email_verified: bool | None = True
+    admin_role: AdminRole | str | None = None
+    preferred_name: str | None = None
+    client_onboarding_completed: bool | None = None
+
     if db_profile and isinstance(db_profile, dict):
         db_type = db_profile.get("user_type")
         if db_type == "admin":
-            merged_user["user_type"] = "admin"
-        merged_user["account_suspended"] = bool(db_profile.get("account_suspended", False))
+            user_type = "admin"
+        account_suspended = bool(db_profile.get("account_suspended", False))
         if db_type == "admin":
-            merged_user["email_verified"] = True
+            email_verified = True
         else:
-            merged_user["email_verified"] = bool(db_profile.get("email_verified_at"))
+            email_verified = bool(db_profile.get("email_verified_at"))
     else:
-        merged_user.setdefault("account_suspended", False)
-        merged_user.setdefault("email_verified", True)
+        email_verified = True
 
-    if merged_user.get("user_type") == "client":
+    if user_type == "client":
         from app.features.settings.client_onboarding import get_client_onboarding
 
-        onboarding = get_client_onboarding(str(uid))
-        merged_user["preferred_name"] = onboarding.get("preferred_name")
-        merged_user["client_onboarding_completed"] = bool(onboarding.get("completed", False))
+        onboarding = get_client_onboarding(user_id)
+        preferred_name = onboarding.get("preferred_name")
+        client_onboarding_completed = bool(onboarding.get("completed", False))
 
-    if merged_user.get("user_type") == "admin":
-        merged_user["admin_role"] = resolve_admin_role(
+    if user_type == "admin":
+        admin_role = resolve_admin_role(
             db_profile if isinstance(db_profile, dict) else None,
-            str(merged_user.get("email") or (db_profile or {}).get("email") or ""),
+            str(email or (db_profile or {}).get("email") or ""),
         )
 
-    return merged_user
+    return AuthUser(
+        id=user_id,
+        email=email,
+        user_type=user_type,
+        admin_role=admin_role,
+        account_suspended=account_suspended,
+        email_verified=email_verified,
+        preferred_name=preferred_name,
+        client_onboarding_completed=client_onboarding_completed,
+        user_metadata=user_metadata,
+        app_metadata=app_metadata,
+    )
+
+
+def hydrate_user_from_db(auth_user: dict[str, Any]) -> AuthUser:
+    """Deprecated alias for build_app_user."""
+    return build_app_user(auth_user)
 
 
 def assert_user_not_suspended(user_id: str) -> None:
     """Raise ValueError if the user exists in public.users and is suspended."""
-    if get_settings().local_auth_mode:
-        return
     prof = fetch_user_profile(user_id)
     if prof and bool(prof.get("account_suspended")):
-        raise ValueError("This account is suspended.")
-
-
-merge_profile_into_user = hydrate_user_from_db
+        raise ValueError(auth_messages.ACCOUNT_SUSPENDED)

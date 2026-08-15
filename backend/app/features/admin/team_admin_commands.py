@@ -8,7 +8,35 @@ from typing import Any, Literal
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.db import get_db as get_client
+from app.core.db import get_db
+from app.features.admin.messages import (
+    ADMIN_ACCOUNT_DELETED,
+    ADMIN_ALREADY_PASSWORD_UPDATED,
+    ADMIN_CREATED,
+    ADMIN_CREATED_PASSWORD_LINK,
+    ADMIN_REMOVED_REMAINS_CLIENT,
+    ADMIN_REMOVED_REMAINS_VENDOR,
+    ADMIN_USER_NO_EMAIL,
+    ADMIN_USER_NOT_FOUND,
+    ASSIGNEE_ADMIN_SUSPENDED,
+    ASSIGNEE_MUST_BE_ADMIN,
+    CANNOT_DELETE_LAST_SUPER_ADMIN,
+    CANNOT_DELETE_SELF,
+    CANNOT_DEMOTE_LAST_SUPER_ADMIN,
+    CANNOT_DEMOTE_SELF,
+    CANNOT_SUSPEND_SELF,
+    COULD_NOT_CREATE_ADMIN,
+    COULD_NOT_DELETE_ADMIN,
+    COULD_NOT_SET_PASSWORD,
+    INVALID_EMAIL_ADDRESS,
+    ONLY_SUPER_ADMIN_CHANGE_TEAM,
+    ONLY_SUPER_ADMIN_DELETE_TEAM,
+    ONLY_SUPER_ADMIN_RESET_LINK,
+    PASSWORD_RESET_LINK_SENT,
+    PASSWORD_SETUP_LINK_SENT,
+    PROMOTED_ADMIN_PASSWORD_LINK,
+    PROMOTED_TO_ADMIN,
+)
 from app.features.auth.accounts import (
     fetch_user_profile,
     fetch_user_profile_by_email,
@@ -30,14 +58,12 @@ def assert_active_admin_assignee(user_id: str | None) -> None:
         return
     prof = fetch_user_profile(user_id)
     if not prof or prof.get("user_type") != "admin":
-        raise ValueError("Assignee must be an admin account.")
+        raise ValueError(ASSIGNEE_MUST_BE_ADMIN)
     if bool(prof.get("account_suspended")):
-        raise ValueError("Assignee admin account is suspended.")
+        raise ValueError(ASSIGNEE_ADMIN_SUSPENDED)
 
 
 def _sync_supabase_admin_metadata(user_id: str, *, admin_role: AdminRole | None = None, user_type: str = "admin") -> None:
-    if get_settings().local_auth_mode:
-        return
     try:
         payload: dict[str, Any] = {
             "app_metadata": {"user_type": user_type},
@@ -47,19 +73,17 @@ def _sync_supabase_admin_metadata(user_id: str, *, admin_role: AdminRole | None 
             payload["app_metadata"]["admin_role"] = admin_role
         elif user_type != "admin":
             payload["app_metadata"]["admin_role"] = None
-        get_client().auth.admin.update_user_by_id(user_id, payload)
+        get_db().auth.admin.update_user_by_id(user_id, payload)
     except Exception as e:
         logger.warning("_sync_supabase_admin_metadata failed user_id=%s: %s", user_id, e)
 
 
 def _set_supabase_password(user_id: str, password: str) -> None:
-    if get_settings().local_auth_mode:
-        return
     try:
-        get_client().auth.admin.update_user_by_id(user_id, {"password": password})
+        get_db().auth.admin.update_user_by_id(user_id, {"password": password})
     except Exception as e:
         logger.warning("_set_supabase_password failed user_id=%s: %s", user_id, e)
-        raise ValueError("Could not set password for this account.") from e
+        raise ValueError(COULD_NOT_SET_PASSWORD) from e
 
 
 def _random_admin_password() -> str:
@@ -68,11 +92,9 @@ def _random_admin_password() -> str:
 
 
 def list_admin_team() -> list[dict[str, Any]]:
-    if get_settings().local_auth_mode:
-        return []
     try:
         res = (
-            get_client()
+            get_db()
             .table("users")
             .select("id,email,user_type,admin_role,created_at,account_suspended")
             .eq("user_type", "admin")
@@ -101,11 +123,9 @@ def list_admin_team() -> list[dict[str, Any]]:
 
 
 def invite_admin_colleague(email: str, *, password: str | None = None) -> dict[str, Any]:
-    if get_settings().local_auth_mode:
-        raise ValueError("Admin invites are disabled in local auth mode.")
     em = email.strip().lower()
     if not em or "@" not in em:
-        raise ValueError("Enter a valid email address.")
+        raise ValueError(INVALID_EMAIL_ADDRESS)
 
     pwd_raw = (password or "").strip()
     use_invite_link = not pwd_raw
@@ -114,7 +134,7 @@ def invite_admin_colleague(email: str, *, password: str | None = None) -> dict[s
         validate_admin_password(pwd)
 
     existing = fetch_user_profile_by_email(em)
-    client = get_client()
+    client = get_db()
 
     if existing and existing.get("user_type") == "admin":
         uid = str(existing["id"])
@@ -127,7 +147,7 @@ def invite_admin_colleague(email: str, *, password: str | None = None) -> dict[s
                 "admin_role": role,
                 "created": False,
                 "invite_link_sent": True,
-                "message": "Password setup link sent to this admin.",
+                "message": PASSWORD_SETUP_LINK_SENT,
             }
         _set_supabase_password(uid, pwd)
         role = resolve_admin_role(existing, em) or "admin"
@@ -137,7 +157,7 @@ def invite_admin_colleague(email: str, *, password: str | None = None) -> dict[s
             "admin_role": role,
             "created": False,
             "invite_link_sent": False,
-            "message": "This person is already an admin. Password updated.",
+            "message": ADMIN_ALREADY_PASSWORD_UPDATED,
         }
 
     if existing:
@@ -155,7 +175,7 @@ def invite_admin_colleague(email: str, *, password: str | None = None) -> dict[s
                 "admin_role": "admin",
                 "created": False,
                 "invite_link_sent": True,
-                "message": "Existing account promoted to admin. We sent a link to set their password.",
+                "message": PROMOTED_ADMIN_PASSWORD_LINK,
             }
         try:
             send_team_invite_email(email=em)
@@ -167,7 +187,7 @@ def invite_admin_colleague(email: str, *, password: str | None = None) -> dict[s
             "admin_role": "admin",
             "created": False,
             "invite_link_sent": False,
-            "message": "Existing account promoted to admin.",
+            "message": PROMOTED_TO_ADMIN,
         }
 
     created = client.auth.admin.create_user(
@@ -181,7 +201,7 @@ def invite_admin_colleague(email: str, *, password: str | None = None) -> dict[s
     )
     user = getattr(created, "user", None)
     if user is None or not getattr(user, "id", None):
-        raise ValueError("Could not create admin account.")
+        raise ValueError(COULD_NOT_CREATE_ADMIN)
 
     uid = str(user.id)
     client.table("users").upsert(
@@ -203,7 +223,7 @@ def invite_admin_colleague(email: str, *, password: str | None = None) -> dict[s
             "admin_role": "admin",
             "created": True,
             "invite_link_sent": True,
-            "message": "Admin account created. We sent a link to set their password.",
+            "message": ADMIN_CREATED_PASSWORD_LINK,
         }
 
     try:
@@ -217,34 +237,32 @@ def invite_admin_colleague(email: str, *, password: str | None = None) -> dict[s
         "admin_role": "admin",
         "created": True,
         "invite_link_sent": False,
-        "message": "Admin account created.",
+        "message": ADMIN_CREATED,
     }
 
 
 def send_admin_password_reset_link(user_id: str, *, actor_user_id: str) -> dict[str, Any]:
-    if get_settings().local_auth_mode:
-        raise ValueError("Admin team actions are disabled in local auth mode.")
     actor = fetch_user_profile(actor_user_id)
     actor_ctx = {"user_type": "admin", **(actor or {})}
     if actor and actor.get("email"):
         actor_ctx["admin_role"] = resolve_admin_role(actor, str(actor.get("email") or ""))
     if not is_super_admin_user(actor_ctx):
-        raise ValueError("Only super admins can send password reset links.")
+        raise ValueError(ONLY_SUPER_ADMIN_RESET_LINK)
 
     prof = fetch_user_profile(user_id)
     if not prof or prof.get("user_type") != "admin":
-        raise ValueError("Admin user not found.")
+        raise ValueError(ADMIN_USER_NOT_FOUND)
     email = str(prof.get("email") or "").strip().lower()
     if not email:
-        raise ValueError("Admin user has no email on file.")
+        raise ValueError(ADMIN_USER_NO_EMAIL)
 
     request_password_reset(email=email, client_ip=None)
-    return {"user_id": user_id, "email": email, "message": "Password reset link sent."}
+    return {"user_id": user_id, "email": email, "message": PASSWORD_RESET_LINK_SENT}
 
 
 def _has_vendor_profile(user_id: str) -> bool:
     try:
-        res = get_client().table("vendors").select("user_id").eq("user_id", user_id).limit(1).execute()
+        res = get_db().table("vendors").select("user_id").eq("user_id", user_id).limit(1).execute()
         return bool(getattr(res, "data", None))
     except Exception as e:
         logger.warning("_has_vendor_profile failed user_id=%s: %s", user_id, e)
@@ -252,7 +270,7 @@ def _has_vendor_profile(user_id: str) -> bool:
 
 
 def _has_client_activity(user_id: str) -> bool:
-    client = get_client()
+    client = get_db()
     checks = (
         ("booking_requests", "client_user_id"),
         ("celebration_plans", "client_user_id"),
@@ -269,7 +287,7 @@ def _has_client_activity(user_id: str) -> bool:
 
 
 def _demote_admin_to(user_id: str, *, user_type: Literal["client", "vendor"]) -> None:
-    get_client().table("users").update(
+    get_db().table("users").update(
         {"user_type": user_type, "admin_role": None, "account_suspended": False},
     ).eq("id", user_id).execute()
     _sync_supabase_admin_metadata(user_id, user_type=user_type)
@@ -278,7 +296,7 @@ def _demote_admin_to(user_id: str, *, user_type: Literal["client", "vendor"]) ->
 
 def _purge_user_delete_blockers(user_id: str) -> None:
     """Remove public rows that block deleting auth.users / public.users."""
-    client = get_client()
+    client = get_db()
     for table, column in (
         ("admin_audit_log", "admin_user_id"),
         ("contact_submissions", "user_id"),
@@ -290,14 +308,14 @@ def _purge_user_delete_blockers(user_id: str) -> None:
 
 
 def _hard_delete_admin_user(user_id: str) -> None:
-    client = get_client()
+    client = get_db()
     _purge_user_delete_blockers(user_id)
     invalidate_all_sessions(user_id)
     try:
         client.auth.admin.delete_user(user_id)
     except Exception as e:
         logger.warning("_hard_delete_admin_user auth delete failed user_id=%s: %s", user_id, e)
-        raise ValueError("Could not delete this admin account.") from e
+        raise ValueError(COULD_NOT_DELETE_ADMIN) from e
     try:
         res = client.table("users").delete().eq("id", user_id).execute()
         data = getattr(res, "data", None) or []
@@ -310,27 +328,24 @@ def _hard_delete_admin_user(user_id: str) -> None:
 
 
 def delete_admin_team_member(user_id: str, *, actor_user_id: str) -> dict[str, Any]:
-    if get_settings().local_auth_mode:
-        raise ValueError("Admin team actions are disabled in local auth mode.")
-
     actor = fetch_user_profile(actor_user_id)
     actor_ctx = {"user_type": "admin", **(actor or {})}
     if actor and actor.get("email"):
         actor_ctx["admin_role"] = resolve_admin_role(actor, str(actor.get("email") or ""))
     if not is_super_admin_user(actor_ctx):
-        raise ValueError("Only super admins can delete team members.")
+        raise ValueError(ONLY_SUPER_ADMIN_DELETE_TEAM)
     if user_id == actor_user_id:
-        raise ValueError("You cannot delete yourself.")
+        raise ValueError(CANNOT_DELETE_SELF)
 
     prof = fetch_user_profile(user_id)
     if not prof or prof.get("user_type") != "admin":
-        raise ValueError("Admin user not found.")
+        raise ValueError(ADMIN_USER_NOT_FOUND)
 
     current_role = resolve_admin_role(prof, str(prof.get("email") or ""))
     if current_role == "super_admin":
         try:
             res = (
-                get_client()
+                get_db()
                 .table("users")
                 .select("id", count="exact")
                 .eq("user_type", "admin")
@@ -340,7 +355,7 @@ def delete_admin_team_member(user_id: str, *, actor_user_id: str) -> dict[str, A
             )
             remaining = int(getattr(res, "count", None) or 0)
             if remaining == 0:
-                raise ValueError("Cannot delete the last super admin.")
+                raise ValueError(CANNOT_DELETE_LAST_SUPER_ADMIN)
         except ValueError:
             raise
         except Exception as e:
@@ -355,7 +370,7 @@ def delete_admin_team_member(user_id: str, *, actor_user_id: str) -> dict[str, A
             "email": email or None,
             "deleted": False,
             "demoted_to": "vendor",
-            "message": "Admin access removed. This account remains a vendor.",
+            "message": ADMIN_REMOVED_REMAINS_VENDOR,
         }
 
     if _has_client_activity(user_id):
@@ -365,7 +380,7 @@ def delete_admin_team_member(user_id: str, *, actor_user_id: str) -> dict[str, A
             "email": email or None,
             "deleted": False,
             "demoted_to": "client",
-            "message": "Admin access removed. This account remains a client.",
+            "message": ADMIN_REMOVED_REMAINS_CLIENT,
         }
 
     _hard_delete_admin_user(user_id)
@@ -374,7 +389,7 @@ def delete_admin_team_member(user_id: str, *, actor_user_id: str) -> dict[str, A
         "email": email or None,
         "deleted": True,
         "demoted_to": None,
-        "message": "Admin account deleted.",
+        "message": ADMIN_ACCOUNT_DELETED,
     }
 
 
@@ -385,24 +400,22 @@ def patch_admin_team_member(
     account_suspended: bool | None,
     actor_user_id: str,
 ) -> dict[str, Any] | None:
-    if get_settings().local_auth_mode:
-        return None
     prof = fetch_user_profile(user_id)
     if not prof or prof.get("user_type") != "admin":
-        raise ValueError("Admin user not found.")
+        raise ValueError(ADMIN_USER_NOT_FOUND)
 
     actor = fetch_user_profile(actor_user_id)
     actor_ctx = {"user_type": "admin", **(actor or {})}
     if actor and actor.get("email"):
         actor_ctx["admin_role"] = resolve_admin_role(actor, str(actor.get("email") or ""))
     if not is_super_admin_user(actor_ctx):
-        raise ValueError("Only super admins can change team members.")
+        raise ValueError(ONLY_SUPER_ADMIN_CHANGE_TEAM)
 
     if user_id == actor_user_id:
         if admin_role is not None and admin_role != "super_admin":
-            raise ValueError("You cannot demote yourself.")
+            raise ValueError(CANNOT_DEMOTE_SELF)
         if account_suspended is True:
-            raise ValueError("You cannot suspend yourself.")
+            raise ValueError(CANNOT_SUSPEND_SELF)
 
     patch: dict[str, Any] = {}
     if admin_role is not None:
@@ -415,7 +428,7 @@ def patch_admin_team_member(
     if admin_role == "admin":
         try:
             res = (
-                get_client()
+                get_db()
                 .table("users")
                 .select("id", count="exact")
                 .eq("user_type", "admin")
@@ -426,14 +439,14 @@ def patch_admin_team_member(
             remaining = int(getattr(res, "count", None) or 0)
             current_role = resolve_admin_role(prof, str(prof.get("email") or ""))
             if current_role == "super_admin" and remaining == 0:
-                raise ValueError("Cannot demote the last super admin.")
+                raise ValueError(CANNOT_DEMOTE_LAST_SUPER_ADMIN)
         except ValueError:
             raise
         except Exception as e:
             logger.warning("super_admin count check failed: %s", e)
 
     try:
-        res = get_client().table("users").update(patch).eq("id", user_id).execute()
+        res = get_db().table("users").update(patch).eq("id", user_id).execute()
         data = getattr(res, "data", None) or []
         if not data:
             return None

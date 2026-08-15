@@ -5,9 +5,9 @@ from __future__ import annotations
 from typing import Literal
 
 from app.core.config import get_settings
-from app.core.db import get_db as get_client
+from app.core.db import get_db
 from app.core.logging import get_logger
-from app.features.auth.lookup import user_emails_by_id, user_types_by_id
+from app.features.auth.user_vendor_display_lookup import user_emails_by_id, user_types_by_id
 from app.features.email.admin_recipients import admin_notify_recipients
 from app.features.email.branding import email_public_base, ensure_public_email_url, public_email_url
 from app.features.email.service import get_email_service
@@ -19,6 +19,8 @@ from app.features.notifications.service import (
 )
 
 logger = get_logger(__name__)
+
+ADMIN_LOGIN_URL = "/login?next=/admin/dashboard"
 
 NotifyMode = Literal["upsert", "insert_if_absent"]
 
@@ -32,11 +34,9 @@ def _booking_portal_path(portal: Portal, booking_id: str) -> str:
 
 
 def _load_booking_parties(booking_id: str) -> dict[str, str] | None:
-    if get_settings().local_auth_mode:
-        return None
     try:
         res = (
-            get_client()
+            get_db()
             .table("booking_requests")
             .select("id,event_name,client_user_id,vendor_user_id")
             .eq("id", booking_id)
@@ -89,9 +89,6 @@ def dispatch_booking_notification(
             kind=kind,
             body=body,
         )
-
-    if get_settings().local_auth_mode:
-        return
 
     parties = _load_booking_parties(booking_id)
     if not parties:
@@ -228,9 +225,6 @@ def send_support_new_message_email(
     conversation_id: str | None = None,
 ) -> bool:
     """Email a client or vendor when Eventtz Support sends them an in-app message."""
-    if get_settings().local_auth_mode:
-        return False
-
     uid = (recipient_user_id or "").strip()
     if not uid:
         return False
@@ -334,7 +328,7 @@ def send_vendor_approval_email(
 
 
 def send_team_invite_email(*, email: str) -> bool:
-    login_url = public_email_url("/admin/login")
+    login_url = public_email_url(ADMIN_LOGIN_URL)
     return get_email_service().send_team_invite(to_email=email.strip().lower(), login_url=login_url)
 
 
@@ -344,8 +338,6 @@ def send_client_suspended_email(*, email: str) -> bool:
 
 
 def send_welcome_email(*, email: str, user_type: str) -> bool:
-    if get_settings().local_auth_mode:
-        return False
     normalized = email.strip().lower()
     if not normalized or "@" not in normalized:
         return False
@@ -364,13 +356,11 @@ def send_welcome_email(*, email: str, user_type: str) -> bool:
 
 
 def send_admin_welcome_email(*, email: str) -> bool:
-    if get_settings().local_auth_mode:
-        return False
     normalized = email.strip().lower()
     if not normalized or "@" not in normalized:
         return False
     try:
-        login_url = public_email_url("/admin/login")
+        login_url = public_email_url(ADMIN_LOGIN_URL)
         return get_email_service().send_admin_welcome(to_email=normalized, login_url=login_url)
     except Exception:
         logger.exception("send_admin_welcome_email failed email=%s", normalized)
@@ -378,12 +368,10 @@ def send_admin_welcome_email(*, email: str) -> bool:
 
 
 def send_password_changed_email(*, email: str, user_type: str | None = None) -> bool:
-    if get_settings().local_auth_mode:
-        return False
     normalized = email.strip().lower()
     if not normalized or "@" not in normalized:
         return False
-    login_path = "/admin/login" if user_type == "admin" else "/login"
+    login_path = ADMIN_LOGIN_URL if user_type == "admin" else "/login"
     login_url = public_email_url(login_path)
     try:
         return get_email_service().send_password_changed(to_email=normalized, login_url=login_url)
@@ -400,8 +388,6 @@ def send_password_reset_email(
     user_type: str | None = None,
     purpose: Literal["reset", "setup"] = "reset",
 ) -> bool:
-    if get_settings().local_auth_mode:
-        return False
     normalized = email.strip().lower()
     if not normalized or "@" not in normalized or not reset_url.strip():
         return False
@@ -425,8 +411,6 @@ def send_email_verification_email(
     expires_minutes: int = 60,
     user_type: str | None = None,
 ) -> bool:
-    if get_settings().local_auth_mode:
-        return False
     normalized = email.strip().lower()
     if not normalized or "@" not in normalized or not verify_url.strip():
         return False

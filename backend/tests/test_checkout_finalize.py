@@ -22,7 +22,7 @@ def _session(*, session_id: str, amount_pence: int, booking_id: str = "b1") -> d
 
 
 @patch("app.features.bookings.payment_finalize._payment_fields_from_checkout_session", return_value=("pi_test", "ch_test"))
-@patch("app.features.bookings.payment_finalize.get_client")
+@patch("app.features.bookings.payment_finalize.get_db")
 def test_rejects_stale_checkout_session(mock_get_client, _pi_fields):
     mock_db = MagicMock()
     mock_get_client.return_value = mock_db
@@ -41,7 +41,7 @@ def test_rejects_stale_checkout_session(mock_get_client, _pi_fields):
 
 
 @patch("app.features.bookings.payment_finalize._payment_fields_from_checkout_session", return_value=("pi_test", "ch_test"))
-@patch("app.features.bookings.payment_finalize.get_client")
+@patch("app.features.bookings.payment_finalize.get_db")
 def test_rejects_amount_mismatch(mock_get_client, _pi_fields):
     mock_db = MagicMock()
     mock_get_client.return_value = mock_db
@@ -70,10 +70,10 @@ def test_rejects_amount_mismatch(mock_get_client, _pi_fields):
     mock_table.update.assert_not_called()
 
 
-@patch("app.features.bookings.payment_shared._notify_pair")
+@patch("app.features.bookings.booking_payment_helpers._notify_pair")
 @patch("app.features.bookings.payment_finalize.dispatch_booking_notification")
 @patch("app.features.bookings.payment_finalize._payment_fields_from_checkout_session", return_value=("pi_test", "ch_test"))
-@patch("app.features.bookings.payment_finalize.get_client")
+@patch("app.features.bookings.payment_finalize.get_db")
 def test_accepts_matching_current_session(mock_get_client, _pi_fields, _notify, _upsert):
     mock_db = MagicMock()
     mock_get_client.return_value = mock_db

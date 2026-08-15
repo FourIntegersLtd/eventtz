@@ -7,7 +7,7 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.db import apply_recent_first_order, get_db as get_client
+from app.core.db import apply_recent_first_order, get_db
 from app.features.bookings import (
     _client_emails_by_id,
     _vendor_display_names_by_id,
@@ -16,7 +16,16 @@ from app.features.bookings.dispute_commands import create_dispute_case
 from app.features.realtime.sse import notify_user
 
 from app.features.bookings.disputes import _resolve_conversation_id_for_dispute
-from app.features.admin.team_ops import assert_active_admin_assignee
+from app.features.admin.messages import (
+    BOOKING_NOT_FOUND_DOT,
+    DISPUTE_NOT_FOUND_DOT,
+    DISPUTE_STATUS_INVALID,
+    NO_RECORDED_PAYMENT_AMOUNT,
+    ONLY_PAID_PARTIAL_REFUND,
+    REFUND_AMOUNT_REQUIRED_PARTIAL,
+    partial_refund_range_detail,
+)
+from app.features.admin.team_admin_commands import assert_active_admin_assignee
 
 logger = get_logger(__name__)
 
@@ -30,7 +39,7 @@ def _same_user_id(a: str, b: str) -> bool:
 def _enrich_dispute_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     if not rows:
         return rows
-    client = get_client()
+    client = get_db()
     booking_ids = list({str(r.get("booking_request_id") or "") for r in rows if r.get("booking_request_id")})
     bookings_by_id: dict[str, dict[str, Any]] = {}
     if booking_ids:
@@ -96,7 +105,7 @@ def _enrich_dispute_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
             opened_by_display = str(opened_by_email).strip()
         row["event_name"] = str(booking.get("event_name") or "") or None
         row["event_date"] = str(booking.get("event_date") or "") or None
-        row["booking_status"] = str(booking.get("status") or "") or None
+        row["booking_lifecycle_status"] = str(booking.get("status") or "") or None
         row["client_email"] = client_email
         row["vendor_display_name"] = vendor_name
         row["vendor_email"] = vendor_email
@@ -119,19 +128,17 @@ def enrich_dispute_row(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def list_disputes_for_admin(*, status: str | None = None) -> list[dict[str, Any]]:
-    if get_settings().local_auth_mode:
-        return []
     status_key = (status or "all").strip().lower()
     try:
         q = apply_recent_first_order(
-            get_client().table("dispute_cases").select("*"),
+            get_db().table("dispute_cases").select("*"),
         )
         if status_key == "open":
             q = q.in_("status", ["open", "under_review"])
         elif status_key in ("under_review", "resolved", "closed"):
             q = q.eq("status", status_key)
         elif status_key not in ("", "all"):
-            raise ValueError("status must be all, open, under_review, resolved, or closed")
+            raise ValueError(DISPUTE_STATUS_INVALID)
         res = q.limit(500).execute()
     except ValueError:
         raise
@@ -184,8 +191,6 @@ def patch_dispute_case(
     set_client_resolution_note: bool = False,
     set_vendor_resolution_note: bool = False,
 ) -> dict[str, Any] | None:
-    if get_settings().local_auth_mode:
-        return None
     patch: dict[str, Any] = {}
     if status:
         patch["status"] = status
@@ -215,7 +220,7 @@ def patch_dispute_case(
     booking_request_id: str | None = None
     if status == "resolved" and resolution_action:
         existing = (
-            get_client()
+            get_db()
             .table("dispute_cases")
             .select("booking_request_id")
             .eq("id", dispute_id)
@@ -226,7 +231,7 @@ def patch_dispute_case(
         if existing_rows and isinstance(existing_rows[0], dict):
             booking_request_id = str(existing_rows[0].get("booking_request_id") or "") or None
         if not booking_request_id:
-            raise ValueError("Dispute not found.")
+            raise ValueError(DISPUTE_NOT_FOUND_DOT)
 
         # Local import avoids a service-layer import cycle at module load time.
         from app.features.bookings.payments import (
@@ -240,9 +245,9 @@ def patch_dispute_case(
             admin_refund_booking(booking_request_id, amount_gbp=None)
         elif resolution_action == "partial_refund":
             if not refund_amount_gbp:
-                raise ValueError("refund_amount_gbp is required for a partial refund.")
+                raise ValueError(REFUND_AMOUNT_REQUIRED_PARTIAL)
             booking_res = (
-                get_client()
+                get_db()
                 .table("booking_requests")
                 .select("payment_amount_gbp,payment_status")
                 .eq("id", booking_request_id)
@@ -251,26 +256,24 @@ def patch_dispute_case(
             )
             booking_rows = getattr(booking_res, "data", None) or []
             if not booking_rows or not isinstance(booking_rows[0], dict):
-                raise ValueError("Booking not found.")
+                raise ValueError(BOOKING_NOT_FOUND_DOT)
             booking_row = booking_rows[0]
             if str(booking_row.get("payment_status") or "") != "paid":
-                raise ValueError("Only paid bookings can be partially refunded.")
+                raise ValueError(ONLY_PAID_PARTIAL_REFUND)
             paid = booking_row.get("payment_amount_gbp")
             try:
                 paid_amt = float(paid)
             except (TypeError, ValueError):
                 paid_amt = 0.0
             if paid_amt <= 0:
-                raise ValueError("No recorded payment amount for this booking.")
+                raise ValueError(NO_RECORDED_PAYMENT_AMOUNT)
             if refund_amount_gbp <= 0 or refund_amount_gbp > paid_amt:
-                raise ValueError(
-                    f"Partial refund must be between 0 and GBP {paid_amt:.2f}.",
-                )
+                raise ValueError(partial_refund_range_detail(paid_amt))
             admin_refund_booking(booking_request_id, amount_gbp=refund_amount_gbp)
 
     try:
         res = (
-            get_client()
+            get_db()
             .table("dispute_cases")
             .update(patch)
             .eq("id", dispute_id)
@@ -287,7 +290,7 @@ def patch_dispute_case(
             bid = str(out.get("booking_request_id") or "")
             if bid:
                 b = (
-                    get_client()
+                    get_db()
                     .table("booking_requests")
                     .select("client_user_id,vendor_user_id")
                     .eq("id", bid)

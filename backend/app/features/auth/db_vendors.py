@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.core.db import rows
+from app.core.db import rows_from_query_result
 from app.core.db import get_db
 
 
@@ -12,4 +12,4 @@ def list_by_user_ids(user_ids: list[str], *, columns: str = "user_id,payload") -
     if not user_ids:
         return []
     res = get_db().table("vendors").select(columns).in_("user_id", user_ids).execute()
-    return rows(res)
+    return rows_from_query_result(res)

@@ -41,13 +41,18 @@ def get_vendor_profile_state(request: Request, response: Response) -> VendorProf
     else:
         logger.info("GET /vendor/profile no row for user_id=%s", uid)
     if not row:
-        return VendorProfileState(current_step=1, status="draft", approval_status="pending", payload={})
+        return VendorProfileState(
+            current_step=1,
+            onboarding_status="draft",
+            approval_status="pending",
+            profile_form_data={},
+        )
     return VendorProfileState(
         success=True,
         current_step=row.get("current_step", 1),
-        status=row.get("status", "draft"),
+        onboarding_status=row.get("status", "draft"),
         approval_status=row.get("approval_status", "pending"),
-        payload=row.get("payload") or {},
+        profile_form_data=row.get("payload") or {},
         updated_at=row.get("updated_at"),
         payouts_verified=bool(row.get("payouts_verified")),
         listing_visible=bool(row.get("listing_visible")),
@@ -79,13 +84,13 @@ def put_vendor_profile_state(
         uid,
         user.get("user_type"),
         body.current_step,
-        body.status,
+        body.onboarding_status,
     )
     row = upsert_vendor_profile(
         uid,
         current_step=body.current_step,
-        payload=body.payload,
-        status=body.status,
+        payload=body.profile_form_data,
+        status=body.onboarding_status,
         user_email=str(user.get("email") or "") or None,
     )
     logger.info(
@@ -98,9 +103,9 @@ def put_vendor_profile_state(
     return VendorProfileState(
         success=True,
         current_step=row.get("current_step", 1),
-        status=row.get("status", "draft"),
+        onboarding_status=row.get("status", "draft"),
         approval_status=row.get("approval_status", "pending"),
-        payload=row.get("payload") or {},
+        profile_form_data=row.get("payload") or {},
         updated_at=row.get("updated_at"),
         payouts_verified=bool(row.get("payouts_verified")),
         listing_visible=bool(row.get("listing_visible")),

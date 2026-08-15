@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.core.db import apply_recent_first_order, get_db, one_row, rows
+from app.core.db import apply_recent_first_order, get_db, first_row_from_query_result, rows_from_query_result
 from app.features.bookings.list_order import sort_booking_rows_recent_first
 
 
-def get_by_id(booking_id: str, *, columns: str = "*") -> dict[str, Any] | None:
+def get_booking_request_by_id(booking_id: str, *, columns: str = "*") -> dict[str, Any] | None:
     res = get_db().table("booking_requests").select(columns).eq("id", booking_id).limit(1).execute()
-    return one_row(res)
+    return first_row_from_query_result(res)
 
 
 def list_for_vendor(
@@ -23,7 +23,7 @@ def list_for_vendor(
     if status_filter:
         q = q.in_("status", status_filter)
     res = apply_recent_first_order(q).execute()
-    return sort_booking_rows_recent_first(rows(res))
+    return sort_booking_rows_recent_first(rows_from_query_result(res))
 
 
 def list_for_client(
@@ -36,4 +36,4 @@ def list_for_client(
     if status_filter:
         q = q.in_("status", status_filter)
     res = apply_recent_first_order(q).execute()
-    return sort_booking_rows_recent_first(rows(res))
+    return sort_booking_rows_recent_first(rows_from_query_result(res))

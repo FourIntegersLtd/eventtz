@@ -9,7 +9,7 @@ Implementation is split across sibling modules; this file re-exports the public 
 from __future__ import annotations
 
 from app.core.config import get_settings
-from app.core.db import get_db as get_client
+from app.core.db import get_db
 from app.features.bookings.payment_checkout import create_checkout_session_for_booking
 from app.features.bookings.payment_completion import (
     _confirm_completion,
@@ -45,7 +45,7 @@ from app.features.bookings.payment_refunds import (
     admin_refund_booking,
     refund_booking_on_cancel,
 )
-from app.features.bookings.payment_shared import (
+from app.features.bookings.booking_payment_helpers import (
     _get_vendor_stripe_fields,
     _load_full_booking_row,
     _notify_pair,
@@ -80,7 +80,7 @@ __all__ = [
     "create_checkout_session_for_booking",
     "dispatch_booking_notification",
     "get_booking_request_for_client",
-    "get_client",
+    "get_db",
     "get_settings",
     "handle_account_updated",
     "handle_checkout_session_completed",

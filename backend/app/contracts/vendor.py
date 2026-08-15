@@ -18,19 +18,25 @@ _LISTING_OVERRIDE_DESCRIPTION = (
 
 class VendorProfilePutBody(BaseModel):
     current_step: int = Field(ge=1, le=20)
-    payload: dict[str, Any] = Field(default_factory=dict)
-    status: VendorProfileStatus | None = Field(
+    profile_form_data: dict[str, Any] = Field(default_factory=dict)
+    onboarding_status: VendorProfileStatus | None = Field(
         default=None,
+        validation_alias="status",
         description="draft | submitted | complete",
     )
+
+    model_config = {"populate_by_name": True}
 
 
 class VendorProfileState(BaseModel):
     success: bool = True
     current_step: int
-    status: VendorProfileStatus | str
+    onboarding_status: VendorProfileStatus | str = Field(validation_alias="status")
     approval_status: VendorApprovalStatus | str = "pending"
-    payload: dict[str, Any] = Field(default_factory=dict)
+    profile_form_data: dict[str, Any] = Field(
+        default_factory=dict,
+        validation_alias="payload",
+    )
     updated_at: str | None = None
     payouts_verified: bool = Field(
         default=False,
@@ -47,6 +53,8 @@ class VendorProfileState(BaseModel):
         default="auto",
         description=_LISTING_OVERRIDE_DESCRIPTION,
     )
+
+    model_config = {"populate_by_name": True}
 
 
 class VendorBusinessNameAvailabilityResponse(BaseModel):
@@ -69,10 +77,13 @@ class AdminVendorRow(BaseModel):
     id: str | None = None
     user_id: str
     email: str | None = None
-    status: VendorProfileStatus | str = "draft"
+    onboarding_status: VendorProfileStatus | str = Field(default="draft", validation_alias="status")
     approval_status: VendorApprovalStatus | str = "pending"
     current_step: int = 1
-    payload: dict[str, Any] = Field(default_factory=dict)
+    profile_form_data: dict[str, Any] = Field(
+        default_factory=dict,
+        validation_alias="payload",
+    )
     created_at: str | None = None
     updated_at: str | None = None
     stripe_account_id: str | None = None
@@ -184,7 +195,10 @@ class ExploreVendorRow(BaseModel):
     email: str | None = None
     status: VendorProfileStatus | str = "draft"
     approval_status: VendorApprovalStatus | str
-    payload: dict[str, Any] = Field(default_factory=dict)
+    profile_form_data: dict[str, Any] = Field(
+        default_factory=dict,
+        validation_alias="payload",
+    )
     updated_at: str | None = None
     review_average: float | None = None
     review_count: int = 0

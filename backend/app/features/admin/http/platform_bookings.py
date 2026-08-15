@@ -16,14 +16,19 @@ from app.contracts.admin import (
     AdminBookingsListResponse,
     AdminBookingListItem,
 )
+from app.features.admin.messages import (
+    BOOKING_NOT_FOUND,
+    COULD_NOT_UPDATE_PAYMENT_FIELDS,
+    NO_FIELDS_TO_UPDATE,
+)
 from app.features.admin.audit import insert_admin_audit_log
 from app.features.admin.booking_recovery import (
-    admin_cancel_booking_on_behalf,
+    admin_cancel_booking_on_behalf as cancel_booking_on_behalf_command,
     admin_clear_checkout_session,
     admin_complete_cancellation,
     admin_confirm_completion_for_party,
     admin_retry_payout_for_booking,
-    admin_run_booking_maintenance,
+    admin_run_booking_maintenance as run_booking_maintenance_command,
     admin_set_support_hold,
     admin_sync_payment_for_booking,
 )
@@ -77,13 +82,13 @@ def admin_get_booking(
     user = require_admin(request, response)
     row = get_booking_detail_for_admin(booking_id)
     if not row:
-        raise HTTPException(status_code=404, detail="Booking not found")
+        raise HTTPException(status_code=404, detail=BOOKING_NOT_FOUND)
     insert_admin_audit_log(
         admin_user_id=str(user.get("id") or ""),
         action="booking.view",
         entity_type="booking_request",
         entity_id=booking_id,
-        payload={},
+        audit_event_details={},
     )
     return AdminBookingDetailResponse(success=True, booking=row)
 
@@ -98,19 +103,19 @@ def admin_patch_booking_payment_fields(
     user = require_super_admin(request, response)
     patch = body.model_dump(exclude_unset=True)
     if not patch:
-        raise HTTPException(status_code=400, detail="No fields to update")
+        raise HTTPException(status_code=400, detail=NO_FIELDS_TO_UPDATE)
     try:
         ok = patch_booking_payment_fields(booking_id, patch)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     if not ok:
-        raise HTTPException(status_code=400, detail="Could not update payment fields")
+        raise HTTPException(status_code=400, detail=COULD_NOT_UPDATE_PAYMENT_FIELDS)
     insert_admin_audit_log(
         admin_user_id=str(user.get("id") or ""),
         action="booking.payment_fields.patch",
         entity_type="booking_request",
         entity_id=booking_id,
-        payload=patch,
+        audit_event_details=patch,
     )
     return {"success": True}
 
@@ -131,11 +136,11 @@ def admin_sync_booking_payment(
         action="booking.sync_payment",
         entity_type="booking_request",
         entity_id=booking_id,
-        payload={},
+        audit_event_details={},
     )
     row = get_booking_detail_for_admin(booking_id)
     if not row:
-        raise HTTPException(status_code=404, detail="Booking not found")
+        raise HTTPException(status_code=404, detail=BOOKING_NOT_FOUND)
     return AdminBookingDetailResponse(success=True, booking=row)
 
 
@@ -155,11 +160,11 @@ def admin_reset_booking_checkout(
         action="booking.reset_checkout",
         entity_type="booking_request",
         entity_id=booking_id,
-        payload={},
+        audit_event_details={},
     )
     row = get_booking_detail_for_admin(booking_id)
     if not row:
-        raise HTTPException(status_code=404, detail="Booking not found")
+        raise HTTPException(status_code=404, detail=BOOKING_NOT_FOUND)
     return AdminBookingDetailResponse(success=True, booking=row)
 
 
@@ -179,11 +184,11 @@ def admin_release_booking_payout(
         action="booking.release_payout",
         entity_type="booking_request",
         entity_id=booking_id,
-        payload={},
+        audit_event_details={},
     )
     row = get_booking_detail_for_admin(booking_id)
     if not row:
-        raise HTTPException(status_code=404, detail="Booking not found")
+        raise HTTPException(status_code=404, detail=BOOKING_NOT_FOUND)
     return AdminBookingDetailResponse(success=True, booking=row)
 
 
@@ -203,11 +208,11 @@ def admin_retry_booking_payout(
         action="booking.retry_payout",
         entity_type="booking_request",
         entity_id=booking_id,
-        payload={},
+        audit_event_details={},
     )
     row = get_booking_detail_for_admin(booking_id)
     if not row:
-        raise HTTPException(status_code=404, detail="Booking not found")
+        raise HTTPException(status_code=404, detail=BOOKING_NOT_FOUND)
     return AdminBookingDetailResponse(success=True, booking=row)
 
 
@@ -227,16 +232,16 @@ def admin_complete_booking_cancellation(
         action="booking.complete_cancellation",
         entity_type="booking_request",
         entity_id=booking_id,
-        payload={},
+        audit_event_details={},
     )
     row = get_booking_detail_for_admin(booking_id)
     if not row:
-        raise HTTPException(status_code=404, detail="Booking not found")
+        raise HTTPException(status_code=404, detail=BOOKING_NOT_FOUND)
     return AdminBookingDetailResponse(success=True, booking=row)
 
 
 @router.post("/bookings/{booking_id}/cancel-on-behalf", response_model=AdminBookingDetailResponse)
-def admin_cancel_booking_on_behalf_route(
+def admin_cancel_booking_on_behalf(
     booking_id: str,
     body: AdminCancelOnBehalfBody,
     request: Request,
@@ -244,7 +249,7 @@ def admin_cancel_booking_on_behalf_route(
 ) -> AdminBookingDetailResponse:
     user = require_super_admin(request, response)
     try:
-        admin_cancel_booking_on_behalf(
+        cancel_booking_on_behalf_command(
             booking_id,
             party=body.party,
             reason=body.reason.strip(),
@@ -256,11 +261,11 @@ def admin_cancel_booking_on_behalf_route(
         action="booking.cancel_on_behalf",
         entity_type="booking_request",
         entity_id=booking_id,
-        payload={"party": body.party, "reason": body.reason.strip()},
+        audit_event_details={"party": body.party, "reason": body.reason.strip()},
     )
     row = get_booking_detail_for_admin(booking_id)
     if not row:
-        raise HTTPException(status_code=404, detail="Booking not found")
+        raise HTTPException(status_code=404, detail=BOOKING_NOT_FOUND)
     return AdminBookingDetailResponse(success=True, booking=row)
 
 
@@ -281,23 +286,23 @@ def admin_confirm_booking_completion(
         action="booking.confirm_completion",
         entity_type="booking_request",
         entity_id=booking_id,
-        payload={"party": body.party},
+        audit_event_details={"party": body.party},
     )
     row = get_booking_detail_for_admin(booking_id)
     if not row:
-        raise HTTPException(status_code=404, detail="Booking not found")
+        raise HTTPException(status_code=404, detail=BOOKING_NOT_FOUND)
     return AdminBookingDetailResponse(success=True, booking=row)
 
 
 @router.post("/bookings/{booking_id}/run-maintenance", response_model=AdminBookingDetailResponse)
-def admin_run_booking_maintenance_route(
+def admin_run_booking_maintenance(
     booking_id: str,
     request: Request,
     response: Response,
 ) -> AdminBookingDetailResponse:
     user = require_super_admin(request, response)
     try:
-        admin_run_booking_maintenance(booking_id)
+        run_booking_maintenance_command(booking_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     insert_admin_audit_log(
@@ -305,11 +310,11 @@ def admin_run_booking_maintenance_route(
         action="booking.run_maintenance",
         entity_type="booking_request",
         entity_id=booking_id,
-        payload={},
+        audit_event_details={},
     )
     row = get_booking_detail_for_admin(booking_id)
     if not row:
-        raise HTTPException(status_code=404, detail="Booking not found")
+        raise HTTPException(status_code=404, detail=BOOKING_NOT_FOUND)
     return AdminBookingDetailResponse(success=True, booking=row)
 
 
@@ -330,9 +335,9 @@ def admin_patch_booking_support_hold(
         action="booking.support_hold",
         entity_type="booking_request",
         entity_id=booking_id,
-        payload={"hold": body.hold},
+        audit_event_details={"hold": body.hold},
     )
     row = get_booking_detail_for_admin(booking_id)
     if not row:
-        raise HTTPException(status_code=404, detail="Booking not found")
+        raise HTTPException(status_code=404, detail=BOOKING_NOT_FOUND)
     return AdminBookingDetailResponse(success=True, booking=row)

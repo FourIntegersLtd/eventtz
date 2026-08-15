@@ -30,9 +30,6 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_service_role_key: str = ""
 
-    #: When true, skip real login/database setup for local tinkering.
-    local_auth_mode: bool = False
-
     #: How much detail to write to logs (e.g. INFO, WARNING, DEBUG).
     log_level: str = "INFO"
     #: True on the live server: shorter log lines. False on a laptop: easier-to-read blocks.

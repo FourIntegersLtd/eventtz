@@ -6,9 +6,10 @@ from datetime import datetime, timezone
 from typing import Any
 
 from app.core.config import get_settings
-from app.core.db import one_row, rows
-from app.core.db import get_db as get_client
-from app.features.bookings._command_helpers import normalize_event_postcode_accept
+from app.core.db import first_row_from_query_result, rows_from_query_result
+from app.core.db import get_db
+from app.features.bookings import messages as booking_messages
+from app.features.bookings.booking_guard_checks import normalize_event_postcode_accept
 from app.features.bookings.notifications import (
     _client_booking_pricing_explanation_body,
     _notify_booking_changed,
@@ -20,12 +21,12 @@ from app.features.bookings.queries import (
     get_booking_request_for_client,
     get_booking_request_for_vendor,
 )
-from app.features.bookings.funnel import (
+from app.features.bookings.booking_funnel_timestamps import (
     apply_accept_update,
     apply_decline_update,
     mark_customer_cancelled_failure,
 )
-from app.features.bookings.payment_shared import _get_vendor_stripe_fields
+from app.features.bookings.booking_payment_helpers import _get_vendor_stripe_fields
 from app.features.email.dispatch import dispatch_booking_notification
 from app.features.vendors.visibility import payout_gate_waived
 
@@ -34,28 +35,24 @@ def _guard_cancel_money_state(booking_id: str, *, status: str, payment_status: s
     """Shared checks before cancel: not after payout, not while a problem report is open."""
     if status == "completed":
         raise ValueError(
-            "This booking is already complete, so it can't be cancelled. "
-            "If something went wrong, report a problem instead.",
+            booking_messages.CANCEL_COMPLETE_INSTEAD,
         )
     if payment_status == "payout_released":
         raise ValueError(
-            "The vendor has already been paid for this booking, so it can't be "
-            "cancelled. If something went wrong, report a problem instead.",
+            booking_messages.CANCEL_AFTER_PAYOUT,
         )
     if payment_status == "partially_refunded":
         raise ValueError(
-            "This booking has a partial refund on record, so it can't be cancelled. "
-            "Contact support if you need help.",
+            booking_messages.CANCEL_PARTIAL_REFUND,
         )
     if payment_status == "refunded" and status != "accepted":
-        raise ValueError("This booking has already been refunded.")
+        raise ValueError(booking_messages.BOOKING_ALREADY_REFUNDED)
     # Import here to avoid a circular import at module load.
     from app.features.bookings.disputes import has_active_dispute_for_booking
 
     if has_active_dispute_for_booking(booking_id):
         raise ValueError(
-            "This booking has an open problem report. It can't be cancelled until "
-            "that's resolved.",
+            booking_messages.CANCEL_OPEN_DISPUTE,
         )
 
 
@@ -104,11 +101,8 @@ def update_booking_request_status_for_vendor(
 ) -> dict[str, Any] | None:
     """Vendor transitions: pending→accepted/declined; declined→accepted; accepted→cancelled."""
     if new_status not in ("accepted", "declined", "cancelled"):
-        raise ValueError("Status must be accepted, declined, or cancelled.")
-    if get_settings().local_auth_mode:
-        return None
-
-    client = get_client()
+        raise ValueError(booking_messages.STATUS_VENDOR_MUST_BE)
+    client = get_db()
     res = (
         client.table("booking_requests")
         .select("id,status,client_user_id,initiator,paid_at,payment_status,vendor_adjustments")
@@ -117,7 +111,7 @@ def update_booking_request_status_for_vendor(
         .limit(1)
         .execute()
     )
-    row0 = one_row(res)
+    row0 = first_row_from_query_result(res)
     if row0 is None:
         return None
     current = str(row0.get("status", ""))
@@ -141,7 +135,7 @@ def update_booking_request_status_for_vendor(
                 .eq("status", "accepted")
                 .execute()
             )
-            if not rows(upd):
+            if not rows_from_query_result(upd):
                 return None
             if client_uid:
                 if refunded:
@@ -172,7 +166,7 @@ def update_booking_request_status_for_vendor(
                 .eq("status", "pending")
                 .execute()
             )
-            if not rows(upd):
+            if not rows_from_query_result(upd):
                 return None
             if client_uid:
                 dispatch_booking_notification(
@@ -187,18 +181,18 @@ def update_booking_request_status_for_vendor(
             _notify_booking_changed(client_user_id=client_uid, vendor_user_id=vendor_user_id)
             return {"id": booking_id, "status": "cancelled"}
         raise ValueError(
-            "Cancel is only for accepted bookings or withdrawing a pending vendor quote.",
+            booking_messages.CANCEL_ONLY_ACCEPTED_OR_QUOTE,
         )
 
     if new_status == "accepted":
         if initiator == "vendor":
-            raise ValueError("The client must accept a vendor quote.")
+            raise ValueError(booking_messages.CLIENT_MUST_ACCEPT_QUOTE)
         if not _vendor_payouts_ready(vendor_user_id):
-            raise ValueError("Complete payout setup before accepting bookings.")
+            raise ValueError(booking_messages.COMPLETE_PAYOUT_SETUP)
         if current == "pending":
             if client_price_confirmation_required(row0):
                 raise ValueError(
-                    "The client must confirm the updated price before you can accept this booking.",
+                    booking_messages.CLIENT_MUST_CONFIRM_PRICE,
                 )
             upd = (
                 client.table("booking_requests")
@@ -208,7 +202,7 @@ def update_booking_request_status_for_vendor(
                 .eq("status", "pending")
                 .execute()
             )
-            if not rows(upd):
+            if not rows_from_query_result(upd):
                 return None
             if client_uid:
                 _notify_client_booking_accepted(client_uid, booking_id)
@@ -234,21 +228,21 @@ def update_booking_request_status_for_vendor(
                 .eq("status", "declined")
                 .execute()
             )
-            if not rows(upd):
+            if not rows_from_query_result(upd):
                 return None
             if client_uid:
                 _notify_client_booking_accepted(client_uid, booking_id)
             _notify_booking_changed(client_user_id=client_uid, vendor_user_id=vendor_user_id)
             return {"id": booking_id, "status": "accepted"}
         raise ValueError(
-            "Accept is only available for pending requests or previously rejected requests.",
+            booking_messages.ACCEPT_ONLY_PENDING_OR_REJECTED,
         )
 
     if new_status == "declined":
         if initiator == "vendor":
-            raise ValueError("Withdraw a quote you sent using cancel instead of reject.")
+            raise ValueError(booking_messages.WITHDRAW_QUOTE_USE_CANCEL)
         if current != "pending":
-            raise ValueError("Only pending requests can be declined.")
+            raise ValueError(booking_messages.ONLY_PENDING_CAN_DECLINE)
         upd = (
             client.table("booking_requests")
             .update(apply_decline_update(booking_id, created_at=row0.get("created_at")))
@@ -257,7 +251,7 @@ def update_booking_request_status_for_vendor(
             .eq("status", "pending")
             .execute()
         )
-        if not rows(upd):
+        if not rows_from_query_result(upd):
             return None
         if client_uid:
             dispatch_booking_notification(
@@ -284,7 +278,7 @@ def update_booking_request_status_for_vendor(
             pass
         return {"id": booking_id, "status": "declined"}
 
-    raise ValueError("Unsupported status transition.")
+    raise ValueError(booking_messages.UNSUPPORTED_STATUS_TRANSITION)
 
 
 def _notify_client_booking_accepted(client_uid: str, booking_id: str) -> None:
@@ -313,10 +307,7 @@ def cancel_booking_request_for_client(
     booking_id: str,
 ) -> dict[str, Any] | None:
     """Client cancels a pending or accepted booking."""
-    if get_settings().local_auth_mode:
-        return None
-
-    db = get_client()
+    db = get_db()
     res = (
         db.table("booking_requests")
         .select("id,status,vendor_user_id,payment_status")
@@ -325,7 +316,7 @@ def cancel_booking_request_for_client(
         .limit(1)
         .execute()
     )
-    row0 = one_row(res)
+    row0 = first_row_from_query_result(res)
     if row0 is None:
         return None
     current = str(row0.get("status", ""))
@@ -334,7 +325,7 @@ def cancel_booking_request_for_client(
     if current == "completed":
         _guard_cancel_money_state(booking_id, status=current, payment_status=payment_status)
     if current not in ("pending", "accepted"):
-        raise ValueError("Only pending or accepted bookings can be cancelled.")
+        raise ValueError(booking_messages.ONLY_PENDING_OR_ACCEPTED_CANCEL)
 
     _guard_cancel_money_state(booking_id, status=current, payment_status=payment_status)
     refunded = _refund_paid_booking_for_cancel(booking_id, payment_status, cancelled_by="client")
@@ -347,7 +338,7 @@ def cancel_booking_request_for_client(
         .in_("status", ["pending", "accepted"])
         .execute()
     )
-    if not rows(upd):
+    if not rows_from_query_result(upd):
         return None
     if vendor_uid:
         dispatch_booking_notification(
@@ -390,11 +381,8 @@ def update_booking_request_status_for_client(
 ) -> dict[str, Any] | None:
     """Client accepts or declines a pending vendor quote, or confirms an updated price."""
     if new_status not in ("accepted", "declined"):
-        raise ValueError("Status must be accepted or declined.")
-    if get_settings().local_auth_mode:
-        return None
-
-    db = get_client()
+        raise ValueError(booking_messages.STATUS_CLIENT_MUST_BE)
+    db = get_db()
     res = (
         db.table("booking_requests")
         .select("id,status,vendor_user_id,initiator,vendor_adjustments,line_items")
@@ -403,20 +391,20 @@ def update_booking_request_status_for_client(
         .limit(1)
         .execute()
     )
-    row0 = one_row(res)
+    row0 = first_row_from_query_result(res)
     if row0 is None:
         return None
     initiator = _row_initiator(row0)
     current = str(row0.get("status", ""))
     if current != "pending":
-        raise ValueError("Only pending bookings can be accepted or declined.")
+        raise ValueError(booking_messages.ONLY_PENDING_ACCEPT_DECLINE)
     vendor_uid = str(row0.get("vendor_user_id") or "")
 
     is_vendor_quote = initiator == "vendor"
     is_updated_price = initiator == "client" and client_price_confirmation_required(row0)
     if not is_vendor_quote and not is_updated_price:
         raise ValueError(
-            "This action applies to vendor quotes or when the vendor sent an updated price.",
+            booking_messages.VENDOR_QUOTE_OR_UPDATED_PRICE,
         )
 
     if new_status == "declined":
@@ -437,7 +425,7 @@ def update_booking_request_status_for_client(
                 .eq("status", "pending")
                 .execute()
             )
-            if not rows(upd):
+            if not rows_from_query_result(upd):
                 return None
             if vendor_uid:
                 dispatch_booking_notification(
@@ -461,7 +449,7 @@ def update_booking_request_status_for_client(
             .eq("status", "pending")
             .execute()
         )
-        if not rows(upd):
+        if not rows_from_query_result(upd):
             return None
         if vendor_uid:
             dispatch_booking_notification(
@@ -492,7 +480,7 @@ def update_booking_request_status_for_client(
         .eq("status", "pending")
         .execute()
     )
-    if not rows(upd):
+    if not rows_from_query_result(upd):
         return None
     if vendor_uid:
         if is_vendor_quote:

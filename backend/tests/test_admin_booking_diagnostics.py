@@ -77,9 +77,8 @@ def test_next_action_check_payment(mock_dispute, mock_vendor_stripe, _mock_activ
 
 
 @patch("app.features.admin.booking_diagnostics.get_settings")
-@patch("app.features.admin.booking_diagnostics.get_client")
+@patch("app.features.admin.booking_diagnostics.get_db")
 def test_summarize_support_for_booking_rows(mock_get_client, mock_settings):
-    mock_settings.return_value.local_auth_mode = False
     mock_get_client.return_value.table.return_value.select.return_value.in_.return_value.execute.side_effect = [
         type("R", (), {"data": [{"user_id": "v1", "stripe_payouts_enabled": True}]})(),
         type("R", (), {"data": []})(),

@@ -21,6 +21,7 @@ from app.contracts.planner import (
 from app.core.errors import NotFoundError, ValidationError
 from app.core.logging import get_logger
 from app.features.planner import db as planner_db
+from app.features.planner import messages as planner_messages
 from app.features.planner.budget import (
     allocate_budget_bands,
     build_budget_breakdown,
@@ -29,8 +30,8 @@ from app.features.planner.budget import (
 from app.features.planner.category_planner import needs_for_event, normalize_event_type
 from app.features.planner.confidence import compute_confidence
 from app.features.planner.defaults import DEDUPE_WINDOW_SECONDS
-from app.features.planner.explain import build_summary, why_for_vendor
-from app.features.planner.marketplace_adapter import (
+from app.features.planner.planner_summary_generation import build_summary, why_for_vendor
+from app.features.planner.explore_vendor_adapter import (
     filter_candidates_for_need,
     get_enriched_vendor,
     load_enriched_vendor_pool,
@@ -279,7 +280,7 @@ def _response_from_parts(
 def generate_plan(client_user_id: str, prompt: str) -> CelebrationPlanResponse:
     text = (prompt or "").strip()
     if not text:
-        raise ValidationError("Describe your celebration in a few words.")
+        raise ValidationError(planner_messages.DESCRIBE_CELEBRATION)
 
     # Double-submit dedupe (short window)
     ph = _prompt_hash(text)
@@ -302,7 +303,7 @@ def generate_plan(client_user_id: str, prompt: str) -> CelebrationPlanResponse:
         cuisine_notes=brief.cuisine_notes,
     )
     if not needs:
-        raise ValidationError("We could not build a plan from that description. Try adding the event type and city.")
+        raise ValidationError(planner_messages.PLAN_BUILD_FAILED)
 
     allocated = allocate_budget_bands(
         needs,
@@ -513,7 +514,7 @@ def list_plans(client_user_id: str) -> CelebrationPlanListResponse:
 def get_plan(client_user_id: str, plan_id: str) -> CelebrationPlanResponse:
     row = planner_db.get_plan_for_client(plan_id, client_user_id)
     if not row:
-        raise NotFoundError("Plan not found.")
+        raise NotFoundError(planner_messages.PLAN_NOT_FOUND)
 
     brief_raw = row.get("brief") if isinstance(row.get("brief"), dict) else {}
     brief = CelebrationBrief.model_validate(brief_raw)
@@ -583,14 +584,14 @@ def replace_plan_item(
 ) -> CelebrationPlanResponse:
     row = planner_db.get_plan_for_client(plan_id, client_user_id)
     if not row:
-        raise NotFoundError("Plan not found.")
+        raise NotFoundError(planner_messages.PLAN_NOT_FOUND)
 
     brief_raw = row.get("brief") if isinstance(row.get("brief"), dict) else {}
     brief = CelebrationBrief.model_validate(brief_raw)
     items = row.get("items") if isinstance(row.get("items"), list) else []
     target = next((i for i in items if i.get("need_id") == need_id), None)
     if not target:
-        raise NotFoundError("That plan item was not found.")
+        raise NotFoundError(planner_messages.PLAN_ITEM_NOT_FOUND)
 
     exclude: set[str] = set()
     if exclude_vendor_user_id:
@@ -643,7 +644,7 @@ def replace_plan_item(
         breakdown=breakdown,
     )
     if rec.primary is None:
-        raise ValidationError(empty_reason or "No more alternatives for this category.")
+        raise ValidationError(empty_reason or planner_messages.NO_MORE_ALTERNATIVES)
 
     # Rebuild costs for budget patch
     updated_items = []
@@ -725,7 +726,7 @@ def replace_plan_item(
 def archive_plan(client_user_id: str, plan_id: str) -> ArchivePlanResponse:
     row = planner_db.archive_plan(plan_id, client_user_id)
     if not row:
-        raise NotFoundError("Plan not found.")
+        raise NotFoundError(planner_messages.PLAN_NOT_FOUND)
     return ArchivePlanResponse(
         success=True,
         plan_id=str(row.get("id") or plan_id),

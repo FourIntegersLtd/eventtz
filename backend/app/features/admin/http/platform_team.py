@@ -17,8 +17,13 @@ from app.contracts.admin import (
     AdminTeamPatchBody,
     AdminTeamSendResetLinkResponse,
 )
+from app.features.admin.messages import (
+    ADMIN_NOT_FOUND,
+    AUDIT_ENTRY_NOT_FOUND,
+    NO_FIELDS_TO_UPDATE,
+)
 from app.features.admin.audit import get_admin_audit_log_entry, insert_admin_audit_log, list_admin_audit_log
-from app.features.admin.team_ops import (
+from app.features.admin.team_admin_commands import (
     delete_admin_team_member,
     invite_admin_colleague,
     list_admin_team,
@@ -52,7 +57,7 @@ def admin_invite_team_member(
         action="admin.invite",
         entity_type="user",
         entity_id=result.get("user_id"),
-        payload={
+        audit_event_details={
             "email": result.get("email"),
             "created": result.get("created"),
             "invite_link_sent": result.get("invite_link_sent"),
@@ -77,7 +82,7 @@ def admin_send_team_reset_link(
         action="admin.password_reset_sent",
         entity_type="user",
         entity_id=user_id,
-        payload={"email": result.get("email")},
+        audit_event_details={"email": result.get("email")},
     )
     return AdminTeamSendResetLinkResponse(**result)
 
@@ -98,7 +103,7 @@ def admin_delete_team_member(
         action="admin.team_delete",
         entity_type="user",
         entity_id=user_id,
-        payload={"email": result.get("email"), "deleted": result.get("deleted"), "demoted_to": result.get("demoted_to")},
+        audit_event_details={"email": result.get("email"), "deleted": result.get("deleted"), "demoted_to": result.get("demoted_to")},
     )
     return AdminTeamDeleteResponse(**result)
 
@@ -112,7 +117,7 @@ def admin_patch_team_member(
 ) -> AdminTeamMember:
     actor = require_super_admin(request, response)
     if not body.model_dump(exclude_unset=True):
-        raise HTTPException(status_code=400, detail="No fields to update")
+        raise HTTPException(status_code=400, detail=NO_FIELDS_TO_UPDATE)
     try:
         row = patch_admin_team_member(
             user_id,
@@ -123,13 +128,13 @@ def admin_patch_team_member(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     if not row:
-        raise HTTPException(status_code=404, detail="Admin not found")
+        raise HTTPException(status_code=404, detail=ADMIN_NOT_FOUND)
     insert_admin_audit_log(
         admin_user_id=str(actor.get("id") or ""),
         action="admin.team_patch",
         entity_type="user",
         entity_id=user_id,
-        payload=body.model_dump(exclude_unset=True),
+        audit_event_details=body.model_dump(exclude_unset=True),
     )
     return AdminTeamMember.model_validate(row)
 
@@ -160,5 +165,5 @@ def admin_audit_log_detail(
     require_admin(request, response)
     row = get_admin_audit_log_entry(entry_id)
     if not row:
-        raise HTTPException(status_code=404, detail="Audit entry not found")
+        raise HTTPException(status_code=404, detail=AUDIT_ENTRY_NOT_FOUND)
     return AdminAuditLogDetailResponse(success=True, entry=AdminAuditLogItem.model_validate(row))

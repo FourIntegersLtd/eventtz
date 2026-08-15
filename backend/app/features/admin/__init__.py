@@ -1,6 +1,6 @@
 """Admin console services: dashboard, bookings, financials, clients, disputes, reviews, chat."""
 
-from app.features.admin.booking_ops import (
+from app.features.admin.booking_admin_commands import (
     get_booking_detail_for_admin,
     list_bookings_for_admin,
     patch_booking_payment_fields,
@@ -9,20 +9,20 @@ from app.features.admin.chat_lookup import (
     get_conversation_admin_meta,
     get_conversation_messages_admin,
 )
-from app.features.admin.client_ops import list_client_user_ids_for_broadcast, list_clients_for_admin, set_client_suspended
+from app.features.admin.client_admin_commands import list_client_user_ids_for_broadcast, list_clients_for_admin, set_client_suspended
 from app.features.admin.dashboard_metrics import get_admin_dashboard_metrics
 from app.features.admin.dashboard_queries import (
     financials_export_csv_bytes,
     get_admin_dashboard_summary,
     get_financials_summary,
 )
-from app.features.admin.dispute_ops import (
+from app.features.admin.dispute_admin_commands import (
     create_dispute_case,
     enrich_dispute_row,
     list_disputes_for_admin,
     patch_dispute_case,
 )
-from app.features.admin.review_ops import get_review_for_admin, list_reviews_for_admin, set_review_hidden
+from app.features.admin.review_admin_commands import get_review_for_admin, list_reviews_for_admin, set_review_hidden
 
 __all__ = [
     "create_dispute_case",

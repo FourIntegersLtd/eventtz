@@ -9,7 +9,7 @@ from typing import Any, Literal
 import stripe
 
 from app.core.config import get_settings
-from app.core.db import get_db as get_client
+from app.core.db import get_db
 from app.core.logging import get_logger
 from app.features.bookings.completion_rules import (
     compute_payout_auto_release_at,
@@ -25,6 +25,31 @@ from app.features.bookings.payments import (
     refund_booking_on_cancel,
     touch_booking_completion_side_effects,
 )
+from app.features.admin.messages import (
+    BOOKING_MARK_PAID_FAILED,
+    BOOKING_MUST_BE_ACCEPTED_PAYOUT,
+    BOOKING_NOT_FOUND_DOT,
+    CHECKOUT_SESSION_NOT_FOUND,
+    COULD_NOT_CANCEL_BOOKING,
+    COULD_NOT_COMPLETE_CANCELLATION,
+    INTERNAL_REASON_REQUIRED,
+    INVALID_BOOKING_ID,
+    NOT_ACCEPTED_REFUNDED_STATE,
+    NO_CHECKOUT_OR_PI_TO_SYNC,
+    ONLY_ACCEPTED_MARK_COMPLETE,
+    ONLY_ACCEPTED_MARK_PAID,
+    ONLY_PAID_PAYOUT_RELEASE,
+    ONLY_PENDING_ACCEPTED_CANCEL,
+    ONLY_REFUNDED_COMPLETE_CANCEL,
+    ONLY_UNPAID_PENDING_RESET,
+    OPEN_DISPUTE_BLOCKS_PAYOUT,
+    PAYMENT_INTENT_BOOKING_MISMATCH,
+    PAYMENT_INTENT_NOT_SUCCEEDED,
+    PAYMENT_INTENT_NO_CONFIRMED_AMOUNT,
+    PAYMENT_REQUIRED_MARK_COMPLETE,
+    PAYOUT_NOT_RELEASED,
+    PAYOUT_RELEASE_ELIGIBILITY,
+)
 from app.features.bookings.status import _cancel_audit_fields, _guard_cancel_money_state
 from app.features.payments import stripe as stripe_module
 
@@ -35,11 +60,11 @@ def _load_booking_row(booking_id: str) -> dict[str, Any]:
     try:
         uuid.UUID(booking_id)
     except ValueError as e:
-        raise ValueError("Invalid booking id.") from e
-    res = get_client().table("booking_requests").select("*").eq("id", booking_id).limit(1).execute()
+        raise ValueError(INVALID_BOOKING_ID) from e
+    res = get_db().table("booking_requests").select("*").eq("id", booking_id).limit(1).execute()
     rows = getattr(res, "data", None) or []
     if not rows or not isinstance(rows[0], dict):
-        raise ValueError("Booking not found.")
+        raise ValueError(BOOKING_NOT_FOUND_DOT)
     return rows[0]
 
 
@@ -49,13 +74,11 @@ def _now_iso() -> str:
 
 def admin_clear_checkout_session(booking_id: str) -> dict[str, Any]:
     """Clear stale checkout session and return booking to unpaid."""
-    if get_settings().local_auth_mode:
-        raise ValueError("Not available in local auth mode.")
     row = _load_booking_row(booking_id)
     payment_status = str(row.get("payment_status") or "unpaid")
     if payment_status not in ("pending", "unpaid"):
-        raise ValueError("Only unpaid or pending checkout bookings can be reset.")
-    get_client().table("booking_requests").update(
+        raise ValueError(ONLY_UNPAID_PENDING_RESET)
+    get_db().table("booking_requests").update(
         {
             "stripe_checkout_session_id": None,
             "payment_status": "unpaid",
@@ -68,16 +91,16 @@ def _mark_paid_from_payment_intent(row: dict[str, Any], pi_dict: dict[str, Any])
     booking_id = str(row.get("id") or "")
     pi_status = str(pi_dict.get("status") or "").lower()
     if pi_status not in ("succeeded", "requires_capture"):
-        raise ValueError("Payment intent is not in a succeeded state.")
+        raise ValueError(PAYMENT_INTENT_NOT_SUCCEEDED)
 
     metadata = pi_dict.get("metadata") or {}
     meta_booking = str(metadata.get("booking_id") or "").strip()
     if meta_booking and meta_booking != booking_id:
-        raise ValueError("Payment intent does not match this booking.")
+        raise ValueError(PAYMENT_INTENT_BOOKING_MISMATCH)
 
     amount_received = pi_dict.get("amount_received") or pi_dict.get("amount")
     if not isinstance(amount_received, (int, float)) or float(amount_received) <= 0:
-        raise ValueError("Payment intent has no confirmed amount.")
+        raise ValueError(PAYMENT_INTENT_NO_CONFIRMED_AMOUNT)
 
     payment_intent_id = str(pi_dict.get("id") or "").strip()
     _, charge_id = _payment_fields_from_checkout_session({"payment_intent": pi_dict})
@@ -97,7 +120,7 @@ def _mark_paid_from_payment_intent(row: dict[str, Any], pi_dict: dict[str, Any])
         platform_fee_gbp = None
 
     upd = (
-        get_client()
+        get_db()
         .table("booking_requests")
         .update(
             {
@@ -121,16 +144,13 @@ def _mark_paid_from_payment_intent(row: dict[str, Any], pi_dict: dict[str, Any])
 
 def admin_sync_payment_for_booking(booking_id: str) -> dict[str, Any]:
     """Verify Stripe checkout session or payment intent and mark booking paid."""
-    if get_settings().local_auth_mode:
-        raise ValueError("Not available in local auth mode.")
-
     row = _load_booking_row(booking_id)
     payment_status = str(row.get("payment_status") or "unpaid")
     if payment_status in ("paid", "payout_released", "refunded", "partially_refunded"):
         return row
 
     if str(row.get("status") or "") != "accepted":
-        raise ValueError("Only accepted bookings can be marked paid.")
+        raise ValueError(ONLY_ACCEPTED_MARK_PAID)
 
     session_id = str(row.get("stripe_checkout_session_id") or "").strip()
     if session_id:
@@ -140,9 +160,7 @@ def admin_sync_payment_for_booking(booking_id: str) -> dict[str, Any]:
             code = str(getattr(e, "code", "") or "")
             if code == "resource_missing" or "checkout.session" in str(e).lower():
                 admin_clear_checkout_session(booking_id)
-                raise ValueError(
-                    "Checkout session not found in Stripe. Checkout was reset - verify charge manually.",
-                ) from e
+                raise ValueError(CHECKOUT_SESSION_NOT_FOUND) from e
             raise
         session = stripe_module.stripe_object_to_dict(session_raw)
         if str(session.get("payment_status") or "") == "paid":
@@ -153,12 +171,12 @@ def admin_sync_payment_for_booking(booking_id: str) -> dict[str, Any]:
 
     pi_id = str(row.get("stripe_payment_intent_id") or "").strip()
     if not pi_id:
-        raise ValueError("No checkout session or payment intent on file to sync.")
+        raise ValueError(NO_CHECKOUT_OR_PI_TO_SYNC)
 
     pi_raw = stripe_module.retrieve_payment_intent(pi_id)
     pi_dict = pi_raw if isinstance(pi_raw, dict) else stripe_module.stripe_object_to_dict(pi_raw)
     if not _mark_paid_from_payment_intent(row, pi_dict):
-        raise ValueError("Booking could not be marked paid - check status and payment state.")
+        raise ValueError(BOOKING_MARK_PAID_FAILED)
     return _load_booking_row(booking_id)
 
 
@@ -167,11 +185,11 @@ def admin_retry_payout_for_booking(booking_id: str) -> dict[str, Any]:
     row = _load_booking_row(booking_id)
     payment_status = str(row.get("payment_status") or "")
     if payment_status != "paid":
-        raise ValueError("Only paid bookings can have payout released.")
+        raise ValueError(ONLY_PAID_PAYOUT_RELEASE)
     if str(row.get("status") or "") != "accepted":
-        raise ValueError("Booking must be accepted to release payout.")
+        raise ValueError(BOOKING_MUST_BE_ACCEPTED_PAYOUT)
     if has_active_dispute_for_booking(booking_id):
-        raise ValueError("Open dispute blocks payout release.")
+        raise ValueError(OPEN_DISPUTE_BLOCKS_PAYOUT)
 
     client_conf = bool(row.get("client_completion_confirmed_at"))
     vendor_conf = bool(row.get("vendor_completion_confirmed_at"))
@@ -182,18 +200,14 @@ def admin_retry_payout_for_booking(booking_id: str) -> dict[str, Any]:
         and datetime.now(timezone.utc) >= release_at,
     )
     if not (client_conf and vendor_conf) and not auto_due:
-        raise ValueError(
-            "Payout can only be released when both parties confirmed or auto-release is due.",
-        )
+        raise ValueError(PAYOUT_RELEASE_ELIGIBILITY)
 
     result = admin_release_payout_for_booking(booking_id)
     if result is None:
-        raise ValueError("Booking not found.")
+        raise ValueError(BOOKING_NOT_FOUND_DOT)
     refreshed = _load_booking_row(booking_id)
     if str(refreshed.get("payment_status") or "") != "payout_released":
-        raise ValueError(
-            "Payout was not released - vendor Stripe account may not be ready or transfer failed.",
-        )
+        raise ValueError(PAYOUT_NOT_RELEASED)
     return refreshed
 
 
@@ -201,16 +215,16 @@ def admin_complete_cancellation(booking_id: str) -> dict[str, Any]:
     """Flip status to cancelled when payment is already refunded."""
     row = _load_booking_row(booking_id)
     if str(row.get("payment_status") or "") != "refunded":
-        raise ValueError("Only refunded bookings can be completed as cancelled.")
+        raise ValueError(ONLY_REFUNDED_COMPLETE_CANCEL)
     if str(row.get("status") or "") != "accepted":
-        raise ValueError("Booking is not in accepted + refunded state.")
+        raise ValueError(NOT_ACCEPTED_REFUNDED_STATE)
 
     cancelled_by = str(row.get("cancelled_by") or "client")
     if cancelled_by not in ("client", "vendor"):
         cancelled_by = "client"
 
     upd = (
-        get_client()
+        get_db()
         .table("booking_requests")
         .update({"status": "cancelled", **_cancel_audit_fields(cancelled_by)})
         .eq("id", booking_id)
@@ -219,7 +233,7 @@ def admin_complete_cancellation(booking_id: str) -> dict[str, Any]:
         .execute()
     )
     if not getattr(upd, "data", None):
-        raise ValueError("Could not complete cancellation.")
+        raise ValueError(COULD_NOT_COMPLETE_CANCELLATION)
     return _load_booking_row(booking_id)
 
 
@@ -231,7 +245,7 @@ def admin_cancel_booking_on_behalf(
 ) -> dict[str, Any]:
     """Cancel and refund (if paid) on behalf of a party."""
     if not reason.strip():
-        raise ValueError("Internal reason is required.")
+        raise ValueError(INTERNAL_REASON_REQUIRED)
 
     row = _load_booking_row(booking_id)
     status = str(row.get("status") or "")
@@ -240,7 +254,7 @@ def admin_cancel_booking_on_behalf(
     if status == "completed":
         _guard_cancel_money_state(booking_id, status=status, payment_status=payment_status)
     if status not in ("pending", "accepted"):
-        raise ValueError("Only pending or accepted bookings can be cancelled.")
+        raise ValueError(ONLY_PENDING_ACCEPTED_CANCEL)
 
     _guard_cancel_money_state(booking_id, status=status, payment_status=payment_status)
 
@@ -250,7 +264,7 @@ def admin_cancel_booking_on_behalf(
         return admin_complete_cancellation(booking_id)
 
     upd = (
-        get_client()
+        get_db()
         .table("booking_requests")
         .update({"status": "cancelled", **_cancel_audit_fields(party)})
         .eq("id", booking_id)
@@ -258,7 +272,7 @@ def admin_cancel_booking_on_behalf(
         .execute()
     )
     if not getattr(upd, "data", None):
-        raise ValueError("Could not cancel booking.")
+        raise ValueError(COULD_NOT_CANCEL_BOOKING)
     return _load_booking_row(booking_id)
 
 
@@ -270,9 +284,9 @@ def admin_confirm_completion_for_party(
     """Mark client or vendor completion confirmed on behalf of support."""
     row = _load_booking_row(booking_id)
     if str(row.get("status") or "") != "accepted":
-        raise ValueError("Only accepted bookings can be marked complete.")
+        raise ValueError(ONLY_ACCEPTED_MARK_COMPLETE)
     if str(row.get("payment_status") or "") != "paid":
-        raise ValueError("Payment must be completed before marking complete.")
+        raise ValueError(PAYMENT_REQUIRED_MARK_COMPLETE)
 
     ts_col = "client_completion_confirmed_at" if party == "client" else "vendor_completion_confirmed_at"
     other_ts_col = "vendor_completion_confirmed_at" if party == "client" else "client_completion_confirmed_at"
@@ -284,7 +298,7 @@ def admin_confirm_completion_for_party(
         return _serialize_completion_state(row)
 
     upd = (
-        get_client()
+        get_db()
         .table("booking_requests")
         .update({ts_col: _now_iso()})
         .eq("id", booking_id)
@@ -314,5 +328,5 @@ def admin_run_booking_maintenance(booking_id: str) -> dict[str, Any]:
 def admin_set_support_hold(booking_id: str, *, hold: bool) -> dict[str, Any]:
     """Pause or resume automatic payout release."""
     _load_booking_row(booking_id)
-    get_client().table("booking_requests").update({"support_hold": hold}).eq("id", booking_id).execute()
+    get_db().table("booking_requests").update({"support_hold": hold}).eq("id", booking_id).execute()
     return _load_booking_row(booking_id)

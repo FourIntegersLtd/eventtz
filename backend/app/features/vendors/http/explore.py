@@ -25,6 +25,7 @@ from app.features.vendors.moderation import (
     list_approved_vendors_for_explore,
 )
 from app.features.vendors.markets import normalize_country_code
+from app.features.vendors import messages as vendor_messages
 
 from app.features.vendors.search import search_approved_vendors
 
@@ -60,17 +61,17 @@ def get_explore_vendor_by_id(vendor_user_id: str) -> ExploreVendorSingleResponse
     try:
         uuid.UUID(vendor_user_id)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail="We couldn't find that vendor.") from e
+        raise HTTPException(status_code=400, detail=vendor_messages.VENDOR_NOT_FOUND_INVALID_ID) from e
 
     row = get_approved_vendor_for_explore_by_id(vendor_user_id)
     if not row:
         logger.info("GET /vendors/explore/vendor/%s not found", vendor_user_id)
-        raise HTTPException(status_code=404, detail="Vendor not found or not listed.")
+        raise HTTPException(status_code=404, detail=vendor_messages.VENDOR_NOT_FOUND_OR_NOT_LISTED)
 
     merged = merge_review_stats_into_vendor_rows([row])
     merged = merge_public_metrics_into_vendor_rows(merged)
     if not merged:
-        raise HTTPException(status_code=404, detail="Vendor not found or not listed.")
+        raise HTTPException(status_code=404, detail=vendor_messages.VENDOR_NOT_FOUND_OR_NOT_LISTED)
     r0 = merged[0]
     try:
         from app.features.analytics.events import record_marketplace_event
@@ -92,7 +93,7 @@ def get_explore_vendor_by_id(vendor_user_id: str) -> ExploreVendorSingleResponse
         email=r0.get("email"),
         status=r0.get("status") or "draft",
         approval_status=r0.get("approval_status") or "pending",
-        payload=r0.get("payload") if isinstance(r0.get("payload"), dict) else {},
+        profile_form_data=r0.get("payload") if isinstance(r0.get("payload"), dict) else {},
         updated_at=str(r0.get("updated_at")) if r0.get("updated_at") else None,
         review_average=r0.get("review_average"),
         review_count=int(r0.get("review_count") or 0),
@@ -198,7 +199,7 @@ def get_vendor_public_reviews(vendor_user_id: str) -> VendorPublicReviewsRespons
     try:
         uuid.UUID(vendor_user_id)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail="We couldn't find that vendor.") from e
+        raise HTTPException(status_code=400, detail=vendor_messages.VENDOR_NOT_FOUND_INVALID_ID) from e
 
     raw_rows, summary = list_public_reviews_for_vendor(vendor_user_id, limit=50)
     items = [

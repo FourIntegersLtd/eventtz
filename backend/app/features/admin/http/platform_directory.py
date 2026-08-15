@@ -14,6 +14,7 @@ from app.contracts.admin import (
     AdminDirectorySearchResponse,
     AdminDirectoryUserRow,
 )
+from app.features.admin.messages import SUSPENSION_UPDATE_FAILED
 from app.features.admin.audit import insert_admin_audit_log
 from app.features.admin import list_clients_for_admin, set_client_suspended
 from app.features.admin.directory_search import search_directory_users_for_admin
@@ -82,13 +83,13 @@ def admin_set_client_suspended(
     if not ok:
         raise HTTPException(
             status_code=400,
-            detail="Could not update suspension (migration or user missing).",
+            detail=SUSPENSION_UPDATE_FAILED,
         )
     insert_admin_audit_log(
         admin_user_id=str(user.get("id") or ""),
         action="client.suspend" if body.suspended else "client.unsuspend",
         entity_type="user",
         entity_id=user_id,
-        payload={"suspended": body.suspended},
+        audit_event_details={"suspended": body.suspended},
     )
     return {"success": True}

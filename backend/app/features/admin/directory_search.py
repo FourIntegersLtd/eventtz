@@ -6,8 +6,8 @@ from typing import Any, Literal
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.db import get_db as get_client
-from app.features.auth.lookup import vendor_display_names_by_id
+from app.core.db import get_db
+from app.features.auth.user_vendor_display_lookup import vendor_display_names_by_id
 
 logger = get_logger(__name__)
 
@@ -26,10 +26,7 @@ def search_directory_users_for_admin(
         return []
     lim = max(1, min(limit, 50))
     want = set(kinds or ["client", "vendor"])
-    if get_settings().local_auth_mode:
-        return []
-
-    client = get_client()
+    client = get_db()
     out: list[dict[str, Any]] = []
     pattern = f"%{term}%"
     per_kind = max(lim, 1)

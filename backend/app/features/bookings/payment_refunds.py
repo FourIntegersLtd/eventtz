@@ -5,15 +5,16 @@ from __future__ import annotations
 from typing import Any
 
 from app.core.config import get_settings
-from app.features.bookings.payment_shared import (
-    _notify_pair,
-    get_client,
+from app.core.db import get_db
+from app.features.bookings.booking_payment_helpers import (
+    _notify_pair, 
     logger,
 )
 from app.features.email.dispatch import (
     dispatch_booking_notification,
     send_admin_refund_failed_email,
 )
+from app.features.bookings import messages as booking_messages
 from app.features.payments import stripe as stripe_service
 
 
@@ -32,10 +33,10 @@ def _refund_paid_booking_row(
     """
     booking_id = str(row.get("id") or "")
     if str(row.get("payment_status") or "") != "paid":
-        raise ValueError("Only paid bookings can be refunded.")
+        raise ValueError(booking_messages.ONLY_PAID_CAN_REFUND)
     pi_id = row.get("stripe_payment_intent_id")
     if not pi_id:
-        raise ValueError("No payment on record for this booking.")
+        raise ValueError(booking_messages.NO_PAYMENT_ON_RECORD)
 
     try:
         stripe_service.create_refund(
@@ -47,11 +48,11 @@ def _refund_paid_booking_row(
     except Exception as e:
         logger.exception("Stripe refund failed booking=%s", booking_id)
         send_admin_refund_failed_email(booking_id=booking_id, error_hint=str(e)[:500])
-        raise ValueError("We couldn't process the refund right now. Please try again shortly.") from e
+        raise ValueError(booking_messages.REFUND_FAILED) from e
 
     new_status = "partially_refunded" if amount_gbp is not None else "refunded"
     upd = (
-        get_client()
+        get_db()
         .table("booking_requests")
         .update({"payment_status": new_status})
         .eq("id", booking_id)
@@ -60,7 +61,7 @@ def _refund_paid_booking_row(
     )
     updated = getattr(upd, "data", None) or []
     final_row = updated[0] if updated and isinstance(updated[0], dict) else {**row, "payment_status": new_status}
-    from app.features.bookings.funnel import mark_refunded
+    from app.features.bookings.booking_funnel_timestamps import mark_refunded
 
     mark_refunded(booking_id)
 
@@ -83,9 +84,7 @@ def refund_booking_on_cancel(booking_id: str, *, cancelled_by: str) -> dict[str,
     Raises ValueError when the refund fails - the caller must not cancel the
     booking in that case. Refund the money first, then change status.
     """
-    if get_settings().local_auth_mode:
-        return None
-    res = get_client().table("booking_requests").select("*").eq("id", booking_id).limit(1).execute()
+    res = get_db().table("booking_requests").select("*").eq("id", booking_id).limit(1).execute()
     rows = getattr(res, "data", None) or []
     if not rows or not isinstance(rows[0], dict):
         return None
@@ -102,9 +101,7 @@ def refund_booking_on_cancel(booking_id: str, *, cancelled_by: str) -> dict[str,
 
 def admin_refund_booking(booking_id: str, *, amount_gbp: float | None) -> dict[str, Any] | None:
     """Admin problem-report resolution: full refund (amount_gbp=None) or partial (amount_gbp set)."""
-    if get_settings().local_auth_mode:
-        return None
-    res = get_client().table("booking_requests").select("*").eq("id", booking_id).limit(1).execute()
+    res = get_db().table("booking_requests").select("*").eq("id", booking_id).limit(1).execute()
     rows = getattr(res, "data", None) or []
     if not rows or not isinstance(rows[0], dict):
         return None

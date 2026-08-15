@@ -5,18 +5,19 @@ from __future__ import annotations
 from typing import Any
 
 from app.core.config import get_settings
-from app.features.bookings.payment_shared import (
+from app.core.db import get_db
+from app.features.bookings.booking_payment_helpers import (
     _get_vendor_stripe_fields,
     _load_full_booking_row,
     _notify_pair,
-    _now_iso,
-    get_client,
+    _now_iso, 
     logger,
 )
 from app.features.email.dispatch import (
     dispatch_booking_notification,
     send_admin_payout_stuck_email,
 )
+from app.features.bookings import messages as booking_messages
 from app.features.bookings.completion_rules import both_parties_confirmed_awaiting_payout
 from app.features.payments import stripe as stripe_service
 
@@ -39,10 +40,10 @@ def _finalize_completion(row: dict[str, Any]) -> dict[str, Any]:
     # Reload from the database - list and dashboard views omit vendor_amount_gbp and other payment fields.
     full = _load_full_booking_row(booking_id)
     if full is None:
-        raise ValueError("Booking not found.")
+        raise ValueError(booking_messages.BOOKING_NOT_FOUND)
     row = full
 
-    db = get_client()
+    db = get_db()
     client_id = str(row.get("client_user_id") or "")
     vendor_id = str(row.get("vendor_user_id") or "")
     vendor_amount = row.get("vendor_amount_gbp")
@@ -84,7 +85,7 @@ def _finalize_completion(row: dict[str, Any]) -> dict[str, Any]:
             error_hint=hint,
         )
         raise ValueError(
-            "Payout amount is missing for this booking. Please contact support.",
+            booking_messages.PAYOUT_AMOUNT_MISSING,
         )
 
     source_charge = stripe_service.resolve_source_charge_id(
@@ -113,7 +114,7 @@ def _finalize_completion(row: dict[str, Any]) -> dict[str, Any]:
             vendor_user_id=vendor_id or None,
             error_hint=str(e)[:500],
         )
-        raise ValueError("We couldn't release the payout right now. Please try again shortly.") from e
+        raise ValueError(booking_messages.PAYOUT_RELEASE_FAILED) from e
 
     upd = (
         db.table("booking_requests")
@@ -168,9 +169,7 @@ def _finalize_completion(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def _confirm_completion(booking_id: str, *, actor: str, user_id: str) -> dict[str, Any] | None:
-    if get_settings().local_auth_mode:
-        return None
-    db = get_client()
+    db = get_db()
     id_col = "client_user_id" if actor == "client" else "vendor_user_id"
     res = (
         db.table("booking_requests")
@@ -186,9 +185,9 @@ def _confirm_completion(booking_id: str, *, actor: str, user_id: str) -> dict[st
     row = rows[0]
 
     if str(row.get("status") or "") != "accepted":
-        raise ValueError("Only accepted bookings can be marked complete.")
+        raise ValueError(booking_messages.ONLY_ACCEPTED_CAN_COMPLETE)
     if str(row.get("payment_status") or "") != "paid":
-        raise ValueError("Payment must be completed before this booking can be marked complete.")
+        raise ValueError(booking_messages.PAYMENT_REQUIRED_FOR_COMPLETE)
 
     ts_col = "client_completion_confirmed_at" if actor == "client" else "vendor_completion_confirmed_at"
     other_ts_col = "vendor_completion_confirmed_at" if actor == "client" else "client_completion_confirmed_at"
@@ -249,13 +248,11 @@ def confirm_completion_for_vendor(vendor_user_id: str, booking_id: str) -> dict[
 
 def admin_release_payout_for_booking(booking_id: str) -> dict[str, Any] | None:
     """Admin problem-report resolution: pay the vendor without waiting for both confirmations."""
-    if get_settings().local_auth_mode:
-        return None
-    res = get_client().table("booking_requests").select("*").eq("id", booking_id).limit(1).execute()
+    res = get_db().table("booking_requests").select("*").eq("id", booking_id).limit(1).execute()
     rows = getattr(res, "data", None) or []
     if not rows or not isinstance(rows[0], dict):
         return None
     row = rows[0]
     if str(row.get("payment_status") or "") != "paid":
-        raise ValueError("Only paid bookings can have their payout released.")
+        raise ValueError(booking_messages.ONLY_PAID_PAYOUT_RELEASE)
     return _finalize_completion(row)

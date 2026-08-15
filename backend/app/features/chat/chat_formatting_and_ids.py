@@ -8,15 +8,15 @@ from uuid import uuid4
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.db import get_db as get_client
+from app.core.db import get_db
+from app.features.chat import messages as chat_messages
 
 logger = get_logger(__name__)
 
 MAX_MESSAGE_LEN = 5000
-LOCAL_CONVERSATION_ID = "00000000-0000-4000-8000-000000000c01"
-SUPPORT_PEER_DISPLAY = "Eventtz Support"
+SUPPORT_PEER_DISPLAY = chat_messages.SUPPORT_PEER_DISPLAY
 SUPPORT_PEER_USER_ID = "eventtz-support"
-ADMIN_SENDER_DISPLAY = "Eventtz Admin"
+ADMIN_SENDER_DISPLAY = chat_messages.ADMIN_SENDER_DISPLAY
 ADMIN_SENDER_USER_ID = "eventtz-admin"
 
 ConversationKind = Literal["dm", "support"]
@@ -51,8 +51,6 @@ def _role_in_conversation(row: dict[str, Any], user_id: str) -> str | None:
 
 
 def _count_unread_for_user(conv: dict[str, Any], user_id: str) -> int:
-    if get_settings().local_auth_mode:
-        return 0
     role = _role_in_conversation(conv, user_id)
     if not role:
         return 0
@@ -66,7 +64,7 @@ def _count_unread_for_user(conv: dict[str, Any], user_id: str) -> int:
     cid = _str_id(conv.get("id"))
     try:
         q = (
-            get_client()
+            get_db()
             .table("messages")
             .select("id")
             .eq("conversation_id", cid)
@@ -83,8 +81,6 @@ def _count_unread_for_user(conv: dict[str, Any], user_id: str) -> int:
 
 
 def _count_unread_for_admin(conv: dict[str, Any]) -> int:
-    if get_settings().local_auth_mode:
-        return 0
     if _conversation_kind(conv) != "support":
         return 0
     lr = conv.get("admin_last_read_at")
@@ -92,7 +88,7 @@ def _count_unread_for_admin(conv: dict[str, Any]) -> int:
     support_uid = _str_id(conv.get("support_user_id"))
     try:
         q = (
-            get_client()
+            get_db()
             .table("messages")
             .select("id")
             .eq("conversation_id", cid)
@@ -134,7 +130,7 @@ def _row_to_conversation_list_item(
     v = _str_id(row.get("vendor_user_id"))
     is_client = user_id == c
     peer = v if is_client else c
-    peer_display = peer_names.get(peer, "Unknown")
+    peer_display = peer_names.get(peer, chat_messages.PEER_UNKNOWN)
     unread = _count_unread_for_user(row, user_id)
     return {
         "id": _str_id(row.get("id")),
@@ -157,7 +153,7 @@ def _row_to_admin_support_item(row: dict[str, Any], user_labels: dict[str, str])
         "kind": "support",
         "support_user_id": support_uid,
         "peer_user_id": support_uid,
-        "peer_display_name": user_labels.get(support_uid, "User"),
+        "peer_display_name": user_labels.get(support_uid, chat_messages.USER_DISPLAY_FALLBACK),
         "created_at": row.get("created_at"),
         "last_message_at": row.get("last_message_at"),
         "unread_count": _count_unread_for_admin(row),
@@ -201,20 +197,11 @@ def insert_message(
     """Insert a message and update conversation last_message_at. No participant checks."""
     text = body.strip()
     if not text:
-        raise ValueError("Message cannot be empty.")
+        raise ValueError(chat_messages.MESSAGE_EMPTY)
     if len(text) > MAX_MESSAGE_LEN:
-        raise ValueError(f"Message is too long (max {MAX_MESSAGE_LEN} characters).")
+        raise ValueError(chat_messages.message_too_long_detail(MAX_MESSAGE_LEN))
 
-    if get_settings().local_auth_mode:
-        return {
-            "id": str(uuid4()),
-            "sender_user_id": sender_user_id,
-            "body": text,
-            "created_at": _now_iso(),
-            "metadata": metadata,
-        }
-
-    client = get_client()
+    client = get_db()
     now = _now_iso()
     payload: dict[str, Any] = {
         "conversation_id": conversation_id,
@@ -234,14 +221,14 @@ def insert_message(
                 ins = client.table("messages").insert(payload).execute()
             except Exception as e2:
                 logger.exception("chat: insert message failed")
-                raise RuntimeError("Could not send message.") from e2
+                raise RuntimeError(chat_messages.SEND_MESSAGE_FAILED) from e2
         else:
             logger.exception("chat: insert message failed")
-            raise RuntimeError("Could not send message.") from e
+            raise RuntimeError(chat_messages.SEND_MESSAGE_FAILED) from e
 
     ins_data = getattr(ins, "data", None) or []
     if not ins_data or not isinstance(ins_data[0], dict):
-        raise RuntimeError("Could not send message.")
+        raise RuntimeError(chat_messages.SEND_MESSAGE_FAILED)
     msg_row = ins_data[0]
     try:
         client.table("conversations").update({"last_message_at": now}).eq("id", conversation_id).execute()

@@ -24,7 +24,7 @@ def _vendor_payload(**overrides: object) -> dict:
                 "id": "pkg-gold",
                 "title": "Gold package",
                 "price": "500",
-                "details": "Full coverage",
+                "details": "Full coverage for your event including setup, service, and breakdown on the day.",
                 "duration": "8 hr",
             },
         ],

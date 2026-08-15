@@ -19,6 +19,7 @@ from app.contracts.vendor_copilot import (
 )
 from app.core.logging import get_logger
 from app.features.auth.http.dependencies import require_vendor_dep
+from app.features.vendor_copilot import messages as copilot_messages
 from app.features.vendor_copilot.assistant import ask_copilot
 from app.features.vendor_copilot.brief import build_daily_brief
 from app.features.vendor_copilot.context import build_vendor_context
@@ -71,7 +72,7 @@ def get_daily_brief(
         logger.exception("vendor_copilot brief failed user=%s", uid)
         raise HTTPException(
             status_code=503,
-            detail="Growth brief is unavailable right now. Please try again later.",
+            detail=copilot_messages.GROWTH_BRIEF_UNAVAILABLE,
         ) from e
 
 
@@ -83,13 +84,13 @@ def post_copilot_ask(
     uid = str(vendor.get("id") or "")
     q = (body.question or "").strip()
     if not q:
-        raise HTTPException(status_code=400, detail="Question is required.")
+        raise HTTPException(status_code=400, detail=copilot_messages.QUESTION_REQUIRED)
     try:
         return ask_copilot(
             vendor_user_id=uid,
             question=q,
             history=body.history,
-            booking_id=body.booking_id,
+            booking_request_id=body.booking_request_id,
         )
     except HTTPException:
         raise
@@ -97,17 +98,17 @@ def post_copilot_ask(
         logger.exception("vendor_copilot ask failed user=%s", uid)
         raise HTTPException(
             status_code=503,
-            detail="Abba is unavailable right now. Please try again later.",
+            detail=copilot_messages.COPILOT_UNAVAILABLE,
         ) from e
 
 
 @router.post("/review-packages", response_model=CopilotReviewPackagesResponse)
-def post_review_listing_packages(
+def post_copilot_review_listing_packages(
     body: CopilotReviewPackagesBody,
     vendor: Annotated[dict[str, Any], Depends(require_vendor_dep)],
 ) -> CopilotReviewPackagesResponse:
     _ = vendor
-    result = review_listing_packages(payload=dict(body.payload or {}))
+    result = review_listing_packages(payload=dict(body.profile_form_data or {}))
     return CopilotReviewPackagesResponse(
         overall_ok=bool(result.get("overall_ok", True)),
         summary=str(result.get("summary") or ""),
@@ -124,16 +125,16 @@ def post_draft_reply(
     try:
         result = draft_enquiry_reply(
             vendor_user_id=uid,
-            booking_id=body.booking_id.strip(),
+            booking_request_id=body.booking_request_id.strip(),
             intent=body.intent,
         )
     except HTTPException:
         raise
     except Exception as e:
-        logger.exception("vendor_copilot draft-reply failed user=%s booking=%s", uid, body.booking_id)
+        logger.exception("vendor_copilot draft-reply failed user=%s booking=%s", uid, body.booking_request_id)
         raise HTTPException(
             status_code=503,
-            detail="Could not draft a reply right now. Please try again later.",
+            detail=copilot_messages.DRAFT_REPLY_UNAVAILABLE,
         ) from e
     return CopilotDraftReplyResponse(
         draft_message=str(result.get("draft_message") or ""),

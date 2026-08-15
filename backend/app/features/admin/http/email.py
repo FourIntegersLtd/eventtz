@@ -10,6 +10,7 @@ from app.contracts.admin_email import (
     AdminEmailTestSendBody,
     AdminEmailTestSendResponse,
 )
+from app.features.admin.messages import EMAIL_NOT_SENT_CHECK_SERVER_LOGS, email_sent_to_detail
 from app.features.admin.audit import insert_admin_audit_log
 from app.features.admin.email_test import list_email_test_templates, send_email_test
 from app.features.auth.http.guards import require_super_admin
@@ -57,7 +58,7 @@ def admin_email_test_send(
         action="email.test_send",
         entity_type="email_template",
         entity_id=body.template_id.strip(),
-        payload={
+        audit_event_details={
             "to_email": body.to_email.strip().lower(),
             "delivered": delivered,
         },
@@ -67,11 +68,11 @@ def admin_email_test_send(
         return AdminEmailTestSendResponse(
             success=False,
             delivered=False,
-            message=message or "Email was not sent. Check RESEND_API_KEY and server logs.",
+            message=message or EMAIL_NOT_SENT_CHECK_SERVER_LOGS,
         )
 
     return AdminEmailTestSendResponse(
         success=True,
         delivered=True,
-        message=f"Sent to {body.to_email.strip().lower()}.",
+        message=email_sent_to_detail(body.to_email.strip().lower()),
     )

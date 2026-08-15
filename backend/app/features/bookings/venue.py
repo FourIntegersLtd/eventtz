@@ -5,9 +5,10 @@ from __future__ import annotations
 from typing import Any
 
 from app.core.config import get_settings
-from app.core.db import one_row
-from app.core.db import get_db as get_client
+from app.core.db import first_row_from_query_result
+from app.core.db import get_db
 from app.features.bookings.notifications import _notify_booking_changed
+from app.features.bookings import messages as booking_messages
 from app.features.bookings.queries import get_booking_request_for_client
 
 
@@ -19,9 +20,7 @@ def update_booking_venue_for_client(
     event_address: str,
 ) -> dict[str, Any] | None:
     """Set venue address on an accepted, unpaid booking before payment."""
-    if get_settings().local_auth_mode:
-        return None
-    client = get_client()
+    client = get_db()
     res = (
         client.table("booking_requests")
         .select("id,status,payment_status,vendor_user_id")
@@ -30,16 +29,16 @@ def update_booking_venue_for_client(
         .limit(1)
         .execute()
     )
-    row = one_row(res)
+    row = first_row_from_query_result(res)
     if row is None:
         return None
     if str(row.get("status") or "") != "accepted":
-        raise ValueError("Venue can only be updated on accepted bookings.")
+        raise ValueError(booking_messages.VENUE_ACCEPTED_ONLY)
     if str(row.get("payment_status") or "unpaid") not in ("unpaid", "pending"):
-        raise ValueError("This booking has already been paid.")
+        raise ValueError(booking_messages.BOOKING_ALREADY_PAID)
     addr = event_address.strip()
     if len(addr) < 3:
-        raise ValueError("Enter the venue address.")
+        raise ValueError(booking_messages.ENTER_VENUE_ADDRESS)
     patch: dict[str, Any] = {"event_address": addr}
     if event_postcode:
         pc = " ".join(event_postcode.strip().split())

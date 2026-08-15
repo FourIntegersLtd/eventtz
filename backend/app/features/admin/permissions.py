@@ -6,14 +6,19 @@ from typing import Any
 
 from fastapi import HTTPException
 
+from app.features.admin.messages import (
+    BROADCAST_SUPPORT_SUPER_ADMIN_ONLY,
+    DISPUTE_FINANCIAL_RESOLUTION_SUPER_ADMIN_ONLY,
+    DISPUTE_REFUND_AMOUNT_SUPER_ADMIN_ONLY,
+    LISTING_OVERRIDE_SUPER_ADMIN_ONLY,
+    SUPER_ADMIN_ONLY,
+)
 from app.features.auth.accounts import is_super_admin_user
-
-SUPER_ADMIN_ONLY_DETAIL = "Only super admins can perform this action."
 
 
 def assert_super_admin(user: dict[str, Any], *, detail: str | None = None) -> None:
     if not is_super_admin_user(user):
-        raise HTTPException(status_code=403, detail=detail or SUPER_ADMIN_ONLY_DETAIL)
+        raise HTTPException(status_code=403, detail=detail or SUPER_ADMIN_ONLY)
 
 
 def validate_listing_override_permissions(
@@ -26,7 +31,7 @@ def validate_listing_override_permissions(
     if listing_override in ("visible", "hidden"):
         raise HTTPException(
             status_code=403,
-            detail="Only super admins can force a vendor listing visible or hidden.",
+            detail=LISTING_OVERRIDE_SUPER_ADMIN_ONLY,
         )
 
 
@@ -43,7 +48,7 @@ def validate_admin_message_send_permissions(
         return
     raise HTTPException(
         status_code=403,
-        detail="Only super admins can broadcast support messages to all clients, vendors, or users.",
+        detail=BROADCAST_SUPPORT_SUPER_ADMIN_ONLY,
     )
 
 
@@ -57,10 +62,10 @@ def validate_dispute_patch_permissions(
     if patch_fields.get("resolution_action") is not None:
         raise HTTPException(
             status_code=403,
-            detail="Only super admins can resolve disputes with a financial outcome.",
+            detail=DISPUTE_FINANCIAL_RESOLUTION_SUPER_ADMIN_ONLY,
         )
     if patch_fields.get("refund_amount_gbp") is not None:
         raise HTTPException(
             status_code=403,
-            detail="Only super admins can set refund amounts on disputes.",
+            detail=DISPUTE_REFUND_AMOUNT_SUPER_ADMIN_ONLY,
         )

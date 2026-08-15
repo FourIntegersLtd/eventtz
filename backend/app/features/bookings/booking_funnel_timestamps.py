@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from app.core.db import get_db as get_client
+from app.core.db import get_db
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -53,7 +53,7 @@ def mark_vendor_first_response(
     if not booking_id:
         return
     try:
-        db = get_client()
+        db = get_db()
         now = at or datetime.now(timezone.utc)
         row_created = created_at
         if row_created is None:
@@ -87,7 +87,7 @@ def patch_booking_funnel(booking_id: str, fields: dict[str, Any]) -> None:
     if not booking_id or not fields:
         return
     try:
-        get_client().table("booking_requests").update(fields).eq("id", booking_id).execute()
+        get_db().table("booking_requests").update(fields).eq("id", booking_id).execute()
     except Exception:
         logger.exception("funnel: patch failed booking=%s fields=%s", booking_id, list(fields))
 
@@ -145,7 +145,7 @@ def mark_payment_requested(booking_id: str) -> None:
     if not booking_id:
         return
     try:
-        get_client().table("booking_requests").update(
+        get_db().table("booking_requests").update(
             {"payment_requested_at": _now_iso()},
         ).eq("id", booking_id).is_("payment_requested_at", "null").execute()
     except Exception:
@@ -156,7 +156,7 @@ def mark_completed(booking_id: str) -> None:
     if not booking_id:
         return
     try:
-        get_client().table("booking_requests").update(
+        get_db().table("booking_requests").update(
             {"completed_at": _now_iso()},
         ).eq("id", booking_id).is_("completed_at", "null").execute()
     except Exception:
@@ -167,7 +167,7 @@ def mark_refunded(booking_id: str) -> None:
     if not booking_id:
         return
     try:
-        get_client().table("booking_requests").update(
+        get_db().table("booking_requests").update(
             {"refunded_at": _now_iso()},
         ).eq("id", booking_id).is_("refunded_at", "null").execute()
     except Exception:
@@ -179,7 +179,7 @@ def mark_customer_cancelled_failure(booking_id: str) -> None:
         return
     try:
         now = _now_iso()
-        get_client().table("booking_requests").update(
+        get_db().table("booking_requests").update(
             {
                 "failure_reason": FAILURE_CUSTOMER_CANCELLED,
                 "failure_noted_at": now,
@@ -198,7 +198,7 @@ def mark_stale_enquiries_no_response(*, sla_hours: int) -> int:
     if sla_hours <= 0:
         return 0
     try:
-        db = get_client()
+        db = get_db()
         cutoff = datetime.now(timezone.utc).timestamp() - (sla_hours * 3600)
         cutoff_iso = datetime.fromtimestamp(cutoff, tz=timezone.utc).isoformat()
         res = (

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from app.features.auth.lookup import _friendly_name_from_email
+from app.features.auth.user_vendor_display_lookup import _friendly_name_from_email
 from app.features.settings.client_onboarding import (
     get_client_onboarding,
     update_client_onboarding,
@@ -33,9 +33,8 @@ def _mock_users_table(mock_get_client, row):
 
 
 @patch("app.features.settings.client_onboarding.get_settings")
-@patch("app.features.settings.client_onboarding.get_client")
+@patch("app.features.settings.client_onboarding.get_db")
 def test_onboarding_state_completed_when_timestamp_set(mock_get_client, mock_settings):
-    mock_settings.return_value.local_auth_mode = False
     _mock_users_table(
         mock_get_client,
         {"preferred_name": "Kenny", "client_onboarding_completed_at": "2026-07-13T00:00:00Z"},
@@ -45,9 +44,8 @@ def test_onboarding_state_completed_when_timestamp_set(mock_get_client, mock_set
 
 
 @patch("app.features.settings.client_onboarding.get_settings")
-@patch("app.features.settings.client_onboarding.get_client")
+@patch("app.features.settings.client_onboarding.get_db")
 def test_onboarding_state_incomplete_by_default(mock_get_client, mock_settings):
-    mock_settings.return_value.local_auth_mode = False
     _mock_users_table(
         mock_get_client,
         {"preferred_name": None, "client_onboarding_completed_at": None},
@@ -57,9 +55,8 @@ def test_onboarding_state_incomplete_by_default(mock_get_client, mock_settings):
 
 
 @patch("app.features.settings.client_onboarding.get_settings")
-@patch("app.features.settings.client_onboarding.get_client")
+@patch("app.features.settings.client_onboarding.get_db")
 def test_update_marks_completed_and_saves_name(mock_get_client, mock_settings):
-    mock_settings.return_value.local_auth_mode = False
     table = _mock_users_table(
         mock_get_client,
         {"preferred_name": "Kenny", "client_onboarding_completed_at": "2026-07-13T00:00:00Z"},

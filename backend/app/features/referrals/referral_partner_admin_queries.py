@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from app.core.db import get_db as get_client
+from app.core.db import get_db
 from app.features.referrals.partners import get_partner_by_id
 
 ShoutoutFilter = Literal["all", "pending", "completed"]
@@ -32,7 +32,7 @@ def list_partner_signups(
         return None, [], 0
 
     q = (
-        get_client()
+        get_db()
         .table("referral_attributions")
         .select("user_id, referral_slug, attributed_at, shoutout_completed, shoutout_completed_at", count="exact")
         .eq("referral_partner_id", partner_id)
@@ -54,13 +54,13 @@ def list_partner_signups(
     vendors_by_user: dict[str, dict[str, Any]] = {}
 
     if user_ids:
-        ures = get_client().table("users").select("id, email").in_("id", user_ids).execute()
+        ures = get_db().table("users").select("id, email").in_("id", user_ids).execute()
         for u in getattr(ures, "data", None) or []:
             if isinstance(u, dict) and u.get("id"):
                 users_by_id[str(u["id"])] = u
 
         vres = (
-            get_client()
+            get_db()
             .table("vendors")
             .select("user_id, status, approval_status, payload")
             .in_("user_id", user_ids)
@@ -84,7 +84,7 @@ def list_partner_signups(
                 "email": user.get("email"),
                 "business_name": _payload_str(payload, "businessName"),
                 "approval_status": vendor.get("approval_status"),
-                "profile_status": vendor.get("status"),
+                "onboarding_status": vendor.get("status"),
                 "attributed_at": row.get("attributed_at"),
                 "shoutout_completed": bool(row.get("shoutout_completed")),
                 "shoutout_completed_at": row.get("shoutout_completed_at"),
@@ -97,7 +97,7 @@ def list_partner_signups(
 
 def get_signup_row(user_id: str) -> dict[str, Any] | None:
     res = (
-        get_client()
+        get_db()
         .table("referral_attributions")
         .select("user_id, referral_partner_id, referral_slug, attributed_at, shoutout_completed, shoutout_completed_at")
         .eq("user_id", user_id)
@@ -109,11 +109,11 @@ def get_signup_row(user_id: str) -> dict[str, Any] | None:
         return None
     row = rows[0]
     uid = str(row.get("user_id") or "")
-    user_res = get_client().table("users").select("id, email").eq("id", uid).limit(1).execute()
+    user_res = get_db().table("users").select("id, email").eq("id", uid).limit(1).execute()
     user_rows = getattr(user_res, "data", None) or []
     user = user_rows[0] if user_rows and isinstance(user_rows[0], dict) else {}
     vendor_res = (
-        get_client()
+        get_db()
         .table("vendors")
         .select("user_id, status, approval_status, payload")
         .eq("user_id", uid)
@@ -128,7 +128,7 @@ def get_signup_row(user_id: str) -> dict[str, Any] | None:
         "email": user.get("email"),
         "business_name": _payload_str(payload, "businessName"),
         "approval_status": vendor.get("approval_status"),
-        "profile_status": vendor.get("status"),
+        "onboarding_status": vendor.get("status"),
         "attributed_at": row.get("attributed_at"),
         "shoutout_completed": bool(row.get("shoutout_completed")),
         "shoutout_completed_at": row.get("shoutout_completed_at"),

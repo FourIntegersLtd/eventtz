@@ -7,7 +7,7 @@ from typing import Any, Literal
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.db import apply_recent_first_order, get_db as get_client
+from app.core.db import apply_recent_first_order, get_db
 from app.features.realtime.sse import notify_user
 
 logger = get_logger(__name__)
@@ -47,11 +47,9 @@ def insert_booking_notification_if_absent(
     booking_id: str,
     kind: BookingNotifyKind,
 ) -> None:
-    """Safe to call again: one row per (booking_id, kind). Skips in local_auth_mode."""
-    if get_settings().local_auth_mode:
-        return
+    """Safe to call again: one row per (booking_id, kind)."""
     try:
-        client = get_client()
+        client = get_db()
         existing = (
             client.table("booking_notifications")
             .select("id")
@@ -92,10 +90,8 @@ def upsert_booking_notification(
     """
     Replace the notification row for (booking_id, kind) with a new body and unread state.
     """
-    if get_settings().local_auth_mode:
-        return
     try:
-        client = get_client()
+        client = get_db()
         client.table("booking_notifications").delete().eq("booking_id", booking_id).eq(
             "kind",
             kind,
@@ -120,11 +116,9 @@ def upsert_booking_notification(
 
 
 def count_unread_booking_notifications(user_id: str) -> int:
-    if get_settings().local_auth_mode:
-        return 0
     try:
         res = (
-            get_client()
+            get_db()
             .table("booking_notifications")
             .select("id")
             .eq("user_id", user_id)
@@ -139,11 +133,9 @@ def count_unread_booking_notifications(user_id: str) -> int:
 
 
 def mark_all_booking_notifications_read(user_id: str) -> None:
-    if get_settings().local_auth_mode:
-        return
     now = datetime.now(timezone.utc).isoformat()
     try:
-        get_client().table("booking_notifications").update({"read_at": now}).eq(
+        get_db().table("booking_notifications").update({"read_at": now}).eq(
             "user_id",
             user_id,
         ).is_("read_at", "null").execute()
@@ -154,15 +146,13 @@ def mark_all_booking_notifications_read(user_id: str) -> None:
 
 def mark_booking_notification_read(*, user_id: str, notification_id: str) -> bool:
     """Mark a single booking_notifications row read for this user."""
-    if get_settings().local_auth_mode:
-        return False
     nid = (notification_id or "").strip()
     if not nid:
         return False
     now = datetime.now(timezone.utc).isoformat()
     try:
         res = (
-            get_client()
+            get_db()
             .table("booking_notifications")
             .update({"read_at": now})
             .eq("id", nid)
@@ -188,13 +178,11 @@ def list_booking_notifications(
     *,
     limit: int = 30,
 ) -> list[dict[str, Any]]:
-    if get_settings().local_auth_mode:
-        return []
     lim = max(1, min(limit, 100))
     try:
         res = (
             apply_recent_first_order(
-                get_client()
+                get_db()
                 .table("booking_notifications")
                 .select("id,booking_id,kind,body,read_at,created_at")
                 .eq("user_id", user_id),

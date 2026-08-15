@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from app.core.config import get_settings
 from app.core.logging import get_logger
 from app.features.auth import db_users as user_repository
 from app.features.auth import db_vendors as vendor_repository
@@ -14,7 +13,7 @@ _preferred_name_column_ok: bool | None = None
 
 
 def vendor_display_names_by_id(vendor_ids: list[str]) -> dict[str, str]:
-    if not vendor_ids or get_settings().local_auth_mode:
+    if not vendor_ids:
         return {}
     try:
         vendor_rows = vendor_repository.list_by_user_ids(vendor_ids)
@@ -38,7 +37,7 @@ def vendor_display_names_by_id(vendor_ids: list[str]) -> dict[str, str]:
 
 def user_types_by_id(user_ids: list[str]) -> dict[str, str]:
     """Map user id -> user_type (client | vendor | admin)."""
-    if not user_ids or get_settings().local_auth_mode:
+    if not user_ids:
         return {}
     try:
         user_rows = user_repository.list_by_ids(user_ids, columns="id,user_type")
@@ -55,7 +54,7 @@ def user_types_by_id(user_ids: list[str]) -> dict[str, str]:
 
 
 def user_emails_by_id(user_ids: list[str], *, fallback: str = "Client") -> dict[str, str]:
-    if not user_ids or get_settings().local_auth_mode:
+    if not user_ids:
         return {}
     try:
         user_rows = user_repository.list_by_ids(user_ids, columns="id,email")
@@ -91,7 +90,7 @@ def client_display_names_by_id(user_ids: list[str]) -> dict[str, str]:
     local-part, then "Client". Never returns the raw email address.
     """
     global _preferred_name_column_ok
-    if not user_ids or get_settings().local_auth_mode:
+    if not user_ids:
         return {}
     columns = "id,email,preferred_name" if _preferred_name_column_ok is not False else "id,email"
     try:
@@ -122,7 +121,7 @@ def client_display_names_by_id(user_ids: list[str]) -> dict[str, str]:
 
 def client_emails_by_id(user_ids: list[str]) -> dict[str, str | None]:
     """Extra client emails for booking lists - returns None when email is missing."""
-    if not user_ids or get_settings().local_auth_mode:
+    if not user_ids:
         return {}
     try:
         user_rows = user_repository.list_by_ids(user_ids, columns="id,email")

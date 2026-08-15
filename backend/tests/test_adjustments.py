@@ -12,7 +12,7 @@ from app.features.bookings.adjustments import _validate_adjustment_caps, put_ven
 def test_surcharge_over_single_cap_rejected():
     line_items = [{"unit_price_gbp": 1000.0}]
     stored = [{"amount_gbp": 60_000.0}]
-    with pytest.raises(ValueError, match="Each extra cost"):
+    with pytest.raises(ValueError, match="Each surcharge cannot exceed"):
         _validate_adjustment_caps(line_items, stored)
 
 
@@ -22,7 +22,7 @@ def test_total_surcharge_pct_cap_rejected():
         {"amount_gbp": 1500.0},
         {"amount_gbp": 600.0},
     ]
-    with pytest.raises(ValueError, match="Extra costs together"):
+    with pytest.raises(ValueError, match="Total surcharges cannot exceed"):
         _validate_adjustment_caps(line_items, stored)
 
 
@@ -33,9 +33,8 @@ def test_discount_allowed():
 
 
 @patch("app.features.bookings.adjustments.get_settings")
-@patch("app.features.bookings.adjustments.get_client")
+@patch("app.features.bookings.adjustments.get_db")
 def test_put_adjustments_rejects_zero_vendor_portion(mock_get_client, mock_settings):
-    mock_settings.return_value.local_auth_mode = False
     mock_client = MagicMock()
     mock_get_client.return_value = mock_client
     mock_table = MagicMock()
@@ -66,5 +65,5 @@ def test_put_adjustments_rejects_zero_vendor_portion(mock_get_client, mock_setti
 def test_total_surcharge_pct_uses_positive_line_subtotal():
     line_items = [{"unit_price_gbp": 500.0}, {"unit_price_gbp": -50.0}]
     stored = [{"amount_gbp": 1100.0}]
-    with pytest.raises(ValueError, match="Extra costs together"):
+    with pytest.raises(ValueError, match="Total surcharges cannot exceed"):
         _validate_adjustment_caps(line_items, stored)

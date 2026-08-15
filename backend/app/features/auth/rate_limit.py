@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import time
 
+from app.features.auth import messages as auth_messages
+
 _buckets: dict[str, list[float]] = {}
 
 
@@ -27,15 +29,15 @@ def assert_sign_in_rate(email: str, client_ip: str | None) -> None:
     email_key = f"signin:e:{email.strip().lower()}"
     ip_key = f"signin:ip:{(client_ip or 'unknown').strip() or 'unknown'}"
     if rate_limited(key=email_key, limit=10, window_s=900):
-        raise ValueError("Too many sign-in attempts. Try again in a few minutes.")
+        raise ValueError(auth_messages.SIGN_IN_RATE_LIMIT)
     if rate_limited(key=ip_key, limit=40, window_s=900):
-        raise ValueError("Too many sign-in attempts. Try again in a few minutes.")
+        raise ValueError(auth_messages.SIGN_IN_RATE_LIMIT)
 
 
 def assert_change_password_rate(user_id: str, client_ip: str | None) -> None:
     user_key = f"change:e:{user_id}"
     ip_key = f"change:ip:{(client_ip or 'unknown').strip() or 'unknown'}"
     if rate_limited(key=user_key, limit=10, window_s=3600):
-        raise ValueError("Too many password change attempts. Try again later.")
+        raise ValueError(auth_messages.CHANGE_PASSWORD_RATE_LIMIT)
     if rate_limited(key=ip_key, limit=30, window_s=3600):
-        raise ValueError("Too many password change attempts. Try again later.")
+        raise ValueError(auth_messages.CHANGE_PASSWORD_RATE_LIMIT)

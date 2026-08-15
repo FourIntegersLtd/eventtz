@@ -13,6 +13,7 @@ from fastapi import HTTPException
 from app.core.constants import OPENAI_BIO_MODEL, OPENAI_VISION_MODEL
 from app.core.logging import get_logger
 from app.features.ai.openai_helpers import extract_json_object, require_openai_client
+from app.features.vendors import messages as vendor_messages
 
 logger = get_logger(__name__)
 
@@ -162,7 +163,7 @@ def generate_vendor_public_bio(*, payload: dict[str, Any]) -> str:
         )
         raise HTTPException(
             status_code=502,
-            detail="AI bio generation failed. Try again in a moment.",
+            detail=vendor_messages.AI_BIO_GENERATION_FAILED,
         ) from e
     text = (resp.output_text or "").strip()
     if not text:
@@ -170,7 +171,7 @@ def generate_vendor_public_bio(*, payload: dict[str, Any]) -> str:
             "vendor_onboarding_ai generate-bio: empty output_text from model=%s (response id may be absent)",
             model,
         )
-        raise HTTPException(status_code=502, detail="We couldn't write a bio this time. Please try again.")
+        raise HTTPException(status_code=502, detail=vendor_messages.AI_BIO_EMPTY)
     logger.info(
         "vendor_onboarding_ai generate-bio: ok model=%s output_chars=%s",
         model,
@@ -182,9 +183,9 @@ def generate_vendor_public_bio(*, payload: dict[str, Any]) -> str:
 def analyze_portfolio_image(*, image_bytes: bytes, content_type: str) -> tuple[bool, int, str]:
     """Returns (ok, score 1-5, short summary). ok=false means the image is not good enough for the marketplace."""
     if not image_bytes:
-        raise HTTPException(status_code=400, detail="Please choose an image to upload.")
+        raise HTTPException(status_code=400, detail=vendor_messages.CHOOSE_IMAGE_TO_UPLOAD)
     if not content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="Only image uploads are supported.")
+        raise HTTPException(status_code=400, detail=vendor_messages.ONLY_IMAGE_UPLOADS)
     client = require_openai_client(log_context="vendor_onboarding_ai")
     b64 = base64.standard_b64encode(image_bytes).decode("ascii")
     data_url = f"data:{content_type};base64,{b64}"
@@ -215,14 +216,14 @@ def analyze_portfolio_image(*, image_bytes: bytes, content_type: str) -> tuple[b
     )
     raw = (resp.output_text or "").strip()
     if not raw:
-        raise HTTPException(status_code=502, detail="Could not analyse this image. Try again.")
+        raise HTTPException(status_code=502, detail=vendor_messages.COULD_NOT_ANALYSE_IMAGE)
     try:
         parsed = extract_json_object(raw)
     except (json.JSONDecodeError, ValueError) as e:
         logger.warning("portfolio image QA parse failed: %s", raw[:200])
         raise HTTPException(
             status_code=502,
-            detail="Could not analyse this image. Try again.",
+            detail=vendor_messages.COULD_NOT_ANALYSE_IMAGE,
         ) from e
     ok = bool(parsed.get("ok"))
     score = int(parsed.get("score", 3))
@@ -518,7 +519,7 @@ def review_vendor_packages(*, payload: dict[str, Any]) -> dict[str, Any]:
         logger.exception("vendor_onboarding_ai review-packages failed model=%s", model)
         raise HTTPException(
             status_code=502,
-            detail="Package review failed. Try again in a moment.",
+            detail=vendor_messages.PACKAGE_REVIEW_FAILED,
         ) from e
     raw = (resp.output_text or "").strip()
     try:
@@ -527,7 +528,7 @@ def review_vendor_packages(*, payload: dict[str, Any]) -> dict[str, Any]:
         logger.warning("package review parse failed: %s", raw[:200])
         raise HTTPException(
             status_code=502,
-            detail="Could not read package suggestions. Try again.",
+            detail=vendor_messages.COULD_NOT_READ_PACKAGE_SUGGESTIONS,
         ) from e
     summary = str(parsed.get("summary") or "").strip()[:400]
     package_feedback = _normalize_package_feedback(parsed.get("package_feedback"))

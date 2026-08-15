@@ -7,9 +7,9 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.db import apply_recent_first_order, get_db as get_client
+from app.core.db import apply_recent_first_order, get_db
 from app.features.bookings.list_order import sort_booking_rows_recent_first
-from app.features.admin._helpers import opt_admin_ts
+from app.features.admin.admin_optional_timestamps import opt_admin_ts
 from app.features.admin.booking_payment_patch import patch_booking_payment_fields
 from app.features.bookings.pricing import build_pricing_breakdown
 from app.features.bookings import (
@@ -82,11 +82,9 @@ def list_bookings_for_admin(
     search: str | None = None,
     needs_attention: bool = False,
 ) -> tuple[list[dict[str, Any]], int]:
-    if get_settings().local_auth_mode:
-        return [], 0
     limit = max(1, min(limit, 200))
     offset = max(0, offset)
-    client = get_client()
+    client = get_db()
     try:
         q = client.table("booking_requests").select(_LIST_SELECT, count="exact")
         if status and status.strip().lower() not in ("", "all"):
@@ -139,14 +137,12 @@ def list_bookings_for_admin(
 
 
 def get_booking_detail_for_admin(booking_id: str) -> dict[str, Any] | None:
-    if get_settings().local_auth_mode:
-        return None
     try:
         uuid.UUID(booking_id)
     except ValueError:
         return None
     res = (
-        get_client()
+        get_db()
         .table("booking_requests")
         .select("*")
         .eq("id", booking_id)

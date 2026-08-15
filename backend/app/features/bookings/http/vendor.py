@@ -20,7 +20,8 @@ from app.contracts.booking import (
     VendorBookingStatusResponse,
     VendorBookingsListResponse,
 )
-from app.features.bookings.http import disputes_http as dh
+from app.features.bookings import messages as booking_messages
+from app.features.bookings.http import participant_dispute_handlers as dh
 from app.contracts.disputes import (
     CreateParticipantDisputeBody,
     CreateParticipantDisputeResponse,
@@ -57,12 +58,12 @@ def post_vendor_quote(
     try:
         uuid.UUID(client_id)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail="Invalid client id.") from e
+        raise HTTPException(status_code=400, detail=booking_messages.INVALID_CLIENT_ID) from e
     if body.conversation_id:
         try:
             uuid.UUID(body.conversation_id.strip())
         except ValueError as e:
-            raise HTTPException(status_code=400, detail="Invalid conversation id.") from e
+            raise HTTPException(status_code=400, detail=booking_messages.INVALID_CONVERSATION_ID) from e
 
     try:
         out = create_vendor_quote_booking_request(
@@ -82,7 +83,7 @@ def post_vendor_quote(
         logger.exception("vendor_quote insert failed vendor=%s client=%s", vendor_id, client_id)
         raise HTTPException(
             status_code=500,
-            detail="Could not save your quote. Try again later.",
+            detail=booking_messages.COULD_NOT_SAVE_QUOTE,
         ) from None
 
     created_at = out.get("created_at")
@@ -111,7 +112,7 @@ def list_vendor_bookings(
     if g not in ("active", "completed", "closed", "all"):
         raise HTTPException(
             status_code=400,
-            detail="Query parameter group must be active, completed, closed, or all.",
+            detail=booking_messages.GROUP_QUERY_PARAM,
         )
     try:
         rows = list_booking_requests_for_vendor(
@@ -144,7 +145,7 @@ def put_vendor_booking_adjustments_ep(
     try:
         uuid.UUID(booking_id)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail="Invalid booking id.") from e
+        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
 
     payload = [a.model_dump() for a in body.adjustments]
     try:
@@ -153,7 +154,7 @@ def put_vendor_booking_adjustments_ep(
         raise HTTPException(status_code=400, detail=str(e)) from e
 
     if not row:
-        raise HTTPException(status_code=404, detail="Booking not found.")
+        raise HTTPException(status_code=404, detail=booking_messages.BOOKING_NOT_FOUND)
 
     return PutVendorBookingAdjustmentsResponse(booking=VendorBookingDetail(**row))
 
@@ -173,7 +174,7 @@ def patch_vendor_booking_status(
     try:
         uuid.UUID(booking_id)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail="Invalid booking id.") from e
+        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
 
     try:
         row = update_booking_request_status_for_vendor(
@@ -185,7 +186,7 @@ def patch_vendor_booking_status(
         raise HTTPException(status_code=400, detail=str(e)) from e
 
     if not row:
-        raise HTTPException(status_code=404, detail="Booking not found.")
+        raise HTTPException(status_code=404, detail=booking_messages.BOOKING_NOT_FOUND)
 
     return VendorBookingStatusResponse(
         id=str(row["id"]),
@@ -207,7 +208,7 @@ def post_vendor_confirm_completion(
     try:
         uuid.UUID(booking_id)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail="Invalid booking id.") from e
+        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
 
     try:
         result = confirm_completion_for_vendor(vendor_id, booking_id)
@@ -215,7 +216,7 @@ def post_vendor_confirm_completion(
         raise HTTPException(status_code=400, detail=str(e)) from e
 
     if not result:
-        raise HTTPException(status_code=404, detail="Booking not found.")
+        raise HTTPException(status_code=404, detail=booking_messages.BOOKING_NOT_FOUND)
 
     return ConfirmCompletionResponse(**result)
 
@@ -231,13 +232,13 @@ def get_vendor_booking(
     try:
         uuid.UUID(booking_id)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail="Invalid booking id.") from e
+        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
 
     # Safety net between hourly runs: pay the vendor if the automatic payout date has passed.
     maybe_auto_release_payout_for_booking(booking_id)
     row = get_booking_request_for_vendor(vendor_id, booking_id)
     if not row:
-        raise HTTPException(status_code=404, detail="Booking not found.")
+        raise HTTPException(status_code=404, detail=booking_messages.BOOKING_NOT_FOUND)
 
     return VendorBookingDetailResponse(booking=VendorBookingDetail(**row))
 
@@ -257,7 +258,7 @@ def post_vendor_booking_dispute(
     try:
         uuid.UUID(booking_id)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail="Invalid booking id.") from e
+        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
 
     return dh.create_booking_dispute(booking_id, uid, body)
 
@@ -276,7 +277,7 @@ def list_vendor_booking_disputes(
     try:
         uuid.UUID(booking_id)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail="Invalid booking id.") from e
+        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
     return dh.list_booking_disputes(booking_id, uid)
 
 

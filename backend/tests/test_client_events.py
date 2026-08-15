@@ -10,9 +10,14 @@ import pytest
 from app.features.client_events import events as client_events
 
 
-@patch("app.features.client_events.events.get_settings")
-def test_resolve_event_creates_when_no_event_id(mock_settings):
-    mock_settings.return_value.local_auth_mode = True
+@patch("app.features.client_events.events.create_client_event")
+def test_resolve_event_creates_when_no_event_id(mock_create):
+    mock_create.return_value = {
+        "id": "evt-new",
+        "title": "Sarah's wedding",
+        "event_date": "2026-08-15",
+        "event_postcode": "SW1A 1AA",
+    }
     eid, fields = client_events.resolve_event_for_booking(
         "client-1",
         event_id=None,
@@ -21,17 +26,16 @@ def test_resolve_event_creates_when_no_event_id(mock_settings):
         event_address="The Barn",
         event_postcode="SW1A 1AA",
     )
-    assert eid == "00000000-0000-4000-8000-000000000099"
+    assert eid == "evt-new"
     assert fields["event_id"] == eid
     assert fields["event_name"] == "Sarah's wedding"
     assert fields["event_date"] == "2026-08-15"
     assert fields["event_postcode"] == "SW1A 1AA"
+    mock_create.assert_called_once()
 
 
-@patch("app.features.client_events.events.get_client_event_row")
-@patch("app.features.client_events.events.get_settings")
-def test_resolve_event_links_existing(mock_settings, mock_get_row):
-    mock_settings.return_value.local_auth_mode = False
+@patch("app.features.client_events.events.get_client_event_by_id")
+def test_resolve_event_links_existing(mock_get_row):
     mock_get_row.return_value = {
         "id": "evt-1",
         "title": "Sarah's wedding",
@@ -53,10 +57,8 @@ def test_resolve_event_links_existing(mock_settings, mock_get_row):
     mock_get_row.assert_called_once_with("client-1", "evt-1")
 
 
-@patch("app.features.client_events.events.get_client_event_row")
-@patch("app.features.client_events.events.get_settings")
-def test_resolve_event_rejects_missing(mock_settings, mock_get_row):
-    mock_settings.return_value.local_auth_mode = False
+@patch("app.features.client_events.events.get_client_event_by_id")
+def test_resolve_event_rejects_missing(mock_get_row):
     mock_get_row.return_value = None
     with pytest.raises(ValueError, match="Event not found"):
         client_events.resolve_event_for_booking(
@@ -67,10 +69,8 @@ def test_resolve_event_rejects_missing(mock_settings, mock_get_row):
         )
 
 
-@patch("app.features.client_events.events.get_client_event_row")
-@patch("app.features.client_events.events.get_settings")
-def test_resolve_event_rejects_archived(mock_settings, mock_get_row):
-    mock_settings.return_value.local_auth_mode = False
+@patch("app.features.client_events.events.get_client_event_by_id")
+def test_resolve_event_rejects_archived(mock_get_row):
     mock_get_row.return_value = {
         "id": "evt-1",
         "title": "Old party",
@@ -86,10 +86,8 @@ def test_resolve_event_rejects_archived(mock_settings, mock_get_row):
         )
 
 
-@patch("app.features.client_events.events.get_settings")
-@patch("app.features.client_events.events.get_client")
-def test_create_client_event_inserts_row(mock_get_client, mock_settings):
-    mock_settings.return_value.local_auth_mode = False
+@patch("app.features.client_events.events.get_db")
+def test_create_client_event_inserts_row(mock_get_client):
     client = MagicMock()
     mock_get_client.return_value = client
     client.table.return_value.insert.return_value.execute.return_value = MagicMock(

@@ -15,8 +15,8 @@ from app.core.logging import get_logger
 from app.features.ai.openai_helpers import parse_completion, require_openai_client
 from app.features.bookings.queries import get_booking_request_for_vendor
 from app.features.help import queries
-from app.features.help.retrieve import format_articles_for_prompt, retrieve_articles
-from app.features.vendor_copilot.context import build_vendor_context, context_for_prompt
+from app.features.help.help_article_keyword_search import format_articles_for_prompt, retrieve_articles
+from app.features.vendor_copilot.context import build_vendor_context, format_vendor_copilot_prompt_context
 from app.features.vendor_copilot.demand import get_market_demand_insights
 
 logger = get_logger(__name__)
@@ -46,7 +46,7 @@ escalate_reason: payments, dispute, account, unknown, or null.
 suggested_actions: up to 3 actionable cards with kind one of:
 edit_profile, open_booking, open_payments, open_analytics, open_messages, apply_package_patch.
 Include href paths like /vendor/profile, /vendor/bookings/{id}, /vendor/payments, /vendor/analytics.
-For open_booking, set payload.booking_id when a specific booking is referenced.
+For open_booking, set payload.booking_request_id when a specific booking is referenced.
 Never invent booking ids or metrics not in vendor_data.
 """
 
@@ -54,9 +54,9 @@ Never invent booking ids or metrics not in vendor_data.
 class _CopilotActionPayloadLlm(BaseModel):
     """Strict payload shape for OpenAI structured output (no free-form dict)."""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
-    booking_id: str | None = None
+    booking_request_id: str | None = Field(default=None, validation_alias="booking_id")
     package_id: str | None = None
 
 
@@ -85,12 +85,12 @@ class CopilotAssistantReply(BaseModel):
 
 
 def _to_copilot_action(action: _CopilotActionLlm) -> CopilotAction:
-    payload = action.payload.model_dump(exclude_none=True)
+    payload = action.payload.model_dump(exclude_none=True, by_alias=False)
     return CopilotAction(
-        kind=action.kind,
+        action_type=action.kind,
         title=action.title,
         rationale=action.rationale,
-        payload=payload,
+        action_data=payload,
         href=action.href,
     )
 
@@ -100,14 +100,14 @@ def ask_copilot(
     vendor_user_id: str,
     question: str,
     history: list[CopilotAskMessage] | None = None,
-    booking_id: str | None = None,
+    booking_request_id: str | None = None,
 ) -> CopilotAskResponse:
     ctx = build_vendor_context(vendor_user_id)
-    facts = context_for_prompt(ctx)
+    facts = format_vendor_copilot_prompt_context(ctx)
 
     booking_context = ""
-    if booking_id:
-        row = get_booking_request_for_vendor(vendor_user_id, booking_id)
+    if booking_request_id:
+        row = get_booking_request_for_vendor(vendor_user_id, booking_request_id)
         if row:
             booking_context = (
                 f"\n\nActive booking context:\n"
@@ -142,7 +142,7 @@ def ask_copilot(
         },
     ]
     for msg in prior:
-        role = msg.role if msg.role in ("user", "assistant") else "user"
+        role = msg.message_role if msg.message_role in ("user", "assistant") else "user"
         content = (msg.content or "").strip()
         if content:
             messages.append({"role": role, "content": content[:1500]})

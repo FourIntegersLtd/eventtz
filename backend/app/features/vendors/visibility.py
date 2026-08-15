@@ -19,8 +19,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.core.config import get_settings
-
 PUBLIC_LISTING_STRIPE_COLS = (
     "stripe_account_id",
     "stripe_charges_enabled",
@@ -81,12 +79,7 @@ def payout_gate_waived(row: dict[str, Any] | None) -> bool:
 
 
 def row_is_publicly_listable(row: dict[str, Any] | None) -> bool:
-    """Same rule as apply_public_listing_filters, for rows already in memory.
-
-    local_auth_mode has no Stripe Connect and its in-memory rows carry no Stripe
-    columns, so the payout half of the rule is skipped there - otherwise offline
-    development would show an empty marketplace with no way to fix it.
-    """
+    """Same rule as apply_public_listing_filters, for rows already in memory."""
     if not isinstance(row, dict):
         return False
     if row.get("approval_status") != "approved":
@@ -95,8 +88,6 @@ def row_is_publicly_listable(row: dict[str, Any] | None) -> bool:
     if override == "hidden":
         return False
     if override == "visible":
-        return True
-    if get_settings().local_auth_mode:
         return True
     return vendor_payouts_verified(row)
 

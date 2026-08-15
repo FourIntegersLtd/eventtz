@@ -6,7 +6,7 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.db import apply_recent_first_order, get_db as get_client
+from app.core.db import apply_recent_first_order, get_db
 from app.features.email.dispatch import send_client_suspended_email
 
 logger = get_logger(__name__)
@@ -18,7 +18,7 @@ def _booking_counts_for_clients(client_ids: list[str]) -> dict[str, int]:
     counts: dict[str, int] = {}
     try:
         br = (
-            get_client()
+            get_db()
             .table("booking_requests")
             .select("client_user_id")
             .in_("client_user_id", client_ids)
@@ -58,14 +58,12 @@ def list_clients_for_admin(
     q: str | None = None,
     suspended: bool | None = None,
 ) -> tuple[list[dict[str, Any]], int]:
-    if get_settings().local_auth_mode:
-        return [], 0
     limit = max(1, min(limit, 200))
     offset = max(0, offset)
     try:
         query = (
             apply_recent_first_order(
-                get_client()
+                get_db()
                 .table("users")
                 .select("id,email,created_at,account_suspended", count="exact")
                 .eq("user_type", "client"),
@@ -82,7 +80,7 @@ def list_clients_for_admin(
         if "account_suspended" in str(e).lower() or "42703" in str(e):
             query = (
                 apply_recent_first_order(
-                    get_client()
+                    get_db()
                     .table("users")
                     .select("id,email,created_at", count="exact")
                     .eq("user_type", "client"),
@@ -104,10 +102,8 @@ def list_clients_for_admin(
 
 def list_client_user_ids_for_broadcast() -> list[str]:
     """All client user IDs - for sending one support message per client (not the paginated directory UI)."""
-    if get_settings().local_auth_mode:
-        return []
     try:
-        res = get_client().table("users").select("id").eq("user_type", "client").execute()
+        res = get_db().table("users").select("id").eq("user_type", "client").execute()
     except Exception as e:
         logger.warning("list_client_user_ids_for_broadcast failed: %s", e, exc_info=True)
         return []
@@ -119,12 +115,10 @@ def list_client_user_ids_for_broadcast() -> list[str]:
 
 
 def set_client_suspended(user_id: str, suspended: bool) -> bool:
-    if get_settings().local_auth_mode:
-        return False
     email: str | None = None
     try:
         res = (
-            get_client()
+            get_db()
             .table("users")
             .select("email")
             .eq("id", user_id)
@@ -139,7 +133,7 @@ def set_client_suspended(user_id: str, suspended: bool) -> bool:
     except Exception:
         pass
     try:
-        get_client().table("users").update({"account_suspended": suspended}).eq(
+        get_db().table("users").update({"account_suspended": suspended}).eq(
             "id", user_id
         ).eq("user_type", "client").execute()
         if suspended and email and "@" in email:

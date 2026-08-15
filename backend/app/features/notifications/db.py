@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.core.db import apply_recent_first_order, rows
+from app.core.db import apply_recent_first_order, rows_from_query_result
 from app.core.db import get_db
 
 
@@ -20,4 +20,4 @@ def list_for_user(user_id: str, *, limit: int = 50) -> list[dict[str, Any]]:
         .limit(limit)
         .execute()
     )
-    return rows(res)
+    return rows_from_query_result(res)

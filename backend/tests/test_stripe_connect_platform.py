@@ -91,7 +91,6 @@ def test_create_connect_onboarding_link_maps_platform_not_ready(
 
 def _connect_enabled_settings() -> MagicMock:
     settings = MagicMock()
-    settings.local_auth_mode = False
     settings.stripe_secret_key = "sk_test_123"
     return settings
 
@@ -146,10 +145,9 @@ def test_refresh_pending_connect_flags_updates_unverified_row(mock_sync: MagicMo
 
 
 @patch("app.features.payments.stripe.sync_connect_account_status")
-def test_refresh_pending_connect_flags_skips_in_local_auth_mode(mock_sync: MagicMock) -> None:
+def test_refresh_pending_connect_flags_skips_without_stripe_key(mock_sync: MagicMock) -> None:
     settings = MagicMock()
-    settings.local_auth_mode = True
-    settings.stripe_secret_key = "sk_test_123"
+    settings.stripe_secret_key = ""
     row = {"stripe_account_id": "acct_123", "stripe_charges_enabled": False}
 
     with patch("app.features.payments.stripe.get_settings", return_value=settings):

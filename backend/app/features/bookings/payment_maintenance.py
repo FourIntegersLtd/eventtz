@@ -6,16 +6,16 @@ from datetime import datetime, timezone
 from typing import Any
 
 from app.core.config import get_settings
+from app.core.db import get_db
 from app.features.bookings.completion_rules import (
     both_parties_confirmed_awaiting_payout,
     compute_payout_auto_release_at,
     event_day_over,
 )
 from app.features.bookings.payment_completion import _finalize_completion
-from app.features.bookings.payment_shared import (
+from app.features.bookings.booking_payment_helpers import (
     _notify_pair,
-    _now_iso,
-    get_client,
+    _now_iso, 
     logger,
 )
 from app.features.email.dispatch import dispatch_booking_notification
@@ -38,7 +38,7 @@ def _claim_completion_reminder_sent(booking_id: str) -> bool:
         return False
     try:
         res = (
-            get_client()
+            get_db()
             .table("booking_requests")
             .update({"completion_reminder_sent_at": _now_iso()})
             .eq("id", booking_id)
@@ -137,8 +137,6 @@ def touch_completion_side_effects_for_booking_rows(
     Automatic payout runs on the booking detail page, the hourly job, and admin retry -
     not on list views, which refresh often from the dashboard.
     """
-    if get_settings().local_auth_mode:
-        return
     touched = 0
     for row in rows:
         if touched >= cap:
@@ -182,7 +180,7 @@ def _auto_release_payout_row(row: dict[str, Any]) -> bool:
     if str((result or {}).get("payment_status") or "") != "payout_released":
         # e.g. vendor Stripe account not ready - leave for a later run.
         return False
-    get_client().table("booking_requests").update(
+    get_db().table("booking_requests").update(
         {"payout_auto_released_at": _now_iso()},
     ).eq("id", booking_id).execute()
     logger.info("payout auto-released booking=%s", booking_id)
@@ -191,9 +189,7 @@ def _auto_release_payout_row(row: dict[str, Any]) -> bool:
 
 def maybe_auto_release_payout_for_booking(booking_id: str) -> bool:
     """Pay the vendor when opening booking detail if the automatic payout date has passed."""
-    if get_settings().local_auth_mode:
-        return False
-    res = get_client().table("booking_requests").select("*").eq("id", booking_id).limit(1).execute()
+    res = get_db().table("booking_requests").select("*").eq("id", booking_id).limit(1).execute()
     rows = getattr(res, "data", None) or []
     if not rows or not isinstance(rows[0], dict):
         return False
@@ -203,7 +199,7 @@ def maybe_auto_release_payout_for_booking(booking_id: str) -> bool:
 def _due_completion_candidates(limit: int, *, extra_null_col: str) -> list[dict[str, Any]]:
     """Accepted + paid bookings whose event day has ended (incl. multi-day events)."""
     res = (
-        get_client()
+        get_db()
         .table("booking_requests")
         .select("*")
         .eq("status", "accepted")
@@ -227,8 +223,6 @@ def _due_completion_candidates(limit: int, *, extra_null_col: str) -> list[dict[
 
 def process_due_payout_auto_releases(limit: int = 50) -> int:
     """Hourly job: pay vendors whose automatic payout date has passed. Returns how many were paid."""
-    if get_settings().local_auth_mode:
-        return 0
     released = 0
     for row in _due_completion_candidates(limit, extra_null_col="payout_auto_released_at"):
         try:
@@ -241,8 +235,6 @@ def process_due_payout_auto_releases(limit: int = 50) -> int:
 
 def send_completion_reminders(limit: int = 50) -> int:
     """Hourly job: one post-event reminder per booking to whoever has not confirmed yet."""
-    if get_settings().local_auth_mode:
-        return 0
     sent = 0
     for row in _due_completion_candidates(limit, extra_null_col="completion_reminder_sent_at"):
         try:

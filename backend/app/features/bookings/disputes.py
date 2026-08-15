@@ -7,7 +7,7 @@ from typing import Any, Literal
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.db import apply_recent_first_order, get_db as get_client
+from app.core.db import apply_recent_first_order, get_db
 from app.features.bookings import _client_emails_by_id, _vendor_display_names_by_id
 from app.features.bookings.dispute_commands import create_dispute_case
 from app.features.email.dispatch import send_admin_dispute_opened_email
@@ -23,13 +23,11 @@ _ALLOWED_BOOKING_STATUSES_FOR_NEW_DISPUTE = frozenset(
 
 def _lookup_conversation_id_for_pair(client_uid: str, vendor_uid: str) -> str | None:
     """Any existing client-vendor DM thread (unique pair in conversations)."""
-    if get_settings().local_auth_mode:
-        return None
     if not client_uid or not vendor_uid:
         return None
     try:
         res = (
-            get_client()
+            get_db()
             .table("conversations")
             .select("id")
             .eq("client_user_id", client_uid)
@@ -64,7 +62,7 @@ def _get_booking_row(booking_id: str) -> dict[str, Any] | None:
         return None
     try:
         res = (
-            get_client()
+            get_db()
             .table("booking_requests")
             .select(_BOOKING_PARTY_SELECT)
             .eq("id", booking_id)
@@ -196,11 +194,11 @@ def _lookup_user_label(labels: dict[str, Any], user_id: str, *, fallback: str) -
 
 
 def _bookings_by_id(booking_ids: list[str]) -> dict[str, dict[str, Any]]:
-    if not booking_ids or get_settings().local_auth_mode:
+    if not booking_ids:
         return {}
     try:
         res = (
-            get_client()
+            get_db()
             .table("booking_requests")
             .select(_BOOKING_PARTY_SELECT)
             .in_("id", booking_ids)
@@ -299,7 +297,7 @@ def _enrich_participant_disputes(
             **base,
             "event_name": str(booking.get("event_name") or "") or None,
             "event_date": str(booking.get("event_date") or "") or None,
-            "booking_status": str(booking.get("status") or "") or None,
+            "booking_lifecycle_status": str(booking.get("status") or "") or None,
             "payment_status": str(booking.get("payment_status") or "") or None,
             "conversation_id": str(conv).strip() if conv and str(conv).strip() else None,
             "opened_by_role": opened_role,
@@ -314,11 +312,9 @@ def _enrich_participant_disputes(
 
 
 def _booking_ids_for_participant(user_id: str) -> list[str]:
-    if get_settings().local_auth_mode:
-        return []
     try:
         res = (
-            get_client()
+            get_db()
             .table("booking_requests")
             .select("id")
             .or_(f"client_user_id.eq.{user_id},vendor_user_id.eq.{user_id}")
@@ -336,11 +332,9 @@ def _booking_ids_for_participant(user_id: str) -> list[str]:
 
 
 def has_active_dispute_for_booking(booking_id: str) -> bool:
-    if get_settings().local_auth_mode:
-        return False
     try:
         res = (
-            get_client()
+            get_db()
             .table("dispute_cases")
             .select("id")
             .eq("booking_request_id", booking_id)
@@ -364,8 +358,6 @@ def create_dispute_for_participant(
     Returns (public_row, error_code).
     error_code: not_found | forbidden | conflict | invalid_status | server_error
     """
-    if get_settings().local_auth_mode:
-        return None, "server_error"
     booking = _get_booking_row(booking_id)
     if not booking:
         return None, "not_found"
@@ -410,15 +402,13 @@ def create_dispute_for_participant(
 
 
 def list_disputes_for_participant_user(user_id: str) -> list[dict[str, Any]]:
-    if get_settings().local_auth_mode:
-        return []
     bids = _booking_ids_for_participant(user_id)
     if not bids:
         return []
     try:
         res = (
             apply_recent_first_order(
-                get_client()
+                get_db()
                 .table("dispute_cases")
                 .select("*")
                 .in_("booking_request_id", bids[:500]),
@@ -440,12 +430,10 @@ def list_disputes_on_booking_for_participant(user_id: str, booking_id: str) -> l
     booking = _get_booking_row(booking_id)
     if not booking or not user_is_booking_party(user_id, booking):
         return []
-    if get_settings().local_auth_mode:
-        return []
     try:
         res = (
             apply_recent_first_order(
-                get_client()
+                get_db()
                 .table("dispute_cases")
                 .select("*")
                 .eq("booking_request_id", booking_id),
@@ -465,15 +453,13 @@ def list_disputes_on_booking_for_participant(user_id: str, booking_id: str) -> l
 
 
 def get_dispute_for_participant(dispute_id: str, user_id: str) -> dict[str, Any] | None:
-    if get_settings().local_auth_mode:
-        return None
     try:
         uuid.UUID(dispute_id)
     except ValueError:
         return None
     try:
         res = (
-            get_client()
+            get_db()
             .table("dispute_cases")
             .select("*")
             .eq("id", dispute_id)

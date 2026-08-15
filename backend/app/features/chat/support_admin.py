@@ -7,12 +7,13 @@ from typing import Any
 from app.core.config import get_settings
 from app.core.logging import get_logger
 from app.core.errors import ForbiddenError, NotFoundError, ServiceUnavailableError
-from app.core.db import apply_recent_first_order, get_db as get_client
-from app.features.auth.lookup import user_emails_by_id
+from app.core.db import apply_recent_first_order, get_db
+from app.features.auth.user_vendor_display_lookup import user_emails_by_id
 from app.features.email.dispatch import send_support_new_message_email
 from app.features.realtime.sse import notify_user
 
-from app.features.chat.chat_shared import (
+from app.features.chat import messages as chat_messages
+from app.features.chat.chat_formatting_and_ids import (
     MAX_MESSAGE_LEN,
     SUPPORT_PEER_DISPLAY,
     SUPPORT_PEER_USER_ID,
@@ -46,22 +47,8 @@ def get_or_create_support_conversation(user_id: str) -> dict[str, Any]:
     """One Eventtz Support thread per end user (client or vendor)."""
     uid = (user_id or "").strip()
     if not uid:
-        raise ValueError("We couldn't start that conversation. Please try again.")
-    if get_settings().local_auth_mode:
-        return {
-            "id": f"00000000-0000-4000-8000-{uid.replace('-', '')[:12].ljust(12, '0')}",
-            "kind": "support",
-            "support_user_id": uid,
-            "client_user_id": "",
-            "vendor_user_id": "",
-            "peer_user_id": SUPPORT_PEER_USER_ID,
-            "peer_display_name": SUPPORT_PEER_DISPLAY,
-            "created_at": None,
-            "last_message_at": None,
-            "unread_count": 0,
-        }
-
-    client = get_client()
+        raise ValueError(chat_messages.SUPPORT_START_FAILED)
+    client = get_db()
     try:
         existing = (
             client.table("conversations")
@@ -73,7 +60,7 @@ def get_or_create_support_conversation(user_id: str) -> dict[str, Any]:
         )
     except Exception as e:
         logger.exception("chat: get support conversation failed")
-        raise RuntimeError("Could not load support conversation.") from e
+        raise RuntimeError(chat_messages.SUPPORT_CONVERSATION_LOAD_FAILED) from e
     data = getattr(existing, "data", None) or []
     if data and isinstance(data[0], dict):
         row = data[0]
@@ -93,10 +80,10 @@ def get_or_create_support_conversation(user_id: str) -> dict[str, Any]:
             )
         except Exception as e:
             logger.exception("chat: insert support conversation failed")
-            raise RuntimeError("Could not start support conversation.") from e
+            raise RuntimeError(chat_messages.SUPPORT_CONVERSATION_START_FAILED) from e
         ins_data = getattr(ins, "data", None) or []
         if not ins_data or not isinstance(ins_data[0], dict):
-            raise RuntimeError("Could not start support conversation.")
+            raise RuntimeError(chat_messages.SUPPORT_CONVERSATION_START_FAILED)
         row = ins_data[0]
 
     return _row_to_conversation_list_item(row, uid, {})
@@ -111,9 +98,9 @@ def admin_send_support_message(
     """Send one support message per recipient. Returns sent count and conversation ids."""
     text = body.strip()
     if not text:
-        raise ValueError("Message cannot be empty.")
+        raise ValueError(chat_messages.MESSAGE_EMPTY)
     if len(text) > MAX_MESSAGE_LEN:
-        raise ValueError(f"Message is too long (max {MAX_MESSAGE_LEN} characters).")
+        raise ValueError(chat_messages.message_too_long_detail(MAX_MESSAGE_LEN))
 
     seen: set[str] = set()
     recipients: list[str] = []
@@ -124,7 +111,7 @@ def admin_send_support_message(
         seen.add(uid)
         recipients.append(uid)
     if not recipients:
-        raise ValueError("At least one recipient is required.")
+        raise ValueError(chat_messages.RECIPIENTS_REQUIRED)
 
     conversation_ids: list[str] = []
     failures: list[dict[str, str]] = []
@@ -145,7 +132,7 @@ def admin_send_support_message(
             _email_support_message_recipient(recipient_user_id=uid, conversation_id=cid)
         except Exception as e:
             logger.warning("chat: admin send failed recipient=%s: %s", uid, e, exc_info=True)
-            failures.append({"user_id": uid, "error": str(e) or "Failed to send."})
+            failures.append({"user_id": uid, "error": str(e) or chat_messages.SEND_FAILED})
 
     notify_user(admin_user_id, "chat_unread_changed")
     return {
@@ -156,13 +143,11 @@ def admin_send_support_message(
 
 
 def list_support_conversations_for_admin(*, limit: int = 200) -> list[dict[str, Any]]:
-    if get_settings().local_auth_mode:
-        return []
     lim = max(1, min(limit, 500))
     try:
         res = (
             apply_recent_first_order(
-                get_client()
+                get_db()
                 .table("conversations")
                 .select("*")
                 .eq("kind", "support"),
@@ -178,16 +163,14 @@ def list_support_conversations_for_admin(*, limit: int = 200) -> list[dict[str, 
     rows = [r for r in (getattr(res, "data", None) or []) if isinstance(r, dict)]
     uids = [_str_id(r.get("support_user_id")) for r in rows if r.get("support_user_id")]
     emails = user_emails_by_id(list({u for u in uids if u}))
-    labels = {u: (emails.get(u) or "User") for u in uids if u}
+    labels = {u: (emails.get(u) or chat_messages.USER_DISPLAY_FALLBACK) for u in uids if u}
     return [_row_to_admin_support_item(r, labels) for r in rows]
 
 
 def get_support_conversation_for_admin(conversation_id: str) -> dict[str, Any] | None:
-    if get_settings().local_auth_mode:
-        return None
     try:
         res = (
-            get_client()
+            get_db()
             .table("conversations")
             .select("*")
             .eq("id", conversation_id)
@@ -204,7 +187,7 @@ def get_support_conversation_for_admin(conversation_id: str) -> dict[str, Any] |
     row = data[0]
     uid = _str_id(row.get("support_user_id"))
     emails = user_emails_by_id([uid] if uid else [])
-    labels = {uid: emails.get(uid) or "User"} if uid else {}
+    labels = {uid: emails.get(uid) or chat_messages.USER_DISPLAY_FALLBACK} if uid else {}
     return _row_to_admin_support_item(row, labels)
 
 
@@ -213,10 +196,8 @@ def list_messages_for_admin_support(conversation_id: str, *, limit: int = 200) -
     if not conv:
         return []
     lim = max(1, min(limit, 500))
-    if get_settings().local_auth_mode:
-        return []
     try:
-        rows = _messages_table_select(get_client(), conversation_id, limit=lim)
+        rows = _messages_table_select(get_db(), conversation_id, limit=lim)
     except Exception:
         logger.exception("chat: list admin support messages failed")
         return []
@@ -245,24 +226,15 @@ def admin_edit_support_message(
 ) -> dict[str, Any]:
     conv = get_support_conversation_for_admin(conversation_id)
     if not conv:
-        raise NotFoundError("Support conversation not found.")
+        raise NotFoundError(chat_messages.SUPPORT_CONVERSATION_NOT_FOUND)
 
     text = body.strip()
     if not text:
-        raise ValueError("Message cannot be empty.")
+        raise ValueError(chat_messages.MESSAGE_EMPTY)
     if len(text) > MAX_MESSAGE_LEN:
-        raise ValueError(f"Message is too long (max {MAX_MESSAGE_LEN} characters).")
+        raise ValueError(chat_messages.message_too_long_detail(MAX_MESSAGE_LEN))
 
-    if get_settings().local_auth_mode:
-        return {
-            "id": message_id,
-            "sender_user_id": admin_user_id,
-            "body": text,
-            "created_at": _now_iso(),
-            "metadata": {"kind": "admin", "edited_at": _now_iso()},
-        }
-
-    client = get_client()
+    client = get_db()
     try:
         res = (
             client.table("messages")
@@ -274,19 +246,19 @@ def admin_edit_support_message(
         )
     except Exception as e:
         logger.exception("chat: load message for edit failed")
-        raise ServiceUnavailableError("Could not load message.") from e
+        raise ServiceUnavailableError(chat_messages.MESSAGE_LOAD_FAILED) from e
 
     data = getattr(res, "data", None) or []
     if not data or not isinstance(data[0], dict):
-        raise NotFoundError("Message not found.")
+        raise NotFoundError(chat_messages.MESSAGE_NOT_FOUND)
 
     row = data[0]
     support_uid = _str_id(conv.get("support_user_id"))
     sender = _str_id(row.get("sender_user_id"))
     if support_uid and sender == support_uid:
-        raise ForbiddenError("Only staff messages can be edited.")
+        raise ForbiddenError(chat_messages.STAFF_MESSAGES_ONLY)
     if sender != admin_user_id:
-        raise ForbiddenError("You can only edit messages you sent.")
+        raise ForbiddenError(chat_messages.EDIT_OWN_MESSAGES_ONLY)
 
     metadata = row.get("metadata")
     meta: dict[str, Any] = dict(metadata) if isinstance(metadata, dict) else {"kind": "admin"}
@@ -314,10 +286,10 @@ def admin_edit_support_message(
                 )
             except Exception as e2:
                 logger.exception("chat: edit message failed")
-                raise ServiceUnavailableError("Could not update message.") from e2
+                raise ServiceUnavailableError(chat_messages.MESSAGE_UPDATE_FAILED) from e2
         else:
             logger.exception("chat: edit message failed")
-            raise ServiceUnavailableError("Could not update message.") from e
+            raise ServiceUnavailableError(chat_messages.MESSAGE_UPDATE_FAILED) from e
 
     upd_data = getattr(upd, "data", None) or []
     updated = upd_data[0] if upd_data and isinstance(upd_data[0], dict) else row
@@ -342,7 +314,7 @@ def admin_reply_support_message(
 ) -> dict[str, Any]:
     conv = get_support_conversation_for_admin(conversation_id)
     if not conv:
-        raise NotFoundError("Support conversation not found.")
+        raise NotFoundError(chat_messages.SUPPORT_CONVERSATION_NOT_FOUND)
     msg = insert_message(
         conversation_id=conversation_id,
         sender_user_id=admin_user_id,
@@ -358,15 +330,13 @@ def admin_reply_support_message(
 
 
 def mark_support_conversation_read_admin(conversation_id: str) -> None:
-    if get_settings().local_auth_mode:
-        return
     conv = get_support_conversation_for_admin(conversation_id)
     if not conv:
-        raise NotFoundError("Support conversation not found.")
+        raise NotFoundError(chat_messages.SUPPORT_CONVERSATION_NOT_FOUND)
     try:
-        get_client().table("conversations").update(
+        get_db().table("conversations").update(
             {"admin_last_read_at": _now_iso()},
         ).eq("id", conversation_id).execute()
     except Exception as e:
         logger.exception("chat: mark admin support read failed")
-        raise ServiceUnavailableError("Could not update read state.") from e
+        raise ServiceUnavailableError(chat_messages.READ_STATE_UPDATE_FAILED) from e

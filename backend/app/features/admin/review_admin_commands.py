@@ -7,7 +7,7 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.db import apply_recent_first_order, get_db as get_client
+from app.core.db import apply_recent_first_order, get_db
 from app.features.bookings import _client_emails_by_id, _vendor_display_names_by_id
 
 logger = get_logger(__name__)
@@ -60,7 +60,7 @@ def _attach_booking_context(row: dict[str, Any]) -> dict[str, Any]:
         return row
     try:
         res = (
-            get_client()
+            get_db()
             .table("booking_requests")
             .select("event_name,event_date,status")
             .eq("id", booking_id)
@@ -83,11 +83,9 @@ def _attach_booking_context(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def set_review_hidden(review_id: str, hidden: bool) -> bool:
-    if get_settings().local_auth_mode:
-        return False
     ts = datetime.now(timezone.utc).isoformat() if hidden else None
     try:
-        get_client().table("booking_reviews").update({"hidden_at": ts}).eq("id", review_id).execute()
+        get_db().table("booking_reviews").update({"hidden_at": ts}).eq("id", review_id).execute()
         return True
     except Exception as e:
         if "hidden_at" in str(e).lower() or "42703" in str(e):
@@ -103,11 +101,9 @@ def list_reviews_for_admin(
     limit: int = 100,
     vendor_user_id: str | None = None,
 ) -> tuple[list[dict[str, Any]], int]:
-    if get_settings().local_auth_mode:
-        return [], 0
     limit = max(1, min(limit, 200))
     offset = max(0, offset)
-    client = get_client()
+    client = get_db()
 
     def _run_query(select: str):
         q = apply_recent_first_order(
@@ -138,12 +134,10 @@ def list_reviews_for_admin(
 
 
 def get_review_for_admin(review_id: str) -> dict[str, Any] | None:
-    if get_settings().local_auth_mode:
-        return None
     rid = (review_id or "").strip()
     if not rid:
         return None
-    client = get_client()
+    client = get_db()
 
     def _fetch(select: str) -> dict[str, Any] | None:
         res = client.table("booking_reviews").select(select).eq("id", rid).limit(1).execute()

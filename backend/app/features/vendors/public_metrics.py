@@ -9,8 +9,9 @@ from __future__ import annotations
 from typing import Any
 
 from app.core.config import get_settings
-from app.core.db import get_db as get_client
+from app.core.db import get_db
 from app.core.logging import get_logger
+from app.features.vendors import messages as vendor_messages
 
 logger = get_logger(__name__)
 
@@ -55,8 +56,8 @@ def format_usual_reply_seconds(seconds: Any) -> str | None:
 def usual_reply_sentence(seconds: Any) -> str:
     within = format_usual_reply_seconds(seconds)
     if within:
-        return f"Usually replies {within}."
-    return "Most vendors reply within a day."
+        return vendor_messages.usually_replies(within)
+    return vendor_messages.MOST_VENDORS_REPLY_WITHIN_DAY
 
 
 def _metrics_from_booking_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
@@ -83,14 +84,14 @@ def _metrics_from_booking_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
 
 def get_public_metrics_for_vendors(vendor_ids: list[str]) -> dict[str, dict[str, Any]]:
     """Batch: { vendor_user_id: metrics dict }."""
-    if get_settings().local_auth_mode or not vendor_ids:
+    if not vendor_ids:
         return {}
     ids = [str(v) for v in vendor_ids if v][:500]
     if not ids:
         return {}
     try:
         res = (
-            get_client()
+            get_db()
             .table("booking_requests")
             .select(
                 "vendor_user_id,status,initiator,completed_at,vendor_response_time_seconds",

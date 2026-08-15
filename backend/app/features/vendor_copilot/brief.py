@@ -16,13 +16,13 @@ from app.core.constants import OPENAI_COPILOT_MODEL
 from app.core.logging import get_logger
 from app.features.ai.openai_helpers import parse_completion, require_openai_client
 from app.features.help import queries
-from app.features.help.retrieve import format_articles_for_prompt, retrieve_articles
+from app.features.help.help_article_keyword_search import format_articles_for_prompt, retrieve_articles
 from app.features.vendor_copilot.brief_cache import (
     BriefNarrationCacheEntry,
     compute_brief_fingerprint,
-    get_or_compute_narration,
+    get_or_compute_brief_narration,
 )
-from app.features.vendor_copilot.context import build_vendor_context, context_for_prompt
+from app.features.vendor_copilot.context import build_vendor_context, format_vendor_copilot_prompt_context
 from app.features.vendor_copilot.demand import get_market_demand_insights
 
 logger = get_logger(__name__)
@@ -51,7 +51,7 @@ def _deterministic_actions(ctx: dict[str, Any]) -> list[CopilotAction]:
                 kind="open_booking",
                 title=f"Reply to {name}",
                 rationale="Pending enquiries hurt your response score. Reply within 2 hours when you can.",
-                payload={"booking_id": bid},
+                payload={"booking_request_id": bid},
                 href=f"/vendor/bookings/{bid}" if bid else "/vendor/bookings",
             )
         )
@@ -113,7 +113,7 @@ def _deterministic_actions(ctx: dict[str, Any]) -> list[CopilotAction]:
     seen: set[str] = set()
     deduped: list[CopilotAction] = []
     for a in actions:
-        sig = f"{a.kind}:{a.href}"
+        sig = f"{a.action_type}:{a.href}"
         if sig in seen:
             continue
         seen.add(sig)
@@ -152,7 +152,7 @@ def _generate_narration_llm(
     ctx: dict[str, Any],
     actions: list[CopilotAction],
 ) -> BriefNarrationCacheEntry:
-    facts = context_for_prompt(ctx)
+    facts = format_vendor_copilot_prompt_context(ctx)
     action_lines = "\n".join(f"- {a.title}: {a.rationale}" for a in actions) or "- Keep your listing fresh"
 
     pool = queries.list_all_published_for_audience(audience="vendor")
@@ -237,7 +237,7 @@ def build_daily_brief(vendor_user_id: str) -> VendorCopilotBriefResponse:
     demand = _load_demand(ctx)
     score = int(ctx.get("growth_score") or 0)
 
-    narration, was_cached = get_or_compute_narration(
+    narration, was_cached = get_or_compute_brief_narration(
         vendor_user_id,
         fingerprint,
         lambda: _generate_narration_llm(ctx, actions),

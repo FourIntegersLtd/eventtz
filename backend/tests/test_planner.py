@@ -10,7 +10,6 @@ from app.contracts.marketplace_search import MarketplaceQueryParseResult
 from app.core.errors import ValidationError
 from app.features.planner.budget import build_budget_breakdown, estimate_need_cost
 from app.features.planner.category_planner import needs_for_event
-from app.features.planner import db as planner_db
 from app.features.planner.plan_service import generate_plan
 from app.features.planner.prompt_parser import parse_celebration_prompt
 
@@ -178,7 +177,6 @@ def _vendor(
 
 
 def test_generate_birthday_plan_end_to_end():
-    planner_db.clear_local_store()
     pool = [
         _vendor("cat1", city="London", services=["catering"], price=800),
         _vendor("cat2", city="London", services=["catering"], price=900),
@@ -190,6 +188,15 @@ def test_generate_birthday_plan_end_to_end():
         _vendor("photo2", city="London", services=["photography"], price=550),
         _vendor("rent1", city="London", services=["rentals"], price=400),
     ]
+
+    def _fake_insert_plan(**kwargs: object) -> dict:
+        return {
+            "id": "plan-test-1",
+            "client_user_id": kwargs.get("client_user_id"),
+            "title": kwargs.get("title"),
+            "items": kwargs.get("items") or [],
+        }
+
     with (
         patch(
             "app.features.planner.prompt_parser.parse_marketplace_query",
@@ -202,21 +209,17 @@ def test_generate_birthday_plan_end_to_end():
             ),
         ),
         patch("app.features.planner.prompt_parser.try_openai_client", return_value=None),
-        patch("app.features.planner.explain.try_openai_client", return_value=None),
+        patch("app.features.planner.planner_summary_generation.try_openai_client", return_value=None),
         patch(
             "app.features.planner.plan_service.load_enriched_vendor_pool",
             return_value=pool,
         ),
-        patch("app.core.config.get_settings") as gs,
+        patch("app.features.planner.plan_service.planner_db.insert_plan", side_effect=_fake_insert_plan),
     ):
-        settings = gs.return_value
-        settings.local_auth_mode = True
-        # Also patch planner_db settings lookups
-        with patch("app.features.planner.db.get_settings", return_value=settings):
-            plan = generate_plan(
-                "client-1",
-                "Help me plan my birthday in London for 80 guests, budget £2000",
-            )
+        plan = generate_plan(
+            "client-1",
+            "Help me plan my birthday in London for 80 guests, budget £2000",
+        )
 
     assert plan.plan_id
     assert plan.celebration.event_type == "birthdays"

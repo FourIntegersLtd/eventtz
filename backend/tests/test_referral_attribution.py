@@ -20,7 +20,7 @@ def test_referral_register_url_uses_live_domain() -> None:
     )
 
 
-@patch("app.features.referrals.partners.get_client")
+@patch("app.features.referrals.partners.get_db")
 def test_resolve_unique_slug_appends_suffix_on_collision(mock_get_client) -> None:
     client = MagicMock()
     mock_get_client.return_value = client
@@ -40,7 +40,7 @@ def test_resolve_unique_slug_appends_suffix_on_collision(mock_get_client) -> Non
 
 
 @patch("app.features.referrals.attribution.get_active_partner_by_slug")
-@patch("app.features.referrals.attribution.get_client")
+@patch("app.features.referrals.attribution.get_db")
 def test_try_attribute_vendor_signup_inserts_row(mock_get_client, mock_partner) -> None:
     mock_partner.return_value = {"id": "partner-1", "slug": "scenery-studios"}
     client = MagicMock()
@@ -65,7 +65,7 @@ def test_try_attribute_vendor_signup_ignores_unknown_code(_mock_partner) -> None
     assert attribution.try_attribute_vendor_signup(user_id="u1", referral_code="unknown") is False
 
 
-@patch("app.features.referrals.attribution.get_client")
+@patch("app.features.referrals.attribution.get_db")
 def test_update_shoutout_completed_sets_timestamp(mock_get_client) -> None:
     client = MagicMock()
     mock_get_client.return_value = client
@@ -87,7 +87,7 @@ def test_update_shoutout_completed_sets_timestamp(mock_get_client) -> None:
     assert patch_body["shoutout_completed_at"] is not None
 
 
-@patch("app.features.referrals.attribution.get_client")
+@patch("app.features.referrals.attribution.get_db")
 def test_update_shoutout_completed_clears_timestamp_when_off(mock_get_client) -> None:
     client = MagicMock()
     mock_get_client.return_value = client

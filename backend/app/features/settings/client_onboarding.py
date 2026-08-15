@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from app.core.config import get_settings
-from app.core.db import get_db as get_client
+from app.core.db import get_db
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -27,11 +27,11 @@ def _missing_onboarding_columns(err: Exception) -> bool:
 def get_client_onboarding(user_id: str) -> dict[str, Any]:
     """Return {completed: bool, preferred_name: str | None} for a client."""
     global _onboarding_columns_ok
-    if get_settings().local_auth_mode or _onboarding_columns_ok is False:
+    if _onboarding_columns_ok is False:
         return dict(_DEFAULT_STATE)
     try:
         res = (
-            get_client()
+            get_db()
             .table("users")
             .select("preferred_name,client_onboarding_completed_at")
             .eq("id", user_id)
@@ -67,7 +67,7 @@ def update_client_onboarding(
 ) -> dict[str, Any]:
     """Save preferred name and/or mark first-visit onboarding as done."""
     global _onboarding_columns_ok
-    if get_settings().local_auth_mode or _onboarding_columns_ok is False:
+    if _onboarding_columns_ok is False:
         return dict(_DEFAULT_STATE)
     patch: dict[str, Any] = {}
     if preferred_name is not None:
@@ -78,7 +78,7 @@ def update_client_onboarding(
     if not patch:
         return get_client_onboarding(user_id)
     try:
-        get_client().table("users").update(patch).eq("id", user_id).execute()
+        get_db().table("users").update(patch).eq("id", user_id).execute()
     except Exception as e:
         if _missing_onboarding_columns(e):
             _onboarding_columns_ok = False

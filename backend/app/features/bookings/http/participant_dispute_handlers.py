@@ -13,6 +13,7 @@ from app.contracts.disputes import (
     ParticipantDisputePublic,
     ParticipantDisputesListResponse,
 )
+from app.features.bookings import messages as booking_messages
 from app.features.bookings.disputes import (
     create_dispute_for_participant,
     get_dispute_for_participant,
@@ -28,21 +29,21 @@ def create_booking_dispute(
 ) -> CreateParticipantDisputeResponse:
     row, err = create_dispute_for_participant(booking_id, uid, body.summary)
     if err == "not_found":
-        raise HTTPException(status_code=404, detail="Booking not found.")
+        raise HTTPException(status_code=404, detail=booking_messages.BOOKING_NOT_FOUND)
     if err == "forbidden":
-        raise HTTPException(status_code=403, detail="You cannot open a dispute for this booking.")
+        raise HTTPException(status_code=403, detail=booking_messages.CANNOT_OPEN_DISPUTE)
     if err == "conflict":
         raise HTTPException(
             status_code=409,
-            detail="A dispute is already open or under review for this booking.",
+            detail=booking_messages.DISPUTE_ALREADY_OPEN,
         )
     if err == "invalid_status":
         raise HTTPException(
             status_code=400,
-            detail="Disputes cannot be opened for this booking in its current status.",
+            detail=booking_messages.DISPUTE_INVALID_STATUS,
         )
     if not row:
-        raise HTTPException(status_code=500, detail="Could not create dispute.")
+        raise HTTPException(status_code=500, detail=booking_messages.COULD_NOT_CREATE_DISPUTE)
     return CreateParticipantDisputeResponse(dispute=ParticipantDisputePublic.model_validate(row))
 
 
@@ -62,8 +63,8 @@ def get_dispute(dispute_id: str, uid: str) -> ParticipantDisputeDetailResponse:
     try:
         uuid.UUID(dispute_id)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail="Invalid dispute id.") from e
+        raise HTTPException(status_code=400, detail=booking_messages.INVALID_DISPUTE_ID) from e
     row = get_dispute_for_participant(dispute_id, uid)
     if not row:
-        raise HTTPException(status_code=404, detail="Dispute not found.")
+        raise HTTPException(status_code=404, detail=booking_messages.DISPUTE_NOT_FOUND)
     return ParticipantDisputeDetailResponse(dispute=ParticipantDisputePublic.model_validate(row))

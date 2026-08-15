@@ -6,7 +6,7 @@ import json
 from typing import Any
 
 from app.core.config import get_settings
-from app.core.db import get_db as get_client
+from app.core.db import get_db
 from app.core.logging import get_logger
 from app.features.vendor_copilot.score import compute_growth_score
 from app.features.vendors.analytics import get_vendor_analytics
@@ -20,11 +20,9 @@ def _business_name(payload: dict[str, Any]) -> str:
 
 
 def _load_pending_bookings(vendor_user_id: str, *, limit: int = 5) -> list[dict[str, Any]]:
-    if get_settings().local_auth_mode:
-        return []
     try:
         res = (
-            get_client()
+            get_db()
             .table("booking_requests")
             .select("id,event_name,event_date,status,created_at,notes")
             .eq("vendor_user_id", vendor_user_id)
@@ -91,7 +89,7 @@ def build_vendor_context(vendor_user_id: str, *, analytics_days: int = 90) -> di
     }
 
 
-def context_for_prompt(ctx: dict[str, Any]) -> str:
+def format_vendor_copilot_prompt_context(ctx: dict[str, Any]) -> str:
     """Compact JSON facts block for LLM system prompt — no secrets."""
     if not ctx.get("found"):
         return "Vendor profile not found."

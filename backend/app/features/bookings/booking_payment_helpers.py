@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from app.core.config import get_settings
-from app.core.db import get_db as get_client
+from app.core.db import get_db
 from app.core.logging import get_logger
 from app.features.email.dispatch import dispatch_booking_notification
 from app.features.payments import stripe as stripe_service
@@ -21,8 +21,6 @@ def _now_iso() -> str:
 
 
 def _notify_pair(client_user_id: str, vendor_user_id: str) -> None:
-    if get_settings().local_auth_mode:
-        return
     if client_user_id:
         notify_user(client_user_id, "booking_changed")
     if vendor_user_id:
@@ -37,7 +35,7 @@ def _get_vendor_stripe_fields(vendor_user_id: str) -> dict[str, Any] | None:
 
     def _select(columns: str) -> Any:
         return (
-            get_client()
+            get_db()
             .table("vendors")
             .select(columns)
             .eq("user_id", vendor_user_id)
@@ -63,7 +61,7 @@ def _load_full_booking_row(booking_id: str) -> dict[str, Any] | None:
     if not booking_id:
         return None
     res = (
-        get_client()
+        get_db()
         .table("booking_requests")
         .select("*")
         .eq("id", booking_id)
