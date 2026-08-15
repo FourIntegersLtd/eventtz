@@ -36,7 +36,9 @@ export function useUnifiedRegister() {
   const [accountType, setAccountType] = useState<RegisterAccountType>(() =>
     referralSlug ? "vendor" : accountTypeFromQuery(typeParam),
   );
-  const [referralDisplayName, setReferralDisplayName] = useState<string | null>(null);
+  const [referralDisplayName, setReferralDisplayName] = useState<string | null>(
+    null,
+  );
   useEffect(() => {
     if (referralSlug) {
       setAccountType("vendor");
@@ -81,14 +83,21 @@ export function useUnifiedRegister() {
     }
     setSubmitting(true);
     try {
-      const result = await signUp(parsed.data.email, parsed.data.password, {
-        userType: parsed.data.accountType,
-        referralCode: parsed.data.accountType === "vendor" ? referralSlug ?? undefined : undefined,
-      });
+      const result = await signUp(
+        parsed.data.email,
+        parsed.data.password,
+        parsed.data.accountType,
+        parsed.data.accountType === "vendor" ? referralSlug ?? undefined : undefined,
+      );
       if (result.message) {
         setMessage(result.message);
       } else {
-        router.push(resolvePostAuthPath(searchParams.get("next"), parsed.data.accountType));
+        router.push(
+          resolvePostAuthPath(
+            searchParams.get("next"),
+            parsed.data.accountType,
+          ),
+        );
       }
     } catch (err: unknown) {
       track(MixpanelEvents.register_failed, { user_type: accountType });

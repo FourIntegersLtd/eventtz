@@ -116,7 +116,7 @@ export function buildMissingChecklistMessage(options: {
   const profileUrl = options.onboardingUrl ?? vendorProfileUrl();
 
   const lines = missingGroups.flatMap((group) =>
-    group.items.map((item) => `• ${item.label} — ${item.detail}`),
+    group.items.map((item) => `• ${item.label}: ${item.detail}`),
   );
 
   const closing = [

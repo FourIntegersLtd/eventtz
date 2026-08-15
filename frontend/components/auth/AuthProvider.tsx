@@ -28,7 +28,8 @@ type AuthContextValue = {
   signUp: (
     email: string,
     password: string,
-    opts?: { userType?: Extract<UserType, "client" | "vendor">; referralCode?: string },
+    userType?: Extract<UserType, "client" | "vendor">,
+    referralCode?: string,
   ) => Promise<{ message?: string | null }>;
   signOut: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -88,8 +89,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await refreshUser();
         track(MixpanelEvents.user_signed_in);
       },
-      signUp: async (email, password, opts) => {
-        const result = await apiSignUp(email, password, opts);
+      signUp: async (email, password, userType = "client", referralCode) => {
+        const result = await apiSignUp(email, password, userType, referralCode);
         // Signup no longer returns a session until email is verified.
         if (!result.session) {
           setUser(null);
@@ -97,7 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await refreshUser();
         }
         track(MixpanelEvents.user_signed_up, {
-          user_type: opts?.userType ?? "client",
+          user_type: userType,
         });
         return { message: result.message };
       },

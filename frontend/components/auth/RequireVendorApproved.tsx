@@ -10,9 +10,10 @@ type RequireVendorApprovedProps = {
 };
 
 /**
- * Gates vendor portal pages (dashboard/bookings/messages/notifications) behind a
- * submitted + admin-approved profile. `/vendor/profile` itself is exempt (wired in
- * the portal layout) so vendors can finish onboarding and check their status there.
+ * Gates vendor portal pages (dashboard/bookings/payments/notifications) behind a
+ * submitted + admin-approved profile. `/vendor/profile`, `/vendor/contact`, and
+ * `/vendor/messages` are exempt (wired in the portal layout) so vendors can finish
+ * onboarding, reach support, and read Eventtz Support threads while pending review.
  */
 export function RequireVendorApproved({ children }: RequireVendorApprovedProps) {
   const router = useRouter();

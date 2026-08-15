@@ -300,6 +300,7 @@ export function mergePayloadIntoVendorData(
       typeof p.onboardingFlowVersion === "number" && Number.isFinite(p.onboardingFlowVersion)
         ? Math.floor(p.onboardingFlowVersion)
         : 1,
+    returnedForEditsAt: coerceStr(p, "returnedForEditsAt"),
     foodHygieneCertFile: null,
     foodHygieneCertNamePersisted: coerceStr(p, "foodHygieneCertNamePersisted"),
     indemnityCertFile: null,

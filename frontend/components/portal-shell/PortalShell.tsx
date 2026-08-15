@@ -19,6 +19,7 @@ import {
 } from "@/lib/clientNotificationsApi";
 import { CHAT_UNREAD_CLEARED_EVENT, fetchChatUnreadCount } from "@/lib/chatApi";
 import { fetchVendorBookings } from "@/lib/vendorBookingsApi";
+import { fetchVendorProfile } from "@/lib/vendorProfileApi";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 import { NotificationBell } from "@/features/notifications/NotificationBell";
 import { HelpWidget } from "@/features/help/HelpWidget";
@@ -189,6 +190,7 @@ export function PortalShell({
   const [bookingUnread, setBookingUnread] = useState<number | null>(null);
   const [chatUnread, setChatUnread] = useState<number | null>(null);
   const [vendorBookingsPending, setVendorBookingsPending] = useState<number | null>(null);
+  const [vendorPreApproval, setVendorPreApproval] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [signOutOpen, setSignOutOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -225,6 +227,28 @@ export function PortalShell({
     void (async () => {
       if (cancelled) return;
       await refreshUnreadCounts();
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [portal, user?.id, navKey]);
+
+  useEffect(() => {
+    if (portal !== "vendor" || !user?.id) {
+      setVendorPreApproval(false);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetchVendorProfile();
+        if (cancelled) return;
+        const approved =
+          res.onboarding_status === "submitted" && res.approval_status === "approved";
+        setVendorPreApproval(!approved);
+      } catch {
+        if (!cancelled) setVendorPreApproval(true);
+      }
     })();
     return () => {
       cancelled = true;
@@ -290,7 +314,17 @@ export function PortalShell({
       : (vendorBookingsPending ?? 0) + (chatUnread ?? 0);
 
   const notificationBell = user ? (
-    <NotificationBell portal={portal} unreadCount={bellUnreadCount} onMarkedRead={refreshUnreadCounts} />
+    <NotificationBell
+      portal={portal}
+      unreadCount={bellUnreadCount}
+      onMarkedRead={refreshUnreadCounts}
+      viewAllHref={
+        portal === "vendor" && vendorPreApproval ? "/vendor/messages" : undefined
+      }
+      viewAllLabel={
+        portal === "vendor" && vendorPreApproval ? "Open Messages" : undefined
+      }
+    />
   ) : null;
 
   const navProps = {

@@ -13,11 +13,13 @@ import { VendorProfilePhotoField } from "../VendorProfilePhotoField";
 
 type StepSubmittedProps = {
   approvalStatus: VendorApprovalStatus;
+  profileStatus?: string;
   /** Live on client explore. False while approved means clients cannot see them yet. */
   listingVisible?: boolean;
   /** Separates "finish payout setup" from "an admin has paused your listing". */
   payoutsVerified?: boolean;
   onViewProfileReview: () => void;
+  onEditProfile?: () => void;
   onRefreshStatus: () => void;
   refreshing?: boolean;
   statusCheckFeedback?: VendorStatusCheckFeedback | null;
@@ -82,9 +84,11 @@ function StatusCheckFeedbackBanner({ feedback }: { feedback: VendorStatusCheckFe
 
 export function StepSubmitted({
   approvalStatus,
+  profileStatus = "submitted",
   listingVisible = false,
   payoutsVerified = false,
   onViewProfileReview,
+  onEditProfile,
   onRefreshStatus,
   refreshing = false,
   statusCheckFeedback = null,
@@ -102,6 +106,7 @@ export function StepSubmitted({
 }: StepSubmittedProps) {
   const approved = approvalStatus === "approved";
   const banned = approvalStatus === "banned";
+  const returnedForEdits = profileStatus === "draft" && !approved && !banned;
   // Admin said yes, but Stripe hasn't verified payouts, so clients still can't see them.
   const awaitingPayouts = approved && !listingVisible && !payoutsVerified;
   // Payouts are fine, so an admin is holding the listing back - don't send them to Stripe.
@@ -111,7 +116,9 @@ export function StepSubmitted({
     ? portfolioApprovalBlockedCopy(portfolioPhotoCount)
     : null;
 
-  const heading = awaitingPayouts
+  const heading = returnedForEdits
+    ? "Profile returned for edits"
+    : awaitingPayouts
     ? "Approved - one step left"
     : listingPaused
       ? "Profile temporarily hidden"
@@ -123,7 +130,9 @@ export function StepSubmitted({
             ? blockedCopy!.submittedHeading
             : "Profile submitted";
 
-  const statusCopy = awaitingPayouts
+  const statusCopy = returnedForEdits
+    ? "You already submitted your profile. Our team sent details in Messages — open the Messages tab to read what to fix, then update and submit again."
+    : awaitingPayouts
     ? "Set up your payout details to go live. Until they're verified, your profile stays hidden from clients."
     : listingPaused
       ? "Our team has paused your listing while they take another look. We'll email you as soon as it's back up."
@@ -163,7 +172,7 @@ export function StepSubmitted({
           {statusCopy}
         </p>
       </AnimatedStepItem>
-      {!banned && onUploadProfileImage ? (
+      {!banned && onUploadProfileImage && !returnedForEdits ? (
         <div className="py-1">
           <VendorProfilePhotoField
             firstName={firstName}
@@ -241,6 +250,27 @@ export function StepSubmitted({
         </>
       ) : (
         <>
+          {returnedForEdits ? (
+            <AnimatedStepItem index={2}>
+              <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+                {onEditProfile ? (
+                  <button
+                    type="button"
+                    onClick={onEditProfile}
+                    className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm hover:opacity-95 sm:w-auto sm:min-w-[12rem]"
+                  >
+                    Edit profile
+                  </button>
+                ) : null}
+                <Link
+                  href="/vendor/messages"
+                  className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-primary bg-white px-6 py-3 text-sm font-semibold text-primary shadow-sm hover:bg-neutral-50 sm:w-auto sm:min-w-[12rem]"
+                >
+                  Read message
+                </Link>
+              </div>
+            </AnimatedStepItem>
+          ) : null}
           {needsMorePortfolioPhotos && onAddPortfolioPhotos && blockedCopy ? (
             <AnimatedStepItem index={2}>
               <div className="mx-auto max-w-md rounded-xl bg-amber-50 px-4 py-4 text-left ring-1 ring-amber-200/70">

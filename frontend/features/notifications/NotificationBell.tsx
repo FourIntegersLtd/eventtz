@@ -20,6 +20,9 @@ export type NotificationBellProps = {
   unreadCount: number;
   /** Called after the dropdown marks booking notifications read, so PortalShell can refresh its own badge state. */
   onMarkedRead?: () => void;
+  /** Override footer link when the default notifications page is unavailable (e.g. pending vendors). */
+  viewAllHref?: string;
+  viewAllLabel?: string;
 };
 
 const NOTIFICATIONS_HREF: Record<"client" | "vendor", string> = {
@@ -32,7 +35,13 @@ const NOTIFICATIONS_HREF: Record<"client" | "vendor", string> = {
  * "mark as read" action for booking notifications - replacing the previous
  * silent auto-mark-read-on-page-visit side effect.
  */
-export function NotificationBell({ portal, unreadCount, onMarkedRead }: NotificationBellProps) {
+export function NotificationBell({
+  portal,
+  unreadCount,
+  onMarkedRead,
+  viewAllHref,
+  viewAllLabel,
+}: NotificationBellProps) {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<NotificationFeedItem[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -84,6 +93,9 @@ export function NotificationBell({ portal, unreadCount, onMarkedRead }: Notifica
     };
   }, [open, portal, onMarkedRead]);
 
+  const footerHref = viewAllHref ?? NOTIFICATIONS_HREF[portal];
+  const footerLabel = viewAllLabel ?? "View all";
+
   return (
     <div ref={containerRef} className="relative">
       <button
@@ -111,11 +123,11 @@ export function NotificationBell({ portal, unreadCount, onMarkedRead }: Notifica
           <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-3">
             <p className="text-sm font-semibold text-neutral-900">Notifications</p>
             <Link
-              href={NOTIFICATIONS_HREF[portal]}
+              href={footerHref}
               onClick={() => setOpen(false)}
               className="text-xs font-medium text-primary hover:underline"
             >
-              View all
+              {footerLabel}
             </Link>
           </div>
           <div className="scroll-pane max-h-96 p-2">

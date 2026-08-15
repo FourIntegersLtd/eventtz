@@ -21,13 +21,20 @@ import {
   normalizePublicBioText,
   portfolioImageCountFromData,
 } from "./reviewDisplayHelpers";
-import { mapLegacyOnboardingStep } from "./onboardingProgress";
+import { resolveOnboardingStepFromProfile, vendorHasReturnedForEditsFlag } from "./onboardingProgress";
 import {
   mergePayloadIntoVendorData,
   normalizeVendorPayload,
   vendorDataToPayload,
 } from "./serializeVendorPayload";
 import { initialVendorOnboardingData, type VendorOnboardingData, type VendorStatusCheckFeedback } from "./types";
+
+export const RETURNED_FOR_EDITS_FEEDBACK: VendorStatusCheckFeedback = {
+  tone: "info",
+  title: "Profile returned for edits",
+  description:
+    "You already submitted your profile. Our team sent details in Messages — check the Messages tab, update your profile, then submit again when you're ready.",
+};
 
 type UseOnboardingPersistenceOptions = {
   isWalkthrough: boolean;
@@ -133,15 +140,22 @@ export function useOnboardingPersistence({
           email: merged.email?.trim() || user.email || "",
           password: "",
         });
-        if (res.onboarding_status === "submitted") {
-          setStep(isWalkthrough ? 1 : res.approval_status === "approved" ? 1 : 9);
-        } else {
-          const cs = res.current_step ?? 1;
-          setStep(
-            isWalkthrough
-              ? 1
-              : mapLegacyOnboardingStep(cs, merged.onboardingFlowVersion ?? 1),
-          );
+        setStep(
+          isWalkthrough
+            ? 1
+            : resolveOnboardingStepFromProfile(
+                res,
+                merged.onboardingFlowVersion ?? 1,
+                false,
+              ),
+        );
+        if (
+          !isWalkthrough &&
+          vendorHasReturnedForEditsFlag(
+            typeof merged.returnedForEditsAt === "string" ? merged.returnedForEditsAt : "",
+          )
+        ) {
+          setStatusCheckFeedback(RETURNED_FOR_EDITS_FEEDBACK);
         }
         setLoadStatus("ready");
       } catch (e) {
@@ -159,6 +173,14 @@ export function useOnboardingPersistence({
       cancelled = true;
     };
   }, [authLoading, user?.id, user?.email, applyVendorProfileResponse, isWalkthrough, setStep]);
+
+  /** Stale UI: vendor still on the submitted screen after admin returned their profile to draft. */
+  useEffect(() => {
+    if (isWalkthrough || loadStatus !== "ready") return;
+    if (profileStatus !== "draft" || step !== 9) return;
+    setStep(8);
+    setStatusCheckFeedback(RETURNED_FOR_EDITS_FEEDBACK);
+  }, [isWalkthrough, loadStatus, profileStatus, step, setStep]);
 
   const update = useCallback(
     (patch: Partial<VendorOnboardingData>) => {
@@ -298,11 +320,19 @@ export function useOnboardingPersistence({
           tone: "neutral",
         });
       } else {
-        setStatusCheckFeedback({
-          tone: "info",
-          title: "Status checked",
-          description: "Your profile hasn't been submitted for review yet.",
-        });
+        // "Check approval status" only appears on the post-submit screen (step 9).
+        // Any non-submitted status here means admin returned the profile for edits.
+        const flowVersion = merged.onboardingFlowVersion ?? 1;
+        const editStep = resolveOnboardingStepFromProfile(
+          {
+            ...res,
+            onboarding_status: res.onboarding_status ?? "draft",
+          },
+          flowVersion,
+          isWalkthrough,
+        );
+        setStep(editStep);
+        setStatusCheckFeedback(RETURNED_FOR_EDITS_FEEDBACK);
       }
     } catch {
       setStatusCheckFeedback({
@@ -313,7 +343,7 @@ export function useOnboardingPersistence({
     } finally {
       setRefreshingStatus(false);
     }
-  }, [user?.email, applyVendorProfileResponse, showToast]);
+  }, [user?.email, applyVendorProfileResponse, showToast, isWalkthrough, step, setStep]);
 
   const persistProfileImageUrl = useCallback(
     async (url: string) => {

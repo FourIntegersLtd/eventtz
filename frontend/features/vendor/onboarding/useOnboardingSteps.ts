@@ -80,10 +80,23 @@ export function useOnboardingSteps({
 
   useEffect(() => {
     if (loadStatus !== "ready") return;
+    // Admin returned profile to draft — leave the submitted screen before lock logic runs.
+    if (profileStatus === "draft" && step === 9) {
+      setStep(8);
+      setReturnToReview(false);
+      return;
+    }
     if (lockedPendingReview && step !== 9 && !(step === 6 && canAddPortfolioWhilePending)) {
       setStep(9);
     }
-  }, [loadStatus, lockedPendingReview, canAddPortfolioWhilePending, step, setStep]);
+  }, [
+    loadStatus,
+    lockedPendingReview,
+    canAddPortfolioWhilePending,
+    step,
+    setStep,
+    profileStatus,
+  ]);
 
   const primaryLabel = useMemo(() => {
     if (canAddPortfolioWhilePending && step === 6) return "Save photos";
@@ -91,7 +104,7 @@ export function useOnboardingSteps({
     if (profileStatus === "submitted" && approvalStatus === "approved") {
       return "Save changes";
     }
-    if (step === 8) return "Confirm";
+    if (step === 8) return "Submit for review";
     if (step === 9) return "OK";
     return "Next";
   }, [step, profileStatus, approvalStatus, isWalkthrough, canAddPortfolioWhilePending]);

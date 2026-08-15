@@ -8,6 +8,7 @@ import { ChevronLeft } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { MIN_PORTFOLIO_IMAGES } from "./constants";
 import { portfolioApprovalBlockedCopy } from "./onboardingCopy";
+import { vendorHasReturnedForEditsFlag } from "./onboardingProgress";
 import { OnboardingStepContent } from "./OnboardingStepContent";
 import { OnboardingProgressHeader } from "./OnboardingProgressHeader";
 import { OnboardingWizardStepTitle } from "./ui/OnboardingWizardStepTitle";
@@ -85,6 +86,15 @@ export function VendorOnboarding() {
   const useWizardLayout = isWalkthrough || !isApprovedLive;
 
   const isLiveEdit = !useWizardLayout;
+  /** Jumped from review to fix one section — "Back to review" replaces linear Back. */
+  const editingFromReview = returnToReview && step < 8;
+  const showWizardBack =
+    !editingFromReview &&
+    (step > 1 || (lockedPendingReview && (step === 6 || step === 8)));
+  const returnedForEditsPending =
+    !isWalkthrough &&
+    profileStatus === "draft" &&
+    vendorHasReturnedForEditsFlag(data.returnedForEditsAt);
   const questionnaireTopRef = useRef<HTMLDivElement>(null);
   const [stepInfoOpen, setStepInfoOpen] = useState(false);
 
@@ -113,6 +123,7 @@ export function VendorOnboarding() {
     payoutsVerified,
     onViewProfileReview,
     onRefreshStatus: () => void onRefreshStatus(),
+    profileStatus,
     refreshingStatus,
     statusCheckFeedback,
     submittedSummaryBusinessName: data.businessName,
@@ -221,6 +232,26 @@ export function VendorOnboarding() {
           </Link>
         </div>
       )}
+      {returnedForEditsPending && step === 8 ? (
+        <div className="mb-8 rounded-2xl bg-sky-50 p-5 text-sm text-sky-950 shadow-sm ring-1 ring-sky-200/70">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <p className="font-semibold text-sky-950">Profile returned for edits</p>
+              <p className="mt-1 leading-relaxed text-sky-900/90">
+                You already submitted your profile. Our team sent details in{" "}
+                <strong className="font-semibold">Messages</strong> — read what to fix, update
+                below, then submit again when you&apos;re ready.
+              </p>
+            </div>
+            <Link
+              href="/vendor/messages"
+              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-95 sm:min-w-[10rem]"
+            >
+              Open Messages
+            </Link>
+          </div>
+        </div>
+      ) : null}
       {lockedPendingReview && step !== 9 && (
         <div className="mb-8 rounded-2xl bg-amber-50 p-5 text-sm text-amber-950 shadow-sm ring-1 ring-amber-200/50">
           <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:text-left">
@@ -355,7 +386,7 @@ export function VendorOnboarding() {
                         : "Close anytime. Your progress is saved."}
                   </p>
                   <div className="flex flex-wrap items-center justify-end gap-3">
-                    {returnToReview && step < 8 && !(lockedPendingReview && step === 6) ? (
+                    {editingFromReview && !(lockedPendingReview && step === 6) ? (
                       <button
                         type="button"
                         onClick={goBackToReview}
@@ -364,7 +395,7 @@ export function VendorOnboarding() {
                         Back to review
                       </button>
                     ) : null}
-                    {step > 1 || (lockedPendingReview && (step === 6 || step === 8)) ? (
+                    {showWizardBack ? (
                       <button
                         type="button"
                         onClick={goBack}
