@@ -72,6 +72,8 @@ export function ChatThreadView({
   initialDraft,
 }: ChatThreadViewProps) {
   const isDrawer = variant === "drawer";
+  const pageThreadShell =
+    "h-full min-h-0 flex-1 max-md:rounded-none max-md:border-x-0 max-md:border-b-0";
   const { user } = useAuth();
   const uid = user?.id ?? "";
   const [conv, setConv] = useState<ChatConversation | null>(null);
@@ -238,10 +240,10 @@ export function ChatThreadView({
   return (
     <div
       className={`flex max-h-full flex-col overflow-hidden ${portalCard} ${
-        isDrawer ? "min-h-[50dvh]" : "h-full min-h-0 flex-1"
+        isDrawer ? "h-full min-h-0 flex-1" : pageThreadShell
       }`}
     >
-      <div className="flex flex-col gap-3 border-b border-neutral-100 px-5 py-4 sm:flex-row sm:items-center sm:gap-4 sm:px-6 sm:py-5">
+      <div className="shrink-0 flex flex-col gap-3 border-b border-neutral-100 px-5 py-4 sm:flex-row sm:items-center sm:gap-4 sm:px-6 sm:py-5">
         {backHref && !isDrawer ? (
           <BackLink
             href={backHref}
@@ -296,9 +298,7 @@ export function ChatThreadView({
       ) : null}
 
       <div
-        className={`scroll-pane flex min-h-0 flex-1 flex-col bg-gradient-to-b from-neutral-50/80 to-white px-5 py-5 sm:px-6 sm:py-6 ${
-          isDrawer ? "min-h-[36dvh]" : ""
-        }`}
+        className={`scroll-pane flex min-h-0 flex-1 flex-col overflow-y-auto bg-gradient-to-b from-neutral-50/80 to-white px-5 py-5 sm:px-6 sm:py-6`}
       >
         {messages.length === 0 ? (
           <div className="m-auto flex max-w-xs flex-col items-center gap-3 text-center">
@@ -390,7 +390,7 @@ export function ChatThreadView({
         <div ref={bottomRef} />
       </div>
 
-      <div className="border-t border-neutral-100 bg-white px-5 py-4 sm:px-6">
+      <div className="shrink-0 border-t border-neutral-100 bg-white px-5 py-4 sm:px-6">
         <MessageComposer
           value={draft}
           onChange={setDraft}

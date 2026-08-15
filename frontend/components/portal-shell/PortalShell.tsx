@@ -29,6 +29,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   isPortalNavActive,
   portalDashboardHref,
+  portalHidePageTitleOnMobile,
   portalNavItems,
   type PortalRole,
 } from "@/components/portal-shell/portalNav";
@@ -337,6 +338,8 @@ export function PortalShell({
     vendorBookingsPending,
   } as const;
 
+  const hideTitleOnMobile = portalHidePageTitleOnMobile(pathname, portal);
+
   const shell = (
     <div className="app-viewport-shell w-full min-w-0 overflow-x-hidden bg-page-bg text-neutral-900">
       <ConfirmDialog
@@ -428,7 +431,11 @@ export function PortalShell({
           <div className="flex h-full min-h-0 w-full min-w-0 flex-col">
             <div className="flex shrink-0 items-center justify-between gap-3">
               {title ? (
-                <h1 className="min-w-0 break-words font-heading text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl">
+                <h1
+                  className={`min-w-0 break-words font-heading text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl ${
+                    hideTitleOnMobile ? "hidden md:block" : ""
+                  }`}
+                >
                   {title}
                 </h1>
               ) : (
@@ -437,7 +444,13 @@ export function PortalShell({
               <div className="hidden shrink-0 md:block">{notificationBell}</div>
             </div>
             <div
-              className={`portal-content app-viewport-shell__main-scroll scroll-pane min-w-0 ${title ? "mt-5 sm:mt-6" : "mt-3"}`}
+              className={`portal-content app-viewport-shell__main-scroll scroll-pane min-w-0 ${
+                title
+                  ? hideTitleOnMobile
+                    ? "mt-0 md:mt-6"
+                    : "mt-5 sm:mt-6"
+                  : "mt-3"
+              }`}
             >
               {children}
             </div>

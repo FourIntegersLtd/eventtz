@@ -91,7 +91,12 @@ export function ChatDrawer({
   };
 
   return (
-    <Drawer isOpen={isOpen} onClose={onClose} title={`Message ${counterpartyName || shortName}`}>
+    <Drawer
+      isOpen={isOpen}
+      onClose={onClose}
+      fillHeight
+      title={`Message ${counterpartyName || shortName}`}
+    >
       {activeConversationId ? (
         <ChatThreadView
           portal={portal}

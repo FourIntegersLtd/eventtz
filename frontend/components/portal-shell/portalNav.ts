@@ -142,6 +142,15 @@ export function portalPageTitle(pathname: string, role: PortalRole): string {
   return "";
 }
 
+/** Master-detail detail routes hide the shell title on mobile (thread has its own back link). */
+export function portalHidePageTitleOnMobile(pathname: string, role: PortalRole): boolean {
+  const base = role === "client" ? "/client" : "/vendor";
+  return (
+    /^\/[^/]+\/(messages|bookings)\/[^/]+/.test(pathname) &&
+    pathname.startsWith(base)
+  );
+}
+
 export function portalDashboardHref(role: PortalRole): string {
   return portalRoute(role, "dashboard");
 }

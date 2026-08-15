@@ -950,6 +950,18 @@ body::-webkit-scrollbar:vertical {
   max-height: 100%;
 }
 
+@media (max-width: 767px) {
+  /* Fill-height master-detail (messages, bookings): edge-to-edge, no FAB gutter */
+  .app-viewport-shell__main:has(.portal-fill-height) {
+    padding: 0;
+  }
+
+  .portal-content:has(> .portal-fill-height) {
+    margin-top: 0;
+    padding-bottom: 0;
+  }
+}
+
 .compliance-table-wrap {
   overflow-x: auto;
   margin: 1.5rem 0;

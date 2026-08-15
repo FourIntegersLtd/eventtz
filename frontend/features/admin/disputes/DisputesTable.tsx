@@ -57,7 +57,7 @@ export function DisputesTable({
         <EmptyState title="No disputes match this filter" lottie="searchNoResults" />
       ) : (
         <AdminTable>
-          <AdminTableElement>
+          <AdminTableElement className="min-w-[40rem]">
             <AdminTableHead>
               <AdminTableHeaderCell>Status</AdminTableHeaderCell>
               <AdminTableHeaderCell>Summary</AdminTableHeaderCell>

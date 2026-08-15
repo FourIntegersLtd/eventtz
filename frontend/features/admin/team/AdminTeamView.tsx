@@ -109,7 +109,7 @@ export function AdminTeamView() {
         <EmptyState title="No admins yet" variant="team" />
       ) : (
         <AdminTable>
-          <AdminTableElement>
+          <AdminTableElement className="min-w-[36rem]">
             <AdminTableHead>
               <AdminTableHeaderCell>Email</AdminTableHeaderCell>
               <AdminTableHeaderCell>Role</AdminTableHeaderCell>

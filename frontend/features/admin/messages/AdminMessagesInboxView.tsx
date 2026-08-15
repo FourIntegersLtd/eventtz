@@ -182,8 +182,8 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
   const activeConv = conversations.find((c) => c.id === activeId) ?? null;
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]">
-      <div className={`${adminCard} flex max-h-[70vh] flex-col overflow-hidden`}>
+    <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)] lg:min-h-[calc(100dvh-10rem)]">
+      <div className={`${adminCard} flex max-h-[38dvh] flex-col overflow-hidden lg:max-h-none lg:min-h-0`}>
         <div className="border-b border-neutral-100 px-4 py-3 text-sm font-medium text-neutral-800">
           Support threads
         </div>
@@ -229,7 +229,7 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
         )}
       </div>
 
-      <div className={`${adminCard} flex min-h-[24rem] max-h-[70vh] flex-col`}>
+      <div className={`${adminCard} flex min-h-[min(100dvh-14rem,100%)] flex-1 flex-col overflow-hidden lg:min-h-0`}>
         {error ? (
           <div className="p-4">
             <AdminErrorBanner message={error} />

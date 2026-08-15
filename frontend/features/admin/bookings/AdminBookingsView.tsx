@@ -143,7 +143,7 @@ export function AdminBookingsView() {
       ) : (
         <>
           <AdminTable>
-            <AdminTableElement>
+            <AdminTableElement className="min-w-[56rem]">
               <AdminTableHead>
                 <AdminTableHeaderCell>Event</AdminTableHeaderCell>
                 <AdminTableHeaderCell>Status</AdminTableHeaderCell>

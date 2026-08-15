@@ -103,7 +103,7 @@ export function AdminAuditView() {
       ) : (
         <>
           <AdminTable>
-            <AdminTableElement>
+            <AdminTableElement className="min-w-[44rem]">
               <AdminTableHead>
                 <AdminTableHeaderCell>When</AdminTableHeaderCell>
                 <AdminTableHeaderCell>What happened</AdminTableHeaderCell>
