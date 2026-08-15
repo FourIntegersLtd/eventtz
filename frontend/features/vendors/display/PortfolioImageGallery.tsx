@@ -1,14 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { ChevronLeft, ChevronRight, LayoutGrid } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type PointerEvent as ReactPointerEvent } from "react";
+import { LayoutGrid } from "lucide-react";
 import { PortfolioLightbox } from "@/features/vendors/display/PortfolioLightbox";
 
 export type PortfolioImageGalleryLayout = "hero" | "grid" | "collage";
 
 const COLLAGE_AUTOPLAY_MS = 4500;
 const COLLAGE_AUTOPLAY_RESUME_MS = 10_000;
-const COLLAGE_CROSSFADE_MS = 1050;
 
 export type PortfolioImageGalleryProps = {
   urls: string[];
@@ -36,10 +35,8 @@ export function PortfolioImageGallery({
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [autoplayPaused, setAutoplayPaused] = useState(false);
-  const [leavingPhotoIndex, setLeavingPhotoIndex] = useState<number | null>(null);
   const autoplayResumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const leaveClearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const prevPhotoIndexRef = useRef(0);
+  const swipeStartX = useRef<number | null>(null);
 
   const photosKey = photos.join("|");
 
@@ -47,14 +44,11 @@ export function PortfolioImageGallery({
     setActivePhotoIndex(0);
     setLightboxOpen(false);
     setAutoplayPaused(false);
-    setLeavingPhotoIndex(null);
-    prevPhotoIndexRef.current = 0;
   }, [photosKey]);
 
   useEffect(
     () => () => {
       if (autoplayResumeTimer.current) clearTimeout(autoplayResumeTimer.current);
-      if (leaveClearTimer.current) clearTimeout(leaveClearTimer.current);
     },
     [],
   );
@@ -75,19 +69,6 @@ export function PortfolioImageGallery({
     },
     [photos.length],
   );
-
-  useEffect(() => {
-    if (photos.length === 0) return;
-    const prev = prevPhotoIndexRef.current;
-    if (prev === activePhotoIndex) return;
-
-    setLeavingPhotoIndex(prev);
-    if (leaveClearTimer.current) clearTimeout(leaveClearTimer.current);
-    leaveClearTimer.current = setTimeout(() => {
-      setLeavingPhotoIndex(null);
-    }, COLLAGE_CROSSFADE_MS);
-    prevPhotoIndexRef.current = activePhotoIndex;
-  }, [activePhotoIndex, photos.length]);
 
   const activePhotoUrl =
     photos.length > 0 ? photos[Math.min(activePhotoIndex, photos.length - 1)] : null;
@@ -122,6 +103,20 @@ export function PortfolioImageGallery({
     photos.length,
     photosKey,
   ]);
+
+  const handleCarouselPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    pauseAutoplay();
+    swipeStartX.current = event.clientX;
+  };
+
+  const handleCarouselPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (swipeStartX.current == null || photos.length <= 1) return;
+    const delta = event.clientX - swipeStartX.current;
+    swipeStartX.current = null;
+    if (Math.abs(delta) < 48) return;
+    if (delta > 0) goToPhoto(activePhotoIndex - 1);
+    else goToPhoto(activePhotoIndex + 1);
+  };
 
   const gridClass = gridCols === 3 ? "grid-cols-3" : "grid-cols-2";
 
@@ -174,97 +169,84 @@ export function PortfolioImageGallery({
     ) : null;
 
   const renderCollageMobileCarousel = () => {
-    if (!activePhotoUrl) return null;
+    if (photos.length === 0) return null;
 
     const showControls = photos.length > 1;
-    const isCrossfading = leavingPhotoIndex !== null;
 
     return (
       <div
-        className={`relative overflow-hidden rounded-2xl bg-neutral-950 md:hidden ${className}`.trim()}
-        onPointerDown={pauseAutoplay}
+        className={`portfolio-mobile-carousel relative overflow-hidden bg-neutral-950 max-md:-mx-4 max-md:w-[calc(100%+2rem)] md:hidden ${className}`.trim()}
+        onPointerDown={handleCarouselPointerDown}
+        onPointerUp={handleCarouselPointerUp}
+        onPointerCancel={() => {
+          swipeStartX.current = null;
+        }}
       >
-        <button
-          type="button"
+        <div
+          className="relative aspect-[4/5] w-full"
           onClick={() => openLightbox(activePhotoIndex)}
-          className="group relative block aspect-[4/5] w-full cursor-zoom-in overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              openLightbox(activePhotoIndex);
+            }
+          }}
+          role="button"
+          tabIndex={0}
           aria-label={`Open ${alt} photo ${activePhotoIndex + 1} fullscreen`}
         >
           <div className="absolute inset-0">
-            {isCrossfading && leavingPhotoIndex !== null ? (
-              <div
-                className="portfolio-carousel-slide portfolio-carousel-slide--leaving"
-                aria-hidden
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={photos[leavingPhotoIndex]}
-                  alt=""
-                  decoding="async"
-                />
-              </div>
-            ) : null}
-            <div
-              className={
-                isCrossfading
-                  ? "portfolio-carousel-slide portfolio-carousel-slide--entering"
-                  : "portfolio-carousel-slide portfolio-carousel-slide--active"
-              }
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={activePhotoUrl}
-                alt={`${alt} ${activePhotoIndex + 1}`}
-                decoding="async"
-              />
-            </div>
+            {photos.map((url, index) => {
+              const isActive = index === activePhotoIndex;
+              return (
+                <div
+                  key={url}
+                  className={`portfolio-carousel-slide ${isActive ? "is-active" : ""}`.trim()}
+                  aria-hidden={!isActive}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={url}
+                    alt={isActive ? `${alt} ${index + 1}` : ""}
+                    loading={index <= 2 ? "eager" : "lazy"}
+                    decoding="async"
+                  />
+                </div>
+              );
+            })}
           </div>
 
-          {showControls ? (
-            <div
-              className="absolute bottom-14 left-0 right-0 z-10 flex items-center justify-center gap-1.5"
-              aria-hidden
-            >
-              {photos.map((_, index) => (
-                <span
-                  key={`dot-${index}`}
-                  className={`h-1 rounded-full bg-white transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] ${
-                    index === activePhotoIndex ? "w-6 opacity-100" : "w-1 opacity-40"
-                  }`}
-                />
-              ))}
-            </div>
-          ) : null}
-
-          <span className="absolute bottom-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-black/45 px-3 py-1.5 text-xs font-medium text-white/95 backdrop-blur-md transition hover:bg-black/55">
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              openLightbox(activePhotoIndex);
+            }}
+            className="portfolio-carousel-view-gallery"
+            aria-label={`View ${alt} gallery`}
+          >
             <LayoutGrid className="h-3.5 w-3.5" aria-hidden />
             View Gallery
-          </span>
-        </button>
+          </button>
+        </div>
 
         {showControls ? (
           <>
             <button
               type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                goToPhoto(activePhotoIndex - 1);
-              }}
-              className="absolute left-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/25 text-white/95 backdrop-blur-md transition duration-300 hover:bg-black/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+              onClick={() => goToPhoto(activePhotoIndex - 1)}
+              className="portfolio-carousel-arrow portfolio-carousel-arrow--prev"
               aria-label="Previous photo"
             >
-              <ChevronLeft className="h-4 w-4" strokeWidth={2.5} aria-hidden />
+              ‹
             </button>
             <button
               type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                goToPhoto(activePhotoIndex + 1);
-              }}
-              className="absolute right-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/25 text-white/95 backdrop-blur-md transition duration-300 hover:bg-black/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+              onClick={() => goToPhoto(activePhotoIndex + 1)}
+              className="portfolio-carousel-arrow portfolio-carousel-arrow--next"
               aria-label="Next photo"
             >
-              <ChevronRight className="h-4 w-4" strokeWidth={2.5} aria-hidden />
+              ›
             </button>
           </>
         ) : null}

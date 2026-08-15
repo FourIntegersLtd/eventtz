@@ -145,48 +145,34 @@ body::-webkit-scrollbar:vertical {
   animation: review-enter-prev 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* Portfolio mobile carousel — Apple-style crossfade + Ken Burns */
+/* Portfolio mobile carousel — Shaadisouk-style fade slider */
 :root {
-  --portfolio-carousel-crossfade: 1050ms;
-  --portfolio-carousel-ease: cubic-bezier(0.32, 0.72, 0, 1);
-  --portfolio-carousel-dwell: 4500ms;
+  --portfolio-carousel-crossfade: 600ms;
+  --portfolio-carousel-ease: ease;
 }
 
-@keyframes portfolio-ken-burns {
-  from {
-    transform: scale(1);
-  }
-  to {
-    transform: scale(1.055);
-  }
-}
-
-@keyframes portfolio-crossfade-in {
-  from {
-    opacity: 0;
-    transform: scale(1.05);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes portfolio-crossfade-out {
-  from {
-    opacity: 1;
-    transform: scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: scale(0.988);
-  }
+.portfolio-mobile-carousel {
+  touch-action: pan-y;
 }
 
 .portfolio-carousel-slide {
   position: absolute;
   inset: 0;
   overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--portfolio-carousel-crossfade) var(--portfolio-carousel-ease),
+    visibility var(--portfolio-carousel-crossfade) var(--portfolio-carousel-ease);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.portfolio-carousel-slide.is-active {
+  opacity: 1;
+  visibility: visible;
+  z-index: 1;
+  pointer-events: auto;
 }
 
 .portfolio-carousel-slide img {
@@ -194,25 +180,50 @@ body::-webkit-scrollbar:vertical {
   width: 100%;
   object-fit: cover;
   object-position: top;
-  transform-origin: center top;
-  will-change: transform, opacity;
 }
 
-.portfolio-carousel-slide--active img {
-  animation: portfolio-ken-burns var(--portfolio-carousel-dwell) linear forwards;
+.portfolio-carousel-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 10;
+  display: flex;
+  height: 2rem;
+  width: 2rem;
+  transform: translateY(-50%);
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: rgb(255 255 255);
+  font-size: 1.75rem;
+  font-weight: 300;
+  line-height: 1;
+  text-shadow: 0 1px 6px rgb(0 0 0 / 35%);
 }
 
-.portfolio-carousel-slide--entering img {
-  animation:
-    portfolio-crossfade-in var(--portfolio-carousel-crossfade) var(--portfolio-carousel-ease)
-      forwards,
-    portfolio-ken-burns var(--portfolio-carousel-dwell) var(--portfolio-carousel-crossfade) linear
-      forwards;
+.portfolio-carousel-arrow--prev {
+  left: 0.375rem;
 }
 
-.portfolio-carousel-slide--leaving img {
-  animation: portfolio-crossfade-out var(--portfolio-carousel-crossfade) var(--portfolio-carousel-ease)
-    forwards;
+.portfolio-carousel-arrow--next {
+  right: 0.375rem;
+}
+
+.portfolio-carousel-view-gallery {
+  position: absolute;
+  right: 0.875rem;
+  bottom: 0.875rem;
+  z-index: 10;
+  display: inline-flex;
+  height: 1.875rem;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 9999px;
+  background: rgb(0 0 0 / 70%);
+  padding: 0 0.75rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: rgb(255 255 255);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -221,10 +232,8 @@ body::-webkit-scrollbar:vertical {
     animation: none;
   }
 
-  .portfolio-carousel-slide--active img,
-  .portfolio-carousel-slide--entering img,
-  .portfolio-carousel-slide--leaving img {
-    animation: none;
+  .portfolio-carousel-slide {
+    transition: none;
   }
 }
 
