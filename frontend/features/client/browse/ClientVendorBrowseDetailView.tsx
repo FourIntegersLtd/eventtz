@@ -15,6 +15,10 @@ import {
   type VendorBookingSearchPrefill,
 } from "@/features/client/browse/VendorBookingModal";
 import { VendorBrowseDetailBody } from "@/features/client/browse/VendorBrowseDetailBody";
+import {
+  VendorBrowseBreadcrumb,
+  vendorBrowseCategoryLabel,
+} from "@/features/client/browse/VendorBrowseBreadcrumb";
 import { ChatDrawer } from "@/features/chat/ChatDrawer";
 import { buildBrowsePricingOptions } from "@/features/client/browse/vendorBrowseDetailModel";
 import { useExploreVendor } from "@/features/client/browse/useExploreVendor";
@@ -114,6 +118,26 @@ export function ClientVendorBrowseDetailView() {
       : undefined;
   }, [vendor]);
 
+  const primaryService = useMemo(() => {
+    const services = vendorPayload?.servicesOffered;
+    if (!Array.isArray(services) || services.length === 0) return undefined;
+    return String(services[0]);
+  }, [vendorPayload]);
+
+  const categoryLabel = useMemo(
+    () => vendorBrowseCategoryLabel(primaryService),
+    [primaryService],
+  );
+
+  const categoryBrowseHref = useMemo(() => {
+    if (!primaryService) return browseListHref;
+    return buildMarketplaceSearchUrl("/client/browse", {
+      ...marketplaceSearch,
+      types: [primaryService],
+      page: 1,
+    });
+  }, [browseListHref, marketplaceSearch, primaryService]);
+
   useEffect(() => {
     if (!vendor?.user_id) return;
     track(MixpanelEvents.vendor_profile_viewed, {
@@ -126,8 +150,19 @@ export function ClientVendorBrowseDetailView() {
   const isClient = user?.user_type === "client";
 
   const headerBar = (
-    <div className="mb-6 flex flex-wrap items-center gap-3">
-      <BackLink href={browseListHref} label="Back to browse" tone="muted" />
+    <div className="mb-4 flex flex-wrap items-center gap-3 md:mb-6">
+      <div className="hidden md:block">
+        <BackLink href={browseListHref} label="Back to browse" tone="muted" />
+      </div>
+      {vendor ? (
+        <VendorBrowseBreadcrumb
+          browseHref={browseListHref}
+          categoryHref={categoryBrowseHref}
+          categoryLabel={categoryLabel}
+          vendorName={businessName}
+          className="md:hidden"
+        />
+      ) : null}
     </div>
   );
 

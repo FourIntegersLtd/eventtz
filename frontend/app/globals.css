@@ -145,9 +145,85 @@ body::-webkit-scrollbar:vertical {
   animation: review-enter-prev 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* Portfolio mobile carousel — Apple-style crossfade + Ken Burns */
+:root {
+  --portfolio-carousel-crossfade: 1050ms;
+  --portfolio-carousel-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --portfolio-carousel-dwell: 4500ms;
+}
+
+@keyframes portfolio-ken-burns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.055);
+  }
+}
+
+@keyframes portfolio-crossfade-in {
+  from {
+    opacity: 0;
+    transform: scale(1.05);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes portfolio-crossfade-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.988);
+  }
+}
+
+.portfolio-carousel-slide {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.portfolio-carousel-slide img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: top;
+  transform-origin: center top;
+  will-change: transform, opacity;
+}
+
+.portfolio-carousel-slide--active img {
+  animation: portfolio-ken-burns var(--portfolio-carousel-dwell) linear forwards;
+}
+
+.portfolio-carousel-slide--entering img {
+  animation:
+    portfolio-crossfade-in var(--portfolio-carousel-crossfade) var(--portfolio-carousel-ease)
+      forwards,
+    portfolio-ken-burns var(--portfolio-carousel-dwell) var(--portfolio-carousel-crossfade) linear
+      forwards;
+}
+
+.portfolio-carousel-slide--leaving img {
+  animation: portfolio-crossfade-out var(--portfolio-carousel-crossfade) var(--portfolio-carousel-ease)
+    forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-review-enter-next,
   .animate-review-enter-prev {
+    animation: none;
+  }
+
+  .portfolio-carousel-slide--active img,
+  .portfolio-carousel-slide--entering img,
+  .portfolio-carousel-slide--leaving img {
     animation: none;
   }
 }

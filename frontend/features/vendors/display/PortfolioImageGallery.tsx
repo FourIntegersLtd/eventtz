@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { ChevronLeft, ChevronRight, LayoutGrid } from "lucide-react";
 import { PortfolioLightbox } from "@/features/vendors/display/PortfolioLightbox";
 
-export type PortfolioImageGalleryLayout = "hero" | "grid";
+export type PortfolioImageGalleryLayout = "hero" | "grid" | "collage";
+
+const COLLAGE_AUTOPLAY_MS = 4500;
+const COLLAGE_AUTOPLAY_RESUME_MS = 10_000;
+const COLLAGE_CROSSFADE_MS = 1050;
 
 export type PortfolioImageGalleryProps = {
   urls: string[];
@@ -30,13 +35,59 @@ export function PortfolioImageGallery({
   const photos = useMemo(() => urls.filter((url) => Boolean(url?.trim())), [urls]);
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [autoplayPaused, setAutoplayPaused] = useState(false);
+  const [leavingPhotoIndex, setLeavingPhotoIndex] = useState<number | null>(null);
+  const autoplayResumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const leaveClearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevPhotoIndexRef = useRef(0);
 
   const photosKey = photos.join("|");
 
   useEffect(() => {
     setActivePhotoIndex(0);
     setLightboxOpen(false);
+    setAutoplayPaused(false);
+    setLeavingPhotoIndex(null);
+    prevPhotoIndexRef.current = 0;
   }, [photosKey]);
+
+  useEffect(
+    () => () => {
+      if (autoplayResumeTimer.current) clearTimeout(autoplayResumeTimer.current);
+      if (leaveClearTimer.current) clearTimeout(leaveClearTimer.current);
+    },
+    [],
+  );
+
+  const pauseAutoplay = useCallback(() => {
+    setAutoplayPaused(true);
+    if (autoplayResumeTimer.current) clearTimeout(autoplayResumeTimer.current);
+    autoplayResumeTimer.current = setTimeout(() => {
+      setAutoplayPaused(false);
+    }, COLLAGE_AUTOPLAY_RESUME_MS);
+  }, []);
+
+  const changePhoto = useCallback(
+    (next: number) => {
+      if (photos.length === 0) return;
+      const normalized = ((next % photos.length) + photos.length) % photos.length;
+      setActivePhotoIndex((current) => (normalized === current ? current : normalized));
+    },
+    [photos.length],
+  );
+
+  useEffect(() => {
+    if (photos.length === 0) return;
+    const prev = prevPhotoIndexRef.current;
+    if (prev === activePhotoIndex) return;
+
+    setLeavingPhotoIndex(prev);
+    if (leaveClearTimer.current) clearTimeout(leaveClearTimer.current);
+    leaveClearTimer.current = setTimeout(() => {
+      setLeavingPhotoIndex(null);
+    }, COLLAGE_CROSSFADE_MS);
+    prevPhotoIndexRef.current = activePhotoIndex;
+  }, [activePhotoIndex, photos.length]);
 
   const activePhotoUrl =
     photos.length > 0 ? photos[Math.min(activePhotoIndex, photos.length - 1)] : null;
@@ -44,9 +95,287 @@ export function PortfolioImageGallery({
   const openLightbox = (index: number) => {
     setActivePhotoIndex(index);
     setLightboxOpen(true);
+    pauseAutoplay();
   };
 
+  const goToPhoto = useCallback(
+    (index: number) => {
+      changePhoto(index);
+      pauseAutoplay();
+    },
+    [changePhoto, pauseAutoplay],
+  );
+
+  useEffect(() => {
+    if (layout !== "collage") return;
+    if (photos.length <= 1 || autoplayPaused || lightboxOpen) return;
+    const timer = setInterval(() => {
+      changePhoto(activePhotoIndex + 1);
+    }, COLLAGE_AUTOPLAY_MS);
+    return () => clearInterval(timer);
+  }, [
+    activePhotoIndex,
+    autoplayPaused,
+    changePhoto,
+    layout,
+    lightboxOpen,
+    photos.length,
+    photosKey,
+  ]);
+
   const gridClass = gridCols === 3 ? "grid-cols-3" : "grid-cols-2";
+
+  const collageHero = photos[0] ?? null;
+  const collageTopRight = photos[1] ?? null;
+  const collageBottomRight = photos.length >= 3 ? photos[2] : null;
+
+  const renderCollageImage = (
+    url: string,
+    index: number,
+    className: string,
+    options?: { showGalleryButton?: boolean; openGalleryFromStart?: boolean },
+  ) => (
+    <button
+      key={`${url}-${index}`}
+      type="button"
+      onClick={() => openLightbox(options?.openGalleryFromStart ? 0 : index)}
+      className={`group relative flex min-h-0 cursor-zoom-in items-center justify-center overflow-hidden bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${className}`.trim()}
+      aria-label={
+        options?.showGalleryButton
+          ? `View ${alt} gallery`
+          : `Open ${alt} photo ${index + 1} fullscreen`
+      }
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={url}
+        alt={`${alt} ${index + 1}`}
+        className="block h-full w-full object-cover object-top transition duration-300 group-hover:scale-[1.02]"
+        decoding="async"
+      />
+      {options?.showGalleryButton ? (
+        <span className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-lg bg-black/55 px-2.5 py-1.5 text-xs font-medium text-white backdrop-blur-sm">
+          <LayoutGrid className="h-3.5 w-3.5" aria-hidden />
+          View Gallery
+        </span>
+      ) : null}
+    </button>
+  );
+
+  const renderCollageLightbox = () =>
+    lightboxOpen ? (
+      <PortfolioLightbox
+        urls={photos}
+        index={activePhotoIndex}
+        alt={alt}
+        onClose={() => setLightboxOpen(false)}
+        onIndexChange={setActivePhotoIndex}
+      />
+    ) : null;
+
+  const renderCollageMobileCarousel = () => {
+    if (!activePhotoUrl) return null;
+
+    const showControls = photos.length > 1;
+    const isCrossfading = leavingPhotoIndex !== null;
+
+    return (
+      <div
+        className={`relative overflow-hidden rounded-2xl bg-neutral-950 md:hidden ${className}`.trim()}
+        onPointerDown={pauseAutoplay}
+      >
+        <button
+          type="button"
+          onClick={() => openLightbox(activePhotoIndex)}
+          className="group relative block aspect-[4/5] w-full cursor-zoom-in overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          aria-label={`Open ${alt} photo ${activePhotoIndex + 1} fullscreen`}
+        >
+          <div className="absolute inset-0">
+            {isCrossfading && leavingPhotoIndex !== null ? (
+              <div
+                className="portfolio-carousel-slide portfolio-carousel-slide--leaving"
+                aria-hidden
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={photos[leavingPhotoIndex]}
+                  alt=""
+                  decoding="async"
+                />
+              </div>
+            ) : null}
+            <div
+              className={
+                isCrossfading
+                  ? "portfolio-carousel-slide portfolio-carousel-slide--entering"
+                  : "portfolio-carousel-slide portfolio-carousel-slide--active"
+              }
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={activePhotoUrl}
+                alt={`${alt} ${activePhotoIndex + 1}`}
+                decoding="async"
+              />
+            </div>
+          </div>
+
+          {showControls ? (
+            <div
+              className="absolute bottom-14 left-0 right-0 z-10 flex items-center justify-center gap-1.5"
+              aria-hidden
+            >
+              {photos.map((_, index) => (
+                <span
+                  key={`dot-${index}`}
+                  className={`h-1 rounded-full bg-white transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+                    index === activePhotoIndex ? "w-6 opacity-100" : "w-1 opacity-40"
+                  }`}
+                />
+              ))}
+            </div>
+          ) : null}
+
+          <span className="absolute bottom-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-black/45 px-3 py-1.5 text-xs font-medium text-white/95 backdrop-blur-md transition hover:bg-black/55">
+            <LayoutGrid className="h-3.5 w-3.5" aria-hidden />
+            View Gallery
+          </span>
+        </button>
+
+        {showControls ? (
+          <>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                goToPhoto(activePhotoIndex - 1);
+              }}
+              className="absolute left-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/25 text-white/95 backdrop-blur-md transition duration-300 hover:bg-black/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+              aria-label="Previous photo"
+            >
+              <ChevronLeft className="h-4 w-4" strokeWidth={2.5} aria-hidden />
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                goToPhoto(activePhotoIndex + 1);
+              }}
+              className="absolute right-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/25 text-white/95 backdrop-blur-md transition duration-300 hover:bg-black/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+              aria-label="Next photo"
+            >
+              <ChevronRight className="h-4 w-4" strokeWidth={2.5} aria-hidden />
+            </button>
+          </>
+        ) : null}
+      </div>
+    );
+  };
+
+  const renderCollageDesktop = (desktopClassName: string, children: ReactNode) => (
+    <div className={`hidden md:block ${desktopClassName}`.trim()}>{children}</div>
+  );
+
+  if (layout === "collage") {
+    if (photos.length === 0) {
+      return (
+        <div
+          className={`flex aspect-[16/10] items-center justify-center rounded-2xl bg-gradient-to-br from-neutral-100 via-white to-neutral-50 ${className}`.trim()}
+        >
+          <span className="font-heading text-4xl font-semibold tracking-tight text-neutral-300 sm:text-5xl">
+            {emptyFallback?.slice(0, 1).toUpperCase() ?? "?"}
+          </span>
+        </div>
+      );
+    }
+
+    if (photos.length === 1 && collageHero) {
+      return (
+        <>
+          {renderCollageMobileCarousel()}
+          {renderCollageDesktop(
+            className,
+            renderCollageImage(
+              collageHero,
+              0,
+              "aspect-[16/10] w-full overflow-hidden rounded-2xl",
+              { showGalleryButton: true },
+            ),
+          )}
+          {renderCollageLightbox()}
+        </>
+      );
+    }
+
+    if (photos.length === 2 && collageHero && collageTopRight) {
+      return (
+        <>
+          {renderCollageMobileCarousel()}
+          {renderCollageDesktop(
+            `grid gap-1 overflow-hidden rounded-2xl ${className}`,
+            <div className="grid gap-1 md:aspect-[16/10] md:grid-cols-[1.35fr_1fr] md:grid-rows-2">
+              <div className="md:row-span-2 md:min-h-0">
+                {renderCollageImage(
+                  collageHero,
+                  0,
+                  "aspect-[4/3] w-full md:aspect-auto md:h-full",
+                )}
+              </div>
+              <div className="md:col-start-2 md:row-span-2 md:min-h-0">
+                {renderCollageImage(
+                  collageTopRight,
+                  1,
+                  "aspect-[4/3] w-full md:aspect-auto md:h-full",
+                  { showGalleryButton: true, openGalleryFromStart: true },
+                )}
+              </div>
+            </div>,
+          )}
+          {renderCollageLightbox()}
+        </>
+      );
+    }
+
+    return (
+      <>
+        {renderCollageMobileCarousel()}
+        {renderCollageDesktop(
+          `grid gap-1 overflow-hidden rounded-2xl ${className}`,
+          <div className="grid gap-1 md:aspect-[16/10] md:grid-cols-[1.35fr_1fr] md:grid-rows-2">
+            {collageHero ? (
+              <div className="md:row-span-2 md:min-h-0">
+                {renderCollageImage(
+                  collageHero,
+                  0,
+                  "aspect-[4/3] w-full md:aspect-auto md:h-full",
+                )}
+              </div>
+            ) : null}
+            {collageTopRight ? (
+              <div className="md:col-start-2 md:row-start-1 md:min-h-0">
+                {renderCollageImage(
+                  collageTopRight,
+                  1,
+                  "aspect-[4/3] w-full md:aspect-auto md:h-full",
+                )}
+              </div>
+            ) : null}
+            {collageBottomRight ? (
+              <div className="md:col-start-2 md:row-start-2 md:min-h-0">
+                {renderCollageImage(
+                  collageBottomRight,
+                  2,
+                  "aspect-[4/3] w-full md:aspect-auto md:h-full",
+                  { showGalleryButton: true, openGalleryFromStart: true },
+                )}
+              </div>
+            ) : null}
+          </div>,
+        )}
+        {renderCollageLightbox()}
+      </>
+    );
+  }
 
   if (layout === "grid") {
     if (photos.length === 0) {

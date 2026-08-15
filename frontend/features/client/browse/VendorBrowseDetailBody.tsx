@@ -271,7 +271,7 @@ export function VendorBrowseDetailBody({
   return (
     <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,440px)] lg:items-start lg:gap-10 xl:grid-cols-[minmax(0,1.15fr)_minmax(280px,440px)]">
       <div className="contents lg:flex lg:flex-col lg:gap-6 lg:min-w-0 lg:col-start-1 lg:row-start-1">
-        <header className="order-1 min-w-0 space-y-1.5">
+        <header className="order-1 hidden min-w-0 space-y-1.5 md:block">
           <h1 className="font-heading text-3xl font-semibold tracking-tight text-neutral-900 sm:text-4xl">
             {businessName}
           </h1>
@@ -285,6 +285,7 @@ export function VendorBrowseDetailBody({
           urls={portfolioUrls}
           alt={`${businessName} portfolio`}
           emptyFallback={businessName}
+          layout="collage"
         />
 
         <section className="order-4 min-w-0 overflow-hidden rounded-2xl border border-neutral-100 bg-white">

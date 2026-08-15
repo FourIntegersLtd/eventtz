@@ -23,7 +23,8 @@ export function VendorPortfolioCover({
   objectFit = "contain",
 }: VendorPortfolioCoverProps) {
   const coverUrl = firstPortfolioImageUrlFromPayload(payload);
-  const fitClass = objectFit === "cover" ? "object-cover" : "object-contain";
+  const fitClass =
+    objectFit === "cover" ? "object-cover object-top" : "object-contain";
 
   return (
     <div
