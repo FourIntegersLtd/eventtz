@@ -1,11 +1,10 @@
 # Eventtz Engineering Course — Progress
 
-Personal 30-day software engineering course using the real Eventtz codebase.
+Personal engineering course using the real Eventtz codebase.
 
-**Course branch:** `cursor/engineering-course-28c8` (all days — do not split per lesson)
-
-**Curriculum map:** [CURRICULUM.md](./CURRICULUM.md)  
-**Lesson spin-offs:** [lessons/](./lessons/)
+**Course branch:** `cursor/engineering-course-28c8`  
+**Primary track:** [FEATURE_TRACK.md](./FEATURE_TRACK.md)  
+**Curriculum:** [CURRICULUM.md](./CURRICULUM.md)
 
 ### Learner preferences
 
@@ -17,7 +16,23 @@ Personal 30-day software engineering course using the real Eventtz codebase.
 
 ---
 
-## Day 1 — What is system architecture?
+## Feature track progress
+
+| Slice | Status |
+|-------|--------|
+| 1 Authentication | not started |
+| 2 Client browse | not started |
+| 3a Client booking — enquire | partial |
+| 3b Client booking — rest | not started |
+| 4 Client payment | not started |
+| 5 Vendor quote + accept | not started |
+| 6 Vendor payout | not started |
+
+---
+
+## Legacy — concept days (on hold)
+
+### Day 1 — What is system architecture?
 
 **Date started:** 2026-08-14
 

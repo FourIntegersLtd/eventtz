@@ -1,19 +1,23 @@
-# Lesson spin-offs
+# Lessons
 
-**Course branch:** `cursor/engineering-course-28c8` — all days, all weeks, one branch.
+## Primary — feature flow track
 
-**How to take a lesson**
+**Use this:** [feature-slice-prompt.md](./feature-slice-prompt.md)  
+**Map & order:** [../FEATURE_TRACK.md](../FEATURE_TRACK.md)  
+**Rules:** [_SPINOFF_RULES.md](./_SPINOFF_RULES.md)
 
-1. Check out `cursor/engineering-course-28c8` (or confirm your agent is on it).
-2. Open a **new Cursor chat** (keep the curriculum chat as your map).
-3. Open the file for the day you want (e.g. `day-01.md`).
-4. Copy everything inside the ` ``` ` block under **Spin-off prompt**.
-5. Paste into the new chat and send.
+One chat on `cursor/engineering-course-28c8`. Say e.g. **"start auth"** or paste the feature-slice prompt.
 
-When you finish a day, update `docs/engineering/PROGRESS.md` in that chat or here.
+---
 
-**Ad-hoc audits** (not part of the 30-day sequence): [audits/](../audits/)
+## Legacy — 30-day concept spin-offs (on hold)
 
-**For agents:** Never open a new branch per lesson. Commit course doc updates to `cursor/engineering-course-28c8` and push there.
+Files `day-01.md` … `day-30.md` are from the **old concept-first plan**. Kept for reference only. Do not use unless you explicitly want a concept day.
 
-**Every lesson must include:** (1) concept, (2) code trace through real files, (3) hands-on rep — see [CURRICULUM.md](../CURRICULUM.md#three-layers-every-day-concept--code). Optional bug-fix reference: [CODEBASE_MAP.md](../CODEBASE_MAP.md).
+The active curriculum is [../CURRICULUM.md](../CURRICULUM.md) → Feature flow track.
+
+---
+
+## Ad-hoc audits
+
+[audits/](../audits/) — e.g. backend naming audit
