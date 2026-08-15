@@ -10,10 +10,10 @@ from app.contracts.vendor import (
     ExplorePlanNeed,
     ExploreSearchPlan,
     ExploreSearchSection,
-    ExploreVendorRow,
     ExploreVendorSearchResponse,
     ExploreVendorSingleResponse,
     ExploreVendorsResponse,
+    explore_vendor_row_from_db,
 )
 from app.features.bookings.reviews import (
     list_public_reviews_for_vendor,
@@ -88,19 +88,7 @@ def get_explore_vendor_by_id(vendor_user_id: str) -> ExploreVendorSingleResponse
         )
     except Exception:
         pass
-    vendor = ExploreVendorRow(
-        user_id=str(r0.get("user_id") or ""),
-        email=r0.get("email"),
-        status=r0.get("status") or "draft",
-        approval_status=r0.get("approval_status") or "pending",
-        profile_form_data=r0.get("payload") if isinstance(r0.get("payload"), dict) else {},
-        updated_at=str(r0.get("updated_at")) if r0.get("updated_at") else None,
-        review_average=r0.get("review_average"),
-        review_count=int(r0.get("review_count") or 0),
-        completed_bookings=int(r0.get("completed_bookings") or 0),
-        avg_response_seconds=r0.get("avg_response_seconds"),
-        conversion_rate=r0.get("conversion_rate"),
-    )
+    vendor = explore_vendor_row_from_db(r0)
     logger.info("GET /vendors/explore/vendor/%s found", vendor_user_id)
     return ExploreVendorSingleResponse(vendor=vendor)
 

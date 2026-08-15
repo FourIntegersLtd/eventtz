@@ -47,15 +47,14 @@ def get_vendor_profile_state(request: Request, response: Response) -> VendorProf
             approval_status="pending",
             profile_form_data={},
         )
-    return VendorProfileState(
-        success=True,
-        current_step=row.get("current_step", 1),
-        onboarding_status=row.get("status", "draft"),
-        approval_status=row.get("approval_status", "pending"),
-        profile_form_data=row.get("payload") or {},
-        updated_at=row.get("updated_at"),
-        payouts_verified=bool(row.get("payouts_verified")),
-        listing_visible=bool(row.get("listing_visible")),
+    return VendorProfileState.model_validate(
+        {
+            **row,
+            "success": True,
+            "current_step": row.get("current_step", 1),
+            "payouts_verified": bool(row.get("payouts_verified")),
+            "listing_visible": bool(row.get("listing_visible")),
+        }
     )
 
 
@@ -100,15 +99,14 @@ def put_vendor_profile_state(
         row.get("approval_status"),
         row.get("current_step"),
     )
-    return VendorProfileState(
-        success=True,
-        current_step=row.get("current_step", 1),
-        onboarding_status=row.get("status", "draft"),
-        approval_status=row.get("approval_status", "pending"),
-        profile_form_data=row.get("payload") or {},
-        updated_at=row.get("updated_at"),
-        payouts_verified=bool(row.get("payouts_verified")),
-        listing_visible=bool(row.get("listing_visible")),
+    return VendorProfileState.model_validate(
+        {
+            **row,
+            "success": True,
+            "current_step": row.get("current_step", 1),
+            "payouts_verified": bool(row.get("payouts_verified")),
+            "listing_visible": bool(row.get("listing_visible")),
+        }
     )
 
 

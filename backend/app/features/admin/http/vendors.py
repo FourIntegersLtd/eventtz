@@ -18,6 +18,7 @@ from app.contracts.vendor import (
     AdminVendorUnsubmitBody,
     AdminVendorUnsubmitResponse,
     AdminVendorsListResponse,
+    admin_vendor_row_from_db,
 )
 from app.features.admin.messages import (
     COULD_NOT_RESTORE_STRIPE_CONNECT,
@@ -64,7 +65,7 @@ def admin_list_vendors(
     )
     return AdminVendorsListResponse(
         success=True,
-        vendors=rows,
+        vendors=[admin_vendor_row_from_db(r) for r in rows],
         total=total,
         offset=offset,
         limit=limit,

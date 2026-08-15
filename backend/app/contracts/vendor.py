@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.contracts.types import (
     VendorApprovalStatus,
@@ -105,6 +105,8 @@ class AdminVendorRow(BaseModel):
         default=None,
         description="Why an admin overrode this vendor's listing.",
     )
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class AdminVendorsListResponse(BaseModel):
@@ -213,6 +215,33 @@ class ExploreVendorRow(BaseModel):
     conversion_rate: float | None = Field(
         default=None,
         description="Completed / client enquiries (0-1), when enquiries exist.",
+    )
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+def explore_vendor_row_from_db(row: dict[str, Any]) -> ExploreVendorRow:
+    """Map a vendors-table dict (``payload``, ``status`` keys) to ``ExploreVendorRow``."""
+    return ExploreVendorRow.model_validate(
+        {
+            **row,
+            "user_id": str(row.get("user_id") or ""),
+            "status": row.get("status") or "draft",
+            "approval_status": row.get("approval_status") or "pending",
+        }
+    )
+
+
+def admin_vendor_row_from_db(row: dict[str, Any]) -> AdminVendorRow:
+    """Map a vendors-table dict (``payload``, ``status`` keys) to ``AdminVendorRow``."""
+    return AdminVendorRow.model_validate(
+        {
+            **row,
+            "user_id": str(row.get("user_id") or ""),
+            "status": row.get("status") or "draft",
+            "approval_status": row.get("approval_status") or "pending",
+            "current_step": row.get("current_step") or 1,
+        }
     )
 
 
