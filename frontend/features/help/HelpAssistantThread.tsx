@@ -7,6 +7,7 @@ import { BackLink } from "@/components/ui/BackLink";
 import { Button } from "@/components/ui/Button";
 import { portalCard, portalCardPadding } from "@/components/portal-shell/portalTheme";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { ASSISTANT_UNAVAILABLE } from "@/lib/help-messages";
 import {
   askHelpAssistant,
   type HelpAskMessage,
@@ -74,8 +75,8 @@ function HelpAssistantThreadInner({
       });
       setHistory((h) => [
         ...h,
-        { role: "user", content: q },
-        { role: "assistant", content: res.answer_markdown },
+        { message_role: "user", content: q },
+        { message_role: "assistant", content: res.answer_markdown },
       ]);
       setThread((t) => [
         ...t,
@@ -94,7 +95,7 @@ function HelpAssistantThreadInner({
         });
       }
     } catch (e: unknown) {
-      setError(getApiErrorDetail(e) ?? "Assistant unavailable. Try again or contact us.");
+      setError(getApiErrorDetail(e) ?? ASSISTANT_UNAVAILABLE);
     } finally {
       setBusy(false);
     }

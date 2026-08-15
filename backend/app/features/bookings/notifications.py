@@ -13,8 +13,6 @@ def _notify_booking_changed(*, client_user_id: str | None, vendor_user_id: str |
     Tell both users that the booking changed (live update in the app).
     Kept here so every code path that changes a booking notifies both parties.
     """
-    if get_settings().local_auth_mode:
-        return
     c = (client_user_id or "").strip()
     v = (vendor_user_id or "").strip()
     if c:

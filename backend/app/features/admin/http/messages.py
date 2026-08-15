@@ -21,9 +21,16 @@ from app.contracts.admin_messages import (
     AdminSupportMessageRow,
     AdminSupportMessagesListResponse,
 )
+from app.features.admin.messages import (
+    COULD_NOT_SEND_MESSAGE,
+    COULD_NOT_UPDATE_MESSAGE,
+    COULD_NOT_UPDATE_READ_STATE,
+    RECIPIENTS_OR_AUDIENCE_REQUIRED,
+    SUPPORT_CONVERSATION_NOT_FOUND,
+)
 from app.features.admin.audit import insert_admin_audit_log
 from app.features.admin.permissions import validate_admin_message_send_permissions
-from app.features.admin.client_ops import list_client_user_ids_for_broadcast
+from app.features.admin.client_admin_commands import list_client_user_ids_for_broadcast
 from app.features.auth.http.guards import require_admin
 from app.features.chat.service import (
     admin_edit_support_message,
@@ -65,7 +72,7 @@ def _resolve_recipient_ids(body: AdminMessageSendBody) -> list[str]:
     if not ids:
         raise HTTPException(
             status_code=400,
-            detail="Provide recipient_user_ids and/or audience (clients|vendors|users).",
+            detail=RECIPIENTS_OR_AUDIENCE_REQUIRED,
         )
     return ids
 
@@ -107,7 +114,7 @@ def admin_messages_send(
         action="chat.admin_send",
         entity_type="conversation",
         entity_id=None,
-        payload={
+        audit_event_details={
             "sent": result.get("sent", 0),
             "audience": body.audience,
             "recipient_count": len(recipients),
@@ -147,7 +154,7 @@ def admin_messages_conversation_detail(
     require_admin(request, response)
     row = get_support_conversation_for_admin(conversation_id)
     if not row:
-        raise HTTPException(status_code=404, detail="Support conversation not found.")
+        raise HTTPException(status_code=404, detail=SUPPORT_CONVERSATION_NOT_FOUND)
     return AdminSupportConversationDetailResponse(conversation=_conv_row(row))
 
 
@@ -163,7 +170,7 @@ def admin_messages_list(
 ) -> AdminSupportMessagesListResponse:
     require_admin(request, response)
     if not get_support_conversation_for_admin(conversation_id):
-        raise HTTPException(status_code=404, detail="Support conversation not found.")
+        raise HTTPException(status_code=404, detail=SUPPORT_CONVERSATION_NOT_FOUND)
     rows = list_messages_for_admin_support(conversation_id, limit=limit)
     return AdminSupportMessagesListResponse(
         messages=[AdminSupportMessageRow.model_validate(r) for r in rows],
@@ -195,14 +202,14 @@ def admin_messages_reply(
             raise HTTPException(status_code=404, detail=str(e)) from e
         if isinstance(e, ValueError):
             raise HTTPException(status_code=400, detail=str(e)) from e
-        raise HTTPException(status_code=503, detail="Could not send message.") from e
+        raise HTTPException(status_code=503, detail=COULD_NOT_SEND_MESSAGE) from e
 
     insert_admin_audit_log(
         admin_user_id=admin_id,
         action="chat.admin_reply",
         entity_type="conversation",
         entity_id=conversation_id,
-        payload={},
+        audit_event_details={},
     )
     return AdminSupportMessageCreateResponse(
         message=AdminSupportMessageRow.model_validate(msg),
@@ -238,14 +245,14 @@ def admin_messages_edit(
             raise HTTPException(status_code=403, detail=str(e)) from e
         if isinstance(e, ValueError):
             raise HTTPException(status_code=400, detail=str(e)) from e
-        raise HTTPException(status_code=503, detail="Could not update message.") from e
+        raise HTTPException(status_code=503, detail=COULD_NOT_UPDATE_MESSAGE) from e
 
     insert_admin_audit_log(
         admin_user_id=admin_id,
         action="chat.admin_edit",
         entity_type="message",
         entity_id=message_id,
-        payload={"conversation_id": conversation_id},
+        audit_event_details={"conversation_id": conversation_id},
     )
     return AdminSupportMessageEditResponse(
         message=AdminSupportMessageRow.model_validate(msg),
@@ -269,5 +276,5 @@ def admin_messages_mark_read(
 
         if isinstance(e, NotFoundError):
             raise HTTPException(status_code=404, detail=str(e)) from e
-        raise HTTPException(status_code=503, detail="Could not update read state.") from e
+        raise HTTPException(status_code=503, detail=COULD_NOT_UPDATE_READ_STATE) from e
     return AdminSupportMarkReadResponse()

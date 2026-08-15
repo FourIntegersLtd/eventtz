@@ -37,7 +37,7 @@ def admin_financials_export(
         action="financials.export_csv",
         entity_type="financials",
         entity_id=None,
-        payload={"date_from": date_from, "date_to": date_to},
+        audit_event_details={"date_from": date_from, "date_to": date_to},
     )
     raw = financials_export_csv_bytes(date_from, date_to)
     return Response(

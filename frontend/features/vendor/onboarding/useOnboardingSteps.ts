@@ -171,8 +171,8 @@ export function useOnboardingSteps({
       }
       const res = await saveVendorProfile({
         current_step: walkthroughFinish ? 8 : nextStep,
-        payload: vendorDataToPayload(dataToSave),
-        status: step === 8 && !walkthroughFinish ? "submitted" : undefined,
+        profile_form_data: vendorDataToPayload(dataToSave),
+        onboarding_status: step === 8 && !walkthroughFinish ? "submitted" : undefined,
       });
       applyVendorProfileResponse(res);
       if (portfolioFixSave) {

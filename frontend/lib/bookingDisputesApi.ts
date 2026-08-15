@@ -16,7 +16,7 @@ export type ParticipantDispute = {
   chat_included_for_review?: boolean;
   event_name?: string | null;
   event_date?: string | null;
-  booking_status?: string | null;
+  booking_lifecycle_status?: string | null;
   conversation_id?: string | null;
   opened_by_role?: "client" | "vendor" | null;
   opened_by_you?: boolean;

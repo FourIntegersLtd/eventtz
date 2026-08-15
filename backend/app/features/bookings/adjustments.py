@@ -6,8 +6,9 @@ import uuid
 from typing import Any
 
 from app.core.config import get_settings
-from app.core.db import one_row, rows
-from app.core.db import get_db as get_client
+from app.core.db import first_row_from_query_result, rows_from_query_result
+from app.core.db import get_db
+from app.features.bookings import messages as booking_messages
 from app.features.bookings.notifications import (
     _client_booking_pricing_explanation_body,
     _notify_booking_changed,
@@ -44,13 +45,12 @@ def _validate_adjustment_caps(
         amt = a["amount_gbp"]
         if amt > 0 and amt > max_single:
             raise ValueError(
-                f"Each surcharge cannot exceed GBP {max_single:,.0f}.",
+                booking_messages.surcharge_max_detail(max_single),
             )
 
     if positive_subtotal > 0 and positive_adj > positive_subtotal * (max_pct / 100.0):
         raise ValueError(
-            "Total surcharges cannot exceed "
-            f"{max_pct:.0f}% of the quoted line items.",
+            booking_messages.surcharges_pct_detail(max_pct),
         )
 
 
@@ -60,10 +60,7 @@ def put_vendor_booking_adjustments(
     adjustments_in: list[dict[str, Any]],
 ) -> dict[str, Any] | None:
     """Replace the vendor's extra costs and discounts while the booking is still pending."""
-    if get_settings().local_auth_mode:
-        return None
-
-    client = get_client()
+    client = get_db()
     res = (
         client.table("booking_requests")
         .select("id,status,line_items,client_user_id,initiator,initial_client_total_label")
@@ -72,13 +69,13 @@ def put_vendor_booking_adjustments(
         .limit(1)
         .execute()
     )
-    row0 = one_row(res)
+    row0 = first_row_from_query_result(res)
     if row0 is None:
         return None
     if _row_initiator(row0) == "vendor":
-        raise ValueError("Adjustments are not editable on vendor quotes before the client accepts.")
+        raise ValueError(booking_messages.ADJUSTMENTS_NOT_ON_VENDOR_QUOTE)
     if str(row0.get("status", "")) != "pending":
-        raise ValueError("Additional costs can only be edited while the request is pending.")
+        raise ValueError(booking_messages.ADDITIONAL_COSTS_PENDING_ONLY)
 
     line_items = row0.get("line_items")
     if not isinstance(line_items, list):
@@ -88,16 +85,18 @@ def put_vendor_booking_adjustments(
     for item in adjustments_in[:20]:
         if not isinstance(item, dict):
             continue
-        tag = str(item.get("tag") or "other").strip()[:50] or "other"
+        tag = str(
+            item.get("adjustment_category") or item.get("tag") or "other",
+        ).strip()[:50] or "other"
         label = str(item.get("label") or "").strip()[:200] or "Additional cost"
         try:
             amt = float(item.get("amount_gbp"))
         except (TypeError, ValueError) as e:
-            raise ValueError("Each adjustment needs a valid amount_gbp.") from e
+            raise ValueError(booking_messages.ADJUSTMENT_VALID_AMOUNT) from e
         if amt == 0:
             continue
         if amt < -1_000_000 or amt > 1_000_000:
-            raise ValueError("Adjustment amount is out of range.")
+            raise ValueError(booking_messages.ADJUSTMENT_OUT_OF_RANGE)
         stored.append(
             {
                 "id": str(uuid.uuid4()),
@@ -112,7 +111,7 @@ def put_vendor_booking_adjustments(
     pb = build_pricing_breakdown(line_items=line_items, vendor_adjustments=stored)
     if float(pb.get("vendor_portion_gbp") or 0) <= 0:
         raise ValueError(
-            "Discounts cannot reduce the booking total to zero or below.",
+            booking_messages.DISCOUNTS_TOO_HIGH,
         )
     total_label = persisted_booking_total_label(pb)
     adj_final = pb.get("vendor_adjustments") or []
@@ -132,7 +131,7 @@ def put_vendor_booking_adjustments(
         .eq("status", "pending")
         .execute()
     )
-    if not rows(upd):
+    if not rows_from_query_result(upd):
         return None
     client_uid = str(row0.get("client_user_id") or "")
     if client_uid:

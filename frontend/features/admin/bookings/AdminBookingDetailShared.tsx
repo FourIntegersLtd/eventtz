@@ -5,7 +5,7 @@ import { useState } from "react";
 import { AlertTriangle, ChevronRight, type LucideIcon } from "lucide-react";
 import { SectionBlock, ContentCard } from "@/components/ui/SectionBlock";
 import { Tooltip } from "@/components/ui/Tooltip";
-import { adminCard } from "@/features/admin/adminTheme";
+import { adminCard } from "@/components/admin-shell/adminTheme";
 import type { AdminBookingSupportMeta } from "@/lib/adminPlatformApi";
 import { shortId } from "./adminBookingDetailUtils";
 

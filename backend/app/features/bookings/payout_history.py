@@ -13,9 +13,9 @@ from __future__ import annotations
 from typing import Any
 
 from app.core.config import get_settings
-from app.core.db import get_db as get_client
+from app.core.db import get_db
 from app.core.logging import get_logger
-from app.features.auth.lookup import client_display_names_by_id
+from app.features.auth.user_vendor_display_lookup import client_display_names_by_id
 from app.features.bookings.pricing import build_pricing_breakdown, format_gbp
 
 logger = get_logger(__name__)
@@ -64,11 +64,8 @@ def _empty_ledger() -> dict[str, Any]:
 
 def list_vendor_payouts(vendor_user_id: str) -> dict[str, Any]:
     """Payout rows, newest first, plus paid-out and awaiting totals."""
-    if get_settings().local_auth_mode:
-        return _empty_ledger()
-
     res = (
-        get_client()
+        get_db()
         .table("booking_requests")
         .select(_PAYOUT_COLS)
         .eq("vendor_user_id", vendor_user_id)

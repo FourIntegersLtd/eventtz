@@ -6,7 +6,7 @@ import {
   type AdminMarketplaceAnalytics,
 } from "@/lib/adminPlatformApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
-import { adminCard } from "@/features/admin/adminTheme";
+import { adminCard } from "@/components/admin-shell/adminTheme";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminChartCard } from "@/features/admin/components/AdminChartCard";
 import { AdminBarChart } from "@/features/admin/components/AdminBarChart";

@@ -9,7 +9,7 @@ from app.core.constants import OPENAI_HELP_MODEL
 from app.core.logging import get_logger
 from app.features.ai.openai_helpers import parse_completion, require_openai_client
 from app.features.help import queries
-from app.features.help.retrieve import format_articles_for_prompt, retrieve_articles
+from app.features.help.help_article_keyword_search import format_articles_for_prompt, retrieve_articles
 
 logger = get_logger(__name__)
 
@@ -41,7 +41,7 @@ class HelpAssistantReply(BaseModel):
     escalate_reason: str | None = None
 
 
-def ask_help(
+def ask_help_assistant(
     *,
     question: str,
     audience: str,
@@ -70,7 +70,7 @@ def ask_help(
         },
     ]
     for msg in prior:
-        role = msg.role if msg.role in ("user", "assistant") else "user"
+        role = msg.message_role if msg.message_role in ("user", "assistant") else "user"
         content = (msg.content or "").strip()
         if content:
             messages.append({"role": role, "content": content[:1500]})

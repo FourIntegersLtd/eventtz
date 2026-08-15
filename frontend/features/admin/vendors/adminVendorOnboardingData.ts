@@ -12,7 +12,7 @@ export function adminVendorToOnboardingData(
   vendor: AdminVendorRow,
 ): VendorOnboardingData {
   const merged = mergePayloadIntoVendorData(
-    normalizeVendorPayload(vendor.payload),
+    normalizeVendorPayload(vendor.profile_form_data),
     vendor.email ?? "",
   );
 

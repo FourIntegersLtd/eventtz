@@ -18,6 +18,7 @@ import {
 } from "@/lib/mixpanelClient";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { useRealtimeSse } from "@/lib/useRealtimeSse";
+import { clearVendorCopilotBriefCache } from "@/lib/vendorCopilotApi";
 
 type AuthContextValue = {
   user: AuthUser | null;
@@ -107,6 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } finally {
           setUser(null);
           resetMixpanel();
+          clearVendorCopilotBriefCache();
         }
       },
       refreshUser,

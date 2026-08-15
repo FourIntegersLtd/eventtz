@@ -24,14 +24,13 @@ def _paid_both_confirmed_row() -> dict:
 
 
 @patch("app.features.bookings.payment_completion.get_settings")
-@patch("app.features.bookings.payment_completion.get_client")
+@patch("app.features.bookings.payment_completion.get_db")
 @patch("app.features.bookings.payment_completion._finalize_completion")
 def test_confirm_completion_retries_stuck_payout_when_vendor_already_confirmed(
     mock_finalize: MagicMock,
     mock_get_client: MagicMock,
     mock_settings: MagicMock,
 ) -> None:
-    mock_settings.return_value.local_auth_mode = False
     row = _paid_both_confirmed_row()
     mock_get_client.return_value.table.return_value.select.return_value.eq.return_value.eq.return_value.limit.return_value.execute.return_value = MagicMock(
         data=[row],
@@ -51,14 +50,13 @@ def test_confirm_completion_retries_stuck_payout_when_vendor_already_confirmed(
 
 
 @patch("app.features.bookings.payment_completion.get_settings")
-@patch("app.features.bookings.payment_completion.get_client")
+@patch("app.features.bookings.payment_completion.get_db")
 @patch("app.features.bookings.payment_completion._finalize_completion")
 def test_confirm_completion_surfaces_transfer_failure_on_retry(
     mock_finalize: MagicMock,
     mock_get_client: MagicMock,
     mock_settings: MagicMock,
 ) -> None:
-    mock_settings.return_value.local_auth_mode = False
     row = _paid_both_confirmed_row()
     mock_get_client.return_value.table.return_value.select.return_value.eq.return_value.eq.return_value.limit.return_value.execute.return_value = MagicMock(
         data=[row],

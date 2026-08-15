@@ -51,7 +51,7 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
     [listStatusFilter],
   );
   const fetchDetail = useCallback((id: string) => fetchVendorBookingDetail(id), []);
-  const getDetailStatus = useCallback((b: VendorBookingDetail) => b.status, []);
+  const getDetailStatus = useCallback((b: VendorBookingDetail) => b.booking_status, []);
 
   const {
     tab,
@@ -74,6 +74,8 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
     fetchDetail,
     getDetailStatus,
   });
+
+  const [chatPrefill, setChatPrefill] = useState<string | null>(null);
 
   useEffect(() => {
     if (urlTab === "active" || urlTab === "closed") {
@@ -104,16 +106,16 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
 
   const applyBookingStatus = useCallback(
     async (next: "accepted" | "declined", bookingId?: string) => {
-      const id = bookingId ?? detail?.id;
+      const id = bookingId ?? detail?.booking_request_id;
       if (!id) return;
-      if (detail && detail.id === id && detail.initiator === "vendor") return;
-      if (next === "declined" && detail && detail.id === id && detail.status !== "pending") return;
+      if (detail && detail.booking_request_id === id && detail.initiator === "vendor") return;
+      if (next === "declined" && detail && detail.booking_request_id === id && detail.booking_status !== "pending") return;
       if (
         next === "accepted" &&
         detail &&
-        detail.id === id &&
-        detail.status !== "pending" &&
-        detail.status !== "declined"
+        detail.booking_request_id === id &&
+        detail.booking_status !== "pending" &&
+        detail.booking_status !== "declined"
       ) {
         return;
       }
@@ -148,20 +150,20 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
   );
 
   const requestAccept = useCallback(() => {
-    if (!detail?.id) return;
+    if (!detail?.booking_request_id) return;
     if (payoutsLoading) return;
     if (!payoutsReady) {
       setPayoutModalOpen(true);
       return;
     }
     void applyBookingStatus("accepted");
-  }, [detail?.id, payoutsLoading, payoutsReady, applyBookingStatus]);
+  }, [detail?.booking_request_id, payoutsLoading, payoutsReady, applyBookingStatus]);
 
   const onCompletePayoutSetup = useCallback(() => {
-    if (!detail?.id) return;
-    setPendingAcceptBookingId(detail.id);
-    void connectPayouts(`/vendor/bookings/${detail.id}`);
-  }, [detail?.id, connectPayouts]);
+    if (!detail?.booking_request_id) return;
+    setPendingAcceptBookingId(detail.booking_request_id);
+    void connectPayouts(`/vendor/bookings/${detail.booking_request_id}`);
+  }, [detail?.booking_request_id, connectPayouts]);
 
   useEffect(() => {
     const stripeParam = searchParams.get("stripe");
@@ -207,13 +209,13 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
   ]);
 
   const applyWithdrawVendorQuote = async () => {
-    if (!detail?.id || detail.status !== "pending" || detail.initiator !== "vendor") return;
+    if (!detail?.booking_request_id || detail.booking_status !== "pending" || detail.initiator !== "vendor") return;
     setActionError(null);
     setActionBusy(true);
     setPendingAction("withdraw");
     try {
-      await patchVendorBookingStatus(detail.id, "cancelled");
-      track(MixpanelEvents.vendor_quote_withdrawn, { booking_id: detail.id });
+      await patchVendorBookingStatus(detail.booking_request_id, "cancelled");
+      track(MixpanelEvents.vendor_quote_withdrawn, { booking_id: detail.booking_request_id });
       bumpDetail();
     } catch (e: unknown) {
       setActionError(getApiErrorDetail(e) ?? "Could not withdraw this quote.");
@@ -224,13 +226,13 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
   };
 
   const applyVendorCancel = async () => {
-    if (!detail?.id || detail.status !== "accepted") return;
+    if (!detail?.booking_request_id || detail.booking_status !== "accepted") return;
     setActionError(null);
     setActionBusy(true);
     setPendingAction("vendor_cancel");
     try {
-      await patchVendorBookingStatus(detail.id, "cancelled");
-      track(MixpanelEvents.vendor_booking_cancelled, { booking_id: detail.id });
+      await patchVendorBookingStatus(detail.booking_request_id, "cancelled");
+      track(MixpanelEvents.vendor_booking_cancelled, { booking_id: detail.booking_request_id });
       bumpDetail();
     } catch (e: unknown) {
       setActionError(getApiErrorDetail(e) ?? "Could not cancel this booking.");
@@ -241,13 +243,13 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
   };
 
   const applyConfirmCompletion = async () => {
-    if (!detail?.id || detail.status !== "accepted" || detail.payment_status !== "paid") return;
+    if (!detail?.booking_request_id || detail.booking_status !== "accepted" || detail.payment_status !== "paid") return;
     setActionError(null);
     setActionBusy(true);
     setPendingAction("complete");
     try {
-      await postVendorConfirmCompletion(detail.id);
-      track(MixpanelEvents.vendor_booking_completed, { booking_id: detail.id });
+      await postVendorConfirmCompletion(detail.booking_request_id);
+      track(MixpanelEvents.vendor_booking_completed, { booking_id: detail.booking_request_id });
       bumpDetail();
     } catch (e: unknown) {
       setActionError(getApiErrorDetail(e) ?? "Could not confirm completion.");
@@ -258,9 +260,9 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
   };
 
   const sendUpdatedPrice = async (rows: AdjDraftRow[]) => {
-    if (!detail?.id || detail.status !== "pending") return;
+    if (!detail?.booking_request_id || detail.booking_status !== "pending") return;
     setActionError(null);
-    const parsed: { tag: string; label: string; amount_gbp: number }[] = [];
+    const parsed: { adjustment_category: string; label: string; amount_gbp: number }[] = [];
     for (const r of rows) {
       const raw = Number.parseFloat(r.amount);
       if (!Number.isFinite(raw) || raw <= 0) {
@@ -273,7 +275,7 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
         return;
       }
       parsed.push({
-        tag: (r.tag || "other").trim() || "other",
+        adjustment_category: (r.tag || "other").trim() || "other",
         label: r.label.trim() || (r.kind === "discount" ? "Discount" : "Additional cost"),
         amount_gbp,
       });
@@ -284,10 +286,10 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
     }
     setAdjSaving(true);
     try {
-      const updated = await putVendorBookingAdjustments(detail.id, parsed);
+      const updated = await putVendorBookingAdjustments(detail.booking_request_id, parsed);
       setDetail(updated);
       track(MixpanelEvents.vendor_booking_price_updated, {
-        booking_id: detail.id,
+        booking_id: detail.booking_request_id,
         line_count: parsed.length,
       });
     } catch (e: unknown) {
@@ -315,7 +317,7 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
     : null;
 
   const headerActions: BookingDetailAction[] = [];
-  if (detail?.status === "pending" && detail.initiator === "vendor") {
+  if (detail?.booking_status === "pending" && detail.initiator === "vendor") {
     headerActions.push({
       key: "withdraw",
       label: "Withdraw quote",
@@ -325,7 +327,7 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
       loading: pendingAction === "withdraw",
       onClick: () => setConfirmAction("withdraw"),
     });
-  } else if (detail?.status === "declined" && detail.initiator !== "vendor") {
+  } else if (detail?.booking_status === "declined" && detail.initiator !== "vendor") {
     headerActions.push({
       key: "accept",
       label: "Accept booking",
@@ -339,7 +341,7 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
 
   const footerActions: BookingDetailAction[] = [];
   if (
-    detail?.status === "accepted" &&
+    detail?.booking_status === "accepted" &&
     detail.payment_status !== "payout_released"
   ) {
     if (detail.payment_status === "paid" && !detail.vendor_completion_confirmed_at) {
@@ -406,7 +408,7 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
   };
 
   const showClientResponseFlow =
-    detail?.status === "pending" && detail.initiator !== "vendor";
+    detail?.booking_status === "pending" && detail.initiator !== "vendor";
 
   const selectBooking = useCallback(
     (id: string) => router.push(`/vendor/bookings/${id}`),
@@ -436,6 +438,8 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
     actionError,
     chatOpen,
     setChatOpen,
+    chatPrefill,
+    setChatPrefill,
     rows,
     viewModel,
     headerActions,

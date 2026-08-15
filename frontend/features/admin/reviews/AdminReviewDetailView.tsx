@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/Button";
 import { BackLink } from "@/components/ui/BackLink";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ADMIN_CONFIRM_COPY } from "@/features/bookings/bookingConfirmCopy";
-import { ReviewVisibilityBadge } from "@/components/ui/ReviewVisibilityBadge";
+import { ReviewVisibilityBadge } from "@/components/badges/ReviewVisibilityBadge";
 import { StarRating } from "@/components/ui/StarRating";
-import { StatusBadge } from "@/components/ui/StatusBadge";
+import { StatusBadge } from "@/components/badges/StatusBadge";
 import { useAdminPermissions } from "@/features/admin/useAdminPermissions";
 import {
   fetchAdminReview,

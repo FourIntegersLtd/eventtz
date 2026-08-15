@@ -28,10 +28,10 @@ def test_client_price_confirmation_not_required_without_adjustments():
     assert client_price_confirmation_required(row) is False
 
 
+@patch("app.features.bookings.status._get_vendor_stripe_fields", return_value={"stripe_account_id": "acct_1", "stripe_charges_enabled": True, "stripe_payouts_enabled": True})
 @patch("app.features.bookings.status.get_settings")
-@patch("app.features.bookings.status.get_client")
-def test_vendor_cannot_accept_while_client_must_confirm_price(mock_get_client, mock_settings):
-    mock_settings.return_value.local_auth_mode = False
+@patch("app.features.bookings.status.get_db")
+def test_vendor_cannot_accept_while_client_must_confirm_price(mock_get_client, mock_settings, _mock_stripe):
     mock_client = MagicMock()
     mock_get_client.return_value = mock_client
     mock_table = MagicMock()
@@ -60,7 +60,7 @@ def test_vendor_cannot_accept_while_client_must_confirm_price(mock_get_client, m
 @patch("app.features.bookings.status._notify_booking_changed")
 @patch("app.features.bookings.status.dispatch_booking_notification")
 @patch("app.features.bookings.status.get_settings")
-@patch("app.features.bookings.status.get_client")
+@patch("app.features.bookings.status.get_db")
 def test_client_can_accept_updated_price(
     mock_get_client,
     mock_settings,
@@ -68,7 +68,6 @@ def test_client_can_accept_updated_price(
     mock_sse,
     mock_get_detail,
 ):
-    mock_settings.return_value.local_auth_mode = False
     mock_get_detail.return_value = {
         "total_label": "GBP 520",
         "pricing": {"client_total_label": "GBP 520"},
@@ -104,14 +103,13 @@ def test_client_can_accept_updated_price(
 @patch("app.features.bookings.status._notify_booking_changed")
 @patch("app.features.bookings.status.dispatch_booking_notification")
 @patch("app.features.bookings.status.get_settings")
-@patch("app.features.bookings.status.get_client")
+@patch("app.features.bookings.status.get_db")
 def test_client_declining_updated_price_reverts_and_stays_pending(
     mock_get_client,
     mock_settings,
     mock_notify,
     _mock_sse,
 ):
-    mock_settings.return_value.local_auth_mode = False
     mock_client = MagicMock()
     mock_get_client.return_value = mock_client
     mock_table = MagicMock()
@@ -155,14 +153,13 @@ def test_client_declining_updated_price_reverts_and_stays_pending(
 @patch("app.features.bookings.status._notify_booking_changed")
 @patch("app.features.bookings.status.dispatch_booking_notification")
 @patch("app.features.bookings.status.get_settings")
-@patch("app.features.bookings.status.get_client")
+@patch("app.features.bookings.status.get_db")
 def test_client_declining_vendor_quote_closes_booking(
     mock_get_client,
     mock_settings,
     mock_notify,
     _mock_sse,
 ):
-    mock_settings.return_value.local_auth_mode = False
     mock_client = MagicMock()
     mock_get_client.return_value = mock_client
     mock_table = MagicMock()

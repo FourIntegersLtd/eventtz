@@ -30,7 +30,7 @@ def post_create_plan(
 
 
 @router.get("/plans", response_model=CelebrationPlanListResponse)
-def get_list_plans(request: Request, response: Response) -> CelebrationPlanListResponse:
+def list_client_plans(request: Request, response: Response) -> CelebrationPlanListResponse:
     user = require_client(request, response)
     return plan_service.list_plans(str(user.get("id") or ""))
 

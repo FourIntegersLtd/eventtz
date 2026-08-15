@@ -4,8 +4,8 @@ import { fetchClientBookings, type ClientBookingsListGroup } from "@/lib/clientB
 import { fetchVendorBookings, type VendorBookingsListGroup } from "@/lib/vendorBookingsApi";
 
 type BookingPartySnapshot = {
-  id: string;
-  status: string;
+  booking_request_id: string;
+  booking_status: string;
   event_name: string;
   event_date: string;
   payment_status?: string;
@@ -29,7 +29,7 @@ function normId(value: string | null | undefined): string {
 export function participantDisputeNeedsHydration(dispute: ParticipantDispute): boolean {
   return (
     !dispute.event_name &&
-    !dispute.booking_status &&
+    !dispute.booking_lifecycle_status &&
     !dispute.client_label &&
     !dispute.vendor_display_name &&
     !dispute.opened_by_role
@@ -80,7 +80,8 @@ export function enrichParticipantDispute(
     ...dispute,
     event_name: dispute.event_name ?? booking.event_name ?? null,
     event_date: dispute.event_date ?? booking.event_date ?? null,
-    booking_status: dispute.booking_status ?? booking.status ?? null,
+    booking_lifecycle_status:
+      dispute.booking_lifecycle_status ?? booking.booking_status ?? null,
     payment_status: dispute.payment_status ?? booking.payment_status ?? null,
     conversation_id: dispute.conversation_id ?? booking.conversation_id ?? null,
     opened_by_role: openedByRole,
@@ -117,9 +118,9 @@ export async function loadParticipantBookingLookup(
     const lists = await Promise.all(CLIENT_GROUPS.map((group) => fetchClientBookings(group)));
     for (const list of lists) {
       for (const booking of list) {
-        map.set(booking.id, {
-          id: booking.id,
-          status: booking.status,
+        map.set(booking.booking_request_id, {
+          booking_request_id: booking.booking_request_id,
+          booking_status: booking.booking_status,
           event_name: booking.event_name,
           event_date: booking.event_date,
           payment_status: booking.payment_status,
@@ -137,9 +138,9 @@ export async function loadParticipantBookingLookup(
   const lists = await Promise.all(VENDOR_GROUPS.map((group) => fetchVendorBookings(group)));
   for (const list of lists) {
     for (const booking of list) {
-      map.set(booking.id, {
-        id: booking.id,
-        status: booking.status,
+      map.set(booking.booking_request_id, {
+        booking_request_id: booking.booking_request_id,
+        booking_status: booking.booking_status,
         event_name: booking.event_name,
         event_date: booking.event_date,
         payment_status: booking.payment_status,

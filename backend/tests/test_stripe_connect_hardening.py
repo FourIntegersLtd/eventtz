@@ -26,7 +26,7 @@ def test_invalid_request_not_found_is_orphan() -> None:
 
 
 @patch("app.features.admin.audit.insert_admin_audit_log")
-@patch("app.features.payments.stripe.get_client")
+@patch("app.features.payments.stripe.get_db")
 @patch("app.features.payments.stripe.vendor_has_payout_history", return_value=True)
 @patch("app.features.payments.stripe._get_vendor_row")
 def test_clear_blocked_when_payout_history(
@@ -81,7 +81,6 @@ def test_status_response_skips_sync_when_fully_enabled(
     mock_sync: MagicMock,
 ) -> None:
     settings = MagicMock()
-    settings.local_auth_mode = False
     settings.stripe_secret_key = "sk_test_123"
     mock_settings.return_value = settings
     mock_row.return_value = {
@@ -96,14 +95,13 @@ def test_status_response_skips_sync_when_fully_enabled(
 
 @patch("app.features.payments.stripe._stripe")
 @patch("app.features.payments.stripe.get_settings")
-@patch("app.features.payments.stripe.get_client")
+@patch("app.features.payments.stripe.get_db")
 def test_restore_from_payout_transfer(
     mock_client: MagicMock,
     mock_settings: MagicMock,
     mock_stripe_factory: MagicMock,
 ) -> None:
     settings = MagicMock()
-    settings.local_auth_mode = False
     settings.stripe_secret_key = "sk_test_123"
     mock_settings.return_value = settings
 

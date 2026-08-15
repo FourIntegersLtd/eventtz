@@ -5,7 +5,7 @@ import {
 import type { ExploreVendorSearchRow } from "@/lib/clientExploreApi";
 
 export function vendorDisplayName(vendor: ExploreVendorSearchRow): string {
-  const p = vendor.payload ?? {};
+  const p = vendor.profile_form_data ?? {};
   const name = typeof p.businessName === "string" ? p.businessName.trim() : "";
   return name || "Vendor";
 }

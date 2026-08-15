@@ -42,8 +42,8 @@ export type CreateBookingRequestPayload = {
 
 export type BookingRequestCreated = {
   success: boolean;
-  id: string;
-  status: string;
+  booking_request_id: string;
+  booking_status: string;
   created_at: string | null;
   event_id?: string | null;
 };
@@ -75,8 +75,8 @@ export type ClientBookingsListParams = {
 };
 
 export type ClientBookingListItem = {
-  id: string;
-  status: string;
+  booking_request_id: string;
+  booking_status: string;
   event_name: string;
   event_date: string;
   event_end_date: string | null;
@@ -104,8 +104,8 @@ export type ClientBookingsListResponse = {
 };
 
 export type ClientBookingDetail = {
-  id: string;
-  status: string;
+  booking_request_id: string;
+  booking_status: string;
   vendor_user_id: string;
   vendor_display_name: string;
   event_name: string;
@@ -122,7 +122,7 @@ export type ClientBookingDetail = {
   created_at: string | null;
   /** Set automatically when payment succeeds (e.g. Stripe webhook). */
   paid_at: string | null;
-  /** Money lifecycle, independent of `status`: unpaid/pending/paid/refunded/partially_refunded/payout_released. */
+  /** Money lifecycle, independent of `booking_status`: unpaid/pending/paid/refunded/partially_refunded/payout_released. */
   payment_status: string;
   client_completion_confirmed_at: string | null;
   vendor_completion_confirmed_at: string | null;
@@ -182,8 +182,8 @@ export async function fetchClientBookingDetail(
 
 export type ClientBookingCancelResponse = {
   success: boolean;
-  id: string;
-  status: string;
+  booking_request_id: string;
+  booking_status: string;
 };
 
 export async function postCancelClientBooking(
@@ -197,21 +197,21 @@ export async function postCancelClientBooking(
 
 export type ClientBookingStatusResponse = {
   success: boolean;
-  id: string;
-  status: string;
+  booking_request_id: string;
+  booking_status: string;
 };
 
 export async function patchClientBookingStatus(
   bookingId: string,
-  status: "accepted" | "declined",
+  bookingStatus: "accepted" | "declined",
   venue?: { event_postcode: string; event_address?: string | null },
 ): Promise<ClientBookingStatusResponse> {
   const body: {
-    status: "accepted" | "declined";
+    booking_status: "accepted" | "declined";
     event_postcode?: string;
     event_address?: string | null;
-  } = { status };
-  if (status === "accepted" && venue) {
+  } = { booking_status: bookingStatus };
+  if (bookingStatus === "accepted" && venue) {
     body.event_postcode = venue.event_postcode;
     const line = venue.event_address?.trim();
     if (line) body.event_address = line;

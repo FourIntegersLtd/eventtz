@@ -11,6 +11,7 @@ from app.core.config import get_settings
 from app.core.logging import get_logger
 from app.core.errors import ForbiddenError, PayloadTooLargeError, ServiceUnavailableError, ValidationError
 from app.core.db import get_supabase
+from app.features.media import messages as media_messages
 
 logger = get_logger(__name__)
 
@@ -37,7 +38,7 @@ async def _upload_user_object(
     error_hint: str,
 ) -> UploadedImage:
     if not user_id:
-        raise ForbiddenError("Please sign in to upload.")
+        raise ForbiddenError(media_messages.SIGN_IN_TO_UPLOAD)
 
     content_type = (file.content_type or "").strip().lower()
     if not any(content_type.startswith(p) for p in allowed_prefixes):
@@ -48,10 +49,10 @@ async def _upload_user_object(
 
     raw = await file.read()
     if not raw:
-        raise ValidationError("That file looks empty. Choose another file and try again.")
+        raise ValidationError(media_messages.FILE_EMPTY)
     if max_bytes is not None and len(raw) > max_bytes:
         mb = max(1, round(max_bytes / 1_000_000))
-        raise PayloadTooLargeError(f"File is too large (max {mb}MB).")
+        raise PayloadTooLargeError(media_messages.file_too_large_detail(mb))
 
     name = (file.filename or "upload").strip()
     ext = ""
@@ -79,7 +80,7 @@ async def _upload_user_object(
             content_type,
             len(raw),
         )
-        raise ServiceUnavailableError("Could not upload file.") from e
+        raise ServiceUnavailableError(media_messages.UPLOAD_FAILED) from e
 
     return UploadedImage(
         bucket=bucket,
@@ -100,7 +101,7 @@ async def upload_user_image(*, user_id: str, file: UploadFile) -> UploadedImage:
         subdir="images",
         allowed_prefixes=("image/",),
         max_bytes=None,
-        error_hint="Only image uploads are supported.",
+        error_hint=media_messages.IMAGE_ONLY,
     )
 
 
@@ -113,5 +114,5 @@ async def upload_user_file(*, user_id: str, file: UploadFile) -> UploadedImage:
         subdir="files",
         allowed_prefixes=("image/", "video/", "application/pdf"),
         max_bytes=settings.media_max_file_upload_bytes,
-        error_hint="Only image, PDF, or video uploads are supported.",
+        error_hint=media_messages.FILE_TYPE_UNSUPPORTED,
     )

@@ -5,6 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, Query, Request, Response
 
 from app.features.auth.http.guards import require_client
+from app.features.geo import messages as geo_messages
 from app.contracts.geo_address import (
     AddressAutocompleteItem,
     AddressAutocompleteResponse,
@@ -63,15 +64,12 @@ def get_address_resolve(
 ) -> AddressResolveResponse:
     _ = require_client(request, response)
     if len(address_id) > 500:
-        raise HTTPException(status_code=400, detail="Invalid address id.")
+        raise HTTPException(status_code=400, detail=geo_messages.INVALID_ADDRESS_ID)
     row = uk_address_resolve(address_id)
     if not row:
         raise HTTPException(
             status_code=404,
-            detail=(
-                "Could not resolve that address. Configure OS_PLACES_API_KEY (OS Places API on "
-                "OS Data Hub - not Maps) or GETADDRESS_API_KEY, then try again."
-            ),
+            detail=geo_messages.ADDRESS_RESOLVE_FAILED,
         )
     return AddressResolveResponse(
         postcode=row["postcode"],

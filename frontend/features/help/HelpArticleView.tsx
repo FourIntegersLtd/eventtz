@@ -7,6 +7,7 @@ import { BackLink } from "@/components/ui/BackLink";
 import { portalCard, portalCardPadding } from "@/components/portal-shell/portalTheme";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { ARTICLE_NOT_FOUND } from "@/lib/help-messages";
 import {
   fetchHelpArticle,
   type HelpArticleDetail,
@@ -41,7 +42,7 @@ export function HelpArticleView({ audience }: Props) {
         });
       })
       .catch((e: unknown) => {
-        if (!cancelled) setError(getApiErrorDetail(e) ?? "Article not found.");
+        if (!cancelled) setError(getApiErrorDetail(e) ?? ARTICLE_NOT_FOUND);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -73,7 +74,7 @@ export function HelpArticleView({ audience }: Props) {
       {loading ? (
         <LoadingState label="Loading article…" variant="centered" className="py-12" />
       ) : error || !article ? (
-        <p className="text-sm text-red-700">{error ?? "Article not found."}</p>
+        <p className="text-sm text-red-700">{error ?? ARTICLE_NOT_FOUND}</p>
       ) : (
         <>
           <article className={`${portalCard} ${portalCardPadding}`}>

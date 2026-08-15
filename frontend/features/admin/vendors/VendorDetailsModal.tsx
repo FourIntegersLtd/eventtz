@@ -5,9 +5,9 @@ import { useEffect, useState } from "react";
 import { ExternalLink } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
-import { VendorApprovalStatusBadge } from "@/components/ui/VendorApprovalStatusBadge";
-import { VendorPayoutStatusBadge } from "@/components/ui/VendorPayoutStatusBadge";
-import { VendorProfileStatusBadge } from "@/components/ui/VendorProfileStatusBadge";
+import { VendorApprovalStatusBadge } from "@/components/badges/VendorApprovalStatusBadge";
+import { VendorPayoutStatusBadge } from "@/components/badges/VendorPayoutStatusBadge";
+import { VendorProfileStatusBadge } from "@/components/badges/VendorProfileStatusBadge";
 import {
   fetchAdminVendorInsights,
   type AdminVendorInsights,
@@ -120,7 +120,7 @@ export function VendorDetailsModal({
               {tab !== "actions" ? (
                 <>
                   <VendorApprovalStatusBadge status={vendor.approval_status} />
-                  <VendorProfileStatusBadge status={vendor.status} />
+                  <VendorProfileStatusBadge status={vendor.onboarding_status} />
                   <VendorPayoutStatusBadge verified={vendor.payouts_verified} />
                 </>
               ) : null}

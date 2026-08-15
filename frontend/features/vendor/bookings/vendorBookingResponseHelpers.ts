@@ -88,7 +88,7 @@ export function legacyLabelToReason(label: string): string {
 export function draftsFromDetail(detail: VendorBookingDetail): AdjDraftRow[] {
   return detail.vendor_adjustments.map((a) => ({
     kind: a.amount_gbp < 0 ? "discount" : "cost",
-    tag: a.tag || "other",
+    tag: a.adjustment_category || "other",
     label: a.label,
     amount: String(Math.abs(a.amount_gbp)),
   }));

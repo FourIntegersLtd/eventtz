@@ -11,11 +11,10 @@ from app.features.chat.support_admin import admin_edit_support_message
 
 
 @patch("app.features.chat.support_admin.notify_user")
-@patch("app.features.chat.support_admin.get_client")
+@patch("app.features.chat.support_admin.get_db")
 @patch("app.features.chat.support_admin.get_support_conversation_for_admin")
 @patch("app.features.chat.support_admin.get_settings")
 def test_admin_edit_own_staff_message(mock_settings, mock_get_conv, mock_get_client, _notify):
-    mock_settings.return_value.local_auth_mode = False
     conv_id = "conv-1"
     msg_id = "msg-1"
     admin_id = "admin-1"
@@ -79,10 +78,9 @@ def test_admin_edit_own_staff_message(mock_settings, mock_get_conv, mock_get_cli
 @patch("app.features.chat.support_admin.get_support_conversation_for_admin")
 @patch("app.features.chat.support_admin.get_settings")
 def test_admin_edit_rejects_other_admin_message(mock_settings, mock_get_conv):
-    mock_settings.return_value.local_auth_mode = False
     mock_get_conv.return_value = {"id": "conv-1", "support_user_id": "client-1"}
 
-    with patch("app.features.chat.support_admin.get_client") as mock_get_client:
+    with patch("app.features.chat.support_admin.get_db") as mock_get_client:
         table = MagicMock()
         select_chain = MagicMock()
         select_chain.eq.return_value = select_chain
@@ -113,10 +111,9 @@ def test_admin_edit_rejects_other_admin_message(mock_settings, mock_get_conv):
 @patch("app.features.chat.support_admin.get_support_conversation_for_admin")
 @patch("app.features.chat.support_admin.get_settings")
 def test_admin_edit_rejects_end_user_message(mock_settings, mock_get_conv):
-    mock_settings.return_value.local_auth_mode = False
     mock_get_conv.return_value = {"id": "conv-1", "support_user_id": "client-1"}
 
-    with patch("app.features.chat.support_admin.get_client") as mock_get_client:
+    with patch("app.features.chat.support_admin.get_db") as mock_get_client:
         table = MagicMock()
         select_chain = MagicMock()
         select_chain.eq.return_value = select_chain
@@ -147,7 +144,6 @@ def test_admin_edit_rejects_end_user_message(mock_settings, mock_get_conv):
 @patch("app.features.chat.support_admin.get_support_conversation_for_admin")
 @patch("app.features.chat.support_admin.get_settings")
 def test_admin_edit_missing_conversation(mock_settings, mock_get_conv):
-    mock_settings.return_value.local_auth_mode = False
     mock_get_conv.return_value = None
 
     with pytest.raises(NotFoundError):

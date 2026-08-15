@@ -1,23 +1,23 @@
 import type { UserType } from "@/lib/domain-types";
 
-/** User-facing copy for auth and role errors (keep in sync with backend `app/api/authz.py` where possible). */
+/**
+ * Client-only auth UX copy.
+ *
+ * API error strings are defined in backend `app/features/auth/messages.py` and
+ * returned in response bodies — use `getApiErrorDetail(err)` first.
+ * `GENERIC_AUTH_ERROR` is only for rare cases when the API sends no detail.
+ */
 
-export const VENDOR_PROFILE_FORBIDDEN =
-  "This page is for vendor accounts. If you offer services on Eventtz, create a vendor account or sign out and sign in again so we can refresh your account type. If you're planning an event, use client sign-in instead.";
-
-export const LOGIN_CREDENTIALS_MISMATCH =
-  "We couldn't sign you in with those details. Check your email and password, then try again.";
-
-export const ADMIN_ACCOUNT_REQUIRED =
-  "This sign-in is only for team admin accounts. If you're a vendor or client, use the matching sign-in page instead.";
-
-export const SIGNUP_GENERIC_ERROR =
-  "We couldn't finish creating your account. Please try again in a moment.";
+export const GENERIC_AUTH_ERROR = "Something went wrong. Please try again.";
 
 export const SESSION_VERIFY_FAILED =
   "We signed you in but couldn't verify your account. Please try again, or refresh the page.";
 
-/** After credentials succeed on `/admin/login`, block non-admin sessions. */
+/** Admin login page — not returned by a dedicated API error code. */
+export const ADMIN_ACCOUNT_REQUIRED =
+  "This sign-in is only for team admin accounts. If you're a vendor or client, use the matching sign-in page instead.";
+
+/** When `?next=` targets admin, block non-admin sessions after sign-in. */
 export function wrongAdminPortalMessage(actual: UserType | undefined): string {
   if (actual == null) {
     return "We couldn't confirm your account type. Please try again, or contact support if this keeps happening.";

@@ -11,6 +11,7 @@ import { PasswordField } from "@/components/ui/PasswordField";
 import { dashboardPathForUserType } from "@/features/auth/authRouting";
 import { ReferralRegisterBanner } from "@/features/auth/ReferralRegisterBanner";
 import { useUnifiedRegister } from "@/features/auth/useUnifiedRegister";
+import { GENERIC_AUTH_ERROR } from "@/lib/auth-messages";
 import { resendVerification } from "@/lib/auth-api";
 import { getApiErrorDetail } from "@/lib/api-errors";
 
@@ -50,7 +51,7 @@ export function UnifiedRegisterView() {
       const res = await resendVerification(email.trim());
       setResendNote(res.message);
     } catch (e: unknown) {
-      setResendNote(getApiErrorDetail(e) ?? "Could not send a new link. Try again later.");
+      setResendNote(getApiErrorDetail(e) ?? GENERIC_AUTH_ERROR);
     } finally {
       setResendBusy(false);
     }

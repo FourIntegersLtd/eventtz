@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Drawer } from "@/components/ui/Drawer";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { CONVERSATION_START_FAILED } from "@/lib/chat-messages";
 import { CHAT_UNREAD_CLEARED_EVENT, postConversation, postMessage } from "@/lib/chatApi";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { chatMessageSchema, parseForm } from "@/lib/validation";
@@ -22,6 +23,8 @@ type ChatDrawerProps = {
   counterpartyUserId?: string;
   /** Fires once a conversation is created from the first-message composer. */
   onConversationCreated?: (conversationId: string) => void;
+  /** Prefill the compose box (e.g. AI draft reply). */
+  initialDraft?: string | null;
 };
 
 /**
@@ -37,6 +40,7 @@ export function ChatDrawer({
   conversationId,
   counterpartyUserId,
   onConversationCreated,
+  initialDraft,
 }: ChatDrawerProps) {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(
     conversationId ?? null,
@@ -48,6 +52,12 @@ export function ChatDrawer({
   useEffect(() => {
     if (isOpen) setActiveConversationId(conversationId ?? null);
   }, [isOpen, conversationId]);
+
+  useEffect(() => {
+    if (isOpen && initialDraft?.trim()) {
+      setDraft(initialDraft.trim());
+    }
+  }, [isOpen, initialDraft]);
 
   const shortName = counterpartyName.trim().split(/\s+/)[0] || counterpartyName || "them";
 
@@ -74,7 +84,7 @@ export function ChatDrawer({
       setActiveConversationId(conv.id);
       onConversationCreated?.(conv.id);
     } catch (e: unknown) {
-      setError(getApiErrorDetail(e) ?? "Could not start the conversation.");
+      setError(getApiErrorDetail(e) ?? CONVERSATION_START_FAILED);
     } finally {
       setBusy(false);
     }
@@ -83,7 +93,12 @@ export function ChatDrawer({
   return (
     <Drawer isOpen={isOpen} onClose={onClose} title={`Message ${counterpartyName || shortName}`}>
       {activeConversationId ? (
-        <ChatThreadView portal={portal} conversationId={activeConversationId} variant="drawer" />
+        <ChatThreadView
+          portal={portal}
+          conversationId={activeConversationId}
+          variant="drawer"
+          initialDraft={initialDraft}
+        />
       ) : (
         <div className="flex flex-col gap-3">
           <p className="text-sm text-neutral-600">

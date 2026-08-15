@@ -33,10 +33,9 @@ def test_should_dedupe_booking_kind():
     assert should_dedupe_booking_kind("booking_request_received") is False
 
 
-@patch("app.features.email.delivery_log.get_client")
+@patch("app.features.email.delivery_log.get_db")
 @patch("app.features.email.delivery_log.get_settings")
 def test_claim_booking_email_send_non_dedupe_always_proceeds(mock_settings, mock_get_client):
-    mock_settings.return_value.local_auth_mode = False
     assert claim_booking_email_send(
         kind="booking_request_received",
         recipient_email="a@example.com",
@@ -46,10 +45,9 @@ def test_claim_booking_email_send_non_dedupe_always_proceeds(mock_settings, mock
     mock_get_client.assert_not_called()
 
 
-@patch("app.features.email.delivery_log.get_client")
+@patch("app.features.email.delivery_log.get_db")
 @patch("app.features.email.delivery_log.get_settings")
 def test_claim_booking_email_send_dedupe_inserts(mock_settings, mock_get_client):
-    mock_settings.return_value.local_auth_mode = False
     client = MagicMock()
     mock_get_client.return_value = client
     assert claim_booking_email_send(
@@ -61,10 +59,9 @@ def test_claim_booking_email_send_dedupe_inserts(mock_settings, mock_get_client)
     client.table.assert_called_with("email_delivery_log")
 
 
-@patch("app.features.email.delivery_log.get_client")
+@patch("app.features.email.delivery_log.get_db")
 @patch("app.features.email.delivery_log.get_settings")
 def test_claim_booking_email_send_dedupe_skips_duplicate(mock_settings, mock_get_client):
-    mock_settings.return_value.local_auth_mode = False
     client = MagicMock()
     client.table.return_value.insert.return_value.execute.side_effect = Exception("duplicate key 23505")
     mock_get_client.return_value = client
@@ -101,15 +98,14 @@ def test_email_service_send_booking_notification(mock_render, mock_claim, mock_r
     assert "New booking request" in args["subject"]
 
 
+@patch("app.features.email.dispatch._load_booking_parties", return_value=None)
 @patch("app.features.email.dispatch.get_email_service")
 @patch("app.features.email.dispatch.upsert_booking_notification")
-@patch("app.features.email.dispatch.get_settings")
-def test_dispatch_booking_notification_skips_email_in_local_auth(
-    mock_settings,
+def test_dispatch_booking_notification_skips_email_without_parties(
     mock_upsert,
     mock_get_svc,
+    _mock_parties,
 ):
-    mock_settings.return_value.local_auth_mode = True
     dispatch_booking_notification(
         user_id="vendor-1",
         booking_id="booking-1",
@@ -146,7 +142,6 @@ def test_display_name_from_email():
 
 @patch("app.features.email.service.get_settings")
 def test_welcome_template_renders_client_showcase(mock_svc_settings):
-    mock_svc_settings.return_value.local_auth_mode = False
     from app.features.email.render import render_template
     from app.features.email.branding import base_email_context, client_welcome_showcase
 
@@ -176,7 +171,6 @@ def test_welcome_template_renders_client_showcase(mock_svc_settings):
 @patch("app.features.email.service.get_settings")
 def test_send_welcome_vendor(mock_settings, mock_resend):
     mock_settings.return_value.frontend_url = "https://eventtz.com"
-    mock_settings.return_value.local_auth_mode = False
     svc = EmailService()
     ok = svc.send_welcome(to_email="vendor@example.com", user_type="vendor")
     assert ok is True
@@ -190,19 +184,21 @@ def test_send_welcome_vendor(mock_settings, mock_resend):
 @patch("app.features.email.service.get_settings")
 def test_send_welcome_client_hero(mock_settings, mock_resend):
     mock_settings.return_value.frontend_url = "https://eventtz.com"
-    mock_settings.return_value.local_auth_mode = False
     svc = EmailService()
     ok = svc.send_welcome(to_email="client@example.com", user_type="client")
     assert ok is True
     assert "welcome-clients.png" in mock_resend.call_args.kwargs["html"]
 
 
-@patch("app.features.email.dispatch.get_settings")
-def test_send_welcome_email_skips_local_auth(mock_settings):
-    mock_settings.return_value.local_auth_mode = True
+@patch("app.features.email.dispatch.get_email_service")
+def test_send_welcome_email_via_dispatch(mock_get_svc):
     from app.features.email.dispatch import send_welcome_email
 
-    assert send_welcome_email(email="a@example.com", user_type="client") is False
+    svc = MagicMock()
+    svc.send_welcome.return_value = True
+    mock_get_svc.return_value = svc
+    assert send_welcome_email(email="a@example.com", user_type="client") is True
+    svc.send_welcome.assert_called_once()
 
 
 @patch("app.features.email.service.resend_send", return_value=True)
@@ -343,7 +339,6 @@ def test_send_support_new_message_email_dispatch_vendor(
     mock_types,
     mock_get_svc,
 ):
-    mock_settings.return_value.local_auth_mode = False
     mock_types.return_value = {"vendor-1": "vendor"}
     mock_emails.return_value = {"vendor-1": "vendor@example.com"}
     svc = MagicMock()
@@ -365,7 +360,6 @@ def test_send_support_new_message_email_dispatch_vendor(
 
 @patch("app.features.email.dispatch.get_settings")
 def test_send_support_new_message_email_skips_admin(mock_settings):
-    mock_settings.return_value.local_auth_mode = False
     from app.features.email.dispatch import send_support_new_message_email
 
     with patch("app.features.email.dispatch.user_types_by_id", return_value={"admin-1": "admin"}):

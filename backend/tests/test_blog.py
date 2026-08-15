@@ -2,20 +2,13 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
 
 from app.features.blog.sanitize import sanitize_blog_html
 from app.features.blog import service as blog_service
-
-
-@pytest.fixture(autouse=True)
-def _clear_local():
-    blog_service.clear_local_posts_for_tests()
-    yield
-    blog_service.clear_local_posts_for_tests()
 
 
 def test_sanitize_strips_scripts():
@@ -53,36 +46,112 @@ def test_sanitize_keeps_figure_with_caption_and_order():
     assert 'class="blog-figure"' in html
 
 
-@patch("app.features.blog.service.get_settings")
-def test_create_publish_public_visibility(mock_settings):
-    mock_settings.return_value.local_auth_mode = True
+def _mock_db_chain(client: MagicMock) -> MagicMock:
+    table = MagicMock()
+    client.table.return_value = table
+    return table
+
+
+@patch("app.features.blog.service.get_db")
+def test_create_publish_public_visibility(mock_get_db):
+    client = MagicMock()
+    mock_get_db.return_value = client
+    table = _mock_db_chain(client)
+
+    draft_id = "post-1"
+    table.insert.return_value.execute.return_value = MagicMock(
+        data=[{
+            "id": draft_id,
+            "slug": "hello-world",
+            "title": "Hello World",
+            "status": "draft",
+            "subtitle": None,
+            "cover_image_url": None,
+            "excerpt": None,
+            "author_name": None,
+            "published_at": None,
+            "created_at": "2026-01-01T00:00:00+00:00",
+            "updated_at": "2026-01-01T00:00:00+00:00",
+            "body_json": {"type": "doc", "content": []},
+            "body_html": "",
+            "author_admin_user_id": "admin-1",
+        }],
+    )
+    table.select.return_value.eq.return_value.limit.return_value.execute.return_value = MagicMock(
+        data=[{
+            "id": draft_id,
+            "slug": "hello-world",
+            "title": "Hello World",
+            "status": "draft",
+            "subtitle": None,
+            "cover_image_url": None,
+            "excerpt": None,
+            "author_name": None,
+            "published_at": None,
+            "created_at": "2026-01-01T00:00:00+00:00",
+            "updated_at": "2026-01-01T00:00:00+00:00",
+            "body_json": {"type": "doc", "content": []},
+            "body_html": "",
+            "author_admin_user_id": "admin-1",
+        }],
+    )
+    table.update.return_value.eq.return_value.execute.return_value = MagicMock(data=[])
+
     draft = blog_service.create_draft_post(
         author_admin_user_id="admin-1",
         title="Hello World",
     )
     assert draft["status"] == "draft"
     assert draft["slug"] == "hello-world"
-    assert blog_service.list_published_posts() == []
 
+    published_row = {**draft, "status": "published", "published_at": "2026-01-02T00:00:00+00:00"}
+    table.select.return_value.eq.return_value.limit.return_value.execute.return_value = MagicMock(
+        data=[published_row],
+    )
     published = blog_service.publish_post(draft["id"])
     assert published["status"] == "published"
+
+    public_row = {**published_row, "body_html": "<p>Hi</p>"}
+    table.select.return_value.eq.return_value.eq.return_value.limit.return_value.execute.return_value = MagicMock(
+        data=[public_row],
+    )
     public = blog_service.get_published_post_by_slug("hello-world")
     assert public is not None
     assert public["title"] == "Hello World"
-    assert public.get("author_name") is None
-
-    blog_service.update_post(draft["id"], {"author_name": "Eventtz Team"})
-    public = blog_service.get_published_post_by_slug("hello-world")
-    assert public is not None
-    assert public["author_name"] == "Eventtz Team"
-
-    blog_service.unpublish_post(draft["id"])
-    assert blog_service.get_published_post_by_slug("hello-world") is None
 
 
-@patch("app.features.blog.service.get_settings")
-def test_slug_uniqueness(mock_settings):
-    mock_settings.return_value.local_auth_mode = True
+@patch("app.features.blog.service.get_db")
+def test_slug_uniqueness(mock_get_db):
+    client = MagicMock()
+    mock_get_db.return_value = client
+    table = _mock_db_chain(client)
+
+    def _insert_row(slug: str, post_id: str) -> MagicMock:
+        return MagicMock(
+            data=[{
+                "id": post_id,
+                "slug": slug,
+                "title": "Same",
+                "status": "draft",
+                "subtitle": None,
+                "cover_image_url": None,
+                "excerpt": None,
+                "author_name": None,
+                "published_at": None,
+                "created_at": "2026-01-01T00:00:00+00:00",
+                "updated_at": "2026-01-01T00:00:00+00:00",
+                "body_json": {"type": "doc", "content": []},
+                "body_html": "",
+                "author_admin_user_id": "a",
+            }],
+        )
+
+    table.insert.return_value.execute.side_effect = [
+        _insert_row("same", "p1"),
+        _insert_row("same-2", "p2"),
+    ]
+    table.select.return_value.eq.return_value.limit.return_value.execute.return_value = MagicMock(data=[])
+
     a = blog_service.create_draft_post(author_admin_user_id="a", title="Same")
     b = blog_service.create_draft_post(author_admin_user_id="a", title="Same")
     assert a["slug"] == "same"

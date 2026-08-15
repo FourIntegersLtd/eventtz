@@ -1,0 +1,103 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+const DEFAULT_TYPE_MS = 38;
+const DEFAULT_DELETE_MS = 24;
+const DEFAULT_HOLD_MS = 1600;
+
+type Phase = "typing" | "holding" | "deleting";
+
+export type RotatingTypewriterPlaceholderProps = {
+  examples: readonly string[];
+  /** Hide when the user has typed in the field. */
+  visible: boolean;
+  compact?: boolean;
+  /** Positioning and padding for the overlay (parent input should be `relative`). */
+  className?: string;
+  textClassName?: string;
+  typeMs?: number;
+  deleteMs?: number;
+  holdMs?: number;
+};
+
+export function RotatingTypewriterPlaceholder({
+  examples,
+  visible,
+  compact = false,
+  className = "",
+  textClassName = "text-neutral-400",
+  typeMs = DEFAULT_TYPE_MS,
+  deleteMs = DEFAULT_DELETE_MS,
+  holdMs = DEFAULT_HOLD_MS,
+}: RotatingTypewriterPlaceholderProps) {
+  const [index, setIndex] = useState(0);
+  const [charCount, setCharCount] = useState(0);
+  const [phase, setPhase] = useState<Phase>("typing");
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setReduceMotion(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  useEffect(() => {
+    if (!visible) return;
+    setIndex(0);
+    setCharCount(0);
+    setPhase("typing");
+  }, [visible]);
+
+  useEffect(() => {
+    if (!visible || reduceMotion || examples.length === 0) return;
+
+    const example = examples[index] ?? examples[0];
+    let timer: number | undefined;
+
+    if (phase === "typing") {
+      if (charCount < example.length) {
+        timer = window.setTimeout(() => setCharCount((n) => n + 1), typeMs);
+      } else {
+        timer = window.setTimeout(() => setPhase("holding"), 0);
+      }
+    } else if (phase === "holding") {
+      timer = window.setTimeout(() => setPhase("deleting"), holdMs);
+    } else if (phase === "deleting") {
+      if (charCount > 0) {
+        timer = window.setTimeout(() => setCharCount((n) => n - 1), deleteMs);
+      } else {
+        timer = window.setTimeout(() => {
+          setIndex((current) => (current + 1) % examples.length);
+          setPhase("typing");
+        }, 0);
+      }
+    }
+
+    return () => {
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [visible, reduceMotion, index, charCount, phase, examples, typeMs, deleteMs, holdMs]);
+
+  if (!visible || examples.length === 0) return null;
+
+  const example = examples[index] ?? examples[0];
+  const shown = reduceMotion ? example : example.slice(0, charCount);
+  const sizeClass = compact ? "text-sm" : "text-base";
+
+  return (
+    <span
+      className={`pointer-events-none absolute inset-y-0 left-0 right-0 flex items-center overflow-hidden ${sizeClass} ${className}`}
+      aria-hidden
+    >
+      <span className={`block truncate ${textClassName}`}>
+        {shown}
+        {!reduceMotion ? (
+          <span className="ml-0.5 inline-block h-[1.05em] w-px translate-y-[0.12em] bg-neutral-400 align-baseline animate-search-caret" />
+        ) : null}
+      </span>
+    </span>
+  );
+}

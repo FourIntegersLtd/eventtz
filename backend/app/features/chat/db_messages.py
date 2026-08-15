@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.core.db import rows
+from app.core.db import rows_from_query_result
 from app.core.db import get_db
 
 
@@ -23,4 +23,4 @@ def list_for_conversation(
         .limit(limit)
         .execute()
     )
-    return rows(res)
+    return rows_from_query_result(res)

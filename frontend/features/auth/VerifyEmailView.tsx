@@ -12,6 +12,7 @@ import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { TextField } from "@/components/ui/TextField";
 import { dashboardPathForUserType } from "@/features/auth/authRouting";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { GENERIC_AUTH_ERROR } from "@/lib/auth-messages";
 import { resendVerification, verifyEmail } from "@/lib/auth-api";
 
 function verifyErrorTitle(message: string | null): string {
@@ -60,7 +61,7 @@ export function VerifyEmailView() {
       } catch (e: unknown) {
         if (cancelled) return;
         setStatus("error");
-        setMessage(getApiErrorDetail(e) ?? "This verification link is invalid or has expired.");
+        setMessage(getApiErrorDetail(e) ?? GENERIC_AUTH_ERROR);
       }
     })();
     return () => {
@@ -80,7 +81,7 @@ export function VerifyEmailView() {
       const res = await resendVerification(email);
       setResendNote(res.message);
     } catch (e: unknown) {
-      setResendNote(getApiErrorDetail(e) ?? "Could not send a new link. Try again later.");
+      setResendNote(getApiErrorDetail(e) ?? GENERIC_AUTH_ERROR);
     } finally {
       setResendBusy(false);
     }

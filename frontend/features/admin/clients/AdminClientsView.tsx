@@ -2,7 +2,7 @@
 
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ADMIN_CONFIRM_COPY } from "@/features/bookings/bookingConfirmCopy";
-import { AccountStatusBadge } from "@/components/ui/AccountStatusBadge";
+import { AccountStatusBadge } from "@/components/badges/AccountStatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { patchClientSuspended, type AdminClientRow } from "@/lib/adminPlatformApi";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";

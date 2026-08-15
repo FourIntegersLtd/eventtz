@@ -9,9 +9,9 @@ import { clientTotalBeforeVendorAdjustments } from "@/features/bookings/bookingP
 import { bookingListPendingSubtext } from "@/features/bookings/bookingPendingLabels";
 
 type ParticipantBookingDetailSource = {
-  id: string;
+  booking_request_id: string;
   event_name: string;
-  status: string;
+  booking_status: string;
   initiator?: BookingInitiator;
   created_at: string | null;
   event_date: string;
@@ -31,9 +31,9 @@ type ParticipantBookingDetailSource = {
 };
 
 type ParticipantBookingListSource = {
-  id: string;
+  booking_request_id: string;
   event_name: string;
-  status: string;
+  booking_status: string;
   event_date: string;
   total_label: string;
   client_total_label?: string | null;
@@ -79,9 +79,9 @@ export function toBookingDetailViewModel(
   }
 
   return {
-    id: detail.id,
+    id: detail.booking_request_id,
     eventName: detail.event_name,
-    status: detail.status,
+    status: detail.booking_status,
     timelineLabel: `${isVendorInitiated ? "Sent" : "Requested"} ${formatDateTime(detail.created_at)}`,
     isVendorInitiated,
     eventDateLabel: formatEventDate(detail.event_date),
@@ -119,16 +119,16 @@ export function toBookingListRowViewModel(
   },
 ): BookingListRowViewModel {
   return {
-    id: row.id,
+    id: row.booking_request_id,
     eventName: row.event_name,
-    status: row.status,
+    status: row.booking_status,
     dateLabel: formatEventDate(row.event_date),
     totalLabel: row.client_total_label ?? row.total_label,
     counterpartyLine: config.counterpartyLine,
     initiatorBadgeLabel: config.initiatorBadgeLabel ?? null,
     reviewLine: config.reviewLine ?? null,
     pendingSubtext: bookingListPendingSubtext(config.portal, {
-      status: row.status,
+      status: row.booking_status,
       initiator: row.initiator,
       hasPriceUpdate: row.has_price_update,
       paymentStatus: row.payment_status,

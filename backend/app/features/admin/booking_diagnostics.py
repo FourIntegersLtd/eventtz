@@ -13,7 +13,7 @@ from app.features.bookings.completion_rules import (
 from app.features.bookings.disputes import has_active_dispute_for_booking
 from app.features.bookings.payments import _get_vendor_stripe_fields
 from app.core.config import get_settings
-from app.core.db import get_db as get_client
+from app.core.db import get_db
 
 # Labels must match support action titles in AdminBookingDetailView.
 ACTION_CHECK_PAYMENT = "Check payment"
@@ -27,7 +27,7 @@ ACTION_RESUME_PAYOUT = "Resume payout"
 
 def _open_dispute_for_booking(booking_id: str) -> dict[str, Any] | None:
     res = (
-        get_client()
+        get_db()
         .table("dispute_cases")
         .select("id,status,summary,created_at")
         .eq("booking_request_id", booking_id)
@@ -225,7 +225,7 @@ def _vendor_payouts_enabled_by_user_id(vendor_user_ids: list[str]) -> dict[str, 
         return {}
     try:
         res = (
-            get_client()
+            get_db()
             .table("vendors")
             .select("user_id,stripe_payouts_enabled")
             .in_("user_id", vendor_user_ids)
@@ -245,7 +245,7 @@ def _booking_ids_with_active_disputes(booking_ids: list[str]) -> set[str]:
         return set()
     try:
         res = (
-            get_client()
+            get_db()
             .table("dispute_cases")
             .select("booking_request_id")
             .in_("booking_request_id", booking_ids)
@@ -297,12 +297,10 @@ _SUPPORT_SCAN_SELECT = (
 
 def count_bookings_needing_support_attention(*, scan_limit: int = 300) -> int:
     """Count recent bookings with support flags (for dashboard attention)."""
-    if get_settings().local_auth_mode:
-        return 0
     scan_limit = max(1, min(scan_limit, 500))
     try:
         res = (
-            get_client()
+            get_db()
             .table("booking_requests")
             .select(_SUPPORT_SCAN_SELECT)
             .order("updated_at", desc=True)

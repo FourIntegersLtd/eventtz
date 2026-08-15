@@ -2,9 +2,9 @@
 
 import type { AdminVendorRow } from "@/lib/adminVendorsApi";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { VendorApprovalStatusBadge } from "@/components/ui/VendorApprovalStatusBadge";
-import { VendorPayoutStatusBadge } from "@/components/ui/VendorPayoutStatusBadge";
-import { VendorProfileStatusBadge } from "@/components/ui/VendorProfileStatusBadge";
+import { VendorApprovalStatusBadge } from "@/components/badges/VendorApprovalStatusBadge";
+import { VendorPayoutStatusBadge } from "@/components/badges/VendorPayoutStatusBadge";
+import { VendorProfileStatusBadge } from "@/components/badges/VendorProfileStatusBadge";
 import {
   AdminTable,
   AdminTableBody,
@@ -74,12 +74,12 @@ export function AdminVendorsTable({
         </AdminTableHead>
         <AdminTableBody>
           {rows.map((r) => {
-            const p = r.payload ?? {};
+            const p = r.profile_form_data ?? {};
             const biz = payloadStr(p, "businessName") || "-";
             const email = r.email ?? "-";
             const updated = r.updated_at ? new Date(r.updated_at).toLocaleString() : "-";
             const pending = r.approval_status === "pending";
-            const isDraft = r.status === "draft";
+            const isDraft = r.onboarding_status === "draft";
             const approvedNotLive = r.approval_status === "approved" && !r.listing_visible;
             const override = getVendorListingOverride(r.listing_override);
             const selected = selectedUserIds.includes(r.user_id);
@@ -110,7 +110,7 @@ export function AdminVendorsTable({
                   </span>
                 </AdminTableCell>
                 <AdminTableCell className="whitespace-nowrap">
-                  <VendorProfileStatusBadge status={r.status} />
+                  <VendorProfileStatusBadge status={r.onboarding_status} />
                 </AdminTableCell>
                 <AdminTableCell className="whitespace-nowrap">
                   <VendorApprovalStatusBadge status={r.approval_status} />

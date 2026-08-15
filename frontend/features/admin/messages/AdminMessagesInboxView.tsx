@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
-import { adminCard } from "@/features/admin/adminTheme";
+import { adminCard } from "@/components/admin-shell/adminTheme";
 import { MessageComposer, MESSAGE_MAX_LEN } from "@/features/chat/MessageComposer";
 import { LinkifyMessageBody } from "@/lib/linkifyMessageBody";
 import { formatDateTime } from "@/lib/dateFormat";

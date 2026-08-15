@@ -17,7 +17,8 @@ from app.contracts.referrals import (
     UpdateReferralShoutoutRequest,
 )
 from app.features.auth.http.guards import require_admin
-from app.features.referrals.admin_list import get_signup_row, list_partner_signups
+from app.features.referrals import messages as referral_messages
+from app.features.referrals.referral_partner_admin_queries import get_signup_row, list_partner_signups
 from app.features.referrals.attribution import update_shoutout_completed
 from app.features.referrals.partners import create_partner, get_partner_by_id, list_partners, update_partner
 
@@ -60,7 +61,7 @@ def admin_patch_referral_partner(
 ) -> ReferralPartnerResponse:
     require_admin(request, response)
     if not body.model_dump(exclude_unset=True):
-        raise HTTPException(status_code=400, detail="No fields to update")
+        raise HTTPException(status_code=400, detail=referral_messages.NO_FIELDS_TO_UPDATE)
     try:
         row = update_partner(
             partner_id,
@@ -72,7 +73,7 @@ def admin_patch_referral_partner(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     if not row:
-        raise HTTPException(status_code=404, detail="Referral partner not found")
+        raise HTTPException(status_code=404, detail=referral_messages.PARTNER_NOT_FOUND)
     return ReferralPartnerResponse(partner=ReferralPartnerRow.model_validate(row))
 
 
@@ -93,7 +94,7 @@ def admin_list_referral_signups(
         shoutout=shoutout,
     )
     if not partner:
-        raise HTTPException(status_code=404, detail="Referral partner not found")
+        raise HTTPException(status_code=404, detail=referral_messages.PARTNER_NOT_FOUND)
     return ReferralSignupListResponse(
         partner=ReferralPartnerRow.model_validate(partner),
         signups=[ReferralVendorSignupRow.model_validate(s) for s in signups],
@@ -113,8 +114,8 @@ def admin_patch_referral_signup_shoutout(
     require_admin(request, response)
     updated = update_shoutout_completed(user_id=user_id, shoutout_completed=body.shoutout_completed)
     if not updated:
-        raise HTTPException(status_code=404, detail="Referral signup not found")
+        raise HTTPException(status_code=404, detail=referral_messages.SIGNUP_NOT_FOUND)
     row = get_signup_row(user_id)
     if not row:
-        raise HTTPException(status_code=404, detail="Referral signup not found")
+        raise HTTPException(status_code=404, detail=referral_messages.SIGNUP_NOT_FOUND)
     return ReferralVendorSignupRow.model_validate(row)

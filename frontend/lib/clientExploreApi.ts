@@ -7,7 +7,7 @@ export type ExploreVendor = {
   email?: string | null;
   status?: VendorProfileStatus | string;
   approval_status?: VendorApprovalStatus | string;
-  payload: Record<string, unknown>;
+  profile_form_data: Record<string, unknown>;
   updated_at?: string;
   /** Average star rating (1-5), when reviews exist. */
   review_average?: number | null;

@@ -1,9 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { BrowsePricingOptionCard } from "@/components/vendor/BrowsePricingOptionCard";
-import { BrowsePricingPackagesSection } from "@/components/vendor/BrowsePricingPackagesSection";
-import { BrowsePricingSharedInfo } from "@/components/vendor/BrowsePricingSharedInfo";
+import { BrowsePricingOptionCard } from "@/features/vendors/display/BrowsePricingOptionCard";
+import { BrowsePricingPackagesSection } from "@/features/vendors/display/BrowsePricingPackagesSection";
+import { BrowsePricingSharedInfo } from "@/features/vendors/display/BrowsePricingSharedInfo";
 import {
   packageSpecificTravelLine,
   type BrowsePricingOption,

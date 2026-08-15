@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ChevronRight, X } from "lucide-react";
-import { ReviewVisibilityBadge } from "@/components/ui/ReviewVisibilityBadge";
+import { ReviewVisibilityBadge } from "@/components/badges/ReviewVisibilityBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StarRating } from "@/components/ui/StarRating";
 import { fetchAdminReviews, type AdminReviewRow } from "@/lib/adminPlatformApi";

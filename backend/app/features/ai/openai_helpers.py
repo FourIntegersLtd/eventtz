@@ -12,6 +12,7 @@ from pydantic import BaseModel
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
+from app.features.ai import messages as ai_messages
 
 logger = get_logger(__name__)
 
@@ -41,7 +42,7 @@ def require_openai_client(*, log_context: str = "openai") -> OpenAI:
     )
     raise HTTPException(
         status_code=503,
-        detail="This AI feature isn't available right now. Please try again later.",
+        detail=ai_messages.OPENAI_UNAVAILABLE,
     )
 
 
@@ -84,7 +85,7 @@ def parse_completion(
         logger.exception("%s: chat.completions.parse failed", log_context)
         raise HTTPException(
             status_code=503,
-            detail="The help assistant is unavailable right now. Please try again later.",
+            detail=ai_messages.AI_PARSE_UNAVAILABLE,
         ) from e
 
     message = completion.choices[0].message
@@ -92,13 +93,13 @@ def parse_completion(
         logger.warning("%s: model refused: %s", log_context, message.refusal)
         raise HTTPException(
             status_code=400,
-            detail="I couldn't answer that. Try rephrasing, or contact support.",
+            detail=ai_messages.AI_REFUSAL,
         )
     parsed = message.parsed
     if parsed is None:
         logger.warning("%s: empty parsed response", log_context)
         raise HTTPException(
             status_code=503,
-            detail="The help assistant returned an empty answer. Please try again.",
+            detail=ai_messages.AI_EMPTY_RESPONSE,
         )
     return parsed

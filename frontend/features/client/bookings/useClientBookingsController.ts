@@ -50,7 +50,7 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
     [listStatusFilter],
   );
   const fetchDetail = useCallback((id: string) => fetchClientBookingDetail(id), []);
-  const getDetailStatus = useCallback((b: ClientBookingDetail) => b.status, []);
+  const getDetailStatus = useCallback((b: ClientBookingDetail) => b.booking_status, []);
 
   const {
     tab,
@@ -92,24 +92,24 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
   const detailViewedRef = useRef<string | null>(null);
   const paymentTrackedRef = useRef<string | null>(null);
   const paymentDue =
-    detail?.status === "accepted" &&
+    detail?.booking_status === "accepted" &&
     (detail?.payment_status === "unpaid" || detail?.payment_status === "pending");
 
   useEffect(() => {
-    if (!detail?.id || detailLoading) return;
-    if (detailViewedRef.current === detail.id) return;
-    detailViewedRef.current = detail.id;
+    if (!detail?.booking_request_id || detailLoading) return;
+    if (detailViewedRef.current === detail.booking_request_id) return;
+    detailViewedRef.current = detail.booking_request_id;
     track(MixpanelEvents.booking_detail_viewed, {
-      booking_id: detail.id,
-      status: detail.status,
+      booking_id: detail.booking_request_id,
+      status: detail.booking_status,
     });
-  }, [detail?.id, detail?.status, detailLoading]);
+  }, [detail?.booking_request_id, detail?.booking_status, detailLoading]);
 
   useEffect(() => {
     if (paymentDue) {
       paymentBannerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
-  }, [paymentDue, detail?.id]);
+  }, [paymentDue, detail?.booking_request_id]);
 
   useEffect(() => {
     pendingPaymentSyncRef.current = null;
@@ -147,8 +147,8 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
   }, []);
 
   const confirmCancelBooking = async () => {
-    if (!detail?.id) return;
-    const bookingId = detail.id;
+    if (!detail?.booking_request_id) return;
+    const bookingId = detail.booking_request_id;
     setActionError(null);
     setActionBusy(true);
     try {
@@ -164,9 +164,9 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
   };
 
   const applyClientQuoteResponse = async (next: "accepted" | "declined") => {
-    if (!detail?.id) return;
-    if (detail.initiator !== "vendor" || detail.status !== "pending") return;
-    const bookingId = detail.id;
+    if (!detail?.booking_request_id) return;
+    if (detail.initiator !== "vendor" || detail.booking_status !== "pending") return;
+    const bookingId = detail.booking_request_id;
     setActionError(null);
     setActionBusy(true);
     setPendingQuoteAction(next === "accepted" ? "accept" : "decline");
@@ -188,10 +188,10 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
   };
 
   const applyClientUpdatedPriceResponse = async (next: "accepted" | "declined") => {
-    if (!detail?.id) return;
-    if (detail.initiator !== "client" || detail.status !== "pending") return;
+    if (!detail?.booking_request_id) return;
+    if (detail.initiator !== "client" || detail.booking_status !== "pending") return;
     if (detail.vendor_adjustments.length === 0) return;
-    const bookingId = detail.id;
+    const bookingId = detail.booking_request_id;
     setActionError(null);
     setActionBusy(true);
     setPendingPriceAction(next === "accepted" ? "accept" : "decline");
@@ -215,8 +215,8 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
   const [confirmingCompletion, setConfirmingCompletion] = useState(false);
   const [confirmCompleteOpen, setConfirmCompleteOpen] = useState(false);
   const confirmCompletion = async () => {
-    if (!detail?.id) return;
-    const bookingId = detail.id;
+    if (!detail?.booking_request_id) return;
+    const bookingId = detail.booking_request_id;
     setActionError(null);
     setConfirmingCompletion(true);
     try {
@@ -315,7 +315,7 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
 
   const rows = useMemo(() => list.map(toClientBookingRowViewModel), [list]);
   const listItemsById = useMemo(
-    () => new Map(list.map((item) => [item.id, item])),
+    () => new Map(list.map((item) => [item.booking_request_id, item])),
     [list],
   );
   const eventGroups = useMemo(() => {
@@ -328,7 +328,7 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
     : null;
 
   const showUpdatedPriceBanner =
-    detail?.status === "pending" &&
+    detail?.booking_status === "pending" &&
     detail.initiator === "client" &&
     detail.vendor_adjustments.length > 0;
 
@@ -338,15 +338,15 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
       : BOOKING_CONFIRM_COPY.cancelClient;
 
   const showCancelledRefunded =
-    detail?.status === "cancelled" &&
+    detail?.booking_status === "cancelled" &&
     (detail.payment_status === "refunded" || detail.payment_status === "partially_refunded");
 
   const footerActions: BookingDetailAction[] = [];
   const canCancel =
     detail &&
-    (detail.status === "pending" || detail.status === "accepted") &&
+    (detail.booking_status === "pending" || detail.booking_status === "accepted") &&
     detail.payment_status !== "payout_released" &&
-    !(detail.initiator === "vendor" && detail.status === "pending");
+    !(detail.initiator === "vendor" && detail.booking_status === "pending");
   if (canCancel) {
     footerActions.push({
       key: "cancel",
@@ -358,7 +358,7 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
         setCancelOpen(true);
       },
     });
-    if (detail.status === "accepted" && detail.payment_status === "paid") {
+    if (detail.booking_status === "accepted" && detail.payment_status === "paid") {
       if (!detail.client_completion_confirmed_at) {
         footerActions.push({
           key: "confirm-completion",
@@ -374,7 +374,7 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
   }
 
   const headerActions: BookingDetailAction[] = [];
-  if (detail && detail.initiator === "vendor" && detail.status === "pending") {
+  if (detail && detail.initiator === "vendor" && detail.booking_status === "pending") {
     headerActions.push(
       {
         key: "accept",
@@ -403,9 +403,9 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
   );
 
   const payNow = useCallback(() => {
-    if (!detail?.id) return;
-    router.push(`/client/bookings/${detail.id}/pay`);
-  }, [detail?.id, router]);
+    if (!detail?.booking_request_id) return;
+    router.push(`/client/bookings/${detail.booking_request_id}/pay`);
+  }, [detail?.booking_request_id, router]);
 
   return {
     router,

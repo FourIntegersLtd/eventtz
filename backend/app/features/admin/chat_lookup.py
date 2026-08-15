@@ -7,8 +7,8 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.db import get_db as get_client
-from app.features.auth.lookup import user_emails_by_id, vendor_display_names_by_id
+from app.core.db import get_db
+from app.features.auth.user_vendor_display_lookup import user_emails_by_id, vendor_display_names_by_id
 
 logger = get_logger(__name__)
 
@@ -21,15 +21,13 @@ def get_conversation_admin_meta(conversation_id: str) -> dict[str, Any]:
         "client_email": None,
         "vendor_display_name": None,
     }
-    if get_settings().local_auth_mode:
-        return empty
     try:
         uuid.UUID(conversation_id)
     except ValueError:
         return empty
     try:
         res = (
-            get_client()
+            get_db()
             .table("conversations")
             .select("id,client_user_id,vendor_user_id")
             .eq("id", conversation_id)
@@ -58,15 +56,13 @@ def get_conversation_admin_meta(conversation_id: str) -> dict[str, Any]:
 
 
 def get_conversation_messages_admin(conversation_id: str) -> list[dict[str, Any]]:
-    if get_settings().local_auth_mode:
-        return []
     try:
         uuid.UUID(conversation_id)
     except ValueError:
         return []
     try:
         res = (
-            get_client()
+            get_db()
             .table("messages")
             .select("id,sender_user_id,body,created_at")
             .eq("conversation_id", conversation_id)

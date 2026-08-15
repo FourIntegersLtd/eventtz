@@ -2,7 +2,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { LottieFailurePanel } from "@/components/ui/LottieFailurePanel";
 import { SkeletonListRows } from "@/components/ui/Skeleton";
 import { SegmentedControl, type SegmentedControlOption } from "@/components/ui/SegmentedControl";
-import { StatusBadge } from "@/components/ui/StatusBadge";
+import { StatusBadge } from "@/components/badges/StatusBadge";
 import type { BookingListRowViewModel } from "@/features/bookings/bookingViewModel";
 import type { BookingEventGroup } from "@/features/bookings/groupBookingsByEvent";
 

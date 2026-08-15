@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from app.core.config import get_settings
-from app.core.db import get_db as get_client
+from app.core.db import get_db
 from app.core.logging import get_logger
 from app.features.email.branding import email_public_base
 from app.features.email.dispatch import dispatch_booking_notification
@@ -46,11 +46,9 @@ def _parse_ts(value: Any) -> datetime | None:
 
 
 def _eligible_pending_enquiries(limit: int = 200) -> list[dict[str, Any]]:
-    if get_settings().local_auth_mode:
-        return []
     try:
         res = (
-            get_client()
+            get_db()
             .table("booking_requests")
             .select(
                 "id,client_user_id,vendor_user_id,event_name,created_at,"
@@ -73,7 +71,7 @@ def _eligible_pending_enquiries(limit: int = 200) -> list[dict[str, Any]]:
 
 def _stamp(booking_id: str, column: str) -> None:
     try:
-        get_client().table("booking_requests").update({column: _now_iso()}).eq(
+        get_db().table("booking_requests").update({column: _now_iso()}).eq(
             "id",
             booking_id,
         ).execute()
@@ -143,7 +141,7 @@ def _client_already_contacted_vendor_ids(client_user_id: str) -> set[str]:
         return set()
     try:
         res = (
-            get_client()
+            get_db()
             .table("booking_requests")
             .select("vendor_user_id")
             .eq("client_user_id", client_user_id)
@@ -247,8 +245,6 @@ def _suggest_alternative_vendors(
 
 def process_client_no_response_nudges(limit: int = 100) -> int:
     """At 24h without vendor reply: email client with alternative vendors."""
-    if get_settings().local_auth_mode:
-        return 0
     sent = 0
     now = _now()
     for row in _eligible_pending_enquiries(limit):
@@ -266,9 +262,9 @@ def process_client_no_response_nudges(limit: int = 100) -> int:
         payload: dict[str, Any] | None = None
         vendor_name = "the vendor"
         try:
-            from app.features.vendors.moderation import get_approved_vendor_payload
+            from app.features.vendors.moderation import get_bookable_vendor_profile_form_data
 
-            payload = get_approved_vendor_payload(vendor_id)
+            payload = get_bookable_vendor_profile_form_data(vendor_id)
             if payload:
                 raw = payload.get("businessName")
                 if isinstance(raw, str) and raw.strip():
@@ -303,7 +299,7 @@ def process_client_no_response_nudges(limit: int = 100) -> int:
             )
 
         try:
-            from app.features.auth.lookup import user_emails_by_id
+            from app.features.auth.user_vendor_display_lookup import user_emails_by_id
 
             emails = user_emails_by_id([client_id])
             to_email = emails.get(client_id, "").strip()

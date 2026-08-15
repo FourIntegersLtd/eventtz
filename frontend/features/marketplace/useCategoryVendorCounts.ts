@@ -18,7 +18,7 @@ export function useCategoryVendorCounts() {
         const next: Record<string, number> = {};
         for (const { value } of CATEGORIES) next[value] = 0;
         for (const vendor of vendors) {
-          const services = vendor.payload?.servicesOffered;
+          const services = vendor.profile_form_data?.servicesOffered;
           if (!Array.isArray(services)) continue;
           for (const service of services) {
             const key = String(service);

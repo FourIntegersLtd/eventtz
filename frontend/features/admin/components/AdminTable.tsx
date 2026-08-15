@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { adminCard } from "@/features/admin/adminTheme";
+import { adminCard } from "@/components/admin-shell/adminTheme";
 
 type AdminTableProps = {
   children: ReactNode;

@@ -18,6 +18,7 @@ from app.contracts.chat import (
     MessagesListResponse,
 )
 from app.features.bookings import vendor_can_initiate_chat
+from app.features.chat import messages as chat_messages
 from app.features.chat.service import (
     count_unread_chat_total,
     get_conversation_for_user,
@@ -45,7 +46,7 @@ def list_conversations(user: dict[str, Any]) -> ConversationsListResponse:
     if role not in ("client", "vendor"):
         from app.core.errors import ForbiddenError
 
-        raise ForbiddenError("Chat is only available for client and vendor accounts.")
+        raise ForbiddenError(chat_messages.CHAT_PORTAL_ONLY)
     rows = list_conversations_for_user(uid, role=role)
     return ConversationsListResponse(conversations=[ConversationRow.model_validate(r) for r in rows])
 
@@ -61,7 +62,7 @@ def create_conversation(user: dict[str, Any], body: ConversationCreateBodyShared
         if not vendor_can_initiate_chat(vendor_user_id=uid, client_user_id=peer):
             from app.core.errors import ForbiddenError
 
-            raise ForbiddenError("You can only message clients you have bookings with.")
+            raise ForbiddenError(chat_messages.CLIENT_BOOKINGS_ONLY)
         row = get_or_create_conversation(
             client_user_id=peer,
             vendor_user_id=uid,
@@ -70,7 +71,7 @@ def create_conversation(user: dict[str, Any], body: ConversationCreateBodyShared
         return ConversationCreateResponse(conversation=ConversationRow.model_validate(row))
     from app.core.errors import ForbiddenError
 
-    raise ForbiddenError("Chat is only available for client and vendor accounts.")
+    raise ForbiddenError(chat_messages.CHAT_PORTAL_ONLY)
 
 
 def get_conversation(user: dict[str, Any], conversation_id: str) -> ConversationDetailResponse:
@@ -79,7 +80,7 @@ def get_conversation(user: dict[str, Any], conversation_id: str) -> Conversation
     if not row:
         from app.core.errors import NotFoundError
 
-        raise NotFoundError("Conversation not found.")
+        raise NotFoundError(chat_messages.CONVERSATION_NOT_FOUND)
     return ConversationDetailResponse(conversation=ConversationRow.model_validate(row))
 
 
@@ -89,7 +90,7 @@ def get_messages(user: dict[str, Any], conversation_id: str, *, limit: int) -> M
     if not conv:
         from app.core.errors import NotFoundError
 
-        raise NotFoundError("Conversation not found.")
+        raise NotFoundError(chat_messages.CONVERSATION_NOT_FOUND)
     rows = list_messages_for_user(conversation_id, uid, limit=limit)
     return MessagesListResponse(messages=[MessageRow.model_validate(r) for r in rows])
 
@@ -107,7 +108,7 @@ def post_message(user: dict[str, Any], conversation_id: str, body: MessageCreate
     elif kind == "support":
         # Notify admin accounts so the Messages inbox refreshes live.
         try:
-            from app.features.admin.team_ops import list_admin_team
+            from app.features.admin.team_admin_commands import list_admin_team
 
             for member in list_admin_team():
                 admin_id = str(member.get("user_id") or member.get("id") or "")

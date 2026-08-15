@@ -17,6 +17,7 @@ import { LinkifyMessageBody } from "@/lib/linkifyMessageBody";
 import { VendorQuoteFormModal } from "@/features/vendor/quotes/VendorQuoteFormModal";
 import { formatDateTime } from "@/lib/dateFormat";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { CONVERSATION_LOAD_FAILED, SEND_MESSAGE_FAILED } from "@/lib/chat-messages";
 import {
   CHAT_UNREAD_CLEARED_EVENT,
   type ChatConversation,
@@ -39,6 +40,7 @@ type ChatThreadViewProps = {
   backLabel?: string;
   /** "page" (default) or "drawer" (no back link - Drawer chrome already has close). */
   variant?: "page" | "drawer";
+  initialDraft?: string | null;
 };
 
 function formatBubbleTime(iso: string | null | undefined): string {
@@ -67,6 +69,7 @@ export function ChatThreadView({
   backHref,
   backLabel = "Messages",
   variant = "page",
+  initialDraft,
 }: ChatThreadViewProps) {
   const isDrawer = variant === "drawer";
   const { user } = useAuth();
@@ -104,7 +107,7 @@ export function ChatThreadView({
         /* Mark-read is best-effort - still show the thread if Supabase hiccups. */
       }
     } catch (e: unknown) {
-      setError(getApiErrorDetail(e) ?? "Could not load conversation.");
+      setError(getApiErrorDetail(e) ?? CONVERSATION_LOAD_FAILED);
       setConv(null);
       setMessages([]);
     } finally {
@@ -117,6 +120,12 @@ export function ChatThreadView({
   }, [load]);
 
   useEffect(() => {
+    if (initialDraft?.trim()) {
+      setDraft(initialDraft.trim());
+    }
+  }, [conversationId, initialDraft]);
+
+  useEffect(() => {
     if (!quoteOpen || portal !== "vendor" || !conversationId) return;
     let cancelled = false;
     void (async () => {
@@ -125,7 +134,7 @@ export function ChatThreadView({
         if (cancelled) return;
         const match =
           bookings.find((b) => b.conversation_id === conversationId) ??
-          bookings.find((b) => b.initiator === "client" && b.status === "pending");
+          bookings.find((b) => b.initiator === "client" && b.booking_status === "pending");
         if (match) {
           setQuotePrefill({
             eventName: match.event_name || undefined,
@@ -194,7 +203,7 @@ export function ChatThreadView({
         window.dispatchEvent(new CustomEvent(CHAT_UNREAD_CLEARED_EVENT));
       }
     } catch (e: unknown) {
-      setError(getApiErrorDetail(e) ?? "Could not send message.");
+      setError(getApiErrorDetail(e) ?? SEND_MESSAGE_FAILED);
     } finally {
       setSending(false);
     }

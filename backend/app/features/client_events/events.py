@@ -6,9 +6,10 @@ from datetime import date, datetime, timezone
 from typing import Any
 
 from app.core.config import get_settings
-from app.core.db import get_db as get_client
-from app.core.db import one_row
+from app.core.db import get_db
+from app.core.db import first_row_from_query_result
 from app.core.logging import get_logger
+from app.features.client_events import messages as client_event_messages
 
 logger = get_logger(__name__)
 
@@ -28,11 +29,11 @@ def _normalize_date_str(value: Any) -> str:
 
 
 def booking_counts_by_event(client_user_id: str, event_ids: list[str]) -> dict[str, tuple[int, int]]:
-    if not event_ids or get_settings().local_auth_mode:
+    if not event_ids:
         return {}
     try:
         res = (
-            get_client()
+            get_db()
             .table("booking_requests")
             .select("event_id,status")
             .eq("client_user_id", client_user_id)
@@ -84,16 +85,6 @@ def create_client_event(
     event_address: str | None = None,
     event_postcode: str | None = None,
 ) -> dict[str, Any]:
-    if get_settings().local_auth_mode:
-        return {
-            "id": "00000000-0000-4000-8000-000000000099",
-            "title": title.strip(),
-            "event_date": event_date.isoformat(),
-            "event_end_date": event_end_date.isoformat() if event_end_date else None,
-            "event_address": event_address,
-            "event_postcode": event_postcode,
-            "status": "active",
-        }
     row = {
         "client_user_id": client_user_id,
         "title": title.strip(),
@@ -103,19 +94,17 @@ def create_client_event(
         "event_postcode": (event_postcode.strip() if event_postcode else None),
         "status": "active",
     }
-    res = get_client().table("client_events").insert(row).execute()
-    created = one_row(res)
+    res = get_db().table("client_events").insert(row).execute()
+    created = first_row_from_query_result(res)
     if created is None:
         raise RuntimeError("Failed to create client event")
     return created
 
 
-def get_client_event_row(client_user_id: str, event_id: str) -> dict[str, Any] | None:
-    if get_settings().local_auth_mode:
-        return None
+def get_client_event_by_id(client_user_id: str, event_id: str) -> dict[str, Any] | None:
     try:
         res = (
-            get_client()
+            get_db()
             .table("client_events")
             .select("*")
             .eq("id", event_id)
@@ -128,9 +117,9 @@ def get_client_event_row(client_user_id: str, event_id: str) -> dict[str, Any] |
         if "client_events" in msg or "pgrst205" in msg:
             logger.error("client_events table missing - run backend/sql/057_client_events.sql")
         else:
-            logger.warning("get_client_event_row failed event=%s: %s", event_id, e)
+            logger.warning("get_client_event_by_id failed event=%s: %s", event_id, e)
         return None
-    row = one_row(res)
+    row = first_row_from_query_result(res)
     return row if isinstance(row, dict) else None
 
 
@@ -139,14 +128,12 @@ def list_client_events(
     *,
     status: str = "active",
 ) -> list[dict[str, Any]]:
-    if get_settings().local_auth_mode:
-        return []
     st = (status or "active").strip().lower()
     if st not in ("active", "archived", "all"):
-        raise ValueError("status must be active, archived, or all.")
+        raise ValueError(client_event_messages.INVALID_STATUS_FILTER)
     try:
         q = (
-            get_client()
+            get_db()
             .table("client_events")
             .select("*")
             .eq("client_user_id", client_user_id)
@@ -180,11 +167,11 @@ def resolve_event_for_booking(
 ) -> tuple[str, dict[str, Any]]:
     """Return (event_id, booking row fields including event_id and denormalized event columns)."""
     if event_id and event_id.strip():
-        existing = get_client_event_row(client_user_id, event_id.strip())
+        existing = get_client_event_by_id(client_user_id, event_id.strip())
         if existing is None:
-            raise ValueError("Event not found.")
+            raise ValueError(client_event_messages.EVENT_NOT_FOUND)
         if str(existing.get("status") or "") == "archived":
-            raise ValueError("That event is archived. Start a new event or choose another.")
+            raise ValueError(client_event_messages.EVENT_ARCHIVED)
         end = _normalize_date_str(existing.get("event_end_date"))
         return (
             str(existing["id"]),
@@ -223,10 +210,10 @@ def resolve_event_for_booking(
 
 
 def touch_client_event_updated_at(event_id: str) -> None:
-    if get_settings().local_auth_mode or not event_id:
+    if not event_id:
         return
     try:
-        get_client().table("client_events").update(
+        get_db().table("client_events").update(
             {"updated_at": _now_iso()},
         ).eq("id", event_id).execute()
     except Exception:

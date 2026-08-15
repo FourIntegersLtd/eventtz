@@ -21,8 +21,8 @@ def send_email(
     text: str | None = None,
 ) -> bool:
     settings = get_settings()
-    if settings.local_auth_mode or not EMAIL_ENABLED:
-        logger.info("email skipped (local auth or disabled): %s", subject)
+    if not EMAIL_ENABLED:
+        logger.info("email skipped (disabled or missing API key): %s", subject)
         return False
     api_key = settings.resend_api_key.strip()
     if not api_key:

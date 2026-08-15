@@ -8,16 +8,17 @@ from uuid import uuid4
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.db import get_db as get_client, is_missing_approval_status_column, local_vendors
+from app.core.db import get_db, is_missing_approval_status_column
 from app.features.auth.accounts import upsert_user_profile
 from app.features.vendors.business_name import (
     assert_business_name_available,
     is_business_name_unique_violation,
 )
 from app.core.errors import ConflictError
+from app.features.vendors import messages as vendor_messages
 from app.features.email.dispatch import send_admin_vendor_submitted_email
 from app.features.vendors.explore_index import explore_search_patch_from_payload
-from app.features.vendors.payload_validation import (
+from app.features.vendors.profile_form_validation import (
     normalize_payload_fields,
     validate_payload_for_progress,
 )
@@ -87,15 +88,12 @@ def get_vendor_profile(user_id: str, *, refresh_payouts: bool = False) -> dict[s
     refresh writes through to the vendor row, so every other caller can stay on stored
     values instead of paying for a Stripe round trip.
     """
-    if get_settings().local_auth_mode:
-        row = local_vendors.get(user_id)
-        return _with_visibility_flags(row) if row else None
     base_cols = "id,user_id,status,approval_status,current_step,payload,created_at,updated_at"
     listing_cols = ",".join((*PUBLIC_LISTING_STRIPE_COLS, *LISTING_OVERRIDE_COLS))
 
     def _select(columns: str) -> Any:
         return (
-            get_client()
+            get_db()
             .table("vendors")
             .select(columns)
             .eq("user_id", user_id)
@@ -153,41 +151,6 @@ def upsert_vendor_profile(
 
     assert_business_name_available(merged_payload, user_id)
 
-    if get_settings().local_auth_mode:
-        prev = local_vendors.get(user_id)
-        stable_id = prev.get("id") if prev else str(uuid4())
-        approval = prev.get("approval_status") if prev and prev.get("approval_status") else "pending"
-        row = {
-            "id": stable_id,
-            "user_id": user_id,
-            "status": st,
-            "approval_status": approval,
-            "current_step": current_step,
-            "payload": merged_payload,
-        }
-        if user_email is not None:
-            row["email"] = user_email.strip().lower()
-        elif prev and prev.get("email"):
-            row["email"] = prev["email"]
-        local_vendors[user_id] = row
-        if st == "submitted" and previous_status != "submitted":
-            payload_bn = merged_payload.get("businessName")
-            business_name = payload_bn.strip() if isinstance(payload_bn, str) else None
-            submit_email = (
-                user_email.strip().lower()
-                if isinstance(user_email, str) and user_email.strip()
-                else (str(row.get("email") or "") or None)
-            )
-            try:
-                send_admin_vendor_submitted_email(
-                    vendor_user_id=user_id,
-                    vendor_email=submit_email,
-                    business_name=business_name,
-                )
-            except Exception:
-                logger.warning("vendor submitted admin email failed user=%s", user_id, exc_info=True)
-        return row
-
     # vendors.user_id must exist in users - create the user row before insert or update.
     norm_email = (
         user_email.strip().lower()
@@ -205,17 +168,17 @@ def upsert_vendor_profile(
     }
     if existing:
         try:
-            get_client().table("vendors").update(row_out).eq("user_id", user_id).execute()
+            get_db().table("vendors").update(row_out).eq("user_id", user_id).execute()
         except Exception as e:
             if is_business_name_unique_violation(e):
-                raise ConflictError("This business name is already registered.") from e
+                raise ConflictError(vendor_messages.BUSINESS_NAME_ALREADY_REGISTERED) from e
             raise
     else:
         try:
-            get_client().table("vendors").insert(row_out).execute()
+            get_db().table("vendors").insert(row_out).execute()
         except Exception as e:
             if is_business_name_unique_violation(e):
-                raise ConflictError("This business name is already registered.") from e
+                raise ConflictError(vendor_messages.BUSINESS_NAME_ALREADY_REGISTERED) from e
             raise
     out = get_vendor_profile(user_id)
     if not out:

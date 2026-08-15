@@ -13,7 +13,7 @@ from app.features.email.service import EmailService
 
 def test_set_supabase_password_uses_service_client() -> None:
     mock_client = MagicMock()
-    with patch("app.features.auth.password_reset.get_client", return_value=mock_client):
+    with patch("app.features.auth.password_reset.get_db", return_value=mock_client):
         _set_supabase_password("user-abc", "NewPassword1!")
     mock_client.auth.admin.update_user_by_id.assert_called_once_with(
         "user-abc",
@@ -27,13 +27,11 @@ def test_set_supabase_password_uses_service_client() -> None:
 @patch("app.features.auth.password_reset._user_type_for_id", return_value="admin")
 @patch("app.features.auth.password_reset.validate_password_for_user")
 @patch("app.features.auth.rate_limit.assert_change_password_rate")
-@patch("app.features.auth.password_reset.local_auth_store.enabled", return_value=False)
 @patch("app.features.auth.password_reset.SupabaseAuthService")
-@patch("app.features.auth.password_reset.get_client")
+@patch("app.features.auth.password_reset.get_db")
 def test_change_password_uses_service_client_for_supabase_update(
     mock_get_client: MagicMock,
     mock_auth_service_cls: MagicMock,
-    _mock_local: MagicMock,
     _mock_rate: MagicMock,
     _mock_validate: MagicMock,
     _mock_user_type: MagicMock,
@@ -64,11 +62,9 @@ def test_change_password_uses_service_client_for_supabase_update(
     )
 
 
-@patch("app.features.auth.password_reset.local_auth_store.enabled", return_value=False)
 @patch("app.features.auth.password_reset.SupabaseAuthService")
 def test_change_password_rejects_wrong_current_password(
     mock_auth_service_cls: MagicMock,
-    _mock_local: MagicMock,
 ) -> None:
     mock_service = MagicMock()
     mock_auth_service_cls.return_value = mock_service
@@ -90,7 +86,9 @@ def test_reset_url_uses_public_website() -> None:
 
 
 def test_public_email_url_builds_admin_login() -> None:
-    assert public_email_url("/admin/login") == "https://www.eventtz.com/admin/login"
+    assert public_email_url("/login?next=/admin/dashboard") == (
+        "https://www.eventtz.com/login?next=/admin/dashboard"
+    )
 
 
 def test_ensure_public_email_url_rewrites_localhost() -> None:

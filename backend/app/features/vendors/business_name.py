@@ -8,8 +8,9 @@ from typing import Any
 from postgrest.exceptions import APIError
 
 from app.core.config import get_settings
-from app.core.db import get_db as get_client, local_vendors, one_row, rows
+from app.core.db import get_db, first_row_from_query_result, rows_from_query_result
 from app.core.errors import ConflictError
+from app.features.vendors import messages as vendor_messages
 
 _NORMALIZE_RE = re.compile(r"\s+")
 
@@ -35,21 +36,9 @@ def find_business_name_owner_user_id(
     if not normalized:
         return None
 
-    if get_settings().local_auth_mode:
-        for uid, row in local_vendors.items():
-            if exclude_user_id and uid == exclude_user_id:
-                continue
-            payload = row.get("payload")
-            if not isinstance(payload, dict):
-                continue
-            other = business_name_from_payload(payload)
-            if other == normalized:
-                return uid
-        return None
-
     try:
         q = (
-            get_client()
+            get_db()
             .table("vendors")
             .select("user_id")
             .eq("business_name_normalized", normalized)
@@ -57,7 +46,7 @@ def find_business_name_owner_user_id(
         )
         if exclude_user_id:
             q = q.neq("user_id", exclude_user_id)
-        row = one_row(q.execute())
+        row = first_row_from_query_result(q.execute())
         if row and row.get("user_id"):
             return str(row["user_id"])
     except APIError as err:
@@ -81,7 +70,7 @@ def assert_business_name_available(payload: dict[str, Any], user_id: str) -> Non
         return
     owner = find_business_name_owner_user_id(norm, exclude_user_id=user_id)
     if owner:
-        raise ConflictError("This business name is already registered.")
+        raise ConflictError(vendor_messages.BUSINESS_NAME_ALREADY_REGISTERED)
 
 
 def is_business_name_unique_violation(err: Exception) -> bool:
@@ -97,8 +86,8 @@ def _find_owner_by_payload_scan(
     *,
     exclude_user_id: str | None = None,
 ) -> str | None:
-    res = get_client().table("vendors").select("user_id,payload").execute()
-    for row in rows(res):
+    res = get_db().table("vendors").select("user_id,payload").execute()
+    for row in rows_from_query_result(res):
         uid = str(row.get("user_id") or "")
         if exclude_user_id and uid == exclude_user_id:
             continue

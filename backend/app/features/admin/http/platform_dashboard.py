@@ -10,6 +10,7 @@ from app.contracts.admin import (
     AdminDashboardSummary,
     AdminMarketplaceAnalyticsResponse,
 )
+from app.features.admin.messages import INVALID_DATE
 from app.features.admin import get_admin_dashboard_metrics, get_admin_dashboard_summary
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -53,7 +54,7 @@ def admin_marketplace_analytics(
         try:
             return date_cls.fromisoformat(d.strip()[:10])
         except ValueError:
-            raise HTTPException(status_code=400, detail="Invalid date. Use YYYY-MM-DD.") from None
+            raise HTTPException(status_code=400, detail=INVALID_DATE) from None
 
     data = get_marketplace_analytics(
         from_date=_parse(from_date),

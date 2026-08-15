@@ -28,7 +28,7 @@ def post_generate_vendor_bio(
     body: GenerateVendorBioBody,
     _vendor: Annotated[dict[str, Any], Depends(require_vendor_dep)],
 ) -> GenerateVendorBioResponse:
-    bio = generate_vendor_public_bio(payload=dict(body.payload or {}))
+    bio = generate_vendor_public_bio(payload=dict(body.profile_form_data or {}))
     return GenerateVendorBioResponse(bio=bio)
 
 
@@ -37,7 +37,7 @@ def post_review_vendor_packages(
     body: ReviewVendorPackagesBody,
     _vendor: Annotated[dict[str, Any], Depends(require_vendor_dep)],
 ) -> ReviewVendorPackagesResponse:
-    result = review_vendor_packages(payload=dict(body.payload or {}))
+    result = review_vendor_packages(payload=dict(body.profile_form_data or {}))
     return ReviewVendorPackagesResponse(**result)
 
 

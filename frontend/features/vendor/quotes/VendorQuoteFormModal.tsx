@@ -68,7 +68,7 @@ export function VendorQuoteFormModal({
     if (!isOpen) return;
     void fetchVendorProfile()
       .then((res) => {
-        const raw = res.payload?.packages;
+        const raw = res.profile_form_data?.packages;
         if (!Array.isArray(raw)) return;
         const opts: VendorPackageOption[] = raw
           .filter(
@@ -169,13 +169,13 @@ export function VendorQuoteFormModal({
         ],
       });
       track(MixpanelEvents.vendor_quote_sent, {
-        booking_id: out.id,
+        booking_id: out.booking_request_id,
         conversation_id: conversationId,
         price_gbp: p,
       });
       reset();
       onClose();
-      router.push(`/vendor/bookings/${encodeURIComponent(out.id)}`);
+      router.push(`/vendor/bookings/${encodeURIComponent(out.booking_request_id)}`);
     } catch (e: unknown) {
       setError(getApiErrorDetail(e) ?? "Could not send quote.");
     } finally {

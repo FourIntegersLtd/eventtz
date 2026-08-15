@@ -9,10 +9,9 @@ import pytest
 from app.features.admin.booking_payment_patch import patch_booking_payment_fields
 
 
-@patch("app.features.admin.booking_payment_patch.get_client")
+@patch("app.features.admin.booking_payment_patch.get_db")
 @patch("app.features.admin.booking_payment_patch.get_settings")
 def test_payment_amount_requires_payment_intent(mock_settings, mock_get_client):
-    mock_settings.return_value.local_auth_mode = False
     mock_client = MagicMock()
     mock_get_client.return_value = mock_client
     mock_table = MagicMock()
@@ -29,10 +28,9 @@ def test_payment_amount_requires_payment_intent(mock_settings, mock_get_client):
 
 
 @patch("app.features.admin.booking_payment_patch.stripe_service")
-@patch("app.features.admin.booking_payment_patch.get_client")
+@patch("app.features.admin.booking_payment_patch.get_db")
 @patch("app.features.admin.booking_payment_patch.get_settings")
 def test_payment_amount_synced_from_stripe(mock_settings, mock_get_client, mock_stripe):
-    mock_settings.return_value.local_auth_mode = False
     booking_id = "00000000-0000-4000-8000-000000000001"
 
     mock_client = MagicMock()

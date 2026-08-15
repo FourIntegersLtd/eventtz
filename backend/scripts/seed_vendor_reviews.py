@@ -13,7 +13,7 @@ from __future__ import annotations
 import secrets
 from datetime import date, datetime, timedelta, timezone
 
-from app.core.db import get_db, one_row, rows
+from app.core.db import get_db, first_row_from_query_result, rows_from_query_result
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -81,10 +81,10 @@ def _cleanup_legacy_seed(client) -> None:
     )
     legacy_booking_ids = [
         str(r["booking_request_id"])
-        for r in rows(legacy_reviews)
+        for r in rows_from_query_result(legacy_reviews)
         if isinstance(r, dict) and r.get("booking_request_id")
     ]
-    legacy_review_ids = [str(r["id"]) for r in rows(legacy_reviews) if isinstance(r, dict)]
+    legacy_review_ids = [str(r["id"]) for r in rows_from_query_result(legacy_reviews) if isinstance(r, dict)]
     if legacy_review_ids:
         client.table("booking_reviews").delete().in_("id", legacy_review_ids).execute()
     if legacy_booking_ids:
@@ -96,7 +96,7 @@ def _cleanup_legacy_seed(client) -> None:
         .eq("notes", SEED_BOOKING_NOTES)
         .execute()
     )
-    marked_ids = [str(r["id"]) for r in rows(marked_bookings) if isinstance(r, dict)]
+    marked_ids = [str(r["id"]) for r in rows_from_query_result(marked_bookings) if isinstance(r, dict)]
     if marked_ids:
         client.table("booking_reviews").delete().in_("booking_request_id", marked_ids).execute()
         client.table("booking_requests").delete().in_("id", marked_ids).execute()
@@ -110,7 +110,7 @@ def _ensure_seed_client(client, email: str) -> str:
         .limit(1)
         .execute()
     )
-    row = one_row(existing)
+    row = first_row_from_query_result(existing)
     if row:
         return str(row["id"])
 
@@ -145,7 +145,7 @@ def _approved_vendors(client, limit: int = 2) -> list[dict]:
         .limit(limit)
         .execute()
     )
-    return [r for r in rows(res) if isinstance(r, dict)]
+    return [r for r in rows_from_query_result(res) if isinstance(r, dict)]
 
 
 def _business_name(payload: dict | None) -> str:
@@ -205,7 +205,7 @@ def seed() -> None:
                 )
                 .execute()
             )
-            booking = one_row(booking_res)
+            booking = first_row_from_query_result(booking_res)
             if not booking:
                 raise RuntimeError(f"Failed to create seed booking for {label}")
 

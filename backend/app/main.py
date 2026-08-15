@@ -32,17 +32,11 @@ register_error_handlers(app)
 
 settings = get_settings()
 logger.info(
-    "Config loaded (cors_origins=%s, supabase_configured=%s, local_auth_mode=%s, log_level=%s)",
+    "Config loaded (cors_origins=%s, supabase_configured=%s, log_level=%s)",
     len(settings.cors_origins_list),
     bool(settings.supabase_url and settings.supabase_service_role_key),
-    settings.local_auth_mode,
     settings.log_level,
 )
-if settings.local_auth_mode:
-    logger.warning(
-        "LOCAL_AUTH_MODE is enabled. Auth uses in-memory mock users and sessions (no Supabase). "
-        "Data resets on backend restart."
-    )
 
 app.add_middleware(
     CORSMiddleware,

@@ -18,17 +18,13 @@ from app.features.bookings.payments import (
     process_due_payout_auto_releases,
     send_completion_reminders,
 )
-from app.features.bookings.funnel import mark_stale_enquiries_no_response
+from app.features.bookings.booking_funnel_timestamps import mark_stale_enquiries_no_response
 from app.features.bookings.enquiry_reminders import process_enquiry_response_maintenance
 
 logger = get_logger(__name__)
 
 
 def main() -> int:
-    if get_settings().local_auth_mode:
-        logger.info("booking maintenance skipped (local auth mode)")
-        return 0
-
     reminders_sent = send_completion_reminders()
     payouts_released = process_due_payout_auto_releases()
     sla_hours = get_settings().enquiry_response_sla_hours

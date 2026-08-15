@@ -14,13 +14,14 @@ from app.core.errors import ValidationError
 from app.core.logging import get_logger
 from app.features.ai.openai_helpers import parse_completion, try_openai_client
 from app.features.planner.category_planner import EVENT_ALIASES, normalize_event_type
+from app.features.planner import messages as planner_messages
 from app.features.planner.defaults import DEFAULT_GUEST_COUNT, MAX_PROMPT_LENGTH
 from app.features.vendors.search_ai import parse_marketplace_query
 from app.features.vendors.taxonomy import filter_service_keys
 
 logger = get_logger(__name__)
 
-_SIMPLE_INTENT_MSG = "This looks like a simple vendor search. Try Browse instead."
+_SIMPLE_INTENT_MSG = planner_messages.SIMPLE_INTENT
 
 _ALPHA_RE = re.compile(r"[a-zA-Z]{2,}")
 _EMOJI_HEAVY_RE = re.compile(
@@ -523,7 +524,7 @@ def parse_celebration_prompt(prompt: str, *, country_code: str | None = "GB") ->
         text = text[:MAX_PROMPT_LENGTH]
     if _looks_like_nonsense(text):
         raise ValidationError(
-            "Describe your celebration in a few words - for example a birthday in London for 80 guests.",
+            planner_messages.INVALID_PROMPT,
             code="invalid_prompt",
         )
 

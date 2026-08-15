@@ -22,7 +22,7 @@ router = APIRouter(prefix="/chat", tags=["chat"])
 
 
 @router.get("/unread-count", response_model=ChatUnreadCountResponse)
-def get_chat_unread(request: Request, response: Response) -> ChatUnreadCountResponse:
+def get_chat_unread_count(request: Request, response: Response) -> ChatUnreadCountResponse:
     user = require_user(request, response)
     return h.chat_unread_count(str(user.get("id") or ""))
 

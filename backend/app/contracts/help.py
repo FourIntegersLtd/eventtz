@@ -46,8 +46,10 @@ class HelpArticleResponse(BaseModel):
 
 
 class HelpAskMessage(BaseModel):
-    role: str = Field(description="user or assistant")
+    message_role: str = Field(description="user or assistant", validation_alias="role")
     content: str
+
+    model_config = {"populate_by_name": True}
 
 
 class HelpAskRequest(BaseModel):

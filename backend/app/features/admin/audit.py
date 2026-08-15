@@ -7,7 +7,7 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.db import apply_recent_first_order, get_db as get_client
+from app.core.db import apply_recent_first_order, get_db
 
 logger = get_logger(__name__)
 
@@ -25,7 +25,7 @@ def _normalize_audit_row(row: dict[str, Any]) -> dict[str, Any]:
         "action": str(row.get("action", "")),
         "entity_type": str(row.get("entity_type", "")),
         "entity_id": str(row.get("entity_id") or "") if row.get("entity_id") else None,
-        "payload": pl if isinstance(pl, dict) else {},
+        "audit_event_details": pl if isinstance(pl, dict) else {},
         "created_at": row.get("created_at"),
     }
 
@@ -55,18 +55,16 @@ def insert_admin_audit_log(
     action: str,
     entity_type: str,
     entity_id: str | None = None,
-    payload: dict[str, Any] | None = None,
+    audit_event_details: dict[str, Any] | None = None,
 ) -> None:
-    if get_settings().local_auth_mode:
-        return
     try:
-        get_client().table("admin_audit_log").insert(
+        get_db().table("admin_audit_log").insert(
             {
                 "admin_user_id": admin_user_id,
                 "action": action,
                 "entity_type": entity_type,
                 "entity_id": entity_id,
-                "payload": payload or {},
+                "payload": audit_event_details or {},
             },
         ).execute()
     except Exception as e:
@@ -84,8 +82,6 @@ def list_admin_audit_log(
     offset: int = 0,
     category: str | None = None,
 ) -> tuple[list[dict[str, Any]], int]:
-    if get_settings().local_auth_mode:
-        return [], 0
     cat = (category or "all").strip().lower()
     # Category filters match the frontend auditFormatters CATEGORY_BY_ACTION.
     category_prefixes: dict[str, tuple[str, ...]] = {
@@ -100,7 +96,7 @@ def list_admin_audit_log(
     }
     try:
         q = apply_recent_first_order(
-            get_client().table("admin_audit_log").select("*", count="exact"),
+            get_db().table("admin_audit_log").select("*", count="exact"),
             column="created_at",
         )
         prefixes = category_prefixes.get(cat)
@@ -122,11 +118,9 @@ def list_admin_audit_log(
 
 
 def get_admin_audit_log_entry(entry_id: str) -> dict[str, Any] | None:
-    if get_settings().local_auth_mode:
-        return None
     try:
         res = (
-            get_client()
+            get_db()
             .table("admin_audit_log")
             .select("*")
             .eq("id", entry_id)

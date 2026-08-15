@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import re
 
+from app.features.auth import messages as auth_messages
+
 ADMIN_MIN_LENGTH = 6
 DEFAULT_MIN_LENGTH = 6
 
@@ -14,15 +16,15 @@ def validate_password_for_user(password: str, user_type: str | None) -> None:
         validate_admin_password(password)
         return
     if len(password) < DEFAULT_MIN_LENGTH:
-        raise ValueError("Password must be at least 6 characters.")
+        raise ValueError(auth_messages.password_min_length_detail(DEFAULT_MIN_LENGTH))
 
 
 def validate_admin_password(password: str) -> None:
     if len(password) < ADMIN_MIN_LENGTH:
-        raise ValueError(f"Admin password must be at least {ADMIN_MIN_LENGTH} characters.")
+        raise ValueError(auth_messages.admin_password_min_length_detail(ADMIN_MIN_LENGTH))
     if not re.search(r"[A-Z]", password):
-        raise ValueError("Admin password must include an uppercase letter.")
+        raise ValueError(auth_messages.ADMIN_PASSWORD_UPPERCASE)
     if not re.search(r"[0-9]", password):
-        raise ValueError("Admin password must include a number.")
+        raise ValueError(auth_messages.ADMIN_PASSWORD_NUMBER)
     if not re.search(r"[^A-Za-z0-9]", password):
-        raise ValueError("Admin password must include a symbol.")
+        raise ValueError(auth_messages.ADMIN_PASSWORD_SYMBOL)

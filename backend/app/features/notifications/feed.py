@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Literal
 
 from app.contracts.notifications import NotificationFeedItem, NotificationFeedResponse
-from app.core.db import get_db as get_client
+from app.core.db import get_db
 from app.features.bookings.disputes import list_disputes_for_participant_user
 from app.features.chat.service import count_unread_chat_total
 from app.features.notifications.copy import format_booking_notification
@@ -24,7 +24,7 @@ def _event_names_for_bookings(booking_ids: list[str]) -> dict[str, str]:
         return {}
     try:
         res = (
-            get_client()
+            get_db()
             .table("booking_requests")
             .select("id,event_name")
             .in_("id", ids[:100])

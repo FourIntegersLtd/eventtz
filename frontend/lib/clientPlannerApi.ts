@@ -101,7 +101,7 @@ export async function createCelebrationPlan(prompt: string): Promise<Celebration
   return data;
 }
 
-export async function listCelebrationPlans(): Promise<CelebrationPlanListItem[]> {
+export async function listClientPlans(): Promise<CelebrationPlanListItem[]> {
   const { data } = await api.get<{ success: boolean; plans: CelebrationPlanListItem[] }>(
     "/api/v1/client/planner/plans",
   );

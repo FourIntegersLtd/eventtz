@@ -8,7 +8,9 @@ import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { TextField } from "@/components/ui/TextField";
-import { adminPageBg, adminCard } from "@/features/admin/adminTheme";
+import { adminPageBg, adminCard } from "@/components/admin-shell/adminTheme";
+import { loginPathWithNext } from "@/features/auth/authRouting";
+import { GENERIC_AUTH_ERROR } from "@/lib/auth-messages";
 import { forgotPassword } from "@/lib/auth-api";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
@@ -28,7 +30,7 @@ export function ForgotPasswordView({ variant = "default" }: ForgotPasswordViewPr
   const [submitting, setSubmitting] = useState(false);
   const [sentMessage, setSentMessage] = useState<string | null>(null);
 
-  const signInHref = isAdmin ? "/admin/login" : "/login";
+  const signInHref = isAdmin ? loginPathWithNext("/admin/dashboard") : "/login";
   const shellClassName = isAdmin ? adminPageBg : undefined;
 
   const onSubmit = async (e: FormEvent) => {
@@ -47,7 +49,7 @@ export function ForgotPasswordView({ variant = "default" }: ForgotPasswordViewPr
       track(MixpanelEvents.password_reset_requested);
       setSentMessage(res.message);
     } catch (err: unknown) {
-      setError(getApiErrorDetail(err) ?? "Could not send a reset email. Try again.");
+      setError(getApiErrorDetail(err) ?? GENERIC_AUTH_ERROR);
     } finally {
       setSubmitting(false);
     }
@@ -56,7 +58,7 @@ export function ForgotPasswordView({ variant = "default" }: ForgotPasswordViewPr
   const cardClassName = isAdmin ? `${adminCard} w-full max-w-md` : "w-full max-w-md";
 
   return (
-    <AuthPageShell logoHref={isAdmin ? "/admin/login" : "/"} className={shellClassName} backHref={signInHref} backLabel="Back to sign in">
+    <AuthPageShell logoHref={isAdmin ? signInHref : "/"} className={shellClassName} backHref={signInHref} backLabel="Back to sign in">
       <Card padding="lg" className={cardClassName}>
         <h1 className="font-heading text-2xl font-semibold text-neutral-900">
           {isAdmin ? "Forgot admin password" : "Forgot password"}

@@ -8,7 +8,7 @@ import { BackLink } from "@/components/ui/BackLink";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
-import { VendorApprovalStatusBadge } from "@/components/ui/VendorApprovalStatusBadge";
+import { VendorApprovalStatusBadge } from "@/components/badges/VendorApprovalStatusBadge";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import {

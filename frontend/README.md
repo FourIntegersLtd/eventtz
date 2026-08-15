@@ -27,7 +27,7 @@ This package talks to the FastAPI backend under **`/api/v1`**. Full-stack archit
 
 - **Node.js 20+** and npm
 - **Backend running** at `http://127.0.0.1:8000` (see [`backend/README.md`](../backend/README.md))
-- Supabase project + env configured on the backend (unless using `LOCAL_AUTH_MODE=true` for mock auth)
+- Supabase project + env configured on the backend (see [`backend/README.md`](../backend/README.md))
 
 ---
 
@@ -98,6 +98,7 @@ Backend secrets (Supabase, Stripe, Resend, OpenAI) belong in **`backend/.env`**,
 | **Routes** | `app/**/page.tsx`, `layout.tsx` | Thin shells: auth gates, portal chrome, compose one feature view |
 | **Features** | `features/<domain>/**` | Screens, hooks, formatters owned by a product flow |
 | **Shared UI** | `components/ui/**` | Reusable primitives (Modal, inputs, buttons, …) |
+| **Domain badges** | `components/badges/**` | Status badges shared across portals |
 | **Shells** | `components/*-shell/` | Client, vendor, admin portal chrome + nav |
 | **API & types** | `lib/**` | `*Api.ts` modules, axios, errors, shared TypeScript types |
 
@@ -112,30 +113,37 @@ Backend secrets (Supabase, Stripe, Resend, OpenAI) belong in **`backend/.env`**,
 
 ```
 frontend/
-├── app/                    # Routes only (thin)
-│   ├── page.tsx            # Landing
-│   ├── explore/            # Public marketplace
-│   ├── blog/               # Published posts
-│   ├── compliances/        # Legal policies
-│   ├── client/             # Client auth + portal
-│   ├── vendor/             # Vendor auth, onboarding, portal
-│   └── admin/              # Admin login + console
+├── app/                    # Routes only (thin) — see app/README.md
+│   ├── (marketing)/        # /, /blog, /compliances
+│   ├── (auth)/             # /login, /register, password reset, verify-email
+│   ├── api/                # Next route handlers (SSE proxy)
+│   ├── internal/           # dev-only (/internal/ui-kit)
+│   ├── client/(portal)/
+│   ├── vendor/(portal)/
+│   └── admin/(portal)/
+├── components/             # Shared UI + shells + auth — see components/README.md
+│   ├── ui/, badges/
+│   ├── auth/, portal-shell/, admin-shell/
+│   └── branding/, compliances/, media/, analytics/
 ├── features/               # Product UI by domain
 │   ├── landing/, marketplace/, blog/
 │   ├── client/, vendor/, admin/
+│   ├── vendors/display/    # Shared vendor listing presentation
 │   ├── bookings/, chat/, disputes/, notifications/, help/, …
+│   ├── internal/           # dev-only ui-kit preview
 │   └── vendor/onboarding/  # Multi-step profile wizard
-├── components/             # Shared UI + shells + auth
 └── lib/                    # HTTP clients, types, formatters
 ```
+
+Legacy URLs (`/explore`, `/admin/vendors`, role-specific login/register, …) redirect via **`next.config.ts`**.
 
 ### Portals & main routes
 
 | Portal | Base routes | Examples |
 |--------|-------------|----------|
-| **Public** | `/`, `/explore`, `/blog`, `/login`, `/register` | Marketplace browse, legal pages |
+| **Public** | `/`, `/explore` (→ browse), `/blog`, `/login`, `/register` | Marketplace browse, legal pages |
 | **Client** | `/client/*` | Dashboard, browse, bookings, pay, messages, planner, favorites, settings |
-| **Vendor** | `/vendor/*` | Dashboard, profile/onboarding, bookings, payments (Stripe Connect), analytics |
+| **Vendor** | `/vendor/*` | Dashboard, profile, bookings, payments (Stripe Connect), analytics |
 | **Admin** | `/admin/*` | Dashboard, commerce, directory, trust, messages, blog CMS, team, audit, email tests |
 
 Notable flows:

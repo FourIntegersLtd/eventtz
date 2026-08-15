@@ -19,6 +19,10 @@ from app.contracts.vendor import (
     AdminVendorUnsubmitResponse,
     AdminVendorsListResponse,
 )
+from app.features.admin.messages import (
+    COULD_NOT_RESTORE_STRIPE_CONNECT,
+    VENDOR_PROFILE_NOT_FOUND,
+)
 from app.features.admin.audit import insert_admin_audit_log
 from app.features.payments.stripe import restore_vendor_connect_from_payout_history
 from app.features.vendors.moderation import (
@@ -107,13 +111,13 @@ def admin_set_vendor_approval(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     if not row:
-        raise HTTPException(status_code=404, detail="Vendor profile not found")
+        raise HTTPException(status_code=404, detail=VENDOR_PROFILE_NOT_FOUND)
     insert_admin_audit_log(
         admin_user_id=str(user.get("id") or ""),
         action="vendor.approval",
         entity_type="vendor",
         entity_id=user_id,
-        payload={
+        audit_event_details={
             "approval_status": row.get("approval_status", body.approval_status),
         },
     )
@@ -147,7 +151,7 @@ def admin_unsubmit_vendor(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     if not row:
-        raise HTTPException(status_code=404, detail="Vendor profile not found")
+        raise HTTPException(status_code=404, detail=VENDOR_PROFILE_NOT_FOUND)
     audit_payload: dict[str, object] = {
         "status": row.get("status", "draft"),
         "email_sent": email_sent,
@@ -159,7 +163,7 @@ def admin_unsubmit_vendor(
         action="vendor.unsubmit",
         entity_type="vendor",
         entity_id=user_id,
-        payload=audit_payload,
+        audit_event_details=audit_payload,
     )
     return AdminVendorUnsubmitResponse(
         success=True,
@@ -187,7 +191,7 @@ def admin_nudge_draft_vendors_profile(
         action="vendor.profile_nudge",
         entity_type="vendor",
         entity_id=None,
-        payload={
+        audit_event_details={
             "user_ids": body.user_ids[:20],
             "sent": result.get("sent", 0),
             "skipped": result.get("skipped", 0),
@@ -241,13 +245,13 @@ def admin_set_vendor_listing_override(
     except RuntimeError as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
     if not row:
-        raise HTTPException(status_code=404, detail="Vendor profile not found")
+        raise HTTPException(status_code=404, detail=VENDOR_PROFILE_NOT_FOUND)
     insert_admin_audit_log(
         admin_user_id=str(user.get("id") or ""),
         action="vendor.listing_override",
         entity_type="vendor",
         entity_id=user_id,
-        payload={
+        audit_event_details={
             "listing_override": body.listing_override,
             "reason": body.reason,
             "listing_visible": bool(row.get("listing_visible")),
@@ -279,13 +283,13 @@ def admin_restore_vendor_stripe_connect(
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.warning("restore-stripe-connect failed vendor=%s: %s", user_id, e, exc_info=True)
-        raise HTTPException(status_code=502, detail="Could not restore Stripe Connect.") from e
+        raise HTTPException(status_code=502, detail=COULD_NOT_RESTORE_STRIPE_CONNECT) from e
     insert_admin_audit_log(
         admin_user_id=admin_id,
         action="vendor.stripe_connect_restored",
         entity_type="vendor",
         entity_id=user_id,
-        payload={
+        audit_event_details={
             "stripe_account_id": result.get("stripe_account_id"),
             "restored_from_transfer_id": result.get("restored_from_transfer_id"),
         },

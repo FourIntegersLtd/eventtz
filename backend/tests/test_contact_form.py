@@ -9,7 +9,7 @@ from app.features.contact.service import submit_contact_message
 
 @patch("app.features.contact.service.send_admin_contact_submitted_email")
 @patch("app.features.contact.service.fetch_user_profile")
-@patch("app.features.contact.service.get_client")
+@patch("app.features.contact.service.get_db")
 @patch("app.features.contact.service.get_settings")
 def test_submit_contact_message_persists_and_emails(
     mock_settings,
@@ -17,7 +17,6 @@ def test_submit_contact_message_persists_and_emails(
     mock_fetch_profile,
     mock_send_email,
 ):
-    mock_settings.return_value.local_auth_mode = False
     mock_fetch_profile.return_value = {"email": "client@example.com"}
 
     client = MagicMock()
@@ -39,7 +38,6 @@ def test_submit_contact_message_persists_and_emails(
 
 @patch("app.features.contact.service.get_settings")
 def test_submit_contact_message_rejects_short_message(mock_settings):
-    mock_settings.return_value.local_auth_mode = False
     with pytest.raises(ValueError, match="10 characters"):
         submit_contact_message(
             user_id="user-1",
@@ -51,8 +49,7 @@ def test_submit_contact_message_rejects_short_message(mock_settings):
 
 @patch("app.features.contact.service.get_settings")
 def test_submit_contact_message_requires_booking_for_booking_subject(mock_settings):
-    mock_settings.return_value.local_auth_mode = False
-    with pytest.raises(ValueError, match="booking id"):
+    with pytest.raises(ValueError, match="booking reference"):
         submit_contact_message(
             user_id="user-1",
             portal="client",

@@ -10,8 +10,8 @@ from typing import Any
 from app.core.config import get_settings
 from app.core.constants import BOOKING_SERVICE_FEE_PERCENT
 from app.core.logging import get_logger
-from app.core.db import get_db as get_client
-from app.features.admin._helpers import opt_admin_ts
+from app.core.db import get_db
+from app.features.admin.admin_optional_timestamps import opt_admin_ts
 from app.features.admin.booking_diagnostics import count_bookings_needing_support_attention
 from app.features.bookings.pricing import build_pricing_breakdown
 from app.features.bookings import _paid_at_iso
@@ -29,10 +29,8 @@ def _count_rows(
     eq: dict[str, Any] | None = None,
     not_null: str | None = None,
 ) -> int:
-    if get_settings().local_auth_mode:
-        return 0
     try:
-        q = get_client().table(table).select("id", count="exact")
+        q = get_db().table(table).select("id", count="exact")
         if eq:
             for k, v in eq.items():
                 q = q.eq(k, v)
@@ -46,25 +44,6 @@ def _count_rows(
 
 
 def get_admin_dashboard_summary() -> dict[str, Any]:
-    if get_settings().local_auth_mode:
-        return {
-            "users_client": 0,
-            "users_vendor": 0,
-            "users_admin": 0,
-            "vendors_pending": 0,
-            "vendors_approved": 0,
-            "vendors_banned": 0,
-            "bookings_pending": 0,
-            "bookings_accepted": 0,
-            "bookings_completed": 0,
-            "bookings_declined": 0,
-            "bookings_cancelled": 0,
-            "bookings_paid_count": 0,
-            "bookings_needing_support": 0,
-            "conversations_count": 0,
-            "reviews_count": 0,
-        }
-
     uc = _count_rows("users", eq={"user_type": "client"})
     uv = _count_rows("users", eq={"user_type": "vendor"})
     ua = _count_rows("users", eq={"user_type": "admin"})
@@ -161,7 +140,7 @@ def _iter_paid_bookings_for_financials(
     date_from: str | None,
     date_to: str | None,
 ) -> list[dict[str, Any]]:
-    client = get_client()
+    client = get_db()
     q = client.table("booking_requests").select("*").in_("payment_status", _PAID_PAYMENT_STATUSES)
     if date_from:
         q = q.gte("paid_at", date_from)
@@ -186,29 +165,6 @@ def get_financials_summary(
         d: {"count": 0, "gmv_gbp": 0.0, "platform_fee_gbp": 0.0, "vendor_portion_gbp": 0.0}
         for d in _iter_financials_days(chart_start, chart_end)
     }
-
-    if settings.local_auth_mode:
-        return {
-            "period_from": date_from,
-            "period_to": date_to,
-            "paid_booking_count": 0,
-            "gmv_gbp": 0.0,
-            "platform_fee_gbp": 0.0,
-            "vendor_portion_gbp": 0.0,
-            "service_fee_percent": fee_pct,
-            "payout_released_gbp": 0.0,
-            "held_in_platform_balance_gbp": 0.0,
-            "daily": [
-                {
-                    "date": d,
-                    "count": 0,
-                    "gmv_gbp": 0.0,
-                    "platform_fee_gbp": 0.0,
-                    "vendor_portion_gbp": 0.0,
-                }
-                for d in sorted(daily_buckets.keys())
-            ],
-        }
 
     rows = _iter_paid_bookings_for_financials(date_from, date_to)
     gmv = 0.0

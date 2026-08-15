@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
+
+from app.contracts.types import VendorApprovalStatus, VendorProfileStatus
 
 ShoutoutFilter = Literal["all", "pending", "completed"]
 
@@ -55,12 +57,17 @@ class ReferralVendorSignupRow(BaseModel):
     user_id: str
     email: str | None = None
     business_name: str | None = None
-    approval_status: str | None = None
-    profile_status: str | None = None
+    approval_status: VendorApprovalStatus | str | None = None
+    onboarding_status: VendorProfileStatus | str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("profile_status", "status"),
+    )
     attributed_at: str | None = None
     shoutout_completed: bool = False
     shoutout_completed_at: str | None = None
     explore_path: str | None = None
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class ReferralSignupListResponse(BaseModel):

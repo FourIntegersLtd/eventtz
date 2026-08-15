@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.core.config import get_settings
-from app.core.db import get_db as get_client
+from app.core.db import get_db
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -47,8 +47,6 @@ def record_marketplace_event(
     """Best-effort insert; never raises to callers."""
     if event_name not in ALLOWED_EVENTS:
         return
-    if get_settings().local_auth_mode:
-        return
     try:
         row: dict[str, Any] = {
             "event_name": event_name,
@@ -69,6 +67,6 @@ def record_marketplace_event(
                 row["booking_value_gbp"] = round(float(booking_value_gbp), 2)
             except (TypeError, ValueError):
                 pass
-        get_client().table("marketplace_events").insert(row).execute()
+        get_db().table("marketplace_events").insert(row).execute()
     except Exception:
         logger.exception("marketplace_events: insert failed event=%s", event_name)

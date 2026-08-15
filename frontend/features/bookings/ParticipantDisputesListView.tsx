@@ -11,7 +11,7 @@ import {
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
-import { ParticipantDisputeStatusBadge } from "@/components/ui/ParticipantDisputeStatusBadge";
+import { ParticipantDisputeStatusBadge } from "@/components/badges/ParticipantDisputeStatusBadge";
 import { participantDisputeBookingLabel } from "@/lib/bookingDisputeHelpers";
 import {
   enrichParticipantDisputes,

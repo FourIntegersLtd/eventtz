@@ -31,7 +31,7 @@ export function useExploreVendors(query: string) {
     const q = query.trim().toLowerCase();
     if (!q) return vendors;
     return vendors.filter((v) => {
-      const p = v.payload ?? {};
+      const p = v.profile_form_data ?? {};
       const biz = typeof p.businessName === "string" ? p.businessName : "";
       const city = typeof p.baseCity === "string" ? p.baseCity : "";
       const services = Array.isArray(p.servicesOffered)

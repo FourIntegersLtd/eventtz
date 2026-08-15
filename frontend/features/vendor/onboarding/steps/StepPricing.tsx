@@ -21,6 +21,7 @@ import {
 import { OnboardingSubQuestion } from "../ui/OnboardingQuestionLayout";
 import { AnimatedStepItem } from "../ui/AnimatedStepItem";
 import { PackageCoachPanel, usePackageCoach } from "../ui/PackageCoachPanel";
+import { VendorListingOptimizerPanel } from "@/features/vendor/copilot/VendorListingOptimizerPanel";
 import { PackageExamplesModal } from "../ui/PackageExamplesModal";
 import { consumeCoachScrollTarget } from "../packageCoachApply";
 import { labelClass, ClearableTextField, ClearableTextarea } from "./form-primitives";
@@ -28,6 +29,8 @@ import { labelClass, ClearableTextField, ClearableTextarea } from "./form-primit
 export type StepPricingProps = {
   data: VendorOnboardingData;
   update: VendorOnboardingUpdate;
+  /** Approved live profile — use post-launch growth optimizer instead of onboarding coach. */
+  usePostLaunchOptimizer?: boolean;
 };
 
 function updatePackage(
@@ -51,7 +54,7 @@ function AddPackageButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-export function StepPricing({ data, update }: StepPricingProps) {
+export function StepPricing({ data, update, usePostLaunchOptimizer = false }: StepPricingProps) {
   const copy = STEP_COPY[4];
   const { packages } = data;
   const [scrollTargetId, setScrollTargetId] = useState<string | null>(null);
@@ -306,13 +309,17 @@ export function StepPricing({ data, update }: StepPricingProps) {
           })}
           <AddPackageButton onClick={addPackage} />
         </div>
-        <PackageCoachPanel
-          className="mt-4"
-          result={coach.result}
-          loading={coach.loading}
-          error={coach.error}
-          onCheck={coach.runCheck}
-        />
+        {usePostLaunchOptimizer ? (
+          <VendorListingOptimizerPanel data={data} update={update} className="mt-4" />
+        ) : (
+          <PackageCoachPanel
+            className="mt-4"
+            result={coach.result}
+            loading={coach.loading}
+            error={coach.error}
+            onCheck={coach.runCheck}
+          />
+        )}
       </OnboardingSubQuestion>
 
       <AnimatedStepItem index={9}>

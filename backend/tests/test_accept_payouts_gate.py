@@ -12,7 +12,7 @@ from app.features.bookings.status import (
 )
 
 
-@patch("app.features.bookings.payment_shared.get_client")
+@patch("app.features.bookings.booking_payment_helpers.get_db")
 def test_vendor_payouts_ready_requires_charges_and_payouts(mock_get_client):
     mock_client = MagicMock()
     mock_get_client.return_value = mock_client
@@ -44,7 +44,7 @@ def test_vendor_payouts_ready_requires_charges_and_payouts(mock_get_client):
     assert _vendor_payouts_ready("v1") is True
 
 
-@patch("app.features.bookings.payment_shared.get_client")
+@patch("app.features.bookings.booking_payment_helpers.get_db")
 def test_admin_listing_waiver_lets_vendor_accept_without_stripe(mock_get_client):
     mock_client = MagicMock()
     mock_get_client.return_value = mock_client
@@ -80,9 +80,8 @@ def test_admin_listing_waiver_lets_vendor_accept_without_stripe(mock_get_client)
 
 @patch("app.features.bookings.status._vendor_payouts_ready", return_value=False)
 @patch("app.features.bookings.status.get_settings")
-@patch("app.features.bookings.status.get_client")
+@patch("app.features.bookings.status.get_db")
 def test_vendor_cannot_accept_without_payouts_ready(mock_get_client, mock_settings, _mock_ready):
-    mock_settings.return_value.local_auth_mode = False
     mock_client = MagicMock()
     mock_get_client.return_value = mock_client
     mock_table = MagicMock()

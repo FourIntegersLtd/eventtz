@@ -11,6 +11,7 @@ from app.features.bookings.payments import (
     handle_account_updated,
     handle_checkout_session_completed,
 )
+from app.features.payments import messages as payment_messages
 
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 logger = get_logger(__name__)
@@ -23,7 +24,7 @@ async def post_stripe_webhook(
 ) -> dict[str, Any]:
     payload = await request.body()
     if not stripe_signature:
-        raise HTTPException(status_code=400, detail="Missing Stripe-Signature header.")
+        raise HTTPException(status_code=400, detail=payment_messages.MISSING_STRIPE_SIGNATURE)
 
     # Import here so the Stripe SDK is not loaded at startup when Stripe is not configured.
     from app.features.payments.stripe import construct_webhook_event, stripe_object_to_dict
@@ -37,7 +38,7 @@ async def post_stripe_webhook(
             "in Stripe Dashboard → Developers → Webhooks, and test vs live mode)",
             e,
         )
-        raise HTTPException(status_code=400, detail="Invalid signature.") from e
+        raise HTTPException(status_code=400, detail=payment_messages.INVALID_STRIPE_SIGNATURE) from e
 
     event_dict = stripe_object_to_dict(event)
     event_id = str(event_dict.get("id") or "")

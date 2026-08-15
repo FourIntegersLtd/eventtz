@@ -6,10 +6,10 @@ export { getApiErrorDetail } from "@/lib/api-errors";
 export type VendorProfileResponse = {
   success: boolean;
   current_step: number;
-  status: VendorProfileStatus | string;
+  onboarding_status: VendorProfileStatus | string;
   /** pending until an admin approves; approved unlocks profile review after submission. */
   approval_status?: VendorApprovalStatus | string;
-  payload: Record<string, unknown>;
+  profile_form_data: Record<string, unknown>;
   updated_at?: string;
   /** Stripe Connect can both charge and pay out for this vendor. */
   payouts_verified?: boolean;
@@ -28,8 +28,8 @@ export async function fetchVendorProfile(): Promise<VendorProfileResponse> {
 
 export async function saveVendorProfile(body: {
   current_step: number;
-  payload: Record<string, unknown>;
-  status?: string;
+  profile_form_data: Record<string, unknown>;
+  onboarding_status?: string;
 }): Promise<VendorProfileResponse> {
   const { data } = await api.put<VendorProfileResponse>(
     "/api/v1/vendor/profile",

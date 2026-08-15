@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from app.core.errors import ValidationError
-from app.features.vendors.payload_validation import (
+from app.features.vendors.profile_form_validation import (
     normalize_payload_fields,
     validate_payload_for_progress,
     validate_step_fields,

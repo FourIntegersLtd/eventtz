@@ -2,7 +2,7 @@
 
 import { BadgeCheck, Check, Heart, Star } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { VendorPortfolioCover } from "@/components/vendor/VendorPortfolioCover";
+import { VendorPortfolioCover } from "@/features/vendors/display/VendorPortfolioCover";
 import { buildBrowsePricingOptions } from "@/features/client/browse/vendorBrowseDetailModel";
 import type { ExpandedSearchCard } from "@/features/marketplace/marketplaceSearchModel";
 import { SERVICE_OPTIONS } from "@/features/vendor/onboarding/constants";
@@ -67,7 +67,7 @@ export function MarketplaceVendorCard({
   const { guardBooking, launchingSoonModal } = useLaunchingSoonBookingGuard();
   const v = card.vendor;
   const detailHref = vendorDetailHref ?? `/client/browse/${v.user_id}`;
-  const p = v.payload ?? {};
+  const p = v.profile_form_data ?? {};
   const biz =
     (typeof p.businessName === "string" && p.businessName) || "Unnamed business";
   const city =

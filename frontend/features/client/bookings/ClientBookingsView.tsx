@@ -95,7 +95,7 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
           counterpartyUserId={c.detail.vendor_user_id}
           onConversationCreated={(conversationId) => {
             c.setDetail((d) =>
-              d && d.id === c.detail!.id ? { ...d, conversation_id: conversationId } : d,
+              d && d.booking_request_id === c.detail!.booking_request_id ? { ...d, conversation_id: conversationId } : d,
             );
           }}
         />
@@ -158,7 +158,7 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
                     />
                   ) : undefined,
                   afterSections:
-                    c.detail && c.detail.status === "completed" ? (
+                    c.detail && c.detail.booking_status === "completed" ? (
                       c.detail.review ? (
                         <BookingReviewPanel
                           title="Your review"
@@ -168,12 +168,12 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
                         />
                       ) : (
                         <ClientBookingReviewForm
-                          bookingId={c.detail.id}
+                          bookingId={c.detail.booking_request_id}
                           vendorName={c.detail.vendor_display_name}
                           initialRating={c.deepLinkRating}
                           onSubmitted={(rev) => {
                             c.setDetail((d) =>
-                              d && d.id === c.detail!.id ? { ...d, review: rev } : d,
+                              d && d.booking_request_id === c.detail!.booking_request_id ? { ...d, review: rev } : d,
                             );
                           }}
                         />
@@ -181,9 +181,9 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
                     ) : undefined,
                   disputeSection: c.detail ? (
                     <BookingDisputeSection
-                      bookingId={c.detail.id}
+                      bookingId={c.detail.booking_request_id}
                       role="client"
-                      bookingStatus={c.detail.status}
+                      bookingStatus={c.detail.booking_status}
                       presentation="drawer"
                     />
                   ) : (

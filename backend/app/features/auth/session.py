@@ -1,4 +1,4 @@
-"""Session cookies and checking sign-in tokens (Supabase or local development)."""
+"""Session cookies and checking sign-in tokens (Supabase)."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from fastapi import HTTPException, Request, Response
 
 from app.core.config import get_settings
 from app.core.constants import ACCESS_COOKIE_NAME, REFRESH_COOKIE_NAME
-from app.features.auth import local_store as local_auth_store
+from app.features.auth import messages as auth_messages
 from app.features.auth.supabase import SupabaseAuthService
 from app.core.db import get_supabase_auth_client
 
@@ -71,19 +71,13 @@ def get_current_user_or_raise(request: Request, response: Response) -> dict[str,
     """Validate session cookie and return the Supabase auth user (before merging public.users)."""
     access_token = request.cookies.get(ACCESS_COOKIE_NAME)
     if not access_token:
-        raise HTTPException(status_code=401, detail="Please sign in to continue.")
-
-    if local_auth_store.enabled():
-        user = local_auth_store.user_for_access_token(access_token)
-        if not user:
-            raise HTTPException(status_code=401, detail="Please sign in to continue.")
-        return user
+        raise HTTPException(status_code=401, detail=auth_messages.SIGN_IN_REQUIRED)
 
     if not _looks_like_jwt(access_token):
         clear_session_cookies(response)
         raise HTTPException(
             status_code=401,
-            detail="Session expired. Please sign in again.",
+            detail=auth_messages.SESSION_EXPIRED,
         )
 
     service = SupabaseAuthService(get_supabase_auth_client())
@@ -91,4 +85,4 @@ def get_current_user_or_raise(request: Request, response: Response) -> dict[str,
     if result.get("success"):
         return result["user"]
     clear_session_cookies(response)
-    raise HTTPException(status_code=401, detail=result.get("error", "Please sign in to continue."))
+    raise HTTPException(status_code=401, detail=result.get("error", auth_messages.SIGN_IN_REQUIRED))

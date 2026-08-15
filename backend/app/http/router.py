@@ -33,6 +33,7 @@ from app.features.vendors.http import explore as vendors_explore
 from app.features.vendors.http import onboarding_ai as vendor_onboarding_ai
 from app.features.vendors.http import profile as vendor_profile
 from app.features.vendors.http import analytics as vendor_analytics
+from app.features.vendor_copilot.http import routes as vendor_copilot
 
 api_router = APIRouter()
 
@@ -46,6 +47,7 @@ api_router.include_router(client_onboarding_settings.router)
 api_router.include_router(vendor_profile.router)
 api_router.include_router(vendor_onboarding_ai.router)
 api_router.include_router(vendor_analytics.router)
+api_router.include_router(vendor_copilot.router)
 api_router.include_router(vendor_bookings.router)
 api_router.include_router(admin_vendors.router)
 api_router.include_router(admin_platform.router)

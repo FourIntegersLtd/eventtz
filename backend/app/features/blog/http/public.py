@@ -10,6 +10,7 @@ from app.contracts.blog import (
     BlogPostPublicDetailResponse,
     BlogPostsListResponse,
 )
+from app.features.blog import messages as blog_messages
 from app.features.blog import service as blog_service
 
 router = APIRouter(prefix="/blog", tags=["blog"])
@@ -27,5 +28,5 @@ def public_list_blog_posts(
 def public_get_blog_post(slug: str) -> BlogPostPublicDetailResponse:
     row = blog_service.get_published_post_by_slug(slug)
     if not row:
-        raise HTTPException(status_code=404, detail="Post not found.")
+        raise HTTPException(status_code=404, detail=blog_messages.POST_NOT_FOUND)
     return BlogPostPublicDetailResponse(post=BlogPostPublicDetail.model_validate(row))

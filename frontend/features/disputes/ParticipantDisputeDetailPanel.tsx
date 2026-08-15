@@ -4,8 +4,8 @@ import type { ParticipantDispute } from "@/lib/bookingDisputesApi";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieFailurePanel } from "@/components/ui/LottieFailurePanel";
-import { ParticipantDisputeStatusBadge } from "@/components/ui/ParticipantDisputeStatusBadge";
-import { PaymentStatusBadge } from "@/components/ui/PaymentStatusBadge";
+import { ParticipantDisputeStatusBadge } from "@/components/badges/ParticipantDisputeStatusBadge";
+import { PaymentStatusBadge } from "@/components/badges/PaymentStatusBadge";
 import { formatDateTime, formatEventDate } from "@/lib/dateFormat";
 
 type Props = {

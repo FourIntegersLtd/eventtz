@@ -218,7 +218,7 @@ class AdminAuditLogItem(BaseModel):
     action: str
     entity_type: str
     entity_id: str | None = None
-    payload: dict[str, Any] | None = None
+    audit_event_details: dict[str, Any] | None = None
     created_at: str | None = None
 
 

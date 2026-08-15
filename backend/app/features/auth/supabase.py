@@ -7,18 +7,14 @@ from supabase_auth.errors import AuthApiError
 
 from app.core.logging import get_logger
 from app.core.db import get_supabase_auth_client
-from app.features.auth import local_store as local_auth_store
+from app.features.auth.accounts import normalize_email
+from app.features.auth import messages as auth_messages
 
 logger = get_logger(__name__)
 
-_SIGNUP_EMAIL_EXISTS = (
-    "An account with this email already exists. "
-    "Try signing in instead, or use Forgot password to set a new one."
-)
-
 
 def _normalize_email(email: str) -> str:
-    return local_auth_store.normalize_email(email)
+    return normalize_email(email)
 
 
 def _signup_is_existing_user(user: Any) -> bool:
@@ -69,10 +65,10 @@ class SupabaseAuthService:
             session = response.session
             if not user:
                 logger.warning("sign_up finished without user email=%s", email)
-                return {"success": False, "error": "We couldn't create your account. Please try again."}
+                return {"success": False, "error": auth_messages.SIGNUP_FAILED}
             if _signup_is_existing_user(user):
                 logger.info("sign_up rejected email=%s (already registered)", email)
-                return {"success": False, "error": _SIGNUP_EMAIL_EXISTS}
+                return {"success": False, "error": auth_messages.SIGNUP_EMAIL_EXISTS}
             if session:
                 logger.info(
                     "sign_up success email=%s user_id=%s has_session=true",
@@ -93,23 +89,23 @@ class SupabaseAuthService:
                 "success": True,
                 "session": None,
                 "user": _user_info(user),
-                "message": "Account created. Please check your email for confirmation.",
+                "message": auth_messages.SIGNUP_CONFIRM_EMAIL,
             }
         except AuthApiError as e:
             err = str(e).lower()
             if "already registered" in err or "already been registered" in err:
                 logger.info("sign_up rejected email=%s (already registered)", email)
-                return {"success": False, "error": _SIGNUP_EMAIL_EXISTS}
+                return {"success": False, "error": auth_messages.SIGNUP_EMAIL_EXISTS}
             logger.info("sign_up rejected email=%s error=%s", email, e)
             return {
                 "success": False,
-                "error": "We couldn't create your account. Please try again.",
+                "error": auth_messages.SIGNUP_FAILED,
             }
         except Exception as e:
             logger.exception("sign_up failed email=%s", email)
             return {
                 "success": False,
-                "error": "We couldn't create your account. Please try again.",
+                "error": auth_messages.SIGNUP_FAILED,
             }
 
     def sign_in_with_password(self, email: str, password: str) -> dict[str, Any]:
@@ -123,7 +119,7 @@ class SupabaseAuthService:
             session = response.session
             if not session or not user:
                 logger.warning("sign_in failed email=%s (no session or user)", email)
-                return {"success": False, "error": "We couldn't sign you in with those details. Check your email and password, then try again."}
+                return {"success": False, "error": auth_messages.LOGIN_CREDENTIALS_MISMATCH}
             logger.info("sign_in success email=%s user_id=%s", email, user.id)
             return {
                 "success": True,
@@ -136,28 +132,24 @@ class SupabaseAuthService:
                 logger.info("sign_in rejected email=%s (invalid credentials)", email)
                 return {
                     "success": False,
-                    "error": (
-                        "We couldn't sign you in with those details. "
-                        "If you recently registered again with this email, use the password "
-                        "from your first sign-up, or reset your password."
-                    ),
+                    "error": auth_messages.LOGIN_CREDENTIALS_REREGISTER,
                 }
             if "email not confirmed" in err:
                 logger.info("sign_in rejected email=%s (email not confirmed)", email)
                 return {
                     "success": False,
-                    "error": "Confirm your email before signing in. Check your inbox for the verification link.",
+                    "error": auth_messages.EMAIL_NOT_CONFIRMED_SUPABASE,
                 }
             logger.info("sign_in rejected email=%s error=%s", email, e)
             return {
                 "success": False,
-                "error": "We couldn't sign you in right now. Please try again.",
+                "error": auth_messages.SIGN_IN_UNAVAILABLE,
             }
         except Exception as e:
             logger.exception("sign_in failed email=%s", email)
             return {
                 "success": False,
-                "error": "We couldn't sign you in right now. Please try again.",
+                "error": auth_messages.SIGN_IN_UNAVAILABLE,
             }
 
     def sign_out(self) -> dict[str, Any]:
@@ -170,7 +162,7 @@ class SupabaseAuthService:
             logger.exception("sign_out failed")
             return {
                 "success": False,
-                "error": "We couldn't sign you out. Please try again.",
+                "error": auth_messages.SIGNOUT_FAILED,
             }
 
     def refresh_session(self, refresh_token: str) -> dict[str, Any]:
@@ -181,7 +173,7 @@ class SupabaseAuthService:
             session = response.session
             if not session or not user:
                 logger.warning("refresh_session failed (no session or user)")
-                return {"success": False, "error": "Your session has expired. Please sign in again."}
+                return {"success": False, "error": auth_messages.REFRESH_SESSION_EXPIRED}
             logger.info("refresh_session success user_id=%s", user.id)
             return {
                 "success": True,
@@ -190,12 +182,12 @@ class SupabaseAuthService:
             }
         except AuthApiError as e:
             logger.debug("refresh_session rejected token: %s", e)
-            return {"success": False, "error": "Your session has expired. Please sign in again."}
+            return {"success": False, "error": auth_messages.REFRESH_SESSION_EXPIRED}
         except Exception as e:
             logger.exception("refresh_session failed")
             return {
                 "success": False,
-                "error": "Your session has expired. Please sign in again.",
+                "error": auth_messages.REFRESH_SESSION_EXPIRED,
             }
 
     def get_user_from_access_token(self, access_token: str) -> dict[str, Any]:
@@ -204,12 +196,12 @@ class SupabaseAuthService:
             user = response.user
             if not user:
                 logger.warning("get_user_from_access_token failed (no user)")
-                return {"success": False, "error": "Please sign in to continue."}
+                return {"success": False, "error": auth_messages.SIGN_IN_REQUIRED}
             return {"success": True, "user": _user_info(user)}
         except AuthApiError as e:
             # Expired or revoked session (e.g. after sign-out), bad token - routine, not server bugs.
             logger.debug("get_user_from_access_token rejected token: %s", e)
-            return {"success": False, "error": "Please sign in to continue."}
+            return {"success": False, "error": auth_messages.SIGN_IN_REQUIRED}
         except Exception:
             logger.exception("get_user_from_access_token failed")
-            return {"success": False, "error": "Please sign in to continue."}
+            return {"success": False, "error": auth_messages.SIGN_IN_REQUIRED}

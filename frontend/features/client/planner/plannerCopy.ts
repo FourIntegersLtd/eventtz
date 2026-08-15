@@ -1,3 +1,5 @@
+import { SIMPLE_INTENT } from "@/lib/planner-messages";
+
 export const PLANNER_COPY = {
   pageTitle: "Plan my celebration",
   heroEyebrow: "AI Event Planner",
@@ -13,8 +15,7 @@ export const PLANNER_COPY = {
     "Ranking vendors…",
     "Building your budget…",
   ],
-  simpleIntentHint:
-    "That looks like a simple vendor search. Browse the marketplace instead - or describe a full celebration to plan.",
+  simpleIntentHint: SIMPLE_INTENT,
   browseCta: "Browse vendors",
   emptyPlans: "No saved plans yet. Describe a celebration above to get started.",
   replaceLabel: "Replace",

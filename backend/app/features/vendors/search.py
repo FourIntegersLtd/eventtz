@@ -18,6 +18,7 @@ from app.contracts.marketplace_search import (
     MarketplaceSearchResult,
     MarketplaceSearchSection,
 )
+from app.features.vendors import messages as vendor_messages
 from app.core.logging import get_logger
 from app.features.vendors.markets import normalize_country_code
 from app.features.vendors.list_pricing import min_listing_price_gbp
@@ -789,9 +790,9 @@ def iso_dates_in_event_range(event_date: date, event_end_date: date | None) -> l
     if event_end_date is None:
         return [event_date.isoformat()]
     if event_end_date < event_date:
-        raise ValueError("Event end date must be on or after the event start date.")
+        raise ValueError(vendor_messages.EVENT_END_BEFORE_START)
     if (event_end_date - event_date).days > _MAX_EVENT_SPAN_DAYS:
-        raise ValueError(f"Event cannot span more than {_MAX_EVENT_SPAN_DAYS} days.")
+        raise ValueError(vendor_messages.event_cannot_span_more_than_days(_MAX_EVENT_SPAN_DAYS))
     out: list[str] = []
     d = event_date
     while d <= event_end_date:
@@ -809,7 +810,4 @@ def assert_vendor_payload_allows_event_dates(
     """Raises ValueError if any day in range is blocked or on a non-working weekday."""
     iso_dates = iso_dates_in_event_range(event_date, event_end_date)
     if not _vendor_available_for_event_dates(payload, iso_dates):
-        raise ValueError(
-            "The event date(s) fall on days this vendor has marked unavailable. "
-            "Choose different dates or contact the vendor via Messages.",
-        )
+        raise ValueError(vendor_messages.EVENT_DATES_VENDOR_UNAVAILABLE)

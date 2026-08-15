@@ -105,7 +105,7 @@ export function useClientDashboard(enabled: boolean) {
       const todayKey = localDateKey(new Date());
       const todayAtNoon = noonUtcSafeDateFromKey(todayKey);
 
-      const accepted = active.filter((b) => b.status === "accepted");
+      const accepted = active.filter((b) => b.booking_status === "accepted");
       const acceptedUpcoming = accepted.filter((b) => {
         const startKey = dateKeyFromIso(b.event_date);
         if (!startKey) return false;
@@ -139,10 +139,10 @@ export function useClientDashboard(enabled: boolean) {
         .slice(0, 5);
 
       const awaitingVendorCount = active.filter(
-        (b) => b.status === "pending" && b.initiator !== "vendor",
+        (b) => b.booking_status === "pending" && b.initiator !== "vendor",
       ).length;
       const awaitingClientCount = active.filter(
-        (b) => b.status === "pending" && b.initiator === "vendor",
+        (b) => b.booking_status === "pending" && b.initiator === "vendor",
       ).length;
 
       if (!dashboardViewedRef.current) {

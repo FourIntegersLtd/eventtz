@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from app.features.chat.chat_shared import ADMIN_SENDER_DISPLAY, ADMIN_SENDER_USER_ID
+from app.features.chat.chat_formatting_and_ids import ADMIN_SENDER_DISPLAY, ADMIN_SENDER_USER_ID
 from app.features.chat.dm import _client_peer_labels, list_messages_for_user
 
 
@@ -21,10 +21,9 @@ def test_client_peer_labels_mask_admin(mock_types, mock_names):
 
 
 @patch("app.features.chat.dm._messages_table_select")
-@patch("app.features.chat.dm.get_client")
+@patch("app.features.chat.dm.get_db")
 @patch("app.features.chat.dm.get_settings")
 def test_list_support_messages_mask_staff_sender(mock_settings, mock_get_client, mock_select):
-    mock_settings.return_value.local_auth_mode = False
     conv_id = "conv-support"
     client_uid = "client-uuid"
     admin_uid = "admin-uuid"

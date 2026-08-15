@@ -6,6 +6,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from app.contracts.types import BookingLifecycleStatus
+
 
 class CreateParticipantDisputeBody(BaseModel):
     summary: str = Field(min_length=10, max_length=4000)
@@ -28,7 +30,10 @@ class ParticipantDisputePublic(BaseModel):
     #: Summary of the related booking (shown on detail and list screens).
     event_name: str | None = None
     event_date: str | None = None
-    booking_status: str | None = None
+    booking_lifecycle_status: BookingLifecycleStatus | str | None = Field(
+        default=None,
+        validation_alias="booking_status",
+    )
     conversation_id: str | None = None
     opened_by_role: Literal["client", "vendor"] | None = None
     opened_by_you: bool = False
@@ -37,6 +42,8 @@ class ParticipantDisputePublic(BaseModel):
     vendor_display_name: str | None = None
     counterparty_label: str | None = None
     payment_status: str | None = None
+
+    model_config = {"populate_by_name": True}
 
 
 class ParticipantDisputesListResponse(BaseModel):

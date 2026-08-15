@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.core.db import get_db as get_client
+from app.core.db import get_db
 from app.core.logging import get_logger
 from app.features.referrals.links import referral_register_url
+from app.features.referrals import messages as referral_messages
 from app.features.referrals.slug import is_valid_slug, normalize_slug, slugify_display_name
 
 logger = get_logger(__name__)
@@ -30,8 +31,8 @@ def _row_to_partner(row: dict[str, Any]) -> dict[str, Any]:
 def resolve_unique_slug(*, display_name: str, preferred: str | None = None) -> str:
     base = normalize_slug(preferred.strip()) if preferred and preferred.strip() else slugify_display_name(display_name)
     if not is_valid_slug(base):
-        raise ValueError("Slug must use lowercase letters, numbers, and hyphens only.")
-    client = get_client()
+        raise ValueError(referral_messages.INVALID_SLUG)
+    client = get_db()
     candidate = base
     suffix = 2
     while True:
@@ -49,7 +50,7 @@ def get_active_partner_by_slug(slug: str) -> dict[str, Any] | None:
         return None
     try:
         res = (
-            get_client()
+            get_db()
             .table("referral_partners")
             .select("id, slug, display_name, is_active")
             .eq("slug", normalized)
@@ -68,7 +69,7 @@ def get_active_partner_by_slug(slug: str) -> dict[str, Any] | None:
 
 def list_partners() -> list[dict[str, Any]]:
     res = (
-        get_client()
+        get_db()
         .table("referral_partners")
         .select("id, slug, display_name, instagram_handle, notes, is_active, created_at, updated_at")
         .order("created_at", desc=True)
@@ -80,7 +81,7 @@ def list_partners() -> list[dict[str, Any]]:
 
 def get_partner_by_id(partner_id: str) -> dict[str, Any] | None:
     res = (
-        get_client()
+        get_db()
         .table("referral_partners")
         .select("id, slug, display_name, instagram_handle, notes, is_active, created_at, updated_at")
         .eq("id", partner_id)
@@ -103,7 +104,7 @@ def create_partner(
 ) -> dict[str, Any]:
     name = display_name.strip()
     if not name:
-        raise ValueError("Display name is required.")
+        raise ValueError(referral_messages.DISPLAY_NAME_REQUIRED)
     unique_slug = resolve_unique_slug(display_name=name, preferred=slug)
     row: dict[str, Any] = {
         "slug": unique_slug,
@@ -114,19 +115,19 @@ def create_partner(
     }
     if created_by_admin_id:
         row["created_by_admin_id"] = created_by_admin_id
-    res = get_client().table("referral_partners").insert(row).execute()
+    res = get_db().table("referral_partners").insert(row).execute()
     data = getattr(res, "data", None) or []
     if data and isinstance(data[0], dict):
         return _row_to_partner(data[0])
     fetched = get_partner_by_slug(unique_slug)
     if not fetched:
-        raise ValueError("Could not create referral partner.")
+        raise ValueError(referral_messages.CREATE_PARTNER_FAILED)
     return fetched
 
 
 def get_partner_by_slug(slug: str) -> dict[str, Any] | None:
     res = (
-        get_client()
+        get_db()
         .table("referral_partners")
         .select("id, slug, display_name, instagram_handle, notes, is_active, created_at, updated_at")
         .eq("slug", slug)
@@ -151,7 +152,7 @@ def update_partner(
     if display_name is not None:
         name = display_name.strip()
         if not name:
-            raise ValueError("Display name cannot be empty.")
+            raise ValueError(referral_messages.DISPLAY_NAME_EMPTY)
         patch["display_name"] = name
     if instagram_handle is not None:
         patch["instagram_handle"] = instagram_handle.strip() or None
@@ -160,8 +161,8 @@ def update_partner(
     if is_active is not None:
         patch["is_active"] = is_active
     if not patch:
-        raise ValueError("No fields to update.")
-    res = get_client().table("referral_partners").update(patch).eq("id", partner_id).execute()
+        raise ValueError(referral_messages.NO_FIELDS_TO_UPDATE)
+    res = get_db().table("referral_partners").update(patch).eq("id", partner_id).execute()
     data = getattr(res, "data", None) or []
     if not data or not isinstance(data[0], dict):
         return None

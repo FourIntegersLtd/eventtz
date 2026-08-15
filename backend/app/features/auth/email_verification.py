@@ -8,12 +8,10 @@ import time
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from app.core.config import get_settings
-from app.core.db import get_db as get_client
+from app.core.db import get_db
 from app.core.logging import get_logger
-from app.features.auth import local_store as local_auth_store
-from app.features.auth.accounts import fetch_user_profile_by_email
-from app.features.auth.supabase import SupabaseAuthService
+from app.features.auth.accounts import fetch_user_profile_by_email, normalize_email
+from app.features.auth import messages as auth_messages
 from app.features.email.branding import public_email_url
 from app.features.email.dispatch import send_email_verification_email, send_welcome_email
 
@@ -21,15 +19,6 @@ logger = get_logger(__name__)
 
 TOKEN_BYTES = 32
 EXPIRY_MINUTES = 60
-GENERIC_RESEND_MESSAGE = (
-    "If an account exists for that email and still needs verification, "
-    "we sent a new link. Check your inbox (and spam) for an email from Eventtz."
-)
-SIGNUP_VERIFY_MESSAGE = "Account created."
-UNVERIFIED_LOGIN_DETAIL = (
-    "Verify your email before signing in. Check your inbox for the link we sent, "
-    "or request a new one."
-)
 
 _issue_hits: dict[str, list[float]] = {}
 _verify_hits: dict[str, list[float]] = {}
@@ -67,15 +56,15 @@ def _assert_issue_rate(email: str, client_ip: str | None) -> None:
     email_key = f"e:{email}"
     ip_key = f"ip:{(client_ip or 'unknown').strip() or 'unknown'}"
     if _rate_limited(_issue_hits, email_key, limit=5, window_s=3600):
-        raise ValueError("Too many verification emails. Try again later.")
+        raise ValueError(auth_messages.VERIFICATION_EMAIL_RATE_LIMIT)
     if _rate_limited(_issue_hits, ip_key, limit=20, window_s=3600):
-        raise ValueError("Too many verification emails. Try again later.")
+        raise ValueError(auth_messages.VERIFICATION_EMAIL_RATE_LIMIT)
 
 
 def _assert_verify_rate(client_ip: str | None) -> None:
     ip_key = f"ip:{(client_ip or 'unknown').strip() or 'unknown'}"
     if _rate_limited(_verify_hits, ip_key, limit=30, window_s=3600):
-        raise ValueError("Too many attempts. Try again later.")
+        raise ValueError(auth_messages.VERIFY_RATE_LIMIT)
 
 
 def _verify_url(raw_token: str) -> str:
@@ -94,11 +83,8 @@ def _parse_expires(value: Any) -> datetime | None:
 
 
 def _invalidate_unused_tokens(user_id: str) -> None:
-    if local_auth_store.enabled():
-        local_auth_store.invalidate_email_verification_tokens(user_id)
-        return
     try:
-        get_client().table("email_verification_tokens").update(
+        get_db().table("email_verification_tokens").update(
             {"used_at": _now_iso()},
         ).eq("user_id", user_id).is_("used_at", "null").execute()
     except Exception as e:
@@ -112,15 +98,8 @@ def _invalidate_unused_tokens(user_id: str) -> None:
 
 
 def _insert_token(user_id: str, token_hash: str, expires_at: datetime) -> None:
-    if local_auth_store.enabled():
-        local_auth_store.insert_email_verification_token(
-            user_id=user_id,
-            token_hash=token_hash,
-            expires_at=expires_at,
-        )
-        return
     try:
-        get_client().table("email_verification_tokens").insert(
+        get_db().table("email_verification_tokens").insert(
             {
                 "user_id": user_id,
                 "token_hash": token_hash,
@@ -137,11 +116,9 @@ def _insert_token(user_id: str, token_hash: str, expires_at: datetime) -> None:
 
 
 def _find_token_row(token_hash: str) -> dict[str, Any] | None:
-    if local_auth_store.enabled():
-        return local_auth_store.find_email_verification_token(token_hash)
     try:
         res = (
-            get_client()
+            get_db()
             .table("email_verification_tokens")
             .select("id,user_id,expires_at,used_at")
             .eq("token_hash", token_hash)
@@ -156,20 +133,14 @@ def _find_token_row(token_hash: str) -> dict[str, Any] | None:
 
 
 def _mark_token_used(token_id: str) -> None:
-    if local_auth_store.enabled():
-        local_auth_store.mark_email_verification_token_used(token_id)
-        return
-    get_client().table("email_verification_tokens").update(
+    get_db().table("email_verification_tokens").update(
         {"used_at": _now_iso()},
     ).eq("id", token_id).execute()
 
 
 def mark_email_verified(user_id: str) -> None:
-    if local_auth_store.enabled():
-        local_auth_store.mark_email_verified(user_id)
-        return
     try:
-        get_client().table("users").update(
+        get_db().table("users").update(
             {"email_verified_at": _now_iso()},
         ).eq("id", user_id).execute()
     except Exception:
@@ -180,11 +151,9 @@ def is_email_verified(user_id: str, *, user_type: str | None = None) -> bool:
     """Admins are not gated. Missing column / profile treated as verified for safety after backfill."""
     if user_type == "admin":
         return True
-    if local_auth_store.enabled():
-        return local_auth_store.is_email_verified(user_id)
     try:
         res = (
-            get_client()
+            get_db()
             .table("users")
             .select("email_verified_at,user_type")
             .eq("id", user_id)
@@ -211,10 +180,8 @@ def is_email_verified(user_id: str, *, user_type: str | None = None) -> bool:
 
 def confirm_supabase_email(user_id: str) -> None:
     """Mark email confirmed in Supabase Auth so password sign-in works; Eventtz still gates login."""
-    if local_auth_store.enabled():
-        return
     try:
-        get_client().auth.admin.update_user_by_id(user_id, {"email_confirm": True})
+        get_db().auth.admin.update_user_by_id(user_id, {"email_confirm": True})
     except Exception:
         logger.exception("email_verification: supabase email_confirm failed user=%s", user_id)
 
@@ -226,8 +193,8 @@ def issue_email_verification(
     user_type: str | None = None,
     client_ip: str | None = None,
 ) -> None:
-    """Create a one-time verify token and email (or log URL in local mode)."""
-    normalized = local_auth_store.normalize_email(email)
+    """Create a one-time verify token and send verification email."""
+    normalized = normalize_email(email)
     if not user_id or not normalized:
         return
     _assert_issue_rate(normalized, client_ip)
@@ -246,16 +213,6 @@ def issue_email_verification(
         return
 
     verify_url = _verify_url(raw)
-    if local_auth_store.enabled():
-        dev_base = get_settings().frontend_url.strip().rstrip("/")
-        logger.info(
-            "email_verification local link user=%s url=%s (email would use %s)",
-            user_id,
-            f"{dev_base}/verify-email?token={raw}",
-            verify_url,
-        )
-        return
-
     send_email_verification_email(
         email=normalized,
         verify_url=verify_url,
@@ -266,35 +223,24 @@ def issue_email_verification(
 
 def resend_email_verification(*, email: str, client_ip: str | None = None) -> str:
     """Enumeration-safe resend for unverified client/vendor accounts."""
-    normalized = local_auth_store.normalize_email(email)
+    normalized = normalize_email(email)
     _assert_issue_rate(normalized, client_ip)
 
     user_id: str | None = None
     to_email: str | None = None
     user_type: str | None = None
 
-    if local_auth_store.enabled():
-        user = local_auth_store.user_record_for_email(normalized)
-        if user:
-            user_id = str(user["id"])
-            to_email = normalized
-            user_type = str(user.get("user_type") or "")
-            if local_auth_store.is_email_verified(user_id):
-                return GENERIC_RESEND_MESSAGE
-    else:
-        profile = fetch_user_profile_by_email(normalized)
-        if profile and profile.get("id"):
-            user_id = str(profile["id"])
-            to_email = str(profile.get("email") or normalized).strip().lower()
-            user_type = str(profile.get("user_type") or "")
-            if user_type == "admin" or profile.get("email_verified_at"):
-                return GENERIC_RESEND_MESSAGE
+    profile = fetch_user_profile_by_email(normalized)
+    if profile and profile.get("id"):
+        user_id = str(profile["id"])
+        to_email = str(profile.get("email") or normalized).strip().lower()
+        user_type = str(profile.get("user_type") or "")
+        if user_type == "admin" or profile.get("email_verified_at"):
+            return auth_messages.GENERIC_RESEND_MESSAGE
 
     if not user_id or not to_email or user_type == "admin":
-        return GENERIC_RESEND_MESSAGE
+        return auth_messages.GENERIC_RESEND_MESSAGE
 
-    # Bypass the rate assert inside issue (already counted above) by calling insert path carefully.
-    # Re-use issue but it will double-count rate - so call internals without re-assert.
     raw = secrets.token_urlsafe(TOKEN_BYTES)
     token_hash = _hash_token(raw)
     expires_at = _now() + timedelta(minutes=EXPIRY_MINUTES)
@@ -303,42 +249,23 @@ def resend_email_verification(*, email: str, client_ip: str | None = None) -> st
         _insert_token(user_id, token_hash, expires_at)
     except Exception:
         logger.exception("email_verification: resend insert failed user=%s", user_id)
-        return GENERIC_RESEND_MESSAGE
+        return auth_messages.GENERIC_RESEND_MESSAGE
 
     verify_url = _verify_url(raw)
-    if local_auth_store.enabled():
-        dev_base = get_settings().frontend_url.strip().rstrip("/")
-        logger.info(
-            "email_verification resend local link user=%s url=%s",
-            user_id,
-            f"{dev_base}/verify-email?token={raw}",
-        )
-    else:
-        send_email_verification_email(
-            email=to_email,
-            verify_url=verify_url,
-            expires_minutes=EXPIRY_MINUTES,
-            user_type=user_type,
-        )
-    return GENERIC_RESEND_MESSAGE
+    send_email_verification_email(
+        email=to_email,
+        verify_url=verify_url,
+        expires_minutes=EXPIRY_MINUTES,
+        user_type=user_type,
+    )
+    return auth_messages.GENERIC_RESEND_MESSAGE
 
 
 def _verify_success_payload(user_id: str) -> dict[str, Any]:
     """Return user/session payload after email is verified (first verify or idempotent retry)."""
-    if local_auth_store.enabled():
-        email = local_auth_store.email_for_user_id(user_id)
-        if not email:
-            raise ValueError("This verification link is invalid or has expired. Request a new one.")
-        user = local_auth_store.user_record_for_email(email)
-        if not user:
-            raise ValueError("Could not verify email. Try again.")
-        session = local_auth_store.create_session(email)
-        user_type = str(user.get("user_type") or "client")
-        return {"user": user, "session": session, "user_type": user_type, "email": email}
-
     try:
         profile = (
-            get_client()
+            get_db()
             .table("users")
             .select("id,email,user_type")
             .eq("id", user_id)
@@ -354,7 +281,7 @@ def _verify_success_payload(user_id: str) -> dict[str, Any]:
         email = ""
         user_type = "client"
     if not email:
-        raise ValueError("Could not verify email. Try again.")
+        raise ValueError(auth_messages.VERIFY_EMAIL_FAILED)
 
     return {
         "user": {"id": user_id, "email": email, "user_type": user_type},
@@ -376,33 +303,31 @@ def verify_email_with_token(
     _assert_verify_rate(client_ip)
     raw = (token or "").strip()
     if not raw or len(raw) < 20:
-        raise ValueError("This verification link is invalid or has expired. Request a new one.")
+        raise ValueError(auth_messages.VERIFICATION_LINK_INVALID)
 
     row = _find_token_row(_hash_token(raw))
     if not row:
-        raise ValueError("This verification link is invalid or has expired. Request a new one.")
+        raise ValueError(auth_messages.VERIFICATION_LINK_INVALID)
 
     user_id = str(row.get("user_id") or "")
     if row.get("used_at"):
-        # Idempotent: link opened twice (email prefetch, React Strict Mode, user refresh).
         if user_id and is_email_verified(user_id):
             return _verify_success_payload(user_id)
-        raise ValueError("This verification link is invalid or has expired. Request a new one.")
+        raise ValueError(auth_messages.VERIFICATION_LINK_INVALID)
 
     expires = _parse_expires(row.get("expires_at"))
     if expires is None or expires < _now():
-        raise ValueError("This verification link is invalid or has expired. Request a new one.")
+        raise ValueError(auth_messages.VERIFICATION_LINK_INVALID)
 
     token_id = str(row.get("id") or "")
     if not user_id or not token_id:
-        raise ValueError("This verification link is invalid or has expired. Request a new one.")
+        raise ValueError(auth_messages.VERIFICATION_LINK_INVALID)
 
     mark_email_verified(user_id)
     _mark_token_used(token_id)
     _invalidate_unused_tokens(user_id)
 
     payload = _verify_success_payload(user_id)
-    if not local_auth_store.enabled():
-        confirm_supabase_email(user_id)
-        send_welcome_email(email=str(payload["email"]), user_type=str(payload["user_type"]))
+    confirm_supabase_email(user_id)
+    send_welcome_email(email=str(payload["email"]), user_type=str(payload["user_type"]))
     return payload

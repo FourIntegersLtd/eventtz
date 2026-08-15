@@ -7,7 +7,14 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.db import get_db as get_client
+from app.core.db import get_db
+from app.features.admin.messages import (
+    STRIPE_CHARGE_MISMATCH,
+    STRIPE_CHARGE_UNVERIFIED,
+    STRIPE_PI_NO_CONFIRMED_AMOUNT,
+    STRIPE_PI_REQUIRED_FOR_AMOUNT,
+    STRIPE_VERIFY_FAILED,
+)
 from app.features.payments import stripe as stripe_service
 
 logger = get_logger(__name__)
@@ -18,8 +25,6 @@ def patch_booking_payment_fields(booking_id: str, fields: dict[str, Any]) -> boo
     Update Stripe / payment snapshot columns.
     payment_amount_gbp is always worked out from Stripe when a payment intent is provided.
     """
-    if get_settings().local_auth_mode:
-        return False
     try:
         uuid.UUID(booking_id)
     except ValueError:
@@ -46,7 +51,7 @@ def patch_booking_payment_fields(booking_id: str, fields: dict[str, Any]) -> boo
 
     if "payment_amount_gbp" in patch or pi_id is not None or charge_id is not None:
         existing_res = (
-            get_client()
+            get_db()
             .table("booking_requests")
             .select("stripe_payment_intent_id")
             .eq("id", booking_id)
@@ -60,17 +65,13 @@ def patch_booking_payment_fields(booking_id: str, fields: dict[str, Any]) -> boo
 
         resolved_pi = pi_id or (str(existing_pi).strip() if existing_pi else None)
         if not resolved_pi:
-            raise ValueError(
-                "stripe_payment_intent_id is required to set payment_amount_gbp.",
-            )
+            raise ValueError(STRIPE_PI_REQUIRED_FOR_AMOUNT)
         try:
             pi_raw = stripe_service.retrieve_payment_intent(resolved_pi)
             pi = stripe_service.stripe_object_to_dict(pi_raw)
         except Exception as e:
             logger.exception("patch_booking_payment_fields stripe retrieve failed")
-            raise ValueError(
-                "Could not verify payment with Stripe. Try again later.",
-            ) from e
+            raise ValueError(STRIPE_VERIFY_FAILED) from e
 
         amount_received = pi.get("amount_received")
         pi_status = str(pi.get("status") or "").strip().lower()
@@ -82,7 +83,7 @@ def patch_booking_payment_fields(booking_id: str, fields: dict[str, Any]) -> boo
             else:
                 amount_received = None
         if not isinstance(amount_received, (int, float)) or float(amount_received) <= 0:
-            raise ValueError("Stripe payment intent has no confirmed amount.")
+            raise ValueError(STRIPE_PI_NO_CONFIRMED_AMOUNT)
         patch["payment_amount_gbp"] = round(float(amount_received) / 100.0, 2)
         patch["stripe_payment_intent_id"] = resolved_pi
 
@@ -93,11 +94,9 @@ def patch_booking_payment_fields(booking_id: str, fields: dict[str, Any]) -> boo
             else:
                 stripe_charge = latest
             if not stripe_charge:
-                raise ValueError(
-                    "Could not verify stripe_charge_id - payment intent has no charge yet.",
-                )
+                raise ValueError(STRIPE_CHARGE_UNVERIFIED)
             if str(stripe_charge) != charge_id:
-                raise ValueError("stripe_charge_id does not match the payment intent.")
+                raise ValueError(STRIPE_CHARGE_MISMATCH)
 
     final_patch: dict[str, Any] = {}
     for k in allowed:
@@ -112,7 +111,7 @@ def patch_booking_payment_fields(booking_id: str, fields: dict[str, Any]) -> boo
         return True
 
     try:
-        get_client().table("booking_requests").update(final_patch).eq("id", booking_id).execute()
+        get_db().table("booking_requests").update(final_patch).eq("id", booking_id).execute()
         return True
     except Exception as e:
         if "stripe_payment_intent_id" in str(e).lower() or "42703" in str(e):

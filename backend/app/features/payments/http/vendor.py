@@ -34,7 +34,7 @@ def post_connect_account(
 
 
 @router.get("/status", response_model=VendorPaymentsStatusResponse)
-def get_status(request: Request, response: Response) -> VendorPaymentsStatusResponse:
+def get_vendor_stripe_connect_status(request: Request, response: Response) -> VendorPaymentsStatusResponse:
     user = require_vendor(request, response)
     uid = str(user.get("id") or "")
     data = get_vendor_connect_status_response(uid)

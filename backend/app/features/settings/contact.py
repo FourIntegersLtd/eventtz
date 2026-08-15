@@ -6,9 +6,8 @@ from typing import Any
 
 from postgrest.exceptions import APIError
 
-from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.db import get_db as get_client, local_vendors
+from app.core.db import get_db
 from app.features.vendors.profile import get_vendor_profile
 
 logger = get_logger(__name__)
@@ -42,13 +41,11 @@ def _missing_contact_prefs_columns(err: Exception) -> bool:
 
 def get_contact_settings(user_id: str) -> dict[str, Any]:
     global _contact_prefs_columns_ok
-    if get_settings().local_auth_mode:
-        return dict(_DEFAULT_PREFS)
     if _contact_prefs_columns_ok is False:
         return dict(_DEFAULT_PREFS)
     try:
         res = (
-            get_client()
+            get_db()
             .table("users")
             .select("contact_phone,share_email,share_phone,share_address")
             .eq("id", user_id)
@@ -88,8 +85,6 @@ def update_contact_settings(
     share_address: bool | None = None,
 ) -> dict[str, Any]:
     global _contact_prefs_columns_ok
-    if get_settings().local_auth_mode:
-        return dict(_DEFAULT_PREFS)
     if _contact_prefs_columns_ok is False:
         return dict(_DEFAULT_PREFS)
     patch: dict[str, Any] = {}
@@ -106,7 +101,7 @@ def update_contact_settings(
     if not patch:
         return get_contact_settings(user_id)
     try:
-        get_client().table("users").update(patch).eq("id", user_id).execute()
+        get_db().table("users").update(patch).eq("id", user_id).execute()
     except Exception as e:
         if _missing_contact_prefs_columns(e):
             _contact_prefs_columns_ok = False
@@ -122,13 +117,8 @@ def update_contact_settings(
 def _vendor_payload_phone(vendor_user_id: str) -> str | None:
     row = get_vendor_profile(vendor_user_id)
     if not row:
-        if get_settings().local_auth_mode:
-            local = local_vendors.get(vendor_user_id)
-            payload = local.get("payload") if isinstance(local, dict) else {}
-        else:
-            return None
-    else:
-        payload = row.get("payload") if isinstance(row.get("payload"), dict) else {}
+        return None
+    payload = row.get("payload") if isinstance(row.get("payload"), dict) else {}
     if not isinstance(payload, dict):
         return None
     phone = payload.get("phone")

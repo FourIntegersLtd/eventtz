@@ -25,10 +25,9 @@ def _mock_booking_rows(rows: list[dict]):
     return mock_client
 
 
-@patch("app.features.bookings.calendar.get_client")
+@patch("app.features.bookings.calendar.get_db")
 @patch("app.features.bookings.calendar.get_settings")
 def test_rejects_when_daily_cap_reached(mock_settings, mock_get_client):
-    mock_settings.return_value.local_auth_mode = False
     mock_get_client.return_value = _mock_booking_rows(
         [
             {
@@ -55,10 +54,9 @@ def test_rejects_when_daily_cap_reached(mock_settings, mock_get_client):
         )
 
 
-@patch("app.features.bookings.calendar.get_client")
+@patch("app.features.bookings.calendar.get_db")
 @patch("app.features.bookings.calendar.get_settings")
 def test_allows_when_under_cap(mock_settings, mock_get_client):
-    mock_settings.return_value.local_auth_mode = False
     mock_get_client.return_value = _mock_booking_rows(
         [
             {
@@ -78,10 +76,9 @@ def test_allows_when_under_cap(mock_settings, mock_get_client):
     )
 
 
-@patch("app.features.bookings.calendar.get_client")
+@patch("app.features.bookings.calendar.get_db")
 @patch("app.features.bookings.calendar.get_settings")
 def test_query_failure_is_fail_closed(mock_settings, mock_get_client):
-    mock_settings.return_value.local_auth_mode = False
     mock_get_client.return_value.table.side_effect = RuntimeError("db down")
     with pytest.raises(ValueError, match="Could not verify vendor availability"):
         _enforce_max_bookings_per_day(

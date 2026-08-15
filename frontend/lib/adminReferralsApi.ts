@@ -17,7 +17,7 @@ export type ReferralVendorSignup = {
   email: string | null;
   business_name: string | null;
   approval_status: string | null;
-  profile_status: string | null;
+  onboarding_status: string | null;
   attributed_at: string | null;
   shoutout_completed: boolean;
   shoutout_completed_at: string | null;

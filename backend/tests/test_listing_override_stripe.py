@@ -9,13 +9,12 @@ from app.features.vendors.moderation import set_vendor_listing_override
 
 @patch("app.features.vendors.moderation.get_vendor_profile")
 @patch("app.features.vendors.moderation.get_settings")
-@patch("app.features.vendors.moderation.get_client")
+@patch("app.features.vendors.moderation.get_db")
 def test_listing_override_hidden_update_excludes_stripe(
     mock_client: MagicMock,
     mock_settings: MagicMock,
     mock_profile: MagicMock,
 ) -> None:
-    mock_settings.return_value.local_auth_mode = False
     mock_table = MagicMock()
     mock_client.return_value.table.return_value = mock_table
     mock_table.update.return_value = mock_table

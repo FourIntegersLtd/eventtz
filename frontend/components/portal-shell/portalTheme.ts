@@ -1,6 +1,6 @@
 /**
  * Shared Tailwind class strings for client/vendor portal UI.
- * Mirror of `features/admin/adminTheme.ts` - use these instead of copying card shells.
+ * Mirror of `components/admin-shell/adminTheme.ts` - use these instead of copying card shells.
  */
 
 import {

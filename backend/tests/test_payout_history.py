@@ -21,14 +21,13 @@ def test_vendor_amount_falls_back_to_pricing() -> None:
 
 
 @patch("app.features.bookings.payout_history.client_display_names_by_id", return_value={})
-@patch("app.features.bookings.payout_history.get_client")
+@patch("app.features.bookings.payout_history.get_db")
 @patch("app.features.bookings.payout_history.get_settings")
 def test_list_vendor_payouts_excludes_pending_and_uses_vendor_share(
     mock_settings: MagicMock,
     mock_get_client: MagicMock,
     _mock_names: MagicMock,
 ) -> None:
-    mock_settings.return_value.local_auth_mode = False
     mock_get_client.return_value.table.return_value.select.return_value.eq.return_value.in_.return_value.execute.return_value = MagicMock(
         data=[
             {

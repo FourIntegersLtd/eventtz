@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Any
 
+from app.features.vendors import messages as vendor_messages
+
 AUTO_BULK_LINE_ID = "auto-bulk"
 AUTO_OFF_PEAK_LINE_ID = "auto-off-peak"
 
@@ -233,7 +235,7 @@ def resolve_line_items(
     with the headline list discount applied. Bulk and off-peak discounts are added separately.
     """
     if not selected_option_ids:
-        raise ValueError("Select at least one package or rate.")
+        raise ValueError(vendor_messages.SELECT_PACKAGE_OR_RATE)
 
     seen: set[str] = set()
     unique_ids: list[str] = []
@@ -242,12 +244,12 @@ def resolve_line_items(
         if not s:
             continue
         if s in seen:
-            raise ValueError("Duplicate package or rate selected.")
+            raise ValueError(vendor_messages.DUPLICATE_PACKAGE_OR_RATE)
         seen.add(s)
         unique_ids.append(s)
 
     if not unique_ids:
-        raise ValueError("Select at least one package or rate.")
+        raise ValueError(vendor_messages.SELECT_PACKAGE_OR_RATE)
 
     options = build_pricing_options(payload)
     by_id = {o.id: o for o in options}
@@ -256,7 +258,7 @@ def resolve_line_items(
     for oid in unique_ids:
         opt = by_id.get(oid)
         if opt is None:
-            raise ValueError("One or more selected packages or rates are no longer available.")
+            raise ValueError(vendor_messages.PACKAGES_NO_LONGER_AVAILABLE)
         line_items.append(_option_to_line_item(opt))
 
     has_priced_selection = any(
@@ -265,10 +267,10 @@ def resolve_line_items(
     has_quote_only = len(options) == 1 and options[0].id == "quote"
 
     if not has_priced_selection and not has_quote_only:
-        raise ValueError("This vendor has no published prices for your selection.")
+        raise ValueError(vendor_messages.NO_PUBLISHED_PRICES)
 
     if has_quote_only and unique_ids != ["quote"]:
-        raise ValueError("This vendor only accepts quote requests - no priced options to select.")
+        raise ValueError(vendor_messages.QUOTE_ONLY_NO_PRICED_OPTIONS)
 
     return line_items
 

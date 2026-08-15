@@ -224,7 +224,7 @@ export function auditEntityHref(entry: AdminAuditLogItem): string | null {
 }
 
 export function formatAuditSummary(entry: AdminAuditLogItem): string {
-  const details = formatPayloadDetails(entry.action, entry.payload ?? undefined);
+  const details = formatPayloadDetails(entry.action, entry.audit_event_details ?? undefined);
   if (details) return details;
 
   const entity = formatAuditEntityLabel(entry.entity_type);
@@ -235,6 +235,6 @@ export function formatAuditSummary(entry: AdminAuditLogItem): string {
 }
 
 export function hasTechnicalPayload(entry: AdminAuditLogItem): boolean {
-  const p = entry.payload;
+  const p = entry.audit_event_details;
   return Boolean(p && Object.keys(p).length > 0);
 }

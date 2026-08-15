@@ -5,6 +5,9 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from app.core.errors import ValidationError
+from app.features.vendors import messages as vendor_messages
+
 MIN_PACKAGE_DESCRIPTION_CHARS = 40
 MIN_PACKAGE_TITLE_CHARS = 3
 RECOMMENDED_PACKAGE_DESCRIPTION_CHARS = 80
@@ -71,22 +74,18 @@ def requires_at_least_one_package(payload: dict[str, Any]) -> bool:
 
 
 def validate_package_fields(pkg: dict[str, Any], *, strict: bool = False) -> None:
-    from app.core.errors import ValidationError
-
     if not is_configured_package(pkg):
         return
     title = _coerce_str(pkg.get("title")).strip()
     price = _coerce_str(pkg.get("price")).strip()
     details = _coerce_str(pkg.get("details")).strip()
     if not title or len(title) < MIN_PACKAGE_TITLE_CHARS:
-        raise ValidationError("Step pricing: each package needs a clear name.")
+        raise ValidationError(vendor_messages.PACKAGE_NEEDS_CLEAR_NAME)
     if not price:
-        raise ValidationError("Step pricing: each package needs a price.")
+        raise ValidationError(vendor_messages.PACKAGE_NEEDS_PRICE)
     if strict or price:
         if len(details) < MIN_PACKAGE_DESCRIPTION_CHARS:
-            raise ValidationError(
-                "Step pricing: tell clients what's included (at least a short sentence).",
-            )
+            raise ValidationError(vendor_messages.PACKAGE_DETAILS_TOO_SHORT)
 
 
 def validate_packages_for_payload(
@@ -95,8 +94,6 @@ def validate_packages_for_payload(
     on_submit: bool = False,
     require_service_packages: bool = False,
 ) -> None:
-    from app.core.errors import ValidationError
-
     pkgs = payload.get("packages")
     if not isinstance(pkgs, list):
         pkgs = []
@@ -111,12 +108,10 @@ def validate_packages_for_payload(
         if not complete:
             svcs = services_requiring_packages(payload.get("servicesOffered") or [])
             labels = ", ".join(svcs) or "your service"
-            raise ValidationError(
-                f"Step pricing: add at least one complete package for {labels}.",
-            )
+            raise ValidationError(vendor_messages.complete_package_for_labels(labels))
 
     if on_submit and not _coerce_str(payload.get("profileImageUrl")).strip():
-        raise ValidationError("Add a profile photo before submitting.")
+        raise ValidationError(vendor_messages.PROFILE_PHOTO_BEFORE_SUBMIT)
 
 
 def count_complete_packages(payload: dict[str, Any]) -> tuple[int, int]:

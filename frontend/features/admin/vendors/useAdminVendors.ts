@@ -14,6 +14,7 @@ import {
   type AdminVendorProfileNudgeResult,
 } from "@/lib/adminVendorsApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { COULD_NOT_RESTORE_STRIPE_CONNECT } from "@/lib/admin-messages";
 import type { VendorApprovalStatus, VendorListingOverride } from "@/lib/domain-types";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
@@ -33,7 +34,7 @@ export function useAdminVendors() {
   const [nudgeBusy, setNudgeBusy] = useState(false);
 
   const draftUserIdsOnPage = useMemo(
-    () => rows.filter((r) => r.status === "draft").map((r) => r.user_id),
+    () => rows.filter((r) => r.onboarding_status === "draft").map((r) => r.user_id),
     [rows],
   );
 
@@ -120,7 +121,7 @@ export function useAdminVendors() {
         await load();
         return true;
       } catch (e) {
-        setError(getApiErrorDetail(e) ?? "Could not restore Stripe Connect.");
+        setError(getApiErrorDetail(e) ?? COULD_NOT_RESTORE_STRIPE_CONNECT);
         throw e;
       } finally {
         setBusyId(null);

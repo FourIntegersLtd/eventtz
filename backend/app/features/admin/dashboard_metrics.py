@@ -7,7 +7,7 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.db import get_db as get_client
+from app.core.db import get_db
 from app.features.admin.dashboard_queries import _PAID_PAYMENT_STATUSES
 from app.features.bookings.pricing import build_pricing_breakdown
 from app.features.bookings import _paid_at_iso
@@ -68,7 +68,7 @@ def _booking_gmv_gbp(row: dict[str, Any]) -> float:
 def _count_open_disputes() -> int:
     try:
         res = (
-            get_client()
+            get_db()
             .table("dispute_cases")
             .select("id", count="exact")
             .in_("status", ["open", "under_review"])
@@ -82,23 +82,6 @@ def _count_open_disputes() -> int:
 
 def get_admin_dashboard_metrics(days: int = 30) -> dict[str, Any]:
     period = days if days in _ALLOWED_DAYS else 30
-    if get_settings().local_auth_mode:
-        empty_bookings, empty_signups = _empty_buckets(period)
-        return {
-            "period_days": period,
-            "bookings_created": [
-                {"date": d, "count": int(b["count"]), "gmv_gbp": 0.0}
-                for d, b in sorted(empty_bookings.items())
-            ],
-            "bookings_paid": [
-                {"date": d, "count": 0, "gmv_gbp": 0.0} for d in sorted(empty_bookings.keys())
-            ],
-            "signups": [
-                {"date": d, "clients": 0, "vendors": 0} for d in sorted(empty_signups.keys())
-            ],
-            "open_disputes_count": 0,
-        }
-
     start_dt = datetime.now(timezone.utc).date() - timedelta(days=period - 1)
     start_iso = datetime.combine(start_dt, datetime.min.time(), tzinfo=timezone.utc).isoformat()
 
@@ -107,7 +90,7 @@ def get_admin_dashboard_metrics(days: int = 30) -> dict[str, Any]:
         d: {"count": 0, "gmv_gbp": 0.0} for d in created_buckets
     }
 
-    client = get_client()
+    client = get_db()
 
     try:
         created_res = (

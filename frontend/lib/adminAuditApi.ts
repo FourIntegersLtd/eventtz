@@ -7,7 +7,7 @@ export type AdminAuditLogItem = {
   action: string;
   entity_type: string;
   entity_id?: string | null;
-  payload?: Record<string, unknown> | null;
+  audit_event_details?: Record<string, unknown> | null;
   created_at?: string | null;
 };
 

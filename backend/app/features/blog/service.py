@@ -7,16 +7,15 @@ from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
 
-from app.core.config import get_settings
-from app.core.db import apply_recent_first_order, get_db as get_client
+from app.core.db import apply_recent_first_order, get_db
 from app.core.errors import NotFoundError, ServiceUnavailableError
 from app.core.logging import get_logger
+from app.features.blog import messages as blog_messages
 from app.features.blog.sanitize import sanitize_blog_html
 
 logger = get_logger(__name__)
 
 _SLUG_RE = re.compile(r"[^a-z0-9]+")
-_LOCAL_POSTS: dict[str, dict[str, Any]] = {}
 
 _LIST_COLS = (
     "id,slug,title,subtitle,cover_image_url,excerpt,author_name,"
@@ -81,31 +80,23 @@ def _unique_slug(desired: str, *, exclude_id: str | None = None) -> str:
     candidate = base
     n = 2
     while True:
-        if get_settings().local_auth_mode:
-            clash = any(
-                p.get("slug") == candidate and p.get("id") != exclude_id
-                for p in _LOCAL_POSTS.values()
+        try:
+            res = (
+                get_db()
+                .table("blog_posts")
+                .select("id")
+                .eq("slug", candidate)
+                .limit(1)
+                .execute()
             )
-            if not clash:
+            rows = getattr(res, "data", None) or []
+            if not rows:
                 return candidate
-        else:
-            try:
-                res = (
-                    get_client()
-                    .table("blog_posts")
-                    .select("id")
-                    .eq("slug", candidate)
-                    .limit(1)
-                    .execute()
-                )
-                rows = getattr(res, "data", None) or []
-                if not rows:
-                    return candidate
-                if exclude_id and isinstance(rows[0], dict) and _str_id(rows[0].get("id")) == exclude_id:
-                    return candidate
-            except Exception:
-                logger.exception("blog: slug check failed")
-                return f"{base}-{uuid4().hex[:8]}"
+            if exclude_id and isinstance(rows[0], dict) and _str_id(rows[0].get("id")) == exclude_id:
+                return candidate
+        except Exception:
+            logger.exception("blog: slug check failed")
+            return f"{base}-{uuid4().hex[:8]}"
         candidate = f"{base}-{n}"
         n += 1
         if n > 50:
@@ -138,13 +129,9 @@ def create_draft_post(
         "created_at": now,
         "updated_at": now,
     }
-    if get_settings().local_auth_mode:
-        _LOCAL_POSTS[row["id"]] = dict(row)
-        return _row_to_admin_detail(row)
-
     try:
         ins = (
-            get_client()
+            get_db()
             .table("blog_posts")
             .insert(
                 {
@@ -161,26 +148,19 @@ def create_draft_post(
         )
     except Exception as e:
         logger.exception("blog: create draft failed")
-        raise ServiceUnavailableError("Could not create post.") from e
+        raise ServiceUnavailableError(blog_messages.CREATE_POST_FAILED) from e
     data = getattr(ins, "data", None) or []
     if not data or not isinstance(data[0], dict):
-        raise ServiceUnavailableError("Could not create post.")
+        raise ServiceUnavailableError(blog_messages.CREATE_POST_FAILED)
     return _row_to_admin_detail(data[0])
 
 
 def list_posts_for_admin() -> list[dict[str, Any]]:
-    if get_settings().local_auth_mode:
-        rows = sorted(
-            _LOCAL_POSTS.values(),
-            key=lambda r: str(r.get("updated_at") or ""),
-            reverse=True,
-        )
-        return [_row_to_list_item(r) for r in rows]
     try:
         try:
             res = (
                 apply_recent_first_order(
-                    get_client().table("blog_posts").select(_LIST_COLS),
+                    get_db().table("blog_posts").select(_LIST_COLS),
                     column="updated_at",
                 )
                 .limit(500)
@@ -192,7 +172,7 @@ def list_posts_for_admin() -> list[dict[str, Any]]:
                 raise
             res = (
                 apply_recent_first_order(
-                    get_client().table("blog_posts").select(_LIST_COLS_LEGACY),
+                    get_db().table("blog_posts").select(_LIST_COLS_LEGACY),
                     column="updated_at",
                 )
                 .limit(500)
@@ -205,12 +185,9 @@ def list_posts_for_admin() -> list[dict[str, Any]]:
 
 
 def get_post_for_admin(post_id: str) -> dict[str, Any] | None:
-    if get_settings().local_auth_mode:
-        row = _LOCAL_POSTS.get(post_id)
-        return _row_to_admin_detail(row) if row else None
     try:
         res = (
-            get_client()
+            get_db()
             .table("blog_posts")
             .select("*")
             .eq("id", post_id)
@@ -229,7 +206,7 @@ def get_post_for_admin(post_id: str) -> dict[str, Any] | None:
 def update_post(post_id: str, fields: dict[str, Any]) -> dict[str, Any]:
     existing = get_post_for_admin(post_id)
     if not existing:
-        raise NotFoundError("Post not found.")
+        raise NotFoundError(blog_messages.POST_NOT_FOUND)
 
     patch: dict[str, Any] = {"updated_at": _now_iso()}
     if "title" in fields and fields["title"] is not None:
@@ -255,15 +232,9 @@ def update_post(post_id: str, fields: dict[str, Any]) -> dict[str, Any]:
     if "body_html" in fields and fields["body_html"] is not None:
         patch["body_html"] = sanitize_blog_html(str(fields["body_html"]))
 
-    if get_settings().local_auth_mode:
-        row = _LOCAL_POSTS[post_id]
-        row.update(patch)
-        _LOCAL_POSTS[post_id] = row
-        return _row_to_admin_detail(row)
-
     try:
         res = (
-            get_client()
+            get_db()
             .table("blog_posts")
             .update(patch)
             .eq("id", post_id)
@@ -271,85 +242,70 @@ def update_post(post_id: str, fields: dict[str, Any]) -> dict[str, Any]:
         )
     except Exception as e:
         logger.exception("blog: update failed")
-        raise ServiceUnavailableError("Could not update post.") from e
+        raise ServiceUnavailableError(blog_messages.UPDATE_POST_FAILED) from e
     data = getattr(res, "data", None) or []
     if data and isinstance(data[0], dict):
         return _row_to_admin_detail(data[0])
     updated = get_post_for_admin(post_id)
     if not updated:
-        raise NotFoundError("Post not found.")
+        raise NotFoundError(blog_messages.POST_NOT_FOUND)
     return updated
 
 
 def publish_post(post_id: str) -> dict[str, Any]:
     existing = get_post_for_admin(post_id)
     if not existing:
-        raise NotFoundError("Post not found.")
+        raise NotFoundError(blog_messages.POST_NOT_FOUND)
     now = _now_iso()
     patch = {
         "status": "published",
         "published_at": existing.get("published_at") or now,
         "updated_at": now,
     }
-    if get_settings().local_auth_mode:
-        row = _LOCAL_POSTS[post_id]
-        row.update(patch)
-        return _row_to_admin_detail(row)
     try:
-        get_client().table("blog_posts").update(patch).eq("id", post_id).execute()
+        get_db().table("blog_posts").update(patch).eq("id", post_id).execute()
     except Exception as e:
         logger.exception("blog: publish failed")
-        raise ServiceUnavailableError("Could not publish post.") from e
+        raise ServiceUnavailableError(blog_messages.PUBLISH_POST_FAILED) from e
     out = get_post_for_admin(post_id)
     if not out:
-        raise NotFoundError("Post not found.")
+        raise NotFoundError(blog_messages.POST_NOT_FOUND)
     return out
 
 
 def unpublish_post(post_id: str) -> dict[str, Any]:
     existing = get_post_for_admin(post_id)
     if not existing:
-        raise NotFoundError("Post not found.")
+        raise NotFoundError(blog_messages.POST_NOT_FOUND)
     patch = {"status": "draft", "updated_at": _now_iso()}
-    if get_settings().local_auth_mode:
-        row = _LOCAL_POSTS[post_id]
-        row.update(patch)
-        return _row_to_admin_detail(row)
     try:
-        get_client().table("blog_posts").update(patch).eq("id", post_id).execute()
+        get_db().table("blog_posts").update(patch).eq("id", post_id).execute()
     except Exception as e:
         logger.exception("blog: unpublish failed")
-        raise ServiceUnavailableError("Could not unpublish post.") from e
+        raise ServiceUnavailableError(blog_messages.UNPUBLISH_POST_FAILED) from e
     out = get_post_for_admin(post_id)
     if not out:
-        raise NotFoundError("Post not found.")
+        raise NotFoundError(blog_messages.POST_NOT_FOUND)
     return out
 
 
 def delete_post(post_id: str) -> None:
     existing = get_post_for_admin(post_id)
     if not existing:
-        raise NotFoundError("Post not found.")
-    if get_settings().local_auth_mode:
-        _LOCAL_POSTS.pop(post_id, None)
-        return
+        raise NotFoundError(blog_messages.POST_NOT_FOUND)
     try:
-        get_client().table("blog_posts").delete().eq("id", post_id).execute()
+        get_db().table("blog_posts").delete().eq("id", post_id).execute()
     except Exception as e:
         logger.exception("blog: delete failed")
-        raise ServiceUnavailableError("Could not delete post.") from e
+        raise ServiceUnavailableError(blog_messages.DELETE_POST_FAILED) from e
 
 
 def list_published_posts(*, limit: int = 50) -> list[dict[str, Any]]:
     lim = max(1, min(limit, 100))
-    if get_settings().local_auth_mode:
-        rows = [r for r in _LOCAL_POSTS.values() if r.get("status") == "published"]
-        rows.sort(key=lambda r: str(r.get("published_at") or ""), reverse=True)
-        return [_row_to_list_item(r) for r in rows[:lim]]
     try:
         try:
             res = (
-                get_client()
+                get_db()
                 .table("blog_posts")
                 .select(_LIST_COLS)
                 .eq("status", "published")
@@ -362,7 +318,7 @@ def list_published_posts(*, limit: int = 50) -> list[dict[str, Any]]:
             if "author_name" not in err and "42703" not in err:
                 raise
             res = (
-                get_client()
+                get_db()
                 .table("blog_posts")
                 .select(_LIST_COLS_LEGACY)
                 .eq("status", "published")
@@ -380,14 +336,9 @@ def get_published_post_by_slug(slug: str) -> dict[str, Any] | None:
     s = (slug or "").strip()
     if not s:
         return None
-    if get_settings().local_auth_mode:
-        for r in _LOCAL_POSTS.values():
-            if r.get("slug") == s and r.get("status") == "published":
-                return _row_to_public_detail(r)
-        return None
     try:
         res = (
-            get_client()
+            get_db()
             .table("blog_posts")
             .select("*")
             .eq("slug", s)
@@ -402,7 +353,3 @@ def get_published_post_by_slug(slug: str) -> dict[str, Any] | None:
     if not data or not isinstance(data[0], dict):
         return None
     return _row_to_public_detail(data[0])
-
-
-def clear_local_posts_for_tests() -> None:
-    _LOCAL_POSTS.clear()

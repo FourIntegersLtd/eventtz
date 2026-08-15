@@ -56,45 +56,45 @@ export function ClientDashboardView() {
     if (loadStatus !== "ready") return [];
     const items: AttentionItem[] = [];
     const pendingQuoteIds = new Set(
-      activeBookings.filter((b) => b.initiator === "vendor" && b.status === "pending").map((b) => b.id),
+      activeBookings.filter((b) => b.initiator === "vendor" && b.booking_status === "pending").map((b) => b.booking_request_id),
     );
 
     for (const b of activeBookings) {
-      if (b.initiator === "vendor" && b.status === "pending") {
+      if (b.initiator === "vendor" && b.booking_status === "pending") {
         items.push({
-          id: `quote-${b.id}`,
+          id: `quote-${b.booking_request_id}`,
           priority: 0,
           tone: "urgent",
           title: `Quote from ${b.vendor_display_name}`,
           subtitle: `${b.event_name} · ${formatEventDate(b.event_date)}`,
-          href: `/client/bookings/${b.id}`,
+          href: `/client/bookings/${b.booking_request_id}`,
           ctaLabel: "Review",
         });
       }
     }
 
     for (const b of activeBookings) {
-      if (b.status !== "accepted" || b.payment_status !== "paid") continue;
+      if (b.booking_status !== "accepted" || b.payment_status !== "paid") continue;
       if (!b.completion_waiting_on) continue;
       if (!eventDayOver(b.event_date, b.event_end_date)) continue;
       if (b.completion_waiting_on === "vendor") {
         items.push({
-          id: `completion-wait-${b.id}`,
+          id: `completion-wait-${b.booking_request_id}`,
           priority: 2,
           tone: "info",
           title: `Waiting for ${b.vendor_display_name} to confirm`,
           subtitle: `${b.event_name} · you've confirmed - the vendor is paid once they confirm too`,
-          href: `/client/bookings/${b.id}`,
+          href: `/client/bookings/${b.booking_request_id}`,
           ctaLabel: "View",
         });
       } else {
         items.push({
-          id: `completion-confirm-${b.id}`,
+          id: `completion-confirm-${b.booking_request_id}`,
           priority: 0,
           tone: "urgent",
           title: "How did your event go?",
           subtitle: `${b.event_name} · confirm it's complete, or report a problem`,
-          href: `/client/bookings/${b.id}`,
+          href: `/client/bookings/${b.booking_request_id}`,
           ctaLabel: "Confirm",
         });
       }
@@ -126,17 +126,17 @@ export function ClientDashboardView() {
 
     for (const b of needsReview.slice(0, 3)) {
       items.push({
-        id: `review-${b.id}`,
+        id: `review-${b.booking_request_id}`,
         priority: 3,
         tone: "positive",
         title: `Rate ${b.vendor_display_name}`,
         subtitle: b.event_name,
-        href: `/client/bookings/${b.id}`,
+        href: `/client/bookings/${b.booking_request_id}`,
         trailing: (
           <StarRating
             rating={0}
             size="sm"
-            onRate={(value) => router.push(`/client/bookings/${b.id}?rate=${value}`)}
+            onRate={(value) => router.push(`/client/bookings/${b.booking_request_id}?rate=${value}`)}
           />
         ),
       });
@@ -172,7 +172,7 @@ export function ClientDashboardView() {
                 </p>
               </div>
               <ButtonLink
-                href={`/client/bookings/${nextEvent.id}`}
+                href={`/client/bookings/${nextEvent.booking_request_id}`}
                 variant="secondary"
                 size="sm"
                 className="shrink-0"
@@ -242,7 +242,7 @@ export function ClientDashboardView() {
         ) : (
           <ul className="divide-y divide-neutral-100">
             {(bookingsByDate[selectedDayKey] ?? []).map((b) => (
-              <li key={b.id} className="py-3 first:pt-0 last:pb-0">
+              <li key={b.booking_request_id} className="py-3 first:pt-0 last:pb-0">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-neutral-900">{b.event_name}</p>
@@ -254,7 +254,7 @@ export function ClientDashboardView() {
                     ) : null}
                   </div>
                   <Link
-                    href={`/client/bookings/${encodeURIComponent(b.id)}`}
+                    href={`/client/bookings/${encodeURIComponent(b.booking_request_id)}`}
                     onClick={() => setDayOpen(false)}
                     className="shrink-0 text-sm font-semibold text-primary underline-offset-2 hover:underline"
                   >

@@ -2,15 +2,14 @@
 
 from unittest.mock import MagicMock, patch
 
-from app.features.admin.client_ops import list_clients_for_admin
+from app.features.admin.client_admin_commands import list_clients_for_admin
 from app.features.vendors.moderation import list_vendors_for_admin
 
 
-@patch("app.features.admin.client_ops.apply_recent_first_order", side_effect=lambda q, **_: q)
-@patch("app.features.admin.client_ops.get_settings")
-@patch("app.features.admin.client_ops.get_client")
+@patch("app.features.admin.client_admin_commands.apply_recent_first_order", side_effect=lambda q, **_: q)
+@patch("app.features.admin.client_admin_commands.get_settings")
+@patch("app.features.admin.client_admin_commands.get_db")
 def test_list_clients_for_admin_paginated(mock_get_client, mock_settings, _order):
-    mock_settings.return_value.local_auth_mode = False
     client = MagicMock()
     mock_get_client.return_value = client
     chain = client.table.return_value.select.return_value.eq.return_value
@@ -29,9 +28,8 @@ def test_list_clients_for_admin_paginated(mock_get_client, mock_settings, _order
 
 @patch("app.features.vendors.moderation.apply_recent_first_order", side_effect=lambda q, **_: q)
 @patch("app.features.vendors.moderation.get_settings")
-@patch("app.features.vendors.moderation.get_client")
+@patch("app.features.vendors.moderation.get_db")
 def test_list_vendors_for_admin_paginated(mock_get_client, mock_settings, _order):
-    mock_settings.return_value.local_auth_mode = False
     client = MagicMock()
     mock_get_client.return_value = client
     chain = client.table.return_value.select.return_value.eq.return_value

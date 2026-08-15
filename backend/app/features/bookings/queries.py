@@ -6,7 +6,7 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.db import apply_recent_first_order, get_db as get_client
+from app.core.db import apply_recent_first_order, get_db
 from app.features.bookings.completion_rules import (
     completion_waiting_on,
     compute_payout_auto_release_at,
@@ -24,6 +24,7 @@ from app.features.settings.contact import (
     apply_counterparty_contact_visibility,
     mask_booking_list_client_email,
 )
+from app.features.bookings import messages as booking_messages
 from app.features.bookings.create import ensure_client_booking_notes_in_chat
 
 logger = get_logger(__name__)
@@ -126,7 +127,7 @@ def _client_total_label_for_list(pb: dict[str, Any]) -> str | None:
     return str(pb.get("client_total_label") or "")
 
 
-from app.features.auth.lookup import (
+from app.features.auth.user_vendor_display_lookup import (
     client_display_names_by_id,
     client_emails_by_id,
     vendor_display_names_by_id,
@@ -139,10 +140,10 @@ def _vendor_display_names_by_id(vendor_ids: list[str]) -> dict[str, str]:
 
 def _client_event_titles_by_id(event_ids: list[str]) -> dict[str, str]:
     ids = [e for e in event_ids if e]
-    if not ids or get_settings().local_auth_mode:
+    if not ids:
         return {}
     try:
-        res = get_client().table("client_events").select("id,title").in_("id", ids).execute()
+        res = get_db().table("client_events").select("id,title").in_("id", ids).execute()
     except Exception as e:
         logger.warning("_client_event_titles_by_id failed: %s", e)
         return {}
@@ -170,12 +171,9 @@ def list_booking_requests_for_vendor(
     Optional `status` / `payment_status` / `exclude_payment_status` refine the query on the server.
     """
     if group not in ("active", "completed", "closed", "all"):
-        raise ValueError("group must be active, completed, closed, or all")
-    if get_settings().local_auth_mode:
-        return []
-
+        raise ValueError(booking_messages.GROUP_INTERNAL)
     q = (
-        get_client()
+        get_db()
         .table("booking_requests")
         .select(
             "id,status,event_name,event_date,event_end_date,total_label,client_user_id,created_at,updated_at,line_items,vendor_adjustments,initiator,conversation_id,payment_status,client_completion_confirmed_at,vendor_completion_confirmed_at,completion_reminder_sent_at",
@@ -250,11 +248,8 @@ def list_booking_requests_for_vendor(
 
 
 def get_booking_request_for_vendor(vendor_user_id: str, booking_id: str) -> dict[str, Any] | None:
-    if get_settings().local_auth_mode:
-        return None
-
     res = (
-        get_client()
+        get_db()
         .table("booking_requests")
         .select("*")
         .eq("id", booking_id)
@@ -337,12 +332,9 @@ def list_booking_requests_for_client(
     Optional `status` / `payment_status` / `exclude_payment_status` refine the query on the server.
     """
     if group not in ("active", "completed", "closed", "all"):
-        raise ValueError("group must be active, completed, closed, or all")
-    if get_settings().local_auth_mode:
-        return []
-
+        raise ValueError(booking_messages.GROUP_INTERNAL)
     q = (
-        get_client()
+        get_db()
         .table("booking_requests")
         .select(
             "id,status,event_name,event_date,event_end_date,total_label,vendor_user_id,created_at,updated_at,line_items,vendor_adjustments,initiator,conversation_id,payment_status,client_completion_confirmed_at,vendor_completion_confirmed_at,completion_reminder_sent_at,event_id",
@@ -426,11 +418,8 @@ def list_booking_requests_for_client(
 
 
 def get_booking_request_for_client(client_user_id: str, booking_id: str) -> dict[str, Any] | None:
-    if get_settings().local_auth_mode:
-        return None
-
     res = (
-        get_client()
+        get_db()
         .table("booking_requests")
         .select("*")
         .eq("id", booking_id)

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import type { VendorApprovalStatus } from "@/lib/domain-types";
-import { VENDOR_PROFILE_FORBIDDEN } from "@/lib/auth-messages";
+import { GENERIC_AUTH_ERROR } from "@/lib/auth-messages";
 import {
   fetchVendorProfile,
   getApiErrorDetail,
@@ -94,7 +94,7 @@ export function useOnboardingPersistence({
 
   const applyVendorProfileResponse = useCallback(
     (res: Awaited<ReturnType<typeof fetchVendorProfile>>) => {
-      setProfileStatus(res.status ?? "draft");
+      setProfileStatus(res.onboarding_status ?? "draft");
       if (res.approval_status === "approved") {
         setApprovalStatus("approved");
       } else if (res.approval_status === "banned") {
@@ -124,7 +124,7 @@ export function useOnboardingPersistence({
         setAccessDenied(false);
         applyVendorProfileResponse(res);
         const merged = mergePayloadIntoVendorData(
-          normalizeVendorPayload(res.payload),
+          normalizeVendorPayload(res.profile_form_data),
           user.email ?? "",
         );
         setData({
@@ -133,7 +133,7 @@ export function useOnboardingPersistence({
           email: merged.email?.trim() || user.email || "",
           password: "",
         });
-        if (res.status === "submitted") {
+        if (res.onboarding_status === "submitted") {
           setStep(isWalkthrough ? 1 : res.approval_status === "approved" ? 1 : 9);
         } else {
           const cs = res.current_step ?? 1;
@@ -148,7 +148,7 @@ export function useOnboardingPersistence({
         if (cancelled) return;
         if (isVendorProfileForbiddenError(e)) {
           setAccessDenied(true);
-          setAccessDeniedMessage(getApiErrorDetail(e) ?? VENDOR_PROFILE_FORBIDDEN);
+          setAccessDeniedMessage(getApiErrorDetail(e) ?? GENERIC_AUTH_ERROR);
           setLoadStatus("ready");
           return;
         }
@@ -181,7 +181,7 @@ export function useOnboardingPersistence({
       try {
         const res = await saveVendorProfile({
           current_step: step,
-          payload: vendorDataToPayload(nextData),
+          profile_form_data: vendorDataToPayload(nextData),
         });
         applyVendorProfileResponse(res);
       } catch {
@@ -240,7 +240,7 @@ export function useOnboardingPersistence({
       const res = await fetchVendorProfile();
       applyVendorProfileResponse(res);
       const merged = mergePayloadIntoVendorData(
-        normalizeVendorPayload(res.payload),
+        normalizeVendorPayload(res.profile_form_data),
         user.email ?? "",
       );
       setData({
@@ -286,7 +286,7 @@ export function useOnboardingPersistence({
           title: "Profile not visible",
           description: "An admin has restricted this profile. Contact support if you believe this is a mistake.",
         });
-      } else if (res.status === "submitted") {
+      } else if (res.onboarding_status === "submitted") {
         setStatusCheckFeedback({
           tone: "info",
           title: "Still under review",
@@ -325,7 +325,7 @@ export function useOnboardingPersistence({
       try {
         const res = await saveVendorProfile({
           current_step: step,
-          payload: vendorDataToPayload(nextData),
+          profile_form_data: vendorDataToPayload(nextData),
         });
         applyVendorProfileResponse(res);
         showToast({ title: "Profile photo updated", tone: "success" });

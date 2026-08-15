@@ -1,4 +1,4 @@
-import { LocationAutocompleteInput } from "@/components/ui/LocationAutocompleteInput";
+import { LocationAutocompleteInput } from "@/features/vendor/onboarding/ui/LocationAutocompleteInput";
 import { enabledMarkets, getMarket } from "@/lib/markets";
 import { radiusOptionsForMarket } from "@/lib/photonLocationAutocomplete";
 import { STEP_COPY } from "../onboardingCopy";
