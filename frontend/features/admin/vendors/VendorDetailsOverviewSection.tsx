@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import type { AdminVendorRow } from "@/lib/adminVendorsApi";
+import type { AdminListingMediaSavePayload, AdminVendorRow } from "@/lib/adminVendorsApi";
 import { AdminVendorSubmissionReview } from "./AdminVendorSubmissionReview";
 import { adminVendorToOnboardingData } from "./adminVendorOnboardingData";
 import { buildAdminVendorSubmissionReviewModel } from "./adminVendorSubmissionReviewModel";
@@ -12,9 +12,10 @@ type Props = {
   busyId?: string | null;
   onUnsubmit?: AdminVendorUnsubmitHandler;
   onReportError?: (message: string) => void;
+  onSaveListingMedia?: (payload: AdminListingMediaSavePayload) => Promise<boolean>;
 };
 
-export function VendorDetailsOverviewSection({ vendor, busyId, onUnsubmit, onReportError }: Props) {
+export function VendorDetailsOverviewSection({ vendor, busyId, onUnsubmit, onReportError, onSaveListingMedia }: Props) {
   const model = useMemo(() => {
     try {
       const data = adminVendorToOnboardingData(vendor);
@@ -40,6 +41,7 @@ export function VendorDetailsOverviewSection({ vendor, busyId, onUnsubmit, onRep
       busyId={busyId}
       onUnsubmit={onUnsubmit}
       onReportError={onReportError}
+      onSaveListingMedia={onSaveListingMedia}
     />
   );
 }

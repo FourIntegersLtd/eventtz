@@ -220,6 +220,9 @@ export function packageSpecificTravelLine(
 
 export {
   firstPortfolioImageUrlFromPayload,
+  listingCoverImageUrlFromPayload,
+  listingCoverOverrideFromPayload,
+  portfolioImageUrlsForDisplay,
   portfolioImageUrlsFromPayload,
 } from "@/lib/vendorPortfolioImages";
 

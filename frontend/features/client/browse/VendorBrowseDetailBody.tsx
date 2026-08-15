@@ -26,7 +26,7 @@ import {
   extractBrowsePricingSharedContext,
   formatBookingTotalGbp,
   packageSpecificTravelLine,
-  portfolioImageUrlsFromPayload,
+  portfolioImageUrlsForDisplay,
 } from "./vendorBrowseDetailModel";
 import { VendorReviewsSection } from "./VendorReviewsSection";
 import { BrowsePricingOptionCard } from "@/features/vendors/display/BrowsePricingOptionCard";
@@ -92,7 +92,7 @@ export function VendorBrowseDetailBody({
   const hasGoodToKnow = hasBrowseGoodToKnowContent(facts);
 
   const portfolioUrls = useMemo(
-    () => portfolioImageUrlsFromPayload(p),
+    () => portfolioImageUrlsForDisplay(p),
     [p],
   );
 

@@ -5,9 +5,11 @@ import { useToast } from "@/components/ui/Toast";
 import {
   fetchAdminVendors,
   patchVendorApproval,
+  patchVendorListingMedia,
   patchVendorListingOverride,
   patchVendorUnsubmit,
   restoreAdminVendorStripeConnect,
+  type AdminListingMediaSavePayload,
   type AdminVendorRow,
   type AdminVendorUnsubmitResult,
   type AdminVendorsQuery,
@@ -130,6 +132,33 @@ export function useAdminVendors() {
     [load, showToast],
   );
 
+  const setListingMedia = useCallback(
+    async (userId: string, payload: AdminListingMediaSavePayload) => {
+      setBusyId(userId);
+      setError(null);
+      try {
+        await patchVendorListingMedia(userId, payload);
+        await load();
+        showToast({
+          title:
+            payload.displayOrder.length === 0 && payload.hiddenImageUrls.length === 0
+              ? "Listing photos reset"
+              : "Listing photos updated",
+          tone: "success",
+        });
+        return true;
+      } catch (e) {
+        const message = getApiErrorDetail(e) ?? "Could not update listing photos.";
+        setError(message);
+        showToast({ title: "Update failed", description: message, tone: "error" });
+        return false;
+      } finally {
+        setBusyId(null);
+      }
+    },
+    [load, showToast],
+  );
+
   const restoreStripeConnect = useCallback(
     async (userId: string) => {
       setBusyId(userId);
@@ -234,6 +263,7 @@ export function useAdminVendors() {
     setSelectedUserId,
     setApproval,
     setListingOverride,
+    setListingMedia,
     restoreStripeConnect,
     unsubmitVendor,
     reportError,

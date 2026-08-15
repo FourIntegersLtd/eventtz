@@ -10,6 +10,7 @@ import { VendorPayoutStatusBadge } from "@/components/badges/VendorPayoutStatusB
 import { VendorProfileStatusBadge } from "@/components/badges/VendorProfileStatusBadge";
 import {
   fetchAdminVendorInsights,
+  type AdminListingMediaSavePayload,
   type AdminVendorInsights,
   type AdminVendorRow,
 } from "@/lib/adminVendorsApi";
@@ -38,6 +39,7 @@ type VendorDetailsModalProps = {
   onRestoreStripe?: (userId: string) => Promise<boolean>;
   onUnsubmit: AdminVendorUnsubmitHandler;
   onReportError?: (message: string) => void;
+  onSaveListingMedia?: (userId: string, payload: AdminListingMediaSavePayload) => Promise<boolean>;
 };
 
 export function VendorDetailsModal({
@@ -49,6 +51,7 @@ export function VendorDetailsModal({
   onRestoreStripe,
   onUnsubmit,
   onReportError,
+  onSaveListingMedia,
 }: VendorDetailsModalProps) {
   const [tab, setTab] = useState<VendorDetailsTabId>("profile");
   const [insights, setInsights] = useState<AdminVendorInsights | null>(null);
@@ -142,6 +145,11 @@ export function VendorDetailsModal({
               busyId={busyId}
               onUnsubmit={onUnsubmit}
               onReportError={onReportError}
+              onSaveListingMedia={
+                onSaveListingMedia
+                  ? (payload) => onSaveListingMedia(vendor.user_id, payload)
+                  : undefined
+              }
             />
           ) : null}
 

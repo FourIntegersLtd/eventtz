@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { firstPortfolioImageUrlFromPayload } from "@/lib/vendorPortfolioImages";
+import { listingCoverImageUrlFromPayload } from "@/lib/vendorPortfolioImages";
 
 type VendorPortfolioCoverProps = {
   payload: Record<string, unknown>;
@@ -22,7 +22,7 @@ export function VendorPortfolioCover({
   heightClass = "h-24",
   objectFit = "contain",
 }: VendorPortfolioCoverProps) {
-  const coverUrl = firstPortfolioImageUrlFromPayload(payload);
+  const coverUrl = listingCoverImageUrlFromPayload(payload);
   const fitClass =
     objectFit === "cover" ? "object-cover object-top" : "object-contain";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { CheckCircle2, XCircle } from "lucide-react";
-import type { AdminVendorRow } from "@/lib/adminVendorsApi";
+import type { AdminListingMediaSavePayload, AdminVendorRow } from "@/lib/adminVendorsApi";
 import { TagPills } from "./vendorDetailsShared";
 import { AdminVendorSubmissionChecklist } from "./AdminVendorSubmissionChecklist";
 import { AdminVendorSubmissionActions } from "./AdminVendorSubmissionActions";
@@ -53,9 +53,10 @@ type Props = {
   busyId?: string | null;
   onUnsubmit?: AdminVendorUnsubmitHandler;
   onReportError?: (message: string) => void;
+  onSaveListingMedia?: (payload: AdminListingMediaSavePayload) => Promise<boolean>;
 };
 
-export function AdminVendorSubmissionReview({ model, vendor, busyId, onUnsubmit, onReportError }: Props) {
+export function AdminVendorSubmissionReview({ model, vendor, busyId, onUnsubmit, onReportError, onSaveListingMedia }: Props) {
   const checklistGroups = model.checklistGroups ?? [];
   const reachFields = model.reachFields ?? [];
   const locationFields = model.locationFields ?? [];
@@ -201,6 +202,10 @@ export function AdminVendorSubmissionReview({ model, vendor, busyId, onUnsubmit,
         businessName={model.businessName}
         fullName={model.fullName}
         submittedMedia={submittedMedia}
+        vendorUserId={vendor?.user_id}
+        profileFormData={vendor?.profile_form_data}
+        listingMediaDisabled={busyId === vendor?.user_id}
+        onSaveListingMedia={onSaveListingMedia}
       />
     </div>
   );

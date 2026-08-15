@@ -16,11 +16,13 @@ type SubmittedMediaViewerProps = {
   subjectName: string;
   /** Profile initials when no profile photo. */
   profileInitials?: string;
-  /** Hide profile block (when shown elsewhere). */
+  /** Hide profile block (when shown elsewhere or in cover picker). */
   hideProfile?: boolean;
   compact?: boolean;
   /** Omit section labels (e.g. sidebar rail). */
   hideHeadings?: boolean;
+  /** Hide portfolio grid (when cover picker shows it). */
+  hidePortfolio?: boolean;
 };
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
@@ -93,6 +95,7 @@ export function SubmittedMediaViewer({
   hideProfile = false,
   compact = false,
   hideHeadings = false,
+  hidePortfolio = false,
 }: SubmittedMediaViewerProps) {
   const imageDocuments = bundle.documents.filter(
     (file) => isImageUploadUrl(file.url) && !isPdfUploadUrl(file.url),
@@ -102,7 +105,7 @@ export function SubmittedMediaViewer({
   );
 
   const hasProfile = !hideProfile && (bundle.profileImageUrl || profileInitials);
-  const hasPortfolio = bundle.portfolioImageUrls.length > 0;
+  const hasPortfolio = !hidePortfolio && bundle.portfolioImageUrls.length > 0;
   const hasVideos = bundle.videos.length > 0;
   const hasDocs = bundle.documents.length > 0;
 

@@ -67,6 +67,7 @@ export function AdminVendorsView() {
     setSelectedUserId,
     setApproval,
     setListingOverride,
+    setListingMedia,
     restoreStripeConnect,
     unsubmitVendor,
     reportError,
@@ -226,6 +227,7 @@ export function AdminVendorsView() {
         onClose={() => setSelectedUserId(null)}
         onSetApproval={setApproval}
         onSetListingOverride={setListingOverride}
+        onSaveListingMedia={setListingMedia}
         onRestoreStripe={restoreStripeConnect}
         onUnsubmit={unsubmitVendor}
         onReportError={reportError}
