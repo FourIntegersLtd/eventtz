@@ -332,7 +332,7 @@ def test_send_support_new_message_email(mock_resend):
     )
     assert ok is True
     assert mock_resend.call_args.kwargs["to"] == ["vendor@example.com"]
-    assert "You have a new message" in mock_resend.call_args.kwargs["subject"]
+    assert "New message from Eventtz Support" in mock_resend.call_args.kwargs["subject"]
     text = mock_resend.call_args.kwargs["text"]
     assert "We fixed the profile editing issue" in text
     assert "Sign in to read this thread and reply" in text

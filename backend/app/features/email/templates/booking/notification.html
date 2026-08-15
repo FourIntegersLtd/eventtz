@@ -1,8 +1,10 @@
 {% extends "partials/transactional/layout.html" %}
 {% block content %}
+{% if headline %}
 <h1 style="margin: 0 0 20px; color: #3e1964; font-size: 22px; line-height: 1.35; font-weight: 700">
   {{ headline }}
 </h1>
+{% endif %}
 {% if subtitle %}
 <p style="margin: 0 0 20px; color: #6b6575; font-size: 16px; line-height: 1.6">{{ subtitle }}</p>
 {% endif %}

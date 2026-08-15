@@ -1,6 +1,6 @@
-{{ headline }}
+{% if headline %}{{ headline }}
 
-{% if subtitle %}{{ subtitle }}
+{% endif %}{% if subtitle %}{{ subtitle }}
 
 {% endif %}{% if body_plain %}{{ body_plain }}
 

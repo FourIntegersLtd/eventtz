@@ -677,26 +677,24 @@ class EmailService:
         message_body: str | None = None,
         message_body_html: str | None = None,
     ) -> bool:
-        headline = "You have a new message"
-        subtitle = "From Eventtz Support"
+        subject_line = "New message from Eventtz Support"
         body_html = (message_body_html or "").strip()
         note_plain = (message_body or "").strip()
         if not note_plain and body_html:
             from app.features.chat.sanitize import message_plain_text
 
             note_plain = message_plain_text(body_html)
-        cta = "Sign in to read this thread and reply in your Messages inbox."
         if body_html or note_plain:
-            body = cta
+            body = "Sign in to read this thread and reply in your Messages inbox."
         else:
             body = (
                 "Eventtz Support sent you a message.\n\n"
                 "Sign in to read it and reply in your Messages inbox."
             )
         ctx = transactional_email_context(
-            subject=headline,
-            headline=headline,
-            subtitle=subtitle,
+            subject=subject_line,
+            headline=None,
+            subtitle=None,
             body=body,
             body_html=body_html or None,
             body_plain=note_plain or None,
@@ -707,7 +705,7 @@ class EmailService:
         text = render_template("booking/notification.txt", ctx)
         return resend_send(
             to=[to_email],
-            subject=f"{headline} | {APP_NAME}",
+            subject=f"{subject_line} | {APP_NAME}",
             html=html,
             text=text,
         )
