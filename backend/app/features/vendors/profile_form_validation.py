@@ -127,6 +127,9 @@ def normalize_payload_fields(payload: dict[str, Any], user_id: str) -> dict[str,
     out["maxBookingsPerDay"] = str(_parse_max_bookings(_coerce_str(out, "maxBookingsPerDay")))
 
     out["portfolioFileNames"] = _filter_url_list(out.get("portfolioFileNames"), user_id)
+    out["listingHiddenImageUrls"] = _filter_url_list(out.get("listingHiddenImageUrls"), user_id)
+    out["listingDisplayOrder"] = _filter_url_list(out.get("listingDisplayOrder"), user_id)
+    out.pop("listingTailImageUrls", None)
     videos = out.get("portfolioVideoNamesPersisted")
     legacy_video = _coerce_str(out, "portfolioVideoNamePersisted").strip()
     if not isinstance(videos, list):
@@ -146,6 +149,7 @@ def normalize_payload_fields(payload: dict[str, Any], user_id: str) -> dict[str,
         "foodHygieneCertNamePersisted",
         "indemnityCertNamePersisted",
         "profileImageUrl",
+        "listingCoverImageUrl",
     ):
         if key in out:
             v = _coerce_str(out, key).strip()

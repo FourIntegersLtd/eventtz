@@ -135,6 +135,9 @@ ONLY_PENDING_VENDORS_TO_DRAFT = "Only pending vendors can be returned to draft."
 APPROVAL_STATUS_INVALID = "approval_status must be pending, approved, or banned"
 LISTING_OVERRIDE_INVALID = "listing_override must be auto, visible, or hidden"
 LISTING_OVERRIDE_REASON_REQUIRED = "Give a reason when overriding a vendor's listing."
+LISTING_MEDIA_URL_INVALID = (
+    "Listing media overrides must use the vendor profile photo or portfolio images."
+)
 VENDOR_PROFILE_NOT_FOUND = "Vendor profile not found."
 EMAIL_COULD_NOT_BE_SENT = "Email could not be sent."
 NO_EMAIL_ON_FILE = "No email address on file."

@@ -37,6 +37,7 @@ from app.features.planner.explore_vendor_adapter import (
     load_enriched_vendor_pool,
 )
 from app.features.planner.prompt_parser import parse_celebration_prompt
+from app.features.vendors.listing_media import listing_cover_image_url_from_payload
 from app.features.vendors.ranking import RankingContext, VendorRankingEngine
 from app.features.vendors.ranking.explain_facts import build_fact_card
 
@@ -54,12 +55,7 @@ def _prompt_hash(prompt: str) -> str:
 
 def _cover_image_url(row: dict[str, Any]) -> str | None:
     payload = row.get("payload") if isinstance(row.get("payload"), dict) else {}
-    names = payload.get("portfolioFileNames")
-    if isinstance(names, list) and names:
-        first = names[0]
-        if isinstance(first, str) and first.strip():
-            return first.strip()
-    return None
+    return listing_cover_image_url_from_payload(payload)
 
 
 def vendor_card_from_row(
