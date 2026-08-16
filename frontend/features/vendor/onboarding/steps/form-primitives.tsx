@@ -1,12 +1,14 @@
 import type { InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from "react";
 import { X } from "lucide-react";
 
+import { formControlClass } from "@/components/ui/tokens";
+
 export function labelClass() {
   return "block text-sm font-medium text-neutral-700 mb-1.5";
 }
 
 export function inputClass() {
-  return "w-full rounded-lg border border-neutral-200 bg-white px-3 py-2.5 text-sm outline-none ring-primary/20 focus:border-primary focus:ring-2";
+  return formControlClass();
 }
 
 const clearButtonClass =

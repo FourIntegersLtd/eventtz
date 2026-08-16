@@ -7,6 +7,7 @@ import { RequireVendor } from "@/components/auth/RequireVendor";
 import { RequireVendorApproved } from "@/components/auth/RequireVendorApproved";
 import { PortalShell } from "@/components/portal-shell/PortalShell";
 import { portalPageTitle } from "@/components/portal-shell/portalNav";
+import { isVendorPreApprovalRoute } from "@/lib/vendorAccess";
 
 /**
  * Every authenticated vendor route shares this shell - new routes under
@@ -15,14 +16,13 @@ import { portalPageTitle } from "@/components/portal-shell/portalNav";
  */
 export default function VendorPortalLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const isProfileRoute = pathname.startsWith("/vendor/profile");
-  const isContactRoute = pathname.startsWith("/vendor/contact");
   const title = portalPageTitle(pathname, "vendor");
+  const preApprovalRoute = isVendorPreApprovalRoute(pathname);
 
   return (
     <RequireAuth redirectTo={`/login?next=${encodeURIComponent(pathname)}`}>
       <RequireVendor>
-        {isProfileRoute || isContactRoute ? (
+        {preApprovalRoute ? (
           <PortalShell portal="vendor" title={title}>
             {children}
           </PortalShell>

@@ -8,6 +8,7 @@ import { parseForm, reviewSchema } from "@/lib/validation";
 import type { BookingReviewDisplay } from "@/lib/reviewTypes";
 import { StarRating } from "@/components/ui/StarRating";
 import { Button } from "@/components/ui/Button";
+import { useToast } from "@/components/ui/Toast";
 import { TextArea } from "@/components/ui/TextArea";
 import { ReviewPhotoPicker } from "@/features/reviews/ReviewPhotoPicker";
 
@@ -30,6 +31,7 @@ export function ClientBookingReviewForm({
   initialRating = 0,
   onSubmitted,
 }: ClientBookingReviewFormProps) {
+  const { showToast } = useToast();
   const [rating, setRating] = useState(initialRating);
   const [body, setBody] = useState("");
   const [imageUrls, setImageUrls] = useState<string[]>([]);
@@ -60,6 +62,7 @@ export function ClientBookingReviewForm({
         rating: parsed.data.rating,
         photo_count: parsed.data.image_urls.length,
       });
+      showToast({ title: "Review submitted", tone: "success" });
       onSubmitted(res.review);
       setBody("");
       setImageUrls([]);

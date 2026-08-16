@@ -74,3 +74,39 @@ export function mapLegacyOnboardingStep(currentStep: number, flowVersion: number
   if (currentStep >= 10) return 9;
   return Math.min(Math.max(currentStep, 1), 8);
 }
+
+export type OnboardingStepProfile = {
+  onboarding_status?: string;
+  approval_status?: string;
+  current_step?: number;
+  returnedForEditsAt?: string;
+};
+
+/**
+ * Admin returned a submitted profile to draft so the vendor can edit again.
+ * Prefers the server timestamp; falls back to draft + review/submitted step.
+ */
+export function isReturnedForEdits(profile: OnboardingStepProfile): boolean {
+  if (profile.returnedForEditsAt?.trim()) return true;
+  return (
+    profile.onboarding_status === "draft" &&
+    profile.approval_status !== "approved" &&
+    profile.approval_status !== "banned" &&
+    (profile.current_step ?? 0) >= 8
+  );
+}
+
+/** Wizard step after loading profile — keeps draft vendors off the submitted screen. */
+export function resolveOnboardingStepFromProfile(
+  profile: OnboardingStepProfile,
+  flowVersion: number,
+  isWalkthrough: boolean,
+): number {
+  if (profile.onboarding_status === "submitted") {
+    return isWalkthrough ? 1 : profile.approval_status === "approved" ? 1 : 9;
+  }
+  const mapped = mapLegacyOnboardingStep(profile.current_step ?? 1, flowVersion);
+  // Admin returned profile to draft; saved step may still point at submitted/review.
+  if (mapped >= 9) return 8;
+  return mapped;
+}

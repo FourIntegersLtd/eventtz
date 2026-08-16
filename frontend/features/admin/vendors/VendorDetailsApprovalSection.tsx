@@ -17,6 +17,7 @@ import { VendorMarketplaceStatusBanner } from "./VendorMarketplaceStatusBanner";
 import { VendorStripeConnectSection } from "./VendorStripeConnectSection";
 import { VendorPanelSection } from "./vendorDetailsPanel";
 import { ApprovalCard, VendorActionOptionRow } from "./vendorDetailsShared";
+import { formControlClass } from "@/components/ui/tokens";
 
 type Props = {
   vendor: AdminVendorRow;
@@ -251,7 +252,7 @@ export function VendorDetailsApprovalSection({
                   rows={2}
                   maxLength={500}
                   placeholder="Brief note on why you're overriding the listing"
-                  className="mt-1.5 w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className={formControlClass("mt-1.5 placeholder:text-neutral-400")}
                 />
               </label>
             ) : null}

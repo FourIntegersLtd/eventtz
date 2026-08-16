@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { PortfolioCollageGallery } from "@/features/vendors/display/PortfolioCollageGallery";
 import { PortfolioLightbox } from "@/features/vendors/display/PortfolioLightbox";
 
-export type PortfolioImageGalleryLayout = "hero" | "grid";
+export type PortfolioImageGalleryLayout = "hero" | "grid" | "collage";
 
 export type PortfolioImageGalleryProps = {
   urls: string[];
@@ -31,22 +32,32 @@ export function PortfolioImageGallery({
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
-  const photosKey = photos.join("|");
-
-  useEffect(() => {
-    setActivePhotoIndex(0);
-    setLightboxOpen(false);
-  }, [photosKey]);
-
-  const activePhotoUrl =
-    photos.length > 0 ? photos[Math.min(activePhotoIndex, photos.length - 1)] : null;
+  if (layout === "collage") {
+    return (
+      <PortfolioCollageGallery
+        photos={photos}
+        alt={alt}
+        emptyFallback={emptyFallback}
+        className={className}
+      />
+    );
+  }
 
   const openLightbox = (index: number) => {
     setActivePhotoIndex(index);
     setLightboxOpen(true);
   };
 
-  const gridClass = gridCols === 3 ? "grid-cols-3" : "grid-cols-2";
+  const lightbox =
+    lightboxOpen && photos.length > 0 ? (
+      <PortfolioLightbox
+        urls={photos}
+        index={activePhotoIndex}
+        alt={alt}
+        onClose={() => setLightboxOpen(false)}
+        onIndexChange={setActivePhotoIndex}
+      />
+    ) : null;
 
   if (layout === "grid") {
     if (photos.length === 0) {
@@ -57,6 +68,7 @@ export function PortfolioImageGallery({
       );
     }
 
+    const gridClass = gridCols === 3 ? "grid-cols-3" : "grid-cols-2";
     return (
       <>
         <div className={`grid gap-2 ${gridClass} ${className}`.trim()}>
@@ -78,15 +90,7 @@ export function PortfolioImageGallery({
             </button>
           ))}
         </div>
-        {lightboxOpen ? (
-          <PortfolioLightbox
-            urls={photos}
-            index={activePhotoIndex}
-            alt={alt}
-            onClose={() => setLightboxOpen(false)}
-            onIndexChange={setActivePhotoIndex}
-          />
-        ) : null}
+        {lightbox}
       </>
     );
   }
@@ -96,6 +100,8 @@ export function PortfolioImageGallery({
     ? "max-h-[min(80vw,320px)]"
     : "max-h-[min(90vw,560px)] lg:max-h-[620px]";
   const thumbH = compact ? "h-14 w-[4.25rem]" : "h-[4.5rem] w-[5.5rem]";
+  const activePhotoUrl =
+    photos.length > 0 ? photos[Math.min(activePhotoIndex, photos.length - 1)] : null;
 
   return (
     <>
@@ -157,15 +163,7 @@ export function PortfolioImageGallery({
           </div>
         ) : null}
       </div>
-      {lightboxOpen && photos.length > 0 ? (
-        <PortfolioLightbox
-          urls={photos}
-          index={activePhotoIndex}
-          alt={alt}
-          onClose={() => setLightboxOpen(false)}
-          onIndexChange={setActivePhotoIndex}
-        />
-      ) : null}
+      {lightbox}
     </>
   );
 }

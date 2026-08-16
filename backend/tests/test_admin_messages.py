@@ -53,10 +53,20 @@ def test_admin_send_fan_out(mock_get_conv, mock_insert, _notify, mock_email):
     assert result["sent"] == 2
     assert result["conversation_ids"] == ["conv-u1", "conv-u2"]
     assert mock_insert.call_count == 2
-    assert mock_insert.call_args.kwargs["metadata"] == {"kind": "admin"}
+    assert mock_insert.call_args.kwargs["metadata"] == {"kind": "admin", "format": "html"}
     assert mock_email.call_count == 2
-    mock_email.assert_any_call(recipient_user_id="u1", conversation_id="conv-u1")
-    mock_email.assert_any_call(recipient_user_id="u2", conversation_id="conv-u2")
+    mock_email.assert_any_call(
+        recipient_user_id="u1",
+        conversation_id="conv-u1",
+        message_body_html="Hello",
+        message_body="Hello",
+    )
+    mock_email.assert_any_call(
+        recipient_user_id="u2",
+        conversation_id="conv-u2",
+        message_body_html="Hello",
+        message_body="Hello",
+    )
 
 
 @patch("app.features.chat.dm.get_db")

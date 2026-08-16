@@ -10,8 +10,10 @@ type AdminTableProps = {
 
 export function AdminTable({ children, className = "" }: AdminTableProps) {
   return (
-    <div className={`${adminCard} overflow-hidden ${className}`.trim()}>
-      <div className="overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">{children}</div>
+    <div className={`${adminCard} w-full min-w-0 max-w-full overflow-hidden ${className}`.trim()}>
+      <div className="w-full min-w-0 max-w-full overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
+        {children}
+      </div>
     </div>
   );
 }

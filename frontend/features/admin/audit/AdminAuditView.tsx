@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { fetchAdminAuditLog, type AdminAuditLogItem } from "@/lib/adminPlatformApi";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminFilterBar } from "@/features/admin/components/AdminFilterBar";
+import { adminFilterControlClassSm } from "@/features/admin/components/adminFilterControlClass";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import { AdminPageHeader } from "@/features/admin/components/AdminPageHeader";
 import {
@@ -86,7 +87,7 @@ export function AdminAuditView() {
               setCategoryFilter(e.target.value as AuditCategory);
               setOffset(0);
             }}
-            className="mt-1 block w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm sm:w-48"
+            className={adminFilterControlClassSm}
           >
             {AUDIT_CATEGORIES.map((c) => (
               <option key={c.id} value={c.id}>
@@ -102,7 +103,7 @@ export function AdminAuditView() {
       ) : (
         <>
           <AdminTable>
-            <AdminTableElement>
+            <AdminTableElement className="min-w-[44rem]">
               <AdminTableHead>
                 <AdminTableHeaderCell>When</AdminTableHeaderCell>
                 <AdminTableHeaderCell>What happened</AdminTableHeaderCell>

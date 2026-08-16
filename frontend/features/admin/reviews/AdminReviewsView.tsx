@@ -85,7 +85,7 @@ export function AdminReviewsView() {
         <EmptyState title={vendorUserId ? "No reviews for this vendor" : "No reviews yet"} lottie="searchNoResults" />
       ) : (
         <AdminTable>
-          <AdminTableElement>
+          <AdminTableElement className="min-w-[30rem]">
             <AdminTableHead>
               {!vendorUserId ? <AdminTableHeaderCell>Vendor</AdminTableHeaderCell> : null}
               <AdminTableHeaderCell>Review</AdminTableHeaderCell>

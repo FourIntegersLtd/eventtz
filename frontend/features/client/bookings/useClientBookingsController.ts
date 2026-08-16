@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useToast } from "@/components/ui/Toast";
 import { resolveWasClientTotalLabel } from "@/features/bookings/bookingPriceLabels";
 import { getApiErrorDetail, postBookingCheckoutSync } from "@/lib/bookingCheckoutApi";
 import {
@@ -36,6 +37,7 @@ type UseClientBookingsControllerArgs = {
 export function useClientBookingsController({ selectedBookingId }: UseClientBookingsControllerArgs) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { showToast } = useToast();
   const rateParam = Number(searchParams.get("rate") ?? "");
   const deepLinkRating = rateParam >= 1 && rateParam <= 5 ? rateParam : undefined;
   const listStatusFilter = searchParams.get("status") ?? "";
@@ -154,6 +156,7 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
     try {
       await postCancelClientBooking(bookingId);
       track(MixpanelEvents.booking_cancelled, { booking_id: bookingId });
+      showToast({ title: "Booking cancelled", tone: "success" });
       setCancelOpen(false);
       bumpDetail();
     } catch (e: unknown) {
@@ -178,6 +181,10 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
           : MixpanelEvents.booking_quote_declined,
         { booking_id: bookingId },
       );
+      showToast({
+        title: next === "accepted" ? "Quote accepted" : "Quote declined",
+        tone: "success",
+      });
       bumpDetail();
     } catch (e: unknown) {
       setActionError(getApiErrorDetail(e) ?? "Could not update this quote.");
@@ -203,6 +210,10 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
           : MixpanelEvents.booking_price_update_declined,
         { booking_id: bookingId },
       );
+      showToast({
+        title: next === "accepted" ? "Price update accepted" : "Price update declined",
+        tone: "success",
+      });
       bumpDetail();
     } catch (e: unknown) {
       setActionError(getApiErrorDetail(e) ?? "Could not update this booking.");
@@ -222,6 +233,7 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
     try {
       await postClientConfirmCompletion(bookingId);
       track(MixpanelEvents.booking_completed, { booking_id: bookingId });
+      showToast({ title: "Completion confirmed", tone: "success" });
       setConfirmCompleteOpen(false);
       bumpDetail();
     } catch (e: unknown) {

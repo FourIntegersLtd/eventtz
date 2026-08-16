@@ -1,8 +1,9 @@
 "use client";
 
-import { ExternalLink, FileText, Video } from "lucide-react";
+import { ExternalLink, FileText } from "lucide-react";
 import Link from "next/link";
 import { PortfolioImageGallery } from "@/features/vendors/display/PortfolioImageGallery";
+import { PortfolioVideoStrip } from "@/features/vendors/display/PortfolioVideoStrip";
 import {
   isImageUploadUrl,
   isPdfUploadUrl,
@@ -16,11 +17,13 @@ type SubmittedMediaViewerProps = {
   subjectName: string;
   /** Profile initials when no profile photo. */
   profileInitials?: string;
-  /** Hide profile block (when shown elsewhere). */
+  /** Hide profile block (when shown elsewhere or in cover picker). */
   hideProfile?: boolean;
   compact?: boolean;
   /** Omit section labels (e.g. sidebar rail). */
   hideHeadings?: boolean;
+  /** Hide portfolio grid (when cover picker shows it). */
+  hidePortfolio?: boolean;
 };
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
@@ -52,40 +55,6 @@ function DocumentRow({ file }: { file: SubmittedMediaFile }) {
   );
 }
 
-function VideoBlock({ file, compact }: { file: SubmittedMediaFile; compact?: boolean }) {
-  return (
-    <div className="overflow-hidden rounded-xl border border-neutral-100 bg-neutral-50/50">
-      <div className={`bg-neutral-900 ${compact ? "max-h-44" : "max-h-72"}`}>
-        <video
-          src={file.url}
-          controls
-          playsInline
-          preload="metadata"
-          className="h-full max-h-[inherit] w-full object-contain"
-        >
-          Your browser does not support embedded video.
-        </video>
-      </div>
-      <div className="flex items-start gap-3 px-4 py-3">
-        <Video className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden />
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-neutral-500">{file.category}</p>
-          <p className="mt-0.5 text-sm font-medium text-neutral-900">{file.label}</p>
-          <Link
-            href={file.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
-          >
-            Open original
-            <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function SubmittedMediaViewer({
   bundle,
   subjectName,
@@ -93,6 +62,7 @@ export function SubmittedMediaViewer({
   hideProfile = false,
   compact = false,
   hideHeadings = false,
+  hidePortfolio = false,
 }: SubmittedMediaViewerProps) {
   const imageDocuments = bundle.documents.filter(
     (file) => isImageUploadUrl(file.url) && !isPdfUploadUrl(file.url),
@@ -102,7 +72,7 @@ export function SubmittedMediaViewer({
   );
 
   const hasProfile = !hideProfile && (bundle.profileImageUrl || profileInitials);
-  const hasPortfolio = bundle.portfolioImageUrls.length > 0;
+  const hasPortfolio = !hidePortfolio && bundle.portfolioImageUrls.length > 0;
   const hasVideos = bundle.videos.length > 0;
   const hasDocs = bundle.documents.length > 0;
 
@@ -143,13 +113,15 @@ export function SubmittedMediaViewer({
       ) : null}
 
       {hasVideos ? (
-        <div>
+        <div className="min-w-0">
           {heading(`Videos (${bundle.videos.length})`)}
-          <div className="space-y-4">
-            {bundle.videos.map((file) => (
-              <VideoBlock key={file.url} file={file} compact={compact} />
-            ))}
-          </div>
+          <PortfolioVideoStrip
+            compact={compact}
+            videos={bundle.videos.map((file) => ({
+              src: file.url,
+              label: file.label,
+            }))}
+          />
         </div>
       ) : null}
 

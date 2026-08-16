@@ -241,8 +241,8 @@ function HelpAssistantThreadInner({
             disabled={busy}
             className={
               embedded
-                ? "min-w-0 flex-1 rounded-xl bg-neutral-100 px-4 py-3 text-[14px] outline-none placeholder:text-neutral-500 focus:ring-1 focus:ring-neutral-300"
-                : "min-w-0 flex-1 rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                ? "min-w-0 flex-1 rounded-xl bg-neutral-100 px-4 py-3 text-base outline-none placeholder:text-neutral-500 focus:ring-1 focus:ring-neutral-300 md:text-sm"
+                : "min-w-0 flex-1 rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-base outline-none focus:border-primary focus:ring-1 focus:ring-primary md:text-sm"
             }
           />
           <Button type="submit" loading={busy} disabled={!input.trim()}>

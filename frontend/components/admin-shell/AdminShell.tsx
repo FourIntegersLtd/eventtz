@@ -54,7 +54,7 @@ const ADMIN_NAV: readonly AdminNavItem[] = [
   { href: "/admin/settings", label: "Settings", icon: Settings },
   { href: "/admin/team", label: "Team", icon: UserCog },
   { href: "/admin/audit", label: "Activity log", icon: ScrollText },
-  { href: "/admin/email", label: "Email testing", icon: Mail, superAdminOnly: true },
+  { href: "/admin/email", label: "Email health", icon: Mail, superAdminOnly: true },
 ];
 
 function navItemActive(pathname: string, itemHref: string): boolean {
@@ -265,7 +265,7 @@ export function AdminShell({ title, children }: AdminShellProps) {
             onClick={closeMobile}
           />
           <aside
-            className={`absolute right-0 top-0 flex h-dvh max-h-dvh w-[min(20rem,calc(100vw-2rem))] max-w-full flex-col border-l border-neutral-200 bg-white p-4 shadow-xl ${adminPageBg}`}
+            className={`absolute right-0 top-0 flex h-dvh max-h-dvh w-[min(20rem,calc(100vw-2rem))] max-w-full flex-col border-l border-neutral-200 bg-white p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] shadow-xl ${adminPageBg}`}
           >
             <div className="flex shrink-0 items-start justify-between gap-2">
               <p className="text-sm font-semibold text-neutral-800">Admin</p>

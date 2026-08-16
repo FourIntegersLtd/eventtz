@@ -46,8 +46,19 @@ const VENDOR_NAV: readonly PortalNavItem[] = [
   { href: "/vendor/settings", label: "Settings", icon: Settings },
 ];
 
-export function portalNavItems(role: PortalRole): readonly PortalNavItem[] {
-  return role === "client" ? CLIENT_NAV : VENDOR_NAV;
+export function portalNavItems(
+  role: PortalRole,
+  options?: { vendorPreApproval?: boolean },
+): readonly PortalNavItem[] {
+  if (role === "client") return CLIENT_NAV;
+  if (!options?.vendorPreApproval) return VENDOR_NAV;
+  const pendingHrefs = new Set([
+    "/vendor/profile",
+    "/vendor/messages",
+    "/vendor/contact",
+    "/vendor/settings",
+  ]);
+  return VENDOR_NAV.filter((item) => pendingHrefs.has(item.href));
 }
 
 /** True when `pathname` is the nav item or a nested route under it. */
@@ -140,6 +151,15 @@ export function portalPageTitle(pathname: string, role: PortalRole): string {
     if (pathname.startsWith(prefix)) return title;
   }
   return "";
+}
+
+/** Master-detail detail routes hide the shell title on mobile (thread has its own back link). */
+export function portalHidePageTitleOnMobile(pathname: string, role: PortalRole): boolean {
+  const base = role === "client" ? "/client" : "/vendor";
+  return (
+    /^\/[^/]+\/(messages|bookings)\/[^/]+/.test(pathname) &&
+    pathname.startsWith(base)
+  );
 }
 
 export function portalDashboardHref(role: PortalRole): string {

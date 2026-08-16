@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { useToast } from "@/components/ui/Toast";
 import { DateInput } from "@/components/ui/DateInput";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { getApiErrorDetail } from "@/lib/api-errors";
@@ -69,6 +70,7 @@ export function MultiVendorEnquireModal({
   onClose,
   onSuccess,
 }: MultiVendorEnquireModalProps) {
+  const { showToast } = useToast();
   const [eventName, setEventName] = useState(initialPrefill?.eventName ?? "");
   const [eventDate, setEventDate] = useState(
     searchPrefill?.eventDate?.trim() ||
@@ -192,6 +194,22 @@ export function MultiVendorEnquireModal({
       setSubmitting(false);
       if (createdIds.length === 0) {
         setError(failures.join("\n") || "Could not send any requests.");
+        showToast({
+          title: "Requests not sent",
+          description: failures[0] ?? "Could not send any requests.",
+          tone: "error",
+        });
+        return;
+      }
+      if (failures.length > 0) {
+        setError(
+          `Sent ${createdIds.length} of ${optionIdsByVendor.length} requests.\n\n${failures.join("\n")}`,
+        );
+        showToast({
+          title: `${createdIds.length} of ${optionIdsByVendor.length} requests sent`,
+          description: `${failures.length} could not be sent. See details in the form.`,
+          tone: "error",
+        });
         return;
       }
       track(MixpanelEvents.multi_enquiry_created, {
@@ -255,7 +273,7 @@ export function MultiVendorEnquireModal({
         <label className="block text-sm">
           <span className="font-medium text-neutral-800">Event name</span>
           <input
-            className="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-sm"
+            className="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-base md:text-sm"
             value={eventName}
             onChange={(e) => setEventName(e.target.value)}
             placeholder="e.g. Summer garden party"
@@ -288,7 +306,7 @@ export function MultiVendorEnquireModal({
         <label className="block text-sm">
           <span className="font-medium text-neutral-800">Venue address (optional)</span>
           <input
-            className="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-sm"
+            className="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-base md:text-sm"
             value={venueAddress}
             onChange={(e) => setVenueAddress(e.target.value)}
             maxLength={500}
@@ -297,7 +315,7 @@ export function MultiVendorEnquireModal({
         <label className="block text-sm">
           <span className="font-medium text-neutral-800">Notes (optional)</span>
           <textarea
-            className="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-sm"
+            className="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-base md:text-sm"
             rows={3}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}

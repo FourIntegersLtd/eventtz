@@ -126,7 +126,7 @@ function BudgetSortControls({ state, onCommit }: MarketplaceFiltersBarProps) {
                 }}
                 placeholder={`Min (${currencySymbol})`}
                 aria-label="Minimum budget"
-                className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 outline-none ring-primary/15 focus:border-primary focus:bg-white focus:ring-2"
+                className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-base text-neutral-900 outline-none ring-primary/15 focus:border-primary focus:bg-white focus:ring-2 md:text-sm"
               />
               <span className="text-neutral-400">-</span>
               <input
@@ -141,7 +141,7 @@ function BudgetSortControls({ state, onCommit }: MarketplaceFiltersBarProps) {
                 }}
                 placeholder={`Max (${currencySymbol})`}
                 aria-label="Maximum budget"
-                className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 outline-none ring-primary/15 focus:border-primary focus:bg-white focus:ring-2"
+                className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-base text-neutral-900 outline-none ring-primary/15 focus:border-primary focus:bg-white focus:ring-2 md:text-sm"
               />
             </div>
             {budgetError ? (

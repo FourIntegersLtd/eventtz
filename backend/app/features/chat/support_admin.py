@@ -14,6 +14,7 @@ from app.features.realtime.sse import notify_user
 
 from app.features.chat import messages as chat_messages
 from app.features.chat.chat_formatting_and_ids import (
+    MAX_MESSAGE_BODY_STORAGE_LEN,
     MAX_MESSAGE_LEN,
     SUPPORT_PEER_DISPLAY,
     SUPPORT_PEER_USER_ID,
@@ -24,15 +25,42 @@ from app.features.chat.chat_formatting_and_ids import (
     _str_id,
     insert_message,
 )
+from app.features.chat.sanitize import (
+    message_plain_text,
+    message_plain_text_length,
+    sanitize_message_html,
+)
 
 logger = get_logger(__name__)
 
+ADMIN_SUPPORT_METADATA = {"kind": "admin", "format": "html"}
 
-def _email_support_message_recipient(*, recipient_user_id: str, conversation_id: str) -> None:
+
+def _prepare_admin_support_body(raw: str) -> tuple[str, dict[str, str]]:
+    """Sanitize admin support HTML and validate visible text + storage length."""
+    html = sanitize_message_html((raw or "").strip())
+    plain = message_plain_text(html)
+    if not plain:
+        raise ValueError(chat_messages.MESSAGE_EMPTY)
+    if message_plain_text_length(html) > MAX_MESSAGE_LEN:
+        raise ValueError(chat_messages.message_too_long_detail(MAX_MESSAGE_LEN))
+    if len(html) > MAX_MESSAGE_BODY_STORAGE_LEN:
+        raise ValueError(chat_messages.message_too_long_detail(MAX_MESSAGE_LEN))
+    return html, dict(ADMIN_SUPPORT_METADATA)
+
+
+def _email_support_message_recipient(
+    *,
+    recipient_user_id: str,
+    conversation_id: str,
+    message_body_html: str,
+) -> None:
     try:
         send_support_new_message_email(
             recipient_user_id=recipient_user_id,
             conversation_id=conversation_id,
+            message_body_html=message_body_html,
+            message_body=message_plain_text(message_body_html),
         )
     except Exception:
         logger.warning(
@@ -96,11 +124,7 @@ def admin_send_support_message(
     body: str,
 ) -> dict[str, Any]:
     """Send one support message per recipient. Returns sent count and conversation ids."""
-    text = body.strip()
-    if not text:
-        raise ValueError(chat_messages.MESSAGE_EMPTY)
-    if len(text) > MAX_MESSAGE_LEN:
-        raise ValueError(chat_messages.message_too_long_detail(MAX_MESSAGE_LEN))
+    html, metadata = _prepare_admin_support_body(body)
 
     seen: set[str] = set()
     recipients: list[str] = []
@@ -115,7 +139,6 @@ def admin_send_support_message(
 
     conversation_ids: list[str] = []
     failures: list[dict[str, str]] = []
-    metadata = {"kind": "admin"}
 
     for uid in recipients:
         try:
@@ -124,12 +147,16 @@ def admin_send_support_message(
             insert_message(
                 conversation_id=cid,
                 sender_user_id=admin_user_id,
-                body=text,
+                body=html,
                 metadata=metadata,
             )
             conversation_ids.append(cid)
             notify_user(uid, "chat_unread_changed")
-            _email_support_message_recipient(recipient_user_id=uid, conversation_id=cid)
+            _email_support_message_recipient(
+                recipient_user_id=uid,
+                conversation_id=cid,
+                message_body_html=html,
+            )
         except Exception as e:
             logger.warning("chat: admin send failed recipient=%s: %s", uid, e, exc_info=True)
             failures.append({"user_id": uid, "error": str(e) or chat_messages.SEND_FAILED})
@@ -228,11 +255,7 @@ def admin_edit_support_message(
     if not conv:
         raise NotFoundError(chat_messages.SUPPORT_CONVERSATION_NOT_FOUND)
 
-    text = body.strip()
-    if not text:
-        raise ValueError(chat_messages.MESSAGE_EMPTY)
-    if len(text) > MAX_MESSAGE_LEN:
-        raise ValueError(chat_messages.message_too_long_detail(MAX_MESSAGE_LEN))
+    html, prepared_meta = _prepare_admin_support_body(body)
 
     client = get_db()
     try:
@@ -261,14 +284,14 @@ def admin_edit_support_message(
         raise ForbiddenError(chat_messages.EDIT_OWN_MESSAGES_ONLY)
 
     metadata = row.get("metadata")
-    meta: dict[str, Any] = dict(metadata) if isinstance(metadata, dict) else {"kind": "admin"}
-    meta["kind"] = "admin"
+    meta: dict[str, Any] = dict(metadata) if isinstance(metadata, dict) else dict(prepared_meta)
+    meta.update(prepared_meta)
     meta["edited_at"] = _now_iso()
 
     try:
         upd = (
             client.table("messages")
-            .update({"body": text, "metadata": meta})
+            .update({"body": html, "metadata": meta})
             .eq("id", message_id)
             .eq("conversation_id", conversation_id)
             .execute()
@@ -279,7 +302,7 @@ def admin_edit_support_message(
             try:
                 upd = (
                     client.table("messages")
-                    .update({"body": text})
+                    .update({"body": html})
                     .eq("id", message_id)
                     .eq("conversation_id", conversation_id)
                     .execute()
@@ -300,7 +323,7 @@ def admin_edit_support_message(
     return {
         "id": _str_id(updated.get("id") or message_id),
         "sender_user_id": sender,
-        "body": str(updated.get("body") or text),
+        "body": str(updated.get("body") or html),
         "created_at": updated.get("created_at") or row.get("created_at"),
         "metadata": meta,
     }
@@ -315,16 +338,21 @@ def admin_reply_support_message(
     conv = get_support_conversation_for_admin(conversation_id)
     if not conv:
         raise NotFoundError(chat_messages.SUPPORT_CONVERSATION_NOT_FOUND)
+    html, metadata = _prepare_admin_support_body(body)
     msg = insert_message(
         conversation_id=conversation_id,
         sender_user_id=admin_user_id,
-        body=body,
-        metadata={"kind": "admin"},
+        body=html,
+        metadata=metadata,
     )
     peer = _str_id(conv.get("support_user_id") or conv.get("peer_user_id"))
     if peer:
         notify_user(peer, "chat_unread_changed")
-        _email_support_message_recipient(recipient_user_id=peer, conversation_id=conversation_id)
+        _email_support_message_recipient(
+            recipient_user_id=peer,
+            conversation_id=conversation_id,
+            message_body_html=html,
+        )
     notify_user(admin_user_id, "chat_unread_changed")
     return msg
 

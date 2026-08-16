@@ -20,6 +20,8 @@ class AdminEmailTemplatesListResponse(BaseModel):
 class AdminEmailTestSendBody(BaseModel):
     template_id: str = Field(min_length=1, max_length=120)
     to_email: str = Field(min_length=3, max_length=320)
+    message_body: str | None = Field(default=None, max_length=5000)
+    message_body_html: str | None = Field(default=None, max_length=20000)
 
 
 class AdminEmailTestSendResponse(BaseModel):

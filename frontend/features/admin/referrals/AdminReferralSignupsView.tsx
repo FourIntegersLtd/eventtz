@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Instagram, Link2, type LucideIcon } from "lucide-react";
+import { useToast } from "@/components/ui/Toast";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { CopyReferralLinkButton } from "@/features/admin/referrals/CopyReferralLinkButton";
 import { BackLink } from "@/components/ui/BackLink";
@@ -67,6 +68,7 @@ type AdminReferralSignupsViewProps = {
 };
 
 export function AdminReferralSignupsView({ partnerId }: AdminReferralSignupsViewProps) {
+  const { showToast } = useToast();
   const [partner, setPartner] = useState<ReferralPartner | null>(null);
   const [signups, setSignups] = useState<ReferralVendorSignup[]>([]);
   const [total, setTotal] = useState(0);
@@ -109,6 +111,10 @@ export function AdminReferralSignupsView({ partnerId }: AdminReferralSignupsView
     try {
       const updated = await patchReferralShoutout(row.user_id, next);
       setSignups((prev) => prev.map((s) => (s.user_id === row.user_id ? updated : s)));
+      showToast({
+        title: next ? "Shoutout marked complete" : "Shoutout marked pending",
+        tone: "success",
+      });
     } catch (err: unknown) {
       setSignups((prev) =>
         prev.map((s) =>

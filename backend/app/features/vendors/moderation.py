@@ -414,7 +414,11 @@ def unsubmit_vendor_profile(
     if approval != "pending":
         raise ValueError(vendor_messages.ONLY_PENDING_VENDORS_TO_DRAFT)
     email_sent = False
-    get_db().table("vendors").update({"status": "draft"}).eq("user_id", user_id).execute()
+    payload = dict(row.get("payload") or {}) if isinstance(row.get("payload"), dict) else {}
+    payload["returnedForEditsAt"] = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    get_db().table("vendors").update(
+        {"status": "draft", "current_step": 8, "payload": payload}
+    ).eq("user_id", user_id).execute()
     updated = get_vendor_profile(user_id)
     if send_email and updated:
         email_sent = _notify_vendor_returned_for_edits(

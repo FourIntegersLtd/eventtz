@@ -4,6 +4,7 @@ import Link from "next/link";
 import { MessageSquare } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useToast } from "@/components/ui/Toast";
 import { useAdminPermissions } from "@/features/admin/useAdminPermissions";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -13,6 +14,7 @@ import { ADMIN_CONFIRM_COPY } from "@/features/bookings/bookingConfirmCopy";
 import { patchAdminDispute, type AdminDisputeCase } from "@/lib/adminPlatformApi";
 import { fetchAdminTeam, type AdminTeamMember } from "@/lib/adminTeamApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { formControlClass } from "@/components/ui/tokens";
 import { DisputePartiesPanel } from "./DisputePartiesSummary";
 import {
   DISPUTE_STATUSES,
@@ -37,6 +39,7 @@ export function DisputeActionPanel({
   onResolve,
 }: DisputeActionPanelProps) {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const { canResolveDisputesFinancially } = useAdminPermissions();
   const [sharedNote, setSharedNote] = useState(dispute.resolution_note ?? "");
   const [noteAudience, setNoteAudience] = useState<"client" | "vendor" | "both">("both");
@@ -107,8 +110,11 @@ export function DisputeActionPanel({
       }
       await patchAdminDispute(dispute.id, body);
       await onUpdated();
+      showToast({ title: "Message saved", tone: "success" });
     } catch (e: unknown) {
-      setError(getApiErrorDetail(e) ?? "Could not save message.");
+      const message = getApiErrorDetail(e) ?? "Could not save message.";
+      setError(message);
+      showToast({ title: "Message not saved", description: message, tone: "error" });
     } finally {
       setNoteBusy(false);
     }
@@ -127,8 +133,14 @@ export function DisputeActionPanel({
         status: next,
       });
       await onUpdated();
+      showToast({
+        title: next === "closed" ? "Dispute closed" : "Dispute status updated",
+        tone: "success",
+      });
     } catch (e: unknown) {
-      setError(getApiErrorDetail(e) ?? "Could not update status.");
+      const message = getApiErrorDetail(e) ?? "Could not update status.";
+      setError(message);
+      showToast({ title: "Status not updated", description: message, tone: "error" });
       setStatus(dispute.status);
     } finally {
       setStatusBusy(false);
@@ -141,8 +153,14 @@ export function DisputeActionPanel({
     try {
       await patchAdminDispute(dispute.id, { assigned_admin_id: adminId });
       await onUpdated();
+      showToast({
+        title: adminId ? "Dispute assigned" : "Dispute unassigned",
+        tone: "success",
+      });
     } catch (e: unknown) {
-      setError(getApiErrorDetail(e) ?? "Could not assign dispute.");
+      const message = getApiErrorDetail(e) ?? "Could not assign dispute.";
+      setError(message);
+      showToast({ title: "Assignment failed", description: message, tone: "error" });
     } finally {
       setAssignBusy(false);
     }
@@ -244,7 +262,7 @@ export function DisputeActionPanel({
                     setStatus(next);
                     onStatusSelect(next);
                   }}
-                  className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2.5 text-sm"
+                  className={formControlClass()}
                 >
                   {DISPUTE_STATUSES.map((s) => (
                     <option key={s} value={s}>
@@ -268,7 +286,7 @@ export function DisputeActionPanel({
                     const next = e.target.value || null;
                     void assignAdmin(next);
                   }}
-                  className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2.5 text-sm"
+                  className={formControlClass()}
                 >
                   <option value="">Unassigned</option>
                   {team
@@ -349,7 +367,7 @@ export function DisputeActionPanel({
                 value={sharedNote}
                 onChange={(e) => setSharedNote(e.target.value)}
                 rows={4}
-                className="mt-3 w-full rounded-lg border border-neutral-200 bg-white px-3 py-2.5 text-sm"
+                className={formControlClass("mt-3")}
                 placeholder="Your message…"
               />
               {(dispute.client_resolution_note ||

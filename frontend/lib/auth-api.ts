@@ -43,13 +43,14 @@ export async function signIn(email: string, password: string): Promise<AuthRespo
 export async function signUp(
   email: string,
   password: string,
-  opts?: { userType?: Extract<UserType, "client" | "vendor">; referralCode?: string },
+  userType: Extract<UserType, "client" | "vendor"> = "client",
+  referralCode?: string,
 ): Promise<AuthResponse> {
   const { data } = await api.post<AuthResponse>("/api/v1/auth/signup", {
     email,
     password,
-    user_type: opts?.userType ?? "client",
-    referral_code: opts?.referralCode ?? undefined,
+    user_type: userType,
+    referral_code: referralCode,
   });
   return data;
 }

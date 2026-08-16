@@ -379,7 +379,7 @@ export function VendorBookingModal({
                   setValidationError(null);
                 }}
                 placeholder="e.g. Ade and Kemi - wedding reception"
-                className="mt-1.5 w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="mt-1.5 w-full rounded-lg border border-neutral-200 px-3 py-2 text-base text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 md:text-sm"
               />
             </div>
 
@@ -442,7 +442,7 @@ export function VendorBookingModal({
                   setValidationError(null);
                 }}
                 placeholder="e.g. The Grand Hall, 12 Park Lane, London"
-                className="mt-1.5 w-full resize-y rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="mt-1.5 w-full resize-y rounded-lg border border-neutral-200 px-3 py-2 text-base text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 md:text-sm"
               />
               <p className="mt-1 text-xs text-neutral-500">Add before you pay.</p>
             </div>
@@ -527,7 +527,7 @@ export function VendorBookingModal({
                 rows={4}
                 maxLength={2000}
                 placeholder="Guest count, venue, dietary needs, timeline, or questions…"
-                className="mt-1.5 w-full resize-y rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="mt-1.5 w-full resize-y rounded-lg border border-neutral-200 px-3 py-2 text-base text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 md:text-sm"
               />
               <p className="mt-1 text-right text-xs text-neutral-400">{notes.length}/2000</p>
             </div>

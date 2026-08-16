@@ -13,19 +13,8 @@ from app.features.auth import messages as auth_messages
 logger = get_logger(__name__)
 
 
-def _normalize_email(email: str) -> str:
-    return normalize_email(email)
-
-
-def _signup_is_existing_user(user: Any) -> bool:
-    """Supabase returns a fake user (empty identities) when email already exists."""
-    identities = getattr(user, "identities", None)
-    if identities is None and hasattr(user, "model_dump"):
-        try:
-            identities = user.model_dump().get("identities")
-        except Exception:
-            identities = None
-    return isinstance(identities, list) and len(identities) == 0
+def _fail(error: str) -> dict[str, Any]:
+    return {"success": False, "error": error}
 
 
 def _user_info(user: Any) -> dict[str, Any]:
@@ -49,159 +38,115 @@ def _session_data(session: Any) -> dict[str, Any] | None:
     return data
 
 
+def _authenticated(user: Any, session: Any) -> dict[str, Any]:
+    return {"success": True, "user": _user_info(user), "session": _session_data(session)}
+
+
+def _signup_is_existing_user(user: Any) -> bool:
+    """Supabase returns a fake user (empty identities) when email already exists."""
+    identities = getattr(user, "identities", None)
+    if identities is None and hasattr(user, "model_dump"):
+        identities = user.model_dump().get("identities")
+    return identities == []
+
+
+def _signup_email_taken(err: AuthApiError) -> bool:
+    msg = str(err).lower()
+    return "already registered" in msg or "already been registered" in msg
+
+
 class SupabaseAuthService:
     def __init__(self, client: Client | None = None) -> None:
         self._client = client or get_supabase_auth_client()
 
-    def sign_up(self, email: str, password: str, options: dict | None = None) -> dict:
-        email = _normalize_email(email)
-        logger.info("sign_up started email=%s", email)
+    def sign_up(self, email: str, password: str, user_type: str) -> dict[str, Any]:
+        email = normalize_email(email)
+        logger.info("sign_up started email=%s user_type=%s", email, user_type)
         try:
-            creds: dict = {"email": email, "password": password}
-            if options is not None:
-                creds["options"] = options
-            response = self._client.auth.sign_up(creds)
+            response = self._client.auth.sign_up(
+                {
+                    "email": email,
+                    "password": password,
+                    "options": {"data": {"user_type": user_type}},
+                },
+            )
             user = response.user
-            session = response.session
             if not user:
                 logger.warning("sign_up finished without user email=%s", email)
-                return {"success": False, "error": auth_messages.SIGNUP_FAILED}
+                return _fail(auth_messages.SIGNUP_FAILED)
             if _signup_is_existing_user(user):
                 logger.info("sign_up rejected email=%s (already registered)", email)
-                return {"success": False, "error": auth_messages.SIGNUP_EMAIL_EXISTS}
-            if session:
-                logger.info(
-                    "sign_up success email=%s user_id=%s has_session=true",
-                    email,
-                    user.id,
-                )
-                return {
-                    "success": True,
-                    "session": _session_data(session),
-                    "user": _user_info(user),
-                }
-            logger.info(
-                "sign_up success email=%s user_id=%s has_session=false (confirm email)",
-                email,
-                user.id,
-            )
-            return {
-                "success": True,
-                "session": None,
-                "user": _user_info(user),
-                "message": auth_messages.SIGNUP_CONFIRM_EMAIL,
-            }
+                return _fail(auth_messages.SIGNUP_EMAIL_EXISTS)
+            logger.info("sign_up success email=%s user_id=%s", email, user.id)
+            return _authenticated(user, response.session)
         except AuthApiError as e:
-            err = str(e).lower()
-            if "already registered" in err or "already been registered" in err:
+            if _signup_email_taken(e):
                 logger.info("sign_up rejected email=%s (already registered)", email)
-                return {"success": False, "error": auth_messages.SIGNUP_EMAIL_EXISTS}
+                return _fail(auth_messages.SIGNUP_EMAIL_EXISTS)
             logger.info("sign_up rejected email=%s error=%s", email, e)
-            return {
-                "success": False,
-                "error": auth_messages.SIGNUP_FAILED,
-            }
-        except Exception as e:
+            return _fail(auth_messages.SIGNUP_FAILED)
+        except Exception:
             logger.exception("sign_up failed email=%s", email)
-            return {
-                "success": False,
-                "error": auth_messages.SIGNUP_FAILED,
-            }
+            return _fail(auth_messages.SIGNUP_FAILED)
 
     def sign_in_with_password(self, email: str, password: str) -> dict[str, Any]:
-        email = _normalize_email(email)
+        email = normalize_email(email)
         logger.info("sign_in started email=%s", email)
         try:
             response = self._client.auth.sign_in_with_password(
                 {"email": email, "password": password},
             )
-            user = response.user
-            session = response.session
-            if not session or not user:
+            if not response.user or not response.session:
                 logger.warning("sign_in failed email=%s (no session or user)", email)
-                return {"success": False, "error": auth_messages.LOGIN_CREDENTIALS_MISMATCH}
-            logger.info("sign_in success email=%s user_id=%s", email, user.id)
-            return {
-                "success": True,
-                "user": _user_info(user),
-                "session": _session_data(session),
-            }
+                return _fail(auth_messages.LOGIN_CREDENTIALS_MISMATCH)
+            logger.info("sign_in success email=%s user_id=%s", email, response.user.id)
+            return _authenticated(response.user, response.session)
         except AuthApiError as e:
             err = str(e).lower()
             if "invalid login credentials" in err or "invalid credentials" in err:
                 logger.info("sign_in rejected email=%s (invalid credentials)", email)
-                return {
-                    "success": False,
-                    "error": auth_messages.LOGIN_CREDENTIALS_REREGISTER,
-                }
+                return _fail(auth_messages.LOGIN_CREDENTIALS_REREGISTER)
             if "email not confirmed" in err:
                 logger.info("sign_in rejected email=%s (email not confirmed)", email)
-                return {
-                    "success": False,
-                    "error": auth_messages.EMAIL_NOT_CONFIRMED_SUPABASE,
-                }
+                return _fail(auth_messages.EMAIL_NOT_CONFIRMED_SUPABASE)
             logger.info("sign_in rejected email=%s error=%s", email, e)
-            return {
-                "success": False,
-                "error": auth_messages.SIGN_IN_UNAVAILABLE,
-            }
-        except Exception as e:
+            return _fail(auth_messages.SIGN_IN_UNAVAILABLE)
+        except Exception:
             logger.exception("sign_in failed email=%s", email)
-            return {
-                "success": False,
-                "error": auth_messages.SIGN_IN_UNAVAILABLE,
-            }
+            return _fail(auth_messages.SIGN_IN_UNAVAILABLE)
 
     def sign_out(self) -> dict[str, Any]:
-        logger.info("sign_out started")
         try:
             self._client.auth.sign_out()
-            logger.info("sign_out success")
             return {"success": True}
-        except Exception as e:
+        except Exception:
             logger.exception("sign_out failed")
-            return {
-                "success": False,
-                "error": auth_messages.SIGNOUT_FAILED,
-            }
+            return _fail(auth_messages.SIGNOUT_FAILED)
 
     def refresh_session(self, refresh_token: str) -> dict[str, Any]:
-        logger.info("refresh_session started")
         try:
             response = self._client.auth.refresh_session(refresh_token)
-            user = response.user
-            session = response.session
-            if not session or not user:
+            if not response.user or not response.session:
                 logger.warning("refresh_session failed (no session or user)")
-                return {"success": False, "error": auth_messages.REFRESH_SESSION_EXPIRED}
-            logger.info("refresh_session success user_id=%s", user.id)
-            return {
-                "success": True,
-                "user": _user_info(user),
-                "session": _session_data(session),
-            }
+                return _fail(auth_messages.REFRESH_SESSION_EXPIRED)
+            logger.info("refresh_session success user_id=%s", response.user.id)
+            return _authenticated(response.user, response.session)
         except AuthApiError as e:
             logger.debug("refresh_session rejected token: %s", e)
-            return {"success": False, "error": auth_messages.REFRESH_SESSION_EXPIRED}
-        except Exception as e:
+            return _fail(auth_messages.REFRESH_SESSION_EXPIRED)
+        except Exception:
             logger.exception("refresh_session failed")
-            return {
-                "success": False,
-                "error": auth_messages.REFRESH_SESSION_EXPIRED,
-            }
+            return _fail(auth_messages.REFRESH_SESSION_EXPIRED)
 
     def get_user_from_access_token(self, access_token: str) -> dict[str, Any]:
         try:
-            response = self._client.auth.get_user(access_token)
-            user = response.user
+            user = self._client.auth.get_user(access_token).user
             if not user:
-                logger.warning("get_user_from_access_token failed (no user)")
-                return {"success": False, "error": auth_messages.SIGN_IN_REQUIRED}
+                return _fail(auth_messages.SIGN_IN_REQUIRED)
             return {"success": True, "user": _user_info(user)}
         except AuthApiError as e:
-            # Expired or revoked session (e.g. after sign-out), bad token - routine, not server bugs.
             logger.debug("get_user_from_access_token rejected token: %s", e)
-            return {"success": False, "error": auth_messages.SIGN_IN_REQUIRED}
+            return _fail(auth_messages.SIGN_IN_REQUIRED)
         except Exception:
             logger.exception("get_user_from_access_token failed")
-            return {"success": False, "error": auth_messages.SIGN_IN_REQUIRED}
+            return _fail(auth_messages.SIGN_IN_REQUIRED)

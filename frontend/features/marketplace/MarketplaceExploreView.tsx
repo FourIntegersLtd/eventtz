@@ -372,7 +372,13 @@ export function MarketplaceExploreView({
 
   const selectionBar =
     isClient && selectedCount > 0 ? (
-      <div className="sticky bottom-4 z-30 mx-auto mt-6 flex max-w-xl flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/25 bg-white px-4 py-3 shadow-lg ring-1 ring-primary/10">
+      <div
+        className={`sticky z-30 mx-auto mt-6 flex max-w-xl flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/25 bg-white px-4 py-3 shadow-lg ring-1 ring-primary/10 ${
+          embedded
+            ? "bottom-[calc(1rem+5.5rem+env(safe-area-inset-bottom,0px))] md:bottom-4"
+            : "bottom-4"
+        }`}
+      >
         <div className="min-w-0">
           <p className="text-sm font-semibold text-neutral-900">
             {selectedCount} selected

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { getApiErrorDetail, saveVendorProfile } from "@/lib/vendorProfileApi";
 import { isHttpStatus } from "@/lib/api-errors";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
+import { vendorIsLiveApproved } from "@/lib/vendorAccess";
 import type { useToast } from "@/components/ui/Toast";
 import { buildDraftBio, validateStep } from "./onboardingLogic";
 import { vendorDataToPayload } from "./serializeVendorPayload";
@@ -25,6 +26,7 @@ type PersistenceSlice = Pick<
   | "approvalStatus"
   | "lockedPendingReview"
   | "canAddPortfolioWhilePending"
+  | "returnedForEdits"
   | "formError"
   | "setFormError"
   | "applyVendorProfileResponse"
@@ -71,6 +73,7 @@ export function useOnboardingSteps({
     approvalStatus,
     lockedPendingReview,
     canAddPortfolioWhilePending,
+    returnedForEdits,
     setFormError,
     applyVendorProfileResponse,
     persistAdditionalInfoFiles,
@@ -80,18 +83,37 @@ export function useOnboardingSteps({
 
   useEffect(() => {
     if (loadStatus !== "ready") return;
+    // Draft vendors never stay on the submitted screen (admin unsubmit or stale step 9).
+    if (
+      !isWalkthrough &&
+      step === 9 &&
+      (returnedForEdits || profileStatus === "draft")
+    ) {
+      setStep(8);
+      setReturnToReview(false);
+      return;
+    }
     if (lockedPendingReview && step !== 9 && !(step === 6 && canAddPortfolioWhilePending)) {
       setStep(9);
     }
-  }, [loadStatus, lockedPendingReview, canAddPortfolioWhilePending, step, setStep]);
+  }, [
+    loadStatus,
+    lockedPendingReview,
+    canAddPortfolioWhilePending,
+    returnedForEdits,
+    step,
+    setStep,
+    profileStatus,
+    isWalkthrough,
+  ]);
 
   const primaryLabel = useMemo(() => {
     if (canAddPortfolioWhilePending && step === 6) return "Save photos";
     if (isWalkthrough && step === 8) return "Finish walkthrough";
-    if (profileStatus === "submitted" && approvalStatus === "approved") {
+    if (vendorIsLiveApproved({ onboarding_status: profileStatus, approval_status: approvalStatus })) {
       return "Save changes";
     }
-    if (step === 8) return "Confirm";
+    if (step === 8) return "Submit for review";
     if (step === 9) return "OK";
     return "Next";
   }, [step, profileStatus, approvalStatus, isWalkthrough, canAddPortfolioWhilePending]);
@@ -142,7 +164,10 @@ export function useOnboardingSteps({
       }
     }
 
-    const isLive = profileStatus === "submitted" && approvalStatus === "approved";
+    const isLive = vendorIsLiveApproved({
+      onboarding_status: profileStatus,
+      approval_status: approvalStatus,
+    });
     const walkthroughFinish = isWalkthrough && step === 8 && isLive;
     const portfolioFixSave = canAddPortfolioWhilePending && step === 6;
     const nextStep = portfolioFixSave
@@ -191,6 +216,7 @@ export function useOnboardingSteps({
       } else {
         if (step === 8 && !walkthroughFinish) {
           track(MixpanelEvents.vendor_onboarding_submitted);
+          showToast({ title: "Submitted for review", tone: "success" });
         }
         setStep(nextStep);
         if (nextStep === 8) {

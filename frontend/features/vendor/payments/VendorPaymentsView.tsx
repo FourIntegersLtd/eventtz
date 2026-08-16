@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SettingsTabs } from "@/features/settings/SettingsTabs";
+import { useToast } from "@/components/ui/Toast";
 import { VendorPaymentHistory } from "@/features/vendor/payments/VendorPaymentHistory";
 import { VendorPayoutAccountPanel } from "@/features/vendor/payments/VendorPayoutAccountPanel";
 import {
@@ -34,6 +35,7 @@ function resolvePaymentsTab(value: string | null): VendorPaymentsTabId {
 export function VendorPaymentsView() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { showToast } = useToast();
   const tab = useMemo(
     (): VendorPaymentsTabId => resolvePaymentsTab(searchParams.get("tab")),
     [searchParams],
@@ -77,13 +79,14 @@ export function VendorPaymentsView() {
           const res = await fetchVendorStripeConnectStatus();
           if (res.charges_enabled && res.payouts_enabled) {
             track(MixpanelEvents.vendor_payouts_ready, { source: "payments" });
+            showToast({ title: "Payout account connected", tone: "success" });
           }
         } catch {
           /* refresh already set error */
         }
       }
     })();
-  }, [searchParams, router, refresh]);
+  }, [searchParams, router, refresh, showToast]);
 
   const onConnect = async () => {
     setConnecting(true);

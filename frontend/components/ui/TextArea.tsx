@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef, useId, type TextareaHTMLAttributes } from "react";
-import { FOCUS_RING, RADIUS } from "@/components/ui/tokens";
+import { FORM_CONTROL, FORM_CONTROL_FOCUS, FOCUS_RING } from "@/components/ui/tokens";
 
 export type TextAreaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
   label: string;
@@ -16,7 +16,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(function 
   const generatedId = useId();
   const inputId = id ?? generatedId;
   return (
-    <div className="space-y-1.5">
+    <div className="min-w-0 space-y-1.5">
       <label htmlFor={inputId} className="block text-sm font-medium text-neutral-800">
         {label}
       </label>
@@ -26,8 +26,8 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(function 
         rows={rows}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
-        className={`w-full resize-none border px-3 py-2 text-sm text-neutral-900 transition duration-150 ease-out ${RADIUS.sm} ${FOCUS_RING} ${
-          error ? "border-red-300" : "border-neutral-200"
+        className={`${FORM_CONTROL} ${FORM_CONTROL_FOCUS} resize-none ${FOCUS_RING} ${
+          error ? "border-red-300" : ""
         } ${className}`.trim()}
         {...rest}
       />

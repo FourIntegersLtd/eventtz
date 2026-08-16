@@ -4,6 +4,7 @@ import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Drawer } from "@/components/ui/Drawer";
+import { useToast } from "@/components/ui/Toast";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -43,6 +44,7 @@ export function BookingDisputeSection({
   bookingStatus,
   presentation = "inline",
 }: Props) {
+  const { showToast } = useToast();
   const [disputes, setDisputes] = useState<ParticipantDispute[]>([]);
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState("");
@@ -112,6 +114,7 @@ export function BookingDisputeSection({
         booking_id: bookingId,
         dispute_id: created.id,
       });
+      showToast({ title: "Dispute opened", tone: "success" });
       setDisputes((prev) => [created, ...prev.filter((x) => x.id !== created.id)]);
       setSummary("");
       setSubmitConfirmOpen(false);
@@ -179,7 +182,7 @@ export function BookingDisputeSection({
                   rows={3}
                   maxLength={4000}
                   placeholder="Describe what happened…"
-                  className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-base text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 md:text-sm"
                 />
               </label>
               <button

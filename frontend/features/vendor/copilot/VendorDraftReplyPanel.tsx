@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { useToast } from "@/components/ui/Toast";
 import { Modal } from "@/components/ui/Modal";
 import {
   postCopilotDraftReply,
   vendorCopilotErrorMessage,
 } from "@/lib/vendorCopilotApi";
+import { formControlClass } from "@/components/ui/tokens";
 
 type Props = {
   bookingId: string;
@@ -15,6 +17,7 @@ type Props = {
 };
 
 export function VendorDraftReplyPanel({ bookingId, onUseDraft }: Props) {
+  const { showToast } = useToast();
   const [open, setOpen] = useState(false);
   const [intent, setIntent] = useState<"accept" | "decline" | "clarify">("accept");
   const [draft, setDraft] = useState("");
@@ -81,7 +84,7 @@ export function VendorDraftReplyPanel({ bookingId, onUseDraft }: Props) {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               rows={6}
-              className="w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-sm text-neutral-900 outline-none focus:ring-2 focus:ring-primary/30"
+              className={formControlClass("rounded-xl focus:ring-2 focus:ring-primary/30")}
             />
             {tips.length > 0 ? (
               <ul className="list-disc space-y-1 pl-4 text-xs text-neutral-600">
@@ -97,6 +100,7 @@ export function VendorDraftReplyPanel({ bookingId, onUseDraft }: Props) {
                   size="sm"
                   onClick={() => {
                     onUseDraft(draft.trim());
+                    showToast({ title: "Draft added to chat", tone: "success" });
                     setOpen(false);
                   }}
                 >

@@ -6,6 +6,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { AuthPageShell } from "@/components/auth/AuthPageShell";
 import { Button } from "@/components/ui/Button";
+import { useToast } from "@/components/ui/Toast";
 import { Card } from "@/components/ui/Card";
 import { PasswordField } from "@/components/ui/PasswordField";
 import { adminPageBg, adminCard } from "@/components/admin-shell/adminTheme";
@@ -28,6 +29,7 @@ export function ResetPasswordView({ variant = "default" }: ResetPasswordViewProp
   const router = useRouter();
   const searchParams = useSearchParams();
   const { refreshUser } = useAuth();
+  const { showToast } = useToast();
   const token = useMemo(() => (searchParams.get("token") ?? "").trim(), [searchParams]);
   const isAdmin =
     variant === "admin" || (searchParams.get("portal") ?? "").trim().toLowerCase() === "admin";
@@ -88,6 +90,7 @@ export function ResetPasswordView({ variant = "default" }: ResetPasswordViewProp
     try {
       await resetPassword(token, parsed.data.password);
       track(MixpanelEvents.password_reset_completed);
+      showToast({ title: "Password updated", tone: "success" });
       await refreshUser();
       const me = await getMe();
       router.replace(dashboardPathForUserType(me.user_type));

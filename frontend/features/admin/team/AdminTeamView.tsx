@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { UserPlus } from "lucide-react";
+import { useToast } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -28,6 +29,7 @@ import {
   type AdminTeamMember,
 } from "@/lib/adminTeamApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { formControlClass } from "@/components/ui/tokens";
 
 function roleLabel(role: AdminTeamMember["admin_role"]): string {
   return role === "super_admin" ? "Super admin" : "Admin";
@@ -35,6 +37,7 @@ function roleLabel(role: AdminTeamMember["admin_role"]): string {
 
 export function AdminTeamView() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [members, setMembers] = useState<AdminTeamMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -97,6 +100,7 @@ export function AdminTeamView() {
         onClose={() => setCreateOpen(false)}
         onCreated={(message) => {
           setSuccessMessage(message);
+          showToast({ title: "Admin created", description: message, tone: "success" });
           void load();
         }}
       />
@@ -105,7 +109,7 @@ export function AdminTeamView() {
         <EmptyState title="No admins yet" variant="team" />
       ) : (
         <AdminTable>
-          <AdminTableElement>
+          <AdminTableElement className="min-w-[36rem]">
             <AdminTableHead>
               <AdminTableHeaderCell>Email</AdminTableHeaderCell>
               <AdminTableHeaderCell>Role</AdminTableHeaderCell>
@@ -137,14 +141,21 @@ export function AdminTeamView() {
                               try {
                                 await patchAdminTeamMember(m.user_id, { admin_role: next });
                                 await load();
+                                showToast({
+                                  title: "Role updated",
+                                  description: roleLabel(next),
+                                  tone: "success",
+                                });
                               } catch (err: unknown) {
-                                setError(getApiErrorDetail(err) ?? "Could not update role.");
+                                const message = getApiErrorDetail(err) ?? "Could not update role.";
+                                setError(message);
+                                showToast({ title: "Role update failed", description: message, tone: "error" });
                               } finally {
                                 setRowBusy(null);
                               }
                             })();
                           }}
-                          className="rounded-lg border border-neutral-200 bg-white px-2 py-1.5 text-sm"
+                          className={formControlClass("px-2 py-1.5")}
                         >
                           <option value="admin">Admin</option>
                           <option value="super_admin">Super admin</option>
@@ -172,8 +183,15 @@ export function AdminTeamView() {
                               try {
                                 const result = await sendAdminPasswordResetLink(m.user_id);
                                 setSuccessMessage(result.message);
+                                showToast({
+                                  title: "Reset link sent",
+                                  description: result.message,
+                                  tone: "success",
+                                });
                               } catch (err: unknown) {
-                                setError(getApiErrorDetail(err) ?? "Could not send reset link.");
+                                const message = getApiErrorDetail(err) ?? "Could not send reset link.";
+                                setError(message);
+                                showToast({ title: "Reset link failed", description: message, tone: "error" });
                               } finally {
                                 setRowBusy(null);
                               }
@@ -185,8 +203,14 @@ export function AdminTeamView() {
                                   account_suspended: !m.account_suspended,
                                 });
                                 await load();
+                                showToast({
+                                  title: m.account_suspended ? "Admin reactivated" : "Admin suspended",
+                                  tone: "success",
+                                });
                               } catch (err: unknown) {
-                                setError(getApiErrorDetail(err) ?? "Could not update status.");
+                                const message = getApiErrorDetail(err) ?? "Could not update status.";
+                                setError(message);
+                                showToast({ title: "Status update failed", description: message, tone: "error" });
                               } finally {
                                 setRowBusy(null);
                               }
@@ -196,9 +220,16 @@ export function AdminTeamView() {
                               try {
                                 const result = await deleteAdminTeamMember(m.user_id);
                                 setSuccessMessage(result.message);
+                                showToast({
+                                  title: "Admin removed",
+                                  description: result.message,
+                                  tone: "success",
+                                });
                                 await load();
                               } catch (err: unknown) {
-                                setError(getApiErrorDetail(err) ?? "Could not delete admin.");
+                                const message = getApiErrorDetail(err) ?? "Could not delete admin.";
+                                setError(message);
+                                showToast({ title: "Delete failed", description: message, tone: "error" });
                               } finally {
                                 setRowBusy(null);
                               }

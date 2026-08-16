@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Drawer } from "@/components/ui/Drawer";
 import { Button } from "@/components/ui/Button";
+import { useToast } from "@/components/ui/Toast";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { TextField } from "@/components/ui/TextField";
 import { TextArea } from "@/components/ui/TextArea";
@@ -53,6 +54,7 @@ export function VendorQuoteFormModal({
   quotePrefill,
 }: VendorQuoteFormModalProps) {
   const router = useRouter();
+  const { showToast } = useToast();
   const [eventName, setEventName] = useState("");
   const [eventDate, setEventDate] = useState(todayIsoDate());
   const [eventEndDate, setEventEndDate] = useState("");
@@ -173,6 +175,7 @@ export function VendorQuoteFormModal({
         conversation_id: conversationId,
         price_gbp: p,
       });
+      showToast({ title: "Quote sent", tone: "success" });
       reset();
       onClose();
       router.push(`/vendor/bookings/${encodeURIComponent(out.booking_request_id)}`);

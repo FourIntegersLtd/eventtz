@@ -179,9 +179,9 @@ export function MarketplaceVendorCard({
       <VendorPortfolioCover
         payload={p}
         businessName={biz}
-        heightClass="h-44 sm:h-48"
-        objectFit="contain"
-        className="rounded-none"
+        heightClass="aspect-[4/3] w-full sm:aspect-[3/2]"
+        objectFit="cover"
+        className="shrink-0 rounded-none"
         overlay={
           <div className="flex flex-wrap items-start gap-2">
             <p className="inline-flex rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-neutral-900 shadow-sm ring-1 ring-black/5">

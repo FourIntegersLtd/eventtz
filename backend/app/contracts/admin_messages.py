@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 
 class AdminMessageSendBody(BaseModel):
-    body: str = Field(min_length=1, max_length=5000)
+    body: str = Field(min_length=1, max_length=15000)
     #: When set, sends to all users of that type (optionally combined with recipient_user_ids).
     audience: Literal["clients", "vendors", "users"] | None = None
     recipient_user_ids: list[str] | None = None
@@ -61,7 +61,7 @@ class AdminSupportMessagesListResponse(BaseModel):
 
 
 class AdminSupportMessageCreateBody(BaseModel):
-    body: str = Field(min_length=1, max_length=5000)
+    body: str = Field(min_length=1, max_length=15000)
 
 
 class AdminSupportMessageCreateResponse(BaseModel):
@@ -70,7 +70,7 @@ class AdminSupportMessageCreateResponse(BaseModel):
 
 
 class AdminSupportMessageEditBody(BaseModel):
-    body: str = Field(min_length=1, max_length=5000)
+    body: str = Field(min_length=1, max_length=15000)
 
 
 class AdminSupportMessageEditResponse(BaseModel):

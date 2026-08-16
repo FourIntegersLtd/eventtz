@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { useToast } from "@/components/ui/Toast";
 import { BackLink } from "@/components/ui/BackLink";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ADMIN_CONFIRM_COPY } from "@/features/bookings/bookingConfirmCopy";
@@ -15,6 +16,7 @@ import {
   patchReviewVisibility,
   type AdminReviewRow,
 } from "@/lib/adminPlatformApi";
+import { getApiErrorDetail } from "@/lib/api-errors";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import {
@@ -29,19 +31,21 @@ type Props = {
 
 export function AdminReviewDetailView({ reviewId }: Props) {
   const { canModerateReviews } = useAdminPermissions();
+  const { showToast } = useToast();
   const [review, setReview] = useState<AdminReviewRow | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [confirmHide, setConfirmHide] = useState(false);
 
   const load = useCallback(async () => {
-    setError(null);
+    setLoadError(null);
     setLoading(true);
     try {
       setReview(await fetchAdminReview(reviewId));
     } catch {
-      setError("Could not load review.");
+      setLoadError("Could not load review.");
       setReview(null);
     } finally {
       setLoading(false);
@@ -55,12 +59,20 @@ export function AdminReviewDetailView({ reviewId }: Props) {
   const toggleVisibility = async () => {
     if (!review) return;
     setBusy(true);
+    setActionError(null);
+    const showPublicly = Boolean(review.hidden_at);
     try {
       await patchReviewVisibility(review.id, !review.hidden_at);
       setConfirmHide(false);
       await load();
-    } catch {
-      setError("Could not update review visibility.");
+      showToast({
+        title: showPublicly ? "Review shown publicly" : "Review hidden",
+        tone: "success",
+      });
+    } catch (e: unknown) {
+      const message = getApiErrorDetail(e) ?? "Could not update review visibility.";
+      setActionError(message);
+      showToast({ title: "Update failed", description: message, tone: "error" });
     } finally {
       setBusy(false);
     }
@@ -70,8 +82,8 @@ export function AdminReviewDetailView({ reviewId }: Props) {
     return <AdminLoadingState label="Loading review…" rows={2} />;
   }
 
-  if (error || !review) {
-    return <AdminErrorBanner message={error ?? "Not found."} />;
+  if (loadError || !review) {
+    return <AdminErrorBanner message={loadError ?? "Not found."} />;
   }
 
   const vendorName = review.vendor_display_name ?? "Vendor";
@@ -83,6 +95,7 @@ export function AdminReviewDetailView({ reviewId }: Props) {
   return (
     <div className="space-y-6">
       <BackLink href={backHref} label="Reviews" icon="chevron" tone="muted" />
+      {actionError ? <AdminErrorBanner message={actionError} /> : null}
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>

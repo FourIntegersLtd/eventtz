@@ -132,6 +132,8 @@ export interface VendorOnboardingData {
   stripeConnectStarted: boolean;
   /** 2+ = post-Stripe-removal step numbering (8 form steps). */
   onboardingFlowVersion: number;
+  /** Set by admin return-for-edits; cleared server-side on resubmit. */
+  returnedForEditsAt: string;
   // Step 7 - Additional info (optional certifications / dietary disclosures)
   foodHygieneCertFile: File | null;
   foodHygieneCertNamePersisted: string;
@@ -206,6 +208,7 @@ export const initialVendorOnboardingData: VendorOnboardingData = {
   portfolioWarnings: [],
   stripeConnectStarted: false,
   onboardingFlowVersion: 2,
+  returnedForEditsAt: "",
   foodHygieneCertFile: null,
   foodHygieneCertNamePersisted: "",
   indemnityCertFile: null,

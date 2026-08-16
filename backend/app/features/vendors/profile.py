@@ -183,6 +183,8 @@ def upsert_vendor_profile(
     out = get_vendor_profile(user_id)
     if not out:
         raise RuntimeError("vendors upsert returned no row")
+    if st == "submitted":
+        merged_payload.pop("returnedForEditsAt", None)
     if st == "submitted" and previous_status != "submitted":
         payload_bn = merged_payload.get("businessName")
         business_name = payload_bn.strip() if isinstance(payload_bn, str) else None

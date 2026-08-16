@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useToast } from "@/components/ui/Toast";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
@@ -11,6 +12,7 @@ import { adminPartialRefundSchema, parseForm } from "@/lib/validation";
 import { z } from "zod";
 import { RESOLUTION_ACTIONS, resolutionActionLabel } from "./disputeFormatters";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
+import { formControlClass } from "@/components/ui/tokens";
 
 const disputeNoteSchema = z.object({
   note: z.string().trim().max(8000, "Message is too long."),
@@ -24,6 +26,7 @@ type DisputeResolveModalProps = {
 
 export function DisputeResolveModal({ dispute, onClose, onResolved }: DisputeResolveModalProps) {
   const { canResolveDisputesFinancially } = useAdminPermissions();
+  const { showToast } = useToast();
   const [action, setAction] = useState<NonNullable<AdminDisputeCase["resolution_action"]>>(
     "release_to_vendor",
   );
@@ -71,9 +74,12 @@ export function DisputeResolveModal({ dispute, onClose, onResolved }: DisputeRes
         resolution_action: action,
         refund_amount_gbp: refundAmountGbp ?? undefined,
       });
+      showToast({ title: "Dispute resolved", description: resolutionActionLabel(action), tone: "success" });
       onResolved();
     } catch (e: unknown) {
-      setError(getApiErrorDetail(e) ?? "Could not resolve this dispute.");
+      const message = getApiErrorDetail(e) ?? "Could not resolve this dispute.";
+      setError(message);
+      showToast({ title: "Resolve failed", description: message, tone: "error" });
     } finally {
       setBusy(false);
     }
@@ -110,7 +116,7 @@ export function DisputeResolveModal({ dispute, onClose, onResolved }: DisputeRes
           <select
             value={action}
             onChange={(e) => setAction(e.target.value as typeof action)}
-            className="mt-1 w-full rounded-lg border border-neutral-200 px-3 py-2"
+            className={formControlClass("mt-1")}
           >
             {RESOLUTION_ACTIONS.map((a) => (
               <option key={a} value={a}>
@@ -129,7 +135,7 @@ export function DisputeResolveModal({ dispute, onClose, onResolved }: DisputeRes
               value={refundAmount}
               onChange={(e) => setRefundAmount(e.target.value)}
               placeholder="0.00"
-              className="mt-1 w-full rounded-lg border border-neutral-200 px-3 py-2"
+              className={formControlClass("mt-1")}
             />
           </div>
         ) : null}
@@ -144,7 +150,7 @@ export function DisputeResolveModal({ dispute, onClose, onResolved }: DisputeRes
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={3}
-            className="mt-1 w-full rounded-lg border border-neutral-200 px-3 py-2"
+            className={formControlClass("mt-1")}
           />
         </div>
       </div>

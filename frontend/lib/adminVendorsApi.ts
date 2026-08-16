@@ -119,6 +119,34 @@ export async function patchVendorListingOverride(
   };
 }
 
+export type AdminListingMediaSavePayload = {
+  displayOrder: string[];
+  hiddenImageUrls: string[];
+};
+
+export async function patchVendorListingMedia(
+  userId: string,
+  payload: AdminListingMediaSavePayload,
+): Promise<{
+  listing_cover_image_url: string | null;
+  display_order: string[];
+  hidden_image_urls: string[];
+}> {
+  const { data } = await api.patch<{
+    listing_cover_image_url: string | null;
+    display_order: string[];
+    hidden_image_urls: string[];
+  }>(`/api/v1/admin/vendors/${userId}/listing-media`, {
+    display_order: payload.displayOrder,
+    hidden_image_urls: payload.hiddenImageUrls,
+  });
+  return {
+    listing_cover_image_url: data.listing_cover_image_url ?? null,
+    display_order: data.display_order ?? payload.displayOrder,
+    hidden_image_urls: data.hidden_image_urls ?? payload.hiddenImageUrls,
+  };
+}
+
 export type AdminVendorRestoreStripeResult = {
   stripe_account_id: string | null;
   stripe_charges_enabled: boolean;

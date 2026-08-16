@@ -33,6 +33,8 @@ type Props = {
   payoutsVerified?: boolean;
   onViewProfileReview: () => void;
   onRefreshStatus: () => void;
+  profileStatus?: string;
+  returnedForEdits?: boolean;
   refreshingStatus?: boolean;
   statusCheckFeedback?: VendorStatusCheckFeedback | null;
   submittedSummaryBusinessName?: string;
@@ -89,6 +91,7 @@ export function OnboardingStepContent({
   payoutsVerified,
   onViewProfileReview,
   onRefreshStatus,
+  returnedForEdits = false,
   refreshingStatus,
   statusCheckFeedback,
   submittedSummaryBusinessName,
@@ -210,9 +213,11 @@ export function OnboardingStepContent({
       return (
         <StepSubmitted
           approvalStatus={approvalStatus}
+          returnedForEdits={returnedForEdits}
           listingVisible={listingVisible}
           payoutsVerified={payoutsVerified}
           onViewProfileReview={onViewProfileReview}
+          onEditProfile={() => onNavigateToStep(8)}
           onRefreshStatus={onRefreshStatus}
           refreshing={refreshingStatus}
           statusCheckFeedback={statusCheckFeedback}

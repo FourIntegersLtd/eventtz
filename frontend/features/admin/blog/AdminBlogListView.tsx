@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import { AdminPageHeader } from "@/features/admin/components/AdminPageHeader";
+import { adminCard } from "@/components/admin-shell/adminTheme";
 import {
   AdminTable,
   AdminTableBody,
@@ -91,8 +92,59 @@ export function AdminBlogListView() {
           }
         />
       ) : (
-        <AdminTable>
-          <AdminTableElement>
+        <>
+          <ul className="space-y-3 md:hidden">
+            {posts.map((p) => (
+              <li key={p.id}>
+                <div className={`${adminCard} overflow-hidden`}>
+                  {p.cover_image_url ? (
+                    <div className="aspect-[16/10] w-full overflow-hidden bg-neutral-100">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={p.cover_image_url}
+                        alt=""
+                        className="block h-full w-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="aspect-[16/10] w-full bg-primary-soft/60" aria-hidden />
+                  )}
+                  <div className="flex flex-col gap-3 p-4">
+                    <div className="min-w-0">
+                      <p className="font-medium text-neutral-900">{p.title || "Untitled"}</p>
+                      <p className="mt-0.5 truncate text-xs text-neutral-500">
+                        /{p.slug}
+                        {p.author_name?.trim() ? ` · By ${p.author_name.trim()}` : ""}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <span
+                        className={`inline-flex rounded-md px-2 py-0.5 text-xs font-medium ${
+                          p.status === "published"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : "bg-neutral-100 text-neutral-700"
+                        }`}
+                      >
+                        {p.status}
+                      </span>
+                      <p className="text-xs text-neutral-500">
+                        {p.updated_at ? formatDateTime(p.updated_at) : "-"}
+                      </p>
+                    </div>
+                    <Link
+                      href={`/admin/blog/${p.id}`}
+                      className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-neutral-200 bg-white text-sm font-medium text-primary transition hover:border-primary/30 hover:bg-primary/[0.04]"
+                    >
+                      Edit post
+                    </Link>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          <AdminTable className="hidden md:block">
+            <AdminTableElement className="min-w-[32rem]">
             <AdminTableHead>
               <AdminTableHeaderCell>Title</AdminTableHeaderCell>
               <AdminTableHeaderCell>Status</AdminTableHeaderCell>
@@ -136,6 +188,7 @@ export function AdminBlogListView() {
             </AdminTableBody>
           </AdminTableElement>
         </AdminTable>
+        </>
       )}
     </div>
   );

@@ -4,15 +4,17 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fetchVendorProfile } from "@/lib/vendorProfileApi";
+import { vendorIsLiveApproved } from "@/lib/vendorAccess";
 
 type RequireVendorApprovedProps = {
   children: ReactNode;
 };
 
 /**
- * Gates vendor portal pages (dashboard/bookings/messages/notifications) behind a
- * submitted + admin-approved profile. `/vendor/profile` itself is exempt (wired in
- * the portal layout) so vendors can finish onboarding and check their status there.
+ * Gates vendor portal pages (dashboard/bookings/payments/notifications) behind
+ * `vendorIsLiveApproved`. `/vendor/profile`, `/vendor/contact`, and `/vendor/messages`
+ * skip this guard (`isVendorPreApprovalRoute` in the portal layout) so vendors can
+ * finish onboarding, reach support, and read Eventtz Support threads while pending.
  */
 export function RequireVendorApproved({ children }: RequireVendorApprovedProps) {
   const router = useRouter();
@@ -24,8 +26,7 @@ export function RequireVendorApproved({ children }: RequireVendorApprovedProps) 
       try {
         const res = await fetchVendorProfile();
         if (cancelled) return;
-        const approved = res.onboarding_status === "submitted" && res.approval_status === "approved";
-        if (approved) {
+        if (vendorIsLiveApproved(res)) {
           setState("approved");
         } else {
           setState("blocked");

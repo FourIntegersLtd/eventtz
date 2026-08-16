@@ -1,10 +1,13 @@
-{{ headline }}
+{% if headline %}{{ headline }}
 
-{% if subtitle %}{{ subtitle }}
+{% endif %}{% if subtitle %}{{ subtitle }}
+
+{% endif %}{% if body_plain %}{{ body_plain }}
 
 {% endif %}{% if body %}{{ body }}
 
 {% endif %}{% if action_url %}{{ action_label }}: {{ action_url }}
+{% endif %}{% if secondary_action_url %}{{ secondary_action_label }}: {{ secondary_action_url }}
 {% endif %}
 
 {{ company_legal_name }}

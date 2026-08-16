@@ -294,6 +294,7 @@ class EmailService:
         to_email: str,
         business_name: str | None,
         onboarding_url: str,
+        messages_url: str,
         admin_message: str | None = None,
     ) -> bool:
         biz = (business_name or "").strip()
@@ -309,9 +310,8 @@ class EmailService:
             body = (
                 f"{intro}\n\n"
                 f"{note}\n\n"
-                "Your profile is unlocked so you can edit it now. Use the button below to "
-                "update your profile and resubmit when you are ready.\n\n"
-                "You can also find this message in Eventtz Support in your account."
+                "Your profile is unlocked so you can edit it now. Read the full message in "
+                "Eventtz Support, update your profile, and resubmit when you are ready."
             )
         else:
             body = (
@@ -324,8 +324,10 @@ class EmailService:
             headline=headline,
             subtitle=subtitle,
             body=body,
-            action_url=onboarding_url,
-            action_label="Update your profile",
+            action_url=messages_url,
+            action_label="Read message in Eventtz",
+            secondary_action_url=onboarding_url,
+            secondary_action_label="Update your profile",
         )
         html = render_template("booking/notification.html", ctx)
         text = render_template("booking/notification.txt", ctx)
@@ -672,18 +674,30 @@ class EmailService:
         *,
         to_email: str,
         messages_url: str,
+        message_body: str | None = None,
+        message_body_html: str | None = None,
     ) -> bool:
-        headline = "You have a new message"
-        subtitle = "From Eventtz Support"
-        body = (
-            "Eventtz Support sent you a message.\n\n"
-            "Sign in to read it and reply in your Messages inbox."
-        )
+        subject_line = "New message from Eventtz Support"
+        body_html = (message_body_html or "").strip()
+        note_plain = (message_body or "").strip()
+        if not note_plain and body_html:
+            from app.features.chat.sanitize import message_plain_text
+
+            note_plain = message_plain_text(body_html)
+        if body_html or note_plain:
+            body = "Sign in to read this thread and reply in your Messages inbox."
+        else:
+            body = (
+                "Eventtz Support sent you a message.\n\n"
+                "Sign in to read it and reply in your Messages inbox."
+            )
         ctx = transactional_email_context(
-            subject=headline,
-            headline=headline,
-            subtitle=subtitle,
+            subject=subject_line,
+            headline=None,
+            subtitle=None,
             body=body,
+            body_html=body_html or None,
+            body_plain=note_plain or None,
             action_url=ensure_public_email_url(messages_url),
             action_label="View message",
         )
@@ -691,7 +705,7 @@ class EmailService:
         text = render_template("booking/notification.txt", ctx)
         return resend_send(
             to=[to_email],
-            subject=f"{headline} | {APP_NAME}",
+            subject=f"{subject_line} | {APP_NAME}",
             html=html,
             text=text,
         )
@@ -721,6 +735,110 @@ class EmailService:
             html=html,
             text=text,
         )
+
+    def send_admin_email_test(
+        self,
+        *,
+        to_email: str,
+        layout: str,
+        message_body: str,
+        message_body_html: str | None = None,
+    ) -> bool:
+        """Super-admin email health check and layout previews."""
+        from app.features.admin.email_test import DEFAULT_TEST_MESSAGE_BODY
+        from app.features.chat.message_content import (
+            resolve_message_content,
+            transactional_rich_body_fields,
+        )
+
+        content = resolve_message_content(
+            message_body=message_body,
+            message_body_html=message_body_html,
+            default_plain=DEFAULT_TEST_MESSAGE_BODY,
+        )
+        plain = content.plain
+        body_html = content.html
+
+        base = email_public_base()
+
+        if layout in {"health", "transactional"}:
+            headline = "Eventtz test email"
+            ctx = transactional_email_context(
+                subject=headline,
+                headline=headline,
+                subtitle="Email health check",
+                action_url=base,
+                action_label="Open Eventtz",
+                **transactional_rich_body_fields(plain, body_html),
+            )
+            html = render_template("booking/notification.html", ctx)
+            text = render_template("booking/notification.txt", ctx)
+            return resend_send(
+                to=[to_email],
+                subject=f"{headline} | {APP_NAME}",
+                html=html,
+                text=text,
+            )
+
+        if layout == "welcome":
+            ctx = base_email_context(
+                display_name="Ada",
+                welcome_subtitle="Thanks for joining Eventtz.",
+                showcase_eyebrow="How Eventtz works",
+                showcase_intro=plain,
+                showcase_intro_html=body_html or None,
+                showcase_intro_plain=plain,
+                showcase_sections=client_welcome_showcase(),
+                welcome_cta_lead="Ready when you are: browse vendors and send your first request.",
+                welcome_cta_label="Find vendors",
+                welcome_cta_url=f"{base}/client/browse",
+                welcome_support_line=(
+                    f"Got questions? Reply to this email or write us at {EMAIL_SUPPORT_ADDRESS}."
+                ),
+                hero_image_url=EMAIL_IMAGES["welcome_clients"],
+            )
+            subject = f"Welcome to {APP_NAME}"
+            html = render_template("marketing/welcome.html", ctx)
+            text = render_template("marketing/welcome.txt", ctx)
+            return resend_send(to=[to_email], subject=subject, html=html, text=text)
+
+        if layout == "auth":
+            headline = "Test email"
+            ctx = transactional_email_context(
+                subject=headline,
+                headline="Verify your email",
+                subtitle="Layout preview",
+                action_url=f"{base}/signin",
+                action_label="Sign in",
+                **transactional_rich_body_fields(plain, body_html),
+            )
+            html = render_template("auth/password_reset.html", ctx)
+            text = render_template("auth/password_reset.txt", ctx)
+            return resend_send(
+                to=[to_email],
+                subject=f"{headline} | {APP_NAME}",
+                html=html,
+                text=text,
+            )
+
+        if layout == "admin":
+            alert_ctx = transactional_email_context(
+                subject=f"Test admin alert | {APP_NAME}",
+                headline="Test admin alert",
+                intro="This is a sample ops notification from the admin console.",
+                **transactional_rich_body_fields(plain, body_html),
+            )
+            html = render_template("admin/alert.html", alert_ctx)
+            text = render_template("admin/alert.txt", alert_ctx)
+            return resend_send(
+                to=[to_email],
+                subject=f"Test admin alert | {APP_NAME}",
+                html=html,
+                text=text,
+            )
+
+        logger.warning("send_admin_email_test unknown layout=%s", layout)
+        return False
 
 
 _email_service: EmailService | None = None

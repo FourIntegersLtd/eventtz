@@ -19,6 +19,8 @@ import {
 } from "@/lib/clientNotificationsApi";
 import { CHAT_UNREAD_CLEARED_EVENT, fetchChatUnreadCount } from "@/lib/chatApi";
 import { fetchVendorBookings } from "@/lib/vendorBookingsApi";
+import { fetchVendorProfile } from "@/lib/vendorProfileApi";
+import { vendorIsLiveApproved } from "@/lib/vendorAccess";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 import { NotificationBell } from "@/features/notifications/NotificationBell";
 import { HelpWidget } from "@/features/help/HelpWidget";
@@ -28,6 +30,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   isPortalNavActive,
   portalDashboardHref,
+  portalHidePageTitleOnMobile,
   portalNavItems,
   type PortalRole,
 } from "@/components/portal-shell/portalNav";
@@ -189,6 +192,7 @@ export function PortalShell({
   const [bookingUnread, setBookingUnread] = useState<number | null>(null);
   const [chatUnread, setChatUnread] = useState<number | null>(null);
   const [vendorBookingsPending, setVendorBookingsPending] = useState<number | null>(null);
+  const [vendorPreApproval, setVendorPreApproval] = useState(portal === "vendor");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [signOutOpen, setSignOutOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -204,13 +208,21 @@ export function PortalShell({
         setBookingUnread(bookingNotificationsUnread);
         setChatUnread(chatMessagesUnread);
         setVendorBookingsPending(null);
+        setVendorPreApproval(false);
       } else {
-        const [chatMessagesUnread, activeBookings] = await Promise.all([
+        const [chatMessagesUnread, profile] = await Promise.all([
           fetchChatUnreadCount(),
-          fetchVendorBookings("active"),
+          fetchVendorProfile().catch(() => null),
         ]);
+        const live = profile != null && vendorIsLiveApproved(profile);
+        setVendorPreApproval(!live);
         setChatUnread(chatMessagesUnread);
         setBookingUnread(null);
+        if (!live) {
+          setVendorBookingsPending(0);
+          return;
+        }
+        const activeBookings = await fetchVendorBookings("active");
         setVendorBookingsPending(activeBookings.filter((b) => b.booking_status === "pending").length);
       }
     } catch {
@@ -268,7 +280,9 @@ export function PortalShell({
   }, [mobileNavOpen]);
 
   const logoHref = portalDashboardHref(portal);
-  const navItems = portalNavItems(portal);
+  const navItems = portalNavItems(portal, {
+    vendorPreApproval: portal === "vendor" && vendorPreApproval,
+  });
   const roleFallback = portal === "client" ? "Client" : "Vendor";
 
   const closeMobile = () => setMobileNavOpen(false);
@@ -290,7 +304,17 @@ export function PortalShell({
       : (vendorBookingsPending ?? 0) + (chatUnread ?? 0);
 
   const notificationBell = user ? (
-    <NotificationBell portal={portal} unreadCount={bellUnreadCount} onMarkedRead={refreshUnreadCounts} />
+    <NotificationBell
+      portal={portal}
+      unreadCount={bellUnreadCount}
+      onMarkedRead={refreshUnreadCounts}
+      viewAllHref={
+        portal === "vendor" && vendorPreApproval ? "/vendor/messages" : undefined
+      }
+      viewAllLabel={
+        portal === "vendor" && vendorPreApproval ? "Open Messages" : undefined
+      }
+    />
   ) : null;
 
   const navProps = {
@@ -302,6 +326,8 @@ export function PortalShell({
     chatUnread,
     vendorBookingsPending,
   } as const;
+
+  const hideTitleOnMobile = portalHidePageTitleOnMobile(pathname, portal);
 
   const shell = (
     <div className="app-viewport-shell w-full min-w-0 overflow-x-hidden bg-page-bg text-neutral-900">
@@ -343,7 +369,7 @@ export function PortalShell({
             aria-label="Close menu"
             onClick={closeMobile}
           />
-          <aside className="absolute right-0 top-0 flex h-dvh max-h-dvh w-[min(20rem,calc(100vw-2.5rem))] max-w-full flex-col bg-white p-5 shadow-2xl">
+          <aside className="absolute right-0 top-0 flex h-dvh max-h-dvh w-[min(20rem,calc(100vw-2.5rem))] max-w-full flex-col bg-white p-5 pt-[max(1.25rem,env(safe-area-inset-top))] pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl">
             <div className="flex shrink-0 items-center justify-between gap-2">
               <div onClick={closeMobile}>
                 <EventtzLogo variant="sidebar" href={logoHref} />
@@ -394,7 +420,11 @@ export function PortalShell({
           <div className="flex h-full min-h-0 w-full min-w-0 flex-col">
             <div className="flex shrink-0 items-center justify-between gap-3">
               {title ? (
-                <h1 className="min-w-0 break-words font-heading text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl">
+                <h1
+                  className={`min-w-0 break-words font-heading text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl ${
+                    hideTitleOnMobile ? "hidden md:block" : ""
+                  }`}
+                >
                   {title}
                 </h1>
               ) : (
@@ -403,7 +433,13 @@ export function PortalShell({
               <div className="hidden shrink-0 md:block">{notificationBell}</div>
             </div>
             <div
-              className={`portal-content app-viewport-shell__main-scroll scroll-pane min-w-0 ${title ? "mt-5 sm:mt-6" : "mt-3"}`}
+              className={`portal-content app-viewport-shell__main-scroll scroll-pane min-w-0 ${
+                title
+                  ? hideTitleOnMobile
+                    ? "mt-0 md:mt-6"
+                    : "mt-5 sm:mt-6"
+                  : "mt-3"
+              }`}
             >
               {children}
             </div>

@@ -10,6 +10,8 @@ export type AdminEmailTemplate = {
 export type AdminEmailTestSendBody = {
   template_id: string;
   to_email: string;
+  message_body?: string;
+  message_body_html?: string;
 };
 
 export type AdminEmailTestSendResult = {
@@ -17,6 +19,11 @@ export type AdminEmailTestSendResult = {
   delivered: boolean;
   message: string | null;
 };
+
+export const DEFAULT_ADMIN_EMAIL_TEST_BODY =
+  "This is a test email from Eventtz. If you received this, Resend delivery is working.";
+
+export const ADMIN_EMAIL_HEALTH_TEMPLATE_ID = "health";
 
 function prefix() {
   return "/api/v1/admin/email";

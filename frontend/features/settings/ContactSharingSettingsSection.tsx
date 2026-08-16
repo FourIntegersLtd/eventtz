@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useToast } from "@/components/ui/Toast";
 import {
   fetchContactSharingSettings,
   updateContactSharingSettings,
@@ -20,10 +21,10 @@ export type ContactSharingSettingsSectionProps = {
 
 export function ContactSharingSettingsSection({ role }: ContactSharingSettingsSectionProps) {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [settings, setSettings] = useState<ContactSharingSettings | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
   const isVendor = role === "vendor";
 
   useEffect(() => {
@@ -38,12 +39,11 @@ export function ContactSharingSettingsSection({ role }: ContactSharingSettingsSe
     if (!settings) return;
     setSaving(true);
     setError(null);
-    setSaved(false);
     const next = { ...settings, [key]: !settings[key] };
     try {
       const updated = await updateContactSharingSettings({ [key]: next[key] });
       setSettings(updated);
-      setSaved(true);
+      showToast({ title: "Contact preferences saved", tone: "success" });
     } catch {
       setError("Could not save. Try again.");
     } finally {
@@ -60,13 +60,12 @@ export function ContactSharingSettingsSection({ role }: ContactSharingSettingsSe
     }
     setSaving(true);
     setError(null);
-    setSaved(false);
     try {
       const updated = await updateContactSharingSettings({
         contact_phone: parsed.data.phone,
       });
       setSettings(updated);
-      setSaved(true);
+      showToast({ title: "Phone number saved", tone: "success" });
     } catch {
       setError("Could not save phone number.");
     } finally {
@@ -93,7 +92,6 @@ export function ContactSharingSettingsSection({ role }: ContactSharingSettingsSe
     <SettingsSection title={title} description={description}>
       <div className="space-y-3 border-t border-neutral-100 px-5 py-4 sm:px-6">
         {error ? <LottieFailureInline message={error} /> : null}
-        {saved ? <p className="text-xs font-medium text-primary">Saved.</p> : null}
 
         <label className="flex items-start gap-3 text-sm">
           <input

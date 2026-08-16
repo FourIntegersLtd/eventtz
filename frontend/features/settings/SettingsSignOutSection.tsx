@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/Button";
+import { useToast } from "@/components/ui/Toast";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { SectionBlock } from "@/components/ui/SectionBlock";
 
 export function SettingsSignOutSection() {
   const { signOut } = useAuth();
+  const { showToast } = useToast();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -18,10 +20,16 @@ export function SettingsSignOutSection() {
     setLoading(true);
     try {
       await signOut();
+      setOpen(false);
       router.replace("/login");
+    } catch {
+      showToast({
+        title: "Could not sign out",
+        description: "Please try again.",
+        tone: "error",
+      });
     } finally {
       setLoading(false);
-      setOpen(false);
     }
   };
 

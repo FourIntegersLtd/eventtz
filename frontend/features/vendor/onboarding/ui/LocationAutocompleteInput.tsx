@@ -21,7 +21,7 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
 }
 
 const DEFAULT_INPUT_CLASS =
-  "w-full rounded-lg border border-neutral-200 py-2 pl-9 pr-10 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:bg-neutral-50 disabled:text-neutral-500";
+  "w-full rounded-lg border border-neutral-200 py-2 pl-9 pr-10 text-base text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:bg-neutral-50 disabled:text-neutral-500 md:text-sm";
 
 export type LocationAutocompleteInputProps = {
   /** Visible label above the field. Omit for compact/inline usage (e.g. a search bar) and pass `ariaLabel` instead. */

@@ -21,7 +21,8 @@ import {
   normalizePublicBioText,
   portfolioImageCountFromData,
 } from "./reviewDisplayHelpers";
-import { mapLegacyOnboardingStep } from "./onboardingProgress";
+import { isReturnedForEdits, resolveOnboardingStepFromProfile } from "./onboardingProgress";
+import { RETURNED_FOR_EDITS_FEEDBACK } from "./returnedForEditsCopy";
 import {
   mergePayloadIntoVendorData,
   normalizeVendorPayload,
@@ -92,6 +93,17 @@ export function useOnboardingPersistence({
     [profileStatus, approvalStatus, needsMorePortfolioPhotos],
   );
 
+  const returnedForEdits = useMemo(
+    () =>
+      isReturnedForEdits({
+        onboarding_status: profileStatus,
+        approval_status: approvalStatus,
+        current_step: step,
+        returnedForEditsAt: data.returnedForEditsAt,
+      }),
+    [profileStatus, approvalStatus, step, data.returnedForEditsAt],
+  );
+
   const applyVendorProfileResponse = useCallback(
     (res: Awaited<ReturnType<typeof fetchVendorProfile>>) => {
       setProfileStatus(res.onboarding_status ?? "draft");
@@ -133,15 +145,26 @@ export function useOnboardingPersistence({
           email: merged.email?.trim() || user.email || "",
           password: "",
         });
-        if (res.onboarding_status === "submitted") {
-          setStep(isWalkthrough ? 1 : res.approval_status === "approved" ? 1 : 9);
-        } else {
-          const cs = res.current_step ?? 1;
-          setStep(
-            isWalkthrough
-              ? 1
-              : mapLegacyOnboardingStep(cs, merged.onboardingFlowVersion ?? 1),
-          );
+        setStep(
+          isWalkthrough
+            ? 1
+            : resolveOnboardingStepFromProfile(
+                res,
+                merged.onboardingFlowVersion ?? 1,
+                false,
+              ),
+        );
+        if (
+          !isWalkthrough &&
+          isReturnedForEdits({
+            onboarding_status: res.onboarding_status ?? "draft",
+            approval_status: res.approval_status,
+            current_step: res.current_step,
+            returnedForEditsAt:
+              typeof merged.returnedForEditsAt === "string" ? merged.returnedForEditsAt : "",
+          })
+        ) {
+          setStatusCheckFeedback(RETURNED_FOR_EDITS_FEEDBACK);
         }
         setLoadStatus("ready");
       } catch (e) {
@@ -298,11 +321,19 @@ export function useOnboardingPersistence({
           tone: "neutral",
         });
       } else {
-        setStatusCheckFeedback({
-          tone: "info",
-          title: "Status checked",
-          description: "Your profile hasn't been submitted for review yet.",
-        });
+        // "Check approval status" only appears on the post-submit screen (step 9).
+        // Any non-submitted status here means admin returned the profile for edits.
+        const flowVersion = merged.onboardingFlowVersion ?? 1;
+        const editStep = resolveOnboardingStepFromProfile(
+          {
+            ...res,
+            onboarding_status: res.onboarding_status ?? "draft",
+          },
+          flowVersion,
+          isWalkthrough,
+        );
+        setStep(editStep);
+        setStatusCheckFeedback(RETURNED_FOR_EDITS_FEEDBACK);
       }
     } catch {
       setStatusCheckFeedback({
@@ -313,7 +344,7 @@ export function useOnboardingPersistence({
     } finally {
       setRefreshingStatus(false);
     }
-  }, [user?.email, applyVendorProfileResponse, showToast]);
+  }, [user?.email, applyVendorProfileResponse, showToast, isWalkthrough, step, setStep]);
 
   const persistProfileImageUrl = useCallback(
     async (url: string) => {
@@ -375,6 +406,7 @@ export function useOnboardingPersistence({
     portfolioImageCount,
     needsMorePortfolioPhotos,
     canAddPortfolioWhilePending,
+    returnedForEdits,
     applyVendorProfileResponse,
     onGenerateBioWithAI,
     onRefreshStatus,

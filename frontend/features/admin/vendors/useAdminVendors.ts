@@ -1,12 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useToast } from "@/components/ui/Toast";
 import {
   fetchAdminVendors,
   patchVendorApproval,
+  patchVendorListingMedia,
   patchVendorListingOverride,
   patchVendorUnsubmit,
   restoreAdminVendorStripeConnect,
+  type AdminListingMediaSavePayload,
   type AdminVendorRow,
   type AdminVendorUnsubmitResult,
   type AdminVendorsQuery,
@@ -19,6 +22,7 @@ import type { VendorApprovalStatus, VendorListingOverride } from "@/lib/domain-t
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 export function useAdminVendors() {
+  const { showToast } = useToast();
   const [rows, setRows] = useState<AdminVendorRow[]>([]);
   const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
@@ -79,15 +83,23 @@ export function useAdminVendors() {
           approval_status,
         });
         await load();
+        const labels: Record<VendorApprovalStatus, string> = {
+          pending: "Vendor moved to pending review",
+          approved: "Vendor approved",
+          banned: "Vendor banned",
+        };
+        showToast({ title: labels[approval_status], tone: "success" });
         return true;
-      } catch {
-        setError("Could not update approval.");
+      } catch (e) {
+        const message = getApiErrorDetail(e) ?? "Could not update approval.";
+        setError(message);
+        showToast({ title: "Approval update failed", description: message, tone: "error" });
         return false;
       } finally {
         setBusyId(null);
       }
     },
-    [load],
+    [load, showToast],
   );
 
   const setListingOverride = useCallback(
@@ -101,15 +113,50 @@ export function useAdminVendors() {
           listing_override,
         });
         await load();
+        const labels: Record<VendorListingOverride, string> = {
+          auto: "Listing set to automatic",
+          visible: "Vendor published on marketplace",
+          hidden: "Vendor hidden from marketplace",
+        };
+        showToast({ title: labels[listing_override], tone: "success" });
         return true;
       } catch (e) {
-        setError(getApiErrorDetail(e) ?? "Could not update listing visibility.");
+        const message = getApiErrorDetail(e) ?? "Could not update listing visibility.";
+        setError(message);
+        showToast({ title: "Listing update failed", description: message, tone: "error" });
         return false;
       } finally {
         setBusyId(null);
       }
     },
-    [load],
+    [load, showToast],
+  );
+
+  const setListingMedia = useCallback(
+    async (userId: string, payload: AdminListingMediaSavePayload) => {
+      setBusyId(userId);
+      setError(null);
+      try {
+        await patchVendorListingMedia(userId, payload);
+        await load();
+        showToast({
+          title:
+            payload.displayOrder.length === 0 && payload.hiddenImageUrls.length === 0
+              ? "Listing photos reset"
+              : "Listing photos updated",
+          tone: "success",
+        });
+        return true;
+      } catch (e) {
+        const message = getApiErrorDetail(e) ?? "Could not update listing photos.";
+        setError(message);
+        showToast({ title: "Update failed", description: message, tone: "error" });
+        return false;
+      } finally {
+        setBusyId(null);
+      }
+    },
+    [load, showToast],
   );
 
   const restoreStripeConnect = useCallback(
@@ -119,6 +166,7 @@ export function useAdminVendors() {
       try {
         await restoreAdminVendorStripeConnect(userId);
         await load();
+        showToast({ title: "Stripe Connect restored", tone: "success" });
         return true;
       } catch (e) {
         setError(getApiErrorDetail(e) ?? COULD_NOT_RESTORE_STRIPE_CONNECT);
@@ -127,7 +175,7 @@ export function useAdminVendors() {
         setBusyId(null);
       }
     },
-    [load],
+    [load, showToast],
   );
 
   const unsubmitVendor = useCallback(
@@ -215,6 +263,7 @@ export function useAdminVendors() {
     setSelectedUserId,
     setApproval,
     setListingOverride,
+    setListingMedia,
     restoreStripeConnect,
     unsubmitVendor,
     reportError,

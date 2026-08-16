@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useToast } from "@/components/ui/Toast";
 import { fetchVendorBookings, type VendorBookingListItem } from "@/lib/vendorBookingsApi";
 import { fetchChatUnreadCount } from "@/lib/chatApi";
 import { installVisibilityRefresh } from "@/lib/useVisibilityRefresh";
@@ -13,6 +14,7 @@ import {
   type VendorPaymentsStatus,
 } from "@/lib/vendorPaymentsApi";
 import { isVendorPayoutsReady } from "@/features/vendor/payments/useVendorPayoutsReady";
+import { getApiErrorDetail } from "@/lib/api-errors";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 function dateKeyFromIso(iso: string | null | undefined): string | null {
@@ -71,6 +73,7 @@ const initial: VendorDashboardState = {
 };
 
 export function useVendorDashboard(enabled: boolean) {
+  const { showToast } = useToast();
   const [state, setState] = useState<VendorDashboardState>(initial);
   const [payoutsConnecting, setPayoutsConnecting] = useState(false);
 
@@ -83,10 +86,12 @@ export function useVendorDashboard(enabled: boolean) {
       });
       const { onboarding_url } = await postConnectStripeAccount(returnPath);
       window.location.href = onboarding_url;
-    } catch {
+    } catch (e: unknown) {
       setPayoutsConnecting(false);
+      const message = getApiErrorDetail(e) ?? "Could not start payout setup. Try again.";
+      showToast({ title: "Payout setup failed", description: message, tone: "error" });
     }
-  }, []);
+  }, [showToast]);
 
   const load = useCallback(async () => {
     if (!enabled) return;

@@ -15,6 +15,7 @@ import {
   type CopilotAskMessage,
   vendorCopilotErrorMessage,
 } from "@/lib/vendorCopilotApi";
+import { formControlClass } from "@/components/ui/tokens";
 
 type ThreadItem =
   | { kind: "user"; content: string }
@@ -193,7 +194,7 @@ export function VendorCopilotThread({
               placeholder=""
               aria-label="Ask Abba a question"
               disabled={busy}
-              className="w-full rounded-xl bg-neutral-100 px-4 py-2.5 text-sm text-neutral-900 outline-none focus:ring-1 focus:ring-neutral-300 disabled:opacity-60"
+              className={formControlClass("rounded-xl bg-neutral-100 px-4 focus:ring-1 focus:ring-neutral-300 disabled:opacity-60")}
             />
           </div>
           <Button type="submit" size="sm" disabled={busy || !input.trim()}>

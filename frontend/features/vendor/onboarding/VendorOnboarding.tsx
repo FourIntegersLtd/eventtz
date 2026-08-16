@@ -12,9 +12,11 @@ import { OnboardingStepContent } from "./OnboardingStepContent";
 import { OnboardingProgressHeader } from "./OnboardingProgressHeader";
 import { OnboardingWizardStepTitle } from "./ui/OnboardingWizardStepTitle";
 import { OnboardingStepInfoModal } from "./ui/OnboardingStepInfoModal";
+import { RETURNED_FOR_EDITS_BODY, RETURNED_FOR_EDITS_TITLE } from "./returnedForEditsCopy";
 import { VendorProfilePhotoField } from "./VendorProfilePhotoField";
 import { VendorProfileSectionTabs } from "./VendorProfileSectionTabs";
 import { useVendorOnboardingController } from "./useVendorOnboardingController";
+import { vendorIsLiveApproved } from "@/lib/vendorAccess";
 import { Button } from "@/components/ui/Button";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
@@ -46,6 +48,7 @@ export function VendorOnboarding() {
     lockedPendingReview,
     portfolioImageCount,
     canAddPortfolioWhilePending,
+    returnedForEdits,
     primaryLabel,
     profileStatus,
     setBusinessNameError,
@@ -80,11 +83,19 @@ export function VendorOnboarding() {
     onUploadProfileImage,
   } = useVendorOnboardingController({ isWalkthrough });
 
-  const isApprovedLive =
-    profileStatus === "submitted" && approvalStatus === "approved";
+  const isApprovedLive = vendorIsLiveApproved({
+    onboarding_status: profileStatus,
+    approval_status: approvalStatus,
+  });
   const useWizardLayout = isWalkthrough || !isApprovedLive;
 
   const isLiveEdit = !useWizardLayout;
+  /** Jumped from review to fix one section — "Back to review" replaces linear Back. */
+  const editingFromReview = returnToReview && step < 8;
+  const showWizardBack =
+    !editingFromReview &&
+    (step > 1 || (lockedPendingReview && (step === 6 || step === 8)));
+  const returnedForEditsPending = !isWalkthrough && returnedForEdits;
   const questionnaireTopRef = useRef<HTMLDivElement>(null);
   const [stepInfoOpen, setStepInfoOpen] = useState(false);
 
@@ -113,11 +124,13 @@ export function VendorOnboarding() {
     payoutsVerified,
     onViewProfileReview,
     onRefreshStatus: () => void onRefreshStatus(),
+    profileStatus,
     refreshingStatus,
     statusCheckFeedback,
     submittedSummaryBusinessName: data.businessName,
     portfolioPhotoCount: portfolioImageCount,
     needsMorePortfolioPhotos: canAddPortfolioWhilePending,
+    returnedForEdits: returnedForEditsPending,
     onAddPortfolioPhotos,
     portfolioQuality,
     portfolioQualityAccepted,
@@ -221,6 +234,22 @@ export function VendorOnboarding() {
           </Link>
         </div>
       )}
+      {returnedForEditsPending && step === 8 ? (
+        <div className="mb-8 rounded-2xl bg-sky-50 p-5 text-sm text-sky-950 shadow-sm ring-1 ring-sky-200/70">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <p className="font-semibold text-sky-950">{RETURNED_FOR_EDITS_TITLE}</p>
+              <p className="mt-1 leading-relaxed text-sky-900/90">{RETURNED_FOR_EDITS_BODY}</p>
+            </div>
+            <Link
+              href="/vendor/messages"
+              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-95 sm:min-w-[10rem]"
+            >
+              Open Messages
+            </Link>
+          </div>
+        </div>
+      ) : null}
       {lockedPendingReview && step !== 9 && (
         <div className="mb-8 rounded-2xl bg-amber-50 p-5 text-sm text-amber-950 shadow-sm ring-1 ring-amber-200/50">
           <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:text-left">
@@ -355,7 +384,7 @@ export function VendorOnboarding() {
                         : "Close anytime. Your progress is saved."}
                   </p>
                   <div className="flex flex-wrap items-center justify-end gap-3">
-                    {returnToReview && step < 8 && !(lockedPendingReview && step === 6) ? (
+                    {editingFromReview && !(lockedPendingReview && step === 6) ? (
                       <button
                         type="button"
                         onClick={goBackToReview}
@@ -364,7 +393,7 @@ export function VendorOnboarding() {
                         Back to review
                       </button>
                     ) : null}
-                    {step > 1 || (lockedPendingReview && (step === 6 || step === 8)) ? (
+                    {showWizardBack ? (
                       <button
                         type="button"
                         onClick={goBack}

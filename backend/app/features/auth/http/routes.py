@@ -63,15 +63,7 @@ async def signup(
     client_ip = _client_ip(request)
 
     service = get_supabase_auth_service()
-    data_meta: dict[str, Any] = {"user_type": body.user_type}
-    if body.options and isinstance(body.options.get("data"), dict):
-        data_meta = {**body.options["data"], **data_meta}
-    signup_options: dict[str, Any] = {"data": data_meta}
-    if body.options:
-        for key, val in body.options.items():
-            if key != "data":
-                signup_options[key] = val
-    result = service.sign_up(body.email, body.password, signup_options)
+    result = service.sign_up(body.email, body.password, body.user_type)
     if result.get("success"):
         logger.info("POST /auth/signup completed email=%s success=true", body.email)
         uid = result["user"].get("id")

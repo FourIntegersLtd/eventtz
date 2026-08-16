@@ -9,6 +9,8 @@ from app.contracts.disputes import AdminVendorInsightsResponse
 from app.contracts.vendor import (
     AdminVendorApprovalBody,
     AdminVendorApprovalResponse,
+    AdminVendorListingMediaBody,
+    AdminVendorListingMediaResponse,
     AdminVendorListingOverrideBody,
     AdminVendorListingOverrideResponse,
     AdminVendorProfileNudgeBody,
@@ -18,12 +20,17 @@ from app.contracts.vendor import (
     AdminVendorUnsubmitBody,
     AdminVendorUnsubmitResponse,
     AdminVendorsListResponse,
+    admin_vendor_row_from_db,
 )
 from app.features.admin.messages import (
     COULD_NOT_RESTORE_STRIPE_CONNECT,
     VENDOR_PROFILE_NOT_FOUND,
 )
 from app.features.admin.audit import insert_admin_audit_log
+from app.features.vendors.listing_media import (
+    listing_media_state_from_row,
+    update_vendor_listing_media,
+)
 from app.features.payments.stripe import restore_vendor_connect_from_payout_history
 from app.features.vendors.moderation import (
     get_vendor_admin_insights,
@@ -64,7 +71,7 @@ def admin_list_vendors(
     )
     return AdminVendorsListResponse(
         success=True,
-        vendors=rows,
+        vendors=[admin_vendor_row_from_db(r) for r in rows],
         total=total,
         offset=offset,
         limit=limit,
@@ -125,6 +132,55 @@ def admin_set_vendor_approval(
         success=True,
         user_id=user_id,
         approval_status=row.get("approval_status", body.approval_status),
+    )
+
+
+@router.patch(
+    "/vendors/{user_id}/listing-media",
+    response_model=AdminVendorListingMediaResponse,
+)
+def admin_set_vendor_listing_media(
+    user_id: str,
+    body: AdminVendorListingMediaBody,
+    request: Request,
+    response: Response,
+) -> AdminVendorListingMediaResponse:
+    user = require_admin(request, response)
+    logger.info(
+        "PATCH /admin/vendors/%s/listing-media admin_user_id=%s visible=%s hidden=%s",
+        user_id,
+        user.get("id"),
+        len(body.display_order),
+        len(body.hidden_image_urls),
+    )
+    try:
+        row = update_vendor_listing_media(
+            user_id,
+            display_order=body.display_order,
+            hidden_image_urls=body.hidden_image_urls,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    if not row:
+        raise HTTPException(status_code=404, detail=VENDOR_PROFILE_NOT_FOUND)
+    state = listing_media_state_from_row(row)
+    insert_admin_audit_log(
+        admin_user_id=str(user.get("id") or ""),
+        action="vendor.listing_media_set",
+        entity_type="vendor",
+        entity_id=user_id,
+        audit_event_details={
+            "listing_cover_image_url": state["listing_cover_image_url"],
+            "display_order_count": len(state["display_order"]),
+            "hidden_count": len(state["hidden_image_urls"]),
+        },
+    )
+    return AdminVendorListingMediaResponse(
+        success=True,
+        user_id=user_id,
+        listing_cover_image_url=state["listing_cover_image_url"],
+        display_order=state["display_order"],
+        hidden_image_urls=state["hidden_image_urls"],
     )
 
 

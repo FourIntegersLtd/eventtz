@@ -16,6 +16,8 @@ export type DrawerProps = {
   widthClassName?: string;
   /** Stack above other overlays (e.g. nested drawers). */
   zIndexClassName?: string;
+  /** Thread-style content: body is a flex column; inner panes scroll instead of the drawer body. */
+  fillHeight?: boolean;
 };
 
 /**
@@ -33,6 +35,7 @@ export function Drawer({
   footer,
   widthClassName = "max-w-md",
   zIndexClassName = "z-50",
+  fillHeight = false,
 }: DrawerProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerElementRef = useRef<Element | null>(null);
@@ -128,7 +131,15 @@ export function Drawer({
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="scroll-pane min-h-0 flex-1 px-5 py-4">{children}</div>
+            <div
+              className={
+                fillHeight
+                  ? "flex min-h-0 flex-1 flex-col overflow-hidden px-5 py-4"
+                  : "scroll-pane min-h-0 flex-1 px-5 py-4"
+              }
+            >
+              {children}
+            </div>
             {footer ? <div className="border-t border-neutral-200 px-5 py-4">{footer}</div> : null}
           </motion.div>
         </div>

@@ -20,7 +20,7 @@
                     color: #2d2938;
                   "
                 >
-                  {{ showcase_intro }}
+                  {% if showcase_intro_html %}{{ showcase_intro_html | safe }}{% else %}{{ showcase_intro }}{% endif %}
                 </p>
               </td>
             </tr>

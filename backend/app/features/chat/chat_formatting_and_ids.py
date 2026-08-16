@@ -14,6 +14,8 @@ from app.features.chat import messages as chat_messages
 logger = get_logger(__name__)
 
 MAX_MESSAGE_LEN = 5000
+# Stored HTML for admin support messages may exceed visible text length (tags, lists, links).
+MAX_MESSAGE_BODY_STORAGE_LEN = 15000
 SUPPORT_PEER_DISPLAY = chat_messages.SUPPORT_PEER_DISPLAY
 SUPPORT_PEER_USER_ID = "eventtz-support"
 ADMIN_SENDER_DISPLAY = chat_messages.ADMIN_SENDER_DISPLAY
@@ -198,7 +200,7 @@ def insert_message(
     text = body.strip()
     if not text:
         raise ValueError(chat_messages.MESSAGE_EMPTY)
-    if len(text) > MAX_MESSAGE_LEN:
+    if len(text) > MAX_MESSAGE_BODY_STORAGE_LEN:
         raise ValueError(chat_messages.message_too_long_detail(MAX_MESSAGE_LEN))
 
     client = get_db()
