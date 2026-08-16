@@ -12,6 +12,8 @@ type InspirationVideoTileProps = {
   onClick?: () => void;
   /** Hide on-tile title when the showcase renders it externally. */
   showTitle?: boolean;
+  /** Skip the opacity fade so iOS does not sit on a black frame while waiting. */
+  fadeIn?: boolean;
 };
 
 export function InspirationVideoTile({
@@ -21,37 +23,53 @@ export function InspirationVideoTile({
   className = "",
   onClick,
   showTitle = true,
+  fadeIn = true,
 }: InspirationVideoTileProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     const el = videoRef.current;
-    if (!el || !shouldLoad) return;
+    if (!el) return;
+
+    if (!shouldLoad || !isActive) {
+      el.pause();
+      return;
+    }
 
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (motionQuery.matches) {
+      el.pause();
+      return;
+    }
 
-    const syncPlayback = () => {
-      if (!isActive || motionQuery.matches) {
-        el.pause();
-        return;
-      }
+    let cancelled = false;
+    const tryPlay = () => {
+      if (cancelled) return;
       el.muted = true;
       void el.play().catch(() => {});
     };
 
-    syncPlayback();
-    el.addEventListener("canplay", syncPlayback);
-    el.addEventListener("loadeddata", syncPlayback);
+    el.muted = true;
+    if (el.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+      tryPlay();
+    } else {
+      el.load();
+      el.addEventListener("loadeddata", tryPlay);
+      el.addEventListener("canplay", tryPlay);
+    }
 
     return () => {
-      el.removeEventListener("canplay", syncPlayback);
-      el.removeEventListener("loadeddata", syncPlayback);
+      cancelled = true;
+      el.removeEventListener("loadeddata", tryPlay);
+      el.removeEventListener("canplay", tryPlay);
+      el.pause();
     };
   }, [isActive, shouldLoad, video.src]);
 
   const content = (
     <>
       <LandingVideo
+        key={shouldLoad ? video.src : "idle"}
         ref={videoRef}
         className={`absolute inset-0 h-full w-full object-cover transition duration-[900ms] ${
           isActive ? "scale-100" : "scale-110 blur-[2px] group-hover:scale-105 group-hover:blur-0"
@@ -61,6 +79,7 @@ export function InspirationVideoTile({
         playsInline
         preload={isActive ? "auto" : "metadata"}
         src={shouldLoad ? video.src : undefined}
+        fadeIn={fadeIn}
         aria-hidden
       />
       <div

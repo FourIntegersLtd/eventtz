@@ -1110,15 +1110,17 @@ body::-webkit-scrollbar:vertical {
 }
 
 @media (max-width: 767px) {
+  /* Hidden (opacity:0) video nodes stay in the compositor and show black
+     on iOS when they become active. Keep one decoded clip on screen. */
   .inspiration-slide-frame {
     inset: 0;
-    opacity: 0;
+    display: none;
     pointer-events: none;
     z-index: 10;
   }
 
   .inspiration-slide-frame[data-active="true"] {
-    opacity: 1;
+    display: block;
     pointer-events: auto;
     z-index: 20;
   }
