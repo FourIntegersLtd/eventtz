@@ -3,10 +3,11 @@
 ## Primary — feature flow track
 
 **Use this:** [feature-slice-prompt.md](./feature-slice-prompt.md)  
+**Token tip:** [NEW_CHAT_PER_SLICE.md](./NEW_CHAT_PER_SLICE.md) — **one new chat per slice**, not one mega-chat for the whole course.  
 **Map & order:** [../FEATURE_TRACK.md](../FEATURE_TRACK.md)  
 **Rules:** [_SPINOFF_RULES.md](./_SPINOFF_RULES.md)
 
-One chat on `cursor/engineering-course-28c8`. Say e.g. **"start auth"** or paste the feature-slice prompt.
+Branch: `cursor/engineering-course-28c8`. Start a **new chat** per slice; paste the prompt from `NEW_CHAT_PER_SLICE.md` or say e.g. **"Slice 3b — booking detail"**.
 
 ---
 
