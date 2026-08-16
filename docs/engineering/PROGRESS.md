@@ -4,11 +4,11 @@ Personal engineering course using the real Eventtz codebase.
 
 **Course branch:** `cursor/engineering-course-28c8`  
 **Primary track:** [FEATURE_TRACK.md](./FEATURE_TRACK.md)  
-**Curriculum:** [CURRICULUM.md](./CURRICULUM.md)
+**Entry point:** [README.md](./README.md)
 
 ### Learner preferences
 
-- **Models over SQL** — teach via `contracts/`, `domain-types.ts`, and feature code; SQL only on migration days or when asked.
+- **Models over SQL** — teach via `contracts/`, `domain-types.ts`, and feature code; SQL only when asked or for migrations.
 - **Complete route** — every example lists the full file path chain (UI → API → contract → feature → `get_db()`) before showing code snippets.
 - **Descriptive names** — immediately understandable; see [NAMING.md](./NAMING.md).
 - **Skip mandatory tasks** — teacher-led feature walkthroughs; no hunts/exit tickets unless requested.
@@ -25,8 +25,11 @@ Personal engineering course using the real Eventtz codebase.
 | 3a Client booking — enquire | **complete** |
 | 3b Client booking — detail | **complete** |
 | 4 Client payment | not started |
-| 5 Vendor quote + accept | not started |
-| 6 Vendor payout | not started |
+| 5 Vendor booking lifecycle | not started |
+| 6 Payout + completion | not started |
+| 7a Client workspace | not started |
+| 7b Comms + realtime | not started |
+| 7c Trust + vendor + admin | not started |
 
 ---
 
@@ -176,136 +179,42 @@ Personal engineering course using the real Eventtz codebase.
 
 ---
 
-## Legacy — concept days (on hold)
+## Slice 4 — Client payment (feature track)
 
-### Day 1 — What is system architecture?
-
-**Date started:** 2026-08-14
-
-### Concept
-
-System architecture is deciding **who does what** and **how the parts communicate**.  
-Like a restaurant: customer, waiter, kitchen, cashier, and delivery each have a role.
-
-**One-sentence definition:** System architecture is the blueprint for how the pieces of software fit together and pass work between each other.
-
-### What I understood
-
-_(To be filled in after you explain the concept back in your own words.)_
-
-### What I struggled with
-
-_(To be filled in during/after the lesson.)_
-
-### Important Eventtz code
-
-| Area | Location | Role |
-|------|----------|------|
-| Frontend (UI) | `frontend/` | Next.js app — pages users see |
-| API client layer | `frontend/lib/*Api.ts` | Frontend talks to backend through these |
-| Backend entry | `backend/app/main.py` | FastAPI app starts here |
-| Route registry | `backend/app/http/router.py` | Lists all API feature routers |
-| Booking creation | `backend/app/features/bookings/create.py` | Business logic for new enquiries |
-| Booking API | `backend/app/features/bookings/http/client.py` | HTTP endpoints clients call |
-| Database schema | `backend/sql/` | SQL migrations (Postgres via Supabase) |
-| Auth | `backend/app/features/auth/` | Login, sessions, cookies |
-| Payments | `backend/app/features/bookings/payments.py`, `backend/app/features/payments/` | Stripe Connect + Checkout |
-| File storage | `backend/app/features/media/` + Supabase Storage | Images/uploads |
-| Tests | `backend/tests/`, `frontend/**/*.test.ts` | Automated checks |
-| Deploy | `backend/railway.toml`, Railway CLI | Backend hosting |
-
-### Decisions made
-
-- **Leave it alone:** Eventtz's split (Next.js frontend + FastAPI backend + Supabase + Stripe) is a sensible, simple architecture for a marketplace at current scale. No need for microservices yet.
-- **Improve later:** As traffic grows, we may add caching, background job queues, or read replicas — but only when a real bottleneck appears.
-
-### Improvements made
-
-- Created `docs/engineering/PROGRESS.md` and `docs/engineering/GLOSSARY.md` to track the course.
-
-### Lesson status
-
-**In progress** — waiting for learner to answer quiz questions and explain the concept back.
+**Status:** not started  
+**Outline:** [lessons/slice-4-client-payment.md](./lessons/slice-4-client-payment.md)
 
 ---
 
-## Day 2 — How to model a real-world problem? (v2 redo)
+## Slice 5 — Vendor booking lifecycle (feature track)
 
-**Date started:** 2026-08-14  
-**Curriculum:** v2 — concept + code trace + hands-on rep required
-
-### Concept
-
-Before you write routes or SQL, name the **nouns** (entities), how they connect (relationships), which feature owns each noun (domain boundaries), and what must be **snapshotted** vs read **live**.
-
-**One-sentence definition:** Domain modeling is naming what exists, how it relates, and what must not change when the source data changes later.
-
-### What I understood
-
-Domain modeling: entities, relationships, domain boundaries, snapshot (`line_items`) vs live (FK to `users`). £200 package stays on booking when vendor edits catalog to £300. Code trace: UI → `clientBookingsApi` → `client.py` → `create.py` → `list_pricing` → `booking_requests`.
-
-### What I struggled with
-
-_(Optional — fill in later.)_
-
-### Code trace (Day 2 v2)
-
-1. [x] `frontend/lib/clientBookingsApi.ts`
-2. [x] `backend/app/features/bookings/http/client.py`
-3. [x] `backend/app/features/bookings/create.py`
-4. [x] `backend/app/features/vendors/list_pricing.py`
-5. [x] `backend/sql/010_booking_requests.sql`
-
-### Hands-on rep (Day 2 v2)
-
-- [x] Code trace delivered in lesson (exit ticket skipped per learner request)
-
-### Lesson status
-
-**Complete** — 2026-08-14 (v2 redo; explain-back skipped on request).
+**Status:** not started  
+**Outline:** [lessons/slice-5-vendor-booking.md](./lessons/slice-5-vendor-booking.md)
 
 ---
 
-## Day 3 — How databases actually work?
+## Slice 6 — Payout, completion, refunds (feature track)
 
-**Date started:** 2026-08-14  
-**Curriculum:** v2
+**Status:** not started  
+**Outline:** [lessons/slice-6-vendor-payout.md](./lessons/slice-6-vendor-payout.md)
 
-### Concept
+---
 
-A database stores **tables** of **rows** and **columns** with strict **types**. Each row has a **primary key** (unique id). **Foreign keys** link tables and define what happens on delete (`CASCADE`, `SET NULL`, `RESTRICT`). Eventtz schema lives in `backend/sql/`; the backend talks to Postgres through Supabase via `get_db()`.
+## Slice 7a — Client workspace (feature track)
 
-**One-sentence definition:** A database is typed, permanent storage where tables relate to each other through keys and rules enforced by Postgres.
+**Status:** not started  
+**Outline:** [lessons/slice-7a-client-workspace.md](./lessons/slice-7a-client-workspace.md)
 
-### What I understood
+---
 
-_(Lesson delivered — fill in when ready.)_
+## Slice 7b — Comms + realtime (feature track)
 
-### Important Eventtz code
+**Status:** not started  
+**Outline:** [lessons/slice-7b-comms-realtime.md](./lessons/slice-7b-comms-realtime.md)
 
-| Area | Location | Role |
-|------|----------|------|
-| Schema migrations | `backend/sql/001_*.sql`, `010_*.sql`, … | Source of truth for tables |
-| DB client | `backend/app/core/db.py` | `get_db()` → Supabase service client |
-| Insert example | `backend/app/features/bookings/create.py` | `.table("booking_requests").insert(...)` |
-| FK + CASCADE | `backend/sql/010_booking_requests.sql` | `client_user_id` / `vendor_user_id` → `users` |
-| Delete bug fix | `backend/sql/063_fix_user_delete_fk_constraints.sql` | CASCADE vs SET NULL vs RESTRICT |
-| Row helpers | `backend/app/core/db.py` | `rows()`, `one_row()` parse query results |
+---
 
-### Code trace (Day 3)
+## Slice 7c — Trust, vendor onboarding & admin (feature track)
 
-`create.py` insert → `get_db()` → Supabase PostgREST → Postgres `booking_requests` table (columns + FK constraints)
-
-### Break-it answer
-
-Delete `auth.users` row → cascades to `public.users` → cascades to `booking_requests` where that user is client or vendor (and related rows in reviews, chat, etc.). `ON DELETE SET NULL` keeps the row but clears the FK; `RESTRICT` blocks the delete.
-
-### Decisions made
-
-- **Leave it alone:** Numbered SQL migrations in `backend/sql/`
-- **Leave it alone:** Service-role Supabase client in backend only
-- **Improve later:** Soft-delete users instead of hard delete for audit (product decision)
-
-### Lesson status
-
-**Complete** — 2026-08-14 (lesson delivered; explain-back optional).
+**Status:** not started  
+**Outline:** [lessons/slice-7c-trust-and-admin.md](./lessons/slice-7c-trust-and-admin.md)

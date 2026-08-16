@@ -68,5 +68,3 @@ If any answer is no → rename when you touch that file.
 2. **No behaviour changes** — rename only
 3. **Run tests** after each batch: `cd backend && poetry run pytest tests/ -q`
 4. **Don’t rename JSON/API fields** without a migration plan (breaking)
-
-Full audit prompt: [audits/backend-naming-audit-prompt.md](./audits/backend-naming-audit-prompt.md)

@@ -1,6 +1,6 @@
 # Feature slice — copy-paste prompt
 
-**New chat per slice** — see [NEW_CHAT_PER_SLICE.md](./NEW_CHAT_PER_SLICE.md). Do not continue Slice 2 + 3a + 3b in one long thread unless you are debugging the same slice.
+**New chat per slice** — see [NEW_CHAT_PER_SLICE.md](./NEW_CHAT_PER_SLICE.md). Do not continue multiple slices in one long thread unless you are debugging the same slice.
 
 Use in a **fresh chat** on `cursor/engineering-course-28c8`. Replace `[SLICE NAME]` and `[N]`.
 
@@ -36,5 +36,8 @@ Start with the complete route for [SLICE NAME].
 | 3a | Client booking — enquire |
 | 3b | Client booking — detail, status, adjustments |
 | 4 | Client payment |
-| 5 | Vendor quote + accept/decline |
-| 6 | Vendor payout |
+| 5 | Vendor booking lifecycle |
+| 6 | Payout, completion, refunds |
+| 7a | Client workspace |
+| 7b | Comms + realtime |
+| 7c | Trust, vendor onboarding & admin |

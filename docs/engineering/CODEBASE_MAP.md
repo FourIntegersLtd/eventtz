@@ -1,7 +1,7 @@
 # Eventtz codebase map (for tracing & bug fixes)
 
 Quick reference when a lesson says "trace the path" or you have a bug to fix.  
-**Start here, then grep.** One concept per day — this file is your compass, not the lesson.
+**Start here, then grep.** One feature slice at a time — this file is your compass, not the lesson.
 
 **Format for lessons:** Always show the route as a numbered list of **full repo paths** before any code. Learner follows on GitHub top to bottom.
 
@@ -17,7 +17,7 @@ Quick reference when a lesson says "trace the path" or you have a bug to fix.
 6. **Find the contract** → `backend/app/contracts/*.py` (request/response models)
 7. **Find the route** → `features/*/http/` (thin handler)
 8. **Find business logic** → `backend/app/features/<area>/` (reads/writes via `get_db()`)
-9. **Schema only if needed** → `backend/sql/` (migrations day or delete/FK bugs)
+9. **Schema only if needed** → `backend/sql/` (migrations or delete/FK bugs)
 10. **Run a test** → `backend/tests/` or `frontend/**/*.test.ts`
 
 > **Prefer models over SQL** in explanations. Say "the `booking_requests` table" in prose; show `ClientBookingDetail` or `create.py` inserts instead of `CREATE TABLE`.
@@ -43,50 +43,88 @@ Quick reference when a lesson says "trace the path" or you have a bug to fix.
 
 ## Common flows (file chains)
 
-### Client creates booking enquiry
+### Client creates booking enquiry (slice 3a)
 
 ```
 VendorBookingModal.tsx
   → clientBookingsApi.ts  CreateBookingRequestPayload (selected_option_ids only)
   → contracts/booking.py  CreateBookingRequestBody / BookingRequestCreated
   → bookings/http/client.py  post_booking_request
-  → bookings/create.py  create_booking_request → row_out dict → .table("booking_requests").insert()
-  → contracts/booking.py  BookingLineItemIn shape inside line_items snapshot
-  → list_pricing.py  resolve_line_items (builds line item dicts from vendor payload)
+  → bookings/create.py  create_booking_request
+  → list_pricing.py  resolve_line_items
 ```
 
-### Client views booking detail
+### Client views booking detail (slice 3b)
 
 ```
 clientBookingsApi.ts  GET .../booking-requests/{id}
   → bookings/http/client.py
   → bookings/queries.py  get_booking_request_for_client
-  → reads booking_requests.line_items (snapshot, not live vendor catalog)
 ```
 
-### Vendor accepts / declines
+### Client pays (slice 4)
 
 ```
-vendorBookingsApi.ts  PATCH .../status
-  → bookings/http/vendor.py
-  → bookings/status.py
+useClientBookingsController.ts  paymentDue → /pay
+  → ClientBookingPayView.tsx → bookingCheckoutApi.ts  POST .../checkout
+  → payment_checkout.py → stripe.py
+  → payment_finalize.py ← webhooks.py (checkout.session.completed)
+  → postBookingCheckoutSync on return URL
 ```
 
-### Login / session
+### Vendor booking lifecycle (slice 5)
+
+```
+vendor/bookings/ → useVendorBookingsController.ts
+  → vendorBookingsApi.ts  PATCH status / PUT adjustments / POST vendor-quote
+  → bookings/http/vendor.py → status.py / adjustments.py / create.py
+```
+
+### Payout & completion (slice 6)
+
+```
+vendor/payments/ → vendorPaymentsApi.ts  Connect onboarding
+  → payments/http/vendor.py → stripe.py
+BookingCompletionBanner → payment_completion.py → completion_rules.py
+payment_maintenance.py + run_booking_maintenance.py  (auto-release)
+payment_refunds.py  (cancel refund)
+```
+
+### Chat & notifications (slice 7b)
+
+```
+useRealtimeSse.ts → realtime/sse.py
+NotificationBell → notifications/http/client.py | vendor.py
+ChatThreadView → chat/http/routes.py → chat/service.py
+email/dispatch.py  (transactional email from booking events)
+```
+
+### Vendor onboarding & admin (slice 7c)
+
+```
+vendor/profile → vendors/http/profile.py → moderation.py / visibility.py
+reviews.py + admin/http/platform_trust.py
+disputes.py + participant_dispute_handlers.py
+admin/http/platform_*.py
+```
+
+### Login / session (slice 1)
 
 ```
 frontend auth provider
   → backend/app/features/auth/
 ```
 
-### Stripe payment
+---
 
-```
-clientBookingsApi / bookingCheckoutApi
-  → bookings/payment_*.py
-  → backend/app/features/payments/stripe.py
-  → webhooks
-```
+## Minor areas (not full slices)
+
+| Area | Path |
+|------|------|
+| Help content | `frontend/features/help/`, `backend/app/features/help/` |
+| Geo autocomplete | `backend/app/features/geo/` |
+| Media uploads | `backend/app/features/media/` |
+| UI kit (internal) | `frontend/app/internal/ui-kit/` |
 
 ---
 
@@ -113,7 +151,3 @@ rg "resolve_line_items" backend/
 # Find API route
 rg "booking-requests" backend/app/features/bookings/http/
 ```
-
----
-
-*Updated as part of curriculum v2 — concept + code trace + hands-on reps.*

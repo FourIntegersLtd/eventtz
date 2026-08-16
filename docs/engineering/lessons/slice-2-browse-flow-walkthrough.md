@@ -639,4 +639,5 @@ GET /api/v1/vendors/explore/search
 ## Related lessons
 
 - `slice-2-client-browse.md` — routes and layout
-- `slice-2-client-browse-e2e.md` — full file index and code excerpts
+- `slice-2-client-browse.md` — main lesson
+- `slice-2-browse-flow-walkthrough.md` — step-by-step function trace

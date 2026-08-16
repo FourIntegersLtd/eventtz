@@ -1,11 +1,11 @@
 # Eventtz Engineering Glossary
 
-Simple definitions for terms we learn in the 30-day course.  
-Format: **term** — plain-English meaning.
+Plain-English definitions for terms from the feature-flow track.  
+Format: **term** — meaning.
 
 ---
 
-## Day 1
+## Foundations — architecture & data
 
 **System architecture** — The plan for which parts of the software exist, what each part is responsible for, and how they talk to each other.
 
@@ -29,7 +29,7 @@ Format: **term** — plain-English meaning.
 
 ---
 
-## Day 2
+## Foundations — domain modeling
 
 **Entity** — A thing in the system with its own identity that persists over time (e.g. a user, a vendor account, a booking request).
 
@@ -53,7 +53,7 @@ Format: **term** — plain-English meaning.
 
 ---
 
-## Day 3
+## Foundations — databases
 
 **Table** — A named collection of rows in the database (e.g. `booking_requests`, `users`).
 
@@ -148,3 +148,39 @@ Format: **term** — plain-English meaning.
 **Master–detail scaffold** — `useParticipantBookingsScaffold` + `MasterDetailLayout` + shared panels; reused by client and vendor booking portals.
 
 **BookingDetailPanel** — Shared detail shell: status badges, event info, pricing breakdown, message CTA. Role-specific banners live in `ClientBookingDetailExtras` (client) or vendor equivalents.
+
+---
+
+## Slice 4 — Client payment
+
+_(Terms to be added when slice 4 is taught.)_
+
+---
+
+## Slice 5 — Vendor booking lifecycle
+
+_(Terms to be added when slice 5 is taught.)_
+
+---
+
+## Slice 6 — Payout, completion, refunds
+
+_(Terms to be added when slice 6 is taught.)_
+
+---
+
+## Slice 7a — Client workspace
+
+_(Terms to be added when slice 7a is taught.)_
+
+---
+
+## Slice 7b — Comms + realtime
+
+_(Terms to be added when slice 7b is taught.)_
+
+---
+
+## Slice 7c — Trust, vendor onboarding & admin
+
+_(Terms to be added when slice 7c is taught.)_
