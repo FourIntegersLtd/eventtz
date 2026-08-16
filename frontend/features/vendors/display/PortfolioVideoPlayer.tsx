@@ -81,7 +81,7 @@ export function PortfolioVideoPlayer({
   return (
     <div
       ref={wrapRef}
-      className={`group relative w-full overflow-hidden bg-neutral-950 max-md:rounded-none md:inline-flex md:w-auto md:rounded-2xl md:ring-1 md:ring-neutral-100 ${className}`.trim()}
+      className={`group relative w-full overflow-hidden bg-neutral-950 md:inline-flex md:w-auto ${className}`.trim()}
     >
       <video
         ref={videoRef}
