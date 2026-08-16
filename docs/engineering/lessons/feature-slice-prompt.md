@@ -1,6 +1,8 @@
 # Feature slice — copy-paste prompt
 
-Use in your **main course chat** on `cursor/engineering-course-28c8`. Replace `[SLICE NAME]` and `[N]`.
+**New chat per slice** — see [NEW_CHAT_PER_SLICE.md](./NEW_CHAT_PER_SLICE.md). Do not continue Slice 2 + 3a + 3b in one long thread unless you are debugging the same slice.
+
+Use in a **fresh chat** on `cursor/engineering-course-28c8`. Replace `[SLICE NAME]` and `[N]`.
 
 ```
 Teach me Feature Slice [N] — [SLICE NAME].
