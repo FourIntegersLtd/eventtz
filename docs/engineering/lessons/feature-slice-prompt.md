@@ -21,7 +21,6 @@ Read and follow:
 
 ## When done
 - Update docs/engineering/FEATURE_TRACK.md (slice status)
-- Add any new terms to docs/engineering/GLOSSARY.md
 - Short note in docs/engineering/PROGRESS.md
 
 Start with the complete route for [SLICE NAME].

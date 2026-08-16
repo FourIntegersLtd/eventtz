@@ -67,7 +67,7 @@
 | Referrals (admin) | `/admin/referrals` | **7c** (attribution in **1**) |
 | Blog | `/blog`, `/admin/blog` | **7c** |
 
-**Out of scope:** `/internal/ui-kit`, help content pages, geo autocomplete — see [CODEBASE_MAP.md](./CODEBASE_MAP.md).
+**Out of scope:** `/internal/ui-kit`, help content pages, geo autocomplete helpers.
 
 ---
 

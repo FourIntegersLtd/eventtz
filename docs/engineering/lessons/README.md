@@ -25,5 +25,3 @@ Branch: `cursor/engineering-course-28c8`. Commit all course work directly to thi
 | 7a | [slice-7a-client-workspace.md](./slice-7a-client-workspace.md) | — |
 | 7b | [slice-7b-comms-realtime.md](./slice-7b-comms-realtime.md) | — |
 | 7c | [slice-7c-trust-and-admin.md](./slice-7c-trust-and-admin.md) | — |
-
-**Templates:** [LESSON_TEMPLATE.md](./LESSON_TEMPLATE.md)

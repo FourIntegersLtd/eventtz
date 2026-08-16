@@ -442,5 +442,6 @@ Table definition: `backend/sql/010_booking_requests.sql`
 
 ## Related lessons
 
+- Slice 1: `slice-1-auth-me.md`
 - Slice 2: `slice-2-client-browse.md`, `slice-2-browse-flow-walkthrough.md`
-- Domain modeling intro: `PROGRESS.md` Day 2 trace (`create.py` → `list_pricing.py`)
+- Slice 3b: `slice-3b-client-booking-detail.md`

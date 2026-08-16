@@ -10,7 +10,7 @@ Personal engineering course using the real Eventtz codebase.
 
 - **Models over SQL** — teach via `contracts/`, `domain-types.ts`, and feature code; SQL only when asked or for migrations.
 - **Complete route** — every example lists the full file path chain (UI → API → contract → feature → `get_db()`) before showing code snippets.
-- **Descriptive names** — immediately understandable; see [NAMING.md](./NAMING.md).
+- **Descriptive names** — immediately understandable; use full words, not abbreviations like `pb` or `row0`.
 - **Skip mandatory tasks** — teacher-led feature walkthroughs; no hunts/exit tickets unless requested.
 - **Primary track:** [FEATURE_TRACK.md](./FEATURE_TRACK.md) (auth → booking → payment → payout).
 

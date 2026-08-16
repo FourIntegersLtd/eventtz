@@ -8,18 +8,16 @@ Personal engineering course using the real Eventtz codebase.
 
 | Doc | Purpose |
 |-----|---------|
-| [FEATURE_TRACK.md](./FEATURE_TRACK.md) | **Primary** — slice order, status, plans for slices 4–7 |
+| [FEATURE_TRACK.md](./FEATURE_TRACK.md) | **Primary** — slice order, status, routes, concepts |
 | [PROGRESS.md](./PROGRESS.md) | Notes per completed slice |
-| [GLOSSARY.md](./GLOSSARY.md) | Terms in plain English |
-| [CODEBASE_MAP.md](./CODEBASE_MAP.md) | Quick paths when debugging |
-| [NAMING.md](./NAMING.md) | Naming rules |
+| [lessons/](./lessons/) | Slice lessons and walkthroughs |
 
 ## How to start a session
 
 1. Open [FEATURE_TRACK.md](./FEATURE_TRACK.md) and pick the next slice.
-2. Start a **new Cursor chat** (see [lessons/NEW_CHAT_PER_SLICE.md](./lessons/NEW_CHAT_PER_SLICE.md)).
-3. Paste the prompt from [lessons/feature-slice-prompt.md](./lessons/feature-slice-prompt.md).
-4. Teacher follows [lessons/_SPINOFF_RULES.md](./lessons/_SPINOFF_RULES.md).
+2. Open the matching `lessons/slice-*.md` file.
+3. Start a **new Cursor chat** (see [lessons/NEW_CHAT_PER_SLICE.md](./lessons/NEW_CHAT_PER_SLICE.md)).
+4. Paste the prompt from [lessons/feature-slice-prompt.md](./lessons/feature-slice-prompt.md).
 
 ## Track at a glance
 
