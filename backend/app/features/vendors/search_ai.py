@@ -1,14 +1,12 @@
 """Turn plain-language search text into keywords, location, service filters, and event plans.
 
-``parse_marketplace_query`` decides **simple** vs **plan**:
+The **LLM** is the only query parser (``mode``, types, location, plan needs).
+Sanitize only clamps taxonomy, length, and duplicate catering needs.
 
-- **simple** - user wants one kind of vendor (“caterer in Manchester”). Ranking uses
-  keywords / types / location as a flat list.
-- **plan** - user wants help assembling an event (“plan my birthday”). We return a
-  short checklist of needs (each mapped to a service key). Ranking for those needs
-  happens in ``search._search_plan_sections``.
+- **simple** - one kind of vendor. Ranking uses keywords / types / location as a flat list.
+- **plan** - event checklist. Ranking is ``search._search_plan_sections``.
 
-Need copy: AI/canned field is ``rationale``; the HTTP section exposes it as ``why``.
+``need.rationale`` is shown on the HTTP section as ``why``.
 """
 
 from __future__ import annotations
@@ -23,7 +21,7 @@ from app.contracts.marketplace_search import MarketplacePlanNeed, MarketplaceQue
 from app.core.config import get_settings
 from app.core.constants import OPENAI_SEARCH_MODEL
 from app.core.logging import get_logger
-from app.features.ai.openai_helpers import try_openai_client
+from app.features.ai.openai_helpers import parse_completion, try_openai_client
 from app.features.vendors.markets import get_market, normalize_country_code
 from app.features.vendors.taxonomy import (
     VENDOR_EVENT_TYPE_KEYS,
@@ -39,172 +37,7 @@ _PLAN_MAX_NEEDS = 6
 
 _PARSE_CACHE: dict[str, tuple[float, MarketplaceQueryParseResult]] = {}
 
-_PLAN_INTENT_RE = re.compile(
-    r"\b("
-    r"plan|planning|help\s+me|select\s+vendors|what\s+do\s+i\s+need|"
-    r"vendors?\s+for|organise|organize|put\s+together|checklist|"
-    r"for\s+my\s+(birthday|wedding|shower|naming)|"
-    r"my\s+(birthday|wedding|shower|naming)"
-    r")\b",
-    re.I,
-)
-
-_EVENT_KEYWORD_MAP: list[tuple[re.Pattern[str], str]] = [
-    (re.compile(r"\b(wedding|weddings|bridal)\b", re.I), "weddings"),
-    (re.compile(r"\b(birthday|birthdays)\b", re.I), "birthdays"),
-    (re.compile(r"\b(shower|baby\s*shower|bridal\s*shower)\b", re.I), "showers"),
-    (re.compile(r"\b(naming|naming\s+ceremon(y|ies)|outdooring)\b", re.I), "naming_ceremonies"),
-]
-
-_CANNED_NEEDS: dict[str, list[dict[str, Any]]] = {
-    "birthdays": [
-        {
-            "id": "cake",
-            "label": "Birthday cake",
-            "service_key": "baking",
-            "keywords": ["cake", "birthday cake"],
-            "optional": False,
-        },
-        {
-            "id": "food",
-            "label": "Food for the party",
-            "service_key": "catering",
-            "keywords": ["catering", "jollof", "rice", "small chops", "finger food"],
-            "optional": False,
-        },
-        {
-            "id": "photos",
-            "label": "Photos",
-            "service_key": "photography",
-            "keywords": ["photography", "photographer"],
-            "optional": True,
-        },
-    ],
-    "weddings": [
-        {
-            "id": "wedding-cake",
-            "label": "Wedding cake",
-            "service_key": "baking",
-            "keywords": ["cake", "wedding cake"],
-            "optional": False,
-        },
-        {
-            "id": "food",
-            "label": "Food for your guests",
-            "service_key": "catering",
-            "keywords": ["catering", "jollof", "small chops", "rice"],
-            "optional": False,
-        },
-        {
-            "id": "photos",
-            "label": "Photos",
-            "service_key": "photography",
-            "keywords": ["photography", "photographer"],
-            "optional": False,
-        },
-        {
-            "id": "makeup",
-            "label": "Makeup",
-            "service_key": "makeup",
-            "keywords": ["makeup", "mua"],
-            "optional": True,
-        },
-        {
-            "id": "decor",
-            "label": "Decor and hire",
-            "service_key": "rentals",
-            "keywords": ["rentals", "decor", "hire"],
-            "optional": True,
-        },
-    ],
-    "showers": [
-        {
-            "id": "cake",
-            "label": "Cake",
-            "service_key": "baking",
-            "keywords": ["cake"],
-            "optional": False,
-        },
-        {
-            "id": "food",
-            "label": "Small chops and bites",
-            "service_key": "catering",
-            "keywords": ["small chops", "finger food", "catering"],
-            "optional": False,
-        },
-        {
-            "id": "photos",
-            "label": "Photos",
-            "service_key": "photography",
-            "keywords": ["photography"],
-            "optional": True,
-        },
-    ],
-    "naming_ceremonies": [
-        {
-            "id": "cake",
-            "label": "Celebration cake",
-            "service_key": "baking",
-            "keywords": ["cake"],
-            "optional": False,
-        },
-        {
-            "id": "food",
-            "label": "Food for guests",
-            "service_key": "catering",
-            "keywords": ["catering", "jollof", "rice", "small chops"],
-            "optional": False,
-        },
-        {
-            "id": "photos",
-            "label": "Photos",
-            "service_key": "photography",
-            "keywords": ["photography"],
-            "optional": True,
-        },
-    ],
-}
-
-_PLAN_TITLES: dict[str, str] = {
-    "birthdays": "Ideas for your birthday - cake, food, and more",
-    "weddings": "Ideas for your wedding",
-    "showers": "Ideas for your shower",
-    "naming_ceremonies": "Ideas for your naming ceremony",
-}
-
-# Static synonym map when OpenAI is unavailable.
-_KEYWORD_TO_TYPE: dict[str, str] = {
-    "baker": "baking",
-    "bakers": "baking",
-    "bakery": "baking",
-    "baking": "baking",
-    "cake": "baking",
-    "cakes": "baking",
-    "pastry": "baking",
-    "photographer": "photography",
-    "photographers": "photography",
-    "photography": "photography",
-    "photo": "photography",
-    "videographer": "photography",
-    "makeup": "makeup",
-    "mua": "makeup",
-    "make-up": "makeup",
-    "beautician": "makeup",
-    "caterer": "catering",
-    "caterers": "catering",
-    "catering": "catering",
-    "food": "catering",
-    "chef": "catering",
-    "chops": "catering",
-    "jollof": "catering",
-    "rice": "catering",
-    "rental": "rentals",
-    "rentals": "rentals",
-    "hire": "rentals",
-    "marquee": "rentals",
-    "decor": "rentals",
-    "décor": "rentals",
-}
+_GENERIC_WHY = "Useful for your event. Compare these vendors."
 
 
 class _LlmPlanNeed(BaseModel):
@@ -245,73 +78,11 @@ def _dedupe_strs(items: list[str], *, limit: int) -> list[str]:
     return out
 
 
-def _detect_event_types(text: str) -> list[str]:
-    found: list[str] = []
-    for pattern, key in _EVENT_KEYWORD_MAP:
-        if pattern.search(text) and key not in found:
-            found.append(key)
-    return filter_event_type_keys(found)
-
-
-def _looks_like_plan_query(text: str) -> bool:
-    return bool(_PLAN_INTENT_RE.search(text))
-
-
-def _canned_needs_for_events(event_types: list[str]) -> list[MarketplacePlanNeed]:
-    raw_needs: list[dict[str, Any]] = []
-    seen_ids: set[str] = set()
-    for et in event_types:
-        for item in _CANNED_NEEDS.get(et, []):
-            nid = str(item.get("id") or "")
-            if not nid or nid in seen_ids:
-                continue
-            seen_ids.add(nid)
-            raw_needs.append({
-                **item,
-                "rationale": why_for_need(
-                    service_key=str(item.get("service_key") or ""),
-                    event_types=[et],
-                ),
-            })
-            if len(raw_needs) >= _PLAN_MAX_NEEDS:
-                break
-        if len(raw_needs) >= _PLAN_MAX_NEEDS:
-            break
-    return _sanitize_needs(raw_needs, event_types=event_types)
-
-
-def _plan_title_for_events(event_types: list[str], intent: str | None) -> str | None:
-    for et in event_types:
-        if et in _PLAN_TITLES:
-            return _PLAN_TITLES[et]
-    if intent:
-        return intent[:160]
-    return "Event vendor checklist"
-
-
-def _friendly_need_label(raw: str, *, service_key: str) -> str:
-    """Keep need titles short and client-friendly (no jargon / slash lists)."""
-    label = re.sub(r"\s+", " ", (raw or "").strip())
-    label = label.replace("/", " and ").replace("&", " and ")
-    label = re.sub(r"\s+", " ", label).strip(" ---")
-    # Drop stiff marketplace jargon if the model used the service key as a title.
-    stiff = {
-        "baking": "Cake",
-        "catering": "Food for the party",
-        "photography": "Photos",
-        "makeup": "Makeup",
-        "rentals": "Decor and hire",
-    }
-    low = label.lower()
-    if low in ("photography", "catering", "baking", "rentals", "mua"):
-        return stiff.get(service_key, label.title())[:80]
-    if "jollof" in low and "rice" in low:
-        return "Food for the party"
-    if low in ("rice and mains", "rice mains", "rice/jollof mains", "rice and jollof mains"):
-        return "Food for the party"
-    if not label:
-        return stiff.get(service_key, service_key.replace("_", " ").title())[:80]
-    return label[:80]
+def _clip_label(raw: str, *, service_key: str) -> str:
+    label = re.sub(r"\s+", " ", (raw or "").strip())[:80]
+    if label:
+        return label
+    return service_key.replace("_", " ").title()[:80]
 
 
 def _slug_id(raw: str, *, fallback: str) -> str:
@@ -319,28 +90,16 @@ def _slug_id(raw: str, *, fallback: str) -> str:
     return (slug[:48] or fallback)[:64]
 
 
-_WHY_BY_SERVICE: dict[str, str] = {
-    "baking": "A cake is often the centrepiece - compare bakers who do celebration cakes.",
-    "catering": "Guests expect proper food - compare caterers for mains and small chops.",
-    "photography": "Photos help you keep the day - compare photographers if you want coverage.",
-    "makeup": "Many hosts book glam for the day - compare makeup artists if you need it.",
-    "rentals": "Decor and hire set the look - compare options if you need tables, chairs, or styling.",
-}
-
-_WHY_BY_EVENT_SERVICE: dict[tuple[str, str], str] = {
-    ("birthdays", "baking"): "Most birthday hosts book a cake - here are bakers who cover that.",
-    ("birthdays", "catering"): "Birthday guests expect good food - jollof, rice, and small chops usually come from a caterer.",
-    ("birthdays", "photography"): "Photos help you keep the memories - optional if you already have someone.",
-    ("weddings", "baking"): "A wedding cake is a highlight - compare bakers who do celebration cakes.",
-    ("weddings", "catering"): "Feeding your guests well matters - compare caterers for the day.",
-    ("weddings", "photography"): "Wedding photos are kept for years - compare photographers for your day.",
-    ("weddings", "makeup"): "Many couples book glam for the day - skip this if you don’t need it.",
-    ("weddings", "rentals"): "Decor and hire shape the room - compare options if you need them.",
-    ("showers", "baking"): "A cake makes the shower feel special - compare bakers.",
-    ("showers", "catering"): "Light bites and small chops keep guests happy - compare food vendors.",
-    ("naming_ceremonies", "baking"): "A celebration cake fits the day - compare bakers.",
-    ("naming_ceremonies", "catering"): "Guests will want a proper meal - compare caterers.",
-}
+def _sanitize_rationale(raw: Any) -> str | None:
+    if raw is None:
+        return None
+    text = re.sub(r"\s+", " ", str(raw).strip())
+    if not text:
+        return None
+    low = text.lower().strip(" .")
+    if low in ("photography", "catering", "baking", "rentals", "makeup"):
+        return None
+    return text[:160]
 
 
 def why_for_need(
@@ -349,39 +108,13 @@ def why_for_need(
     event_types: list[str] | None = None,
     rationale: str | None = None,
 ) -> str:
-    """Client-friendly one-liner explaining why this need is in the plan."""
+    """Prefer the LLM rationale; otherwise a generic compare line."""
+    del service_key, event_types
     cleaned = _sanitize_rationale(rationale)
-    if cleaned:
-        return cleaned
-    for et in event_types or []:
-        hit = _WHY_BY_EVENT_SERVICE.get((et, service_key))
-        if hit:
-            return hit
-    return _WHY_BY_SERVICE.get(
-        service_key,
-        "Useful for your event - compare these vendors.",
-    )
+    return cleaned or _GENERIC_WHY
 
 
-def _sanitize_rationale(raw: Any) -> str | None:
-    if raw is None:
-        return None
-    text = re.sub(r"\s+", " ", str(raw).strip())
-    text = text.replace("/", " and ")
-    if not text:
-        return None
-    # Reject stiff / empty jargon-only blurbs.
-    low = text.lower().strip(" .")
-    if low in ("photography", "catering", "baking", "rentals", "makeup"):
-        return None
-    return text[:160]
-
-
-def _sanitize_needs(
-    raw: Any,
-    *,
-    event_types: list[str] | None = None,
-) -> list[MarketplacePlanNeed]:
+def _sanitize_needs(raw: Any) -> list[MarketplacePlanNeed]:
     if not isinstance(raw, list):
         return []
     out: list[MarketplacePlanNeed] = []
@@ -399,7 +132,7 @@ def _sanitize_needs(
         if not service_keys:
             continue
         service_key = service_keys[0]
-        label = _friendly_need_label(str(data.get("label") or ""), service_key=service_key)
+        label = _clip_label(str(data.get("label") or ""), service_key=service_key)
         need_id = _slug_id(str(data.get("id") or label), fallback=f"need-{i+1}")
         if need_id in seen:
             need_id = f"{need_id}-{i+1}"
@@ -410,13 +143,10 @@ def _sanitize_needs(
         )
         if not keywords:
             keywords = [service_key]
-        rationale = _sanitize_rationale(data.get("rationale"))
-        if not rationale:
-            rationale = why_for_need(
-                service_key=service_key,
-                event_types=event_types,
-                rationale=None,
-            )
+        rationale = _sanitize_rationale(data.get("rationale")) or why_for_need(
+            service_key=service_key,
+            rationale=None,
+        )
         out.append(
             MarketplacePlanNeed(
                 id=need_id,
@@ -432,59 +162,16 @@ def _sanitize_needs(
     return out
 
 
-def _fallback_parse(raw_q: str) -> MarketplaceQueryParseResult:
-    """Split the query into words and map synonyms when OpenAI is unavailable."""
+def _token_only_parse(raw_q: str) -> MarketplaceQueryParseResult:
+    """OpenAI down: keywords only. No types, events, or plan needs."""
     normalized = _normalize_query(raw_q)
     if not normalized:
         return MarketplaceQueryParseResult()
     keywords = [w for w in normalized.split() if len(w) >= 2][:16]
-    types: list[str] = []
-    for kw in keywords:
-        mapped = _KEYWORD_TO_TYPE.get(kw)
-        if mapped and mapped not in types:
-            types.append(mapped)
-    # Multi-word catering hints
-    if "small chops" in normalized or "smallchops" in normalized.replace(" ", ""):
-        if "catering" not in types:
-            types.append("catering")
-        if "chops" not in keywords:
-            keywords.append("chops")
-    related_keywords: list[str] = []
-    for kw in keywords:
-        if kw.endswith("s") and len(kw) > 3:
-            stem = kw[:-1]
-            if stem not in keywords and stem not in related_keywords:
-                related_keywords.append(stem)
-        elif not kw.endswith("s"):
-            plural = f"{kw}s"
-            if plural not in keywords and plural not in related_keywords:
-                related_keywords.append(plural)
-
-    event_types = _detect_event_types(normalized)
-    mode: Literal["simple", "plan"] = "plan" if _looks_like_plan_query(normalized) else "simple"
-    if mode == "simple" and event_types and not types:
-        if re.search(r"\b(vendor|vendors|help|need|select|plan)\b", normalized):
-            mode = "plan"
-
-    needs: list[MarketplacePlanNeed] = []
-    plan_title: str | None = None
-    if mode == "plan":
-        if not event_types:
-            event_types = ["birthdays"]
-        needs = _canned_needs_for_events(event_types)
-        plan_title = _plan_title_for_events(event_types, normalized[:120])
-        if not types:
-            types = list(dict.fromkeys(n.service_key for n in needs if not n.optional))
-
     return MarketplaceQueryParseResult(
-        mode=mode,
+        mode="simple",
         keywords=keywords,
-        types=filter_service_keys(types),
-        related_keywords=related_keywords[:12],
-        event_types=event_types,
         intent_summary=normalized[:120] or None,
-        plan_title=plan_title,
-        needs=needs,
     )
 
 
@@ -494,7 +181,28 @@ def _sanitize_string_list(raw: Any, *, limit: int) -> list[str]:
     return _dedupe_strs([str(x) for x in raw], limit=limit)
 
 
-def _sanitize_parse_result(data: dict[str, Any] | MarketplaceQueryParseResult | _LlmMarketplaceParse) -> MarketplaceQueryParseResult:
+def _collapse_needs_by_service(needs: list[MarketplacePlanNeed]) -> list[MarketplacePlanNeed]:
+    collapsed: list[MarketplacePlanNeed] = []
+    seen_services: set[str] = set()
+    for need in needs:
+        if need.service_key in seen_services:
+            for existing in collapsed:
+                if existing.service_key == need.service_key:
+                    merged_kw = list(existing.keywords)
+                    for kw in need.keywords:
+                        if kw not in merged_kw:
+                            merged_kw.append(kw)
+                    existing.keywords = merged_kw[:8]
+                    break
+            continue
+        seen_services.add(need.service_key)
+        collapsed.append(need)
+    return collapsed[:_PLAN_MAX_NEEDS]
+
+
+def _sanitize_parse_result(
+    data: dict[str, Any] | MarketplaceQueryParseResult | _LlmMarketplaceParse,
+) -> MarketplaceQueryParseResult:
     if isinstance(data, MarketplaceQueryParseResult):
         data = data.model_dump()
     elif isinstance(data, _LlmMarketplaceParse):
@@ -544,35 +252,9 @@ def _sanitize_parse_result(data: dict[str, Any] | MarketplaceQueryParseResult | 
     mode_raw = str(data.get("mode") or "simple").strip().lower()
     mode: Literal["simple", "plan"] = "plan" if mode_raw == "plan" else "simple"
 
-    needs = _sanitize_needs(data.get("needs"), event_types=event_types)
-    if mode == "plan" and not needs and event_types:
-        needs = _canned_needs_for_events(event_types)
-    if mode == "plan" and not needs:
-        # Still asked to plan but no event - use birthday staples as a safe default.
-        needs = _canned_needs_for_events(["birthdays"])
-        if not event_types:
-            event_types = ["birthdays"]
+    needs = _sanitize_needs(data.get("needs"))
     if mode == "plan" and needs:
-        # One section per service - avoid repeating the same caterer under rice + chops.
-        collapsed: list[MarketplacePlanNeed] = []
-        seen_services: set[str] = set()
-        for need in needs:
-            if need.service_key in seen_services:
-                # Merge keywords into the existing need for that service.
-                for existing in collapsed:
-                    if existing.service_key == need.service_key:
-                        merged_kw = list(existing.keywords)
-                        for kw in need.keywords:
-                            if kw not in merged_kw:
-                                merged_kw.append(kw)
-                        existing.keywords = merged_kw[:8]
-                        break
-                continue
-            seen_services.add(need.service_key)
-            collapsed.append(need)
-        needs = collapsed[:_PLAN_MAX_NEEDS]
-    if mode == "plan" and not plan_title:
-        plan_title = _plan_title_for_events(event_types, intent_summary)
+        needs = _collapse_needs_by_service(needs)
     if mode == "simple":
         needs = []
         plan_title = None
@@ -622,9 +304,8 @@ def _cache_set(key: str, result: MarketplaceQueryParseResult) -> None:
 def _parse_with_llm(raw_q: str, *, country_code: str) -> MarketplaceQueryParseResult:
     client = try_openai_client()
     if client is None:
-        return _fallback_parse(raw_q)
+        return _token_only_parse(raw_q)
 
-    model = OPENAI_SEARCH_MODEL
     services = ", ".join(sorted(VENDOR_SERVICE_KEYS))
     events = ", ".join(sorted(VENDOR_EVENT_TYPE_KEYS))
     market = get_market(country_code)
@@ -651,7 +332,7 @@ def _parse_with_llm(raw_q: str, *, country_code: str) -> MarketplaceQueryParseRe
         "no jargon (never 'Photography', 'Catering', 'Rice/Jollof Mains'; prefer "
         "'Photos', 'Food for the party', 'Birthday cake').\n"
         "- need.rationale: one short friendly sentence explaining why this need matters for "
-        "the event (e.g. 'Most birthday hosts book a cake - here are bakers who cover that.'). "
+        "the event (e.g. 'Most birthday hosts book a cake. Here are bakers who cover that.'). "
         "Shown to clients as section.why. No jargon, no vendor names.\n"
         "- plan_title: warm and plain (e.g. 'Ideas for your birthday - cake, food, and more').\n"
         "- keywords: 1-12 meaningful terms. related_keywords: stems/synonyms.\n"
@@ -663,31 +344,17 @@ def _parse_with_llm(raw_q: str, *, country_code: str) -> MarketplaceQueryParseRe
         "- Do not invent vendor names.\n\n"
         f"User query: {raw_q.strip()}"
     )
-
     try:
-        try:
-            completion = client.chat.completions.parse(
-                model=model,
-                messages=[
-                    {"role": "system", "content": system},
-                    {"role": "user", "content": user},
-                ],
-                response_format=_LlmMarketplaceParse,
-                temperature=0.2,
-            )
-        except AttributeError:
-            completion = client.beta.chat.completions.parse(
-                model=model,
-                messages=[
-                    {"role": "system", "content": system},
-                    {"role": "user", "content": user},
-                ],
-                response_format=_LlmMarketplaceParse,
-                temperature=0.2,
-            )
-        parsed_msg = completion.choices[0].message.parsed
-        if parsed_msg is None:
-            raise ValueError("empty parsed response")
+        parsed_msg = parse_completion(
+            client=client,
+            model=OPENAI_SEARCH_MODEL,
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+            response_format=_LlmMarketplaceParse,
+            log_context="marketplace_search_ai",
+        )
         result = _sanitize_parse_result(parsed_msg)
         logger.info(
             "marketplace_search_ai: parsed q=%r mode=%s keywords=%s types=%s "
@@ -703,11 +370,11 @@ def _parse_with_llm(raw_q: str, *, country_code: str) -> MarketplaceQueryParseRe
         return result
     except Exception as e:
         logger.warning(
-            "marketplace_search_ai: LLM parse failed q=%r err=%s - using fallback",
+            "marketplace_search_ai: LLM parse failed q=%r err=%s - using keywords only",
             raw_q[:80],
             e,
         )
-        return _fallback_parse(raw_q)
+        return _token_only_parse(raw_q)
 
 
 def parse_marketplace_query(
@@ -716,7 +383,7 @@ def parse_marketplace_query(
     country_code: str | None = None,
 ) -> MarketplaceQueryParseResult:
     """
-    Parse free-text browse search.
+    Parse free-text browse search via the LLM.
 
     Returns filters for ranking, plus ``mode`` and optional ``needs`` when the
     query is an event checklist (plan). Cached briefly per country + query.
@@ -726,7 +393,7 @@ def parse_marketplace_query(
         return MarketplaceQueryParseResult()
 
     market_country = normalize_country_code(country_code)
-    cache_key = f"v4:{market_country}:{normalized}"
+    cache_key = f"v5:{market_country}:{normalized}"
     cached = _cache_get(cache_key)
     if cached is not None:
         logger.debug("marketplace_search_ai: cache hit q=%r country=%s", normalized[:80], market_country)
@@ -739,4 +406,4 @@ def parse_marketplace_query(
 
 # Exported for unit tests.
 sanitize_marketplace_parse_result = _sanitize_parse_result
-fallback_parse_marketplace_query = _fallback_parse
+token_only_marketplace_parse = _token_only_parse

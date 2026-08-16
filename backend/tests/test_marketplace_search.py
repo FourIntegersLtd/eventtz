@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from app.features.vendors.search import search_approved_vendors
 from app.features.vendors.search_ai import (
-    fallback_parse_marketplace_query,
+    parse_marketplace_query,
     sanitize_marketplace_parse_result,
+    token_only_marketplace_parse,
     why_for_need,
 )
 
@@ -80,22 +81,51 @@ def test_sanitize_plan_needs():
     assert result.needs[1].label == "Small chops"
 
 
-def test_fallback_parse_maps_baker_to_baking():
-    result = fallback_parse_marketplace_query("baker in manchester")
-    assert "baking" in result.types
-    assert "baker" in result.keywords
-    assert result.intent_summary
+def test_token_only_parse_does_not_map_baker_to_baking():
+    result = token_only_marketplace_parse("baker in manchester")
     assert result.mode == "simple"
+    assert result.types == []
+    assert result.event_types == []
+    assert result.needs == []
+    assert "baker" in result.keywords
+    assert "manchester" in result.keywords
 
 
-def test_fallback_parse_birthday_plan():
-    result = fallback_parse_marketplace_query("help me select vendors for my birthday")
-    assert result.mode == "plan"
-    assert "birthdays" in result.event_types
-    assert len(result.needs) >= 3
-    assert any(n.service_key == "baking" for n in result.needs)
-    assert any(n.service_key == "catering" for n in result.needs)
-    assert result.plan_title
+def test_token_only_parse_does_not_invent_birthday_plan():
+    result = token_only_marketplace_parse("help me select vendors for my birthday")
+    assert result.mode == "simple"
+    assert result.types == []
+    assert result.event_types == []
+    assert result.needs == []
+    assert result.plan_title is None
+    assert "birthday" in result.keywords
+
+
+def test_parse_without_openai_uses_keywords_only():
+    with patch("app.features.vendors.search_ai.try_openai_client", return_value=None):
+        result = parse_marketplace_query("baker for my birthday")
+    assert result.mode == "simple"
+    assert result.types == []
+    assert result.needs == []
+    assert "baker" in result.keywords
+    assert "birthday" in result.keywords
+
+
+def test_parse_error_uses_keywords_only():
+    with (
+        patch("app.features.vendors.search_ai.try_openai_client", return_value=MagicMock()),
+        patch(
+            "app.features.vendors.search_ai.parse_completion",
+            side_effect=RuntimeError("openai down"),
+        ),
+    ):
+        result = parse_marketplace_query("plan my wedding in london")
+    assert result.mode == "simple"
+    assert result.types == []
+    assert result.event_types == []
+    assert result.needs == []
+    assert "wedding" in result.keywords
+    assert "london" in result.keywords
 
 
 def _vendor(
@@ -284,6 +314,7 @@ def test_plan_search_sections_by_need():
                     "label": "Birthday cake",
                     "service_key": "baking",
                     "keywords": ["cake"],
+                    "rationale": "Most birthday hosts book a cake.",
                 },
                 {
                     "id": "food",
@@ -348,7 +379,7 @@ def test_plan_search_sections_by_need():
     assert bake_row.get("match_hint")
 
 
-def test_friendly_need_labels_sanitized():
+def test_need_labels_stripped_and_capped_not_rewritten():
     result = sanitize_marketplace_parse_result(
         {
             "mode": "plan",
@@ -356,9 +387,10 @@ def test_friendly_need_labels_sanitized():
             "needs": [
                 {
                     "id": "food",
-                    "label": "Rice/Jollof Mains",
+                    "label": "  Rice/Jollof Mains  ",
                     "service_key": "catering",
                     "keywords": ["rice"],
+                    "rationale": "Guests will want a proper meal.",
                 },
                 {
                     "id": "photos",
@@ -367,14 +399,20 @@ def test_friendly_need_labels_sanitized():
                     "keywords": ["photo"],
                     "optional": True,
                 },
+                {
+                    "id": "empty",
+                    "label": "   ",
+                    "service_key": "baking",
+                    "keywords": ["cake"],
+                },
             ],
         },
     )
     labels = {n.id: n.label for n in result.needs}
-    assert "/" not in labels["food"]
-    assert labels["food"] == "Food for the party"
-    assert labels["photos"] == "Photos"
-    assert result.needs[0].rationale
+    assert labels["food"] == "Rice/Jollof Mains"
+    assert labels["photos"] == "Photography"
+    assert labels["empty"] == "Baking"
+    assert result.needs[0].rationale == "Guests will want a proper meal."
 
 
 def test_plan_section_pool_count_exceeds_shown():
@@ -422,26 +460,34 @@ def test_plan_section_pool_count_exceeds_shown():
     assert section.why
 
 
-def test_why_for_need_prefers_sanitized_rationale_then_event_copy():
-    assert "cake" in why_for_need(
-        service_key="baking",
-        event_types=["birthdays"],
-        rationale="Custom cake blurb for hosts.",
-    ).lower()
+def test_why_for_need_prefers_rationale_else_generic():
     assert "Custom cake blurb" in why_for_need(
         service_key="baking",
         event_types=["birthdays"],
         rationale="Custom cake blurb for hosts.",
     )
-    # Jargon-only rationale is discarded → canned event/service copy.
-    birthday_why = why_for_need(
+    jargon = why_for_need(
         service_key="baking",
         event_types=["birthdays"],
         rationale="Baking",
     )
-    assert "birthday" in birthday_why.lower()
+    assert jargon == "Useful for your event. Compare these vendors."
     generic = why_for_need(service_key="rentals", event_types=[], rationale=None)
-    assert "decor" in generic.lower() or "hire" in generic.lower()
+    assert generic == "Useful for your event. Compare these vendors."
+
+
+def test_sanitize_plan_does_not_invent_needs():
+    result = sanitize_marketplace_parse_result(
+        {
+            "mode": "plan",
+            "keywords": ["birthday"],
+            "event_types": ["birthdays"],
+            "needs": [],
+        },
+    )
+    assert result.mode == "plan"
+    assert result.needs == []
+    assert result.event_types == ["birthdays"]
 
 
 def test_plan_needs_collapse_duplicate_service_keys():
