@@ -122,3 +122,29 @@ Format: **term** — plain-English meaning.
 **selected_option_ids** — Package/rate IDs the client chose; server resolves to priced `line_items` via `resolve_line_items`.
 
 **booking enquiry** — Client-initiated `POST /client/booking-requests`; creates `pending` + `unpaid` row; vendor notified; Slice 4 is payment.
+
+---
+
+## Slice 3b — Client booking detail
+
+**Booking status** — Request lifecycle on a booking row: `pending` → `accepted` → `completed`, or closed via `declined` / `cancelled`. API field `booking_status` (DB column `status`).
+
+**Payment status** — Money lifecycle on the same row, independent of booking status: `unpaid`, `pending`, `paid`, `refunded`, `partially_refunded`, `payout_released`.
+
+**Initiator** — Who started the booking request: `client` (enquiry from browse) or `vendor` (quote from vendor portal). Drives which pending actions appear on detail.
+
+**Vendor adjustment** — Pre-accept surcharge or discount line (`vendor_adjustments` JSON). Positive `amount_gbp` = extra cost; negative = discount. Does not rewrite snapshot `line_items`.
+
+**Price update** — Pending client-initiated booking with non-empty `vendor_adjustments`; client must accept or decline before vendor can accept.
+
+**initial_client_total_label** — Client-facing total at enquiry time (or first adjustment); shown as the “was” price in `BookingPriceUpdateBanner`.
+
+**client_price_confirmation_required** — Backend helper in `pricing_confirmation.py`; true when client must confirm vendor adjustments before the booking can become `accepted`.
+
+**has_price_update** — List-row flag when `vendor_adjustments` is non-empty; drives “New price. Your response needed” in the bookings list.
+
+**BookingPricingBreakdown** — Computed totals on detail: subtotal from `line_items`, adjustments, service fee, `client_total_gbp` / `client_total_label`.
+
+**Master–detail scaffold** — `useParticipantBookingsScaffold` + `MasterDetailLayout` + shared panels; reused by client and vendor booking portals.
+
+**BookingDetailPanel** — Shared detail shell: status badges, event info, pricing breakdown, message CTA. Role-specific banners live in `ClientBookingDetailExtras` (client) or vendor equivalents.
