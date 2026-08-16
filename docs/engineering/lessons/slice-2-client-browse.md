@@ -30,9 +30,10 @@ Plain English: **browse** is the marketplace discovery slice. Listing and detail
 7. `backend/app/features/vendors/http/explore.py` — `GET /explore/search`
 8. `backend/app/contracts/vendor.py` — `ExploreVendorSearchResponse`, `ExploreVendorSearchRow`
 9. `backend/app/features/vendors/search.py` — `search_approved_vendors`
-10. `backend/app/features/vendors/moderation.py` — `list_approved_vendors_for_explore` (base pool)
-11. `backend/app/features/vendors/visibility.py` — `apply_public_listing_filters`
-12. `backend/app/core/db.py` — `get_db()` → Supabase `vendors` + `users`
+10. `backend/app/features/vendors/search_ai.py` — `parse_marketplace_query` (when `q` non-empty)
+11. `backend/app/features/vendors/moderation.py` — `list_approved_vendors_for_explore` (base pool)
+12. `backend/app/features/vendors/visibility.py` — `apply_public_listing_filters`
+13. `backend/app/core/db.py` — `get_db()` → Supabase `vendors` + `users`
 
 ### Vendor detail (`GET /vendors/explore/vendor/{id}`)
 
@@ -210,7 +211,58 @@ Detail route records `vendor_profile_viewed` analytics when found.
 
 ---
 
-## Step 6 — Who appears in explore? (visibility rule)
+## Step 6 — Free-text `q` → LLM parser (`search_ai.py`)
+
+When the browse URL has a non-empty `q` (or the frontend merges `query` + `location` into `q`), `search_approved_vendors` calls `parse_marketplace_query` before ranking.
+
+**File:** `backend/app/features/vendors/search_ai.py`
+
+The **LLM is the only query parser** for `mode`, service `types`, `location`, event `event_types`, and plan `needs`. Sanitize steps only clamp taxonomy, length, and duplicate catering needs — they do not invent a birthday checklist or map “baker” → `baking` when the model is skipped.
+
+| Outcome | What happens |
+|---------|----------------|
+| `q` empty | Parser not called; browse uses URL chips (`types`, `location`) and `_rank_candidates` on the full pool |
+| OpenAI OK | `parse_completion` → `_LlmMarketplaceParse` → `_sanitize_parse_result` |
+| OpenAI missing or error | `_token_only_parse` — split `q` into keyword tokens only; `mode` stays `simple`; no types, no plan |
+
+```380:404:backend/app/features/vendors/search_ai.py
+def parse_marketplace_query(
+    raw_q: str,
+    *,
+    country_code: str | None = None,
+) -> MarketplaceQueryParseResult:
+    """
+    Parse free-text browse search via the LLM.
+
+    Returns filters for ranking, plus ``mode`` and optional ``needs`` when the
+    query is an event checklist (plan). Cached briefly per country + query.
+    """
+    normalized = _normalize_query(raw_q)
+    if not normalized:
+        return MarketplaceQueryParseResult()
+
+    market_country = normalize_country_code(country_code)
+    cache_key = f"v5:{market_country}:{normalized}"
+    cached = _cache_get(cache_key)
+    if cached is not None:
+        logger.debug("marketplace_search_ai: cache hit q=%r country=%s", normalized[:80], market_country)
+        return cached
+
+    result = _parse_with_llm(raw_q, country_code=market_country)
+    _cache_set(cache_key, result)
+    return result
+```
+
+**Simple vs plan** (decided by the LLM, not regex):
+
+- **simple** — one vendor hunt (“photographers in Leeds”). `search.py` runs `_rank_candidates`.
+- **plan** — event checklist (“help me plan my birthday”). `search.py` runs `_search_plan_sections` with `parsed.needs`.
+
+Plain English: without OpenAI, “plan my wedding” still searches as loose keywords — it will **not** auto-build cake + catering sections. Plan mode requires a successful LLM parse.
+
+---
+
+## Step 7 — Who appears in explore? (visibility rule)
 
 **File:** `backend/app/features/vendors/visibility.py`
 
@@ -236,7 +288,7 @@ Vendor profile body lives in `vendors.payload` (JSON) — exposed as `profile_fo
 
 ---
 
-## Step 7 — Contract shape (models, not SQL)
+## Step 8 — Contract shape (models, not SQL)
 
 **File:** `backend/app/contracts/vendor.py`
 
@@ -265,7 +317,7 @@ Frontend twin: `ExploreVendor` in `frontend/lib/clientExploreApi.ts`.
 
 ---
 
-## Step 8 — Vendor detail page (read-only body)
+## Step 9 — Vendor detail page (read-only body)
 
 **File:** `frontend/features/client/browse/ClientVendorBrowseDetailView.tsx`
 
@@ -301,7 +353,7 @@ MarketplaceExploreView reads marketplaceSearchParams
   ↓
 fetchExploreVendorsSearch → GET /api/v1/vendors/explore/search
   ↓
-explore.py → search_approved_vendors → moderation + visibility filters
+explore.py → search_approved_vendors → (search_ai if q) → moderation + visibility filters
   ↓
 JSON ExploreVendorSearchRow[] → MarketplaceVendorCard grid
 
@@ -332,7 +384,8 @@ VendorBrowseDetailBody (read-only profile)
 | Symptom | First file to open |
 |---------|-------------------|
 | Vendor missing from browse but “approved” in admin | `backend/app/features/vendors/visibility.py` (Stripe / `listing_override`) |
-| Empty search results | `backend/app/features/vendors/search.py` |
+| Empty search results | `backend/app/features/vendors/search.py` then `search_ai.py` if `q` set |
+| Plan mode never appears | `search_ai.py` — OpenAI must succeed; check logs for LLM parse failures |
 | 404 on detail | `moderation.py` → `get_approved_vendor_for_explore_by_id` |
 | Filters lost when going back | `frontend/lib/marketplaceSearchParams.ts` |
 | Client sees marketing chrome instead of sidebar | `ClientBrowsePortalLayout.tsx` + `/me` `user_type` |
@@ -359,6 +412,7 @@ VendorBrowseDetailBody (read-only profile)
 - **profile_form_data** — vendor marketing copy and packages from `vendors.payload` JSON.
 - **Embedded browse** — same marketplace component, different chrome for portal vs public.
 - **Search context on URLs** — filters survive navigation to detail and back.
+- **LLM-only parse** — `search_ai.py` decides simple vs plan; token-only fallback is keywords, not canned checklists.
 
 ---
 

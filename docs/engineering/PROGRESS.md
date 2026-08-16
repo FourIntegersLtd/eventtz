@@ -83,6 +83,7 @@ Personal engineering course using the real Eventtz codebase.
 | Listing rules | `apply_public_listing_filters` — approved + Stripe ready or admin `visible`, not `hidden` |
 | Models | `ExploreVendorRow`, `ExploreVendorSearchRow` in contracts + `clientExploreApi.ts` |
 | Metrics | Review stats + `public_metrics` merged on explore responses |
+| Query parse | `search_ai.py` — LLM-only `parse_marketplace_query`; token-only keywords fallback when OpenAI down |
 
 ### Key files (bookmark)
 

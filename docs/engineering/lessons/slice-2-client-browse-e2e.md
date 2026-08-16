@@ -1,6 +1,6 @@
 # Slice 2 — Client browse: complete end-to-end code
 
-**Branch:** `cursor/engineering-course-28c8` (synced with `main`)  
+**Branch:** `cursor/engineering-course-28c8` (synced with `main` — LLM-only `search_ai.py`)  
 **User story:** Guest or client opens `/client/browse`; the page calls `GET /api/v1/vendors/explore/search` and renders vendor cards.
 
 ---
@@ -306,7 +306,7 @@ def search_approved_vendors(
 **Plain English walk of `search_approved_vendors`:**
 
 1. Parse URL `types` and `dates` strings into lists.
-2. If `q` present → `parse_marketplace_query` (AI/canned — `search_ai.py`).
+2. If `q` present → `parse_marketplace_query` in `search_ai.py` (LLM-only; see Part H).
 3. **`list_approved_vendors_for_explore`** — DB pool (listable + country + optional SQL filters).
 4. Build `primary_types`, `keywords`, `location_filter` from URL + AI parse.
 5. **Plan mode** → `_search_plan_sections` (sections per need).
@@ -369,6 +369,65 @@ Card reads `vendor.profile_form_data.businessName`, `baseCity`, `servicesOffered
 
 ---
 
+## Part H — `search_ai.py` (LLM-only query parse)
+
+**File:** `backend/app/features/vendors/search_ai.py` (~410 lines after refactor)
+
+### What changed on `main`
+
+| Removed | Still there |
+|---------|-------------|
+| `_fallback_parse` with synonym maps (`baker` → `baking`) | LLM via `parse_completion` → `_LlmMarketplaceParse` |
+| Regex plan detection (`_PLAN_INTENT_RE`) | `_sanitize_parse_result` — taxonomy + length clamps |
+| Canned birthday/wedding checklists (`_CANNED_NEEDS`) | `_collapse_needs_by_service` — one section per service key |
+| Event-type regex + static `why_for_need` maps | `_token_only_parse` — emergency keywords-only path |
+
+### Parse flow
+
+```
+parse_marketplace_query(raw_q)
+  → normalize + cache key v5:{country}:{normalized}
+  → _parse_with_llm
+      → try_openai_client() missing? → _token_only_parse
+      → parse_completion(...) OK? → _sanitize_parse_result
+      → exception? → _token_only_parse
+```
+
+**Token-only fallback** (`_token_only_parse`) — used when OpenAI is down:
+
+```python
+def _token_only_parse(raw_q: str) -> MarketplaceQueryParseResult:
+    """OpenAI down: keywords only. No types, events, or plan needs."""
+    normalized = _normalize_query(raw_q)
+    if not normalized:
+        return MarketplaceQueryParseResult()
+    keywords = [w for w in normalized.split() if len(w) >= 2][:16]
+    return MarketplaceQueryParseResult(
+        mode="simple",
+        keywords=keywords,
+        intent_summary=normalized[:120] or None,
+    )
+```
+
+Tests in `backend/tests/test_marketplace_search.py` assert token-only does **not** map “baker” to `baking` and does **not** invent a birthday plan.
+
+### Three browse scenarios (current code)
+
+| Scenario | URL / `q` | `search_ai` | `search.py` fork |
+|----------|-----------|-------------|------------------|
+| **1 — bare browse** | `/client/browse` (no `q`) | Skipped | `_rank_candidates` on full approved pool; 6 cards (`MARKETPLACE_PAGE_SIZE`) |
+| **2 — simple hunt** | `q=photographers in Leeds` | LLM → usually `mode=simple`, `types` may include `photography`, `location=Leeds` | `_rank_candidates`; city may also hit SQL via `city_query` |
+| **3 — plan checklist** | `q=help me plan my birthday` | LLM → `mode=plan`, `needs` (cake, food, photos…) | `_search_plan_sections` → `sections` + `plan` in JSON |
+
+If OpenAI fails in scenario 2 or 3, both collapse to **simple keyword ranking** — no plan sections.
+
+### Export for tests
+
+- `sanitize_marketplace_parse_result` — pure sanitize, no network
+- `token_only_marketplace_parse` — keywords-only path (replaces old `fallback_parse_marketplace_query`)
+
+---
+
 ## File index (open in order)
 
 1. `frontend/app/client/(portal)/browse/page.tsx`
@@ -379,8 +438,10 @@ Card reads `vendor.profile_form_data.businessName`, `baseCity`, `servicesOffered
 6. `backend/app/http/router.py` (include explore router)
 7. `backend/app/features/vendors/http/explore.py`
 8. `backend/app/features/vendors/search.py` ← **`search_approved_vendors`**
-9. `backend/app/features/vendors/moderation.py` ← **`list_approved_vendors_for_explore`**
-10. `backend/app/features/vendors/visibility.py`
-11. `backend/app/contracts/vendor.py`
-12. `backend/app/features/bookings/reviews.py` ← `merge_review_stats_into_vendor_rows`
-13. `backend/app/features/vendors/public_metrics.py` ← `merge_public_metrics_into_vendor_rows`
+9. `backend/app/features/vendors/search_ai.py` ← **`parse_marketplace_query`**
+10. `backend/app/features/vendors/moderation.py` ← **`list_approved_vendors_for_explore`**
+11. `backend/app/features/vendors/visibility.py`
+12. `backend/app/contracts/vendor.py`
+13. `backend/app/features/bookings/reviews.py` ← `merge_review_stats_into_vendor_rows`
+14. `backend/app/features/vendors/public_metrics.py` ← `merge_public_metrics_into_vendor_rows`
+15. `backend/tests/test_marketplace_search.py` ← parse + tier tests
