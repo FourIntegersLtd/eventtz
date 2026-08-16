@@ -116,6 +116,9 @@ export function useOnboardingPersistence({
       }
       setListingVisible(Boolean(res.listing_visible));
       setPayoutsVerified(Boolean(res.payouts_verified));
+      if ((res.onboarding_status ?? "draft") === "submitted") {
+        setData((prev) => (prev.returnedForEditsAt ? { ...prev, returnedForEditsAt: "" } : prev));
+      }
     },
     [],
   );

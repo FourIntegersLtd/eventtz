@@ -26,7 +26,6 @@ type PersistenceSlice = Pick<
   | "approvalStatus"
   | "lockedPendingReview"
   | "canAddPortfolioWhilePending"
-  | "returnedForEdits"
   | "formError"
   | "setFormError"
   | "applyVendorProfileResponse"
@@ -73,7 +72,6 @@ export function useOnboardingSteps({
     approvalStatus,
     lockedPendingReview,
     canAddPortfolioWhilePending,
-    returnedForEdits,
     setFormError,
     applyVendorProfileResponse,
     persistAdditionalInfoFiles,
@@ -83,24 +81,20 @@ export function useOnboardingSteps({
 
   useEffect(() => {
     if (loadStatus !== "ready") return;
-    // Draft vendors never stay on the submitted screen (admin unsubmit or stale step 9).
-    if (
-      !isWalkthrough &&
-      step === 9 &&
-      (returnedForEdits || profileStatus === "draft")
-    ) {
-      setStep(8);
-      setReturnToReview(false);
-      return;
-    }
+    // Pending review owns step 9. Check this first so a leftover returned-for-edits
+    // flag cannot bounce the wizard 8 ↔ 9 after submit.
     if (lockedPendingReview && step !== 9 && !(step === 6 && canAddPortfolioWhilePending)) {
       setStep(9);
+      return;
+    }
+    if (!isWalkthrough && step === 9 && profileStatus === "draft") {
+      setStep(8);
+      setReturnToReview(false);
     }
   }, [
     loadStatus,
     lockedPendingReview,
     canAddPortfolioWhilePending,
-    returnedForEdits,
     step,
     setStep,
     profileStatus,

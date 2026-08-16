@@ -13,14 +13,35 @@ describe("isReturnedForEdits", () => {
     ).toBe(true);
   });
 
-  it("is true for legacy draft profiles saved at review without the timestamp", () => {
+  it("is false for first-time review without the timestamp", () => {
     expect(
       isReturnedForEdits({
         onboarding_status: "draft",
         approval_status: "pending",
         current_step: 8,
       }),
+    ).toBe(false);
+  });
+
+  it("is true for a leftover submitted-screen step after unsubmit without the timestamp", () => {
+    expect(
+      isReturnedForEdits({
+        onboarding_status: "draft",
+        approval_status: "pending",
+        current_step: 9,
+      }),
     ).toBe(true);
+  });
+
+  it("is false after resubmit even if the timestamp is still on the payload", () => {
+    expect(
+      isReturnedForEdits({
+        onboarding_status: "submitted",
+        approval_status: "pending",
+        current_step: 9,
+        returnedForEditsAt: "2026-08-15T10:00:00+00:00",
+      }),
+    ).toBe(false);
   });
 
   it("is false for early draft onboarding", () => {

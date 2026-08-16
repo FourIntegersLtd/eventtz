@@ -84,16 +84,17 @@ export type OnboardingStepProfile = {
 
 /**
  * Admin returned a submitted profile to draft so the vendor can edit again.
- * Prefers the server timestamp; falls back to draft + review/submitted step.
+ * Submitted profiles are never “returned” — a leftover timestamp after resubmit
+ * would fight the pending-review lock and bounce step 8 ↔ 9.
  */
 export function isReturnedForEdits(profile: OnboardingStepProfile): boolean {
+  if (profile.onboarding_status === "submitted") return false;
+  if (profile.approval_status === "approved" || profile.approval_status === "banned") {
+    return false;
+  }
   if (profile.returnedForEditsAt?.trim()) return true;
-  return (
-    profile.onboarding_status === "draft" &&
-    profile.approval_status !== "approved" &&
-    profile.approval_status !== "banned" &&
-    (profile.current_step ?? 0) >= 8
-  );
+  // Stale submitted-screen step after an unsubmit that predates the timestamp.
+  return profile.onboarding_status === "draft" && (profile.current_step ?? 0) >= 9;
 }
 
 /** Wizard step after loading profile — keeps draft vendors off the submitted screen. */
