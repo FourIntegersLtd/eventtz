@@ -11,9 +11,10 @@ type InspirationMobileReelProps = {
 };
 
 /**
- * One &lt;video&gt; for the celebrations carousel on small screens.
- * Chrome on iPhone uses WebKit and blacks out if several clips are decoded
- * (including display:none / opacity:0 neighbours). Swap src by remounting.
+ * One persistent &lt;video&gt; for the celebrations carousel on small screens.
+ * Keep a single element and swap src — remounting on each slide makes iOS block
+ * muted autoplay on later clips. One element avoids WebKit blacking out when
+ * several decoded clips sit in the DOM (display:none neighbours).
  */
 export function InspirationMobileReel({
   video,
@@ -36,19 +37,27 @@ export function InspirationMobileReel({
       return;
     }
 
+    let cancelled = false;
     const tryPlay = () => {
+      if (cancelled) return;
       el.muted = true;
       void el.play().catch(() => {});
     };
 
-    tryPlay();
-    el.addEventListener("loadeddata", tryPlay);
-    el.addEventListener("canplay", tryPlay);
-    el.addEventListener("playing", tryPlay);
+    // Reuse one <video> and swap src. Remounting a new element on each slide
+    // makes iOS treat later clips as fresh media and block muted autoplay.
+    el.load();
+    if (el.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+      tryPlay();
+    } else {
+      el.addEventListener("loadeddata", tryPlay);
+      el.addEventListener("canplay", tryPlay);
+    }
+
     return () => {
+      cancelled = true;
       el.removeEventListener("loadeddata", tryPlay);
       el.removeEventListener("canplay", tryPlay);
-      el.removeEventListener("playing", tryPlay);
       el.pause();
     };
   }, [inView, reduceMotion, video.src]);

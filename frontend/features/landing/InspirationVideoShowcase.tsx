@@ -58,11 +58,13 @@ export function InspirationVideoShowcase({ videos }: InspirationVideoShowcasePro
   }, []);
 
   useEffect(() => {
-    if (!inView || total === 0 || compact) return;
+    if (!inView || total === 0) return;
     const next = videos[(index + 1) % total]?.src;
-    const prev = videos[(index - 1 + total) % total]?.src;
     if (next) prefetchLandingVideo(next);
-    if (prev) prefetchLandingVideo(prev);
+    if (!compact) {
+      const prev = videos[(index - 1 + total) % total]?.src;
+      if (prev) prefetchLandingVideo(prev);
+    }
   }, [compact, index, inView, total, videos]);
 
   const handleTouchStart = useCallback((event: React.TouchEvent) => {
@@ -124,7 +126,6 @@ export function InspirationVideoShowcase({ videos }: InspirationVideoShowcasePro
             onTouchEnd={handleTouchEnd}
           >
             <InspirationMobileReel
-              key={active.src}
               video={active}
               inView={inView}
               reduceMotion={reduceMotion}
