@@ -2,6 +2,8 @@
 
 Trace **one enquire click** from button → DB row → redirect. Read this when `slice-3a-client-booking-enquire.md` feels too high-level.
 
+**For the full booking form UI, state, validation, and parameter mapping (form → API → DB), see the main lesson Steps 3–8.**
+
 **Endpoint:** `POST /api/v1/client/booking-requests`  
 **Orchestrator:** `create_booking_request` in `backend/app/features/bookings/create.py`
 
@@ -138,25 +140,42 @@ Each option gets a stable `id` (e.g. `pkg-gold`, `fixed-hourly`, `quote`).
 ```228:250:frontend/features/client/browse/ClientVendorBrowseDetailView.tsx
         {user && bookingOpen && vendor ? (
           <VendorBookingModal
-            initialSelectedIds={bookingSelectionIds}
-            vendorUserId={userId}
-            pricingOptions={pricingOptions}
-            clientSearchContext={bookingClientSearchContext}
+            key={`${bookingSelectionIds.slice().sort().join("|")}|${searchParams.toString()}`}
+            onClose={() => setBookingOpen(false)}
             onSuccess={(bookingId) => {
+              setBookingOpen(false);
+              showToast({
+                title: "Request sent",
+                description: `${businessName} will be notified. ${usualReplyExpectation(vendor.avg_response_seconds)}`,
+                tone: "success",
+              });
               router.push(`/client/bookings/${bookingId}`);
             }}
+            vendorDisplayName={businessName}
+            vendorUserId={userId}
+            pricingOptions={pricingOptions}
+            initialSelectedIds={bookingSelectionIds}
+            vendorPayload={vendorPayload}
+            searchPrefill={bookingSearchPrefill}
+            initialPrefill={plannerEventPrefill}
+            linkedEventId={linkedEventId}
+            clientSearchContext={bookingClientSearchContext}
           />
+        ) : null}
 ```
 
 Modal does **not** let you change packages — close modal, re-pick on profile.
 
 **Prefill:** browse URL dates (`searchPrefill`), planner query params (`initialPrefill`), linked celebration (`linkedEventId` → `useActiveEventPrefill`), or active-event banner (`ActiveEventPrefillBanner`).
 
-**File:** `VendorBookingModal.tsx` line 77:
+**File:** `VendorBookingModal.tsx` — packages are fixed from profile:
 
-```77:77:frontend/features/client/browse/VendorBookingModal.tsx
+```76:77:frontend/features/client/browse/VendorBookingModal.tsx
+  // Selection happens once, on the profile sidebar - this modal only confirms dates/venue/notes.
   const selectedIds = useMemo(() => new Set(initialSelectedIds), [initialSelectedIds]);
 ```
+
+**Form fields** (event name, dates, venue, notes) — see main lesson Step 5 for full JSX snippets.
 
 ---
 
