@@ -1,5 +1,7 @@
 # Slice 2 — Client browse: explore list + vendor profile (read-only)
 
+**Deep dive:** If the flow still feels fuzzy, read `slice-2-browse-flow-walkthrough.md` first — it traces every function call with three scenarios.
+
 ### User story
 Anyone (guest or signed-in client) opens `/client/browse` to search approved vendors, then opens `/client/browse/[userId]` to read a vendor’s public profile — without logging in. Signed-in clients see the same pages inside the client portal sidebar.
 

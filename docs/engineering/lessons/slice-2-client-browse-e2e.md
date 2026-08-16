@@ -1,5 +1,7 @@
 # Slice 2 — Client browse: complete end-to-end code
 
+**Start here if confused:** `slice-2-browse-flow-walkthrough.md` — step-by-step function trace (URL → SQL → rank → UI).
+
 **Branch:** `cursor/engineering-course-28c8` (synced with `main` — LLM-only `search_ai.py`)  
 **User story:** Guest or client opens `/client/browse`; the page calls `GET /api/v1/vendors/explore/search` and renders vendor cards.
 
