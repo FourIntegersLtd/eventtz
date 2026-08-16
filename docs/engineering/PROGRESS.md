@@ -23,7 +23,7 @@ Personal engineering course using the real Eventtz codebase.
 | 1 Authentication | **complete** |
 | 2 Client browse | **complete** |
 | 3a Client booking — enquire | **complete** |
-| 3b Client booking — rest | not started |
+| 3b Client booking — detail | **complete** |
 | 4 Client payment | not started |
 | 5 Vendor quote + accept | not started |
 | 6 Vendor payout | not started |
@@ -133,6 +133,46 @@ Personal engineering course using the real Eventtz codebase.
 ### Lesson status
 
 **Complete** — ready for Slice 3b (booking detail, status, adjustments).
+
+---
+
+## Slice 3b — Client booking: detail, status, adjustments (feature track)
+
+**Date completed:** 2026-08-16  
+**Lesson:** `docs/engineering/lessons/slice-3b-client-booking-detail.md`
+
+### Covered
+
+| Area | Topics |
+|------|--------|
+| URLs | `/client/bookings`, `/client/bookings/[id]` master–detail |
+| Detail load | `fetchClientBookingDetail` → `GET /client/booking-requests/{id}` |
+| Two lifecycles | `booking_status` (agreement) vs `payment_status` (money) |
+| Shared UI | `BookingDetailPanel`, `useParticipantBookingsScaffold` (client + vendor) |
+| Initiator | `client` enquiry vs `vendor` quote — different pending actions |
+| Adjustments | Vendor `PUT .../adjustments`; client reads + confirms via `PATCH .../status` |
+| Price update | `BookingPriceUpdateBanner`; decline reverts to original snapshot price |
+| Cancel | `POST .../cancel` while pending/accepted |
+| Banners | Payment due (`accepted` + unpaid), completion, checkout return (adjacent Slice 4) |
+
+### Key files (bookmark)
+
+- `frontend/app/client/(portal)/bookings/`
+- `frontend/features/client/bookings/useClientBookingsController.ts`
+- `frontend/features/client/bookings/ClientBookingDetailExtras.tsx`
+- `frontend/features/bookings/BookingDetailPanel.tsx`
+- `frontend/features/bookings/BookingPriceUpdateBanner.tsx`
+- `frontend/lib/clientBookingsApi.ts`
+- `backend/app/features/bookings/http/client.py`
+- `backend/app/features/bookings/queries.py`
+- `backend/app/features/bookings/status.py`
+- `backend/app/features/bookings/adjustments.py`
+- `backend/app/features/bookings/pricing_confirmation.py`
+- `backend/app/contracts/booking.py` — `ClientBookingDetail`, `ClientBookingStatusBody`
+
+### Lesson status
+
+**Complete** — ready for Slice 4 (client payment / Stripe Checkout).
 
 ---
 
