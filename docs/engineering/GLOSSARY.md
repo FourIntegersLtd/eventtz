@@ -116,3 +116,9 @@ Format: **term** — plain-English meaning.
 **parse_marketplace_query** — `search_ai.py` entry: turns free-text `q` into keywords, location, types, and optional plan `needs`. LLM-only for structure; `_token_only_parse` is keywords-only when OpenAI is unavailable.
 
 **token_only parse** — Degraded parse path: split `q` into keyword tokens, `mode=simple`, no types or plan needs. Does not synonym-map or build canned checklists.
+
+**line_items (snapshot)** — JSON on `booking_requests` copying package prices at enquire time; vendor catalog edits do not rewrite past enquiries.
+
+**selected_option_ids** — Package/rate IDs the client chose; server resolves to priced `line_items` via `resolve_line_items`.
+
+**booking enquiry** — Client-initiated `POST /client/booking-requests`; creates `pending` + `unpaid` row; vendor notified; Slice 4 is payment.

@@ -23,7 +23,7 @@
 |---|-------|--------|
 | 1 | **Authentication** — login, session, `/me`, guards, signup, verify, passwords | **complete** |
 | 2 | **Client browse** — explore, vendor profile (read-only) | **complete** |
-| 3a | **Client booking — enquire** | partial (Day 2) |
+| 3a | **Client booking — enquire** | **complete** (lesson) |
 | 3b | **Client booking — detail, status, adjustments** | not started |
 | 4 | **Client payment** — Checkout + sync + webhook | not started |
 | 5 | **Vendor quote + accept/decline** | not started |

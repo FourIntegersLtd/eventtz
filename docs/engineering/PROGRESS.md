@@ -22,7 +22,7 @@ Personal engineering course using the real Eventtz codebase.
 |-------|--------|
 | 1 Authentication | **complete** |
 | 2 Client browse | **complete** |
-| 3a Client booking — enquire | partial |
+| 3a Client booking — enquire | **complete** |
 | 3b Client booking — rest | not started |
 | 4 Client payment | not started |
 | 5 Vendor quote + accept | not started |
@@ -92,12 +92,47 @@ Personal engineering course using the real Eventtz codebase.
 - `frontend/features/client/browse/`
 - `frontend/lib/clientExploreApi.ts`, `frontend/lib/marketplaceSearchParams.ts`
 - `backend/app/features/vendors/http/explore.py`
-- `backend/app/features/vendors/moderation.py`, `visibility.py`, `search.py`
+- `backend/app/features/vendors/moderation.py`, `visibility.py`, `search.py`, `search_ai.py`
 - `backend/app/contracts/vendor.py`
 
 ### Lesson status
 
 **Complete** — ready for Slice 3a (Client booking — enquire).
+
+---
+
+## Slice 3a — Client booking: enquire (feature track)
+
+**Date completed:** 2026-08-16  
+**Lesson:** `docs/engineering/lessons/slice-3a-client-booking-enquire.md`
+
+### Covered
+
+| Area | Topics |
+|------|--------|
+| Entry UI | `VendorBookingModal` (single vendor), `MultiVendorEnquireModal` (browse multi-select) |
+| Auth | Client-only enquire; `require_client` on POST; guests see login |
+| API | `POST /api/v1/client/booking-requests` |
+| Snapshot | `resolve_line_items` — prices from vendor profile at submit, stored in `line_items` JSON |
+| Payload | Client sends `selected_option_ids` only — no prices from browser |
+| Create flow | `create_booking_request` — calendar, pricing, insert, chat notes, notifications |
+| Status | `pending`, `initiator: client`, payment `unpaid` |
+| After submit | Toast + redirect `/client/bookings/{id}` |
+
+### Key files (bookmark)
+
+- `frontend/features/client/browse/ClientVendorBrowseDetailView.tsx`
+- `frontend/features/client/browse/VendorBookingModal.tsx`
+- `frontend/features/marketplace/MultiVendorEnquireModal.tsx`
+- `frontend/lib/clientBookingsApi.ts`, `frontend/lib/validation/bookings.ts`
+- `backend/app/features/bookings/http/client.py`
+- `backend/app/features/bookings/create.py`
+- `backend/app/features/vendors/list_pricing.py` — `resolve_line_items`
+- `backend/app/contracts/booking.py` — `CreateBookingRequestBody`
+
+### Lesson status
+
+**Complete** — ready for Slice 3b (booking detail, status, adjustments).
 
 ---
 
