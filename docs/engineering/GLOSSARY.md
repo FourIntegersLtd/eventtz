@@ -94,3 +94,21 @@ Format: **term** — plain-English meaning.
 **Route group** — Next.js folder like `(auth)/` or `(portal)/` that organizes files without adding a URL segment.
 
 **referral_code** — Partner slug sent on vendor `POST /signup`; recorded in `referral_attributions` when valid.
+
+---
+
+## Slice 2 — Client browse
+
+**Explore / browse** — Marketplace discovery: search approved vendors and open read-only profiles (`/client/browse`).
+
+**Public listing gate** — Rule in `visibility.py`: vendor must be `approval_status = approved`, not `listing_override = hidden`, and either Stripe Connect ready or admin `listing_override = visible`.
+
+**profile_form_data** — Vendor marketing profile JSON from `vendors.payload`; returned on explore APIs as the shape clients render (business name, gallery, services, packages).
+
+**explore/search vs explore** — Search endpoint supports filters, sort, pagination, and plan mode; plain `/explore` returns a country-scoped approved list (browse UI uses search).
+
+**Embedded browse** — `MarketplaceExploreView embedded={true}` when a signed-in client browses inside the portal (less marketing chrome).
+
+**Search context on URL** — Filters encoded in query params (`marketplaceSearchParams.ts`) so list ↔ detail navigation preserves filters.
+
+**match_tier** — Search quality label on a row: `exact`, `related`, or `fallback` (close-enough matching).

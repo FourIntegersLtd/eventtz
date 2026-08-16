@@ -21,7 +21,7 @@ Personal engineering course using the real Eventtz codebase.
 | Slice | Status |
 |-------|--------|
 | 1 Authentication | **complete** |
-| 2 Client browse | not started |
+| 2 Client browse | **complete** |
 | 3a Client booking — enquire | partial |
 | 3b Client booking — rest | not started |
 | 4 Client payment | not started |
@@ -62,7 +62,41 @@ Personal engineering course using the real Eventtz codebase.
 
 ### Lesson status
 
-**Complete** — ready for Slice 2 (Client browse).
+**Complete** — see `lessons/slice-1-auth-me.md`.
+
+---
+
+## Slice 2 — Client browse (feature track)
+
+**Date completed:** 2026-08-16  
+**Lesson:** `docs/engineering/lessons/slice-2-client-browse.md`
+
+### Covered
+
+| Area | Topics |
+|------|--------|
+| URLs | `/client/browse`, `/client/browse/[userId]`, `/explore` → browse redirect |
+| Layout | `ClientBrowsePortalLayout` — guests public chrome; clients `PortalShell` |
+| List UI | `MarketplaceExploreView`, URL search params, `fetchExploreVendorsSearch` |
+| Detail UI | `ClientVendorBrowseDetailView`, `useExploreVendor`, `VendorBrowseDetailBody` |
+| API | Public `GET /vendors/explore/search`, `GET /vendors/explore/vendor/{id}` (no auth guards) |
+| Listing rules | `apply_public_listing_filters` — approved + Stripe ready or admin `visible`, not `hidden` |
+| Models | `ExploreVendorRow`, `ExploreVendorSearchRow` in contracts + `clientExploreApi.ts` |
+| Metrics | Review stats + `public_metrics` merged on explore responses |
+
+### Key files (bookmark)
+
+- `frontend/app/client/(portal)/browse/`
+- `frontend/features/marketplace/MarketplaceExploreView.tsx`
+- `frontend/features/client/browse/`
+- `frontend/lib/clientExploreApi.ts`, `frontend/lib/marketplaceSearchParams.ts`
+- `backend/app/features/vendors/http/explore.py`
+- `backend/app/features/vendors/moderation.py`, `visibility.py`, `search.py`
+- `backend/app/contracts/vendor.py`
+
+### Lesson status
+
+**Complete** — ready for Slice 3a (Client booking — enquire).
 
 ---
 
