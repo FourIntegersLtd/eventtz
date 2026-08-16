@@ -1,6 +1,6 @@
 # Slice 3a — Client booking: enquire
 
-**Deep dive from browse:** Slice 2 ends at read-only profiles. This slice is **write** — the client sends a booking enquiry.
+**Walkthrough:** `slice-3a-enquire-flow-walkthrough.md` — traces one click button → DB row with example payload.
 
 ### User story
 
