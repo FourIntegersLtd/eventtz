@@ -33,7 +33,7 @@ MatchTier = Literal["exact", "related", "fallback"]
 _TIER_RANK = {"exact": 0, "related": 1, "fallback": 2}
 # Cap how many cards we return per plan section (UI stays scannable).
 _PLAN_SECTION_VENDOR_LIMIT = 8
-# Hard ceiling on checklist length from the AI / canned plans.
+# Hard ceiling on checklist length from the LLM parse.
 _PLAN_MAX_NEEDS = 6
 # Rank more candidates than we show so earlier sections don't empty later ones.
 _PLAN_RANK_POOL_MULTIPLIER = 4
@@ -522,8 +522,8 @@ def _search_plan_sections(
     offers several services (e.g. cake + catering) is assigned to the **first**
     need that claims them so they do not repeat down the page.
 
-    ``section.why`` is the client-facing sentence (from AI ``rationale`` or canned
-    copy). ``section.total_count`` is how many unclaimed matches exist before we
+    ``section.why`` is the client-facing sentence (LLM ``rationale``, else a
+    generic compare line). ``section.total_count`` is how many unclaimed matches exist before we
     trim to ``_PLAN_SECTION_VENDOR_LIMIT`` cards (so “See more” can work).
     """
     sections: list[MarketplaceSearchSection] = []
@@ -574,7 +574,7 @@ def _search_plan_sections(
             continue
 
         # Display copy lives on the section as ``why`` (UI). Need.rationale is the
-        # AI/canned source field kept on the plan checklist for consistency.
+        # LLM source field kept on the plan checklist for consistency.
         why = why_for_need(
             service_key=need.service_key,
             event_types=parsed_event_types,
