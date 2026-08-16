@@ -13,14 +13,35 @@ A **signed-in client** picks packages on a vendor profile (or selects several ve
 ## What happens at a glance
 
 ```
-Client picks packages → VendorBookingModal → POST /client/booking-requests
-    → create_booking_request()
-        → resolve_line_items()   (prices from vendor profile, not browser)
-        → insert booking_requests (pending)
-        → notes → chat
-        → notify vendor + client
-    → redirect /client/bookings/{id}
+Client picks packages on profile
+    → guardBooking (optional launching-soon gate)
+    → VendorBookingModal (prefill from browse URL / planner / celebration event)
+    → calendar soft warning OR submit
+    → POST /client/booking-requests
+        → create_booking_request()
+            → guards (self-book, bookable vendor, calendar, capacity)
+            → resolve_line_items() + automatic discounts (prices from vendor profile)
+            → resolve_event_for_booking() (link or create celebration event)
+            → insert booking_requests (pending / unpaid)
+            → notes → chat + conversation_id on row
+            → notify vendor + client + SSE + analytics
+    → success modal → "View booking"
+    → toast + redirect /client/bookings/{id}
 ```
+
+---
+
+## Example: client enquires from a vendor profile
+
+1. Signed-in client opens `/client/browse/abc-vendor-uuid?dates=2026-09-20`.
+2. Ticks “Gold package” on the profile sidebar → clicks **Request booking**.
+3. `guardBooking` passes (or shows launching-soon modal if feature flag is on).
+4. `VendorBookingModal` opens with package IDs fixed, event date prefilled from URL.
+5. Client fills event name + notes → submits (calendar conflict blocks submit client-side if dates don’t match vendor calendar).
+6. `POST /api/v1/client/booking-requests` with `selected_option_ids` only — no prices.
+7. Server snapshots prices into `line_items`, links a `client_events` row, inserts `pending` booking.
+8. Notes appear in chat; vendor gets in-app + email notification.
+9. Modal shows success → client clicks **View booking** → toast + redirect to `/client/bookings/{id}` (Slice 3b).
 
 ---
 
@@ -34,10 +55,15 @@ Client picks packages → VendorBookingModal → POST /client/booking-requests
 4. `frontend/features/client/browse/VendorBrowseDetailBody.tsx` — packages UI + “Request booking”
 5. `frontend/features/client/browse/vendorBrowseDetailModel.ts` — `buildBrowsePricingOptions`, `buildBookingLineItems`
 6. `frontend/features/bookings/useLaunchingSoonBookingGuard.tsx` — optional feature-flag gate
-7. `frontend/features/client/browse/VendorBookingModal.tsx` — form + submit
-8. `frontend/lib/validation/bookings.ts` — `clientBookingRequestSchema` (Zod)
-9. `frontend/lib/clientBookingsApi.ts` — `postBookingRequest`
-10. `frontend/lib/axios.ts` — session cookies (`withCredentials`)
+7. `frontend/features/bookings/eventEnquirePrefill.ts` — planner URL → prefill fields
+8. `frontend/features/bookings/useActiveEventPrefill.ts` — linked celebration event prefill
+9. `frontend/features/bookings/ActiveEventPrefillBanner.tsx` — “Use your event” banner in modal
+10. `frontend/lib/marketplaceSearchParams.ts` — browse filters → `clientSearchContext`
+11. `frontend/features/client/browse/VendorBookingModal.tsx` — form + submit + success modal
+12. `frontend/lib/validation/bookings.ts` — `clientBookingRequestSchema` (Zod)
+13. `frontend/lib/clientBookingsApi.ts` — `postBookingRequest`
+14. `frontend/lib/mixpanelEvents.ts` — `enquiry_started`, `enquiry_created`, `enquiry_failed`
+15. `frontend/lib/axios.ts` — session cookies (`withCredentials`)
 
 ### Backend (HTTP → business logic → DB)
 
@@ -49,25 +75,28 @@ Client picks packages → VendorBookingModal → POST /client/booking-requests
 16. `backend/app/features/vendors/list_pricing.py` — `resolve_line_items` (snapshot)
 17. `backend/app/features/bookings/pricing.py` — `build_pricing_breakdown`, totals
 18. `backend/app/features/bookings/calendar.py` — availability + capacity checks
-19. `backend/app/features/client_events/events.py` — link/create celebration event
+19. `backend/app/features/client_events/events.py` — `resolve_event_for_booking`
 20. `backend/app/features/chat/service.py` — notes → first chat message
 21. `backend/app/features/email/dispatch.py` — in-app + email notifications
-22. `backend/app/core/db.py` — `booking_requests` insert
+22. `backend/app/features/bookings/booking_funnel_timestamps.py` — `mark_vendor_notified`
+23. `backend/app/features/analytics/events.py` — `enquiry_created`, `enquiry_multi_created`, `vendor_notified`
+24. `backend/app/core/db.py` — `booking_requests` insert
 
 ### After success
 
-23. `frontend/app/client/(portal)/bookings/[bookingId]/page.tsx` — booking detail (Slice 3b)
+25. `frontend/app/client/(portal)/bookings/[bookingId]/page.tsx` — booking detail (Slice 3b)
 
 ---
 
 ## Complete route — multi-vendor enquire (browse grid)
 
-Same API from step 9 onward. Different UI entry:
+Same API from step 13 onward. Different UI entry:
 
 1. `frontend/app/client/(portal)/browse/page.tsx` — `/client/browse`
 2. `frontend/features/marketplace/MarketplaceExploreView.tsx` — multi-select + “Message N together”
 3. `frontend/features/marketplace/MultiVendorEnquireModal.tsx` — one brief, **N sequential** `postBookingRequest` calls
 4. `frontend/features/bookings/MultiVendorPackagePicker.tsx` — pick one package per vendor
+5. `frontend/features/bookings/multiVendorPackageSelection.ts` — initial package picks per vendor
 
 ---
 
@@ -98,8 +127,10 @@ Browse is **public** (Slice 2). Enquire requires a **client** session.
 | User | Sees on profile |
 |------|-----------------|
 | Guest | Login / register links (`requireLoginForActions`) |
-| Client | “Request booking” → modal |
+| Client | “Request booking” → modal (after `guardBooking`) |
 | Vendor / admin browsing | Public chrome, no enquire hook |
+
+**Launching-soon gate:** `useLaunchingSoonBookingGuard` wraps the enquire click. When `BOOKINGS_LAUNCHING_SOON` is on and the client lacks early access, the guard shows `LaunchingSoonBookingModal` instead of opening the booking modal.
 
 **Backend:** `require_client` on the POST handler — 401/403 without a valid client session.
 
@@ -136,10 +167,15 @@ Fields the client fills:
 
 Prefill sources:
 
-- Browse URL dates → `searchPrefill`
-- Planner handoff → `initialPrefill` from query params
-- Linked celebration → `linkedEventId` / `event_id`
-- Search context → `clientSearchContext` (for analytics + nudges)
+- Browse URL dates → `searchPrefill` (from `marketplaceSearchParams`)
+- Planner handoff → `initialPrefill` from `eventEnquirePrefillFromSearchParams` (`?eventName=…&eventDate=…&fromPlanner=…`)
+- Linked celebration → `linkedEventId` query param → `useActiveEventPrefill` loads event and auto-fills fields
+- Active celebration banner → `ActiveEventPrefillBanner` offers the client’s primary active event when no linked id
+- Search context → `clientSearchContext` via `toClientSearchContext(marketplaceSearch)` (for analytics + nudges)
+
+**Calendar soft warning:** before submit, the modal checks `vendorPayloadAllowsEventDates`. If chosen dates conflict with the vendor’s calendar, submit is blocked client-side with a validation message. The server still runs `_enforce_vendor_calendar` as a hard reject — the modal warning is UX, not the only guard.
+
+**Note:** `event_postcode` is supported on the API (`CreateBookingRequestBody`) but both modals currently send `event_postcode: null`. Postcode is required later at payment (Slice 4).
 
 Submit handler:
 
@@ -252,7 +288,7 @@ Walk in order:
 
 ### 6a — Guards
 
-```176:186:backend/app/features/bookings/create.py
+```176:195:backend/app/features/bookings/create.py
     if client_user_id == vendor_user_id:
         raise ValueError(booking_messages.CANNOT_BOOK_OWN_VENDOR)
 
@@ -263,18 +299,25 @@ Walk in order:
     assert_user_not_suspended(vendor_user_id)
 
     _enforce_vendor_calendar(vendor_user_id, event_date, event_end_date)
+
+    payload = get_bookable_vendor_profile_form_data(vendor_user_id)
+    if payload is None:
+        raise ValueError(booking_messages.VENDOR_NOT_AVAILABLE_FULL)
+
+    _enforce_max_bookings_per_day(vendor_user_id, payload, event_date, event_end_date)
 ```
 
-Same bookability rules as browse listing + hard calendar check.
+Same bookability rules as browse listing + hard calendar check + daily capacity limit.
 
 ### 6b — Snapshot line items (the key modeling idea)
 
-```189:203:backend/app/features/bookings/create.py
-    payload = get_bookable_vendor_profile_form_data(vendor_user_id)
+```197:202:backend/app/features/bookings/create.py
     line_items = resolve_line_items(payload, selected_option_ids)
     line_items = line_items + compute_automatic_discount_lines(payload, line_items, event_date)
 
     pb = build_pricing_breakdown(line_items=line_items, vendor_adjustments=[])
+    if float(pb.get("vendor_portion_gbp") or 0) <= 0 and not pb.get("has_pricing_tbc"):
+        raise ValueError(booking_messages.BOOKING_NO_VALID_PRICE)
     client_total = str(pb.get("client_total_label") or persisted_booking_total_label(pb))
 ```
 
@@ -296,7 +339,28 @@ def resolve_line_items(
 
 Plain English: if the vendor later changes a package from £200 → £300, this enquiry still shows £200 in `line_items` JSON.
 
-### 6c — Insert row
+### 6c — Resolve celebration event (before insert)
+
+```209:217:backend/app/features/bookings/create.py
+    resolved_event_id, event_fields = resolve_event_for_booking(
+        client_user_id,
+        event_id=event_id,
+        event_name=event_name,
+        event_date=event_date,
+        event_end_date=event_end_date,
+        event_address=event_address,
+        event_postcode=event_postcode,
+    )
+```
+
+| `event_id` in payload | What happens |
+|-------------------------|--------------|
+| Set (linked celebration) | Validates event belongs to client and is not archived; uses event title/dates on the booking row |
+| Omitted | Creates a new `client_events` row from the form fields |
+
+Multi-vendor enquire reuses the `event_id` returned from the first successful POST for later vendors in the batch.
+
+### 6d — Insert row
 
 ```218:235:backend/app/features/bookings/create.py
     row_out: dict[str, Any] = {
@@ -323,18 +387,22 @@ Plain English: if the vendor later changes a package from £200 → £300, this 
 | `line_items` | JSON snapshot |
 | `client_search_context` | optional browse filters |
 
-### 6d — Side effects after insert
+### 6e — Side effects after insert
 
-1. **Notes → chat** — `_post_client_booking_notes_to_chat` creates DM, inserts message with `metadata.source = "booking_notes"`
-2. **Vendor notification** — `dispatch_booking_notification(..., kind="booking_request_received")`
-3. **Client confirmation** — `booking_request_sent`
-4. **Realtime** — `_notify_booking_changed` (SSE)
-5. **Analytics** — `enquiry_created`, optional `enquiry_multi_created`
-6. **Celebration event** — `resolve_event_for_booking` links or creates `client_events` row
+1. **Notes → chat** — `_post_client_booking_notes_to_chat` creates DM, inserts message with `metadata.source = "booking_notes"`, sets `conversation_id` on the booking row
+2. **Vendor notification** — `dispatch_booking_notification(..., kind="booking_request_received")` + `mark_vendor_notified`
+3. **Client confirmation** — `dispatch_booking_notification(..., kind="booking_request_sent", mode="insert_if_absent")`
+4. **Realtime** — `_notify_booking_changed` (SSE) + chat unread pings
+5. **Analytics** — `enquiry_created`; first batch item also fires `enquiry_multi_created`; `vendor_notified`
+6. **Celebration touch** — `touch_client_event_updated_at(resolved_event_id)`
 
 ---
 
 ## Step 7 — Success UX
+
+**File:** `VendorBookingModal.tsx`
+
+After a successful POST, the modal shows a **success overlay** (“Request sent”) with a **View booking** button. Only when the client clicks that button does `onSuccess(bookingId)` run.
 
 **File:** `ClientVendorBrowseDetailView.tsx`
 
@@ -350,7 +418,24 @@ Plain English: if the vendor later changes a package from £200 → £300, this 
             }}
 ```
 
+Flow: POST success → success modal → **View booking** → toast + `router.push(`/client/bookings/${bookingId}`)`.
+
 Client lands on `/client/bookings/{bookingId}` — **Slice 3b** (detail, status, chat, pay later).
+
+---
+
+## Analytics (Mixpanel + backend)
+
+| Event | When | Where |
+|-------|------|-------|
+| `enquiry_started` | Client clicks “Request booking” | `ClientVendorBrowseDetailView` |
+| `multi_enquire_opened` | Client opens multi-vendor modal | `MarketplaceExploreView` |
+| `enquiry_created` | POST succeeds (per vendor) | `VendorBookingModal`, `MultiVendorEnquireModal` |
+| `enquiry_failed` | POST throws | both modals |
+| `multi_enquiry_created` | All vendors in batch succeed | `MultiVendorEnquireModal` |
+| `enquiry_created` (backend) | Row inserted | `create.py` → `record_marketplace_event` |
+| `enquiry_multi_created` (backend) | First item in multi batch | `create.py` when `batchSize > 1` |
+| `vendor_notified` (backend) | Vendor notification dispatched | `create.py` |
 
 ---
 
@@ -364,6 +449,8 @@ Signed-in clients can checkbox vendors → sticky bar → “Message N together�
 - One package per vendor (`MultiVendorPackagePicker`)
 - **Sequential** `postBookingRequest` per vendor (not one bulk API)
 - First successful response may return `event_id`; later calls reuse it so all enquiries link to one celebration
+- **Partial failure:** if some POSTs fail, the modal shows which vendors failed; toast reports “N of M sent”; user stays in modal unless all succeed
+- **Redirect:** 1 success → `/client/bookings/{id}`; 2+ successes → `/client/bookings` list
 
 `client_search_context` includes `source: "multi"`, `batchSize`, `batchIndex` for analytics.
 
@@ -400,12 +487,16 @@ Table definition: `backend/sql/010_booking_requests.sql`
 | Symptom | First file to open |
 |---------|-------------------|
 | 401 on enquire | Session cookie / `AuthProvider` / `require_client` |
+| Enquire blocked before modal | `useLaunchingSoonBookingGuard` / `BOOKINGS_LAUNCHING_SOON` |
 | “Packages no longer available” | Vendor edited packages; client had stale IDs |
 | “Event date cannot be in the past” | `CreateBookingRequestBody` validator |
-| Calendar rejected | `calendar.py` — blocked dates / weekdays |
+| Calendar rejected | `calendar.py` — blocked dates / weekdays / capacity |
+| Calendar blocked in modal only | `VendorBookingModal` `calendarConflict` (soft) vs server hard reject |
+| “No valid price” | Quote-only packages with no TBC flag — `BOOKING_NO_VALID_PRICE` |
 | Price looks wrong on UI but right on booking | UI estimate vs server `build_pricing_breakdown` |
 | Notes missing in chat | `ensure_client_booking_notes_in_chat` in `create.py` |
 | Vendor not notified | `dispatch_booking_notification` / email config |
+| Multi-vendor partial send | `MultiVendorEnquireModal` failures array + toast |
 
 ---
 
@@ -426,7 +517,9 @@ Table definition: `backend/sql/010_booking_requests.sql`
 - **Snapshot `line_items`** — agreed prices frozen at submit time.
 - **selected_option_ids** — client sends IDs; server resolves prices.
 - **initiator `client`** — vendor-initiated quotes use a different create path (`create_vendor_quote_booking_request`).
-- **client_search_context** — remembers browse filters for product analytics.
+- **client_search_context** — remembers browse filters for product analytics and alternative-vendor nudges.
+- **Celebration events** — every enquire links to a `client_events` row (existing or newly created).
+- **Two calendar layers** — modal soft warning + server hard reject.
 
 ---
 
@@ -435,7 +528,8 @@ Table definition: `backend/sql/010_booking_requests.sql`
 - **Enquire** = `POST /api/v1/client/booking-requests` from `VendorBookingModal` or `MultiVendorEnquireModal`.
 - **Only clients** with a valid session; guests must sign in.
 - **Server** copies package prices into `line_items`; browser cannot set £1.
-- **Row** starts `pending` / `unpaid`; vendor notified; notes go to chat.
+- **Row** starts `pending` / `unpaid`; vendor notified; notes go to chat; celebration event linked.
+- **Success** = modal confirmation → View booking → redirect.
 - **Next:** Slice 3b — client booking detail page (`/client/bookings/[id]`).
 
 ---
