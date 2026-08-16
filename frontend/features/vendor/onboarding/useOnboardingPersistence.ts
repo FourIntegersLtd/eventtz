@@ -118,6 +118,8 @@ export function useOnboardingPersistence({
       setPayoutsVerified(Boolean(res.payouts_verified));
       if ((res.onboarding_status ?? "draft") === "submitted") {
         setData((prev) => (prev.returnedForEditsAt ? { ...prev, returnedForEditsAt: "" } : prev));
+        // Drop leftover “returned for edits” copy from the load so submit shows pending.
+        setStatusCheckFeedback(null);
       }
     },
     [],
@@ -157,18 +159,6 @@ export function useOnboardingPersistence({
                 false,
               ),
         );
-        if (
-          !isWalkthrough &&
-          isReturnedForEdits({
-            onboarding_status: res.onboarding_status ?? "draft",
-            approval_status: res.approval_status,
-            current_step: res.current_step,
-            returnedForEditsAt:
-              typeof merged.returnedForEditsAt === "string" ? merged.returnedForEditsAt : "",
-          })
-        ) {
-          setStatusCheckFeedback(RETURNED_FOR_EDITS_FEEDBACK);
-        }
         setLoadStatus("ready");
       } catch (e) {
         if (cancelled) return;

@@ -118,6 +118,12 @@ export function StepSubmitted({
     ? portfolioApprovalBlockedCopy(portfolioPhotoCount)
     : null;
 
+  const visibleFeedback =
+    statusCheckFeedback &&
+    (showReturnedForEdits || statusCheckFeedback.title !== RETURNED_FOR_EDITS_TITLE)
+      ? statusCheckFeedback
+      : null;
+
   const heading = showReturnedForEdits
     ? RETURNED_FOR_EDITS_TITLE
     : awaitingPayouts
@@ -205,9 +211,9 @@ export function StepSubmitted({
               </Link>
             </div>
           </AnimatedStepItem>
-          {statusCheckFeedback ? (
+          {visibleFeedback ? (
             <AnimatedStepItem index={3}>
-              <StatusCheckFeedbackBanner feedback={statusCheckFeedback} />
+              <StatusCheckFeedbackBanner feedback={visibleFeedback} />
             </AnimatedStepItem>
           ) : null}
         </>
@@ -230,9 +236,9 @@ export function StepSubmitted({
               </button>
             </div>
           </AnimatedStepItem>
-          {listingPaused && statusCheckFeedback ? (
+          {listingPaused && visibleFeedback ? (
             <AnimatedStepItem index={3}>
-              <StatusCheckFeedbackBanner feedback={statusCheckFeedback} />
+              <StatusCheckFeedbackBanner feedback={visibleFeedback} />
             </AnimatedStepItem>
           ) : null}
         </>
@@ -244,9 +250,9 @@ export function StepSubmitted({
               className="mx-auto max-w-md text-left"
             />
           </AnimatedStepItem>
-          {statusCheckFeedback ? (
+          {visibleFeedback ? (
             <AnimatedStepItem index={3}>
-              <StatusCheckFeedbackBanner feedback={statusCheckFeedback} />
+              <StatusCheckFeedbackBanner feedback={visibleFeedback} />
             </AnimatedStepItem>
           ) : null}
         </>
@@ -318,9 +324,9 @@ export function StepSubmitted({
                 : "Tap to refresh. We'll show the latest review status here."}
             </p>
           </AnimatedStepItem>
-          {statusCheckFeedback ? (
+          {visibleFeedback ? (
             <AnimatedStepItem index={needsMorePortfolioPhotos ? 4 : 3}>
-              <StatusCheckFeedbackBanner feedback={statusCheckFeedback} />
+              <StatusCheckFeedbackBanner feedback={visibleFeedback} />
             </AnimatedStepItem>
           ) : null}
         </>
