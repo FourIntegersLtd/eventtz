@@ -66,6 +66,7 @@ export function useVendorOnboardingController(options?: { isWalkthrough?: boolea
     portfolioImageCount: persistence.portfolioImageCount,
     needsMorePortfolioPhotos: persistence.needsMorePortfolioPhotos,
     canAddPortfolioWhilePending: persistence.canAddPortfolioWhilePending,
+    returnedForEdits: persistence.returnedForEdits,
     primaryLabel: steps.primaryLabel,
     profileStatus: persistence.profileStatus,
     setBusinessNameError: steps.setBusinessNameError,

@@ -21,20 +21,14 @@ import {
   normalizePublicBioText,
   portfolioImageCountFromData,
 } from "./reviewDisplayHelpers";
-import { resolveOnboardingStepFromProfile, vendorHasReturnedForEditsFlag } from "./onboardingProgress";
+import { isReturnedForEdits, resolveOnboardingStepFromProfile } from "./onboardingProgress";
+import { RETURNED_FOR_EDITS_FEEDBACK } from "./returnedForEditsCopy";
 import {
   mergePayloadIntoVendorData,
   normalizeVendorPayload,
   vendorDataToPayload,
 } from "./serializeVendorPayload";
 import { initialVendorOnboardingData, type VendorOnboardingData, type VendorStatusCheckFeedback } from "./types";
-
-export const RETURNED_FOR_EDITS_FEEDBACK: VendorStatusCheckFeedback = {
-  tone: "info",
-  title: "Profile returned for edits",
-  description:
-    "You already submitted your profile. Our team sent details in Messages — check the Messages tab, update your profile, then submit again when you're ready.",
-};
 
 type UseOnboardingPersistenceOptions = {
   isWalkthrough: boolean;
@@ -99,6 +93,17 @@ export function useOnboardingPersistence({
     [profileStatus, approvalStatus, needsMorePortfolioPhotos],
   );
 
+  const returnedForEdits = useMemo(
+    () =>
+      isReturnedForEdits({
+        onboarding_status: profileStatus,
+        approval_status: approvalStatus,
+        current_step: step,
+        returnedForEditsAt: data.returnedForEditsAt,
+      }),
+    [profileStatus, approvalStatus, step, data.returnedForEditsAt],
+  );
+
   const applyVendorProfileResponse = useCallback(
     (res: Awaited<ReturnType<typeof fetchVendorProfile>>) => {
       setProfileStatus(res.onboarding_status ?? "draft");
@@ -151,9 +156,13 @@ export function useOnboardingPersistence({
         );
         if (
           !isWalkthrough &&
-          vendorHasReturnedForEditsFlag(
-            typeof merged.returnedForEditsAt === "string" ? merged.returnedForEditsAt : "",
-          )
+          isReturnedForEdits({
+            onboarding_status: res.onboarding_status ?? "draft",
+            approval_status: res.approval_status,
+            current_step: res.current_step,
+            returnedForEditsAt:
+              typeof merged.returnedForEditsAt === "string" ? merged.returnedForEditsAt : "",
+          })
         ) {
           setStatusCheckFeedback(RETURNED_FOR_EDITS_FEEDBACK);
         }
@@ -173,14 +182,6 @@ export function useOnboardingPersistence({
       cancelled = true;
     };
   }, [authLoading, user?.id, user?.email, applyVendorProfileResponse, isWalkthrough, setStep]);
-
-  /** Stale UI: vendor still on the submitted screen after admin returned their profile to draft. */
-  useEffect(() => {
-    if (isWalkthrough || loadStatus !== "ready") return;
-    if (profileStatus !== "draft" || step !== 9) return;
-    setStep(8);
-    setStatusCheckFeedback(RETURNED_FOR_EDITS_FEEDBACK);
-  }, [isWalkthrough, loadStatus, profileStatus, step, setStep]);
 
   const update = useCallback(
     (patch: Partial<VendorOnboardingData>) => {
@@ -405,6 +406,7 @@ export function useOnboardingPersistence({
     portfolioImageCount,
     needsMorePortfolioPhotos,
     canAddPortfolioWhilePending,
+    returnedForEdits,
     applyVendorProfileResponse,
     onGenerateBioWithAI,
     onRefreshStatus,

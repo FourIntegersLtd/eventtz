@@ -218,14 +218,6 @@ export function packageSpecificTravelLine(
   return opt.travelLine;
 }
 
-export {
-  firstPortfolioImageUrlFromPayload,
-  listingCoverImageUrlFromPayload,
-  listingCoverOverrideFromPayload,
-  portfolioImageUrlsForDisplay,
-  portfolioImageUrlsFromPayload,
-} from "@/lib/vendorPortfolioImages";
-
 /**
  * Builds pricing options from the same JSON the vendor saves in onboarding:
  * completed packages first; otherwise fixed hourly and/or daily rates.

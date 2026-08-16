@@ -8,14 +8,15 @@ import { ChevronLeft } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { MIN_PORTFOLIO_IMAGES } from "./constants";
 import { portfolioApprovalBlockedCopy } from "./onboardingCopy";
-import { vendorHasReturnedForEditsFlag } from "./onboardingProgress";
 import { OnboardingStepContent } from "./OnboardingStepContent";
 import { OnboardingProgressHeader } from "./OnboardingProgressHeader";
 import { OnboardingWizardStepTitle } from "./ui/OnboardingWizardStepTitle";
 import { OnboardingStepInfoModal } from "./ui/OnboardingStepInfoModal";
+import { RETURNED_FOR_EDITS_BODY, RETURNED_FOR_EDITS_TITLE } from "./returnedForEditsCopy";
 import { VendorProfilePhotoField } from "./VendorProfilePhotoField";
 import { VendorProfileSectionTabs } from "./VendorProfileSectionTabs";
 import { useVendorOnboardingController } from "./useVendorOnboardingController";
+import { vendorIsLiveApproved } from "@/lib/vendorAccess";
 import { Button } from "@/components/ui/Button";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
@@ -47,6 +48,7 @@ export function VendorOnboarding() {
     lockedPendingReview,
     portfolioImageCount,
     canAddPortfolioWhilePending,
+    returnedForEdits,
     primaryLabel,
     profileStatus,
     setBusinessNameError,
@@ -81,8 +83,10 @@ export function VendorOnboarding() {
     onUploadProfileImage,
   } = useVendorOnboardingController({ isWalkthrough });
 
-  const isApprovedLive =
-    profileStatus === "submitted" && approvalStatus === "approved";
+  const isApprovedLive = vendorIsLiveApproved({
+    onboarding_status: profileStatus,
+    approval_status: approvalStatus,
+  });
   const useWizardLayout = isWalkthrough || !isApprovedLive;
 
   const isLiveEdit = !useWizardLayout;
@@ -91,10 +95,7 @@ export function VendorOnboarding() {
   const showWizardBack =
     !editingFromReview &&
     (step > 1 || (lockedPendingReview && (step === 6 || step === 8)));
-  const returnedForEditsPending =
-    !isWalkthrough &&
-    profileStatus === "draft" &&
-    vendorHasReturnedForEditsFlag(data.returnedForEditsAt);
+  const returnedForEditsPending = !isWalkthrough && returnedForEdits;
   const questionnaireTopRef = useRef<HTMLDivElement>(null);
   const [stepInfoOpen, setStepInfoOpen] = useState(false);
 
@@ -129,6 +130,7 @@ export function VendorOnboarding() {
     submittedSummaryBusinessName: data.businessName,
     portfolioPhotoCount: portfolioImageCount,
     needsMorePortfolioPhotos: canAddPortfolioWhilePending,
+    returnedForEdits: returnedForEditsPending,
     onAddPortfolioPhotos,
     portfolioQuality,
     portfolioQualityAccepted,
@@ -236,12 +238,8 @@ export function VendorOnboarding() {
         <div className="mb-8 rounded-2xl bg-sky-50 p-5 text-sm text-sky-950 shadow-sm ring-1 ring-sky-200/70">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
-              <p className="font-semibold text-sky-950">Profile returned for edits</p>
-              <p className="mt-1 leading-relaxed text-sky-900/90">
-                You already submitted your profile. Our team sent details in{" "}
-                <strong className="font-semibold">Messages</strong> — read what to fix, update
-                below, then submit again when you&apos;re ready.
-              </p>
+              <p className="font-semibold text-sky-950">{RETURNED_FOR_EDITS_TITLE}</p>
+              <p className="mt-1 leading-relaxed text-sky-900/90">{RETURNED_FOR_EDITS_BODY}</p>
             </div>
             <Link
               href="/vendor/messages"

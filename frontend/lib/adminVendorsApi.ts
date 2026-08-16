@@ -147,21 +147,6 @@ export async function patchVendorListingMedia(
   };
 }
 
-/** @deprecated Prefer patchVendorListingMedia. */
-export async function patchVendorListingCover(
-  userId: string,
-  listingCoverImageUrl: string | null,
-): Promise<{ listing_cover_image_url: string | null }> {
-  const { data } = await api.patch<{
-    listing_cover_image_url: string | null;
-  }>(`/api/v1/admin/vendors/${userId}/listing-cover`, {
-    listing_cover_image_url: listingCoverImageUrl,
-  });
-  return {
-    listing_cover_image_url: data.listing_cover_image_url ?? null,
-  };
-}
-
 export type AdminVendorRestoreStripeResult = {
   stripe_account_id: string | null;
   stripe_charges_enabled: boolean;

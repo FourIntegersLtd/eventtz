@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { CheckCircle2, Info, TriangleAlert, XCircle } from "lucide-react";
 import type { VendorApprovalStatus } from "@/lib/domain-types";
+import { RETURNED_FOR_EDITS_BODY, RETURNED_FOR_EDITS_TITLE } from "@/features/vendor/onboarding/returnedForEditsCopy";
 import { portfolioApprovalBlockedCopy } from "@/features/vendor/onboarding/onboardingCopy";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
@@ -13,7 +14,8 @@ import { VendorProfilePhotoField } from "../VendorProfilePhotoField";
 
 type StepSubmittedProps = {
   approvalStatus: VendorApprovalStatus;
-  profileStatus?: string;
+  /** Admin returned this submitted profile so the vendor can edit again. */
+  returnedForEdits?: boolean;
   /** Live on client explore. False while approved means clients cannot see them yet. */
   listingVisible?: boolean;
   /** Separates "finish payout setup" from "an admin has paused your listing". */
@@ -84,7 +86,7 @@ function StatusCheckFeedbackBanner({ feedback }: { feedback: VendorStatusCheckFe
 
 export function StepSubmitted({
   approvalStatus,
-  profileStatus = "submitted",
+  returnedForEdits = false,
   listingVisible = false,
   payoutsVerified = false,
   onViewProfileReview,
@@ -106,7 +108,7 @@ export function StepSubmitted({
 }: StepSubmittedProps) {
   const approved = approvalStatus === "approved";
   const banned = approvalStatus === "banned";
-  const returnedForEdits = profileStatus === "draft" && !approved && !banned;
+  const showReturnedForEdits = returnedForEdits && !approved && !banned;
   // Admin said yes, but Stripe hasn't verified payouts, so clients still can't see them.
   const awaitingPayouts = approved && !listingVisible && !payoutsVerified;
   // Payouts are fine, so an admin is holding the listing back - don't send them to Stripe.
@@ -116,8 +118,8 @@ export function StepSubmitted({
     ? portfolioApprovalBlockedCopy(portfolioPhotoCount)
     : null;
 
-  const heading = returnedForEdits
-    ? "Profile returned for edits"
+  const heading = showReturnedForEdits
+    ? RETURNED_FOR_EDITS_TITLE
     : awaitingPayouts
     ? "Approved - one step left"
     : listingPaused
@@ -130,8 +132,8 @@ export function StepSubmitted({
             ? blockedCopy!.submittedHeading
             : "Profile submitted";
 
-  const statusCopy = returnedForEdits
-    ? "You already submitted your profile. Our team sent details in Messages — open the Messages tab to read what to fix, then update and submit again."
+  const statusCopy = showReturnedForEdits
+    ? RETURNED_FOR_EDITS_BODY
     : awaitingPayouts
     ? "Set up your payout details to go live. Until they're verified, your profile stays hidden from clients."
     : listingPaused
@@ -172,7 +174,7 @@ export function StepSubmitted({
           {statusCopy}
         </p>
       </AnimatedStepItem>
-      {!banned && onUploadProfileImage && !returnedForEdits ? (
+      {!banned && onUploadProfileImage && !showReturnedForEdits ? (
         <div className="py-1">
           <VendorProfilePhotoField
             firstName={firstName}
@@ -250,7 +252,7 @@ export function StepSubmitted({
         </>
       ) : (
         <>
-          {returnedForEdits ? (
+          {showReturnedForEdits ? (
             <AnimatedStepItem index={2}>
               <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
                 {onEditProfile ? (

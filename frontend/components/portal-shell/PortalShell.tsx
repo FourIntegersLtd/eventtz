@@ -20,6 +20,7 @@ import {
 import { CHAT_UNREAD_CLEARED_EVENT, fetchChatUnreadCount } from "@/lib/chatApi";
 import { fetchVendorBookings } from "@/lib/vendorBookingsApi";
 import { fetchVendorProfile } from "@/lib/vendorProfileApi";
+import { vendorIsLiveApproved } from "@/lib/vendorAccess";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 import { NotificationBell } from "@/features/notifications/NotificationBell";
 import { HelpWidget } from "@/features/help/HelpWidget";
@@ -191,7 +192,7 @@ export function PortalShell({
   const [bookingUnread, setBookingUnread] = useState<number | null>(null);
   const [chatUnread, setChatUnread] = useState<number | null>(null);
   const [vendorBookingsPending, setVendorBookingsPending] = useState<number | null>(null);
-  const [vendorPreApproval, setVendorPreApproval] = useState(false);
+  const [vendorPreApproval, setVendorPreApproval] = useState(portal === "vendor");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [signOutOpen, setSignOutOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -207,13 +208,21 @@ export function PortalShell({
         setBookingUnread(bookingNotificationsUnread);
         setChatUnread(chatMessagesUnread);
         setVendorBookingsPending(null);
+        setVendorPreApproval(false);
       } else {
-        const [chatMessagesUnread, activeBookings] = await Promise.all([
+        const [chatMessagesUnread, profile] = await Promise.all([
           fetchChatUnreadCount(),
-          fetchVendorBookings("active"),
+          fetchVendorProfile().catch(() => null),
         ]);
+        const live = profile != null && vendorIsLiveApproved(profile);
+        setVendorPreApproval(!live);
         setChatUnread(chatMessagesUnread);
         setBookingUnread(null);
+        if (!live) {
+          setVendorBookingsPending(0);
+          return;
+        }
+        const activeBookings = await fetchVendorBookings("active");
         setVendorBookingsPending(activeBookings.filter((b) => b.booking_status === "pending").length);
       }
     } catch {
@@ -228,28 +237,6 @@ export function PortalShell({
     void (async () => {
       if (cancelled) return;
       await refreshUnreadCounts();
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [portal, user?.id, navKey]);
-
-  useEffect(() => {
-    if (portal !== "vendor" || !user?.id) {
-      setVendorPreApproval(false);
-      return;
-    }
-    let cancelled = false;
-    void (async () => {
-      try {
-        const res = await fetchVendorProfile();
-        if (cancelled) return;
-        const approved =
-          res.onboarding_status === "submitted" && res.approval_status === "approved";
-        setVendorPreApproval(!approved);
-      } catch {
-        if (!cancelled) setVendorPreApproval(true);
-      }
     })();
     return () => {
       cancelled = true;
@@ -293,7 +280,9 @@ export function PortalShell({
   }, [mobileNavOpen]);
 
   const logoHref = portalDashboardHref(portal);
-  const navItems = portalNavItems(portal);
+  const navItems = portalNavItems(portal, {
+    vendorPreApproval: portal === "vendor" && vendorPreApproval,
+  });
   const roleFallback = portal === "client" ? "Client" : "Vendor";
 
   const closeMobile = () => setMobileNavOpen(false);

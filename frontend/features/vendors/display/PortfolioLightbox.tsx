@@ -10,6 +10,7 @@ type PortfolioLightboxProps = {
   alt: string;
   onClose: () => void;
   onIndexChange: (index: number) => void;
+  kind?: "image" | "video";
 };
 
 export function PortfolioLightbox({
@@ -18,12 +19,14 @@ export function PortfolioLightbox({
   alt,
   onClose,
   onIndexChange,
+  kind = "image",
 }: PortfolioLightboxProps) {
   const total = urls.length;
   const safeIndex = total > 0 ? Math.min(Math.max(index, 0), total - 1) : 0;
   const url = total > 0 ? urls[safeIndex] : null;
   const canPrev = safeIndex > 0;
   const canNext = safeIndex < total - 1;
+  const itemWord = kind === "video" ? "video" : "photo";
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -65,13 +68,27 @@ export function PortfolioLightbox({
       />
 
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-3 sm:p-8">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={url}
-          alt={alt}
-          className="pointer-events-none max-h-full max-w-full object-contain"
-          decoding="async"
-        />
+        {kind === "video" ? (
+          <video
+            key={url}
+            src={url}
+            controls
+            autoPlay
+            playsInline
+            aria-label={alt}
+            className="pointer-events-auto max-h-full max-w-full object-contain"
+          >
+            Your browser does not support embedded video.
+          </video>
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={url}
+            alt={alt}
+            className="pointer-events-none max-h-full max-w-full object-contain"
+            decoding="async"
+          />
+        )}
       </div>
 
       <button
@@ -90,7 +107,7 @@ export function PortfolioLightbox({
             disabled={!canPrev}
             onClick={() => onIndexChange(safeIndex - 1)}
             className={`absolute left-2 top-1/2 z-10 inline-flex -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-sm transition hover:bg-black/70 disabled:pointer-events-none disabled:opacity-30 sm:left-4 ${TOUCH_TARGET} ${FOCUS_RING}`}
-            aria-label="Previous photo"
+            aria-label={`Previous ${itemWord}`}
           >
             <ChevronLeft className="h-6 w-6" strokeWidth={2} />
           </button>
@@ -99,7 +116,7 @@ export function PortfolioLightbox({
             disabled={!canNext}
             onClick={() => onIndexChange(safeIndex + 1)}
             className={`absolute right-2 top-1/2 z-10 inline-flex -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-sm transition hover:bg-black/70 disabled:pointer-events-none disabled:opacity-30 sm:right-4 ${TOUCH_TARGET} ${FOCUS_RING}`}
-            aria-label="Next photo"
+            aria-label={`Next ${itemWord}`}
           >
             <ChevronRight className="h-6 w-6" strokeWidth={2} />
           </button>

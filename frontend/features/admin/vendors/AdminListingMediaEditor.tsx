@@ -25,9 +25,8 @@ import {
   adminListingMediaItemsFromPayload,
   adminListingMediaMatchesDefault,
   adminListingMediaStateFromItems,
-  publicListingImageUrlsFromPayload,
   type AdminListingMediaItem,
-} from "@/lib/vendorPortfolioImages";
+} from "@/features/admin/vendors/adminListingMedia";
 
 type AdminListingMediaEditorProps = {
   vendorUserId: string;
@@ -170,14 +169,7 @@ export function AdminListingMediaEditor({
     if (index >= 0) setLightboxIndex(index);
   };
 
-  const mainUrl = useMemo(() => {
-    const previewPayload = {
-      ...payload,
-      listingDisplayOrder: items.map((item) => item.url),
-      listingHiddenImageUrls: items.filter((item) => item.hidden).map((item) => item.url),
-    };
-    return publicListingImageUrlsFromPayload(previewPayload)[0] ?? null;
-  }, [items, payload]);
+  const mainUrl = items.find((item) => !item.hidden)?.url ?? null;
 
   const persist = async (nextItems: AdminListingMediaItem[]) => {
     setSaving(true);

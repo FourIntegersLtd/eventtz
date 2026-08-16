@@ -1,14 +1,21 @@
 import { describe, expect, it } from "vitest";
-import {
-  isProfileReturnedForEdits,
-  resolveOnboardingStepFromProfile,
-  vendorHasReturnedForEditsFlag,
-} from "./onboardingProgress";
+import { isReturnedForEdits, resolveOnboardingStepFromProfile } from "./onboardingProgress";
 
-describe("isProfileReturnedForEdits", () => {
-  it("detects draft profiles saved at review after admin return", () => {
+describe("isReturnedForEdits", () => {
+  it("is true when the server set returnedForEditsAt", () => {
     expect(
-      isProfileReturnedForEdits({
+      isReturnedForEdits({
+        onboarding_status: "draft",
+        approval_status: "pending",
+        current_step: 3,
+        returnedForEditsAt: "2026-08-15T10:00:00+00:00",
+      }),
+    ).toBe(true);
+  });
+
+  it("is true for legacy draft profiles saved at review without the timestamp", () => {
+    expect(
+      isReturnedForEdits({
         onboarding_status: "draft",
         approval_status: "pending",
         current_step: 8,
@@ -16,24 +23,35 @@ describe("isProfileReturnedForEdits", () => {
     ).toBe(true);
   });
 
-  it("ignores early draft onboarding", () => {
+  it("is false for early draft onboarding", () => {
     expect(
-      isProfileReturnedForEdits({
+      isReturnedForEdits({
         onboarding_status: "draft",
         approval_status: "pending",
         current_step: 3,
       }),
     ).toBe(false);
   });
-});
 
-describe("vendorHasReturnedForEditsFlag", () => {
-  it("is true when server set returnedForEditsAt", () => {
-    expect(vendorHasReturnedForEditsFlag("2026-08-15T10:00:00+00:00")).toBe(true);
+  it("is false when the timestamp is empty", () => {
+    expect(
+      isReturnedForEdits({
+        onboarding_status: "draft",
+        approval_status: "pending",
+        current_step: 3,
+        returnedForEditsAt: "",
+      }),
+    ).toBe(false);
   });
 
-  it("is false when flag is absent", () => {
-    expect(vendorHasReturnedForEditsFlag("")).toBe(false);
+  it("is false for banned profiles at the review step without the timestamp", () => {
+    expect(
+      isReturnedForEdits({
+        onboarding_status: "draft",
+        approval_status: "banned",
+        current_step: 8,
+      }),
+    ).toBe(false);
   });
 });
 

@@ -2,13 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import {
-  ArrowRight,
-  CalendarCheck,
-  ExternalLink,
-  MessageCircle,
-  Play,
-} from "lucide-react";
+import { ArrowRight, CalendarCheck, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { VendorMetricsStrip } from "@/features/vendors/display/VendorMetricsStrip";
@@ -26,14 +20,15 @@ import {
   extractBrowsePricingSharedContext,
   formatBookingTotalGbp,
   packageSpecificTravelLine,
-  portfolioImageUrlsForDisplay,
 } from "./vendorBrowseDetailModel";
 import { VendorReviewsSection } from "./VendorReviewsSection";
 import { BrowsePricingOptionCard } from "@/features/vendors/display/BrowsePricingOptionCard";
 import { BrowsePricingPackagesSection } from "@/features/vendors/display/BrowsePricingPackagesSection";
 import { BrowsePricingSharedInfo } from "@/features/vendors/display/BrowsePricingSharedInfo";
 import { PortfolioImageGallery } from "@/features/vendors/display/PortfolioImageGallery";
+import { PortfolioVideoStrip } from "@/features/vendors/display/PortfolioVideoStrip";
 import { marketLocationFallback } from "@/lib/markets";
+import { publicListingImageUrlsFromPayload } from "@/lib/vendorPortfolioImages";
 
 type VendorBrowseDetailBodyProps = {
   vendor: ExploreVendor;
@@ -92,7 +87,7 @@ export function VendorBrowseDetailBody({
   const hasGoodToKnow = hasBrowseGoodToKnowContent(facts);
 
   const portfolioUrls = useMemo(
-    () => portfolioImageUrlsForDisplay(p),
+    () => publicListingImageUrlsFromPayload(p),
     [p],
   );
 
@@ -280,13 +275,23 @@ export function VendorBrowseDetailBody({
           ) : null}
         </header>
 
-        <PortfolioImageGallery
-          className="order-2 min-w-0"
-          urls={portfolioUrls}
-          alt={`${businessName} portfolio`}
-          emptyFallback={businessName}
-          layout="collage"
-        />
+        <div className="order-2 flex min-w-0 flex-col gap-1 md:gap-6">
+          <PortfolioImageGallery
+            className="min-w-0"
+            urls={portfolioUrls}
+            alt={`${businessName} portfolio`}
+            emptyFallback={businessName}
+            layout="collage"
+          />
+
+          {facts.portfolioVideoUrls.length > 0 ? (
+            <PortfolioVideoStrip
+              compact
+              className="min-w-0 max-md:-mx-4 max-md:w-[calc(100%+2rem)]"
+              videos={facts.portfolioVideoUrls.map((src) => ({ src }))}
+            />
+          ) : null}
+        </div>
 
         <section className="order-4 min-w-0 overflow-hidden rounded-2xl border border-neutral-100 bg-white">
           <div className="space-y-3 px-5 py-5">
@@ -302,25 +307,6 @@ export function VendorBrowseDetailBody({
               }}
             />
             <p className="text-sm leading-relaxed text-neutral-700">{bio}</p>
-            {facts.portfolioVideoUrls.length > 0 ? (
-              <div className="flex flex-col gap-2">
-                {facts.portfolioVideoUrls.map((url, index) => (
-                  <a
-                    key={url}
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-                  >
-                    <Play className="h-4 w-4" aria-hidden />
-                    {facts.portfolioVideoUrls.length > 1
-                      ? `Watch portfolio video ${index + 1}`
-                      : "Watch portfolio video"}
-                    <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-                  </a>
-                ))}
-              </div>
-            ) : null}
           </div>
 
           <div className="border-t border-neutral-100 px-5 py-5">
