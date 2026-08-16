@@ -78,3 +78,19 @@ Format: **term** — plain-English meaning.
 **ON DELETE RESTRICT** — Blocks deleting the parent if children still exist (default if not specified).
 
 **JSONB** _(reinforced)_ — Postgres column type for JSON; still a column with a type, just flexible inside.
+
+---
+
+## Slice 1 — Authentication
+
+**Session cookie** — HttpOnly cookie holding the access or refresh token; browser sends it automatically (`withCredentials`); not the same as `user_type`.
+
+**build_app_user** — Backend helper that merges Supabase auth user + `public.users` (+ client onboarding) into the `AuthUser` contract for `/me` and sign-in responses.
+
+**Email verification gate** — Client/vendor accounts must have `email_verified_at` set before `POST /signin` succeeds; admins exempt.
+
+**Enumeration-safe message** — API returns the same text whether or not an email exists (forgot password, resend verification) so attackers cannot probe registered emails.
+
+**Route group** — Next.js folder like `(auth)/` or `(portal)/` that organizes files without adding a URL segment.
+
+**referral_code** — Partner slug sent on vendor `POST /signup`; recorded in `referral_attributions` when valid.

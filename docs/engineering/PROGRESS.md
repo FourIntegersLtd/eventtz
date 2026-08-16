@@ -20,13 +20,49 @@ Personal engineering course using the real Eventtz codebase.
 
 | Slice | Status |
 |-------|--------|
-| 1 Authentication | not started |
+| 1 Authentication | **complete** |
 | 2 Client browse | not started |
 | 3a Client booking — enquire | partial |
 | 3b Client booking — rest | not started |
 | 4 Client payment | not started |
 | 5 Vendor quote + accept | not started |
 | 6 Vendor payout | not started |
+
+---
+
+## Slice 1 — Authentication (feature track)
+
+**Date completed:** 2026-08-16  
+**Code base:** merged `main` through app-folder restructure (`(auth)/`, `(marketing)/`, `(portal)/`), `backend/app/contracts/auth.py`, Supabase-only auth (no local store).
+
+### Covered
+
+| Area | Topics |
+|------|--------|
+| Session | Cookie tokens (`eventtz_access_token` / `eventtz_refresh_token`), `GET /me`, refresh interceptor on 401 |
+| Sign-in | `UnifiedLoginView` → `POST /signin` → `build_app_user` → `resolvePostAuthPath` |
+| Role / UI | `user_type` from `/me`; layouts under `client/(portal)/`, `vendor/(portal)/`, `admin/(portal)/`; `PortalShell portal=` for nav |
+| Guards | `RequireAuth` / `RequireRole` (frontend); `require_user`, `require_client`, etc. (backend) |
+| Sign-up | `POST /signup`, `session: null`, `user_type` + optional `referral_code` (vendor) |
+| Email verify | `issue_email_verification` → `/verify-email?token=` → `email_verified_at`; sign-in blocked until verified |
+| Referral | `?ref=` / cookie → `referralSlug` → `referral_code` on vendor signup → `referral_attributions` |
+| Sign-out | `POST /signout`, `clear_session_cookies`, `AuthProvider` clears `user` |
+| Passwords | Forgot (enumeration-safe) → reset link → `POST /reset-password` signs in; change-password revokes sessions |
+| Admin auth | Unified `/login` (`/admin/login` redirects via `next.config.ts`); `?next=/admin/dashboard` |
+
+### Key files (bookmark)
+
+- `frontend/app/README.md` — URL → folder map
+- `frontend/app/(auth)/` — login, register, verify-email, forgot/reset password
+- `frontend/components/auth/AuthProvider.tsx`
+- `frontend/lib/auth-api.ts`, `frontend/features/auth/authRouting.ts`
+- `backend/app/contracts/auth.py`
+- `backend/app/features/auth/http/routes.py`, `guards.py`, `session.py`, `accounts.py`
+- `backend/app/features/auth/email_verification.py`, `password_reset.py`, `messages.py`
+
+### Lesson status
+
+**Complete** — ready for Slice 2 (Client browse).
 
 ---
 

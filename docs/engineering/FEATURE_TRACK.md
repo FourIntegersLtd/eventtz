@@ -21,7 +21,7 @@
 
 | # | Slice | Status |
 |---|-------|--------|
-| 1 | **Authentication** — login, session, `/me`, guards | not started |
+| 1 | **Authentication** — login, session, `/me`, guards, signup, verify, passwords | **complete** |
 | 2 | **Client browse** — explore, vendor profile (read-only) | not started |
 | 3a | **Client booking — enquire** | partial (Day 2) |
 | 3b | **Client booking — detail, status, adjustments** | not started |
