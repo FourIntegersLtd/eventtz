@@ -2,6 +2,8 @@
 
 **New chat per slice** — see [NEW_CHAT_PER_SLICE.md](./NEW_CHAT_PER_SLICE.md). Do not continue multiple slices in one long thread unless you are debugging the same slice.
 
+**Branch:** All teaching docs live on `cursor/engineering-course-28c8` only — no per-slice git branches, no course PRs unless asked. See `.cursor/rules/engineering-course.mdc`.
+
 Use in a **fresh chat** on `cursor/engineering-course-28c8`. Replace `[SLICE NAME]` and `[N]`.
 
 ```

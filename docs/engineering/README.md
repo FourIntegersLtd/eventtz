@@ -2,7 +2,9 @@
 
 Personal engineering course using the real Eventtz codebase.
 
-**Branch:** `cursor/engineering-course-28c8` — all course work commits here. Do not create per-slice branches.
+**Branch:** `cursor/engineering-course-28c8` — **all teaching** (lessons, walkthroughs, progress) commits here only. Do not create per-slice branches.
+
+**New chat:** Cursor loads `.cursor/rules/engineering-course.mdc` automatically — agents should read `_SPINOFF_RULES.md` and stay on the engineering branch.
 
 ## Start here
 

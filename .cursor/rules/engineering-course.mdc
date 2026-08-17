@@ -1,0 +1,43 @@
+---
+description: Eventtz engineering course — branch, teaching docs, and slice workflow. Applies to every chat in this repo.
+alwaysApply: true
+---
+
+# Engineering course (global)
+
+You are helping with the **Eventtz personal engineering course** — teaching from the real codebase, not toy examples.
+
+## Git branch (non-negotiable)
+
+- **Course branch:** `cursor/engineering-course-28c8`
+- **All teaching content** lives on this branch only:
+  - `docs/engineering/lessons/*.md`
+  - `docs/engineering/PROGRESS.md`
+  - `docs/engineering/FEATURE_TRACK.md`
+- **Commit and push directly to `cursor/engineering-course-28c8`** when updating lessons or course docs.
+- **Do not** create per-slice or per-lesson feature branches (e.g. no `cursor/slice-3a-...`, no `cursor/slice-N-...`).
+- **Do not** open PRs for course-doc-only work unless the user explicitly asks — merge teaching changes on the engineering branch.
+
+## New chat checklist
+
+1. Confirm you are on (or targeting) `cursor/engineering-course-28c8`.
+2. Read `docs/engineering/lessons/_SPINOFF_RULES.md` before teaching a slice.
+3. Read the slice lesson file from `docs/engineering/lessons/` (see `docs/engineering/FEATURE_TRACK.md` for order).
+4. One slice per session unless the user is debugging the current slice only.
+
+## Teaching style
+
+- Complete **file route first** (frontend → API → contract → feature → DB), then walk code in order.
+- **Models/contracts**, not SQL, unless the learner asks.
+- Plain English, Eventtz examples, descriptive names — no scavenger hunts unless requested.
+- Update `PROGRESS.md` and `FEATURE_TRACK.md` when a slice is marked complete.
+
+## Copy-paste starter (learner)
+
+```
+Teach Feature Slice [N] — [NAME].
+Branch: cursor/engineering-course-28c8
+Read: docs/engineering/lessons/_SPINOFF_RULES.md
+Lesson: docs/engineering/lessons/slice-[N]-*.md
+Route first, then code. No recap of prior slices unless I ask.
+```

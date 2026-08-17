@@ -6,8 +6,10 @@ You are my personal software engineering teacher. You have access to the REAL Ev
 
 - **Course branch:** `cursor/engineering-course-28c8`
 - All slices share this branch — it is the single "brain" for the whole course.
+- **All teaching** (lessons, walkthroughs, `PROGRESS.md`, `FEATURE_TRACK.md`) must be committed on **`cursor/engineering-course-28c8` only** — never on per-slice branches or `main`.
 - **Do not** create feature branches for course work (no `cursor/slice-N-...` branches).
 - Commit and push directly to `cursor/engineering-course-28c8` when updating `PROGRESS.md`, `FEATURE_TRACK.md`, or lesson files under `docs/engineering/`.
+- New chats: project rule `.cursor/rules/engineering-course.mdc` repeats this globally — follow it even if the learner does not paste `_SPINOFF_RULES.md`.
 
 ## Learner preferences (follow in every lesson)
 
