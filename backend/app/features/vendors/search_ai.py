@@ -97,7 +97,20 @@ def _sanitize_rationale(raw: Any) -> str | None:
     if not text:
         return None
     low = text.lower().strip(" .")
-    if low in ("photography", "catering", "baking", "rentals", "makeup"):
+    if low in (
+        "photography",
+        "catering",
+        "baking",
+        "rentals",
+        "makeup",
+        "decor",
+        "dj",
+        "mc",
+        "hair styling",
+        "hair_styling",
+        "event planning",
+        "event_planning",
+    ):
         return None
     return text[:160]
 
@@ -325,7 +338,8 @@ def _parse_with_llm(raw_q: str, *, country_code: str) -> MarketplaceQueryParseRe
         "(e.g. 'caterer in Manchester', 'puff-puff in Leeds').\n"
         "- For birthdays: usually Birthday cake (baking), Food for the party (catering - "
         "covers rice, jollof, small chops in ONE need), and optionally Photos.\n"
-        "- For weddings: Wedding cake, Food for your guests, Photos, optionally Makeup, Decor and hire.\n"
+        "- For weddings: Wedding cake, Food for your guests, Photos, optionally Makeup, Hair, "
+        "Decor, Rentals, DJ, MC, and Event planner.\n"
         f"- Every need.service_key must be an allowed service key. Max {_PLAN_MAX_NEEDS} needs. "
         "Do NOT split catering into multiple needs (no separate rice vs small chops sections).\n"
         "- need.label must be plain, friendly English a guest would say - short, no slashes, "

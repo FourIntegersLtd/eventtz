@@ -7,6 +7,7 @@ from typing import Any
 from app.core.logging import get_logger
 from app.features.vendors.markets import get_market, normalize_country_code
 from app.features.vendors.list_pricing import min_listing_price_gbp
+from app.features.vendors.taxonomy import filter_service_keys
 
 logger = get_logger(__name__)
 
@@ -15,7 +16,7 @@ def _services_offered_keys(payload: dict[str, Any]) -> list[str]:
     raw = payload.get("servicesOffered")
     if not isinstance(raw, list):
         return []
-    return [str(x).strip() for x in raw if str(x).strip()]
+    return filter_service_keys([str(x) for x in raw if str(x).strip()])
 
 
 def explore_search_patch_from_payload(payload: dict[str, Any]) -> dict[str, Any]:

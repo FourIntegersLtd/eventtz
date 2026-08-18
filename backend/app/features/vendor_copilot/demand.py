@@ -21,8 +21,10 @@ _SERVICE_LABELS: dict[str, str] = {
     "decor": "Decor",
     "rentals": "Rentals",
     "entertainment": "Entertainment",
-    "dj": "DJ",
-    "mc": "MC / host",
+    "dj": "DJ / music band",
+    "mc": "MC / Alaga",
+    "event_planning": "Event planner",
+    "hair_styling": "Hair stylist",
 }
 
 

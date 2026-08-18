@@ -48,7 +48,8 @@ _GUEST_RE = re.compile(
 _DATE_ISO_RE = re.compile(r"\b(20\d{2}-\d{2}-\d{2})\b")
 _EXCLUDE_RE = re.compile(
     r"\b(?:no|without|skip|don'?t\s+need|do\s+not\s+need)\s+"
-    r"(?P<need>makeup|glam|mua|photos?|photography|cake|baking|catering|food|rentals?|decor|hire)\b",
+    r"(?P<need>makeup|glam|mua|hair|photos?|photography|cake|baking|catering|food|"
+    r"rentals?|decor|hire|dj|mc|alaga|planner|planning)\b",
     re.I,
 )
 _FUNERAL_RE = re.compile(r"\b(funeral|memorial|wake|repast|bereavement)\b", re.I)
@@ -81,6 +82,15 @@ _SERVICE_HUNT_RE = re.compile(
                 "rental",
                 "hire",
                 "decor",
+                "dj",
+                "mc",
+                "alaga",
+                "emcee",
+                "band",
+                "hair",
+                "stylist",
+                "planner",
+                "planning",
             },
         ),
     )
@@ -88,7 +98,32 @@ _SERVICE_HUNT_RE = re.compile(
     re.I,
 )
 
-_UNSUPPORTED_RE = re.compile(r"\b(dj|mc|emcee|videographer|video|band|live\s+band)\b", re.I)
+_UNSUPPORTED_RE = re.compile(r"\b(videographer|video)\b", re.I)
+
+
+def _map_service_hunt_token(token: str) -> str | None:
+    low = token.lower()
+    if low in ("baker", "bakers", "bakery", "baking", "cake", "cakes"):
+        return "baking"
+    if low in ("caterer", "caterers", "catering"):
+        return "catering"
+    if low in ("photographer", "photographers", "photography"):
+        return "photography"
+    if low in ("makeup", "mua"):
+        return "makeup"
+    if low in ("hair", "stylist"):
+        return "hair_styling"
+    if low in ("rentals", "rental", "hire"):
+        return "rentals"
+    if low == "decor":
+        return "decor"
+    if low in ("dj", "band"):
+        return "dj"
+    if low in ("mc", "alaga", "emcee"):
+        return "mc"
+    if low in ("planner", "planning"):
+        return "event_planning"
+    return None
 
 
 class _LlmCelebrationBrief(BaseModel):
@@ -133,24 +168,17 @@ def _single_service_hunt(prompt: str, marketplace_types: list[str]) -> bool:
     if len(types) == 1:
         # Explicit multi-need language keeps plan
         if re.search(r"\b(and|plus|also|with)\b", prompt, re.I) and re.search(
-            r"\b(cake|food|cater|photo|makeup|decor|rental|hire|vendor|vendors)\b",
+            r"\b(cake|food|cater|photo|makeup|decor|rental|hire|dj|mc|hair|planner|vendor|vendors)\b",
             prompt,
             re.I,
         ):
             # "food and cake" → plan; "baking in Leeds" stays simple
             services_mentioned = set(_SERVICE_HUNT_RE.findall(prompt.lower()))
-            mapped = set()
-            for s in services_mentioned:
-                if s in ("baker", "bakers", "bakery", "baking", "cake", "cakes"):
-                    mapped.add("baking")
-                elif s in ("caterer", "caterers", "catering"):
-                    mapped.add("catering")
-                elif s in ("photographer", "photographers", "photography"):
-                    mapped.add("photography")
-                elif s in ("makeup", "mua"):
-                    mapped.add("makeup")
-                elif s in ("rentals", "rental", "hire", "decor"):
-                    mapped.add("rentals")
+            mapped = {
+                key
+                for s in services_mentioned
+                if (key := _map_service_hunt_token(s)) is not None
+            }
             if len(mapped) >= 2:
                 return False
         return True
@@ -160,17 +188,9 @@ def _single_service_hunt(prompt: str, marketplace_types: list[str]) -> bool:
         return False
     mapped_services: set[str] = set()
     for h in hits:
-        low = h.lower()
-        if low in ("baker", "bakers", "bakery", "baking", "cake", "cakes"):
-            mapped_services.add("baking")
-        elif low in ("caterer", "caterers", "catering"):
-            mapped_services.add("catering")
-        elif low in ("photographer", "photographers", "photography"):
-            mapped_services.add("photography")
-        elif low in ("makeup", "mua"):
-            mapped_services.add("makeup")
-        elif low in ("rentals", "rental", "hire", "decor"):
-            mapped_services.add("rentals")
+        key = _map_service_hunt_token(h)
+        if key:
+            mapped_services.add(key)
     if len(mapped_services) != 1:
         return False
     if re.search(
@@ -322,7 +342,18 @@ def _detect_excluded(text: str) -> list[str]:
         if need not in out:
             out.append(need)
     if re.search(r"\b(food and cake only|cake and food only|only food and cake)\b", text, re.I):
-        for n in ("photos", "photography", "makeup", "rentals", "decor", "hire"):
+        for n in (
+            "photos",
+            "photography",
+            "makeup",
+            "hair",
+            "rentals",
+            "decor",
+            "hire",
+            "dj",
+            "mc",
+            "planning",
+        ):
             if n not in out:
                 out.append(n)
     return out
@@ -425,7 +456,7 @@ def _llm_brief(prompt: str) -> CelebrationBrief | None:
         "Budget numbers without £ are still GBP for GB market - set currency_assumed_gbp true "
         "when the symbol is not £. "
         "excluded_needs: services the user said they do not want (makeup, photos, cake, etc.). "
-        "unsupported_categories_mentioned: dj, mc, videographer if mentioned."
+        "unsupported_categories_mentioned: videographer if mentioned."
     )
     user = f"Celebration prompt:\n{prompt.strip()}"
     try:

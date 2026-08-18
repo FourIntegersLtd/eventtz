@@ -384,6 +384,46 @@ class EmailService:
             text=text,
         )
 
+    def send_vendor_setup_payouts_nudge(
+        self,
+        *,
+        to_email: str,
+        business_name: str | None,
+        payments_url: str,
+        dashboard_url: str,
+    ) -> bool:
+        biz = (business_name or "").strip()
+        name = biz or display_name_from_email(to_email)
+        headline = "Set up payouts to go live on Eventtz"
+        subtitle = "Your profile is approved — one step left before clients can find you."
+        body = (
+            f"Hi {name},\n\n"
+            "Your vendor profile has been approved on Eventtz. Before clients can discover "
+            "you and send booking requests, we need your payout details so we can pay you "
+            "when bookings are confirmed.\n\n"
+            "It usually takes 2–3 minutes in Stripe. Your listing goes live automatically "
+            "once payouts are verified.\n\n"
+            f"Questions? Reply to this email or write us at {EMAIL_SUPPORT_ADDRESS}."
+        )
+        ctx = transactional_email_context(
+            subject=headline,
+            headline=headline,
+            subtitle=subtitle,
+            body=body,
+            action_url=payments_url,
+            action_label="Set up payouts",
+            secondary_action_url=dashboard_url,
+            secondary_action_label="Open dashboard",
+        )
+        html = render_template("booking/notification.html", ctx)
+        text = render_template("booking/notification.txt", ctx)
+        return resend_send(
+            to=[to_email],
+            subject=f"{headline} | {APP_NAME}",
+            html=html,
+            text=text,
+        )
+
     def send_team_invite(
         self,
         *,

@@ -87,6 +87,7 @@ STEP_AVAILABILITY_MAX_BOOKINGS_MIN = "Step availability: set max bookings per da
 BUSINESS_NAME_REQUIRED_BEFORE_SUBMIT = "Business name is required before submit."
 BASE_CITY_REQUIRED_BEFORE_SUBMIT = "Base city is required before submit."
 SELECT_SERVICE_BEFORE_SUBMIT = "Select at least one service before submit."
+INVALID_SERVICE_OFFERED = "Select a valid service category before submit."
 
 
 def step_pricing_label_valid_number(label: str) -> str:
@@ -141,6 +142,7 @@ LISTING_MEDIA_URL_INVALID = (
 VENDOR_PROFILE_NOT_FOUND = "Vendor profile not found."
 EMAIL_COULD_NOT_BE_SENT = "Email could not be sent."
 NO_EMAIL_ON_FILE = "No email address on file."
+PAYOUT_NUDGE_NOT_ELIGIBLE = "Not approved or payouts already set up."
 
 # --- Public metrics ---
 

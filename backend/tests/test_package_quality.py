@@ -54,6 +54,24 @@ def test_catering_requires_complete_package_on_step():
         validate_packages_for_payload(payload, require_service_packages=True)
 
 
+def test_hair_styling_requires_complete_package_on_step():
+    payload = {
+        "servicesOffered": ["hair_styling"],
+        "packages": [{"title": "Bridal hair", "price": "200", "details": "short"}],
+    }
+    with pytest.raises(ValidationError, match="what's included"):
+        validate_packages_for_payload(payload, require_service_packages=True)
+
+
+def test_dj_does_not_require_package_on_step():
+    payload = {
+        "servicesOffered": ["dj"],
+        "packages": [],
+        "hourlyRate": "150",
+    }
+    validate_packages_for_payload(payload, require_service_packages=True)
+
+
 def test_package_quality_level():
     payload = {"packages": [_complete_pkg(), _complete_pkg(title="Large Pack", price="70")]}
     assert package_quality_level(payload) == "high"

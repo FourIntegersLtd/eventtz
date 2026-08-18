@@ -3,7 +3,18 @@
 from __future__ import annotations
 
 VENDOR_SERVICE_KEYS: frozenset[str] = frozenset(
-    {"baking", "catering", "photography", "makeup", "rentals"},
+    {
+        "baking",
+        "catering",
+        "photography",
+        "makeup",
+        "rentals",
+        "event_planning",
+        "decor",
+        "dj",
+        "mc",
+        "hair_styling",
+    },
 )
 
 VENDOR_EVENT_TYPE_KEYS: frozenset[str] = frozenset(

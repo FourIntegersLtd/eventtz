@@ -31,6 +31,7 @@ from app.features.email.dispatch import (
     send_vendor_approval_email,
     send_vendor_complete_profile_nudge_email,
     send_vendor_returned_for_edits_email,
+    send_vendor_setup_payouts_nudge_email,
 )
 
 logger = get_logger(__name__)
@@ -386,6 +387,50 @@ def nudge_draft_vendors_to_complete_profile(user_ids: list[str]) -> dict[str, An
             )
         except Exception:
             logger.warning("vendor profile nudge email failed user=%s", user_id, exc_info=True)
+            failures.append({"user_id": user_id, "error": vendor_messages.EMAIL_COULD_NOT_BE_SENT})
+            continue
+
+        if ok:
+            sent += 1
+        else:
+            failures.append({"user_id": user_id, "error": vendor_messages.NO_EMAIL_ON_FILE})
+
+    return {"sent": sent, "skipped": skipped, "failures": failures}
+
+
+def nudge_vendors_to_setup_payouts(user_ids: list[str]) -> dict[str, Any]:
+    """Email approved vendors who have not finished Stripe payout setup."""
+    seen: set[str] = set()
+    sent = 0
+    skipped = 0
+    failures: list[dict[str, str]] = []
+
+    for raw_id in user_ids:
+        user_id = str(raw_id or "").strip()
+        if not user_id or user_id in seen:
+            continue
+        seen.add(user_id)
+
+        row = get_vendor_profile(user_id)
+        if not row:
+            failures.append({"user_id": user_id, "error": vendor_messages.VENDOR_PROFILE_NOT_FOUND})
+            continue
+
+        approval = str(row.get("approval_status") or "pending")
+        if approval != "approved" or vendor_payouts_verified(row):
+            skipped += 1
+            continue
+
+        payload = row.get("payload") if isinstance(row.get("payload"), dict) else {}
+        business_name = payload.get("businessName")
+        try:
+            ok = send_vendor_setup_payouts_nudge_email(
+                vendor_user_id=user_id,
+                vendor_email=row.get("email") if isinstance(row.get("email"), str) else None,
+                business_name=business_name.strip() if isinstance(business_name, str) else None,
+            )
+        except Exception:
+            logger.warning("vendor payout nudge email failed user=%s", user_id, exc_info=True)
             failures.append({"user_id": user_id, "error": vendor_messages.EMAIL_COULD_NOT_BE_SENT})
             continue
 

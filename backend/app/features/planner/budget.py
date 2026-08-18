@@ -61,7 +61,12 @@ def template_estimate(
         "baking": "celebration cake",
         "photography": "photography",
         "makeup": "makeup",
-        "rentals": "decor & hire",
+        "hair_styling": "hair styling",
+        "rentals": "rentals & hire",
+        "decor": "decor",
+        "dj": "DJ / music",
+        "mc": "MC / hosting",
+        "event_planning": "event planning",
     }.get(key, key or "this service")
     return CostEstimate(
         amount_gbp=round(flat, 2),

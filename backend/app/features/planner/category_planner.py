@@ -1,10 +1,10 @@
-"""Map celebration event types onto the five marketplace service keys."""
+"""Map celebration event types onto marketplace service keys."""
 
 from __future__ import annotations
 
 from typing import Any
 
-# Need templates: labels celebration-specific; service_key must be one of five.
+# Need templates: labels celebration-specific; service_key must be an allowed vendor key.
 _NEED_LIBRARY: dict[str, dict[str, Any]] = {
     "food": {
         "id": "food",
@@ -34,12 +34,47 @@ _NEED_LIBRARY: dict[str, dict[str, Any]] = {
         "optional": True,
         "keywords": ["makeup", "mua", "glam"],
     },
+    "hair": {
+        "id": "hair",
+        "label": "Hair styling",
+        "service_key": "hair_styling",
+        "optional": True,
+        "keywords": ["hair", "braids", "stylist", "bridal hair"],
+    },
     "hire": {
         "id": "hire",
-        "label": "Decor & rentals",
+        "label": "Rentals & hire",
         "service_key": "rentals",
         "optional": True,
-        "keywords": ["rentals", "decor", "hire", "tables", "chairs"],
+        "keywords": ["rentals", "hire", "tables", "chairs", "marquee"],
+    },
+    "decor": {
+        "id": "decor",
+        "label": "Decor",
+        "service_key": "decor",
+        "optional": True,
+        "keywords": ["decor", "balloon", "floral", "backdrop", "styling"],
+    },
+    "dj": {
+        "id": "dj",
+        "label": "DJ / music band",
+        "service_key": "dj",
+        "optional": True,
+        "keywords": ["dj", "music", "band", "dancefloor"],
+    },
+    "mc": {
+        "id": "mc",
+        "label": "MC / Alaga",
+        "service_key": "mc",
+        "optional": True,
+        "keywords": ["mc", "host", "alaga", "emcee"],
+    },
+    "planning": {
+        "id": "planning",
+        "label": "Event planner",
+        "service_key": "event_planning",
+        "optional": True,
+        "keywords": ["planner", "planning", "coordination", "timeline"],
     },
 }
 
@@ -49,32 +84,48 @@ _EVENT_NEEDS: dict[str, list[tuple[str, dict[str, Any]]]] = {
         ("food", {"label": "Food for the party", "optional": False}),
         ("cake", {"label": "Birthday cake", "optional": False}),
         ("photos", {"label": "Photos", "optional": True}),
-        ("hire", {"label": "Decor & hire", "optional": True}),
+        ("decor", {"label": "Decor", "optional": True}),
+        ("hire", {"label": "Rentals & hire", "optional": True}),
+        ("dj", {"label": "DJ / music", "optional": True}),
         ("glam", {"label": "Makeup", "optional": True}),
+        ("hair", {"label": "Hair styling", "optional": True}),
     ],
     "weddings": [
         ("food", {"label": "Food for your guests", "optional": False}),
         ("cake", {"label": "Wedding cake", "optional": False}),
         ("photos", {"label": "Photos", "optional": False}),
+        ("decor", {"label": "Decor", "optional": True}),
+        ("hire", {"label": "Rentals & hire", "optional": True}),
+        ("dj", {"label": "DJ / music band", "optional": True}),
+        ("mc", {"label": "MC / Alaga", "optional": True}),
+        ("planning", {"label": "Event planner", "optional": True}),
         ("glam", {"label": "Makeup", "optional": True}),
-        ("hire", {"label": "Decor & hire", "optional": True}),
+        ("hair", {"label": "Hair styling", "optional": True}),
     ],
     "showers": [
         ("food", {"label": "Small chops and bites", "optional": False}),
         ("cake", {"label": "Cake", "optional": False}),
         ("photos", {"label": "Photos", "optional": True}),
-        ("hire", {"label": "Decor & hire", "optional": True}),
+        ("decor", {"label": "Decor", "optional": True}),
+        ("hire", {"label": "Rentals & hire", "optional": True}),
+        ("glam", {"label": "Makeup", "optional": True}),
+        ("hair", {"label": "Hair styling", "optional": True}),
     ],
     "naming_ceremonies": [
         ("food", {"label": "Food for guests", "optional": False}),
         ("cake", {"label": "Celebration cake", "optional": False}),
         ("photos", {"label": "Photos", "optional": True}),
-        ("hire", {"label": "Decor & hire", "optional": True}),
+        ("decor", {"label": "Decor", "optional": True}),
+        ("hire", {"label": "Rentals & hire", "optional": True}),
+        ("mc", {"label": "MC / Alaga", "optional": True}),
     ],
     "corporate": [
         ("food", {"label": "Catering for the event", "optional": False}),
         ("photos", {"label": "Event photography", "optional": False}),
         ("hire", {"label": "AV & room hire", "optional": True}),
+        ("decor", {"label": "Decor", "optional": True}),
+        ("dj", {"label": "DJ / music", "optional": True}),
+        ("planning", {"label": "Event planner", "optional": True}),
     ],
     "funeral": [
         ("food", {"label": "Catering for guests", "optional": False}),
@@ -114,6 +165,9 @@ _EXCLUDE_ALIASES: dict[str, str] = {
     "makeup": "glam",
     "glam": "glam",
     "mua": "glam",
+    "hair": "hair",
+    "hair_styling": "hair",
+    "stylist": "hair",
     "photos": "photos",
     "photography": "photos",
     "photographer": "photos",
@@ -125,8 +179,17 @@ _EXCLUDE_ALIASES: dict[str, str] = {
     "caterer": "food",
     "hire": "hire",
     "rentals": "hire",
-    "decor": "hire",
     "rental": "hire",
+    "decor": "decor",
+    "dj": "dj",
+    "band": "dj",
+    "music": "dj",
+    "mc": "mc",
+    "alaga": "mc",
+    "emcee": "mc",
+    "planning": "planning",
+    "planner": "planning",
+    "event_planning": "planning",
 }
 
 
@@ -164,8 +227,6 @@ def needs_for_event(
 ) -> list[dict[str, Any]]:
     """
     Return ordered need dicts: id, label, service_key, optional, keywords.
-
-    Only uses baking, catering, photography, makeup, rentals.
     """
     canonical = normalize_event_type(event_type, event_kind=event_kind)
     template = _EVENT_NEEDS.get(canonical) or _EVENT_NEEDS["birthdays"]

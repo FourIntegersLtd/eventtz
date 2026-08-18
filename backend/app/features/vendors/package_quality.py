@@ -12,7 +12,9 @@ MIN_PACKAGE_DESCRIPTION_CHARS = 40
 MIN_PACKAGE_TITLE_CHARS = 3
 RECOMMENDED_PACKAGE_DESCRIPTION_CHARS = 80
 
-SERVICES_REQUIRING_PACKAGES = frozenset({"catering", "baking", "makeup"})
+SERVICES_REQUIRING_PACKAGES = frozenset(
+    {"catering", "baking", "makeup", "hair_styling", "decor", "event_planning"},
+)
 
 _VAGUE_DESCRIPTION_RE = re.compile(
     r"\b("

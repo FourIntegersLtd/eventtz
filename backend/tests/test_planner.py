@@ -97,6 +97,22 @@ def test_no_makeup_drops_need():
     assert all(n["service_key"] != "makeup" for n in needs)
 
 
+def test_wedding_needs_include_new_categories():
+    needs = needs_for_event("weddings")
+    keys = {n["service_key"] for n in needs}
+    assert "decor" in keys
+    assert "dj" in keys
+    assert "mc" in keys
+    assert "event_planning" in keys
+    assert "hair_styling" in keys
+
+
+def test_no_decor_drops_decor_need():
+    needs = needs_for_event("weddings", excluded_needs=["decor"])
+    assert all(n["service_key"] != "decor" for n in needs)
+    assert any(n["service_key"] == "rentals" for n in needs)
+
+
 def test_budget_overspend_fields():
     needs = [
         {"id": "food", "label": "Food", "service_key": "catering"},

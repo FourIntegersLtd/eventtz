@@ -22,3 +22,10 @@ def test_explore_search_patch_defaults_country():
     patch = explore_search_patch_from_payload({"baseCity": "Leeds"})
     assert patch["country_code"] == "GB"
     assert patch["currency"] == "GBP"
+
+
+def test_explore_search_patch_filters_invalid_services():
+    patch = explore_search_patch_from_payload(
+        {"servicesOffered": ["dj", "not_a_real_type", "decor", "mc"]},
+    )
+    assert patch["services_offered"] == ["dj", "decor", "mc"]

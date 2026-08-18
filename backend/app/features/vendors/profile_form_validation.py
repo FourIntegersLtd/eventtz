@@ -15,6 +15,7 @@ from app.features.vendors.package_quality import (
     validate_package_fields,
     validate_packages_for_payload,
 )
+from app.features.vendors.taxonomy import filter_service_keys
 
 MAX_DISCOUNT_PCT = 100.0
 MAX_MONEY_GBP = 1_000_000.0
@@ -348,6 +349,10 @@ def validate_payload_for_progress(
         svcs = payload.get("servicesOffered")
         if not isinstance(svcs, list) or not any(str(x).strip() for x in svcs):
             raise ValidationError(vendor_messages.SELECT_SERVICE_BEFORE_SUBMIT)
+        allowed = filter_service_keys([str(x) for x in svcs])
+        if not allowed:
+            raise ValidationError(vendor_messages.INVALID_SERVICE_OFFERED)
+        payload["servicesOffered"] = allowed
         validate_packages_for_payload(payload, on_submit=True)
         return
 

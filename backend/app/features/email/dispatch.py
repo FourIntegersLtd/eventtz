@@ -304,6 +304,25 @@ def send_vendor_complete_profile_nudge_email(
     )
 
 
+def send_vendor_setup_payouts_nudge_email(
+    *,
+    vendor_user_id: str,
+    vendor_email: str | None,
+    business_name: str | None,
+) -> bool:
+    if not vendor_email or "@" not in vendor_email:
+        emails = user_emails_by_id([vendor_user_id])
+        vendor_email = emails.get(vendor_user_id)
+    if not vendor_email or "@" not in vendor_email:
+        return False
+    return get_email_service().send_vendor_setup_payouts_nudge(
+        to_email=vendor_email,
+        business_name=business_name,
+        payments_url=public_email_url("/vendor/payments"),
+        dashboard_url=public_email_url("/vendor/dashboard"),
+    )
+
+
 def send_vendor_approval_email(
     *,
     vendor_user_id: str,
