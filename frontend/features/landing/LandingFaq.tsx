@@ -85,8 +85,8 @@ export function LandingFaq() {
           More categories coming
         </p>
         <p className="mt-2 text-sm leading-relaxed text-neutral-600 sm:text-base">
-          Baking, catering, photography, makeup, and rentals are live today. Join the waitlist
-          to hear when we add more.
+          Ten vendor categories are live today — from catering and photography to DJs, MCs,
+          decor, and event planning. Join the waitlist if your service isn&apos;t listed yet.
         </p>
         <a
           href={WAITLIST_URL}

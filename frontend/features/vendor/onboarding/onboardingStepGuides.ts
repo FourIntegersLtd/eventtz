@@ -1,5 +1,6 @@
 import { MIN_PORTFOLIO_IMAGES } from "./constants";
 import { packageExamplesForServices } from "./packageExamples";
+import { vendorServiceOnboardingGuideSections } from "@/lib/vendorServiceCatalog";
 
 export type OnboardingStepGuide = {
   title: string;
@@ -34,6 +35,7 @@ export function getOnboardingStepGuide(
             heading: "Services & events",
             body: "Pick the main service you offer and the event types you work on. This helps us show relevant examples when you add packages.",
           },
+          ...vendorServiceOnboardingGuideSections(),
         ],
       };
     case 3:
@@ -65,7 +67,7 @@ export function getOnboardingStepGuide(
           },
           {
             heading: "Rates vs packages",
-            body: "Hourly or daily rates are optional. For catering, cakes, and makeup we require at least one complete package.",
+            body: "Hourly or daily rates are optional. For catering, cakes, makeup, hair styling, decor, and event planning we require at least one complete package.",
           },
         ],
       };

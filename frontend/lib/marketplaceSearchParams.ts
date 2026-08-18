@@ -1,6 +1,22 @@
 import type { MarketplaceSort } from "@/lib/clientExploreApi";
 import type { ClientSearchContext } from "@/lib/clientBookingsApi";
 import { DEFAULT_COUNTRY_CODE, normalizeCountryCode } from "@/lib/markets";
+import { VENDOR_SERVICE_OPTIONS } from "@/lib/vendorServiceCatalog";
+
+const ALLOWED_VENDOR_SERVICE_TYPES = new Set(
+  VENDOR_SERVICE_OPTIONS.map((option) => option.value),
+);
+
+function filterVendorServiceTypes(raw: string[]): string[] {
+  const out: string[] = [];
+  for (const item of raw) {
+    const key = item.trim().toLowerCase();
+    if (ALLOWED_VENDOR_SERVICE_TYPES.has(key) && !out.includes(key)) {
+      out.push(key);
+    }
+  }
+  return out;
+}
 
 export type MarketplaceSearchState = {
   query: string;
@@ -59,10 +75,7 @@ export function marketplaceStateFromSearchParams(
 ): MarketplaceSearchState {
   const typesRaw = sp.get("types");
   const types = typesRaw
-    ? typesRaw
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean)
+    ? filterVendorServiceTypes(typesRaw.split(",").map((t) => t.trim()).filter(Boolean))
     : [];
 
   const datesRaw = sp.get("dates");

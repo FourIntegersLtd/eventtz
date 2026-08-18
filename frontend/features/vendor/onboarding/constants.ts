@@ -1,3 +1,5 @@
+import { VENDOR_SERVICE_OPTIONS } from "@/lib/vendorServiceCatalog";
+
 export const STEP_LABELS = [
   "Account",
   "Business",
@@ -14,11 +16,7 @@ export const SERVICE_OPTIONS: {
   value: string;
   label: string;
 }[] = [
-  { value: "baking", label: "Baking" },
-  { value: "catering", label: "Catering" },
-  { value: "photography", label: "Photography" },
-  { value: "makeup", label: "Makeup" },
-  { value: "rentals", label: "Rentals" },
+  ...VENDOR_SERVICE_OPTIONS,
   { value: "other", label: "Other" },
 ];
 

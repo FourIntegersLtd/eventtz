@@ -13,6 +13,7 @@ import {
   type AdminVendorRow,
   type AdminVendorUnsubmitResult,
   type AdminVendorsQuery,
+  postAdminVendorPayoutNudge,
   postAdminVendorProfileNudge,
   type AdminVendorProfileNudgeResult,
 } from "@/lib/adminVendorsApi";
@@ -20,6 +21,11 @@ import { getApiErrorDetail } from "@/lib/api-errors";
 import { COULD_NOT_RESTORE_STRIPE_CONNECT } from "@/lib/admin-messages";
 import type { VendorApprovalStatus, VendorListingOverride } from "@/lib/domain-types";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
+import {
+  vendorIsBulkEmailSelectable,
+  vendorIsDraft,
+  vendorNeedsPayoutSetup,
+} from "@/features/admin/vendors/adminVendorBulkEmail";
 
 export function useAdminVendors() {
   const { showToast } = useToast();
@@ -37,9 +43,29 @@ export function useAdminVendors() {
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [nudgeBusy, setNudgeBusy] = useState(false);
 
-  const draftUserIdsOnPage = useMemo(
-    () => rows.filter((r) => r.onboarding_status === "draft").map((r) => r.user_id),
+  const selectableUserIdsOnPage = useMemo(
+    () => rows.filter(vendorIsBulkEmailSelectable).map((r) => r.user_id),
     [rows],
+  );
+
+  const rowByUserId = useMemo(() => new Map(rows.map((r) => [r.user_id, r])), [rows]);
+
+  const selectedDraftCount = useMemo(
+    () =>
+      selectedUserIds.filter((id) => {
+        const row = rowByUserId.get(id);
+        return row ? vendorIsDraft(row) : false;
+      }).length,
+    [rowByUserId, selectedUserIds],
+  );
+
+  const selectedPayoutCount = useMemo(
+    () =>
+      selectedUserIds.filter((id) => {
+        const row = rowByUserId.get(id);
+        return row ? vendorNeedsPayoutSetup(row) : false;
+      }).length,
+    [rowByUserId, selectedUserIds],
   );
 
   const load = useCallback(async () => {
@@ -210,18 +236,14 @@ export function useAdminVendors() {
     });
   }, []);
 
-  const selectAllDraftOnPage = useCallback(() => {
-    setSelectedUserIds((prev) => [...new Set([...prev, ...draftUserIdsOnPage])]);
-  }, [draftUserIdsOnPage]);
+  const selectAllSelectableOnPage = useCallback(() => {
+    setSelectedUserIds((prev) => [...new Set([...prev, ...selectableUserIdsOnPage])]);
+  }, [selectableUserIdsOnPage]);
 
-  const clearDraftOnPage = useCallback(() => {
-    const draftSet = new Set(draftUserIdsOnPage);
-    setSelectedUserIds((prev) => prev.filter((id) => !draftSet.has(id)));
-  }, [draftUserIdsOnPage]);
-
-  const clearSelection = useCallback(() => {
-    setSelectedUserIds([]);
-  }, []);
+  const clearSelectableOnPage = useCallback(() => {
+    const selectableSet = new Set(selectableUserIdsOnPage);
+    setSelectedUserIds((prev) => prev.filter((id) => !selectableSet.has(id)));
+  }, [selectableUserIdsOnPage]);
 
   const nudgeDraftVendors = useCallback(async (): Promise<
     | { kind: "result"; result: AdminVendorProfileNudgeResult }
@@ -237,6 +259,27 @@ export function useAdminVendors() {
       return { kind: "result", result };
     } catch (e) {
       const message = getApiErrorDetail(e) ?? "Could not send profile reminder emails.";
+      setError(message);
+      return { kind: "error", message };
+    } finally {
+      setNudgeBusy(false);
+    }
+  }, [selectedUserIds]);
+
+  const nudgePayoutVendors = useCallback(async (): Promise<
+    | { kind: "result"; result: AdminVendorProfileNudgeResult }
+    | { kind: "error"; message: string }
+    | null
+  > => {
+    if (selectedUserIds.length === 0) return null;
+    setNudgeBusy(true);
+    setError(null);
+    try {
+      const result = await postAdminVendorPayoutNudge(selectedUserIds);
+      setSelectedUserIds([]);
+      return { kind: "result", result };
+    } catch (e) {
+      const message = getApiErrorDetail(e) ?? "Could not send payout reminder emails.";
       setError(message);
       return { kind: "error", message };
     } finally {
@@ -274,12 +317,14 @@ export function useAdminVendors() {
     profileStatus,
     setProfileStatus,
     selectedUserIds,
-    draftUserIdsOnPage,
+    selectableUserIdsOnPage,
+    selectedDraftCount,
+    selectedPayoutCount,
     toggleSelectedUserId,
-    selectAllDraftOnPage,
-    clearDraftOnPage,
-    clearSelection,
+    selectAllSelectableOnPage,
+    clearSelectableOnPage,
     nudgeDraftVendors,
+    nudgePayoutVendors,
     nudgeBusy,
   };
 }

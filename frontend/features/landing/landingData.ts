@@ -1,16 +1,11 @@
 import type { LucideIcon } from "lucide-react";
 import {
   BadgeCheck,
-  Camera,
-  Cake,
   CircleCheck,
   MessageCircle,
-  Package,
   Search,
   Send,
   ShieldCheck,
-  Sparkles,
-  UtensilsCrossed,
 } from "lucide-react";
 import type { IconType } from "react-icons";
 import {
@@ -20,6 +15,7 @@ import {
   SiTiktok,
   SiX,
 } from "react-icons/si";
+import { VENDOR_SERVICE_CATEGORIES } from "@/lib/vendorServiceCatalog";
 import { getBookingServiceFeePercent } from "@/lib/bookingServiceFee";
 import { FOOTER_CONTACT_EMAIL } from "@/lib/footerLinks";
 
@@ -38,48 +34,16 @@ export type LandingCategory = {
   iconColor: string;
 };
 
-export const CATEGORIES: LandingCategory[] = [
-  {
-    name: "Baking",
-    value: "baking",
-    Icon: Cake,
-    description: "Cakes and sweet tables worth showing off",
-    iconBg: "bg-orange-100",
-    iconColor: "text-orange-500",
-  },
-  {
-    name: "Catering",
-    value: "catering",
-    Icon: UtensilsCrossed,
-    description: "Food your guests will remember",
-    iconBg: "bg-rose-100",
-    iconColor: "text-rose-500",
-  },
-  {
-    name: "Photography",
-    value: "photography",
-    Icon: Camera,
-    description: "See services and prices on every profile before you send a message",
-    iconBg: "bg-violet-100",
-    iconColor: "text-violet-600",
-  },
-  {
-    name: "Makeup",
-    value: "makeup",
-    Icon: Sparkles,
-    description: "Bridal, party, and on-the-day looks",
-    iconBg: "bg-fuchsia-100",
-    iconColor: "text-fuchsia-500",
-  },
-  {
-    name: "Rentals",
-    value: "rentals",
-    Icon: Package,
-    description: "Décor, marquees, furniture, and hire",
-    iconBg: "bg-sky-100",
-    iconColor: "text-sky-600",
-  },
-];
+export const CATEGORIES: LandingCategory[] = VENDOR_SERVICE_CATEGORIES.map(
+  ({ value, label, description, Icon, iconBg, iconColor }) => ({
+    name: label,
+    value,
+    Icon,
+    description,
+    iconBg,
+    iconColor,
+  }),
+);
 
 /** Strip above the fold uses the same categories as the detailed grid. */
 export const BROWSE_CATEGORIES = CATEGORIES;

@@ -18,19 +18,26 @@ import type { AdminVendorProfileNudgeResult } from "@/lib/adminVendorsApi";
 const APPROVAL_STATUSES = ["", "pending", "approved", "banned"];
 const PROFILE_STATUSES = ["", "draft", "submitted", "complete"];
 
-function profileNudgeToastCopy(result: AdminVendorProfileNudgeResult): {
+type NudgeKind = "profile" | "payout";
+
+function nudgeToastCopy(
+  kind: NudgeKind,
+  result: AdminVendorProfileNudgeResult,
+): {
   title: string;
   description: string;
   tone: "success" | "error" | "neutral";
 } {
   const { sent, skipped, failures } = result;
   const parts: string[] = [];
+  const skippedLabel =
+    kind === "profile" ? "skipped (not draft)." : "skipped (payouts set up or not approved).";
 
   if (sent > 0) {
     parts.push(`Sent ${sent} email${sent === 1 ? "" : "s"}.`);
   }
   if (skipped > 0) {
-    parts.push(`${skipped} skipped (not draft).`);
+    parts.push(`${skipped} ${skippedLabel}`);
   }
   if (failures.length > 0) {
     const reasons = [...new Set(failures.map((f) => f.error).filter(Boolean))];
@@ -39,17 +46,18 @@ function profileNudgeToastCopy(result: AdminVendorProfileNudgeResult): {
   }
 
   const description = parts.join(" ") || "No emails were sent.";
+  const label = kind === "profile" ? "profile" : "payout";
 
   if (sent > 0 && failures.length === 0) {
-    return { title: "Profile emails sent", description, tone: "success" };
+    return { title: `${label} emails sent`, description, tone: "success" };
   }
   if (sent > 0) {
-    return { title: "Profile emails partly sent", description, tone: "neutral" };
+    return { title: `${label} emails partly sent`, description, tone: "neutral" };
   }
   if (failures.length > 0 || skipped > 0) {
-    return { title: "Could not send profile emails", description, tone: "error" };
+    return { title: `Could not send ${label} emails`, description, tone: "error" };
   }
-  return { title: "No profile emails sent", description, tone: "neutral" };
+  return { title: `No ${label} emails sent`, description, tone: "neutral" };
 }
 
 export function AdminVendorsView() {
@@ -78,16 +86,43 @@ export function AdminVendorsView() {
     profileStatus,
     setProfileStatus,
     selectedUserIds,
-    draftUserIdsOnPage,
+    selectableUserIdsOnPage,
+    selectedDraftCount,
+    selectedPayoutCount,
     toggleSelectedUserId,
-    selectAllDraftOnPage,
-    clearDraftOnPage,
+    selectAllSelectableOnPage,
+    clearSelectableOnPage,
     nudgeDraftVendors,
+    nudgePayoutVendors,
     nudgeBusy,
   } = useAdminVendors();
 
   const canPrev = offset > 0;
   const canNext = offset + limit < total;
+
+  const runNudge = async (kind: NudgeKind) => {
+    const outcome = kind === "profile" ? await nudgeDraftVendors() : await nudgePayoutVendors();
+    if (!outcome) return;
+    if (outcome.kind === "error") {
+      showToast({
+        title:
+          kind === "profile"
+            ? "Could not send profile emails"
+            : "Could not send payout emails",
+        description: outcome.message,
+        tone: "error",
+        durationMs: 7000,
+      });
+      return;
+    }
+    const toast = nudgeToastCopy(kind, outcome.result);
+    showToast({
+      title: toast.title,
+      description: toast.description,
+      tone: toast.tone,
+      durationMs: toast.tone === "error" ? 7000 : 6000,
+    });
+  };
 
   return (
     <div className="space-y-4">
@@ -146,37 +181,43 @@ export function AdminVendorsView() {
       {selectedUserIds.length > 0 ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3">
           <p className="text-sm text-neutral-700">
-            {selectedUserIds.length} draft vendor{selectedUserIds.length === 1 ? "" : "s"} selected
+            {selectedUserIds.length} vendor{selectedUserIds.length === 1 ? "" : "s"} selected
+            {selectedDraftCount > 0 || selectedPayoutCount > 0 ? (
+              <span className="text-neutral-500">
+                {" "}
+                (
+                {[
+                  selectedDraftCount > 0 ? `${selectedDraftCount} draft` : null,
+                  selectedPayoutCount > 0 ? `${selectedPayoutCount} need payouts` : null,
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
+                )
+              </span>
+            ) : null}
           </p>
-          <button
-            type="button"
-            disabled={nudgeBusy}
-            onClick={() => {
-              void (async () => {
-                const outcome = await nudgeDraftVendors();
-                if (!outcome) return;
-                if (outcome.kind === "error") {
-                  showToast({
-                    title: "Could not send profile emails",
-                    description: outcome.message,
-                    tone: "error",
-                    durationMs: 7000,
-                  });
-                  return;
-                }
-                const toast = profileNudgeToastCopy(outcome.result);
-                showToast({
-                  title: toast.title,
-                  description: toast.description,
-                  tone: toast.tone,
-                  durationMs: toast.tone === "error" ? 7000 : 6000,
-                });
-              })();
-            }}
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {nudgeBusy ? "Sending…" : "Send complete profile email"}
-          </button>
+          <div className="flex flex-wrap gap-2">
+            {selectedDraftCount > 0 ? (
+              <button
+                type="button"
+                disabled={nudgeBusy}
+                onClick={() => void runNudge("profile")}
+                className="rounded-lg border border-neutral-200 bg-white px-4 py-2 text-sm font-semibold text-neutral-800 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {nudgeBusy ? "Sending…" : "Send complete profile email"}
+              </button>
+            ) : null}
+            {selectedPayoutCount > 0 ? (
+              <button
+                type="button"
+                disabled={nudgeBusy}
+                onClick={() => void runNudge("payout")}
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {nudgeBusy ? "Sending…" : "Send setup payouts email"}
+              </button>
+            ) : null}
+          </div>
         </div>
       ) : null}
 
@@ -189,10 +230,10 @@ export function AdminVendorsView() {
           <AdminVendorsTable
             rows={rows}
             selectedUserIds={selectedUserIds}
-            draftUserIdsOnPage={draftUserIdsOnPage}
+            selectableUserIdsOnPage={selectableUserIdsOnPage}
             onToggleSelected={toggleSelectedUserId}
-            onSelectAllDraft={selectAllDraftOnPage}
-            onClearDraftOnPage={clearDraftOnPage}
+            onSelectAllSelectable={selectAllSelectableOnPage}
+            onClearSelectableOnPage={clearSelectableOnPage}
             onSelect={setSelectedUserId}
           />
           <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-neutral-600">

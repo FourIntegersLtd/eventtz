@@ -18,7 +18,7 @@ export const MARKETPLACE_CHART_INFO = {
   },
   category: {
     title: "Category performance",
-    what: "Which service types get the most booking requests, such as photography, catering, or rentals. Useful for seeing where demand is strongest.",
+    what: "Which service types get the most booking requests, such as photography, catering, decor, DJ, or rentals. Useful for seeing where demand is strongest.",
     how: "Each request is linked to the vendor’s main service type. We add up requests for each type in the dates you picked and show the busiest ones.",
   },
   failures: {

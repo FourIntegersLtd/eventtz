@@ -3,7 +3,14 @@
 export const MIN_PACKAGE_DESCRIPTION_CHARS = 40;
 export const MIN_PACKAGE_TITLE_CHARS = 3;
 
-export const SERVICES_REQUIRING_PACKAGES = new Set(["catering", "baking", "makeup"]);
+export const SERVICES_REQUIRING_PACKAGES = new Set([
+  "catering",
+  "baking",
+  "makeup",
+  "hair_styling",
+  "decor",
+  "event_planning",
+]);
 
 export type PackageLike = {
   id?: string;
