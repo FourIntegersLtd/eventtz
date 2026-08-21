@@ -6,7 +6,6 @@ import { getButtonClassName } from "@/components/ui/buttonStyles";
 import { HeroMarketplaceSearch } from "@/features/marketplace/HeroMarketplaceSearch";
 import {
   HERO_CTA,
-  HERO_EYEBROW,
   HERO_HEADLINE,
   HERO_SUBHEADLINE,
 } from "@/features/landing/landingData";
@@ -36,12 +35,7 @@ export function LandingHero() {
       >
         <div className="grid items-center gap-5 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-10 xl:gap-14 2xl:gap-16">
           <div className="min-w-0 text-left motion-safe:animate-[hero-copy-in_0.65s_ease-out_both]">
-            <p className="flex items-center gap-3 text-sm font-semibold text-primary">
-              <span className="inline-block h-px w-8 bg-primary" aria-hidden />
-              {HERO_EYEBROW}
-            </p>
-
-            <h1 className="font-heading mt-4 text-[1.65rem] font-semibold leading-[1.2] tracking-tight text-neutral-900 sm:mt-5 sm:text-4xl lg:text-[2.85rem] xl:text-5xl">
+            <h1 className="font-heading text-[1.65rem] font-semibold leading-[1.2] tracking-tight text-neutral-900 sm:text-4xl lg:text-[2.85rem] xl:text-5xl">
               {HERO_HEADLINE.lead}{" "}
               <span className="inline-flex max-w-full flex-wrap items-baseline gap-x-2 gap-y-1 md:flex-nowrap md:gap-x-3">
                 {HERO_HEADLINE.sticky} <HeroRotatingWord />
