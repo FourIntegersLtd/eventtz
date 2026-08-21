@@ -204,9 +204,9 @@ export function VendorQuoteFormModal({
     >
       <div className="space-y-4">
         <p className="text-sm leading-relaxed text-neutral-600">
-          A custom quote is a priced offer you send from chat - for a package you already
-          list, or a one-off price that isn&apos;t on your profile. It creates a booking
-          request the client can accept or decline from Bookings.
+          Send this client a price from chat. Use a package you already list, or enter a
+          one-off amount. They can accept or decline in Bookings. This stays on their
+          booking only — it won&apos;t appear on your listing.
         </p>
         {error ? <LottieFailureInline message={error} /> : null}
         <TextField

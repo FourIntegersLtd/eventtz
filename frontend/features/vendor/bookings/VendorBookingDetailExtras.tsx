@@ -4,6 +4,8 @@ import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { BookingCompletionBanner } from "@/features/bookings/BookingCompletionBanner";
 import { BookingPayoutPendingBanner } from "@/features/bookings/BookingPayoutPendingBanner";
 import { isPayoutReleasePending, PAYMENT_FLOW_COPY } from "@/features/bookings/bookingConfirmCopy";
+import { ReceiptActions } from "@/features/receipts/ReceiptActions";
+import { hasPaymentReceipt } from "@/lib/receiptsApi";
 import type { VendorBookingDetail } from "@/lib/vendorBookingsApi";
 
 type VendorBookingDetailExtrasProps = {
@@ -56,6 +58,21 @@ export function VendorBookingDetailExtras({
         <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-950">
           <LottieIllustration asset="pendingReview" size="status" className="mb-2" ariaLabel="" />
           {PAYMENT_FLOW_COPY.cancelledRefundedVendor}
+        </div>
+      ) : null}
+
+      {hasPaymentReceipt(detail.payment_status) ? (
+        <div className="mt-4 flex flex-wrap gap-2">
+          <ReceiptActions
+            bookingId={detail.booking_request_id}
+            documentType="vendor_payment_record"
+          />
+          {detail.payment_status === "payout_released" ? (
+            <ReceiptActions
+              bookingId={detail.booking_request_id}
+              documentType="vendor_payout_statement"
+            />
+          ) : null}
         </div>
       ) : null}
     </>

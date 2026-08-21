@@ -7,7 +7,9 @@ import { resolveWasClientTotalLabel } from "@/features/bookings/bookingPriceLabe
 import { BookingPriceUpdateBanner } from "@/features/bookings/BookingPriceUpdateBanner";
 import { BookingCompletionBanner } from "@/features/bookings/BookingCompletionBanner";
 import { BookingPayoutPendingBanner } from "@/features/bookings/BookingPayoutPendingBanner";
-import { isPayoutReleasePending, PAYMENT_FLOW_COPY } from "@/features/bookings/bookingConfirmCopy";
+import { PAYMENT_FLOW_COPY, isPayoutReleasePending } from "@/features/bookings/bookingConfirmCopy";
+import { ReceiptActions } from "@/features/receipts/ReceiptActions";
+import { hasPaymentReceipt } from "@/lib/receiptsApi";
 import type { ClientBookingDetail } from "@/lib/clientBookingsApi";
 
 type ClientBookingDetailExtrasProps = {
@@ -17,6 +19,7 @@ type ClientBookingDetailExtrasProps = {
   checkoutReturnMessage: string;
   paymentBanner: string | null;
   paymentSyncError: string | null;
+  paymentConfirmed: boolean;
   showCancelledRefunded: boolean;
   paymentDue: boolean;
   paymentBannerRef: RefObject<HTMLDivElement | null>;
@@ -36,6 +39,7 @@ export function ClientBookingDetailExtras({
   checkoutReturnMessage,
   paymentBanner,
   paymentSyncError,
+  paymentConfirmed,
   showCancelledRefunded,
   paymentDue,
   paymentBannerRef,
@@ -81,6 +85,14 @@ export function ClientBookingDetailExtras({
             />
           ) : null}
           {checkoutReturnMessage}
+          {paymentBanner === "success" && paymentConfirmed && !paymentSyncError ? (
+            <div className="mt-3">
+              <ReceiptActions
+                bookingId={detail.booking_request_id}
+                documentType="client_payment_receipt"
+              />
+            </div>
+          ) : null}
         </div>
       ) : null}
 
@@ -104,6 +116,16 @@ export function ClientBookingDetailExtras({
         <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-950">
           <LottieIllustration asset="pendingReview" size="status" className="mb-2" />
           {PAYMENT_FLOW_COPY.cancelledRefunded}
+        </div>
+      ) : null}
+
+      {hasPaymentReceipt(detail.payment_status) &&
+      !(paymentBanner === "success" && paymentConfirmed && !paymentSyncError) ? (
+        <div className="mt-4 flex flex-wrap gap-2">
+          <ReceiptActions
+            bookingId={detail.booking_request_id}
+            documentType="client_payment_receipt"
+          />
         </div>
       ) : null}
 

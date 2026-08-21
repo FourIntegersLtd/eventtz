@@ -462,6 +462,7 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
     checkoutReturnMessage,
     paymentBanner,
     paymentSyncError,
+    paymentConfirmed,
     paymentDue,
     paymentBannerRef,
     showCancelledRefunded,
