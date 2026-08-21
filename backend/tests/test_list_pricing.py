@@ -6,14 +6,21 @@ from datetime import date
 
 import pytest
 
+from app.core.errors import ValidationError
 from app.features.vendors.list_pricing import (
     AUTO_BULK_LINE_ID,
     AUTO_OFF_PEAK_LINE_ID,
+    SingleMoneyErrorKind,
     compute_automatic_discount_lines,
     is_off_peak_date,
     min_listing_price_gbp,
+    parse_single_money_gbp,
+    parse_vendor_discount_config,
+    raise_if_invalid_single_money_gbp,
     resolve_line_items,
     sale_price_after_discount,
+    validate_single_money_gbp,
+    validate_single_money_gbp_kind,
 )
 
 
@@ -38,6 +45,41 @@ def _vendor_payload(**overrides: object) -> dict:
 
 def test_sale_price_after_discount():
     assert sale_price_after_discount(500, 10) == 450.0
+
+
+def test_parse_single_money_gbp_rejects_comma_prices():
+    assert parse_single_money_gbp("150, 180") is None
+    assert parse_single_money_gbp("150,180") is None
+    err = validate_single_money_gbp("150, 180", "Package price", required=True)
+    assert err and "one amount only" in err
+
+
+def test_single_money_error_kind_mapping():
+    assert validate_single_money_gbp_kind("150;180") is SingleMoneyErrorKind.MULTIPLE_AMOUNTS
+    with pytest.raises(ValidationError, match="one amount only"):
+        raise_if_invalid_single_money_gbp("150;180", "Package price", required=True)
+
+
+def test_bulk_threshold_uses_strict_parse():
+    config = parse_vendor_discount_config({"bulkDiscountThreshold": "150,180"})
+    assert config.bulk_threshold is None
+    config_ok = parse_vendor_discount_config({"bulkDiscountThreshold": "400"})
+    assert config_ok.bulk_threshold == 400.0
+
+
+def test_min_listing_price_ignores_invalid_package_price():
+    payload = _vendor_payload(
+        packages=[
+            {
+                "id": "pkg-bad",
+                "title": "Chairs",
+                "price": "150, 180",
+                "details": "Thirty chairs and ten tables with delivery and collection included.",
+                "duration": "2-hour hire",
+            }
+        ],
+    )
+    assert min_listing_price_gbp(payload) is None
 
 
 def test_main_discount_on_resolve():

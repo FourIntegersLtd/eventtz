@@ -114,6 +114,24 @@ def step_pricing_label_out_of_range(label: str) -> str:
     return f"Step pricing: {label} is out of allowed range."
 
 
+def step_pricing_label_single_amount(label: str) -> str:
+    return f"Step pricing: {label} must be a single number (e.g. 150 or 150.00)."
+
+
+def step_pricing_label_one_amount_only(label: str) -> str:
+    return (
+        f"Step pricing: {label} must be one amount only — "
+        "add a separate package for each price."
+    )
+
+
+def step_pricing_label_no_range_price(label: str) -> str:
+    return (
+        f"Step pricing: {label} must be one fixed amount, "
+        "not a range or “starts from” price."
+    )
+
+
 def step_availability_max_bookings_range(min_val: int, max_val: int) -> str:
     return (
         f"Step availability: max bookings per day must be "

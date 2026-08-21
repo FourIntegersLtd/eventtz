@@ -7,6 +7,10 @@ from typing import Any
 
 from app.core.errors import ValidationError
 from app.features.vendors import messages as vendor_messages
+from app.features.vendors.list_pricing import (
+    parse_single_money_gbp,
+    raise_if_invalid_single_money_gbp,
+)
 
 MIN_PACKAGE_DESCRIPTION_CHARS = 40
 MIN_PACKAGE_TITLE_CHARS = 3
@@ -54,7 +58,7 @@ def is_complete_package(pkg: dict[str, Any]) -> bool:
     details = _coerce_str(pkg.get("details")).strip()
     if len(title) < MIN_PACKAGE_TITLE_CHARS:
         return False
-    if not price:
+    if parse_single_money_gbp(price) is None:
         return False
     return len(details) >= MIN_PACKAGE_DESCRIPTION_CHARS
 
@@ -85,6 +89,11 @@ def validate_package_fields(pkg: dict[str, Any], *, strict: bool = False) -> Non
         raise ValidationError(vendor_messages.PACKAGE_NEEDS_CLEAR_NAME)
     if not price:
         raise ValidationError(vendor_messages.PACKAGE_NEEDS_PRICE)
+    raise_if_invalid_single_money_gbp(
+        price,
+        "Package price",
+        required=True,
+    )
     if strict or price:
         if len(details) < MIN_PACKAGE_DESCRIPTION_CHARS:
             raise ValidationError(vendor_messages.PACKAGE_DETAILS_TOO_SHORT)

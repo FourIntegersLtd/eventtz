@@ -10,7 +10,13 @@ from app.core.errors import ValidationError
 from app.core.phone_validation import is_valid_phone_number
 from app.features.vendors import messages as vendor_messages
 from app.features.vendors.markets import DEFAULT_COUNTRY_CODE, is_market_enabled, normalize_country_code
-from app.features.vendors.list_pricing import parse_money_gbp
+from app.features.vendors.list_pricing import (
+    MAX_MONEY_GBP,
+    MIN_MONEY_GBP,
+    parse_money_gbp,
+    parse_single_money_gbp,
+    raise_if_invalid_single_money_gbp,
+)
 from app.features.vendors.package_quality import (
     validate_package_fields,
     validate_packages_for_payload,
@@ -18,8 +24,6 @@ from app.features.vendors.package_quality import (
 from app.features.vendors.taxonomy import filter_service_keys
 
 MAX_DISCOUNT_PCT = 100.0
-MAX_MONEY_GBP = 1_000_000.0
-MIN_MONEY_GBP = 0.1
 MIN_MAX_BOOKINGS_PER_DAY = 1
 MAX_MAX_BOOKINGS_PER_DAY = 20
 MIN_PORTFOLIO_IMAGES = 5
@@ -50,9 +54,9 @@ def _clamp_pct(raw: str) -> str:
 
 
 def _clamp_money_str(raw: str) -> str:
-    n = parse_money_gbp(raw)
+    n = parse_single_money_gbp(raw)
     if n is None:
-        return ""
+        return raw.strip()
     clamped = max(0.0, min(MAX_MONEY_GBP, n))
     if clamped == int(clamped):
         return str(int(clamped))
@@ -193,17 +197,13 @@ def _pct_in_range(raw: str, label: str) -> None:
 
 
 def _money_in_range(raw: str, label: str, *, required: bool = False) -> None:
-    if not raw.strip():
-        if required:
-            raise ValidationError(vendor_messages.step_pricing_label_required(label))
-        return
-    n = parse_money_gbp(raw)
-    if n is None:
-        raise ValidationError(vendor_messages.step_pricing_label_valid_amount(label))
-    if n < MIN_MONEY_GBP or n > MAX_MONEY_GBP:
-        if n < MIN_MONEY_GBP:
-            raise ValidationError(vendor_messages.step_pricing_label_min_gbp(label, MIN_MONEY_GBP))
-        raise ValidationError(vendor_messages.step_pricing_label_out_of_range(label))
+    raise_if_invalid_single_money_gbp(
+        raw,
+        label,
+        required=required,
+        min_gbp=MIN_MONEY_GBP,
+        max_gbp=MAX_MONEY_GBP,
+    )
 
 
 def _validate_step_location(payload: dict[str, Any]) -> None:
@@ -264,9 +264,6 @@ def validate_step_fields(step: int, payload: dict[str, Any]) -> None:
             for pkg in pkgs:
                 if isinstance(pkg, dict):
                     validate_package_fields(pkg, strict=True)
-                    price = _coerce_str(pkg, "price").strip()
-                    if price:
-                        _money_in_range(price, "Package price", required=True)
         validate_packages_for_payload(payload, on_submit=False, require_service_packages=True)
         has_rate = bool(_coerce_str(payload, "hourlyRate").strip()) or bool(
             _coerce_str(payload, "dailyRate").strip(),

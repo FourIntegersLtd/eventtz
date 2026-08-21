@@ -30,6 +30,25 @@ def test_is_complete_package_requires_description():
     assert is_complete_package(_complete_pkg(title="Package 1"))
 
 
+def test_is_complete_package_rejects_invalid_price():
+    assert not is_complete_package(_complete_pkg(price="150,180"))
+    assert not is_complete_package(_complete_pkg(price="150;180"))
+
+
+def test_validate_package_fields_rejects_semicolon_price():
+    from app.features.vendors.package_quality import validate_package_fields
+
+    with pytest.raises(ValidationError, match="one amount only"):
+        validate_package_fields(
+            {
+                "title": "Small Chops Pack",
+                "price": "150;180",
+                "details": "Ten spring rolls and ten samosas with delivery included.",
+            },
+            strict=True,
+        )
+
+
 def test_vague_description_helper_optional():
     assert has_vague_package_description("Contact for details about what's included")
     assert not has_vague_package_description("10 samosas and 10 spring rolls included.")

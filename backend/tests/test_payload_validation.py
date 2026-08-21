@@ -198,6 +198,14 @@ def test_validate_step_4_rejects_zero_price():
         validate_step_fields(4, payload)
 
 
+def test_validate_step_4_rejects_comma_separated_package_price():
+    payload = {
+        "packages": [{"title": "Chairs", "price": "150, 180", "details": PACKAGE_DETAILS}],
+    }
+    with pytest.raises(ValidationError, match="one amount only"):
+        validate_step_fields(4, payload)
+
+
 def test_validate_step_4_requires_discount_option_when_enabled():
     payload = {
         "packages": [{"title": "Gold", "price": "500", "details": PACKAGE_DETAILS}],
