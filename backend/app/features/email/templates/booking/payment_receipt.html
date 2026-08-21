@@ -1,0 +1,50 @@
+{% extends "partials/transactional/layout.html" %}
+{% block content %}
+<h1 style="margin: 0 0 8px; color: #3e1964; font-size: 22px; line-height: 1.35; font-weight: 700">
+  {{ headline }}
+</h1>
+{% if subtitle %}
+<p style="margin: 0 0 20px; color: #6b6575; font-size: 15px; line-height: 1.6">{{ subtitle }}</p>
+{% endif %}
+<p style="margin: 0 0 8px; color: #2d2938; font-size: 15px; line-height: 1.65">
+  <strong>{{ receipt.event_name }}</strong>
+  {% if receipt.event_date %} · {{ receipt.event_date }}{% endif %}
+</p>
+<p style="margin: 0 0 16px; color: #6b6575; font-size: 14px; line-height: 1.6">
+  {% if receipt.document_type == "client_payment_receipt" %}
+  Vendor: {{ receipt.counterparty_name }}
+  {% else %}
+  Client: {{ receipt.counterparty_name }}
+  {% endif %}
+  {% if receipt.paid_at %}<br />Paid: {{ receipt.paid_at[:10] }}{% endif %}
+  {% if receipt.payment_reference %}<br />Payment ref: {{ receipt.payment_reference }}{% endif %}
+  {% if receipt.transfer_reference %}<br />Transfer ref: {{ receipt.transfer_reference }}{% endif %}
+</p>
+{% include "booking/partials/receipt_table.html" %}
+{% if receipt.status_note %}
+<p style="margin: 16px 0 0; color: #6b6575; font-size: 14px; line-height: 1.6">{{ receipt.status_note }}</p>
+{% endif %}
+{% if action_url and action_label %}
+<p style="margin: 20px 0 0">
+  <a
+    href="{{ action_url }}"
+    style="
+      display: inline-block;
+      background: #3e1964;
+      color: #ffffff;
+      text-decoration: none;
+      padding: 14px 28px;
+      border-radius: 980px;
+      font-size: 15px;
+      font-weight: 600;
+    "
+    >{{ action_label }}</a
+  >
+</p>
+{% endif %}
+{% if receipt.stripe_receipt_url %}
+<p style="margin: 16px 0 0">
+  <a href="{{ receipt.stripe_receipt_url }}" style="color: #3e1964; font-size: 14px">View card receipt from Stripe</a>
+</p>
+{% endif %}
+{% endblock %}

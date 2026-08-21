@@ -163,7 +163,15 @@ def _finalize_completion(row: dict[str, Any]) -> dict[str, Any]:
             booking_id=booking_id,
             kind="vendor_payout_released",
             body="Your payout for this booking has been released.\n\nIt should arrive in your connected account shortly, depending on your bank. Thank you for completing this booking with Eventtz.",
+            send_email=False,
         )
+        from app.features.bookings.receipts import (
+            dispatch_vendor_payout_statement_after_release,
+            persist_vendor_payout_statement_snapshot,
+        )
+
+        persist_vendor_payout_statement_snapshot(booking_id)
+        dispatch_vendor_payout_statement_after_release(booking_id, vendor_id=vendor_id)
     _notify_pair(client_id, vendor_id)
     return _serialize_completion_state(final_row)
 

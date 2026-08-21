@@ -67,6 +67,63 @@ class EmailService:
             )
         return ok
 
+    def send_receipt_email(
+        self,
+        *,
+        kind: str,
+        to_email: str,
+        recipient_user_id: str,
+        booking_id: str,
+        receipt_payload: dict,
+        action_url: str | None,
+        action_label: str = "View receipt",
+    ) -> bool:
+        from app.features.bookings.receipts import receipt_context_for_email
+
+        if not claim_booking_email_send(
+            kind=kind,
+            recipient_email=to_email,
+            recipient_user_id=recipient_user_id,
+            booking_id=booking_id,
+        ):
+            return False
+
+        ctx = receipt_context_for_email(receipt_payload)
+        ctx.update(
+            transactional_email_context(
+                subject=str(ctx.get("headline") or "Receipt"),
+                headline=str(ctx.get("headline") or "Receipt"),
+                subtitle=str(ctx.get("subtitle") or ""),
+                body=None,
+                action_url=action_url,
+                action_label=action_label,
+            ),
+        )
+
+        template_map = {
+            "payment_receipt": "booking/payment_receipt.html",
+            "vendor_payment_record": "booking/vendor_payment_record.html",
+            "vendor_payout_statement": "booking/vendor_payout_statement.html",
+        }
+        text_template_map = {
+            "payment_receipt": "booking/payment_receipt.txt",
+            "vendor_payment_record": "booking/vendor_payment_record.txt",
+            "vendor_payout_statement": "booking/vendor_payout_statement.txt",
+        }
+        template = template_map.get(kind, "booking/payment_receipt.html")
+        html = render_template(template, ctx)
+        text = render_template(text_template_map.get(kind, "booking/payment_receipt.txt"), ctx)
+        subject = f"{ctx['headline']} | {APP_NAME}"
+        ok = resend_send(to=[to_email], subject=subject, html=html, text=text)
+        if not ok:
+            logger.warning(
+                "receipt email failed kind=%s booking=%s user=%s",
+                kind,
+                booking_id,
+                recipient_user_id,
+            )
+        return ok
+
     def send_admin_alert(
         self,
         *,

@@ -54,6 +54,9 @@ PAYMENT_REQUIRED_FOR_COMPLETE = (
 ONLY_PAID_PAYOUT_RELEASE = "Only paid bookings can have their payout released."
 COULD_NOT_START_CHECKOUT = "Could not start checkout. Try again shortly."
 COULD_NOT_CONFIRM_PAYMENT = "Could not confirm payment. Try refreshing in a moment."
+RECEIPT_NOT_AVAILABLE = "No receipt is available for this booking yet."
+RECEIPT_STRIPE_VERIFY_FAILED = "Unable to verify payment with Stripe. Please try again later."
+PAYOUT_STATEMENT_NOT_AVAILABLE = "Payout statement is not available until funds have been released."
 
 # --- Status transitions / cancel ---
 

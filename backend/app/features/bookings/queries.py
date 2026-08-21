@@ -32,6 +32,8 @@ logger = get_logger(__name__)
 
 def _backfill_notes_chat_on_detail(row: dict[str, Any], out: dict[str, Any]) -> None:
     """If the booking has client notes, make sure they appear in the message thread."""
+    if _row_initiator(row) != "client":
+        return
     notes = out.get("notes")
     if not isinstance(notes, str) or not notes.strip():
         return

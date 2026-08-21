@@ -147,6 +147,7 @@ def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> 
         return False
 
     payment_intent_id, charge_id = _payment_fields_from_checkout_session(session)
+    stripe_receipt_url = stripe_service.charge_receipt_url(charge_id)
 
     payment_amount_gbp = float(amount_total) / 100.0
     try:
@@ -166,6 +167,7 @@ def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> 
                 "paid_at": _now_iso(),
                 "stripe_payment_intent_id": payment_intent_id,
                 "stripe_charge_id": charge_id,
+                "stripe_receipt_url": stripe_receipt_url,
                 "payment_amount_gbp": payment_amount_gbp,
                 "vendor_amount_gbp": vendor_amount_gbp,
                 "platform_fee_gbp": platform_fee_gbp,
@@ -192,6 +194,7 @@ def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> 
             booking_id=booking_id,
             kind="payment_received",
             body=PAYMENT_RECEIVED_CLIENT_BODY,
+            send_email=False,
         )
     if vendor_id:
         dispatch_booking_notification(
@@ -199,7 +202,19 @@ def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> 
             booking_id=booking_id,
             kind="vendor_payment_received",
             body=VENDOR_PAYMENT_RECEIVED_BODY,
+            send_email=False,
         )
+    from app.features.bookings.receipts import (
+        dispatch_payment_receipts_after_checkout,
+        persist_payment_receipt_snapshots,
+    )
+
+    persist_payment_receipt_snapshots(booking_id)
+    dispatch_payment_receipts_after_checkout(
+        booking_id,
+        client_id=client_id,
+        vendor_id=vendor_id,
+    )
     _notify_pair(client_id, vendor_id)
     try:
         from app.features.analytics.events import record_marketplace_event

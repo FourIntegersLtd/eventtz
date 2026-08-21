@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, Request, Response
 
@@ -33,6 +34,7 @@ from app.contracts.payments import (
     BookingCheckoutSyncResponse,
     ConfirmCompletionResponse,
 )
+from app.contracts.receipts import PaymentReceiptResponse
 from app.contracts.reviews import (
     ClientOwnerReviewItem,
     ClientOwnerReviewsResponse,
@@ -55,9 +57,47 @@ from app.features.bookings import (
     update_booking_venue_for_client,
 )
 from app.features.bookings.reviews import create_booking_review, list_reviews_for_client
+from app.features.bookings.receipts import build_client_payment_receipt, load_payment_snapshot
+from app.features.bookings.receipt_document import payment_receipt_response, receipt_html_response
+from app.features.payments.stripe import ReceiptVerificationError, verify_payment_for_receipt
 
 router = APIRouter(prefix="/client", tags=["client"])
 logger = get_logger(__name__)
+
+
+def _has_frozen_client_receipt(snap: dict[str, Any] | None) -> bool:
+    if not snap:
+        return False
+    frozen = snap.get("payment_receipt_snapshot")
+    return isinstance(frozen, dict) and frozen.get("document_type") == "client_payment_receipt"
+
+
+def _verify_client_receipt_with_stripe(snap: dict[str, Any] | None) -> None:
+    if not snap:
+        return
+    has_frozen = _has_frozen_client_receipt(snap)
+    pi_id = str(snap.get("stripe_payment_intent_id") or "").strip()
+    if not pi_id.startswith("pi_"):
+        if has_frozen:
+            return
+        raise HTTPException(
+            status_code=404,
+            detail=booking_messages.RECEIPT_STRIPE_VERIFY_FAILED,
+        )
+    try:
+        raw_amount = snap.get("payment_amount_gbp")
+        expected = float(raw_amount) if raw_amount is not None else None
+    except (TypeError, ValueError):
+        expected = None
+    try:
+        verify_payment_for_receipt(
+            payment_intent_id=pi_id,
+            expected_amount_gbp=expected,
+        )
+    except ReceiptVerificationError as e:
+        if has_frozen and e.status_code == 503:
+            return
+        raise HTTPException(status_code=e.status_code, detail=str(e)) from e
 
 
 @router.get("/booking-requests", response_model=ClientBookingsListResponse)
@@ -119,6 +159,72 @@ def get_client_booking(
         raise HTTPException(status_code=404, detail=booking_messages.BOOKING_NOT_FOUND)
 
     return ClientBookingDetailResponse(booking=ClientBookingDetail(**row))
+
+
+@router.get("/booking-requests/{booking_id}/receipt", response_model=PaymentReceiptResponse)
+def get_client_booking_receipt(
+    request: Request,
+    response: Response,
+    booking_id: str,
+) -> PaymentReceiptResponse:
+    user = require_client(request, response)
+    client_id = str(user.get("id") or "")
+    try:
+        uuid.UUID(booking_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+
+    row = get_booking_request_for_client(client_id, booking_id)
+    if not row:
+        raise HTTPException(status_code=404, detail=booking_messages.BOOKING_NOT_FOUND)
+
+    snap = load_payment_snapshot(booking_id)
+    _verify_client_receipt_with_stripe(snap)
+    try:
+        payload = build_client_payment_receipt(
+            row,
+            vendor_display_name=str(row.get("vendor_display_name") or "Vendor"),
+            snapshot=snap,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+    return payment_receipt_response(payload)
+
+
+@router.get("/booking-requests/{booking_id}/receipt.html")
+def get_client_booking_receipt_html(
+    request: Request,
+    response: Response,
+    booking_id: str,
+) -> Response:
+    user = require_client(request, response)
+    client_id = str(user.get("id") or "")
+    try:
+        uuid.UUID(booking_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+
+    row = get_booking_request_for_client(client_id, booking_id)
+    if not row:
+        raise HTTPException(status_code=404, detail=booking_messages.BOOKING_NOT_FOUND)
+
+    snap = load_payment_snapshot(booking_id)
+    _verify_client_receipt_with_stripe(snap)
+    try:
+        payload = build_client_payment_receipt(
+            row,
+            vendor_display_name=str(row.get("vendor_display_name") or "Vendor"),
+            snapshot=snap,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+    return receipt_html_response(
+        payload,
+        filename=f"receipt-{payload['receipt_number']}.html",
+        inline=False,
+    )
 
 
 @router.post(
@@ -239,7 +345,7 @@ def patch_client_booking_status(
         row = update_booking_request_status_for_client(
             client_id,
             booking_id,
-            new_status=body.status,
+            new_status=body.booking_status,
             event_postcode=body.event_postcode,
             event_address=body.event_address,
         )

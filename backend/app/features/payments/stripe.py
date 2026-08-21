@@ -677,6 +677,100 @@ def retrieve_payment_intent(payment_intent_id: str) -> Any:
     return _stripe().PaymentIntent.retrieve(payment_intent_id, expand=["latest_charge"])
 
 
+def retrieve_charge(charge_id: str) -> Any:
+    return _stripe().Charge.retrieve(charge_id)
+
+
+def charge_receipt_url(charge_id: str | None) -> str | None:
+    """Stripe-hosted card receipt URL, when available."""
+    cid = str(charge_id or "").strip()
+    if not cid.startswith("ch_"):
+        return None
+    try:
+        raw = retrieve_charge(cid)
+        ch = raw if isinstance(raw, dict) else stripe_object_to_dict(raw)
+        url = ch.get("receipt_url")
+        return str(url).strip() if url else None
+    except Exception:
+        logger.exception("Failed to retrieve Charge %s for receipt_url", cid)
+        return None
+
+
+class ReceiptVerificationError(Exception):
+    """Stripe receipt verification failed (download-time check)."""
+
+    def __init__(self, message: str, status_code: int = 503) -> None:
+        super().__init__(message)
+        self.status_code = status_code
+
+
+def verify_payment_for_receipt(
+    *,
+    payment_intent_id: str | None,
+    expected_amount_gbp: float | None,
+) -> None:
+    """Re-fetch Stripe and confirm the payment still matches our frozen snapshot."""
+    from app.features.bookings import messages as booking_messages
+
+    pi_id = str(payment_intent_id or "").strip()
+    if not pi_id.startswith("pi_"):
+        raise ReceiptVerificationError(booking_messages.RECEIPT_STRIPE_VERIFY_FAILED, 404)
+
+    try:
+        pi_raw = retrieve_payment_intent(pi_id)
+    except stripe.InvalidRequestError as exc:
+        code = str(getattr(exc, "code", "") or "")
+        if code == "resource_missing":
+            # Common when Stripe keys were rotated or booking paid on another account.
+            # Frozen snapshot + auth still gate the receipt; live verify is best-effort.
+            logger.warning(
+                "Receipt verify: PaymentIntent %s not in current Stripe account; "
+                "serving from frozen snapshot",
+                pi_id,
+            )
+            return
+        logger.warning("Receipt verify: PaymentIntent.retrieve failed for %s: %s", pi_id, exc)
+        raise ReceiptVerificationError(
+            booking_messages.RECEIPT_STRIPE_VERIFY_FAILED,
+            503,
+        ) from exc
+    except stripe.StripeError as exc:
+        logger.warning("Receipt verify: PaymentIntent.retrieve failed for %s: %s", pi_id, exc)
+        raise ReceiptVerificationError(
+            booking_messages.RECEIPT_STRIPE_VERIFY_FAILED,
+            503,
+        ) from exc
+
+    pi = pi_raw if isinstance(pi_raw, dict) else stripe_object_to_dict(pi_raw)
+    if str(pi.get("status") or "") != "succeeded":
+        raise ReceiptVerificationError("Payment is not completed", 403)
+
+    if expected_amount_gbp is None:
+        return
+
+    try:
+        amount_received_pence = int(pi.get("amount_received") or 0)
+        expected_pence = _to_pence(float(expected_amount_gbp))
+    except (TypeError, ValueError) as exc:
+        raise ReceiptVerificationError(
+            booking_messages.RECEIPT_STRIPE_VERIFY_FAILED,
+            503,
+        ) from exc
+
+    if amount_received_pence != expected_pence:
+        logger.warning(
+            "Receipt verify amount mismatch pi=%s stored_gbp=%s stripe_pence=%s expected_pence=%s",
+            pi_id,
+            expected_amount_gbp,
+            amount_received_pence,
+            expected_pence,
+        )
+        raise ReceiptVerificationError(
+            booking_messages.RECEIPT_STRIPE_VERIFY_FAILED,
+            503,
+        )
+
+
 def resolve_source_charge_id(
     *,
     charge_id: str | None,

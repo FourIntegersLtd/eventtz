@@ -29,6 +29,7 @@ from app.contracts.disputes import (
     ParticipantDisputesListResponse,
 )
 from app.contracts.payments import ConfirmCompletionResponse
+from app.contracts.receipts import PaymentReceiptResponse
 from app.features.bookings.payments import (
     confirm_completion_for_vendor,
     maybe_auto_release_payout_for_booking,
@@ -41,6 +42,12 @@ from app.features.bookings import (
     put_vendor_booking_adjustments,
     update_booking_request_status_for_vendor,
 )
+from app.features.bookings.receipts import (
+    build_vendor_payment_record,
+    build_vendor_payout_statement,
+    load_payment_snapshot,
+)
+from app.features.bookings.receipt_document import payment_receipt_response, receipt_html_response
 
 router = APIRouter(prefix="/vendor", tags=["vendor"])
 logger = get_logger(__name__)
@@ -180,7 +187,7 @@ def patch_vendor_booking_status(
         row = update_booking_request_status_for_vendor(
             vendor_id,
             booking_id,
-            new_status=body.status,
+            new_status=body.booking_status,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -241,6 +248,140 @@ def get_vendor_booking(
         raise HTTPException(status_code=404, detail=booking_messages.BOOKING_NOT_FOUND)
 
     return VendorBookingDetailResponse(booking=VendorBookingDetail(**row))
+
+
+@router.get(
+    "/booking-requests/{booking_id}/payment-record",
+    response_model=PaymentReceiptResponse,
+)
+def get_vendor_booking_payment_record(
+    request: Request,
+    response: Response,
+    booking_id: str,
+) -> PaymentReceiptResponse:
+    user = require_vendor(request, response)
+    vendor_id = str(user.get("id") or "")
+    try:
+        uuid.UUID(booking_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+
+    row = get_booking_request_for_vendor(vendor_id, booking_id)
+    if not row:
+        raise HTTPException(status_code=404, detail=booking_messages.BOOKING_NOT_FOUND)
+
+    snap = load_payment_snapshot(booking_id)
+    try:
+        payload = build_vendor_payment_record(
+            row,
+            client_display_name=str(row.get("client_display_name") or "Client"),
+            snapshot=snap,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+    return payment_receipt_response(payload)
+
+
+@router.get("/booking-requests/{booking_id}/payment-record.html")
+def get_vendor_booking_payment_record_html(
+    request: Request,
+    response: Response,
+    booking_id: str,
+) -> Response:
+    user = require_vendor(request, response)
+    vendor_id = str(user.get("id") or "")
+    try:
+        uuid.UUID(booking_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+
+    row = get_booking_request_for_vendor(vendor_id, booking_id)
+    if not row:
+        raise HTTPException(status_code=404, detail=booking_messages.BOOKING_NOT_FOUND)
+
+    snap = load_payment_snapshot(booking_id)
+    try:
+        payload = build_vendor_payment_record(
+            row,
+            client_display_name=str(row.get("client_display_name") or "Client"),
+            snapshot=snap,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+    return receipt_html_response(
+        payload,
+        filename=f"payment-record-{payload['receipt_number']}.html",
+        inline=False,
+    )
+
+
+@router.get(
+    "/booking-requests/{booking_id}/payout-statement",
+    response_model=PaymentReceiptResponse,
+)
+def get_vendor_booking_payout_statement(
+    request: Request,
+    response: Response,
+    booking_id: str,
+) -> PaymentReceiptResponse:
+    user = require_vendor(request, response)
+    vendor_id = str(user.get("id") or "")
+    try:
+        uuid.UUID(booking_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+
+    row = get_booking_request_for_vendor(vendor_id, booking_id)
+    if not row:
+        raise HTTPException(status_code=404, detail=booking_messages.BOOKING_NOT_FOUND)
+
+    snap = load_payment_snapshot(booking_id)
+    try:
+        payload = build_vendor_payout_statement(
+            row,
+            client_display_name=str(row.get("client_display_name") or "Client"),
+            snapshot=snap,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+    return payment_receipt_response(payload)
+
+
+@router.get("/booking-requests/{booking_id}/payout-statement.html")
+def get_vendor_booking_payout_statement_html(
+    request: Request,
+    response: Response,
+    booking_id: str,
+) -> Response:
+    user = require_vendor(request, response)
+    vendor_id = str(user.get("id") or "")
+    try:
+        uuid.UUID(booking_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+
+    row = get_booking_request_for_vendor(vendor_id, booking_id)
+    if not row:
+        raise HTTPException(status_code=404, detail=booking_messages.BOOKING_NOT_FOUND)
+
+    snap = load_payment_snapshot(booking_id)
+    try:
+        payload = build_vendor_payout_statement(
+            row,
+            client_display_name=str(row.get("client_display_name") or "Client"),
+            snapshot=snap,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+    return receipt_html_response(
+        payload,
+        filename=f"payout-statement-{payload['receipt_number']}.html",
+        inline=False,
+    )
 
 
 @router.post(
