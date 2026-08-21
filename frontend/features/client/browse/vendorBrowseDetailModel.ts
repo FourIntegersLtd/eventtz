@@ -3,9 +3,9 @@ import { displayServicesOffered } from "@/features/client/browse/browseLabels";
 import {
   buildDiscountPromoLines,
   listPriceDisplay,
-  parseMoneyNumber,
   parseVendorDiscountConfig,
 } from "@/lib/vendorDiscountDisplay";
+import { parseSingleMoneyNumber } from "@/lib/validation/money";
 
 /** One selectable pricing block - mirrors onboarding packages and/or fixed hourly & daily rates. */
 export type BrowsePricingOption = {
@@ -163,9 +163,9 @@ function normalizePackages(payload: Record<string, unknown>): RawPkg[] {
   });
 }
 
-/** Onboarding: name + price required for a package to count as complete. */
+/** Onboarding: name + strictly valid price required for a package to count as complete. */
 function isCompletePackage(p: RawPkg): boolean {
-  return Boolean(p.title && p.price);
+  return Boolean(p.title && parseSingleMoneyNumber(p.price) !== null);
 }
 
 function tabLabelFromTitle(title: string, fallback: string): string {
@@ -224,8 +224,8 @@ export function packageSpecificTravelLine(
  */
 export function buildBrowsePricingOptions(vendor: ExploreVendor): BrowsePricingOption[] {
   const p = vendor.profile_form_data ?? {};
-  const hourly = parseMoneyNumber(coerceStr(p, "hourlyRate"));
-  const daily = parseMoneyNumber(coerceStr(p, "dailyRate"));
+  const hourly = parseSingleMoneyNumber(coerceStr(p, "hourlyRate"));
+  const daily = parseSingleMoneyNumber(coerceStr(p, "dailyRate"));
 
   const discountConfig = parseVendorDiscountConfig(p);
   const promoLines = buildDiscountPromoLines(discountConfig);
@@ -236,7 +236,7 @@ export function buildBrowsePricingOptions(vendor: ExploreVendor): BrowsePricingO
 
   if (completePkgs.length > 0) {
     return completePkgs.map((pkg, index) => {
-      const listPrice = parseMoneyNumber(pkg.price);
+      const listPrice = parseSingleMoneyNumber(pkg.price);
       const priced = listPriceDisplay(listPrice, discountConfig);
 
       const timelineLine = pkg.duration.trim()

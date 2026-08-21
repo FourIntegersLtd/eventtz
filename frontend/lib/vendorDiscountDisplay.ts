@@ -1,5 +1,7 @@
 /** Shared vendor discount parsing and client-facing price display helpers. */
 
+import { parseSingleMoneyNumber } from "@/lib/validation/money";
+
 function coerceStr(p: Record<string, unknown>, k: string): string {
   const v = p[k];
   if (v == null) return "";
@@ -39,7 +41,7 @@ export function parseVendorDiscountConfig(
     offerDiscounts: payload.offerDiscounts === true,
     discountPct: parseMoneyNumber(coerceStr(payload, "discountPercentage")) ?? 0,
     discountLabel: coerceStr(payload, "discountLabel").trim(),
-    bulkThreshold: parseMoneyNumber(coerceStr(payload, "bulkDiscountThreshold")),
+    bulkThreshold: parseSingleMoneyNumber(coerceStr(payload, "bulkDiscountThreshold")),
     bulkPct: parseMoneyNumber(coerceStr(payload, "bulkDiscountPercent")),
     offPeakPct: parseMoneyNumber(coerceStr(payload, "offPeakDiscountPercent")),
   };

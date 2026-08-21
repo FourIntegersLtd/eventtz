@@ -108,7 +108,9 @@ export function eventDatesSchema(opts?: { requireStart?: boolean }) {
     });
 }
 
-/** Money as typed by users (£1,200.50 or 1200). Returns a number when valid. */
+/** Money as typed by users (£1,200.50 or 1200). Returns a number when valid.
+ *  Used for booking quotes, admin refunds, and formatted single amounts (Tier C).
+ *  Vendor onboarding package/rate prices use `@/lib/validation/money` instead (Tier A). */
 export const moneyGbpSchema = z
   .string()
   .trim()

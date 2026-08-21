@@ -10,21 +10,15 @@ import {
   listPriceDisplay,
   parseVendorDiscountConfig,
 } from "@/lib/vendorDiscountDisplay";
-
-function parseMoneyGbp(raw: unknown): number | null {
-  if (raw == null || typeof raw !== "string") return null;
-  const t = raw.replace(/[^0-9.]/g, "");
-  if (!t) return null;
-  const n = Number.parseFloat(t);
-  return Number.isFinite(n) && n >= 0 && n < 1e9 ? n : null;
-}
+import { parseSingleMoneyNumber } from "@/lib/validation/money";
 
 function minListingPriceGbp(payload: Record<string, unknown>): number | null {
   const discountConfig = parseVendorDiscountConfig(payload);
   const candidates: number[] = [];
 
   const addListPrice = (raw: unknown) => {
-    const listPrice = parseMoneyGbp(raw);
+    if (raw == null || typeof raw !== "string") return;
+    const listPrice = parseSingleMoneyNumber(raw);
     if (listPrice == null) return;
     const priced = listPriceDisplay(listPrice, discountConfig);
     if (priced.unitPriceGbp != null) candidates.push(priced.unitPriceGbp);

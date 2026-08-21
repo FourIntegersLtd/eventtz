@@ -11,6 +11,7 @@ import { TextArea } from "@/components/ui/TextArea";
 import { Select } from "@/components/ui/Select";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { todayIsoDate } from "@/lib/eventDateValidation";
+import { parseSingleMoneyNumber } from "@/lib/validation/money";
 import { parseForm, vendorQuoteSchema } from "@/lib/validation";
 import { postVendorQuote } from "@/lib/vendorBookingsApi";
 import { fetchVendorProfile } from "@/lib/vendorProfileApi";
@@ -35,12 +36,11 @@ type VendorPackageOption = {
   price: string;
 };
 
-/** A package's `price` field is free text (e.g. "£1,200" or "1200") - pull out
- * the leading number so it's usable to prefill the quote's price field. */
+/** Prefill quote price from a validated onboarding package price string. */
 function numericPricePrefill(raw: string): string {
-  const match = raw.match(/[\d,]+(\.\d+)?/);
-  if (!match) return "";
-  return match[0].replace(/,/g, "");
+  const amount = parseSingleMoneyNumber(raw);
+  if (amount == null) return "";
+  return amount % 1 === 0 ? String(amount) : amount.toFixed(2);
 }
 
 const CUSTOM_OPTION_ID = "__custom__";

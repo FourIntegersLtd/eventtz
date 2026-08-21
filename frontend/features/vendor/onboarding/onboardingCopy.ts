@@ -33,7 +33,7 @@ export const STEP_COPY = {
     fixedRatesHeadline: "Hourly or daily rates? (optional)",
     packagesHeadline: "Your packages",
     packagesHint:
-      "Add one package per option you offer. Each needs a clear name, price, and what's included. Use AI review below for tailored suggestions.",
+      "Add one package per option you offer. Each needs a clear name, one fixed price (not a range or comma-separated list), and what's included.",
     bookingHeadline: "Any discounts?",
   },
   5: {

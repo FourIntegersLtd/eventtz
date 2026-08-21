@@ -10,7 +10,7 @@ import {
 import {
   isConfiguredPackage,
   MIN_PACKAGE_DESCRIPTION_CHARS,
-  packageValidationErrors,
+  packageFieldErrors,
 } from "../packageQuality";
 import {
   createVendorPackage,
@@ -25,6 +25,7 @@ import { VendorListingOptimizerPanel } from "@/features/vendor/copilot/VendorLis
 import { PackageExamplesModal } from "../ui/PackageExamplesModal";
 import { consumeCoachScrollTarget } from "../packageCoachApply";
 import { labelClass, ClearableTextField, ClearableTextarea } from "./form-primitives";
+import { singleGbpAmountFieldError } from "@/lib/validation/money";
 
 export type StepPricingProps = {
   data: VendorOnboardingData;
@@ -112,6 +113,13 @@ export function StepPricing({ data, update, usePostLaunchOptimizer = false }: St
     update({ packages: packages.filter((p) => p.id !== id) });
   };
 
+  const hourlyRateError = data.hourlyRate.trim()
+    ? singleGbpAmountFieldError(data.hourlyRate, "Hourly rate", { required: false })
+    : null;
+  const dailyRateError = data.dailyRate.trim()
+    ? singleGbpAmountFieldError(data.dailyRate, "Daily rate", { required: false })
+    : null;
+
   return (
     <div className="space-y-8">
       <OnboardingSubQuestion headline={copy.fixedRatesHeadline} indexOffset={0}>
@@ -123,7 +131,11 @@ export function StepPricing({ data, update, usePostLaunchOptimizer = false }: St
               inputMode="decimal"
               value={data.hourlyRate}
               onChange={(v) => update({ hourlyRate: v })}
+              placeholder="e.g. 75"
             />
+            {hourlyRateError ? (
+              <p className="mt-1 text-xs text-amber-800">{hourlyRateError}</p>
+            ) : null}
           </div>
           <div>
             <label className={labelClass()}>Daily (£ / day)</label>
@@ -132,7 +144,11 @@ export function StepPricing({ data, update, usePostLaunchOptimizer = false }: St
               inputMode="decimal"
               value={data.dailyRate}
               onChange={(v) => update({ dailyRate: v })}
+              placeholder="e.g. 500"
             />
+            {dailyRateError ? (
+              <p className="mt-1 text-xs text-amber-800">{dailyRateError}</p>
+            ) : null}
           </div>
         </div>
         <div className="mt-3 space-y-2">
@@ -161,7 +177,7 @@ export function StepPricing({ data, update, usePostLaunchOptimizer = false }: St
         <div className="mt-4 space-y-3">
           {packages.map((pkg, index) => {
             const hasPartial = isConfiguredPackage(pkg);
-            const fieldErrors = packageValidationErrors(pkg, { strict: true });
+            const errors = packageFieldErrors(pkg, { strict: true });
             const displayTitle = pkg.title.trim()
               ? pkg.title.trim()
               : hasPartial && !pkg.title.trim()
@@ -240,6 +256,9 @@ export function StepPricing({ data, update, usePostLaunchOptimizer = false }: St
                         }
                         placeholder={packageNamePlaceholder(primaryService)}
                       />
+                      {errors.title ? (
+                        <p className="mt-1 text-xs text-amber-800">{errors.title}</p>
+                      ) : null}
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div>
@@ -251,7 +270,11 @@ export function StepPricing({ data, update, usePostLaunchOptimizer = false }: St
                               packages: updatePackage(packages, pkg.id, { price: v }),
                             })
                           }
+                          placeholder="One fixed price, e.g. 150"
                         />
+                        {errors.price ? (
+                          <p className="mt-1 text-xs text-amber-800">{errors.price}</p>
+                        ) : null}
                       </div>
                       <div>
                         <label className={labelClass()}>Duration (optional)</label>
@@ -278,8 +301,8 @@ export function StepPricing({ data, update, usePostLaunchOptimizer = false }: St
                         }
                         placeholder={packageIncludedPlaceholder(primaryService)}
                       />
-                      {fieldErrors.length > 0 ? (
-                        <p className="mt-1 text-xs text-amber-800">{fieldErrors[0]}</p>
+                      {errors.details ? (
+                        <p className="mt-1 text-xs text-amber-800">{errors.details}</p>
                       ) : null}
                     </div>
                     <label className="flex items-start gap-2 text-sm text-neutral-800">

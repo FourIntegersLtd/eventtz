@@ -1,5 +1,10 @@
 /** Package completeness rules — keep in sync with backend/app/features/vendors/package_quality.py */
 
+import {
+  parseSingleMoneyNumber,
+  singleGbpAmountFieldError,
+} from "@/lib/validation/money";
+
 export const MIN_PACKAGE_DESCRIPTION_CHARS = 40;
 export const MIN_PACKAGE_TITLE_CHARS = 3;
 
@@ -20,6 +25,13 @@ export type PackageLike = {
   duration?: string;
 };
 
+export type PackageFieldErrors = {
+  title: string | null;
+  price: string | null;
+  details: string | null;
+  all: string[];
+};
+
 export function isConfiguredPackage(pkg: PackageLike): boolean {
   return Boolean(
     (pkg.title ?? "").trim() ||
@@ -35,7 +47,7 @@ export function isCompletePackage(pkg: PackageLike): boolean {
   const details = (pkg.details ?? "").trim();
   return (
     title.length >= MIN_PACKAGE_TITLE_CHARS &&
-    Boolean(price) &&
+    parseSingleMoneyNumber(price) !== null &&
     details.length >= MIN_PACKAGE_DESCRIPTION_CHARS
   );
 }
@@ -52,24 +64,44 @@ export function packageValidationErrors(
   pkg: PackageLike,
   opts?: { strict?: boolean },
 ): string[] {
+  return packageFieldErrors(pkg, opts).all;
+}
+
+/** Structured field errors for onboarding package forms. */
+export function packageFieldErrors(
+  pkg: PackageLike,
+  opts?: { strict?: boolean },
+): PackageFieldErrors {
   const strict = opts?.strict ?? false;
   const title = (pkg.title ?? "").trim();
   const price = (pkg.price ?? "").trim();
   const details = (pkg.details ?? "").trim();
   const hasAny = isConfiguredPackage(pkg);
-  if (!hasAny) return [];
 
-  const errors: string[] = [];
-  if (!title || title.length < MIN_PACKAGE_TITLE_CHARS) {
-    errors.push("Each package needs a clear name.");
+  if (!hasAny) {
+    return { title: null, price: null, details: null, all: [] };
   }
-  if (!price) errors.push("Each package needs a price.");
+
+  let titleError: string | null = null;
+  let priceError: string | null = null;
+  let detailsError: string | null = null;
+
+  if (!title || title.length < MIN_PACKAGE_TITLE_CHARS) {
+    titleError = "Each package needs a clear name.";
+  }
+  if (!price) {
+    priceError = "Each package needs a price.";
+  } else {
+    priceError = singleGbpAmountFieldError(price, "Package price", { required: true });
+  }
   if (strict || price) {
     if (details.length < MIN_PACKAGE_DESCRIPTION_CHARS) {
-      errors.push("Tell clients what's included (at least a short sentence).");
+      detailsError = "Tell clients what's included (at least a short sentence).";
     }
   }
-  return errors;
+
+  const all = [titleError, priceError, detailsError].filter(Boolean) as string[];
+  return { title: titleError, price: priceError, details: detailsError, all };
 }
 
 export function countCompletePackages(packages: PackageLike[]): number {
