@@ -20,7 +20,7 @@ export function LandingHero() {
     variant: "primary",
     shape: "default",
     className:
-      "mt-6 inline-flex w-full justify-center px-7 py-3.5 text-base font-semibold sm:mt-8 sm:w-auto",
+      "mt-6 hidden w-full justify-center px-7 py-3.5 text-base font-semibold sm:mt-8 sm:inline-flex sm:w-auto",
   });
 
   return (
