@@ -12,6 +12,7 @@ from app.features.blog.http import public as public_blog
 from app.features.bookings.http import client as client_booking_requests
 from app.features.bookings.http import vendor as vendor_bookings
 from app.features.favorites.http import client as client_favorites
+from app.features.contact.http.routes import admin_router as contact_admin_router
 from app.features.contact.http.routes import client_router as contact_client_router
 from app.features.contact.http.routes import vendor_router as contact_vendor_router
 from app.features.chat.http import routes as chat
@@ -41,6 +42,7 @@ api_router.include_router(auth.router)
 api_router.include_router(client_favorites.router)
 api_router.include_router(contact_client_router)
 api_router.include_router(contact_vendor_router)
+api_router.include_router(contact_admin_router)
 api_router.include_router(chat.router)
 api_router.include_router(user_settings.router)
 api_router.include_router(client_onboarding_settings.router)

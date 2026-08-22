@@ -38,5 +38,9 @@ class ContactSubmitBody(BaseModel):
     booking_id: str | None = None
 
 
+class AdminBugReportBody(BaseModel):
+    message: str = Field(min_length=10, max_length=5000)
+
+
 class ContactSubmitResponse(BaseModel):
     success: bool = True
