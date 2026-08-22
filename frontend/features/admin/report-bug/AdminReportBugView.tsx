@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useAuth } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { formControlClass } from "@/components/ui/tokens";
@@ -13,7 +12,6 @@ import { adminBugReportSchema, parseForm } from "@/lib/validation";
 const fieldClass = formControlClass();
 
 export function AdminReportBugView() {
-  const { user } = useAuth();
   const { showToast } = useToast();
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -61,18 +59,6 @@ export function AdminReportBugView() {
         </div>
 
         <form onSubmit={onSubmit} className="divide-y divide-neutral-100 border-t border-neutral-100">
-          <div className="space-y-1.5 px-5 py-4 sm:px-6">
-            <label htmlFor="admin-bug-email" className="block text-sm font-medium text-neutral-800">
-              Your email
-            </label>
-            <input
-              id="admin-bug-email"
-              readOnly
-              value={user?.email ?? ""}
-              className={formControlClass("bg-neutral-50 text-neutral-700")}
-            />
-          </div>
-
           <div className="space-y-1.5 px-5 py-4 sm:px-6">
             <label htmlFor="admin-bug-message" className="block text-sm font-medium text-neutral-800">
               What went wrong
