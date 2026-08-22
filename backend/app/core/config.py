@@ -87,6 +87,9 @@ class Settings(BaseSettings):
     #: Key for sending transactional email.
     resend_api_key: str = ""
 
+    #: Sentry DSN. Empty = do not initialize the SDK (local/dev default).
+    sentry_dsn: str = ""
+
     @property
     def super_admin_emails_list(self) -> list[str]:
         return [e.strip().lower() for e in self.super_admin_emails.split(",") if e.strip()]

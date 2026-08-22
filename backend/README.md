@@ -33,6 +33,7 @@ Copy **`.env.example`** to **`.env`** and set values. Important keys:
 | `STRIPE_WEBHOOK_SECRET` | Signing secret for `POST /api/v1/webhooks/stripe` (`whsec_...`) |
 | `LOG_LEVEL` | `DEBUG`, `INFO`, … |
 | `IS_PRODUCTION` | `true` = compact logs; `false` = detailed logs + `backend/logs/eventtz.log` |
+| `SENTRY_DSN` | Optional. Empty = Sentry stays off. Production: FastAPI project DSN in Railway. |
 
 See **`.env.example`** for optional log file tuning (`LOG_DIR`, `LOG_MAX_BYTES`, …).
 
@@ -76,6 +77,25 @@ Also set `user_metadata.user_type` to `"admin"` for that user in the Auth dashbo
 ## Role resolution
 
 Guards in `app/api/authz.py` / `deps.py` resolve role from `public.users`, then JWT `user_metadata`, with safe fallbacks. Use these dependencies on protected routes instead of ad-hoc checks.
+
+## CI
+
+GitHub Actions runs on every pull request and on pushes to `main` (`.github/workflows/ci.yml`):
+
+| Job | Command |
+|-----|---------|
+| `frontend` | `npx tsc --noEmit`, `npm test` (Vitest) |
+| `backend` | `poetry run pytest -q` |
+| `ci-gate` | Fails if either job fails — use this as the **required** branch-protection check |
+
+No `.env` is needed in CI. Tests mock Supabase/Stripe; `SENTRY_DSN` is cleared so Sentry stays off.
+
+Run the same checks locally:
+
+```bash
+cd frontend && npm ci && npx tsc --noEmit && npm test
+cd backend && poetry install --extras dev && poetry run pytest -q
+```
 
 ## Payments (Stripe Connect)
 

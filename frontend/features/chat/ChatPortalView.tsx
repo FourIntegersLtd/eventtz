@@ -10,11 +10,15 @@ import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { MasterDetailLayout } from "@/features/bookings/MasterDetailLayout";
 import { ChatThreadView } from "@/features/chat/ChatThreadView";
+import { helpHubTabHref, helpMessagesPath } from "@/lib/helpHub";
+import Link from "next/link";
 
 type ChatPortalViewProps = {
   portal: "client" | "vendor";
-  /** Present on `/{portal}/messages/[conversationId]` - absent on the index route. */
+  /** Present on `/{portal}/help/messages/[conversationId]` - absent on the index route. */
   selectedConversationId?: string;
+  /** Link to the Contact tab when the inbox is empty. */
+  contactTabHref?: string;
 };
 
 function peerInitials(name: string): string {
@@ -44,13 +48,18 @@ function formatActivity(iso: string | null | undefined): string {
  * Master-detail messages view - conversation list on the left, active thread on
  * the right (desktop); mobile shows one pane at a time via `MasterDetailLayout`.
  */
-export function ChatPortalView({ portal, selectedConversationId }: ChatPortalViewProps) {
+export function ChatPortalView({
+  portal,
+  selectedConversationId,
+  contactTabHref,
+}: ChatPortalViewProps) {
   const router = useRouter();
   const [rows, setRows] = useState<ChatConversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const base = portal === "client" ? "/client/messages" : "/vendor/messages";
+  const base = helpMessagesPath(portal);
+  const contactHref = contactTabHref ?? helpHubTabHref(portal, "contact");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -100,6 +109,14 @@ export function ChatPortalView({ portal, selectedConversationId }: ChatPortalVie
                   className="border-0 py-16"
                   variant="messages"
                   title="No conversations yet"
+                  action={
+                    <Link
+                      href={contactHref}
+                      className="text-sm font-medium text-primary hover:underline"
+                    >
+                      Contact the team
+                    </Link>
+                  }
                 />
               ) : (
                 <ul className="divide-y divide-neutral-100">

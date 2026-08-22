@@ -23,6 +23,7 @@ features/<name>/
 - User-facing API copy in **`messages.py`** or **`copy.py`** — not inline in routes.
 - Raise **`AppError`** subclasses; global handler in **`core/errors.py`**.
 - Auth: **`require_client(request, response)`** etc. from **`features/auth/http/guards.py`**.
+- **Sentry:** `SENTRY_DSN` empty = skip init (`app/core/sentry.py` before `FastAPI()`). Do not sample `/health` transactions.
 
 ## Registration & contracts
 

@@ -115,7 +115,7 @@ export function VendorDashboardView() {
         tone: "urgent",
         title: `${chatUnread} unread message${chatUnread === 1 ? "" : "s"}`,
         subtitle: "Open Messages to reply",
-        href: "/vendor/messages",
+        href: "/vendor/help",
       });
     }
 

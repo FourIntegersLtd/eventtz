@@ -26,11 +26,24 @@ Per [Cursor’s rules docs](https://cursor.com/docs/context/rules), **Agent** pi
 eventtz/
 ├── AGENTS.md         # Short agent entrypoint - points here
 ├── cursor.md         # This file - architecture & patterns (keep in sync with the repo)
+├── .github/workflows/ci.yml  # PR + main: frontend tsc/vitest, backend pytest, ci-gate
 ├── backend/          # Python (Poetry), FastAPI, Supabase (Postgres + Auth + Storage)
 │   ├── app/
 │   └── sql/          # Ordered Postgres migrations (run in Supabase in order)
 └── frontend/         # Next.js (App Router), TypeScript, Tailwind, Axios
 ```
+
+### CI (GitHub Actions)
+
+Workflow **`.github/workflows/ci.yml`** runs on every **pull request** and on **pushes to `main`**:
+
+| Job | What it runs |
+|-----|----------------|
+| `frontend` | `npm ci`, `npx tsc --noEmit`, `npm test` (Vitest) |
+| `backend` | Poetry + `pytest -q` (no `.env`; `SENTRY_DSN` cleared) |
+| `ci-gate` | Aggregator — set as the **only required** branch-protection status |
+
+Hardening: read-only `permissions`, SHA-pinned actions, concurrency with `cancel-in-progress`. ESLint is not in the gate yet (existing debt); typecheck + unit tests are.
 
 ---
 
@@ -304,6 +317,7 @@ Document every field in **`backend/.env.example`**. Current groups:
 | Frontend base URL | `FRONTEND_URL` - used to build Stripe `return_url`/`refresh_url` (Connect onboarding) and Checkout `success_url`/`cancel_url` |
 | Stripe | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` (see **Payments (Stripe Connect)** below) |
 | Email (Resend) | `RESEND_API_KEY` only - sender, admin recipients, and enable flag live in `features/email/constants.py` |
+| Sentry | `SENTRY_DSN` - empty = no-op (SDK not initialized). `IS_PRODUCTION` maps to Sentry `environment`. Init in `app/core/sentry.py` before the FastAPI app; `/health` is not sampled as a transaction. |
 
 ### Logging
 
@@ -549,6 +563,7 @@ Search/filter/pagination for directory, disputes, audit, payments, and booking `
 - **Icons:** `lucide-react` (and `react-icons` where used, e.g. landing)
 - Env: **`frontend/.env.example`**; local **``.env.local`**
 - **Mixpanel (browser):** **`lib/mixpanelClient.ts`** + event catalog **`lib/mixpanelEvents.ts`**. Env: **`NEXT_PUBLIC_MIXPANEL_TOKEN`** (no-op when unset); EU projects **must** set **`NEXT_PUBLIC_MIXPANEL_API_HOST=https://api-eu.mixpanel.com`** and restart the Next server. Wired in **`AuthProvider`** (identify / auth events / reset) + **`MixpanelPageViews`**. Product funnel events fire from feature hooks/views after successful API (landing → browse → enquire → pay → complete → review; vendor accept/payouts; admin approve/resolve). Help Center: `help_opened`, `help_article_viewed`, `help_ask_submitted`, `help_escalated`. First-party SQL aggregates remain in **`marketplace_events`**.
+- **Sentry:** `@sentry/nextjs` — `instrumentation-client.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts`, `instrumentation.ts`. Env: **`NEXT_PUBLIC_SENTRY_DSN`** (empty = no-op). Errors + tracing; Session Replay sampled low with text/inputs/media masked. `next.config.ts` is wrapped with `withSentryConfig` (existing `/api/v1` rewrites stay). User id (not email) is set from **`AuthProvider`**. No User Feedback widget yet.
 
 ### Layering (do not invert)
 

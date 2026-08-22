@@ -107,7 +107,7 @@ export function ClientDashboardView() {
         tone: "urgent",
         title: `${chatUnread} unread message${chatUnread === 1 ? "" : "s"}`,
         subtitle: "Open Messages to reply",
-        href: "/client/messages",
+        href: "/client/help",
         ctaLabel: "Reply",
       });
     }

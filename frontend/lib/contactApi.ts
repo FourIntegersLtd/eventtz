@@ -7,6 +7,14 @@ export type ContactSubject =
   | "account"
   | "other";
 
+export type FeedbackSubject =
+  | "feedback_bug"
+  | "feedback_feature"
+  | "feedback_general"
+  | "feedback_other";
+
+export type ContactOrFeedbackSubject = ContactSubject | FeedbackSubject;
+
 export const CONTACT_SUBJECT_OPTIONS: { value: ContactSubject; label: string }[] = [
   { value: "general", label: "General" },
   { value: "booking_problem", label: "Booking problem" },
@@ -15,8 +23,15 @@ export const CONTACT_SUBJECT_OPTIONS: { value: ContactSubject; label: string }[]
   { value: "other", label: "Other" },
 ];
 
+export const FEEDBACK_SUBJECT_OPTIONS: { value: FeedbackSubject; label: string }[] = [
+  { value: "feedback_bug", label: "Bug" },
+  { value: "feedback_feature", label: "Feature idea" },
+  { value: "feedback_general", label: "General feedback" },
+  { value: "feedback_other", label: "Other" },
+];
+
 export type ContactSubmitBody = {
-  subject: ContactSubject;
+  subject: ContactOrFeedbackSubject;
   message: string;
   booking_id?: string | null;
 };

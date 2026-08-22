@@ -7,11 +7,7 @@ export function vendorIsLiveApproved(profile: {
   return profile.onboarding_status === "submitted" && profile.approval_status === "approved";
 }
 
-const VENDOR_PRE_APPROVAL_PREFIXES = [
-  "/vendor/profile",
-  "/vendor/contact",
-  "/vendor/messages",
-] as const;
+const VENDOR_PRE_APPROVAL_PREFIXES = ["/vendor/profile", "/vendor/help"] as const;
 
 /** Routes pending (not yet live-approved) vendors may use without RequireVendorApproved. */
 export function isVendorPreApprovalRoute(pathname: string): boolean {

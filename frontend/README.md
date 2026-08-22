@@ -17,6 +17,7 @@ This package talks to the FastAPI backend under **`/api/v1`**. Full-stack archit
 | Rich text (admin blog) | TipTap |
 | Charts (admin) | Recharts |
 | Analytics | Mixpanel (`lib/mixpanelClient.ts`, optional locally) |
+| Errors / tracing | Sentry (`@sentry/nextjs`, no-op without `NEXT_PUBLIC_SENTRY_DSN`) |
 | Tests | Vitest |
 
 **Fonts:** Fraunces + Plus Jakarta Sans in `app/layout.tsx`.
@@ -70,6 +71,8 @@ Copy **`frontend/.env.example`** to **`.env.local`** (or `.env`).
 | `NEXT_PUBLIC_API_URL` | No | Direct browser → API calls (debug only; omit in prod) |
 | `NEXT_PUBLIC_MIXPANEL_TOKEN` | No | Mixpanel project token; leave empty to disable tracking locally |
 | `NEXT_PUBLIC_MIXPANEL_API_HOST` | EU projects | e.g. `https://api-eu.mixpanel.com` - restart dev server after change |
+| `NEXT_PUBLIC_SENTRY_DSN` | No | Sentry DSN; leave empty to disable locally |
+| `SENTRY_AUTH_TOKEN` | No | Optional source-map upload (CI / Vercel). Never commit. |
 
 Backend secrets (Supabase, Stripe, Resend, OpenAI) belong in **`backend/.env`**, not here.
 
@@ -82,10 +85,21 @@ Backend secrets (Supabase, Stripe, Resend, OpenAI) belong in **`backend/.env`**,
 | `npm run dev` | Development server (port 3000) |
 | `npm run build` | Production build |
 | `npm run start` | Serve production build |
-| `npm run lint` | ESLint |
+| `npm run lint` | ESLint (local; not yet enforced in CI) |
+| `npx tsc --noEmit` | TypeScript check (same as CI) |
 | `npm test` | Vitest (unit tests) |
 | `npm run test:watch` | Vitest watch mode |
 | `npm run optimize-videos` | Compress landing-page videos (`scripts/optimize-landing-videos.sh`) |
+
+### CI
+
+Pull requests and pushes to `main` run **`.github/workflows/ci.yml`**:
+
+- **frontend:** `npx tsc --noEmit`, `npm test`
+- **backend:** `poetry run pytest -q`
+- **ci-gate:** single required check for branch protection
+
+ESLint cleanup is tracked separately; run `npm run lint` locally before large UI changes.
 
 ---
 

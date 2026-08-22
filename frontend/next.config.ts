@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 import { getBackendBaseUrl } from "./lib/backend-url";
 
 const backendUrl = getBackendBaseUrl();
@@ -120,23 +121,33 @@ const nextConfig: NextConfig = {
         permanent: false,
       },
       {
-        source: "/client/help",
-        destination: "/client/dashboard",
+        source: "/client/messages",
+        destination: "/client/help",
         permanent: false,
       },
       {
-        source: "/client/help/:path*",
-        destination: "/client/dashboard",
+        source: "/client/messages/:conversationId",
+        destination: "/client/help/messages/:conversationId",
         permanent: false,
       },
       {
-        source: "/vendor/help",
-        destination: "/vendor/dashboard",
+        source: "/client/contact",
+        destination: "/client/help?tab=contact",
         permanent: false,
       },
       {
-        source: "/vendor/help/:path*",
-        destination: "/vendor/dashboard",
+        source: "/vendor/messages",
+        destination: "/vendor/help",
+        permanent: false,
+      },
+      {
+        source: "/vendor/messages/:conversationId",
+        destination: "/vendor/help/messages/:conversationId",
+        permanent: false,
+      },
+      {
+        source: "/vendor/contact",
+        destination: "/vendor/help?tab=contact",
         permanent: false,
       },
     ];
@@ -156,4 +167,14 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG || "four-integers-ltd-09",
+  project: process.env.SENTRY_PROJECT || "eventtz-frontend",
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+  disableLogger: true,
+  sourcemaps: {
+    disable: !process.env.SENTRY_AUTH_TOKEN,
+  },
+});

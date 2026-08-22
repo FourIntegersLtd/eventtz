@@ -8,11 +8,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import get_settings
 from app.core.errors import register_error_handlers
 from app.core.logging import get_logger, setup_logging
+from app.core.sentry import init_sentry
 from app.core.startup import validate_settings
 from app.http.router import api_router
 
 setup_logging()
 logger = get_logger(__name__)
+init_sentry()
 
 
 @asynccontextmanager
