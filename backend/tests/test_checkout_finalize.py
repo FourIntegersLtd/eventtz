@@ -70,11 +70,20 @@ def test_rejects_amount_mismatch(mock_get_client, _pi_fields):
     mock_table.update.assert_not_called()
 
 
+@patch("app.features.bookings.receipts.persist_payment_receipt_snapshots")
+@patch("app.features.bookings.receipts.dispatch_payment_receipts_after_checkout")
 @patch("app.features.bookings.booking_payment_helpers._notify_pair")
 @patch("app.features.bookings.payment_finalize.dispatch_booking_notification")
 @patch("app.features.bookings.payment_finalize._payment_fields_from_checkout_session", return_value=("pi_test", "ch_test"))
 @patch("app.features.bookings.payment_finalize.get_db")
-def test_accepts_matching_current_session(mock_get_client, _pi_fields, _notify, _upsert):
+def test_accepts_matching_current_session(
+    mock_get_client,
+    _pi_fields,
+    _notify,
+    _upsert,
+    _dispatch_receipts,
+    _persist_snapshots,
+):
     mock_db = MagicMock()
     mock_get_client.return_value = mock_db
     mock_table = MagicMock()
