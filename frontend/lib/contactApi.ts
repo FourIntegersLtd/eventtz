@@ -15,19 +15,14 @@ export type FeedbackSubject =
 
 export type ContactOrFeedbackSubject = ContactSubject | FeedbackSubject;
 
-export const CONTACT_SUBJECT_OPTIONS: { value: ContactSubject; label: string }[] = [
+export const CONTACT_SUBJECT_OPTIONS: { value: ContactOrFeedbackSubject; label: string }[] = [
   { value: "general", label: "General" },
+  { value: "feedback_bug", label: "Bug" },
+  { value: "feedback_feature", label: "Feature idea" },
   { value: "booking_problem", label: "Booking problem" },
   { value: "payments", label: "Payments" },
   { value: "account", label: "Account" },
   { value: "other", label: "Other" },
-];
-
-export const FEEDBACK_SUBJECT_OPTIONS: { value: FeedbackSubject; label: string }[] = [
-  { value: "feedback_bug", label: "Bug" },
-  { value: "feedback_feature", label: "Feature idea" },
-  { value: "feedback_general", label: "General feedback" },
-  { value: "feedback_other", label: "Other" },
 ];
 
 export type ContactSubmitBody = {

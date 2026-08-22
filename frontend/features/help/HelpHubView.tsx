@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import type { PortalRole } from "@/components/portal-shell/portalNav";
 import { ContactFormView } from "@/features/contact/ContactFormView";
-import { FeedbackFormView } from "@/features/contact/FeedbackFormView";
 import { ChatPortalView } from "@/features/chat/ChatPortalView";
 import {
   HELP_HUB_TAB_OPTIONS,
@@ -31,7 +30,6 @@ export function HelpHubView({ portal, tab, selectedConversationId }: HelpHubView
           aria-label="Help sections"
           options={HELP_HUB_TAB_OPTIONS}
           value={tab}
-          stretch
           onChange={(next) => router.push(helpHubTabHref(portal, next))}
         />
       </div>
@@ -47,7 +45,6 @@ export function HelpHubView({ portal, tab, selectedConversationId }: HelpHubView
       ) : null}
 
       {tab === "contact" ? <ContactFormView role={portal} embedded /> : null}
-      {tab === "feedback" ? <FeedbackFormView role={portal} /> : null}
     </div>
   );
 }
