@@ -1,3 +1,5 @@
+import type { ErrorEvent, Event } from "@sentry/nextjs";
+
 /**
  * Shared Sentry env helpers. Empty DSN = SDK stays a no-op.
  * NEXT_PUBLIC_SENTRY_DSN is used in the browser; SENTRY_DSN is a server-only fallback.
@@ -26,3 +28,25 @@ export function getSentryTracesSampleRate(): number {
 /** Low background capture; errors always get a replay. */
 export const SENTRY_REPLAYS_SESSION_SAMPLE_RATE = 0.05;
 export const SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE = 1;
+
+const SAFE_TO_IGNORE_PATTERN = /safe to ignore/i;
+
+function getEventMessages(event: Event | ErrorEvent): string[] {
+  const messages: string[] = [];
+  if (event.message) messages.push(event.message);
+  for (const exception of event.exception?.values ?? []) {
+    if (exception.value) messages.push(exception.value);
+    if (exception.type) messages.push(exception.type);
+  }
+  return messages;
+}
+
+/** Drop intentional console test errors (e.g. admin Sentry smoke tests). */
+export function sentryBeforeSend<T extends Event | ErrorEvent>(
+  event: T,
+): T | null {
+  if (getEventMessages(event).some((message) => SAFE_TO_IGNORE_PATTERN.test(message))) {
+    return null;
+  }
+  return event;
+}

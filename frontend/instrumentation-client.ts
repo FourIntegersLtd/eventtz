@@ -3,6 +3,7 @@ import {
   getSentryDsn,
   getSentryEnvironment,
   getSentryTracesSampleRate,
+  sentryBeforeSend,
   SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE,
   SENTRY_REPLAYS_SESSION_SAMPLE_RATE,
 } from "./lib/sentryConfig";
@@ -13,6 +14,7 @@ if (dsn) {
     dsn,
     environment: getSentryEnvironment(),
     sendDefaultPii: false,
+    beforeSend: sentryBeforeSend,
     tracesSampleRate: getSentryTracesSampleRate(),
     integrations: [
       Sentry.replayIntegration({
