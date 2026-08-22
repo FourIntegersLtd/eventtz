@@ -21,6 +21,7 @@ describe("sentryConfig", () => {
 describe("sentryBeforeSend", () => {
   it("drops events whose exception message contains 'safe to ignore'", () => {
     const event: ErrorEvent = {
+      type: undefined,
       exception: {
         values: [
           {
@@ -36,6 +37,7 @@ describe("sentryBeforeSend", () => {
 
   it("drops events whose top-level message contains 'safe to ignore'", () => {
     const event: ErrorEvent = {
+      type: undefined,
       message: "Manual test - SAFE TO IGNORE",
     };
 
@@ -44,6 +46,7 @@ describe("sentryBeforeSend", () => {
 
   it("passes through real errors unchanged", () => {
     const event: ErrorEvent = {
+      type: undefined,
       exception: {
         values: [{ type: "TypeError", value: "Cannot read property 'x' of undefined" }],
       },
