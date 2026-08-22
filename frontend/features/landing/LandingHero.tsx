@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { getButtonClassName } from "@/components/ui/buttonStyles";
 import { HeroMarketplaceSearch } from "@/features/marketplace/HeroMarketplaceSearch";
@@ -12,7 +13,9 @@ import { HeroRotatingWord } from "@/features/landing/HeroRotatingWord";
 import { LANDING_HERO_CONTAINER_CLASS } from "@/features/landing/landingSectionStyles";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
-const HERO_IMAGE_SRC = "/images/landing-images/hero.png?v=2";
+const HERO_IMAGE_SRC = "/images/landing-images/hero.png";
+const HERO_IMAGE_WIDTH = 1402;
+const HERO_IMAGE_HEIGHT = 1122;
 
 export function LandingHero() {
   return (
@@ -62,14 +65,14 @@ export function LandingHero() {
           </div>
 
           <div className="relative mx-auto flex w-full max-w-full flex-1 items-center justify-center motion-safe:animate-[hero-copy-in_0.75s_ease-out_0.08s_both] lg:mx-0 lg:flex-none lg:max-w-none lg:justify-self-end lg:pl-2 xl:pl-4">
-            {/* Plain img — no frame; asset must be exported with transparent background */}
-            <img
+            <Image
               src={HERO_IMAGE_SRC}
               alt="Featured Eventtz vendors - photographer and makeup artist"
-              width={900}
-              height={720}
-              decoding="async"
-              fetchPriority="high"
+              width={HERO_IMAGE_WIDTH}
+              height={HERO_IMAGE_HEIGHT}
+              priority
+              unoptimized
+              sizes="(max-width: 1024px) 100vw, 50vw"
               className="block h-auto max-h-[min(44dvh,22rem)] w-full bg-transparent object-contain sm:max-h-[min(48dvh,26rem)] lg:max-h-[min(50dvh,28rem)] xl:max-h-[min(54dvh,32rem)]"
             />
           </div>
