@@ -1,0 +1,49 @@
+---
+description: FastAPI backend conventions for Eventtz
+globs: backend/**
+alwaysApply: false
+---
+
+# Backend rules
+
+## Stack
+
+Python 3.13+, Poetry, FastAPI, Pydantic v2, Supabase via **`app/core/db.py`**.
+
+## Feature layout
+
+```
+features/<name>/
+├── http/       # Thin routers: auth guard → logic → contract / HTTPException
+├── *.py        # Business logic
+└── db*.py      # Table access
+```
+
+- Logic must **not** import from feature `http/`.
+- User-facing API copy in **`messages.py`** or **`copy.py`** — not inline in routes.
+- Raise **`AppError`** subclasses; global handler in **`core/errors.py`**.
+- Auth: **`require_client(request, response)`** etc. from **`features/auth/http/guards.py`**.
+
+## Registration & contracts
+
+- Register routers only in **`app/http/router.py`** (prefix `/api/v1`).
+- Request/response shapes in **`app/contracts/`**; shared literals in **`contracts/types.py`**.
+
+## Lists & ordering
+
+Use **`apply_recent_first_order()`** for most lists (recent first). Chat messages stay `created_at ASC`.
+
+## Payments & visibility
+
+- Money lifecycle: **`payment_status`** separate from booking **`status`**.
+- Public vendor listing: use **`vendors/visibility.py`** — never filter on `approval_status` alone.
+
+## Checklist (new feature)
+
+1. `features/<name>/*.py` + `db*.py`
+2. Contracts in `app/contracts/`
+3. Routes in `features/<name>/http/`
+4. Register in `app/http/router.py`
+5. Env → `.env.example`; DB → `sql/NNN_*.sql`
+
+Details: **`docs/cursor/architecture-reference.md`** (Backend section).

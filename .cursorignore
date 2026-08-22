@@ -1,0 +1,29 @@
+# Secrets
+**/.env
+**/.env.*
+!**/.env.example
+**/credentials.json
+**/*.pem
+**/*.key
+
+# Dependencies & build output
+**/node_modules/
+**/.next/
+**/out/
+**/dist/
+**/build/
+**/.venv/
+**/__pycache__/
+**/.pytest_cache/
+**/.mypy_cache/
+.pycache_tmp/
+**/.pycache_tmp/
+
+# Local tooling / OS
+**/.DS_Store
+**/.git/
+**/.railway/
+**/.vercel/
+
+# Large media (not useful as code context)
+frontend/public/videos/

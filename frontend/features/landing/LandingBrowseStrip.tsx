@@ -22,6 +22,7 @@ export function LandingBrowseStrip() {
     <section
       id="browse"
       className={`${LANDING_SECTION_SHELL.content} z-10 bg-white`}
+      
     >
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-neutral-100/80 to-transparent"
