@@ -16,13 +16,6 @@ import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 const HERO_IMAGE_SRC = "/images/landing-images/hero.png";
 
 export function LandingHero() {
-  const ctaClass = getButtonClassName({
-    variant: "primary",
-    shape: "default",
-    className:
-      "mt-6 hidden w-full justify-center px-7 py-3.5 text-base font-semibold sm:mt-8 sm:inline-flex sm:w-auto",
-  });
-
   return (
     <section className="relative z-30 isolate flex min-h-0 flex-col bg-[#f7f8fc] pt-20 sm:pt-24 lg:min-h-dvh lg:pt-28">
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
@@ -48,18 +41,25 @@ export function LandingHero() {
               {HERO_SUBHEADLINE.tail}
             </p>
 
-            <Link
-              href={HERO_CTA.href}
-              className={ctaClass}
-              onClick={() =>
-                track(MixpanelEvents.landing_cta_clicked, {
-                  cta: "browse",
-                  location: "hero",
-                })
-              }
-            >
-              {HERO_CTA.label}
-            </Link>
+            <div className="mt-6 hidden lg:block">
+              <Link
+                href={HERO_CTA.href}
+                className={getButtonClassName({
+                  variant: "primary",
+                  shape: "default",
+                  className:
+                    "w-full justify-center px-7 py-3.5 text-base font-semibold lg:w-auto",
+                })}
+                onClick={() =>
+                  track(MixpanelEvents.landing_cta_clicked, {
+                    cta: "browse",
+                    location: "hero",
+                  })
+                }
+              >
+                {HERO_CTA.label}
+              </Link>
+            </div>
           </div>
 
           <div className="relative mx-auto hidden w-full max-w-[16rem] motion-safe:animate-[hero-copy-in_0.75s_ease-out_0.08s_both] sm:max-w-sm lg:mx-0 lg:block lg:max-w-none lg:justify-self-end lg:pl-2 xl:pl-4">
