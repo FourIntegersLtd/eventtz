@@ -10,7 +10,8 @@
 #          backend/sql schema (first boot only) and grant API-role privileges.
 #   3. Write backend/.env so the API and the dev terminals can boot.
 #
-# The dev servers themselves run in the `terminals` (run-backend.sh / run-frontend.sh).
+# The dev servers (FastAPI :8000, Next.js :3000) are launched in the background at
+# the end (idempotent — skipped if the port is already serving).
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -76,4 +77,23 @@ IS_PRODUCTION=false
 SENTRY_DSN=
 ENV
 
-echo "==> start.sh complete (Supabase URL: ${SB_URL})"
+echo "==> Supabase ready (URL: ${SB_URL})"
+
+# --- 4. Dev servers (background, idempotent) --------------------------------
+serving() { curl -fsS -o /dev/null -m 2 "http://127.0.0.1:$1$2" 2>/dev/null; }
+
+if serving 8000 /health; then
+  echo "==> Backend already serving on :8000"
+else
+  echo "==> Launching backend (uvicorn :8000)"
+  nohup bash "$REPO_ROOT/.cursor/run-backend.sh" >/tmp/eventtz-backend.log 2>&1 &
+fi
+
+if serving 3000 /; then
+  echo "==> Frontend already serving on :3000"
+else
+  echo "==> Launching frontend (next dev :3000)"
+  nohup bash "$REPO_ROOT/.cursor/run-frontend.sh" >/tmp/eventtz-frontend.log 2>&1 &
+fi
+
+echo "==> start.sh complete (backend :8000, frontend :3000, logs in /tmp/eventtz-*.log)"
