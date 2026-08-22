@@ -20,7 +20,9 @@ const ROLE_GATED_PATH_PREFIXES: { prefix: string; role: UserType }[] = [
   { prefix: "/admin/", role: "admin" },
   { prefix: "/client/dashboard", role: "client" },
   { prefix: "/client/bookings", role: "client" },
+  { prefix: "/client/help", role: "client" },
   { prefix: "/client/messages", role: "client" },
+  { prefix: "/client/contact", role: "client" },
   { prefix: "/client/notifications", role: "client" },
 ];
 

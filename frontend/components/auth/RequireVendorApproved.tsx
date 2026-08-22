@@ -12,7 +12,7 @@ type RequireVendorApprovedProps = {
 
 /**
  * Gates vendor portal pages (dashboard/bookings/payments/notifications) behind
- * `vendorIsLiveApproved`. `/vendor/profile`, `/vendor/contact`, and `/vendor/messages`
+ * `vendorIsLiveApproved`. `/vendor/profile` and `/vendor/help`
  * skip this guard (`isVendorPreApprovalRoute` in the portal layout) so vendors can
  * finish onboarding, reach support, and read Eventtz Support threads while pending.
  */

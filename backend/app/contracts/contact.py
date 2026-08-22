@@ -13,6 +13,10 @@ ContactSubject = Literal[
     "payments",
     "account",
     "other",
+    "feedback_bug",
+    "feedback_feature",
+    "feedback_general",
+    "feedback_other",
 ]
 
 CONTACT_SUBJECT_LABELS: dict[str, str] = {
@@ -21,6 +25,10 @@ CONTACT_SUBJECT_LABELS: dict[str, str] = {
     "payments": "Payments",
     "account": "Account",
     "other": "Other",
+    "feedback_bug": "Bug report",
+    "feedback_feature": "Feature idea",
+    "feedback_general": "General feedback",
+    "feedback_other": "Other feedback",
 }
 
 

@@ -5,7 +5,6 @@ import {
   Heart,
   LayoutDashboard,
   LifeBuoy,
-  MessageSquare,
   Settings,
   ShieldAlert,
   Sparkles,
@@ -28,9 +27,8 @@ const CLIENT_NAV: readonly PortalNavItem[] = [
   { href: "/client/browse", label: "Browse", icon: Compass },
   { href: "/client/favorites", label: "Favorites", icon: Heart },
   { href: "/client/bookings", label: "Bookings", icon: CalendarDays },
-  { href: "/client/messages", label: "Messages", icon: MessageSquare },
+  { href: "/client/help", label: "Help", icon: LifeBuoy },
   { href: "/client/disputes", label: "Disputes", icon: ShieldAlert },
-  { href: "/client/contact", label: "Contact", icon: LifeBuoy },
   { href: "/client/settings", label: "Settings", icon: Settings },
 ];
 
@@ -38,11 +36,10 @@ const VENDOR_NAV: readonly PortalNavItem[] = [
   { href: "/vendor/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/vendor/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/vendor/bookings", label: "Bookings", icon: CalendarDays },
-  { href: "/vendor/messages", label: "Messages", icon: MessageSquare },
+  { href: "/vendor/help", label: "Help", icon: LifeBuoy },
   { href: "/vendor/profile", label: "Profile", icon: UserCircle2 },
   { href: "/vendor/payments", label: "Payments", icon: Wallet },
   { href: "/vendor/disputes", label: "Disputes", icon: ShieldAlert },
-  { href: "/vendor/contact", label: "Contact", icon: LifeBuoy },
   { href: "/vendor/settings", label: "Settings", icon: Settings },
 ];
 
@@ -52,12 +49,7 @@ export function portalNavItems(
 ): readonly PortalNavItem[] {
   if (role === "client") return CLIENT_NAV;
   if (!options?.vendorPreApproval) return VENDOR_NAV;
-  const pendingHrefs = new Set([
-    "/vendor/profile",
-    "/vendor/messages",
-    "/vendor/contact",
-    "/vendor/settings",
-  ]);
+  const pendingHrefs = new Set(["/vendor/profile", "/vendor/help", "/vendor/settings"]);
   return VENDOR_NAV.filter((item) => pendingHrefs.has(item.href));
 }
 
@@ -74,6 +66,7 @@ type PortalRouteKey =
   | "messages"
   | "disputes"
   | "contact"
+  | "help"
   | "settings"
   | "notifications"
   | "browse"
@@ -86,9 +79,10 @@ const PORTAL_ROUTES: Record<PortalRole, Record<PortalRouteKey, string>> = {
     dashboard: "/client/dashboard",
     planner: "/client/planner",
     bookings: "/client/bookings",
-    messages: "/client/messages",
+    messages: "/client/help",
     disputes: "/client/disputes",
-    contact: "/client/contact",
+    contact: "/client/help?tab=contact",
+    help: "/client/help",
     settings: "/client/settings",
     notifications: "/client/notifications",
     browse: "/client/browse",
@@ -100,9 +94,10 @@ const PORTAL_ROUTES: Record<PortalRole, Record<PortalRouteKey, string>> = {
     dashboard: "/vendor/dashboard",
     planner: "/vendor/dashboard",
     bookings: "/vendor/bookings",
-    messages: "/vendor/messages",
+    messages: "/vendor/help",
     disputes: "/vendor/disputes",
-    contact: "/vendor/contact",
+    contact: "/vendor/help?tab=contact",
+    help: "/vendor/help",
     settings: "/vendor/settings",
     notifications: "/vendor/notifications",
     browse: "/vendor/dashboard",
@@ -118,10 +113,9 @@ export function portalRoute(role: PortalRole, key: PortalRouteKey): string {
 
 const PAGE_TITLE_RULES: Record<PortalRole, readonly { prefix: string; title: string }[]> = {
   client: [
-    { prefix: "/client/messages", title: "Messages" },
+    { prefix: "/client/help", title: "Help" },
     { prefix: "/client/bookings", title: "My bookings" },
     { prefix: "/client/disputes", title: "Disputes" },
-    { prefix: "/client/contact", title: "Contact us" },
     { prefix: "/client/settings/reviews", title: "Your reviews" },
     { prefix: "/client/payments", title: "Payment history" },
     { prefix: "/client/settings", title: "Settings" },
@@ -132,12 +126,11 @@ const PAGE_TITLE_RULES: Record<PortalRole, readonly { prefix: string; title: str
     { prefix: "/client/dashboard", title: "Dashboard" },
   ],
   vendor: [
-    { prefix: "/vendor/messages", title: "Messages" },
+    { prefix: "/vendor/help", title: "Help" },
     { prefix: "/vendor/bookings", title: "Bookings" },
     { prefix: "/vendor/analytics", title: "Analytics" },
     { prefix: "/vendor/payments", title: "Payments" },
     { prefix: "/vendor/disputes", title: "Disputes" },
-    { prefix: "/vendor/contact", title: "Contact us" },
     { prefix: "/vendor/settings", title: "Settings" },
     { prefix: "/vendor/profile/reviews", title: "Client reviews" },
     { prefix: "/vendor/profile", title: "Vendor profile" },
@@ -157,7 +150,7 @@ export function portalPageTitle(pathname: string, role: PortalRole): string {
 export function portalHidePageTitleOnMobile(pathname: string, role: PortalRole): boolean {
   const base = role === "client" ? "/client" : "/vendor";
   return (
-    /^\/[^/]+\/(messages|bookings)\/[^/]+/.test(pathname) &&
+    /^\/[^/]+\/(messages|bookings|help\/messages)\/[^/]+/.test(pathname) &&
     pathname.startsWith(base)
   );
 }

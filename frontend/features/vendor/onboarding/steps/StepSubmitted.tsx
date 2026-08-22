@@ -271,7 +271,7 @@ export function StepSubmitted({
                   </button>
                 ) : null}
                 <Link
-                  href="/vendor/messages"
+                  href="/vendor/help"
                   className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-primary bg-white px-6 py-3 text-sm font-semibold text-primary shadow-sm hover:bg-neutral-50 sm:w-auto sm:min-w-[12rem]"
                 >
                   Read message

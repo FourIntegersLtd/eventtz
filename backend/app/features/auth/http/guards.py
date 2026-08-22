@@ -7,6 +7,7 @@ from fastapi import HTTPException, Request, Response
 from app.contracts.auth import AuthUser
 from app.contracts.types import UserType
 from app.core.logging import get_logger
+from app.core.sentry import bind_sentry_user
 from app.features.auth import messages as auth_messages
 from app.features.auth.session import get_current_user_or_raise
 from app.features.auth.accounts import build_app_user, is_super_admin_user
@@ -23,6 +24,7 @@ def require_user(request: Request, response: Response) -> AuthUser:
             status_code=403,
             detail=auth_messages.ACCOUNT_SUSPENDED_CONTACT,
         )
+    bind_sentry_user(user_id=user.id, user_type=user.user_type)
     return user
 
 

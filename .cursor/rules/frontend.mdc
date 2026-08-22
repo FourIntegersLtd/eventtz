@@ -37,5 +37,6 @@ Use **`useToast()`** + **`lib/mutationFeedback.ts`** for save/send/approve feedb
 - Forms: Zod via **`lib/validation/`**.
 - Buttons: **`components/ui/Button.tsx`**; loading: **`LoadingState`** / **`LoadingSpinner`**.
 - Back nav: **`BackLink.tsx`**.
+- **Sentry:** `NEXT_PUBLIC_SENTRY_DSN` empty = no-op. Init in `instrumentation-client.ts` / `sentry.server.config.ts` / `sentry.edge.config.ts`. Do not drop `next.config.ts` rewrites when wrapping `withSentryConfig`.
 
 Details: **`docs/cursor/architecture-reference.md`** (Frontend section).

@@ -7,11 +7,10 @@ describe("portalNavItems", () => {
     expect(portalNavItems("vendor").map((item) => item.href)).toContain("/vendor/bookings");
   });
 
-  it("keeps Profile, Messages, Contact, and Settings while pending", () => {
+  it("keeps Profile, Help, and Settings while pending", () => {
     expect(portalNavItems("vendor", { vendorPreApproval: true }).map((item) => item.href)).toEqual([
-      "/vendor/messages",
+      "/vendor/help",
       "/vendor/profile",
-      "/vendor/contact",
       "/vendor/settings",
     ]);
   });

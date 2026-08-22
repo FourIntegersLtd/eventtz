@@ -7,6 +7,7 @@ import { LottieFailurePanel } from "@/components/ui/LottieFailurePanel";
 import { ParticipantDisputeStatusBadge } from "@/components/badges/ParticipantDisputeStatusBadge";
 import { PaymentStatusBadge } from "@/components/badges/PaymentStatusBadge";
 import { formatDateTime, formatEventDate } from "@/lib/dateFormat";
+import { helpMessagesPath } from "@/lib/helpHub";
 
 type Props = {
   role: "client" | "vendor";
@@ -25,7 +26,7 @@ function openedByLabel(dispute: ParticipantDispute): string {
 
 export function ParticipantDisputeDetailPanel({ role, dispute, loading, error }: Props) {
   const bookingsBase = role === "client" ? "/client/bookings" : "/vendor/bookings";
-  const messagesBase = role === "client" ? "/client/messages" : "/vendor/messages";
+  const messagesBase = helpMessagesPath(role);
 
   if (loading) {
     return <LoadingState label="Loading dispute…" variant="centered" branded className="py-12" />;

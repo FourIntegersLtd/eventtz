@@ -8,6 +8,7 @@ import { TextField } from "@/components/ui/TextField";
 import { useToast } from "@/components/ui/Toast";
 import type { PortalRole } from "@/components/portal-shell/portalNav";
 import { portalRoute } from "@/components/portal-shell/portalNav";
+import { helpHubTabHref } from "@/lib/helpHub";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { contactFormSchema, parseForm } from "@/lib/validation";
@@ -21,13 +22,15 @@ import { formControlClass } from "@/components/ui/tokens";
 
 type Props = {
   role: PortalRole;
+  /** When rendered inside the Help hub, show cross-links to other tabs. */
+  embedded?: boolean;
 };
 
 const BOOKING_SUBJECTS = new Set<ContactSubject>(["booking_problem", "payments"]);
 
 const fieldClass = formControlClass();
 
-export function ContactFormView({ role }: Props) {
+export function ContactFormView({ role, embedded = false }: Props) {
   const { user } = useAuth();
   const { showToast } = useToast();
   const [subject, setSubject] = useState<ContactSubject>("general");
@@ -87,8 +90,18 @@ export function ContactFormView({ role }: Props) {
             Message the team
           </h2>
           <p className="mt-0.5 text-[13px] text-neutral-400">
-            We usually reply by email within two working days. For problems on a paid booking, you
-            can also{" "}
+            We usually reply by email within two working days.
+            {embedded ? (
+              <>
+                {" "}
+                For ongoing chats with Eventtz, use the{" "}
+                <Link href={helpHubTabHref(role, "messages")} className="font-medium text-primary hover:underline">
+                  Messages
+                </Link>{" "}
+                tab.
+              </>
+            ) : null}{" "}
+            For problems on a paid booking, you can also{" "}
             <Link href={disputesHref} className="font-medium text-primary hover:underline">
               report a problem
             </Link>{" "}

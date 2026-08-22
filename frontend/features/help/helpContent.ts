@@ -18,7 +18,7 @@ export function helpBasePath(audience: HelpAudience): string {
 
 export function helpContactPath(audience: HelpAudience): string | null {
   if (audience === "admin") return null;
-  return audience === "client" ? "/client/contact" : "/vendor/contact";
+  return audience === "client" ? "/client/help?tab=contact" : "/vendor/help?tab=contact";
 }
 
 export function helpCategoryIcon(iconKey: string): LucideIcon {
