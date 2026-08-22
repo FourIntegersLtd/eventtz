@@ -62,7 +62,7 @@ export function LandingHero() {
             </Link>
           </div>
 
-          <div className="relative mx-auto w-full max-w-[16rem] motion-safe:animate-[hero-copy-in_0.75s_ease-out_0.08s_both] sm:max-w-sm lg:mx-0 lg:max-w-none lg:justify-self-end lg:pl-2 xl:pl-4">
+          <div className="relative mx-auto hidden w-full max-w-[16rem] motion-safe:animate-[hero-copy-in_0.75s_ease-out_0.08s_both] sm:max-w-sm lg:mx-0 lg:block lg:max-w-none lg:justify-self-end lg:pl-2 xl:pl-4">
             <div className="relative overflow-hidden rounded-[1.75rem] border border-primary-border/70 bg-white/60 p-1.5 shadow-primary-soft sm:rounded-[2.5rem] sm:p-2.5">
               <Image
                 src={HERO_IMAGE_SRC}

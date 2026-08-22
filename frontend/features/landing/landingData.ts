@@ -45,8 +45,8 @@ export const CATEGORIES: LandingCategory[] = VENDOR_SERVICE_CATEGORIES.map(
   }),
 );
 
-/** Strip above the fold uses the same categories as the detailed grid. */
-export const BROWSE_CATEGORIES = CATEGORIES;
+/** Hero browse strip — original five categories only; full grid uses `CATEGORIES`. */
+export const BROWSE_CATEGORIES = CATEGORIES.slice(0, 5);
 
 export type GalleryVideo = {
   src: string;
