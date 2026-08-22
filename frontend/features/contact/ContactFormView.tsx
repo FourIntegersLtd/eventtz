@@ -16,7 +16,7 @@ import {
   CONTACT_SUBJECT_OPTIONS,
   submitClientContact,
   submitVendorContact,
-  type ContactSubject,
+  type ContactOrFeedbackSubject,
 } from "@/lib/contactApi";
 import { formControlClass } from "@/components/ui/tokens";
 
@@ -26,14 +26,14 @@ type Props = {
   embedded?: boolean;
 };
 
-const BOOKING_SUBJECTS = new Set<ContactSubject>(["booking_problem", "payments"]);
+const BOOKING_SUBJECTS = new Set<ContactOrFeedbackSubject>(["booking_problem", "payments"]);
 
 const fieldClass = formControlClass();
 
 export function ContactFormView({ role, embedded = false }: Props) {
   const { user } = useAuth();
   const { showToast } = useToast();
-  const [subject, setSubject] = useState<ContactSubject>("general");
+  const [subject, setSubject] = useState<ContactOrFeedbackSubject>("general");
   const [message, setMessage] = useState("");
   const [bookingId, setBookingId] = useState("");
   const [busy, setBusy] = useState(false);
@@ -90,7 +90,8 @@ export function ContactFormView({ role, embedded = false }: Props) {
             Message the team
           </h2>
           <p className="mt-0.5 text-[13px] text-neutral-400">
-            We usually reply by email within two working days.
+            Bugs, booking issues, ideas, or anything else — one form. We usually reply by email
+            within two working days.
             {embedded ? (
               <>
                 {" "}
@@ -129,7 +130,7 @@ export function ContactFormView({ role, embedded = false }: Props) {
             <select
               id="contact-subject"
               value={subject}
-              onChange={(e) => setSubject(e.target.value as ContactSubject)}
+              onChange={(e) => setSubject(e.target.value as ContactOrFeedbackSubject)}
               className={fieldClass}
             >
               {CONTACT_SUBJECT_OPTIONS.map((opt) => (

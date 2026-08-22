@@ -11,6 +11,10 @@ from app.core.logging import get_logger
 from app.contracts.contact import CONTACT_SUBJECT_LABELS
 from app.features.auth.accounts import fetch_user_profile
 from app.features.contact import messages as contact_messages
+from app.features.contact.cursor_webhook import (
+    notify_cursor_automation_for_contact,
+    should_notify_cursor_automation,
+)
 from app.features.email.dispatch import send_admin_contact_submitted_email
 
 logger = get_logger(__name__)
@@ -77,11 +81,26 @@ def submit_contact_message(
         )
         .execute()
     )
-    if not getattr(insert_res, "data", None):
+    insert_data = getattr(insert_res, "data", None) or []
+    submission_id: str | None = None
+    if insert_data and isinstance(insert_data[0], dict):
+        submission_id = str(insert_data[0].get("id") or "") or None
+    else:
         logger.warning("contact_submissions insert returned no data user=%s", user_id)
 
     prof = fetch_user_profile(user_id) or {}
     user_email = str(prof.get("email") or "")
+    if should_notify_cursor_automation(subj):
+        notify_cursor_automation_for_contact(
+            submission_id=submission_id,
+            portal=portal,
+            user_id=user_id,
+            subject_key=subj,
+            subject_label=label,
+            message=body,
+            booking_id=resolved_booking_id,
+            user_email=user_email or None,
+        )
     send_admin_contact_submitted_email(
         portal=portal,
         user_email=user_email or None,

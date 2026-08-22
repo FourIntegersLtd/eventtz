@@ -1,11 +1,10 @@
 import type { PortalRole } from "@/components/portal-shell/portalNav";
 
-export type HelpHubTab = "messages" | "contact" | "feedback";
+export type HelpHubTab = "messages" | "contact";
 
 export const HELP_HUB_TAB_OPTIONS: readonly { value: HelpHubTab; label: string }[] = [
   { value: "messages", label: "Messages" },
   { value: "contact", label: "Contact" },
-  { value: "feedback", label: "Feedback" },
 ] as const;
 
 export function helpHubPath(portal: PortalRole): string {
@@ -22,6 +21,6 @@ export function helpHubTabHref(portal: PortalRole, tab: HelpHubTab): string {
 }
 
 export function parseHelpHubTab(value: string | null | undefined): HelpHubTab {
-  if (value === "contact" || value === "feedback") return value;
+  if (value === "contact" || value === "feedback") return "contact";
   return "messages";
 }

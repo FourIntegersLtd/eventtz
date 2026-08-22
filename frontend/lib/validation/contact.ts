@@ -7,6 +7,10 @@ export const contactSubjectSchema = z.enum([
   "booking_problem",
   "payments",
   "other",
+  "feedback_bug",
+  "feedback_feature",
+  "feedback_general",
+  "feedback_other",
 ]);
 
 const BOOKING_SUBJECTS = new Set(["booking_problem", "payments"]);

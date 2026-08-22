@@ -34,6 +34,8 @@ Copy **`.env.example`** to **`.env`** and set values. Important keys:
 | `LOG_LEVEL` | `DEBUG`, `INFO`, … |
 | `IS_PRODUCTION` | `true` = compact logs; `false` = detailed logs + `backend/logs/eventtz.log` |
 | `SENTRY_DSN` | Optional. Empty = Sentry stays off. Production: FastAPI project DSN in Railway. |
+| `CURSOR_AUTOMATION_WEBHOOK_URL` | Optional. Cursor Automations webhook URL; empty = no-op. Fired for bug-related contact subjects (`feedback_bug`, `booking_problem`, `payments`). |
+| `CURSOR_AUTOMATION_WEBHOOK_SECRET` | Optional Bearer token for the Cursor webhook (from automation settings after save). |
 
 See **`.env.example`** for optional log file tuning (`LOG_DIR`, `LOG_MAX_BYTES`, …).
 

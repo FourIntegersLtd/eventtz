@@ -90,6 +90,11 @@ class Settings(BaseSettings):
     #: Sentry DSN. Empty = do not initialize the SDK (local/dev default).
     sentry_dsn: str = ""
 
+    #: Cursor Automation webhook (from cursor.com/automations, Webhook trigger). Empty = no-op.
+    cursor_automation_webhook_url: str = ""
+    #: Optional Bearer token for the Cursor webhook (shown when the automation is saved).
+    cursor_automation_webhook_secret: str = ""
+
     @property
     def super_admin_emails_list(self) -> list[str]:
         return [e.strip().lower() for e in self.super_admin_emails.split(",") if e.strip()]
