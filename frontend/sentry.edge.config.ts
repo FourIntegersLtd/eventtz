@@ -3,6 +3,7 @@ import {
   getSentryDsn,
   getSentryEnvironment,
   getSentryTracesSampleRate,
+  sentryBeforeSend,
 } from "./lib/sentryConfig";
 
 const dsn = getSentryDsn();
@@ -11,6 +12,7 @@ if (dsn) {
     dsn,
     environment: getSentryEnvironment(),
     sendDefaultPii: false,
+    beforeSend: sentryBeforeSend,
     tracesSampleRate: getSentryTracesSampleRate(),
   });
 }
