@@ -124,8 +124,8 @@ features/<name>/
 | `media/` | `/media/*` | `upload.py` - `POST /media/images` (images) and `POST /media/files` (PDF/video/docs for portfolio & certificates) |
 | `realtime/` | `/realtime/*` | `sse.py` - server-sent events for chat unread / data refresh |
 | `settings/` | `/user/*`, `/client/onboarding` | `contact.py` - contact-sharing prefs; **`apply_counterparty_contact_visibility`** masks email/phone until `payment_status` is paid (`paid`, `payout_released`, or `partially_refunded`); booking venue (`event_address`/`event_postcode`) is **never** masked from vendors. Vendor phone comes from vendor profile payload, not `users.contact_phone`. `client_onboarding.py` - first-visit client onboarding state (`users.preferred_name`, `users.client_onboarding_completed_at`, migration 035); `/me` includes `preferred_name` + `client_onboarding_completed` for clients, and vendor booking APIs expose a friendly `client_display_name` (from `client_display_names_by_id` in `auth/lookup.py` - never the raw email). |
-| `contact/` | `/client/contact`, `/vendor/contact` | `service.py` - authenticated support form; persists to `contact_submissions` (migration 037) and emails admins via `features/email/` (Resend). |
-| `help/` | `/help/*` | `queries.py`, `help_article_keyword_search.py`, `assistant.py`, `http/routes.py` - signed-in Help Center: role-filtered categories/articles (`help_categories` / `help_articles`, migrations **051–067**) for `client` \| `vendor` \| `admin` + AI ask via OpenAI `chat.completions.parse` (`OPENAI_HELP_MODEL`). Content is **SQL seed only** (plain English, no em dashes). Portal money/dispute → escalate to Contact; admin escalate → Team. Primary UX: **`HelpWidget` FAB** (standalone `/client/help` and `/vendor/help` redirect to dashboard). No TipTap CMS for help in v1. |
+| `contact/` | `/client/contact`, `/vendor/contact`, `/admin/contact` | `service.py` - authenticated support form; persists to `contact_submissions` (migrations 037 + **074** `portal=admin`) and emails admins via `features/email/` (Resend). Bug / booking / payments subjects POST the Cursor automation webhook. Admin **Report a bug** always sends `feedback_bug`. |
+| `help/` | `/help/*` | `queries.py`, `help_article_keyword_search.py`, `assistant.py`, `http/routes.py` - signed-in Help Center: role-filtered categories/articles (`help_categories` / `help_articles`, migrations **051–067**) for `client` \| `vendor` \| `admin` + AI ask via OpenAI `chat.completions.parse` (`OPENAI_HELP_MODEL`). Content is **SQL seed only** (plain English, no em dashes). Portal money/dispute → escalate to Contact; admin escalate → **Report a bug**. Primary UX: **`HelpWidget` FAB** (standalone `/client/help` and `/vendor/help` redirect to dashboard). No TipTap CMS for help in v1. |
 | `planner/` | `/client/planner/*` | `plan_service.py`, `prompt_parser.py`, `category_planner.py`, `explore_vendor_adapter.py`, `budget.py`, `confidence.py`, `planner_summary_generation.py`, `db.py`, `http/routes.py` - AI Event Planner: one prompt → persisted celebration plan (`celebration_plans` / `celebration_plan_items`, migration 055). Intent `simple` → `ValidationError(code=simple_intent)` (use Browse). Ranking via **`vendors/ranking/`** (`VendorRankingEngine`); LLM only parses brief + grounded explanations (`OPENAI_PLANNER_MODEL`). |
 | `blog/` | `/admin/blog/*`, `/blog/*` | `service.py`, `sanitize.py`, `http/admin.py`, `http/public.py` - admin TipTap CMS (draft/publish) + public published posts; images via `/media/images`. No newsletter/comments in v1. |
 | `referrals/` | `/admin/referrals/*`, `/referrals/partners/{slug}` | `partners.py`, `attribution.py`, `referral_partner_admin_queries.py`, `links.py` - admin-created creator signup links (`?ref=slug` on `/vendor/register`); **`referral_attributions.shoutout_completed`** for shoutout tracking. Share links always use **`https://www.eventtz.com`** (`links.referral_register_url`). Signup: optional **`referral_code`** on `POST /auth/signup` (vendor only). Frontend cookie: **`lib/referralAttribution.ts`**. Migration **`064_referral_partners.sql`**. |
@@ -225,7 +225,7 @@ Order in code (matters if paths could overlap; several admin routers share **`pr
 | `features/auth/http/routes.py` | `/auth` | `auth` | Sign up, sign in, refresh, sign out, session cookies, `/me`, **forgot/reset/change-password** |
 | `features/favorites/http/client.py` | `/client` | `client` | Favorites list/add/remove |
 | `features/client_events/http/routes.py` | `/client` | `client` | **`GET /events`**, **`GET /events/{id}`** - active celebrations for smart prefill |
-| `features/contact/http/routes.py` | `/client`, `/vendor` | `client` / `vendor` | **`POST /contact`** - authenticated support form |
+| `features/contact/http/routes.py` | `/client`, `/vendor`, `/admin` | `client` / `vendor` / `admin` | **`POST /contact`** - authenticated support form; admin body is message-only (`feedback_bug`) |
 | `features/chat/http/routes.py` | `/chat` | `chat` | Conversations/messages (DM + support), unread count, read markers |
 | `features/settings/http/routes.py` | `/user` | `user` | Contact-sharing prefs |
 | `features/settings/http/client_onboarding.py` | `/client` | `client` | Client onboarding preferred name / complete |
@@ -367,6 +367,7 @@ Run in **numeric order** in Supabase (new changes → next `NNN_description.sql`
 | `035_client_preferred_name.sql` | `users.preferred_name` + `users.client_onboarding_completed_at` (client onboarding) |
 | `036_booking_cancel_completion.sql` | Cancellation audit (`cancelled_by`/`cancelled_at`) + 48h auto-release/reminder tracking (`payout_auto_released_at`/`completion_reminder_sent_at`), partial index for the maintenance scan, and updated `booking_notifications` kind constraint (adds completion reminder + updated-price kinds) |
 | `037_contact_submissions_and_support_hold.sql` | `contact_submissions` table + `booking_requests.support_hold` (pauses auto-release) |
+| `074_contact_submissions_admin_portal.sql` | `contact_submissions.portal` also allows `admin` (staff bug reports) |
 | `038_support_conversations.sql` | Support chat: `conversations.kind` (`dm`\|`support`), `support_user_id`, `admin_last_read_at`, partial unique indexes |
 | `039_blog_posts.sql` | `blog_posts` (slug, TipTap `body_json`, sanitized `body_html`, status draft/published, cover, excerpt) |
 | `040_email_delivery_log.sql` | `email_delivery_log` - dedupe index on `(template_id, booking_id, recipient_user_id)` for retryable booking lifecycle emails |
@@ -686,6 +687,7 @@ Legacy URLs (`/explore`, `/admin/vendors`, `/client/login`, …) redirect via **
 | `/admin/trust/reviews/[id]` | `AdminReviewDetailView` |
 | `/admin/bookings/[id]` | `AdminBookingDetailView` (diagnostics, support-hold, recovery) |
 | `/admin/messages` | Tabs: Inbox / Compose (`?tab=inbox` default); nav unread badge |
+| `/admin/report-bug` | Staff bug form (`AdminReportBugView`) → `POST /admin/contact` + Cursor webhook |
 | `/admin/blog`, `/admin/blog/[id]` | `AdminBlogListView` / `AdminBlogEditorView` (TipTap) |
 | `/admin/team` | `AdminTeamView` (`super_admin`) |
 | `/admin/audit`, `/admin/audit/[id]` | `AdminAuditView` (+ detail) |
@@ -710,7 +712,7 @@ Legacy URLs (`/explore`, `/admin/vendors`, `/client/login`, …) redirect via **
 | **`adminVendorsApi.ts`**, **`adminPlatformApi.ts`** (facade re-exporting **`adminDashboardApi.ts`**, **`adminBookingsApi.ts`**, **`adminFinancialsApi.ts`**, **`adminDirectoryApi.ts`**, **`adminTrustApi.ts`**, **`adminAuditApi.ts`**), **`adminTeamApi.ts`**, **`adminMessagesApi.ts`**, **`adminBlogApi.ts`** | Admin console APIs |
 | **`adminPermissions.ts`**, **`adminRole.ts`** | `super_admin` / `admin` capability checks |
 | **`blogApi.ts`** | Public published posts |
-| **`contactApi.ts`** | Contact form submissions |
+| **`contactApi.ts`** | Contact form submissions (client/vendor + admin bug report) |
 | **`helpApi.ts`** | Help Center categories/articles + ask assistant |
 | **`clientPlannerApi.ts`** | AI Event Planner create/list/get/replace/archive |
 | **`chatApi.ts`** | Conversations + messages (DM + support) |
@@ -748,7 +750,7 @@ Legacy URLs (`/explore`, `/admin/vendors`, `/client/login`, …) redirect via **
 
 - **`AuthProvider`:** holds user state, installs axios interceptors, refresh + `getMe`.
 - **`RequireAuth` / `RequireAdmin` / `RequireRole`:** gate routes; redirect to login with `next` query where used.
-- **`AdminShell`:** admin layout + nav (Dashboard, Commerce, Directory, Trust, Messages, Blog, Team, Audit); mounts **`HelpWidget`** with `audience="admin"`.
+- **`AdminShell`:** admin layout + nav (Dashboard, Commerce, Directory, Trust, Messages, Report a bug, Blog, Team, Audit); mounts **`HelpWidget`** with `audience="admin"` (Contact → `/admin/report-bug`).
 - **`PortalShell`:** client + vendor app chrome (sidebar, `portal="client" | "vendor"`); mounts **`HelpWidget`** (Fern-style in-panel Help Center).
 - **`AuthPageShell`:** shared public auth page chrome.
 - **TipTap** (`@tiptap/*`): admin blog body editing (`BlogRichTextEditor`, `blogImageExtension` — inline images via drag-and-drop into the editor, optional figure/caption); public blog renders sanitized `body_html` only (cover image is separate `cover_image_url`).

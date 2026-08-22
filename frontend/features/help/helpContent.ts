@@ -17,7 +17,7 @@ export function helpBasePath(audience: HelpAudience): string {
 }
 
 export function helpContactPath(audience: HelpAudience): string | null {
-  if (audience === "admin") return null;
+  if (audience === "admin") return "/admin/report-bug";
   return audience === "client" ? "/client/help?tab=contact" : "/vendor/help?tab=contact";
 }
 

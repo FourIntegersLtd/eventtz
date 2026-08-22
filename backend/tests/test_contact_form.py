@@ -75,6 +75,43 @@ def test_submit_contact_message_notifies_cursor_for_bug_report(
     assert call_kwargs["portal"] == "client"
 
 
+@patch("app.features.contact.service.send_admin_contact_submitted_email")
+@patch("app.features.contact.service.notify_cursor_automation_for_contact")
+@patch("app.features.contact.service.fetch_user_profile")
+@patch("app.features.contact.service.get_db")
+@patch("app.features.contact.service.get_settings")
+def test_submit_contact_message_notifies_cursor_for_admin_bug_report(
+    mock_settings,
+    mock_get_client,
+    mock_fetch_profile,
+    mock_notify_cursor,
+    mock_send_email,
+):
+    mock_fetch_profile.return_value = {"email": "ops@example.com"}
+
+    client = MagicMock()
+    mock_get_client.return_value = client
+    client.table.return_value.insert.return_value.execute.return_value = MagicMock(
+        data=[{"id": "admin-sub-1"}],
+    )
+
+    result = submit_contact_message(
+        user_id="admin-1",
+        portal="admin",
+        subject="feedback_bug",
+        message="The vendor directory table is blank after I change the date filter.",
+        booking_id=None,
+    )
+
+    assert result["success"] is True
+    insert_row = client.table.return_value.insert.call_args.args[0]
+    assert insert_row["portal"] == "admin"
+    assert insert_row["subject"] == "Bug report"
+    mock_notify_cursor.assert_called_once()
+    assert mock_notify_cursor.call_args.kwargs["portal"] == "admin"
+    assert mock_notify_cursor.call_args.kwargs["subject_key"] == "feedback_bug"
+
+
 @patch("app.features.contact.service.get_settings")
 def test_submit_contact_message_rejects_short_message(mock_settings):
     with pytest.raises(ValueError, match="10 characters"):

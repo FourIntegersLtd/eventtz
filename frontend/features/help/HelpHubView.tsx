@@ -19,12 +19,9 @@ type HelpHubViewProps = {
 
 export function HelpHubView({ portal, tab, selectedConversationId }: HelpHubViewProps) {
   const router = useRouter();
-  const isMessages = tab === "messages";
 
   return (
-    <div
-      className={`flex min-h-0 w-full flex-col ${isMessages ? "h-full flex-1" : "gap-4"}`}
-    >
+    <div className="flex h-full min-h-0 w-full flex-1 flex-col gap-4">
       <div className="shrink-0">
         <SegmentedControl
           aria-label="Help sections"
@@ -44,7 +41,11 @@ export function HelpHubView({ portal, tab, selectedConversationId }: HelpHubView
         </div>
       ) : null}
 
-      {tab === "contact" ? <ContactFormView role={portal} embedded /> : null}
+      {tab === "contact" ? (
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <ContactFormView role={portal} embedded />
+        </div>
+      ) : null}
     </div>
   );
 }

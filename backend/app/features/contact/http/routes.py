@@ -1,15 +1,20 @@
-"""Signed-in contact form endpoints for clients and vendors."""
+"""Signed-in contact form endpoints for clients, vendors, and admins."""
 
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Request, Response
 
-from app.contracts.contact import ContactSubmitBody, ContactSubmitResponse
-from app.features.auth.http.guards import require_client, require_vendor
+from app.contracts.contact import (
+    AdminBugReportBody,
+    ContactSubmitBody,
+    ContactSubmitResponse,
+)
+from app.features.auth.http.guards import require_admin, require_client, require_vendor
 from app.features.contact.service import submit_contact_message
 
 client_router = APIRouter(prefix="/client", tags=["client"])
 vendor_router = APIRouter(prefix="/vendor", tags=["vendor"])
+admin_router = APIRouter(prefix="/admin", tags=["admin"])
 
 
 def _handle_submit(
@@ -56,4 +61,18 @@ def post_vendor_contact(
         user_id=str(user.get("id") or ""),
         portal="vendor",
         body=body,
+    )
+
+
+@admin_router.post("/contact", response_model=ContactSubmitResponse)
+def post_admin_contact(
+    body: AdminBugReportBody,
+    request: Request,
+    response: Response,
+) -> ContactSubmitResponse:
+    user = require_admin(request, response)
+    return _handle_submit(
+        user_id=str(user.get("id") or ""),
+        portal="admin",
+        body=ContactSubmitBody(subject="feedback_bug", message=body.message),
     )

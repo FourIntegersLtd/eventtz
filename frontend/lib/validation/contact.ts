@@ -32,3 +32,9 @@ export const contactFormSchema = z
   });
 
 export type ContactFormInput = z.infer<typeof contactFormSchema>;
+
+export const adminBugReportSchema = z.object({
+  message: messageBodySchema({ min: 10, max: 5000, label: "Message" }),
+});
+
+export type AdminBugReportInput = z.infer<typeof adminBugReportSchema>;

@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { useToast } from "@/components/ui/Toast";
 import type { PortalRole } from "@/components/portal-shell/portalNav";
-import { portalRoute } from "@/components/portal-shell/portalNav";
 import { helpHubTabHref } from "@/lib/helpHub";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
@@ -40,7 +39,6 @@ export function ContactFormView({ role, embedded = false }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const showBookingId = BOOKING_SUBJECTS.has(subject);
-  const disputesHref = portalRoute(role, "disputes");
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,14 +82,13 @@ export function ContactFormView({ role, embedded = false }: Props) {
 
   return (
     <div className="w-full min-w-0 max-w-3xl">
-      <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+      <section className="rounded-2xl border border-neutral-100 bg-white">
         <div className="px-5 py-4 sm:px-6 sm:py-5">
           <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">
             Message the team
           </h2>
           <p className="mt-0.5 text-[13px] text-neutral-400">
-            Bugs, booking issues, ideas, or anything else — one form. We usually reply by email
-            within two working days.
+            We usually reply by email within two working days.
             {embedded ? (
               <>
                 {" "}
@@ -101,12 +98,7 @@ export function ContactFormView({ role, embedded = false }: Props) {
                 </Link>{" "}
                 tab.
               </>
-            ) : null}{" "}
-            For problems on a paid booking, you can also{" "}
-            <Link href={disputesHref} className="font-medium text-primary hover:underline">
-              report a problem
-            </Link>{" "}
-            from the booking page.
+            ) : null}
           </p>
         </div>
 
