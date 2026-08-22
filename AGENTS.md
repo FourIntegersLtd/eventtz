@@ -30,3 +30,13 @@ For deep architecture (route tables, feature inventory, payments, etc.), referen
 - Avoid **spaghetti**: no god-components, no duplicated API paths, no inverted import layers (see **Anti-patterns** in `docs/cursor/architecture-reference.md`).
 
 When you introduce a **new cross-cutting pattern** (middleware, `lib/` convention, env vars, top-level feature area), update **`docs/cursor/architecture-reference.md`** and the relevant **`.cursor/rules/*.mdc`** in the same change.
+
+## Cursor Cloud specific instructions
+
+The Cloud Agent environment is self-contained via scripts in **`.cursor/`**:
+
+- **`install.sh`** — `poetry install --extras dev` (backend) + `npm ci` (frontend). Toolchain (Python 3.13, Poetry, Node, Docker, Supabase CLI) is baked into the base image/snapshot.
+- **`start.sh`** — starts the Docker daemon, then brings up a **local Supabase stack** (`supabase start`, config in **`supabase/`**), applies **`backend/sql/*.sql`** on first boot (+ `supabase-grants.sql`), and writes **`backend/.env`**. If `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` are provided as secrets, it uses that hosted project instead of the local stack.
+- **`run-backend.sh` / `run-frontend.sh`** — the `terminals` dev servers (FastAPI on `:8000`, Next.js on `:3000`).
+
+Local Supabase Studio is at `http://127.0.0.1:54323`. Run backend tests with `cd backend && poetry run pytest -q` and frontend checks with `cd frontend && npx tsc --noEmit && npm test` (both mock external services, no DB needed).
