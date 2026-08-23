@@ -35,6 +35,11 @@ const ROWS = [
     location: "USA",
   },
   {
+    service: "Sentry",
+    purpose: "Application error monitoring (user id only; no email)",
+    location: "USA / EU",
+  },
+  {
     service: "Amazon Web Services (S3)",
     purpose: "Email template image hosting",
     location: "United Kingdom (eu-west-2)",

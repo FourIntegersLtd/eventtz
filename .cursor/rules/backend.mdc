@@ -24,6 +24,7 @@ features/<name>/
 - Raise **`AppError`** subclasses; global handler in **`core/errors.py`**.
 - Auth: **`require_client(request, response)`** etc. from **`features/auth/http/guards.py`**.
 - **Sentry:** `SENTRY_DSN` empty = skip init (`app/core/sentry.py` before `FastAPI()`). Do not sample `/health` transactions.
+- **Scheduled jobs:** run in-process from `app/jobs/scheduler.py` (lifespan). Do not add host-specific cron services. New jobs: a function in `app/jobs/` + `job_runs` claim.
 
 ## Registration & contracts
 
@@ -37,7 +38,7 @@ Use **`apply_recent_first_order()`** for most lists (recent first). Chat message
 ## Payments & visibility
 
 - Money lifecycle: **`payment_status`** separate from booking **`status`**.
-- Public vendor listing: use **`vendors/visibility.py`** — never filter on `approval_status` alone.
+- Public vendor listing: use **`vendors/visibility.py`** — never filter on `approval_status` alone. **`users.deleted_at`** means the account is a GDPR tombstone: never `DELETE` `public.users` or shared `booking_requests` for marketplace erasure; hide listings with `listing_override = hidden` plus empty payload.
 
 ## Checklist (new feature)
 

@@ -8,6 +8,7 @@ from typing import Any
 from app.core.config import get_settings
 from app.core.db import get_db
 from app.core.logging import get_logger
+from app.features.auth.accounts import deleted_user_ids
 from app.features.email.branding import email_public_base
 from app.features.email.dispatch import dispatch_booking_notification
 from app.features.email.service import get_email_service
@@ -118,12 +119,23 @@ def process_vendor_enquiry_reminders(limit: int = 200) -> int:
     """Send 1h / 6h / 24h vendor nudges for unanswered client enquiries."""
     sent = 0
     now = _now()
-    for row in _eligible_pending_enquiries(limit):
+    rows = _eligible_pending_enquiries(limit)
+    gone = deleted_user_ids(
+        [str(r.get("vendor_user_id") or "") for r in rows if r.get("vendor_user_id")],
+    )
+    for row in rows:
         created = _parse_ts(row.get("created_at"))
         if created is None:
             continue
         age = now - created
         booking_id = str(row.get("id") or "")
+        vendor_id = str(row.get("vendor_user_id") or "")
+        if vendor_id and vendor_id in gone:
+            for col, _kind, _hours in _REMINDER_STEPS:
+                if not row.get(col):
+                    _stamp(booking_id, col)
+                    row[col] = _now_iso()
+            continue
         for col, kind, hours in _REMINDER_STEPS:
             if row.get(col):
                 continue
@@ -247,7 +259,11 @@ def process_client_no_response_nudges(limit: int = 100) -> int:
     """At 24h without vendor reply: email client with alternative vendors."""
     sent = 0
     now = _now()
-    for row in _eligible_pending_enquiries(limit):
+    rows = _eligible_pending_enquiries(limit)
+    gone = deleted_user_ids(
+        [str(r.get("client_user_id") or "") for r in rows if r.get("client_user_id")],
+    )
+    for row in rows:
         if row.get("client_no_response_nudge_at"):
             continue
         created = _parse_ts(row.get("created_at"))
@@ -257,6 +273,9 @@ def process_client_no_response_nudges(limit: int = 100) -> int:
         client_id = str(row.get("client_user_id") or "")
         vendor_id = str(row.get("vendor_user_id") or "")
         if not booking_id or not client_id:
+            continue
+        if client_id in gone:
+            _stamp(booking_id, "client_no_response_nudge_at")
             continue
 
         payload: dict[str, Any] | None = None

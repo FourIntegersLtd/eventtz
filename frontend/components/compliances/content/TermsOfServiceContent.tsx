@@ -15,7 +15,7 @@ export function TermsOfServiceContent() {
       <p className="compliance-meta">
         Effective date: 1 July 2026
         <br />
-        Last updated: 14 July 2026
+        Last updated: 23 August 2026
       </p>
       <p>
         These Terms of Service (&quot;Terms&quot;) govern your access to and use
@@ -197,9 +197,13 @@ export function TermsOfServiceContent() {
       <section id="termination">
         <h2>13. Termination</h2>
         <p>
-          You may stop using Eventtz at any time. We may suspend or terminate
-          access where necessary to protect users, comply with law, or enforce
-          these Terms.
+          You may stop using Eventtz at any time. Signed-in clients and vendors
+          can delete their account from Settings. We then close login and remove
+          personal details; booking and payment records we must keep are stored
+          without your name, email, or phone. You cannot delete an account while
+          a payment is in progress, an accepted booking is still ahead, or a
+          problem report is open. We may suspend or terminate access where
+          necessary to protect users, comply with law, or enforce these Terms.
         </p>
       </section>
 

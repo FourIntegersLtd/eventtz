@@ -10,7 +10,11 @@ from typing import Any
 
 from app.core.db import get_db
 from app.core.logging import get_logger
-from app.features.auth.accounts import fetch_user_profile_by_email, normalize_email
+from app.features.auth.accounts import (
+    fetch_user_profile_by_email,
+    normalize_email,
+    profile_is_deleted,
+)
 from app.features.auth import messages as auth_messages
 from app.features.email.branding import public_email_url
 from app.features.email.dispatch import send_email_verification_email, send_welcome_email
@@ -235,7 +239,7 @@ def resend_email_verification(*, email: str, client_ip: str | None = None) -> st
         user_id = str(profile["id"])
         to_email = str(profile.get("email") or normalized).strip().lower()
         user_type = str(profile.get("user_type") or "")
-        if user_type == "admin" or profile.get("email_verified_at"):
+        if user_type == "admin" or profile.get("email_verified_at") or profile_is_deleted(profile):
             return auth_messages.GENERIC_RESEND_MESSAGE
 
     if not user_id or not to_email or user_type == "admin":

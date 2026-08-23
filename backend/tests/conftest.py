@@ -7,6 +7,7 @@ import os
 # A developer's backend/.env normally holds a real SENTRY_DSN, and importing the
 # app initializes Sentry, so local test runs would ship noise to the live project.
 os.environ["SENTRY_DSN"] = ""
+os.environ["BOOKING_MAINTENANCE_INTERVAL_SECONDS"] = "0"
 
 from app.core.config import get_settings  # noqa: E402
 

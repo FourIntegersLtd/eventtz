@@ -11,6 +11,10 @@ from app.core.logging import get_logger, setup_logging
 from app.core.sentry import init_sentry
 from app.core.startup import validate_settings
 from app.http.router import api_router
+from app.jobs.scheduler import (
+    start_booking_maintenance_scheduler,
+    stop_booking_maintenance_scheduler,
+)
 
 setup_logging()
 logger = get_logger(__name__)
@@ -21,7 +25,11 @@ init_sentry()
 async def lifespan(_app: FastAPI):
     settings = get_settings()
     validate_settings(settings)
-    yield
+    start_booking_maintenance_scheduler()
+    try:
+        yield
+    finally:
+        await stop_booking_maintenance_scheduler()
 
 
 app = FastAPI(
@@ -52,7 +60,12 @@ app.add_middleware(
 app.include_router(api_router, prefix="/api/v1")
 
 
-@app.get("/health")
+@app.api_route("/health", methods=["GET", "HEAD"])
 def health():
+    """Liveness only (Railway + UptimeRobot). Flask-style: GET and HEAD.
+
+    UptimeRobot HTTP(s) monitors send HEAD; FastAPI ``@app.get`` does not
+    accept that (405). OSCE Guide Flask ``methods=["GET"]`` does, automatically.
+    """
     logger.debug("health check")
     return {"status": "ok"}

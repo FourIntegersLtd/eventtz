@@ -139,6 +139,11 @@ async def sign_in(
         except ValueError as e:
             clear_session_cookies(response)
             raise HTTPException(status_code=403, detail=str(e)) from e
+        from app.features.auth.accounts import fetch_user_profile, profile_is_deleted
+
+        if profile_is_deleted(fetch_user_profile(app_user.id)):
+            clear_session_cookies(response)
+            raise HTTPException(status_code=401, detail=auth_messages.ACCOUNT_DELETED_SIGNIN)
         ut = str(app_user.user_type or "")
         if ut in ("client", "vendor") and not is_email_verified(app_user.id, user_type=ut):
             clear_session_cookies(response)

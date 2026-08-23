@@ -413,6 +413,17 @@ def send_client_suspended_email(*, email: str) -> bool:
     return get_email_service().send_client_suspended(to_email=email, support_url=support_url)
 
 
+def send_account_deleted_email(*, email: str) -> bool:
+    normalized = (email or "").strip().lower()
+    if not normalized or "@" not in normalized:
+        return False
+    try:
+        return get_email_service().send_account_deleted(to_email=normalized)
+    except Exception:
+        logger.exception("send_account_deleted_email failed")
+        return False
+
+
 def send_welcome_email(*, email: str, user_type: str) -> bool:
     normalized = email.strip().lower()
     if not normalized or "@" not in normalized:

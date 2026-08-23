@@ -58,6 +58,7 @@ def test_invite_admin_colleague_with_invite_link(mock_settings, _mock_email, moc
 
 @patch("app.features.admin.team_admin_commands.get_db")
 @patch("app.features.admin.team_admin_commands._hard_delete_admin_user")
+@patch("app.features.admin.team_admin_commands._has_restricted_public_references", return_value=False)
 @patch("app.features.admin.team_admin_commands._has_client_activity", return_value=False)
 @patch("app.features.admin.team_admin_commands._has_vendor_profile", return_value=False)
 @patch("app.features.admin.team_admin_commands.fetch_user_profile")
@@ -69,6 +70,7 @@ def test_delete_admin_team_member_hard_delete(
     mock_fetch,
     _mock_vendor,
     _mock_client,
+    _mock_restricted,
     mock_hard_delete,
     mock_get_db,
 ) -> None:
@@ -85,6 +87,42 @@ def test_delete_admin_team_member_hard_delete(
     assert result["deleted"] is True
     assert result["demoted_to"] is None
     mock_hard_delete.assert_called_once_with("user-2")
+
+
+@patch("app.features.admin.team_admin_commands._demote_admin_to")
+@patch("app.features.admin.team_admin_commands._hard_delete_admin_user")
+@patch("app.features.admin.team_admin_commands._has_restricted_public_references", return_value=True)
+@patch("app.features.admin.team_admin_commands._has_client_activity", return_value=False)
+@patch("app.features.admin.team_admin_commands._has_vendor_profile", return_value=False)
+@patch("app.features.admin.team_admin_commands.fetch_user_profile")
+@patch("app.features.admin.team_admin_commands.is_super_admin_user", return_value=True)
+@patch("app.features.admin.team_admin_commands.get_settings")
+@patch("app.features.admin.team_admin_commands.get_db")
+def test_delete_admin_team_member_demotes_when_restricted_fks(
+    mock_get_db,
+    mock_settings,
+    _mock_super,
+    mock_fetch,
+    _mock_vendor,
+    _mock_client,
+    _mock_restricted,
+    mock_hard_delete,
+    mock_demote,
+) -> None:
+    mock_fetch.side_effect = [
+        {"id": "actor-1", "user_type": "admin", "email": "super@test.com", "admin_role": "super_admin"},
+        {"id": "user-2", "user_type": "admin", "email": "admin@test.com", "admin_role": "admin"},
+    ]
+    mock_table = MagicMock()
+    mock_get_db.return_value.table.return_value = mock_table
+    mock_table.select.return_value.eq.return_value.neq.return_value.execute.return_value = MagicMock(
+        count=1,
+    )
+    result = team_admin_commands.delete_admin_team_member("user-2", actor_user_id="actor-1")
+    assert result["deleted"] is False
+    assert result["demoted_to"] == "client"
+    mock_demote.assert_called_once_with("user-2", user_type="client")
+    mock_hard_delete.assert_not_called()
 
 
 @patch("app.features.admin.team_admin_commands.invalidate_all_sessions")

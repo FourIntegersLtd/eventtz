@@ -68,6 +68,55 @@ def user_type_from_auth_metadatas(user: dict[str, Any]) -> str | None:
     return None
 
 
+def profile_is_deleted(profile: dict[str, Any] | None) -> bool:
+    """True when public.users.deleted_at is set (account closed, tombstone kept)."""
+    if not isinstance(profile, dict):
+        return False
+    return bool(profile.get("deleted_at"))
+
+
+def _missing_deleted_at_column(err: Exception) -> bool:
+    msg = str(err).lower()
+    return "deleted_at" in msg and (
+        "42703" in msg or "does not exist" in msg or "schema cache" in msg
+    )
+
+
+def deleted_user_ids(user_ids: list[str]) -> set[str]:
+    """Subset of ids whose public.users row has deleted_at set."""
+    ids = [str(i).strip() for i in user_ids if str(i).strip()]
+    if not ids:
+        return set()
+    try:
+        res = get_db().table("users").select("id,deleted_at").in_("id", ids).execute()
+    except Exception as e:
+        if _missing_deleted_at_column(e):
+            return set()
+        logger.warning("deleted_user_ids failed: %s", e)
+        return set()
+    data = getattr(res, "data", None) or []
+    out: set[str] = set()
+    for row in data:
+        if isinstance(row, dict) and row.get("deleted_at") and row.get("id"):
+            out.add(str(row["id"]))
+    return out
+
+
+def user_is_deleted(user_id: str) -> bool:
+    uid = str(user_id or "").strip()
+    if not uid:
+        return False
+    return profile_is_deleted(fetch_user_profile(uid))
+
+
+def is_deleted_user_id(user_id: str) -> bool:
+    """Fast tombstone check for one id (jobs and explore guards)."""
+    uid = str(user_id or "").strip()
+    if not uid:
+        return False
+    return uid in deleted_user_ids([uid])
+
+
 def upsert_user_profile(
     user_id: str,
     email: str | None,
@@ -79,6 +128,10 @@ def upsert_user_profile(
     """Optional: copy role into public.users for database joins (explore/admin). Never raises."""
     if user_type not in ("client", "vendor", "admin"):
         logger.warning("upsert_user_profile skipped invalid user_type=%s", user_type)
+        return
+    existing = fetch_user_profile(user_id)
+    if profile_is_deleted(existing):
+        logger.warning("upsert_user_profile refused tombstone user_id=%s", user_id)
         return
     row: dict[str, Any] = {"id": user_id, "user_type": user_type}
     if email is not None:
@@ -97,15 +150,37 @@ def upsert_user_profile(
         )
 
 
+_PROFILE_COLS = (
+    "id,email,user_type,admin_role,created_at,updated_at,"
+    "account_suspended,email_verified_at,deleted_at"
+)
+_PROFILE_COLS_LEGACY = (
+    "id,email,user_type,admin_role,created_at,updated_at,"
+    "account_suspended,email_verified_at"
+)
+
+
 def fetch_user_profile(user_id: str) -> dict[str, Any] | None:
-    res = (
-        get_db()
-        .table("users")
-        .select("id,email,user_type,admin_role,created_at,updated_at,account_suspended,email_verified_at")
-        .eq("id", user_id)
-        .limit(1)
-        .execute()
-    )
+    try:
+        res = (
+            get_db()
+            .table("users")
+            .select(_PROFILE_COLS)
+            .eq("id", user_id)
+            .limit(1)
+            .execute()
+        )
+    except Exception as e:
+        if not _missing_deleted_at_column(e):
+            raise
+        res = (
+            get_db()
+            .table("users")
+            .select(_PROFILE_COLS_LEGACY)
+            .eq("id", user_id)
+            .limit(1)
+            .execute()
+        )
     data = getattr(res, "data", None)
     if not data:
         return None
@@ -116,14 +191,26 @@ def fetch_user_profile_by_email(email: str) -> dict[str, Any] | None:
     em = normalize_email(email)
     if not em:
         return None
-    res = (
-        get_db()
-        .table("users")
-        .select("id,email,user_type,admin_role,created_at,updated_at,account_suspended,email_verified_at")
-        .eq("email", em)
-        .limit(1)
-        .execute()
-    )
+    try:
+        res = (
+            get_db()
+            .table("users")
+            .select(_PROFILE_COLS)
+            .eq("email", em)
+            .limit(1)
+            .execute()
+        )
+    except Exception as e:
+        if not _missing_deleted_at_column(e):
+            raise
+        res = (
+            get_db()
+            .table("users")
+            .select(_PROFILE_COLS_LEGACY)
+            .eq("email", em)
+            .limit(1)
+            .execute()
+        )
     data = getattr(res, "data", None)
     if not data:
         return None

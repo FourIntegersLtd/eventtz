@@ -10,7 +10,7 @@ from typing import Any, Literal
 
 from app.core.db import get_db
 from app.core.logging import get_logger
-from app.features.auth.accounts import fetch_user_profile_by_email, normalize_email
+from app.features.auth.accounts import fetch_user_profile_by_email, normalize_email, profile_is_deleted
 from app.features.auth.password_policy import validate_password_for_user
 from app.features.auth.session_invalidation import invalidate_all_sessions
 from app.features.auth.supabase import SupabaseAuthService
@@ -205,6 +205,8 @@ def request_password_reset(
 
     profile = fetch_user_profile_by_email(normalized)
     if profile and profile.get("id"):
+        if profile_is_deleted(profile):
+            return auth_messages.GENERIC_FORGOT_MESSAGE
         user_id = str(profile["id"])
         to_email = str(profile.get("email") or normalized).strip().lower()
         user_type = str(profile.get("user_type") or "")

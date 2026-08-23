@@ -82,6 +82,10 @@ class Settings(BaseSettings):
     #: ``VENDOR_NO_RESPONSE`` (does not auto-decline the booking).
     enquiry_response_sla_hours: int = 72
 
+    #: Seconds between in-process booking maintenance runs. Used only when
+    #: ``IS_PRODUCTION`` is true. ``0`` disables the loop even in production.
+    booking_maintenance_interval_seconds: int = 3600
+
     #: Comma-separated emails that count as top-level admins until roles are set in the database.
     super_admin_emails: str = "hello@eventtz.com"
     #: Key for sending transactional email.
@@ -89,6 +93,11 @@ class Settings(BaseSettings):
 
     #: Sentry DSN. Empty = do not initialize the SDK (local/dev default).
     sentry_dsn: str = ""
+
+    #: Mixpanel project token for server-side profile deletion. Empty = skip.
+    mixpanel_token: str = ""
+    #: Mixpanel API host (EU projects: https://api-eu.mixpanel.com).
+    mixpanel_api_host: str = ""
 
     #: Cursor Automation webhook (from cursor.com/automations, Webhook trigger). Empty = no-op.
     cursor_automation_webhook_url: str = ""
