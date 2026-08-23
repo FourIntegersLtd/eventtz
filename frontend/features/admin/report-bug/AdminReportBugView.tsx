@@ -48,17 +48,7 @@ export function AdminReportBugView() {
   return (
     <div className="max-w-2xl">
       <section className="rounded-2xl border border-neutral-100 bg-white">
-        <div className="px-5 py-4 sm:px-6 sm:py-5">
-          <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">
-            Report a bug
-          </h2>
-          <p className="mt-0.5 text-[13px] text-neutral-400">
-            Describe what you clicked, what you expected, and what happened. Include a booking
-            reference if it is about a booking.
-          </p>
-        </div>
-
-        <form onSubmit={onSubmit} className="divide-y divide-neutral-100 border-t border-neutral-100">
+        <form onSubmit={onSubmit} className="divide-y divide-neutral-100">
           <div className="space-y-1.5 px-5 py-4 sm:px-6">
             <label htmlFor="admin-bug-message" className="block text-sm font-medium text-neutral-800">
               What went wrong
