@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from postgrest.exceptions import APIError
-
 from app.core.db import get_db
 from app.core.logging import get_logger
 
@@ -46,12 +44,22 @@ def try_claim_job_period(job_name: str, period_key: str) -> bool:
         return False
 
 
+_MISSING_JOB_RUNS_MARKERS = (
+    "does not exist",
+    "could not find",
+    "schema cache",
+    "42p01",
+    "pgrst205",
+)
+
+
 def _is_missing_job_runs_table(err: Exception) -> bool:
-    if not isinstance(err, APIError):
-        msg = str(err).lower()
-        return "job_runs" in msg and (
-            "does not exist" in msg or "42p01" in msg or "could not find" in msg
-        )
-    code = getattr(err, "code", None)
+    # PostgREST raises APIError PGRST205 ("not in the schema cache") when the
+    # table is absent or the cache is stale — not Postgres 42P01.
     msg = str(err).lower()
-    return code == "42P01" or ("job_runs" in msg and "does not exist" in msg)
+    if "job_runs" not in msg:
+        return False
+    code = str(getattr(err, "code", "") or "").upper()
+    if code in {"42P01", "PGRST205"}:
+        return True
+    return any(marker in msg for marker in _MISSING_JOB_RUNS_MARKERS)
