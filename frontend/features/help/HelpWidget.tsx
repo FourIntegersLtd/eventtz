@@ -7,13 +7,18 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleHelp,
+  ExternalLink,
+  FileText,
+  LifeBuoy,
   Mail,
   Maximize2,
+  MessageSquare,
   Minimize2,
+  Newspaper,
   Sparkles,
   X,
 } from "lucide-react";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, KeyboardEvent, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { getApiErrorDetail } from "@/lib/api-errors";
@@ -269,8 +274,52 @@ function HomePanel({
   onContact: () => void;
   audience: HelpAudience;
 }) {
-  const heading =
-    audience === "admin" ? "How can we help" : "How can we help";
+  const heading = "How can we help";
+
+  const onAskKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      onAskHome(e as unknown as FormEvent);
+    }
+  };
+
+  type HomeLink =
+    | { kind: "action"; label: string; icon: typeof BookOpen; onClick: () => void }
+    | { kind: "internal"; label: string; icon: typeof BookOpen; href: string }
+    | { kind: "external"; label: string; icon: typeof BookOpen; href: string };
+
+  const links: HomeLink[] =
+    audience === "admin"
+      ? [
+          { kind: "action", label: "Browse our docs", icon: BookOpen, onClick: onBrowse },
+          ...(contactHref
+            ? [{ kind: "internal" as const, label: "Report a bug", icon: LifeBuoy, href: contactHref }]
+            : []),
+          { kind: "internal", label: "Admin team", icon: Mail, href: "/admin/team" },
+          { kind: "internal", label: "Activity log", icon: FileText, href: "/admin/audit" },
+          { kind: "internal", label: "Blog CMS", icon: Newspaper, href: "/admin/blog" },
+        ]
+      : audience === "vendor"
+        ? [
+            { kind: "action", label: "Browse our docs", icon: BookOpen, onClick: onBrowse },
+            ...(contactHref
+              ? [{ kind: "internal" as const, label: "Contact us", icon: Mail, href: contactHref }]
+              : []),
+            { kind: "internal", label: "Message support", icon: MessageSquare, href: "/vendor/help" },
+            { kind: "external", label: "Read our blog", icon: Newspaper, href: "/blog" },
+            { kind: "external", label: "How vendors join", icon: Sparkles, href: "/#for-vendors" },
+            { kind: "external", label: "Visit FAQ", icon: CircleHelp, href: "/#faq" },
+          ]
+        : [
+            { kind: "action", label: "Browse our docs", icon: BookOpen, onClick: onBrowse },
+            ...(contactHref
+              ? [{ kind: "internal" as const, label: "Contact us", icon: Mail, href: contactHref }]
+              : []),
+            { kind: "internal", label: "Message support", icon: MessageSquare, href: "/client/help" },
+            { kind: "external", label: "Read our blog", icon: Newspaper, href: "/blog" },
+            { kind: "external", label: "How booking works", icon: Sparkles, href: "/#booking-journey" },
+            { kind: "external", label: "Visit FAQ", icon: CircleHelp, href: "/#faq" },
+          ];
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6 pt-5 sm:pb-5 sm:pt-6">
@@ -286,52 +335,64 @@ function HomePanel({
           </p>
         </div>
         <form onSubmit={onAskHome}>
-          <input
+          <textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={onAskKeyDown}
             placeholder="Ask a question..."
-            className="w-full bg-white px-3.5 py-3.5 text-base text-neutral-900 outline-none placeholder:text-neutral-400 md:text-[15px]"
+            rows={4}
+            className="min-h-[6.5rem] w-full resize-none bg-white px-3.5 py-3.5 text-base leading-relaxed text-neutral-900 outline-none placeholder:text-neutral-400 md:text-[15px]"
           />
         </form>
       </div>
 
       <ul className="mt-2">
-        <li className={contactHref ? "border-b border-neutral-100" : undefined}>
-          <button
-            type="button"
-            onClick={onBrowse}
-            className="flex w-full items-center gap-3 py-3.5 text-left transition hover:bg-neutral-50"
-          >
-            <BookOpen className="h-[18px] w-[18px] shrink-0 text-neutral-500" strokeWidth={1.75} />
-            <span className="flex-1 text-[15px] text-neutral-900">Browse our docs</span>
-            <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" strokeWidth={1.75} />
-          </button>
-        </li>
-        {contactHref ? (
-          <li>
-            <Link
-              href={contactHref}
-              onClick={onContact}
-              className="flex w-full items-center gap-3 py-3.5 text-left transition hover:bg-neutral-50"
-            >
-              <Mail className="h-[18px] w-[18px] shrink-0 text-neutral-500" strokeWidth={1.75} />
-              <span className="flex-1 text-[15px] text-neutral-900">Contact us</span>
-              <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" strokeWidth={1.75} />
-            </Link>
-          </li>
-        ) : audience === "admin" ? (
-          <li>
-            <Link
-              href="/admin/team"
-              onClick={onContact}
-              className="flex w-full items-center gap-3 py-3.5 text-left transition hover:bg-neutral-50"
-            >
-              <Mail className="h-[18px] w-[18px] shrink-0 text-neutral-500" strokeWidth={1.75} />
-              <span className="flex-1 text-[15px] text-neutral-900">Admin team</span>
-              <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" strokeWidth={1.75} />
-            </Link>
-          </li>
-        ) : null}
+        {links.map((item, index) => {
+          const Icon = item.icon;
+          const rowClass =
+            "flex w-full items-center gap-3 py-3.5 text-left transition hover:bg-neutral-50";
+          const isLast = index === links.length - 1;
+          const liClass = isLast ? undefined : "border-b border-neutral-100";
+
+          if (item.kind === "action") {
+            return (
+              <li key={item.label} className={liClass}>
+                <button type="button" onClick={item.onClick} className={rowClass}>
+                  <Icon className="h-[18px] w-[18px] shrink-0 text-neutral-500" strokeWidth={1.75} />
+                  <span className="flex-1 text-[15px] text-neutral-900">{item.label}</span>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" strokeWidth={1.75} />
+                </button>
+              </li>
+            );
+          }
+
+          if (item.kind === "external") {
+            return (
+              <li key={item.label} className={liClass}>
+                <a
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={rowClass}
+                >
+                  <Icon className="h-[18px] w-[18px] shrink-0 text-neutral-500" strokeWidth={1.75} />
+                  <span className="flex-1 text-[15px] text-neutral-900">{item.label}</span>
+                  <ExternalLink className="h-4 w-4 shrink-0 text-neutral-400" strokeWidth={1.75} />
+                </a>
+              </li>
+            );
+          }
+
+          return (
+            <li key={item.label} className={liClass}>
+              <Link href={item.href} onClick={onContact} className={rowClass}>
+                <Icon className="h-[18px] w-[18px] shrink-0 text-neutral-500" strokeWidth={1.75} />
+                <span className="flex-1 text-[15px] text-neutral-900">{item.label}</span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" strokeWidth={1.75} />
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
