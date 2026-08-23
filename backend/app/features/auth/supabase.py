@@ -2,6 +2,7 @@
 
 from typing import Any
 
+import httpx
 from supabase import Client
 from supabase_auth.errors import AuthApiError
 
@@ -12,9 +13,26 @@ from app.features.auth import messages as auth_messages
 
 logger = get_logger(__name__)
 
+_UPSTREAM_UNAVAILABLE_CODE = "auth_upstream_unavailable"
 
-def _fail(error: str) -> dict[str, Any]:
-    return {"success": False, "error": error}
+
+def _fail(error: str, *, code: str | None = None) -> dict[str, Any]:
+    payload: dict[str, Any] = {"success": False, "error": error}
+    if code:
+        payload["code"] = code
+    return payload
+
+
+def _upstream_unavailable() -> dict[str, Any]:
+    return _fail(
+        auth_messages.AUTH_UPSTREAM_UNAVAILABLE,
+        code=_UPSTREAM_UNAVAILABLE_CODE,
+    )
+
+
+def is_upstream_unavailable(result: dict[str, Any]) -> bool:
+    """True when GoTrue timed out or could not be reached (keep the session)."""
+    return result.get("code") == _UPSTREAM_UNAVAILABLE_CODE
 
 
 def _user_info(user: Any) -> dict[str, Any]:
@@ -85,6 +103,9 @@ class SupabaseAuthService:
                 return _fail(auth_messages.SIGNUP_EMAIL_EXISTS)
             logger.info("sign_up rejected email=%s error=%s", email, e)
             return _fail(auth_messages.SIGNUP_FAILED)
+        except httpx.TransportError:
+            logger.warning("sign_up failed email=%s (GoTrue timeout/network)", email)
+            return _fail(auth_messages.SIGNUP_FAILED)
         except Exception:
             logger.exception("sign_up failed email=%s", email)
             return _fail(auth_messages.SIGNUP_FAILED)
@@ -111,6 +132,9 @@ class SupabaseAuthService:
                 return _fail(auth_messages.EMAIL_NOT_CONFIRMED_SUPABASE)
             logger.info("sign_in rejected email=%s error=%s", email, e)
             return _fail(auth_messages.SIGN_IN_UNAVAILABLE)
+        except httpx.TransportError:
+            logger.warning("sign_in failed email=%s (GoTrue timeout/network)", email)
+            return _fail(auth_messages.SIGN_IN_UNAVAILABLE)
         except Exception:
             logger.exception("sign_in failed email=%s", email)
             return _fail(auth_messages.SIGN_IN_UNAVAILABLE)
@@ -119,6 +143,9 @@ class SupabaseAuthService:
         try:
             self._client.auth.sign_out()
             return {"success": True}
+        except httpx.TransportError:
+            logger.warning("sign_out failed (GoTrue timeout/network)")
+            return _fail(auth_messages.SIGNOUT_FAILED)
         except Exception:
             logger.exception("sign_out failed")
             return _fail(auth_messages.SIGNOUT_FAILED)
@@ -134,6 +161,9 @@ class SupabaseAuthService:
         except AuthApiError as e:
             logger.debug("refresh_session rejected token: %s", e)
             return _fail(auth_messages.REFRESH_SESSION_EXPIRED)
+        except httpx.TransportError:
+            logger.warning("refresh_session failed (GoTrue timeout/network)")
+            return _upstream_unavailable()
         except Exception:
             logger.exception("refresh_session failed")
             return _fail(auth_messages.REFRESH_SESSION_EXPIRED)
@@ -147,6 +177,9 @@ class SupabaseAuthService:
         except AuthApiError as e:
             logger.debug("get_user_from_access_token rejected token: %s", e)
             return _fail(auth_messages.SIGN_IN_REQUIRED)
+        except httpx.TransportError:
+            logger.warning("get_user_from_access_token failed (GoTrue timeout/network)")
+            return _upstream_unavailable()
         except Exception:
             logger.exception("get_user_from_access_token failed")
             return _fail(auth_messages.SIGN_IN_REQUIRED)

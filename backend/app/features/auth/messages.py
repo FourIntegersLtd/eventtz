@@ -63,6 +63,9 @@ SIGN_IN_REQUIRED = "Please sign in to continue."
 SESSION_EXPIRED = "Session expired. Please sign in again."
 REFRESH_SESSION_EXPIRED = "Your session has expired. Please sign in again."
 REFRESH_SIGN_IN_AGAIN = "Please sign in again."
+AUTH_UPSTREAM_UNAVAILABLE = (
+    "We couldn't reach the sign-in service. Please try again."
+)
 
 # --- Signup / signin / signout ---
 

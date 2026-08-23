@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, NoReturn
 
 from fastapi import HTTPException, Request, Response
 
 from app.core.config import get_settings
 from app.core.constants import ACCESS_COOKIE_NAME, REFRESH_COOKIE_NAME
 from app.features.auth import messages as auth_messages
-from app.features.auth.supabase import SupabaseAuthService
+from app.features.auth.supabase import SupabaseAuthService, is_upstream_unavailable
 from app.core.db import get_supabase_auth_client
 
 
@@ -67,6 +67,20 @@ def _looks_like_jwt(token: str) -> bool:
     return token.count(".") == 2 and " " not in token
 
 
+def raise_failed_auth(
+    response: Response,
+    result: dict[str, Any],
+    *,
+    fallback: str,
+) -> NoReturn:
+    """Fail the request without treating a GoTrue outage as a signed-out session."""
+    error = result.get("error") or fallback
+    if is_upstream_unavailable(result):
+        raise HTTPException(status_code=503, detail=error)
+    clear_session_cookies(response)
+    raise HTTPException(status_code=401, detail=error)
+
+
 def get_current_user_or_raise(request: Request, response: Response) -> dict[str, Any]:
     """Validate session cookie and return the Supabase auth user (before merging public.users)."""
     access_token = request.cookies.get(ACCESS_COOKIE_NAME)
@@ -84,5 +98,4 @@ def get_current_user_or_raise(request: Request, response: Response) -> dict[str,
     result = service.get_user_from_access_token(access_token)
     if result.get("success"):
         return result["user"]
-    clear_session_cookies(response)
-    raise HTTPException(status_code=401, detail=result.get("error", auth_messages.SIGN_IN_REQUIRED))
+    raise_failed_auth(response, result, fallback=auth_messages.SIGN_IN_REQUIRED)
