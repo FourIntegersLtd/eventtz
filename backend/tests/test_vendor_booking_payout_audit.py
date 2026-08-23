@@ -8,11 +8,15 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from app.features.bookings.payment_completion import (
+    confirm_completion_for_client,
     confirm_completion_for_vendor,
     release_vendor_payout_and_complete_booking,
 )
 from app.features.bookings.payment_finalize import _finalize_booking_payment_from_checkout_session
-from app.features.bookings.status import update_booking_request_status_for_vendor
+from app.features.bookings.status import (
+    cancel_booking_request_for_client,
+    update_booking_request_status_for_vendor,
+)
 
 
 def _vendor_accepted_row(*, payment_status: str, checkout_session_id: str | None = "cs_live") -> dict:
@@ -50,6 +54,40 @@ def test_vendor_cancel_while_checkout_pending_expires_session(
     mock_table.execute.side_effect = [MagicMock(data=[row]), MagicMock(data=[{"id": "b1"}])]
 
     result = update_booking_request_status_for_vendor("v1", "b1", new_status="cancelled")
+    assert result == {"id": "b1", "status": "cancelled"}
+    mock_expire.assert_called_once_with("cs_live")
+    mock_refund.assert_not_called()
+
+
+@patch("app.features.payments.stripe.expire_checkout_session")
+@patch("app.features.bookings.payments.refund_booking_on_cancel")
+@patch("app.features.bookings.disputes.has_active_dispute_for_booking", return_value=False)
+@patch("app.features.bookings.status_client._notify_booking_changed")
+@patch("app.features.bookings.status_client.dispatch_booking_notification")
+@patch("app.features.bookings.status_client.get_db")
+def test_client_cancel_while_checkout_pending_expires_session(
+    mock_get_db,
+    _notify,
+    _dispatch,
+    _dispute,
+    mock_refund,
+    mock_expire,
+):
+    row = {
+        "id": "b1",
+        "status": "accepted",
+        "client_user_id": "c1",
+        "vendor_user_id": "v1",
+        "payment_status": "pending",
+        "stripe_checkout_session_id": "cs_live",
+    }
+    mock_table = MagicMock()
+    mock_get_db.return_value.table.return_value = mock_table
+    for m in ("select", "eq", "limit", "update", "in_"):
+        getattr(mock_table, m).return_value = mock_table
+    mock_table.execute.side_effect = [MagicMock(data=[row]), MagicMock(data=[{"id": "b1"}])]
+
+    result = cancel_booking_request_for_client("c1", "b1")
     assert result == {"id": "b1", "status": "cancelled"}
     mock_expire.assert_called_once_with("cs_live")
     mock_refund.assert_not_called()
@@ -145,3 +183,27 @@ def test_confirm_completion_rejected_before_event_day_over(mock_get_db):
 
     with pytest.raises(ValueError, match="event day"):
         confirm_completion_for_vendor("v1", "b1")
+
+
+@patch("app.features.bookings.payment_completion.get_db")
+def test_client_confirm_completion_rejected_before_event_day_over(mock_get_db):
+    tomorrow = (datetime.now(timezone.utc) + timedelta(days=2)).date().isoformat()
+    row = {
+        "id": "b1",
+        "status": "accepted",
+        "payment_status": "paid",
+        "event_date": tomorrow,
+        "event_end_date": None,
+        "client_completion_confirmed_at": None,
+        "vendor_completion_confirmed_at": None,
+        "client_user_id": "c1",
+        "vendor_user_id": "v1",
+    }
+    mock_table = MagicMock()
+    mock_get_db.return_value.table.return_value = mock_table
+    for m in ("select", "eq", "limit"):
+        getattr(mock_table, m).return_value = mock_table
+    mock_table.execute.return_value = MagicMock(data=[row])
+
+    with pytest.raises(ValueError, match="event day"):
+        confirm_completion_for_client("c1", "b1")
