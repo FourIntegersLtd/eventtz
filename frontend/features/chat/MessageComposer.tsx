@@ -67,7 +67,7 @@ export function MessageComposer({
         className={
           variant === "compose"
             ? "flex flex-col gap-3"
-            : "flex flex-col gap-3 sm:flex-row sm:items-end"
+            : "flex min-w-0 items-end gap-3"
         }
       >
         <textarea
