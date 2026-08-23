@@ -242,7 +242,7 @@ export function ChatThreadView({
         isDrawer ? "h-full min-h-0 flex-1" : pageThreadShell
       }`}
     >
-      <div className="shrink-0 flex flex-col gap-3 border-b border-neutral-100 px-5 py-4 sm:flex-row sm:items-center sm:gap-4 sm:px-6 sm:py-5">
+      <div className="flex min-w-0 shrink-0 flex-col gap-3 border-b border-neutral-100 px-5 py-4 sm:flex-row sm:items-center sm:gap-4 sm:px-6 sm:py-5">
         {backHref && !isDrawer ? (
           <BackLink
             href={backHref}
@@ -253,18 +253,20 @@ export function ChatThreadView({
           />
         ) : null}
 
-        <div
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-semibold text-primary"
-          aria-hidden
-        >
-          {peerInitials(peerName)}
-        </div>
+        <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
+          <div
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-semibold text-primary"
+            aria-hidden
+          >
+            {peerInitials(peerName)}
+          </div>
 
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-heading text-lg font-semibold text-neutral-900">
-            {peerName}
-          </p>
-          <p className="mt-0.5 text-sm leading-snug text-neutral-500">{subtitle}</p>
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-heading text-lg font-semibold text-neutral-900">
+              {peerName}
+            </p>
+            <p className="mt-0.5 text-sm leading-snug text-neutral-500">{subtitle}</p>
+          </div>
         </div>
 
         {portal === "vendor" && conv && !isSupport ? (
