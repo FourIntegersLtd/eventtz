@@ -900,6 +900,19 @@ def create_transfer(
         raise
 
 
+def expire_checkout_session(session_id: str | None) -> None:
+    """Best-effort close of an open Checkout Session so a cancelled booking cannot still be paid."""
+    sid = str(session_id or "").strip()
+    if not sid.startswith("cs_"):
+        return
+    try:
+        _stripe().checkout.Session.expire(sid)
+    except stripe.InvalidRequestError as e:
+        logger.info("checkout session expire skipped session=%s: %s", sid, e)
+    except Exception:
+        logger.exception("checkout session expire failed session=%s", sid)
+
+
 def create_refund(
     *,
     payment_intent_id: str,

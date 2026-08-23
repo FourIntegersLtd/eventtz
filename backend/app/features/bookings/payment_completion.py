@@ -18,7 +18,10 @@ from app.features.email.dispatch import (
     send_admin_payout_stuck_email,
 )
 from app.features.bookings import messages as booking_messages
-from app.features.bookings.completion_rules import both_parties_confirmed_awaiting_payout
+from app.features.bookings.completion_rules import (
+    both_parties_confirmed_awaiting_payout,
+    event_day_over,
+)
 from app.features.payments import stripe as stripe_service
 
 
@@ -34,8 +37,8 @@ def _serialize_completion_state(row: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _finalize_completion(row: dict[str, Any]) -> dict[str, Any]:
-    """Both parties have confirmed: mark the booking completed and pay the vendor."""
+def release_vendor_payout_and_complete_booking(row: dict[str, Any]) -> dict[str, Any]:
+    """Stripe Transfer of the vendor share, then mark the booking completed and payout released."""
     booking_id = str(row.get("id") or "")
     # Reload from the database - list and dashboard views omit vendor_amount_gbp and other payment fields.
     full = _load_full_booking_row(booking_id)
@@ -59,11 +62,11 @@ def _finalize_completion(row: dict[str, Any]) -> dict[str, Any]:
             dispatch_booking_notification(
                 user_id=vendor_id,
                 booking_id=booking_id,
-                kind="completion_confirmed_awaiting_other_party",
+                kind="payout_held_connect_incomplete",
                 body=(
-                    "Both sides have confirmed this booking is complete, but your payout account "
-                    "is not ready yet.\n\n"
-                    "Please finish Stripe verification so we can release your funds."
+                    "Both of you confirmed the event is complete. We are holding your payout "
+                    "until you finish Stripe payout setup.\n\n"
+                    "Open Payouts to complete verification so we can send your funds."
                 ),
             )
         _notify_pair(client_id, vendor_id)
@@ -129,14 +132,26 @@ def _finalize_completion(row: dict[str, Any]) -> dict[str, Any]:
         )
         .eq("id", booking_id)
         .eq("status", "accepted")
+        .eq("payment_status", "paid")
         .execute()
     )
     updated = getattr(upd, "data", None) or []
-    final_row = (
-        updated[0]
-        if updated and isinstance(updated[0], dict)
-        else {**row, "status": "completed", "payment_status": "payout_released"}
-    )
+    if not updated or not isinstance(updated[0], dict):
+        reloaded = _load_full_booking_row(booking_id) or row
+        if str(reloaded.get("payment_status") or "") == "payout_released":
+            logger.info(
+                "payout already released booking=%s; skipping duplicate notify",
+                booking_id,
+            )
+            return _serialize_completion_state(reloaded)
+        logger.error(
+            "transfer succeeded but booking row was not updated booking=%s status=%s payment=%s",
+            booking_id,
+            reloaded.get("status"),
+            reloaded.get("payment_status"),
+        )
+        return _serialize_completion_state(reloaded)
+    final_row = updated[0]
 
     try:
         from app.features.analytics.events import record_marketplace_event
@@ -176,7 +191,9 @@ def _finalize_completion(row: dict[str, Any]) -> dict[str, Any]:
     return _serialize_completion_state(final_row)
 
 
-def _confirm_completion(booking_id: str, *, actor: str, user_id: str) -> dict[str, Any] | None:
+def record_party_completion_confirmation(
+    booking_id: str, *, actor: str, user_id: str,
+) -> dict[str, Any] | None:
     db = get_db()
     id_col = "client_user_id" if actor == "client" else "vendor_user_id"
     res = (
@@ -204,6 +221,9 @@ def _confirm_completion(booking_id: str, *, actor: str, user_id: str) -> dict[st
         if both_parties_confirmed_awaiting_payout(row):
             return _finalize_completion(row)
         return _serialize_completion_state(row)
+
+    if not event_day_over(row):
+        raise ValueError(booking_messages.EVENT_DAY_NOT_OVER)
 
     upd = (
         db.table("booking_requests")
@@ -238,20 +258,22 @@ def _confirm_completion(booking_id: str, *, actor: str, user_id: str) -> dict[st
                 ),
             )
         _notify_pair(client_id, vendor_id)
-        from app.features.bookings.payment_maintenance import touch_booking_completion_side_effects
+        from app.features.bookings.payment_maintenance import (
+            run_post_event_payout_and_reminder_for_booking,
+        )
 
-        touch_booking_completion_side_effects(row)
+        run_post_event_payout_and_reminder_for_booking(row)
         return _serialize_completion_state(row)
 
     return _finalize_completion(row)
 
 
 def confirm_completion_for_client(client_user_id: str, booking_id: str) -> dict[str, Any] | None:
-    return _confirm_completion(booking_id, actor="client", user_id=client_user_id)
+    return record_party_completion_confirmation(booking_id, actor="client", user_id=client_user_id)
 
 
 def confirm_completion_for_vendor(vendor_user_id: str, booking_id: str) -> dict[str, Any] | None:
-    return _confirm_completion(booking_id, actor="vendor", user_id=vendor_user_id)
+    return record_party_completion_confirmation(booking_id, actor="vendor", user_id=vendor_user_id)
 
 
 def admin_release_payout_for_booking(booking_id: str) -> dict[str, Any] | None:
@@ -263,4 +285,9 @@ def admin_release_payout_for_booking(booking_id: str) -> dict[str, Any] | None:
     row = rows[0]
     if str(row.get("payment_status") or "") != "paid":
         raise ValueError(booking_messages.ONLY_PAID_PAYOUT_RELEASE)
-    return _finalize_completion(row)
+    return release_vendor_payout_and_complete_booking(row)
+
+
+# Compatibility aliases for tests and admin recovery until all call sites use the new names.
+_finalize_completion = release_vendor_payout_and_complete_booking
+_confirm_completion = record_party_completion_confirmation

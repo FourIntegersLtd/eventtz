@@ -48,6 +48,7 @@ _USE_STORED_BODY: frozenset[str] = frozenset(
         "event_tomorrow",
         "vendor_event_tomorrow",
         "pay_to_confirm",
+        "payout_held_connect_incomplete",
     }
 )
 
@@ -278,6 +279,14 @@ _COPY: dict[str, dict[Portal, tuple[str, str]]] = {
             "Refund issued",
             "The client was refunded for this booking.\n\n"
             "The payment side of this booking is now closed. Thank you for your understanding.",
+        ),
+    },
+    "payout_held_connect_incomplete": {
+        "vendor": (
+            "Finish payout setup to get paid",
+            "You and the client both confirmed this event is complete. "
+            "We're holding your payout until you finish Stripe payout setup.\n\n"
+            "Open Payouts to complete verification so we can send your funds.",
         ),
     },
     "completion_confirmed_awaiting_other_party": {

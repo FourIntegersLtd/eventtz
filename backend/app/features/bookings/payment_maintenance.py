@@ -12,7 +12,7 @@ from app.features.bookings.completion_rules import (
     compute_payout_auto_release_at,
     event_day_over,
 )
-from app.features.bookings.payment_completion import _finalize_completion
+from app.features.bookings.payment_completion import release_vendor_payout_and_complete_booking
 from app.features.bookings.booking_payment_helpers import (
     _notify_pair,
     _now_iso, 
@@ -20,7 +20,9 @@ from app.features.bookings.booking_payment_helpers import (
 )
 from app.features.email.dispatch import dispatch_booking_notification
 
-LIST_COMPLETION_TOUCH_CAP = 10
+LIST_COMPLETION_REMINDER_CAP = 10
+# Old name kept so existing imports and tests keep working.
+LIST_COMPLETION_TOUCH_CAP = LIST_COMPLETION_REMINDER_CAP
 
 
 def _format_release_date(release_at: datetime) -> str:
@@ -28,7 +30,7 @@ def _format_release_date(release_at: datetime) -> str:
     return release_at.strftime("%A %d %B").replace(" 0", " ")
 
 
-def _claim_completion_reminder_sent(booking_id: str) -> bool:
+def mark_completion_reminder_sent_if_unset(booking_id: str) -> bool:
     """Atomically mark the reminder as sent. Returns False if another request already claimed it.
 
     List endpoints can call this concurrently (dashboard Promise.all, Strict Mode, realtime
@@ -59,7 +61,7 @@ def maybe_send_completion_reminder_for_row(row: dict[str, Any]) -> bool:
     if not event_day_over(row):
         return False
     booking_id = str(row.get("id") or "")
-    if not _claim_completion_reminder_sent(booking_id):
+    if not mark_completion_reminder_sent_if_unset(booking_id):
         return False
     client_id = str(row.get("client_user_id") or "")
     vendor_id = str(row.get("vendor_user_id") or "")
@@ -93,7 +95,7 @@ def maybe_send_completion_reminder_for_row(row: dict[str, Any]) -> bool:
     return True
 
 
-def _retry_stuck_mutual_completion_payout(row: dict[str, Any]) -> bool:
+def retry_payout_when_both_parties_already_confirmed(row: dict[str, Any]) -> bool:
     """Both parties confirmed but payout is still ``paid`` - retry the Transfer."""
     if not both_parties_confirmed_awaiting_payout(row):
         return False
@@ -109,13 +111,13 @@ def _retry_stuck_mutual_completion_payout(row: dict[str, Any]) -> bool:
     return str((result or {}).get("payment_status") or "") == "payout_released"
 
 
-def touch_booking_completion_side_effects(row: dict[str, Any]) -> bool:
+def run_post_event_payout_and_reminder_for_booking(row: dict[str, Any]) -> bool:
     """For one booking (detail page or hourly job): send a reminder, then pay the vendor if due."""
     try:
         maybe_send_completion_reminder_for_row(row)
     except Exception:
         logger.exception("completion reminder failed booking=%s", row.get("id"))
-    if _retry_stuck_mutual_completion_payout(row):
+    if retry_payout_when_both_parties_already_confirmed(row):
         return True
     try:
         return _auto_release_payout_row(row)
@@ -127,19 +129,19 @@ def touch_booking_completion_side_effects(row: dict[str, Any]) -> bool:
         return False
 
 
-def touch_completion_side_effects_for_booking_rows(
+def send_completion_reminders_for_booking_list(
     rows: list[dict[str, Any]],
     *,
-    cap: int = LIST_COMPLETION_TOUCH_CAP,
+    cap: int = LIST_COMPLETION_REMINDER_CAP,
 ) -> None:
     """Send completion reminders when a booking list is loaded - reminders only, no payout.
 
     Automatic payout runs on the booking detail page, the hourly job, and admin retry -
     not on list views, which refresh often from the dashboard.
     """
-    touched = 0
+    reminded = 0
     for row in rows:
-        if touched >= cap:
+        if reminded >= cap:
             break
         if str(row.get("status") or "") != "accepted":
             continue
@@ -151,17 +153,17 @@ def touch_completion_side_effects_for_booking_rows(
             maybe_send_completion_reminder_for_row(row)
         except Exception:
             logger.exception("completion reminder failed booking=%s", row.get("id"))
-        touched += 1
+        reminded += 1
 
 
-def _auto_release_payout_row(row: dict[str, Any]) -> bool:
+def auto_release_payout_if_grace_period_elapsed(row: dict[str, Any]) -> bool:
     """Pay the vendor for one booking if the automatic payout date has passed.
 
     Why: if neither party confirms after the event, funds would otherwise sit
     held forever; this is the 48h safety net (skipped when a dispute or support hold exists).
 
     Returns True when the payout was sent. Raises ValueError when the Stripe
-    transfer fails (from _finalize_completion).
+    transfer fails (from release_vendor_payout_and_complete_booking).
     """
     # Import here to avoid a circular import at module load.
     from app.features.bookings.disputes import has_active_dispute_for_booking
@@ -193,10 +195,12 @@ def maybe_auto_release_payout_for_booking(booking_id: str) -> bool:
     rows = getattr(res, "data", None) or []
     if not rows or not isinstance(rows[0], dict):
         return False
-    return touch_booking_completion_side_effects(rows[0])
+    return run_post_event_payout_and_reminder_for_booking(rows[0])
 
 
-def _due_completion_candidates(limit: int, *, extra_null_col: str) -> list[dict[str, Any]]:
+def bookings_due_for_post_event_payout_or_reminder(
+    limit: int, *, extra_null_col: str,
+) -> list[dict[str, Any]]:
     """Accepted + paid bookings whose event day has ended (incl. multi-day events)."""
     res = (
         get_db()
@@ -224,9 +228,11 @@ def _due_completion_candidates(limit: int, *, extra_null_col: str) -> list[dict[
 def process_due_payout_auto_releases(limit: int = 50) -> int:
     """Hourly job: pay vendors whose automatic payout date has passed. Returns how many were paid."""
     released = 0
-    for row in _due_completion_candidates(limit, extra_null_col="payout_auto_released_at"):
+    for row in _due_completion_candidates(
+        limit, extra_null_col="payout_auto_released_at",
+    ):
         try:
-            if _auto_release_payout_row(row):
+            if auto_release_payout_if_grace_period_elapsed(row):
                 released += 1
         except Exception:
             logger.exception("auto-release failed booking=%s", row.get("id"))
@@ -236,10 +242,20 @@ def process_due_payout_auto_releases(limit: int = 50) -> int:
 def send_completion_reminders(limit: int = 50) -> int:
     """Hourly job: one post-event reminder per booking to whoever has not confirmed yet."""
     sent = 0
-    for row in _due_completion_candidates(limit, extra_null_col="completion_reminder_sent_at"):
+    for row in _due_completion_candidates(
+        limit, extra_null_col="completion_reminder_sent_at",
+    ):
         try:
             if maybe_send_completion_reminder_for_row(row):
                 sent += 1
         except Exception:
             logger.exception("completion reminder failed booking=%s", row.get("id"))
     return sent
+
+
+# Names used by tests and older imports.
+touch_booking_completion_side_effects = run_post_event_payout_and_reminder_for_booking
+touch_completion_side_effects_for_booking_rows = send_completion_reminders_for_booking_list
+_auto_release_payout_row = auto_release_payout_if_grace_period_elapsed
+_due_completion_candidates = bookings_due_for_post_event_payout_or_reminder
+_finalize_completion = release_vendor_payout_and_complete_booking

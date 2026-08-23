@@ -41,6 +41,7 @@ BookingNotifyKind = Literal[
     "event_tomorrow",
     "vendor_event_tomorrow",
     "pay_to_confirm",
+    "payout_held_connect_incomplete",
 ]
 
 

@@ -1,17 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SettingsTabs } from "@/features/settings/SettingsTabs";
 import { useToast } from "@/components/ui/Toast";
 import { VendorPaymentHistory } from "@/features/vendor/payments/VendorPaymentHistory";
 import { VendorPayoutAccountPanel } from "@/features/vendor/payments/VendorPayoutAccountPanel";
 import {
-  fetchVendorStripeConnectStatus,
-  getApiErrorDetail,
-  postConnectStripeAccount,
-  type VendorPaymentsStatus,
-} from "@/lib/vendorPaymentsApi";
+  isVendorPayoutsReady,
+  useVendorPayoutsReady,
+} from "@/features/vendor/payments/useVendorPayoutsReady";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 const TABS = [
@@ -40,31 +38,23 @@ export function VendorPaymentsView() {
     (): VendorPaymentsTabId => resolvePaymentsTab(searchParams.get("tab")),
     [searchParams],
   );
+  const stripeReturnHandled = useRef(false);
 
-  const [status, setStatus] = useState<VendorPaymentsStatus | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [connecting, setConnecting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetchVendorStripeConnectStatus();
-      setStatus(res);
-    } catch {
-      setError("Could not load your payout status.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
+  const {
+    status,
+    loading,
+    connecting,
+    error,
+    refresh,
+    connectPayouts,
+  } = useVendorPayoutsReady(true);
 
   useEffect(() => {
     const stripeParam = searchParams.get("stripe");
     if (stripeParam !== "return" && stripeParam !== "refresh") return;
+    if (stripeReturnHandled.current) return;
+    stripeReturnHandled.current = true;
+
     const params = new URLSearchParams(searchParams.toString());
     params.delete("stripe");
     if (!params.get("tab")) {
@@ -73,35 +63,16 @@ export function VendorPaymentsView() {
     const next = params.toString();
     router.replace(next ? `/vendor/payments?${next}` : "/vendor/payments?tab=account");
     void (async () => {
-      await refresh();
-      if (stripeParam === "return") {
-        try {
-          const res = await fetchVendorStripeConnectStatus();
-          if (res.charges_enabled && res.payouts_enabled) {
-            track(MixpanelEvents.vendor_payouts_ready, { source: "payments" });
-            showToast({ title: "Payout account connected", tone: "success" });
-          }
-        } catch {
-          /* refresh already set error */
-        }
+      const res = await refresh();
+      if (stripeParam === "return" && isVendorPayoutsReady(res)) {
+        track(MixpanelEvents.vendor_payouts_ready, { source: "payments" });
+        showToast({ title: "Payout account connected", tone: "success" });
       }
     })();
   }, [searchParams, router, refresh, showToast]);
 
-  const onConnect = async () => {
-    setConnecting(true);
-    setError(null);
-    try {
-      track(MixpanelEvents.vendor_payout_setup_started, {
-        source: "payments",
-        return_path: "/vendor/payments",
-      });
-      const { onboarding_url } = await postConnectStripeAccount("/vendor/payments");
-      window.location.href = onboarding_url;
-    } catch (err) {
-      setError(getApiErrorDetail(err) ?? "We couldn't start payout setup. Please try again.");
-      setConnecting(false);
-    }
+  const startStripeConnectOnboarding = () => {
+    void connectPayouts("/vendor/payments");
   };
 
   const activeLabel = TABS.find((item) => item.id === tab)?.label;
@@ -117,7 +88,7 @@ export function VendorPaymentsView() {
             loading={loading}
             connecting={connecting}
             error={error}
-            onConnect={() => void onConnect()}
+            onConnect={startStripeConnectOnboarding}
           />
         ) : (
           <VendorPaymentHistory />

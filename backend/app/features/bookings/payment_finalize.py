@@ -100,10 +100,11 @@ def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> 
     booking_row = existing_rows[0]
     if str(booking_row.get("status") or "") != "accepted":
         logger.warning(
-            "checkout session rejected: booking %s status=%s",
+            "checkout session rejected: booking %s status=%s — refunding if payment succeeded",
             booking_id,
             booking_row.get("status"),
         )
+        _refund_checkout_if_booking_no_longer_accepted(session, booking_id)
         return False
 
     stored_session = str(booking_row.get("stripe_checkout_session_id") or "").strip()
@@ -229,6 +230,45 @@ def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> 
     except Exception:
         pass
     return True
+
+
+def _refund_checkout_if_booking_no_longer_accepted(session: dict[str, Any], booking_id: str) -> None:
+    """Client paid Checkout after the booking left accepted — refund instead of keeping the funds."""
+    pi_raw = session.get("payment_intent")
+    payment_intent_id: str | None = None
+    if isinstance(pi_raw, str) and pi_raw.startswith("pi_"):
+        payment_intent_id = pi_raw
+    elif isinstance(pi_raw, dict):
+        pid = pi_raw.get("id")
+        if isinstance(pid, str) and pid.startswith("pi_"):
+            payment_intent_id = pid
+    if not payment_intent_id:
+        logger.error(
+            "cannot refund inactive booking=%s: checkout session has no payment_intent",
+            booking_id,
+        )
+        return
+    try:
+        stripe_service.create_refund(
+            payment_intent_id=payment_intent_id,
+            booking_id=booking_id,
+            idempotency_suffix="stale-checkout-not-accepted",
+        )
+    except Exception:
+        logger.exception(
+            "refund failed for inactive booking=%s payment_intent=%s",
+            booking_id,
+            payment_intent_id,
+        )
+        return
+    get_db().table("booking_requests").update(
+        {"payment_status": "refunded"},
+    ).eq("id", booking_id).in_("payment_status", ["pending", "unpaid", "paid"]).execute()
+    logger.info(
+        "refunded checkout for inactive booking=%s payment_intent=%s",
+        booking_id,
+        payment_intent_id,
+    )
 
 
 def handle_checkout_session_completed(event_id: str, session: dict[str, Any]) -> None:

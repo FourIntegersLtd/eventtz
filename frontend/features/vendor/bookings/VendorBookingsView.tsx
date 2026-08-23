@@ -20,50 +20,50 @@ type VendorBookingsViewProps = {
 };
 
 export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProps) {
-  const v = useVendorBookingsController({ selectedBookingId });
+  const controller = useVendorBookingsController({ selectedBookingId });
 
   return (
     <>
       <PayoutSetupRequiredModal
-        isOpen={v.payoutModalOpen}
-        connecting={v.connectingPayouts}
-        error={v.payoutConnectError}
+        isOpen={controller.payoutModalOpen}
+        connecting={controller.connectingPayouts}
+        error={controller.payoutConnectError}
         onClose={() => {
-          v.setPayoutModalOpen(false);
-          v.setPayoutConnectError(null);
+          controller.setPayoutModalOpen(false);
+          controller.setPayoutConnectError(null);
         }}
-        onCompleteSetup={v.onCompletePayoutSetup}
+        onCompleteSetup={controller.onCompletePayoutSetup}
       />
-      {v.confirmAction ? (
+      {controller.confirmAction ? (
         <ConfirmDialog
           isOpen
-          title={v.confirmCopy[v.confirmAction].title}
-          description={v.confirmCopy[v.confirmAction].description}
-          cancelLabel={v.confirmCopy[v.confirmAction].cancelLabel}
-          confirmLabel={v.confirmCopy[v.confirmAction].confirmLabel}
-          confirmLoadingLabel={v.confirmCopy[v.confirmAction].loadingLabel}
-          confirmVariant={v.confirmCopy[v.confirmAction].variant}
-          lottie={v.confirmAction === "complete" ? "successCheck" : "failure"}
-          loading={v.actionBusy}
-          onCancel={() => v.setConfirmAction(null)}
-          onConfirm={v.handleConfirmAction}
+          title={controller.confirmCopy[controller.confirmAction].title}
+          description={controller.confirmCopy[controller.confirmAction].description}
+          cancelLabel={controller.confirmCopy[controller.confirmAction].cancelLabel ?? "Go back"}
+          confirmLabel={controller.confirmCopy[controller.confirmAction].confirmLabel}
+          confirmLoadingLabel={controller.confirmCopy[controller.confirmAction].loadingLabel}
+          confirmVariant={controller.confirmCopy[controller.confirmAction].variant}
+          lottie={controller.confirmAction === "complete" ? "successCheck" : "failure"}
+          loading={controller.actionBusy}
+          onCancel={() => controller.setConfirmAction(null)}
+          onConfirm={controller.handleConfirmAction}
         />
       ) : null}
-      {v.detail ? (
+      {controller.detail ? (
         <ChatDrawer
-          isOpen={v.chatOpen}
+          isOpen={controller.chatOpen}
           onClose={() => {
-            v.setChatOpen(false);
-            v.setChatPrefill(null);
+            controller.setChatOpen(false);
+            controller.setChatPrefill(null);
           }}
-          initialDraft={v.chatPrefill}
+          initialDraft={controller.chatPrefill}
           portal="vendor"
-          counterpartyName={v.detail.client_email ?? "this client"}
-          conversationId={v.detail.conversation_id}
-          counterpartyUserId={v.detail.client_user_id ?? undefined}
+          counterpartyName={controller.detail.client_email ?? "this client"}
+          conversationId={controller.detail.conversation_id}
+          counterpartyUserId={controller.detail.client_user_id ?? undefined}
           onConversationCreated={(conversationId) => {
-            v.setDetail((d) =>
-              d && d.booking_request_id === v.detail!.booking_request_id ? { ...d, conversation_id: conversationId } : d,
+            controller.setDetail((d) =>
+              d && d.booking_request_id === controller.detail!.booking_request_id ? { ...d, conversation_id: conversationId } : d,
             );
           }}
         />
@@ -72,14 +72,14 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
         hasSelection={!!selectedBookingId}
         list={
           <BookingListPanel
-            tab={v.tab}
-            onTabChange={v.setTab}
-            rows={v.rows}
-            loading={v.listLoading}
-            error={v.listError}
+            tab={controller.tab}
+            onTabChange={controller.setTab}
+            rows={controller.rows}
+            loading={controller.listLoading}
+            error={controller.listError}
             selectedId={selectedBookingId ?? null}
-            onSelect={v.selectBooking}
-            emptyTitle={BOOKING_EMPTY_LIST_TITLE[v.tab]}
+            onSelect={controller.selectBooking}
+            emptyTitle={BOOKING_EMPTY_LIST_TITLE[controller.tab]}
           />
         }
         detail={
@@ -95,49 +95,49 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
             ) : null}
             <div className="min-h-0 flex-1 overflow-hidden">
               <BookingDetailPanel
-                booking={v.viewModel}
-                loading={v.detailLoading || (v.listLoading && !selectedBookingId)}
-                error={v.detailError}
-                actionError={v.actionError}
-                headerActions={v.headerActions}
-                footerActions={v.footerActions}
-                emptyTitle={v.list.length === 0 ? "No bookings yet" : "Select a booking"}
+                booking={controller.viewModel}
+                loading={controller.detailLoading || (controller.listLoading && !selectedBookingId)}
+                error={controller.detailError}
+                actionError={controller.actionError}
+                headerActions={controller.headerActions}
+                footerActions={controller.footerActions}
+                emptyTitle={controller.list.length === 0 ? "No bookings yet" : "Select a booking"}
                 slots={{
-                  beforeSections: v.detail ? (
+                  beforeSections: controller.detail ? (
                     <VendorBookingDetailExtras
-                      detail={v.detail}
-                      actionBusy={v.actionBusy}
-                      onConfirmComplete={() => v.setConfirmAction("complete")}
-                      onRetryPayout={() => void v.applyConfirmCompletion()}
+                      detail={controller.detail}
+                      actionBusy={controller.actionBusy}
+                      onConfirmComplete={() => controller.setConfirmAction("complete")}
+                      onRetryPayout={() => void controller.applyConfirmCompletion()}
                     />
                   ) : undefined,
-                  footerSection: v.showClientResponseFlow && v.detail ? (
+                  footerSection: controller.showClientResponseFlow && controller.detail ? (
                     <VendorBookingResponseFlow
-                      key={`${v.detail.booking_request_id}-${v.detail.vendor_adjustments.length}`}
-                      detail={v.detail}
-                      actionBusy={v.actionBusy}
-                      adjSaving={v.adjSaving}
-                      onAcceptAtListedPrice={() => v.requestAccept()}
-                      onDecline={() => void v.applyBookingStatus("declined")}
-                      onSendUpdatedPrice={(rows) => void v.sendUpdatedPrice(rows)}
-                      onOpenChat={() => v.setChatOpen(true)}
-                      onUseDraftInChat={(message) => v.setChatPrefill(message)}
+                      key={`${controller.detail.booking_request_id}-${controller.detail.vendor_adjustments.length}`}
+                      detail={controller.detail}
+                      actionBusy={controller.actionBusy}
+                      adjustmentSaving={controller.adjustmentSaving}
+                      onAcceptAtListedPrice={() => controller.requestAccept()}
+                      onDecline={() => void controller.applyBookingStatus("declined")}
+                      onSendUpdatedPrice={(rows) => void controller.sendUpdatedPrice(rows)}
+                      onOpenChat={() => controller.setChatOpen(true)}
+                      onUseDraftInChat={(message) => controller.setChatPrefill(message)}
                     />
                   ) : undefined,
                   afterSections:
-                    v.detail && v.detail.booking_status === "completed" ? (
+                    controller.detail && controller.detail.booking_status === "completed" ? (
                       <BookingReviewPanel
                         title="Client review"
-                        review={v.detail.review}
+                        review={controller.detail.review}
                         showReviewer
                         emptyLabel="The client has not left a review for this booking yet."
                       />
                     ) : undefined,
-                  disputeSection: v.detail ? (
+                  disputeSection: controller.detail ? (
                     <BookingDisputeSection
-                      bookingId={v.detail.booking_request_id}
+                      bookingId={controller.detail.booking_request_id}
                       role="vendor"
-                      bookingStatus={v.detail.booking_status}
+                      bookingStatus={controller.detail.booking_status}
                       presentation="drawer"
                     />
                   ) : (

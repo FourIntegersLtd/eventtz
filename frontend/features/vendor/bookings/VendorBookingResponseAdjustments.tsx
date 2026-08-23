@@ -9,63 +9,63 @@ import {
   applyDraftLine,
   costNeedsReason,
   formatLineSummary,
-  kindFromRow,
+  adjustmentKindFromRow,
   legacyLabelToReason,
   previewClientTotalLabel,
-  rowForKind,
-  type AdjDraftRow,
-  type AdjKind,
+  draftRowForAdjustmentKind,
+  type AdjustmentDraftRow,
+  type AdjustmentKind,
 } from "@/features/vendor/bookings/vendorBookingResponseHelpers";
 import type { BookingPricing } from "@/features/bookings/BookingPricingBreakdown";
 
 type VendorBookingResponseAdjustmentsProps = {
   pricing: BookingPricing | null | undefined;
-  initialLines: AdjDraftRow[];
+  initialLines: AdjustmentDraftRow[];
   actionBusy: boolean;
-  adjSaving: boolean;
+  adjustmentSaving: boolean;
   onBack: () => void;
-  onSendUpdatedPrice: (rows: AdjDraftRow[]) => void;
+  onSendUpdatedPrice: (rows: AdjustmentDraftRow[]) => void;
 };
 
 export function VendorBookingResponseAdjustments({
   pricing,
   initialLines,
   actionBusy,
-  adjSaving,
+  adjustmentSaving,
   onBack,
   onSendUpdatedPrice,
 }: VendorBookingResponseAdjustmentsProps) {
-  const [adjKind, setAdjKind] = useState<AdjKind>(() => {
+  const [adjKind, setAdjustmentKind] = useState<AdjustmentKind>(() => {
     const first = initialLines[0];
-    return first ? kindFromRow(first) : "cost";
+    return first ? adjustmentKindFromRow(first) : "cost";
   });
-  const [lines, setLines] = useState<AdjDraftRow[]>(initialLines);
+  const [lines, setLines] = useState<AdjustmentDraftRow[]>(initialLines);
   const [amountInput, setAmountInput] = useState(() => {
     const first = initialLines[0];
-    const kind = first ? kindFromRow(first) : "cost";
-    return rowForKind(initialLines, kind)?.amount ?? "";
+    const kind = first ? adjustmentKindFromRow(first) : "cost";
+    return draftRowForAdjustmentKind(initialLines, kind)?.amount ?? "";
   });
   const [reasonInput, setReasonInput] = useState(() => {
     const first = initialLines[0];
-    const kind = first ? kindFromRow(first) : "cost";
-    const active = rowForKind(initialLines, kind);
+    const kind = first ? adjustmentKindFromRow(first) : "cost";
+    const active = draftRowForAdjustmentKind(initialLines, kind);
     return active && kind === "cost" ? legacyLabelToReason(active.label) : "";
   });
   const [adjError, setAdjError] = useState<string | null>(null);
 
   const adjustDrafts = lines;
   const previewTotal = previewClientTotalLabel(pricing, adjustDrafts);
-  const otherKind: AdjKind = adjKind === "cost" ? "discount" : "cost";
-  const otherLine = rowForKind(lines, otherKind);
+  const otherKind: AdjustmentKind = adjKind === "cost" ? "discount" : "cost";
+  const otherLine = draftRowForAdjustmentKind(lines, otherKind);
 
-  const syncLines = (kind: AdjKind, amount: string, reason: string) => {
+  const syncLines = (kind: AdjustmentKind, amount: string, reason: string) => {
     setLines((prev) => applyDraftLine(prev, kind, amount, reason));
   };
 
   const handleAmountChange = (raw: string) => {
     if (raw.trim().startsWith("-")) {
       const numeric = raw.replace(/^-/, "");
-      setAdjKind("discount");
+      setAdjustmentKind("discount");
       setAmountInput(numeric);
       setReasonInput("");
       syncLines("discount", numeric, "");
@@ -80,9 +80,9 @@ export function VendorBookingResponseAdjustments({
     syncLines("cost", amountInput, raw);
   };
 
-  const handleKindChange = (kind: AdjKind) => {
-    setAdjKind(kind);
-    const row = rowForKind(lines, kind);
+  const handleKindChange = (kind: AdjustmentKind) => {
+    setAdjustmentKind(kind);
+    const row = draftRowForAdjustmentKind(lines, kind);
     setAmountInput(row?.amount ?? "");
     setReasonInput(kind === "cost" && row ? legacyLabelToReason(row.label) : "");
   };
@@ -192,7 +192,7 @@ export function VendorBookingResponseAdjustments({
         <Button
           variant="secondary"
           className="w-full sm:w-auto"
-          disabled={adjSaving || actionBusy}
+          disabled={adjustmentSaving || actionBusy}
           onClick={onBack}
         >
           Back
@@ -200,8 +200,8 @@ export function VendorBookingResponseAdjustments({
         <Button
           variant="primary"
           className="w-full sm:w-auto"
-          disabled={adjSaving || actionBusy || sendDisabled}
-          loading={adjSaving}
+          disabled={adjustmentSaving || actionBusy || sendDisabled}
+          loading={adjustmentSaving}
           onClick={handleSendUpdatedPrice}
         >
           Send new price

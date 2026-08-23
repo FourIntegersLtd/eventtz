@@ -56,6 +56,14 @@ export const BOOKING_CONFIRM_COPY = {
     confirmLabel: "Yes, cancel",
     confirmLoadingLabel: "Cancelling…",
   },
+  cancelVendorPending: {
+    title: "Cancel this booking?",
+    description:
+      "This ends the booking. If the client has started checkout, that payment will be cancelled or refunded so they are not charged for a cancelled booking.",
+    cancelLabel: "Keep booking",
+    confirmLabel: "Yes, cancel",
+    confirmLoadingLabel: "Cancelling…",
+  },
   cancelVendorPaid: {
     title: "Cancel this booking?",
     description:
@@ -148,6 +156,26 @@ export const CLIENT_BOOKING_TOAST_COPY = {
   requestsSent: (count: number) => `${count} requests sent`,
   requestsNotSent: "Requests not sent",
   partialRequestsSent: (sent: number, total: number) => `${sent} of ${total} requests sent`,
+} as const;
+
+export const VENDOR_BOOKING_TOAST_COPY = {
+  bookingAccepted: "Booking accepted",
+  bookingDeclined: "Booking declined",
+  quoteWithdrawn: "Quote withdrawn",
+  bookingCancelled: "Booking cancelled",
+  completionConfirmed: "Completion confirmed",
+  updatedPriceSent: "Updated price sent",
+  quoteSent: "Quote sent",
+} as const;
+
+export const VENDOR_BOOKING_ERROR_COPY = {
+  acceptFailed: "Could not accept this booking.",
+  declineFailed: "Could not decline this booking.",
+  withdrawFailed: "Could not withdraw this quote.",
+  cancelFailed: "Could not cancel this booking.",
+  completionFailed: "Could not confirm completion.",
+  priceUpdateFailed: "Could not send the updated price.",
+  quoteFailed: "Could not send quote.",
 } as const;
 
 export const CLIENT_BOOKING_ERROR_COPY = {
