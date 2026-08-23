@@ -63,6 +63,7 @@ def release_vendor_payout_and_complete_booking(row: dict[str, Any]) -> dict[str,
                 user_id=vendor_id,
                 booking_id=booking_id,
                 kind="payout_held_connect_incomplete",
+                mode="insert_if_absent",
                 body=(
                     "Both of you confirmed the event is complete. We are holding your payout "
                     "until you finish Stripe payout setup.\n\n"
