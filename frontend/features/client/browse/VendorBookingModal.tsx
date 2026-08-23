@@ -7,9 +7,6 @@ import { Button } from "@/components/ui/Button";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { DateInput } from "@/components/ui/DateInput";
-import { getApiErrorDetail } from "@/lib/api-errors";
-import { postBookingRequest, type ClientSearchContext } from "@/lib/clientBookingsApi";
-import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import {
   isoDatesInEventRange,
   vendorPayloadAllowsEventDates,
@@ -20,11 +17,12 @@ import {
 } from "@/lib/vendorDiscountDisplay";
 import { getBookingServiceFeePercent } from "@/lib/bookingServiceFee";
 import { todayIsoDate, isPastIsoDate } from "@/lib/eventDateValidation";
-import { clientBookingRequestSchema, parseForm } from "@/lib/validation";
 import {
   type BrowsePricingOption,
   buildBookingLineItems,
 } from "./vendorBrowseDetailModel";
+import { useVendorBookingSubmit } from "@/features/client/browse/useVendorBookingSubmit";
+import type { ClientSearchContext } from "@/lib/clientBookingsApi";
 import { ActiveEventPrefillBanner } from "@/features/bookings/ActiveEventPrefillBanner";
 import type { EventEnquirePrefill } from "@/features/bookings/eventEnquirePrefill";
 import {
@@ -86,11 +84,6 @@ export function VendorBookingModal({
   );
   const [venueAddress, setVenueAddress] = useState(initialPrefill?.venueAddress ?? "");
   const [notes, setNotes] = useState(initialPrefill?.notes ?? "");
-  const [validationError, setValidationError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitResult, setSubmitResult] = useState<
-    null | { type: "error"; message: string } | { type: "success"; bookingId: string }
-  >(null);
   const {
     pendingPrefill,
     linkedPrefill,
@@ -145,7 +138,19 @@ export function VendorBookingModal({
     return !vendorPayloadAllowsEventDates(vendorPayload, range);
   }, [vendorPayload, eventDate, eventEndDate]);
 
-  const dismissResultModal = () => setSubmitResult(null);
+  const {
+    validationError,
+    setValidationError,
+    submitting,
+    submitResult,
+    dismissResultModal,
+    submit: submitBooking,
+  } = useVendorBookingSubmit({
+    vendorUserId,
+    selectedEventId,
+    clientSearchContext,
+    calendarConflict,
+  });
 
   const lineItems = useMemo(
     () => buildBookingLineItems(pricingOptions, [...selectedIds]),
@@ -193,56 +198,14 @@ export function VendorBookingModal({
   const minEventDate = todayIsoDate();
 
   const submit = () => {
-    const parsed = parseForm(clientBookingRequestSchema, {
+    submitBooking({
       eventName,
       eventDate,
-      eventEndDate: eventEndDate || null,
+      eventEndDate,
       venueAddress,
       notes,
       selectedOptionIds: [...selectedIds],
     });
-    if (!parsed.ok) {
-      setValidationError(parsed.formError);
-      return;
-    }
-    if (calendarConflict) {
-      setValidationError(
-        "These dates don’t match this vendor’s availability. Adjust the dates or message them to confirm.",
-      );
-      return;
-    }
-    setValidationError(null);
-    setSubmitting(true);
-    void postBookingRequest({
-      vendor_user_id: vendorUserId,
-      event_name: parsed.data.eventName,
-      event_date: parsed.data.eventDate,
-      event_end_date: parsed.data.eventEndDate?.trim() || null,
-      event_postcode: null,
-      event_address: (parsed.data.venueAddress ?? "").trim() || null,
-      notes: (parsed.data.notes ?? "").trim() || null,
-      selected_option_ids: parsed.data.selectedOptionIds,
-      client_search_context: clientSearchContext ?? undefined,
-      event_id: selectedEventId,
-    })
-      .then((created) => {
-        track(MixpanelEvents.enquiry_created, {
-          booking_id: created.booking_request_id,
-          vendor_user_id: vendorUserId,
-          option_count: parsed.data.selectedOptionIds.length,
-          source: "single",
-        });
-        setSubmitResult({ type: "success", bookingId: created.booking_request_id });
-        setSubmitting(false);
-      })
-      .catch((err: unknown) => {
-        track(MixpanelEvents.enquiry_failed, {
-          vendor_user_id: vendorUserId,
-          source: "single",
-        });
-        setSubmitResult({ type: "error", message: getApiErrorDetail(err) ?? "Request failed. Try again." });
-        setSubmitting(false);
-      });
   };
 
   return (

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { PAYMENT_SAFETY_COPY } from "@/features/bookings/bookingConfirmCopy";
-import { bookingNeedsVenue } from "@/features/client/payments/bookingPayHelpers";
+import { bookingCanBePaid, bookingNeedsVenue } from "@/features/client/payments/bookingPayHelpers";
 import { parseForm, payVenueSchema } from "@/lib/validation";
 
 describe("PAYMENT_SAFETY_COPY", () => {
@@ -22,6 +22,29 @@ describe("bookingNeedsVenue", () => {
 
   it("skips venue collection when address present", () => {
     expect(bookingNeedsVenue("12 Park Lane")).toBe(false);
+  });
+});
+
+describe("bookingCanBePaid", () => {
+  it("allows checkout only for accepted unpaid or pending bookings", () => {
+    expect(
+      bookingCanBePaid({ booking_status: "accepted", payment_status: "unpaid" }),
+    ).toBe(true);
+    expect(
+      bookingCanBePaid({ booking_status: "accepted", payment_status: "pending" }),
+    ).toBe(true);
+  });
+
+  it("blocks checkout when the booking is not accepted or already paid", () => {
+    expect(
+      bookingCanBePaid({ booking_status: "pending", payment_status: "unpaid" }),
+    ).toBe(false);
+    expect(
+      bookingCanBePaid({ booking_status: "accepted", payment_status: "paid" }),
+    ).toBe(false);
+    expect(
+      bookingCanBePaid({ booking_status: "declined", payment_status: "unpaid" }),
+    ).toBe(false);
   });
 });
 

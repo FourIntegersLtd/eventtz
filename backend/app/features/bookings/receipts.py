@@ -16,6 +16,46 @@ RECEIPT_ELIGIBLE_STATUSES = frozenset(
 PAYOUT_STATEMENT_STATUSES = frozenset({"payout_released"})
 
 
+def _has_frozen_client_receipt(snap: dict[str, Any] | None) -> bool:
+    if not snap:
+        return False
+    frozen = snap.get("payment_receipt_snapshot")
+    return isinstance(frozen, dict) and frozen.get("document_type") == "client_payment_receipt"
+
+
+def verify_client_receipt_with_stripe(snap: dict[str, Any] | None) -> None:
+    """Raise HTTPException when Stripe cannot verify an unfrozen client receipt."""
+    from fastapi import HTTPException
+
+    from app.features.payments.stripe import ReceiptVerificationError, verify_payment_for_receipt
+
+    if not snap:
+        return
+    has_frozen = _has_frozen_client_receipt(snap)
+    pi_id = str(snap.get("stripe_payment_intent_id") or "").strip()
+    if not pi_id.startswith("pi_"):
+        if has_frozen:
+            return
+        raise HTTPException(
+            status_code=404,
+            detail=booking_messages.RECEIPT_STRIPE_VERIFY_FAILED,
+        )
+    try:
+        raw_amount = snap.get("payment_amount_gbp")
+        expected = float(raw_amount) if raw_amount is not None else None
+    except (TypeError, ValueError):
+        expected = None
+    try:
+        verify_payment_for_receipt(
+            payment_intent_id=pi_id,
+            expected_amount_gbp=expected,
+        )
+    except ReceiptVerificationError as e:
+        if has_frozen and e.status_code == 503:
+            return
+        raise HTTPException(status_code=e.status_code, detail=str(e)) from e
+
+
 def receipt_number(booking_id: str) -> str:
     raw = str(booking_id or "").replace("-", "").upper()
     return f"EVT-{raw[:8]}" if raw else "EVT-UNKNOWN"

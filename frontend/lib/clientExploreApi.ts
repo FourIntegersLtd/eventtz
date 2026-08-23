@@ -95,6 +95,11 @@ type ExploreVendorSearchApiResponse = {
   sections?: ExploreSearchSection[];
 };
 
+/**
+ * Unfiltered approved-vendor dump (same visibility rules as search).
+ * Browse UI uses `fetchExploreVendorsSearch`. Keep this for landing category
+ * counts, which need the full list rather than a ranked/paginated page.
+ */
 export async function fetchExploreVendors(): Promise<ExploreVendor[]> {
   const { data } = await api.get<ApiListResponse<ExploreVendor>>("/api/v1/vendors/explore");
   return data.vendors ?? [];

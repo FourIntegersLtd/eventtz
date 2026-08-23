@@ -22,6 +22,11 @@ import {
 import { todayIsoDate } from "@/lib/eventDateValidation";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { clientBookingRequestSchema, parseForm } from "@/lib/validation";
+import {
+  CLIENT_BOOKING_ERROR_COPY,
+  CLIENT_BOOKING_TOAST_COPY,
+} from "@/features/bookings/bookingConfirmCopy";
+import { withMutationFeedback } from "@/lib/mutationFeedback";
 import { ActiveEventPrefillBanner } from "@/features/bookings/ActiveEventPrefillBanner";
 import type { EventEnquirePrefill } from "@/features/bookings/eventEnquirePrefill";
 import {
@@ -150,6 +155,7 @@ export function MultiVendorEnquireModal({
       const createdIds: string[] = [];
       const failures: string[] = [];
       const batchSize = optionIdsByVendor.length;
+      const resolvedSource = clientSearchContext.source ?? enquirySource;
       let linkedEventId = selectedEventId;
       for (let i = 0; i < optionIdsByVendor.length; i += 1) {
         const { vendor, optionId } = optionIdsByVendor[i]!;
@@ -167,7 +173,7 @@ export function MultiVendorEnquireModal({
               ...clientSearchContext,
               batchSize,
               batchIndex: i,
-              source: enquirySource,
+              source: resolvedSource,
             },
             event_id: linkedEventId,
           });
@@ -179,12 +185,12 @@ export function MultiVendorEnquireModal({
             booking_id: created.booking_request_id,
             vendor_user_id: vendor.user_id,
             option_count: 1,
-            source: enquirySource,
+            source: resolvedSource,
           });
         } catch (err: unknown) {
           track(MixpanelEvents.enquiry_failed, {
             vendor_user_id: vendor.user_id,
-            source: enquirySource,
+            source: resolvedSource,
           });
           failures.push(
             `${vendorLabel(vendor)}: ${getApiErrorDetail(err) ?? "failed"}`,
@@ -193,11 +199,13 @@ export function MultiVendorEnquireModal({
       }
       setSubmitting(false);
       if (createdIds.length === 0) {
-        setError(failures.join("\n") || "Could not send any requests.");
-        showToast({
-          title: "Requests not sent",
-          description: failures[0] ?? "Could not send any requests.",
-          tone: "error",
+        setError(failures.join("\n") || CLIENT_BOOKING_ERROR_COPY.multiEnquireNone);
+        await withMutationFeedback(showToast, {
+          successTitle: CLIENT_BOOKING_TOAST_COPY.requestsNotSent,
+          showSuccessToast: false,
+          errorTitle: CLIENT_BOOKING_TOAST_COPY.requestsNotSent,
+          errorDescription: failures[0] ?? CLIENT_BOOKING_ERROR_COPY.multiEnquireNone,
+          run: () => Promise.reject(new Error("none sent")),
         });
         return;
       }
@@ -205,17 +213,25 @@ export function MultiVendorEnquireModal({
         setError(
           `Sent ${createdIds.length} of ${optionIdsByVendor.length} requests.\n\n${failures.join("\n")}`,
         );
-        showToast({
-          title: `${createdIds.length} of ${optionIdsByVendor.length} requests sent`,
-          description: `${failures.length} could not be sent. See details in the form.`,
-          tone: "error",
+        await withMutationFeedback(showToast, {
+          successTitle: CLIENT_BOOKING_TOAST_COPY.partialRequestsSent(
+            createdIds.length,
+            optionIdsByVendor.length,
+          ),
+          showSuccessToast: false,
+          errorTitle: CLIENT_BOOKING_TOAST_COPY.partialRequestsSent(
+            createdIds.length,
+            optionIdsByVendor.length,
+          ),
+          errorDescription: `${failures.length} could not be sent. See details in the form.`,
+          run: () => Promise.reject(new Error("partial")),
         });
         return;
       }
       track(MixpanelEvents.multi_enquiry_created, {
         created_count: createdIds.length,
         requested_count: optionIdsByVendor.length,
-        source: enquirySource,
+        source: resolvedSource,
       });
       onSuccess(createdIds);
     })();

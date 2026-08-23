@@ -9,7 +9,11 @@ import {
 } from "@/lib/clientBookingsApi";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { parseForm, payVenueSchema } from "@/lib/validation";
-import { bookingNeedsVenue } from "@/features/client/payments/bookingPayHelpers";
+import { PAYMENT_FLOW_COPY } from "@/features/bookings/bookingConfirmCopy";
+import {
+  bookingCanBePaid,
+  bookingNeedsVenue,
+} from "@/features/client/payments/bookingPayHelpers";
 
 export type ClientBookingPayPhase = "loading" | "venue" | "safety" | "redirecting" | "error";
 
@@ -27,6 +31,11 @@ export function useClientBookingPay(bookingId: string | undefined) {
       try {
         const booking = await fetchClientBookingDetail(bookingId);
         if (cancelled) return;
+        if (!bookingCanBePaid(booking)) {
+          setError(PAYMENT_FLOW_COPY.payNotReady);
+          setPhase("error");
+          return;
+        }
         if (bookingNeedsVenue(booking.event_address)) {
           setVenueAddress(booking.event_address ?? "");
           setPhase("venue");

@@ -24,6 +24,7 @@ import { buildBrowsePricingOptions } from "@/features/client/browse/vendorBrowse
 import { useExploreVendor } from "@/features/client/browse/useExploreVendor";
 import { marketplaceStateFromSearchParams, buildMarketplaceSearchUrl, toClientSearchContext } from "@/lib/marketplaceSearchParams";
 import { eventEnquirePrefillFromSearchParams } from "@/features/bookings/eventEnquirePrefill";
+import { CLIENT_BOOKING_TOAST_COPY } from "@/features/bookings/bookingConfirmCopy";
 import { useLaunchingSoonBookingGuard } from "@/features/bookings/useLaunchingSoonBookingGuard";
 import { vendorMatchesMarketplaceSearch } from "@/lib/marketplaceVendorMatch";
 import { usualReplyExpectation } from "@/lib/vendorMetrics";
@@ -232,7 +233,7 @@ export function ClientVendorBrowseDetailView() {
             onSuccess={(bookingId) => {
               setBookingOpen(false);
               showToast({
-                title: "Request sent",
+                title: CLIENT_BOOKING_TOAST_COPY.requestSent,
                 description: `${businessName} will be notified. ${usualReplyExpectation(vendor.avg_response_seconds)}`,
                 tone: "success",
               });
