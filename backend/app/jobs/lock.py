@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from postgrest.exceptions import APIError
-
 from app.core.db import get_db
 from app.core.logging import get_logger
 
@@ -47,11 +45,21 @@ def try_claim_job_period(job_name: str, period_key: str) -> bool:
 
 
 def _is_missing_job_runs_table(err: Exception) -> bool:
-    if not isinstance(err, APIError):
-        msg = str(err).lower()
-        return "job_runs" in msg and (
-            "does not exist" in msg or "42p01" in msg or "could not find" in msg
-        )
-    code = getattr(err, "code", None)
+    """True when PostgREST/Postgres cannot see ``public.job_runs``.
+
+    Production PostgREST reports a missing/un-cached table as ``APIError``
+    with ``PGRST205`` / "Could not find the table ... in the schema cache",
+    not Postgres ``42P01``. Treat both as "run without lock" so the hourly
+    job still runs until migration 075 is applied and the schema cache reloads.
+    """
+    code = str(getattr(err, "code", "") or "")
     msg = str(err).lower()
-    return code == "42P01" or ("job_runs" in msg and "does not exist" in msg)
+    if code in {"42P01", "PGRST205"}:
+        return True
+    return "job_runs" in msg and (
+        "does not exist" in msg
+        or "42p01" in msg
+        or "could not find" in msg
+        or "schema cache" in msg
+        or "pgrst205" in msg
+    )
