@@ -51,6 +51,9 @@ ONLY_ACCEPTED_CAN_COMPLETE = "Only accepted bookings can be marked complete."
 PAYMENT_REQUIRED_FOR_COMPLETE = (
     "Payment must be completed before this booking can be marked complete."
 )
+EVENT_DAY_NOT_OVER = (
+    "You can confirm the event is complete after the event day has ended."
+)
 ONLY_PAID_PAYOUT_RELEASE = "Only paid bookings can have their payout released."
 COULD_NOT_START_CHECKOUT = "Could not start checkout. Try again shortly."
 COULD_NOT_CONFIRM_PAYMENT = "Could not confirm payment. Try refreshing in a moment."

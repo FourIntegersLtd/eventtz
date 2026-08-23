@@ -78,9 +78,9 @@ def test_admin_listing_waiver_lets_vendor_accept_without_stripe(mock_get_client)
     assert _vendor_payouts_ready("v1") is False
 
 
-@patch("app.features.bookings.status._vendor_payouts_ready", return_value=False)
-@patch("app.features.bookings.status.get_settings")
-@patch("app.features.bookings.status.get_db")
+@patch("app.features.bookings.status_vendor.vendor_connect_can_receive_payouts", return_value=False)
+@patch("app.features.bookings.status_vendor.get_settings")
+@patch("app.features.bookings.status_vendor.get_db")
 def test_vendor_cannot_accept_without_payouts_ready(mock_get_client, mock_settings, _mock_ready):
     mock_client = MagicMock()
     mock_get_client.return_value = mock_client

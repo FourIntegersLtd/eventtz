@@ -10,6 +10,8 @@ import { TextField } from "@/components/ui/TextField";
 import { TextArea } from "@/components/ui/TextArea";
 import { Select } from "@/components/ui/Select";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { withMutationFeedback } from "@/lib/mutationFeedback";
+import { VENDOR_BOOKING_TOAST_COPY, VENDOR_BOOKING_ERROR_COPY } from "@/features/bookings/bookingConfirmCopy";
 import { todayIsoDate } from "@/lib/eventDateValidation";
 import { parseSingleMoneyNumber } from "@/lib/validation/money";
 import { parseForm, vendorQuoteSchema } from "@/lib/validation";
@@ -150,40 +152,51 @@ export function VendorQuoteFormModal({
       parsed.data;
 
     setBusy(true);
-    try {
-      const id =
-        typeof crypto !== "undefined" && crypto.randomUUID
-          ? crypto.randomUUID()
-          : `li-${Date.now()}`;
-      const out = await postVendorQuote({
-        client_user_id: clientUserId,
-        conversation_id: conversationId,
-        event_name: name,
-        event_date: ed.slice(0, 10),
-        event_end_date: end?.trim() ? end.slice(0, 10) : null,
-        notes: noteText || null,
-        line_items: [
-          {
-            id,
-            heading: packageName,
-            unit_price_gbp: p,
-          },
-        ],
-      });
-      track(MixpanelEvents.vendor_quote_sent, {
-        booking_id: out.booking_request_id,
-        conversation_id: conversationId,
-        price_gbp: p,
-      });
-      showToast({ title: "Quote sent", tone: "success" });
+    let caught: unknown = null;
+    const out = await withMutationFeedback(showToast, {
+      successTitle: VENDOR_BOOKING_TOAST_COPY.quoteSent,
+      showErrorToast: false,
+      run: async () => {
+        try {
+          const id =
+            typeof crypto !== "undefined" && crypto.randomUUID
+              ? crypto.randomUUID()
+              : `li-${Date.now()}`;
+          const posted = await postVendorQuote({
+            client_user_id: clientUserId,
+            conversation_id: conversationId,
+            event_name: name,
+            event_date: ed.slice(0, 10),
+            event_end_date: end?.trim() ? end.slice(0, 10) : null,
+            notes: noteText || null,
+            line_items: [
+              {
+                id,
+                heading: packageName,
+                unit_price_gbp: p,
+              },
+            ],
+          });
+          track(MixpanelEvents.vendor_quote_sent, {
+            booking_id: posted.booking_request_id,
+            conversation_id: conversationId,
+            price_gbp: p,
+          });
+          return posted;
+        } catch (e) {
+          caught = e;
+          throw e;
+        }
+      },
+    });
+    if (out) {
       reset();
       onClose();
       router.push(`/vendor/bookings/${encodeURIComponent(out.booking_request_id)}`);
-    } catch (e: unknown) {
-      setError(getApiErrorDetail(e) ?? "Could not send quote.");
-    } finally {
-      setBusy(false);
+    } else if (caught) {
+      setError(getApiErrorDetail(caught) ?? VENDOR_BOOKING_ERROR_COPY.quoteFailed);
     }
+    setBusy(false);
   };
 
   return (

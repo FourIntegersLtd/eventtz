@@ -18,6 +18,8 @@ from app.features.bookings.payment_completion import (
     admin_release_payout_for_booking,
     confirm_completion_for_client,
     confirm_completion_for_vendor,
+    record_party_completion_confirmation,
+    release_vendor_payout_and_complete_booking,
 )
 from app.features.bookings.payment_finalize import (
     _clear_stale_checkout_session,
@@ -29,6 +31,7 @@ from app.features.bookings.payment_finalize import (
     sync_checkout_payment_for_client,
 )
 from app.features.bookings.payment_maintenance import (
+    LIST_COMPLETION_REMINDER_CAP,
     LIST_COMPLETION_TOUCH_CAP,
     _auto_release_payout_row,
     _due_completion_candidates,
@@ -36,7 +39,9 @@ from app.features.bookings.payment_maintenance import (
     maybe_auto_release_payout_for_booking,
     maybe_send_completion_reminder_for_row,
     process_due_payout_auto_releases,
+    run_post_event_payout_and_reminder_for_booking,
     send_completion_reminders,
+    send_completion_reminders_for_booking_list,
     touch_booking_completion_side_effects,
     touch_completion_side_effects_for_booking_rows,
 )
@@ -57,6 +62,7 @@ from app.features.email.dispatch import dispatch_booking_notification
 from app.features.payments import stripe as stripe_service
 
 __all__ = [
+    "LIST_COMPLETION_REMINDER_CAP",
     "LIST_COMPLETION_TOUCH_CAP",
     "_auto_release_payout_row",
     "_clear_stale_checkout_session",
@@ -88,7 +94,11 @@ __all__ = [
     "maybe_auto_release_payout_for_booking",
     "maybe_send_completion_reminder_for_row",
     "process_due_payout_auto_releases",
+    "record_party_completion_confirmation",
     "refund_booking_on_cancel",
+    "release_vendor_payout_and_complete_booking",
+    "run_post_event_payout_and_reminder_for_booking",
+    "send_completion_reminders_for_booking_list",
     "send_completion_reminders",
     "stripe_service",
     "sync_checkout_payment_for_client",

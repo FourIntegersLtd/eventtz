@@ -20,6 +20,7 @@ from app.contracts.booking import (
     VendorBookingStatusResponse,
 )
 from app.features.bookings import messages as booking_messages
+from app.features.bookings.http.ids import parse_booking_id
 from app.features.bookings.http import participant_dispute_handlers as dh
 from app.contracts.disputes import (
     CreateParticipantDisputeBody,
@@ -114,10 +115,7 @@ def get_client_booking(
 ) -> ClientBookingDetailResponse:
     user = require_client(request, response)
     client_id = str(user.get("id") or "")
-    try:
-        uuid.UUID(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+    parse_booking_id(booking_id)
 
     # Safety net between hourly runs: pay the vendor if the automatic payout date has passed.
     maybe_auto_release_payout_for_booking(booking_id)
@@ -136,10 +134,7 @@ def get_client_booking_receipt(
 ) -> PaymentReceiptResponse:
     user = require_client(request, response)
     client_id = str(user.get("id") or "")
-    try:
-        uuid.UUID(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+    parse_booking_id(booking_id)
 
     row = get_booking_request_for_client(client_id, booking_id)
     if not row:
@@ -167,10 +162,7 @@ def get_client_booking_receipt_html(
 ) -> Response:
     user = require_client(request, response)
     client_id = str(user.get("id") or "")
-    try:
-        uuid.UUID(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+    parse_booking_id(booking_id)
 
     row = get_booking_request_for_client(client_id, booking_id)
     if not row:
@@ -206,10 +198,7 @@ def post_client_booking_dispute(
 ) -> CreateParticipantDisputeResponse:
     user = require_client(request, response)
     uid = str(user.get("id") or "")
-    try:
-        uuid.UUID(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+    parse_booking_id(booking_id)
 
     return dh.create_booking_dispute(booking_id, uid, body)
 
@@ -225,10 +214,7 @@ def list_client_booking_disputes(
 ) -> ParticipantDisputesListResponse:
     user = require_client(request, response)
     uid = str(user.get("id") or "")
-    try:
-        uuid.UUID(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+    parse_booking_id(booking_id)
     return dh.list_booking_disputes(booking_id, uid)
 
 
@@ -272,10 +258,7 @@ def post_booking_review(
 ) -> PostBookingReviewResponse:
     user = require_client(request, response)
     client_id = str(user.get("id") or "")
-    try:
-        uuid.UUID(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+    parse_booking_id(booking_id)
 
     try:
         rev = create_booking_review(
@@ -303,10 +286,7 @@ def patch_client_booking_status(
 ) -> VendorBookingStatusResponse:
     user = require_client(request, response)
     client_id = str(user.get("id") or "")
-    try:
-        uuid.UUID(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+    parse_booking_id(booking_id)
 
     try:
         row = update_booking_request_status_for_client(
@@ -336,10 +316,7 @@ def post_cancel_client_booking(
 ) -> VendorBookingStatusResponse:
     user = require_client(request, response)
     client_id = str(user.get("id") or "")
-    try:
-        uuid.UUID(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+    parse_booking_id(booking_id)
 
     try:
         row = cancel_booking_request_for_client(client_id, booking_id)
@@ -367,10 +344,7 @@ def patch_client_booking_venue(
 ) -> ClientBookingDetailResponse:
     user = require_client(request, response)
     client_id = str(user.get("id") or "")
-    try:
-        uuid.UUID(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+    parse_booking_id(booking_id)
     try:
         row = update_booking_venue_for_client(
             client_id,
@@ -396,10 +370,7 @@ def post_booking_checkout(
 ) -> BookingCheckoutResponse:
     user = require_client(request, response)
     client_id = str(user.get("id") or "")
-    try:
-        uuid.UUID(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+    parse_booking_id(booking_id)
 
     try:
         checkout_url = create_checkout_session_for_booking(client_id, booking_id)
@@ -428,10 +399,7 @@ def post_booking_checkout_sync(
     """Confirm payment after Stripe redirect when the webhook has not run yet (common in local dev)."""
     user = require_client(request, response)
     client_id = str(user.get("id") or "")
-    try:
-        uuid.UUID(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+    parse_booking_id(booking_id)
 
     try:
         row = sync_checkout_payment_for_client(client_id, booking_id, body.session_id)
@@ -463,10 +431,7 @@ def post_client_confirm_completion(
 ) -> ConfirmCompletionResponse:
     user = require_client(request, response)
     client_id = str(user.get("id") or "")
-    try:
-        uuid.UUID(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+    parse_booking_id(booking_id)
 
     try:
         result = confirm_completion_for_client(client_id, booking_id)
