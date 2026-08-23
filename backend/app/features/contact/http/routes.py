@@ -5,6 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, Request, Response
 
 from app.contracts.contact import (
+    ADMIN_BUG_REPORT_SUBJECT,
     AdminBugReportBody,
     ContactSubmitBody,
     ContactSubmitResponse,
@@ -76,5 +77,5 @@ def post_admin_contact(
         user_id=str(user.get("id") or ""),
         portal="admin",
         body=ContactSubmitBody(message=body.message),
-        subject="feedback_bug",
+        subject=ADMIN_BUG_REPORT_SUBJECT,
     )

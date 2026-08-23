@@ -3,6 +3,7 @@ import type { ErrorEvent } from "@sentry/nextjs";
 import {
   getSentryDsn,
   getSentryEnvironment,
+  getSentrySharedInitOptions,
   getSentryTracesSampleRate,
   sentryBeforeSend,
 } from "./sentryConfig";
@@ -15,6 +16,10 @@ describe("sentryConfig", () => {
   it("uses NODE_ENV for environment and sample rate when Vercel env is unset", () => {
     expect(getSentryEnvironment()).toMatch(/development|production|test/);
     expect(getSentryTracesSampleRate()).toBeGreaterThan(0);
+  });
+
+  it("skips shared init options when DSN is empty", () => {
+    expect(getSentrySharedInitOptions()).toBeNull();
   });
 });
 

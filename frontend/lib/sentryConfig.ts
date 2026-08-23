@@ -50,3 +50,24 @@ export function sentryBeforeSend<T extends Event | ErrorEvent>(
   }
   return event;
 }
+
+export type SentrySharedInitOptions = {
+  dsn: string;
+  environment: string;
+  sendDefaultPii: false;
+  beforeSend: typeof sentryBeforeSend;
+  tracesSampleRate: number;
+};
+
+/** Shared SDK options for client / server / edge. Null when DSN is unset (skip init). */
+export function getSentrySharedInitOptions(): SentrySharedInitOptions | null {
+  const dsn = getSentryDsn();
+  if (!dsn) return null;
+  return {
+    dsn,
+    environment: getSentryEnvironment(),
+    sendDefaultPii: false,
+    beforeSend: sentryBeforeSend,
+    tracesSampleRate: getSentryTracesSampleRate(),
+  };
+}

@@ -90,16 +90,22 @@ def submit_contact_message(
     prof = fetch_user_profile(user_id) or {}
     user_email = str(prof.get("email") or "")
     if should_notify_cursor_automation(subj):
-        notify_cursor_automation_for_contact(
-            submission_id=submission_id,
-            portal=portal,
-            user_id=user_id,
-            subject_key=subj,
-            subject_label=label,
-            message=body,
-            booking_id=resolved_booking_id,
-            user_email=user_email or None,
-        )
+        try:
+            notify_cursor_automation_for_contact(
+                submission_id=submission_id,
+                portal=portal,
+                user_id=user_id,
+                subject_key=subj,
+                subject_label=label,
+                message=body,
+                booking_id=resolved_booking_id,
+                user_email=user_email or None,
+            )
+        except Exception:
+            logger.exception(
+                "Cursor automation webhook dispatch failed submission_id=%s",
+                submission_id,
+            )
     send_admin_contact_submitted_email(
         portal=portal,
         user_email=user_email or None,

@@ -40,6 +40,12 @@ const ROWS = [
     location: "USA / EU",
   },
   {
+    service: "Cursor",
+    purpose:
+      "Engineering automation for bug, booking, and payment support reports (message and account email)",
+    location: "USA",
+  },
+  {
     service: "Amazon Web Services (S3)",
     purpose: "Email template image hosting",
     location: "United Kingdom (eu-west-2)",

@@ -24,6 +24,7 @@ features/<name>/
 - Raise **`AppError`** subclasses; global handler in **`core/errors.py`**.
 - Auth: **`require_client(request, response)`** etc. from **`features/auth/http/guards.py`**.
 - **Sentry:** `SENTRY_DSN` empty = skip init (`app/core/sentry.py` before `FastAPI()`). Do not sample `/health` transactions.
+- **Contact Cursor webhook:** `CURSOR_AUTOMATION_WEBHOOK_URL` empty = skip. Subjects live in `CURSOR_AUTOMATION_SUBJECTS` (`contracts/contact.py`). Dispatch is best-effort and must not fail the contact API.
 - **Scheduled jobs:** run in-process from `app/jobs/scheduler.py` (lifespan). Do not add host-specific cron services. New jobs: a function in `app/jobs/` + `job_runs` claim.
 
 ## Registration & contracts

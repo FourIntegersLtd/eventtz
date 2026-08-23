@@ -11,6 +11,8 @@ from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
+_SAFE_TO_IGNORE = "safe to ignore"
+
 
 def traces_sampler(sampling_context: dict[str, Any]) -> float:
     """Skip health checks; otherwise sample all locally and 10% in production."""
@@ -31,6 +33,28 @@ def traces_sampler(sampling_context: dict[str, Any]) -> float:
     return 0.1 if get_settings().is_production else 1.0
 
 
+def sentry_before_send(event: dict[str, Any], _hint: Any) -> dict[str, Any] | None:
+    """Drop intentional smoke-test noise; never hide real errors."""
+    blobs: list[str] = []
+    message = event.get("message")
+    if isinstance(message, str):
+        blobs.append(message)
+    exception = event.get("exception")
+    if isinstance(exception, dict):
+        for item in exception.get("values") or []:
+            if not isinstance(item, dict):
+                continue
+            value = item.get("value")
+            if isinstance(value, str):
+                blobs.append(value)
+            typ = item.get("type")
+            if isinstance(typ, str):
+                blobs.append(typ)
+    if any(_SAFE_TO_IGNORE in blob.lower() for blob in blobs):
+        return None
+    return event
+
+
 def init_sentry() -> None:
     settings = get_settings()
     dsn = settings.sentry_dsn.strip()
@@ -42,6 +66,7 @@ def init_sentry() -> None:
         environment=environment,
         send_default_pii=False,
         traces_sampler=traces_sampler,
+        before_send=sentry_before_send,
     )
     logger.info("Sentry initialized (environment=%s)", environment)
 

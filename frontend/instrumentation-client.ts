@@ -1,21 +1,14 @@
 import * as Sentry from "@sentry/nextjs";
 import {
-  getSentryDsn,
-  getSentryEnvironment,
-  getSentryTracesSampleRate,
-  sentryBeforeSend,
+  getSentrySharedInitOptions,
   SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE,
   SENTRY_REPLAYS_SESSION_SAMPLE_RATE,
 } from "./lib/sentryConfig";
 
-const dsn = getSentryDsn();
-if (dsn) {
+const options = getSentrySharedInitOptions();
+if (options) {
   Sentry.init({
-    dsn,
-    environment: getSentryEnvironment(),
-    sendDefaultPii: false,
-    beforeSend: sentryBeforeSend,
-    tracesSampleRate: getSentryTracesSampleRate(),
+    ...options,
     integrations: [
       Sentry.replayIntegration({
         maskAllText: true,

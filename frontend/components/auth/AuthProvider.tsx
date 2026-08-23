@@ -70,7 +70,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      resetSentryUser();
+      return;
+    }
     identifyMixpanelUser(user.id, {
       email: user.email,
       user_type: user.user_type ?? null,
