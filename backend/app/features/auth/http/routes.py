@@ -31,6 +31,7 @@ from app.features.auth import messages as auth_messages
 from app.features.auth.session import (
     clear_session_cookies,
     get_current_user_or_raise,
+    raise_session_auth_failure,
     set_session_cookies,
 )
 from app.features.auth.accounts import build_app_user, normalize_email, upsert_user_profile, assert_user_not_suspended
@@ -199,10 +200,10 @@ async def refresh_session(
             user=build_app_user(result["user"]),
             session=_auth_session(result["session"]),
         )
-    clear_session_cookies(response)
-    raise HTTPException(
-        status_code=401,
-        detail=result.get("error", auth_messages.REFRESH_SESSION_EXPIRED),
+    raise_session_auth_failure(
+        response,
+        result.get("error"),
+        fallback=auth_messages.REFRESH_SESSION_EXPIRED,
     )
 
 

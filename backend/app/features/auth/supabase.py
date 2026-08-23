@@ -2,6 +2,7 @@
 
 from typing import Any
 
+import httpx
 from supabase import Client
 from supabase_auth.errors import AuthApiError
 
@@ -111,6 +112,9 @@ class SupabaseAuthService:
                 return _fail(auth_messages.EMAIL_NOT_CONFIRMED_SUPABASE)
             logger.info("sign_in rejected email=%s error=%s", email, e)
             return _fail(auth_messages.SIGN_IN_UNAVAILABLE)
+        except httpx.TransportError as e:
+            logger.warning("sign_in unavailable email=%s error=%s", email, e)
+            return _fail(auth_messages.SIGN_IN_UNAVAILABLE)
         except Exception:
             logger.exception("sign_in failed email=%s", email)
             return _fail(auth_messages.SIGN_IN_UNAVAILABLE)
@@ -134,6 +138,9 @@ class SupabaseAuthService:
         except AuthApiError as e:
             logger.debug("refresh_session rejected token: %s", e)
             return _fail(auth_messages.REFRESH_SESSION_EXPIRED)
+        except httpx.TransportError as e:
+            logger.warning("refresh_session unavailable: %s", e)
+            return _fail(auth_messages.AUTH_SERVICE_UNAVAILABLE)
         except Exception:
             logger.exception("refresh_session failed")
             return _fail(auth_messages.REFRESH_SESSION_EXPIRED)
@@ -147,6 +154,9 @@ class SupabaseAuthService:
         except AuthApiError as e:
             logger.debug("get_user_from_access_token rejected token: %s", e)
             return _fail(auth_messages.SIGN_IN_REQUIRED)
+        except httpx.TransportError as e:
+            logger.warning("get_user_from_access_token unavailable: %s", e)
+            return _fail(auth_messages.AUTH_SERVICE_UNAVAILABLE)
         except Exception:
             logger.exception("get_user_from_access_token failed")
             return _fail(auth_messages.SIGN_IN_REQUIRED)

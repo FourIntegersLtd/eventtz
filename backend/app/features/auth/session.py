@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, NoReturn
 
 from fastapi import HTTPException, Request, Response
 
@@ -67,6 +67,20 @@ def _looks_like_jwt(token: str) -> bool:
     return token.count(".") == 2 and " " not in token
 
 
+def raise_session_auth_failure(
+    response: Response,
+    error: str | None,
+    *,
+    fallback: str = auth_messages.SIGN_IN_REQUIRED,
+) -> NoReturn:
+    """Fail a session check without treating Auth outages as a signed-out user."""
+    detail = error or fallback
+    if detail == auth_messages.AUTH_SERVICE_UNAVAILABLE:
+        raise HTTPException(status_code=503, detail=detail)
+    clear_session_cookies(response)
+    raise HTTPException(status_code=401, detail=detail)
+
+
 def get_current_user_or_raise(request: Request, response: Response) -> dict[str, Any]:
     """Validate session cookie and return the Supabase auth user (before merging public.users)."""
     access_token = request.cookies.get(ACCESS_COOKIE_NAME)
@@ -84,5 +98,4 @@ def get_current_user_or_raise(request: Request, response: Response) -> dict[str,
     result = service.get_user_from_access_token(access_token)
     if result.get("success"):
         return result["user"]
-    clear_session_cookies(response)
-    raise HTTPException(status_code=401, detail=result.get("error", auth_messages.SIGN_IN_REQUIRED))
+    raise_session_auth_failure(response, result.get("error"))

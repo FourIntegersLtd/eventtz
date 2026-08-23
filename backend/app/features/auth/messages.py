@@ -60,6 +60,7 @@ def admin_password_min_length_detail(min_length: int) -> str:
 # --- Session ---
 
 SIGN_IN_REQUIRED = "Please sign in to continue."
+AUTH_SERVICE_UNAVAILABLE = "We couldn't verify your session right now. Please try again."
 SESSION_EXPIRED = "Session expired. Please sign in again."
 REFRESH_SESSION_EXPIRED = "Your session has expired. Please sign in again."
 REFRESH_SIGN_IN_AGAIN = "Please sign in again."
