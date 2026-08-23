@@ -50,7 +50,7 @@ export function HelpCenterView({ audience }: Props) {
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
         <h1 className="font-heading text-2xl font-semibold text-neutral-900">Help Center</h1>
-        <p className="mt-1 text-sm text-neutral-500">Find answers in our knowledge base</p>
+        <p className="mt-1 text-sm text-neutral-500">Guides for booking, payments, and your account.</p>
       </div>
 
       <div className={`${portalCard} ${portalCardPadding} !p-0 overflow-hidden`}>

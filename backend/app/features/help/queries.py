@@ -182,15 +182,41 @@ def get_article_by_slug(*, slug: str, audience: str) -> dict[str, Any] | None:
     except Exception:
         pass
 
+    related_slugs = [str(s) for s in (row.get("related_slugs") or []) if s]
+    related_articles = _related_articles_for_slugs(related_slugs)
+
     return {
         **row,
         "id": str(row.get("id") or ""),
         "category_id": str(row.get("category_id") or ""),
         "category_slug": cat_slug,
         "category_title": cat_title,
-        "related_slugs": list(row.get("related_slugs") or []),
+        "related_slugs": related_slugs,
+        "related_articles": related_articles,
         "body_md": str(row.get("body_md") or ""),
     }
+
+
+def _related_articles_for_slugs(slugs: list[str]) -> list[dict[str, str]]:
+    if not slugs:
+        return []
+    titles: dict[str, str] = {}
+    try:
+        res = (
+            get_db()
+            .table("help_articles")
+            .select("slug,title")
+            .in_("slug", slugs)
+            .eq("published", True)
+            .execute()
+        )
+        for item in getattr(res, "data", None) or []:
+            slug = str(item.get("slug") or "")
+            if slug:
+                titles[slug] = str(item.get("title") or slug)
+    except Exception:
+        logger.exception("help: related article titles failed")
+    return [{"slug": slug, "title": titles.get(slug) or slug} for slug in slugs]
 
 
 def list_all_published_for_audience(*, audience: str) -> list[dict[str, Any]]:

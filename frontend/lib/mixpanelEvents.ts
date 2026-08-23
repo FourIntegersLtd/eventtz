@@ -74,6 +74,7 @@ export const MixpanelEvents = {
   // Help Center
   help_opened: "help_opened",
   help_article_viewed: "help_article_viewed",
+  help_article_feedback: "help_article_feedback",
   help_ask_submitted: "help_ask_submitted",
   help_escalated: "help_escalated",
 
