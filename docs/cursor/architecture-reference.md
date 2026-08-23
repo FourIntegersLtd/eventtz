@@ -319,6 +319,7 @@ Document every field in **`backend/.env.example`**. Current groups:
 | Stripe | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` (see **Payments (Stripe Connect)** below) |
 | Email (Resend) | `RESEND_API_KEY` only - sender, admin recipients, and enable flag live in `features/email/constants.py` |
 | Sentry | `SENTRY_DSN` - empty = no-op (SDK not initialized). `IS_PRODUCTION` maps to Sentry `environment`. Init in `app/core/sentry.py` before the FastAPI app; `/health` is not sampled as a transaction. |
+| Cursor Automations | `CURSOR_AUTOMATION_WEBHOOK_URL` (empty = no-op), `CURSOR_AUTOMATION_WEBHOOK_SECRET` (optional Bearer). Fired after persist for `feedback_bug` / `booking_problem` / `payments` (`CURSOR_AUTOMATION_SUBJECTS` in `contracts/contact.py`). Best-effort; never fails the contact API. |
 | Uptime | External UptimeRobot HTTP monitor on `GET /health` (email). Railway healthcheck on the same path restarts the process only. See `backend/README.md`. |
 
 ### Logging
@@ -569,7 +570,7 @@ Search/filter/pagination for directory, disputes, audit, payments, and booking `
 - **Icons:** `lucide-react` (and `react-icons` where used, e.g. landing)
 - Env: **`frontend/.env.example`**; local **``.env.local`**
 - **Mixpanel (browser):** **`lib/mixpanelClient.ts`** + event catalog **`lib/mixpanelEvents.ts`**. Env: **`NEXT_PUBLIC_MIXPANEL_TOKEN`** (no-op when unset); EU projects **must** set **`NEXT_PUBLIC_MIXPANEL_API_HOST=https://api-eu.mixpanel.com`** and restart the Next server. Wired in **`AuthProvider`** (identify / auth events / reset) + **`MixpanelPageViews`**. Product funnel events fire from feature hooks/views after successful API (landing → browse → enquire → pay → complete → review; vendor accept/payouts; admin approve/resolve). Help Center: `help_opened`, `help_article_viewed`, `help_ask_submitted`, `help_escalated`. First-party SQL aggregates remain in **`marketplace_events`**.
-- **Sentry:** `@sentry/nextjs` — `instrumentation-client.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts`, `instrumentation.ts`. Env: **`NEXT_PUBLIC_SENTRY_DSN`** (empty = no-op). Errors + tracing; Session Replay sampled low with text/inputs/media masked. `next.config.ts` is wrapped with `withSentryConfig` (existing `/api/v1` rewrites stay). User id (not email) is set from **`AuthProvider`**. No User Feedback widget yet.
+- **Sentry:** `@sentry/nextjs` — shared options in **`lib/sentryConfig.ts`** (`getSentrySharedInitOptions`); thin inits in `instrumentation-client.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts` via `instrumentation.ts`. Env: **`NEXT_PUBLIC_SENTRY_DSN`** (empty = no-op). Errors + tracing; Session Replay sampled low with text/inputs/media masked. `next.config.ts` is wrapped with `withSentryConfig` (existing `/api/v1` rewrites stay). User id (not email) is set from **`AuthProvider`**. No User Feedback widget yet.
 
 ### Layering (do not invert)
 
@@ -804,7 +805,7 @@ Legacy URLs (`/explore`, `/admin/vendors`, `/client/login`, …) redirect via **
 
 Feature-local **constants, labels, formatters** stay under that feature unless reused across 2+ domains (then consider `lib/`).
 
-Cross-feature data that is not an HTTP client may live next to its owner (e.g. **`browseCategoriesData.tsx`**, **`browseLabels.ts`** under **`features/client/browse/`**).
+Cross-feature data that is not an HTTP client may live next to its owner (e.g. **`browseLabels.ts`** under **`features/client/browse/`**).
 
 ---
 

@@ -136,12 +136,16 @@ export function ClientBookingDetailExtras({
         >
           <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-semibold text-neutral-900">Payment needed</p>
-              <p className="mt-1 text-[13px] text-neutral-600">Pay now to confirm your booking.</p>
+              <p className="text-sm font-semibold text-neutral-900">
+                {PAYMENT_FLOW_COPY.paymentDueTitle}
+              </p>
+              <p className="mt-1 text-[13px] text-neutral-600">
+                {PAYMENT_FLOW_COPY.paymentDueSubtitle}
+              </p>
               <p className="mt-1 text-[13px] text-neutral-400">{PAYMENT_FLOW_COPY.beforePay}</p>
             </div>
             <Button variant="primary" size="md" className="shrink-0" onClick={onPayNow}>
-              Pay now
+              {PAYMENT_FLOW_COPY.payNowLabel}
             </Button>
           </div>
         </div>

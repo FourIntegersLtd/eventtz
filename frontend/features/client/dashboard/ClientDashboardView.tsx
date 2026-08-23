@@ -15,6 +15,7 @@ import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { dashboardNotificationUpdates } from "@/features/dashboard/attentionFeedHelpers";
 import type { AttentionItem } from "@/features/dashboard/attentionTypes";
 import { eventDayOver } from "@/features/bookings/eventDay";
+import { CLIENT_DASHBOARD_COPY } from "@/features/bookings/bookingConfirmCopy";
 import { useClientDashboard } from "./useClientDashboard";
 import { ClientBookingsCalendarCard } from "./ClientBookingsCalendarCard";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
@@ -65,10 +66,10 @@ export function ClientDashboardView() {
           id: `quote-${b.booking_request_id}`,
           priority: 0,
           tone: "urgent",
-          title: `Quote from ${b.vendor_display_name}`,
+          title: CLIENT_DASHBOARD_COPY.quoteTitle(b.vendor_display_name),
           subtitle: `${b.event_name} · ${formatEventDate(b.event_date)}`,
           href: `/client/bookings/${b.booking_request_id}`,
-          ctaLabel: "Review",
+          ctaLabel: CLIENT_DASHBOARD_COPY.quoteCta,
         });
       }
     }
@@ -82,20 +83,20 @@ export function ClientDashboardView() {
           id: `completion-wait-${b.booking_request_id}`,
           priority: 2,
           tone: "info",
-          title: `Waiting for ${b.vendor_display_name} to confirm`,
-          subtitle: `${b.event_name} · you've confirmed - the vendor is paid once they confirm too`,
+          title: CLIENT_DASHBOARD_COPY.completionWaitTitle(b.vendor_display_name),
+          subtitle: CLIENT_DASHBOARD_COPY.completionWaitSubtitle(b.event_name),
           href: `/client/bookings/${b.booking_request_id}`,
-          ctaLabel: "View",
+          ctaLabel: CLIENT_DASHBOARD_COPY.completionViewCta,
         });
       } else {
         items.push({
           id: `completion-confirm-${b.booking_request_id}`,
           priority: 0,
           tone: "urgent",
-          title: "How did your event go?",
-          subtitle: `${b.event_name} · confirm it's complete, or report a problem`,
+          title: CLIENT_DASHBOARD_COPY.completionConfirmTitle,
+          subtitle: CLIENT_DASHBOARD_COPY.completionConfirmSubtitle(b.event_name),
           href: `/client/bookings/${b.booking_request_id}`,
-          ctaLabel: "Confirm",
+          ctaLabel: CLIENT_DASHBOARD_COPY.completionCta,
         });
       }
     }
