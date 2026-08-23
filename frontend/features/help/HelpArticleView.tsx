@@ -1,10 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { BackLink } from "@/components/ui/BackLink";
-import { portalCard, portalCardPadding } from "@/components/portal-shell/portalTheme";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { ARTICLE_NOT_FOUND } from "@/lib/help-messages";
@@ -14,7 +12,8 @@ import {
   type HelpAudience,
 } from "@/lib/helpApi";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
-import { helpBasePath, helpMarkdownToHtml } from "@/features/help/helpContent";
+import { HelpArticleBody } from "@/features/help/HelpArticleBody";
+import { helpBasePath } from "@/features/help/helpContent";
 import { formControlClass } from "@/components/ui/tokens";
 
 type Props = { audience: HelpAudience };
@@ -53,11 +52,6 @@ export function HelpArticleView({ audience }: Props) {
     };
   }, [audience, slug]);
 
-  const html = useMemo(
-    () => (article ? helpMarkdownToHtml(article.body_md) : ""),
-    [article],
-  );
-
   const onAsk = (e: FormEvent) => {
     e.preventDefault();
     const q = ask.trim();
@@ -78,37 +72,11 @@ export function HelpArticleView({ audience }: Props) {
         <p className="text-sm text-red-700">{error ?? ARTICLE_NOT_FOUND}</p>
       ) : (
         <>
-          <article className={`${portalCard} ${portalCardPadding}`}>
-            <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">
-              {article.category_title}
-            </p>
-            <h1 className="font-heading mt-2 text-2xl font-semibold text-neutral-900">
-              {article.title}
-            </h1>
-            {article.summary ? (
-              <p className="mt-2 text-sm text-neutral-500">{article.summary}</p>
-            ) : null}
-            <div
-              className="help-article-body mt-2"
-              dangerouslySetInnerHTML={{ __html: html }}
+          <article>
+            <HelpArticleBody
+              article={article}
+              relatedHref={(s) => `${base}/a/${encodeURIComponent(s)}`}
             />
-            {article.related_slugs.length > 0 ? (
-              <div className="mt-8 border-t border-neutral-100 pt-5">
-                <h2 className="text-sm font-semibold text-neutral-900">Related articles</h2>
-                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
-                  {article.related_slugs.map((s) => (
-                    <li key={s}>
-                      <Link
-                        href={`${base}/a/${encodeURIComponent(s)}`}
-                        className="text-primary underline-offset-2 hover:underline"
-                      >
-                        {s.replace(/^(client|vendor)-/, "").replace(/-/g, " ")}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
           </article>
 
           <form

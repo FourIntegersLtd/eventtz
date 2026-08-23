@@ -13,7 +13,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { getApiErrorDetail } from "@/lib/api-errors";
@@ -29,10 +29,10 @@ import {
 } from "@/lib/helpApi";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { HelpAssistantThread } from "@/features/help/HelpAssistantThread";
+import { HelpArticleBody } from "@/features/help/HelpArticleBody";
 import {
   helpCategoryIcon,
   helpContactPath,
-  helpMarkdownToHtml,
 } from "@/features/help/helpContent";
 import { useVendorCopilotOptional } from "@/features/vendor/copilot/VendorCopilotContext";
 import { VENDOR_COPILOT } from "@/features/vendor/copilot/copilotBranding";
@@ -203,6 +203,9 @@ export function HelpWidget({ audience }: Props) {
               audience={audience}
               onOpenCategory={(slug, title, description) =>
                 setView({ name: "category", slug, title, description })
+              }
+              onOpenArticle={(slug, fromCategory) =>
+                setView({ name: "article", slug, fromCategory })
               }
             />
           ) : null}
@@ -377,20 +380,25 @@ function HomePanel({
 function BrowsePanel({
   audience,
   onOpenCategory,
+  onOpenArticle,
 }: {
   audience: HelpAudience;
   onOpenCategory: (slug: string, title: string, description: string) => void;
+  onOpenArticle: (slug: string, fromCategory?: string) => void;
 }) {
   const [categories, setCategories] = useState<HelpCategory[]>([]);
+  const [articles, setArticles] = useState<HelpArticleListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    void fetchHelpCategories(audience)
-      .then((rows) => {
-        if (!cancelled) setCategories(rows);
+    void Promise.all([fetchHelpCategories(audience), fetchHelpArticles(audience)])
+      .then(([cats, rows]) => {
+        if (cancelled) return;
+        setCategories(cats);
+        setArticles(rows);
       })
       .catch((e: unknown) => {
         if (!cancelled) setError(getApiErrorDetail(e) ?? "Could not load topics.");
@@ -403,54 +411,58 @@ function BrowsePanel({
     };
   }, [audience]);
 
+  const grouped = categories
+    .map((cat) => ({
+      category: cat,
+      articles: articles
+        .filter((a) => a.category_id === cat.id)
+        .sort((a, b) => a.sort_order - b.sort_order),
+    }))
+    .filter((g) => g.articles.length > 0);
+
   return (
     <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6 pt-4 sm:pb-5">
       <h1 className="font-heading text-[1.375rem] font-semibold tracking-tight text-neutral-950 sm:text-[1.25rem]">
         Help Center
       </h1>
       <p className="mt-1 text-[14px] text-neutral-500">
-        Find answers in our knowledge base
+        Guides for booking, payments, and your account.
       </p>
 
-      <div className="mt-5 overflow-hidden rounded-xl border border-neutral-200 bg-white">
-        <div className="border-b border-neutral-100 px-4 py-3">
-          <p className="text-[13px] font-medium text-neutral-600">Documentation</p>
+      {loading ? (
+        <LoadingState label="Loading topics…" variant="inline" className="mt-6 py-8" />
+      ) : error ? (
+        <p className="mt-6 text-sm text-red-700">{error}</p>
+      ) : (
+        <div className="mt-6 space-y-7">
+          {grouped.map(({ category, articles: items }) => (
+            <section key={category.id}>
+              <button
+                type="button"
+                onClick={() =>
+                  onOpenCategory(category.slug, category.title, category.description)
+                }
+                className="text-left text-[15px] font-semibold text-neutral-900 hover:underline"
+              >
+                {category.title}
+              </button>
+              <ul className="mt-2 space-y-1.5">
+                {items.map((a) => (
+                  <li key={a.id}>
+                    <button
+                      type="button"
+                      onClick={() => onOpenArticle(a.slug, category.slug)}
+                      className="w-full rounded-md px-0 py-1 text-left text-[14px] text-neutral-700 underline-offset-4 hover:text-neutral-950 hover:underline"
+                    >
+                      {a.title}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
         </div>
-        {loading ? (
-          <LoadingState label="Loading topics…" variant="inline" className="px-4 py-8" />
-        ) : error ? (
-          <p className="px-4 py-4 text-sm text-red-700">{error}</p>
-        ) : (
-          <ul>
-            {categories.map((cat) => {
-              const Icon = helpCategoryIcon(cat.icon_key);
-              return (
-                <li key={cat.id} className="border-b border-neutral-100 last:border-b-0">
-                  <button
-                    type="button"
-                    onClick={() => onOpenCategory(cat.slug, cat.title, cat.description)}
-                    className="flex w-full items-start gap-3 px-4 py-3.5 text-left transition hover:bg-neutral-50"
-                  >
-                    <Icon
-                      className="mt-0.5 h-[18px] w-[18px] shrink-0 text-neutral-500"
-                      strokeWidth={1.75}
-                      aria-hidden
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[14px] font-medium text-neutral-900">
-                        {cat.title}
-                      </span>
-                      <span className="mt-0.5 block truncate text-[13px] text-neutral-500">
-                        {cat.description}
-                      </span>
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </div>
+      )}
     </div>
   );
 }
@@ -581,11 +593,6 @@ function ArticlePanel({
     };
   }, [audience, slug]);
 
-  const html = useMemo(
-    () => (article ? helpMarkdownToHtml(article.body_md) : ""),
-    [article],
-  );
-
   const submitAsk = (e: FormEvent) => {
     e.preventDefault();
     const q = ask.trim();
@@ -602,33 +609,7 @@ function ArticlePanel({
         ) : error || !article ? (
           <p className="text-sm text-red-700">{error ?? ARTICLE_NOT_FOUND}</p>
         ) : (
-          <>
-            <h1 className="font-heading text-[1.375rem] font-semibold leading-snug tracking-tight text-neutral-950 sm:text-[1.25rem]">
-              {article.title}
-            </h1>
-            <div
-              className="help-article-body mt-4 font-sans [&_h2]:font-heading [&_h2]:mt-6 [&_h2]:text-[1.125rem] [&_h2]:font-semibold [&_h2]:text-neutral-950 [&_h3]:font-heading [&_h3]:mt-5 [&_h3]:text-[1rem] [&_h3]:font-semibold [&_li]:text-[15px] [&_li]:leading-relaxed [&_li]:text-neutral-700 sm:[&_li]:text-[14px] [&_ol]:mt-3 [&_p]:mt-3 [&_p]:text-[15px] [&_p]:leading-relaxed [&_p]:text-neutral-700 sm:[&_p]:text-[14px] [&_ul]:mt-3"
-              dangerouslySetInnerHTML={{ __html: html }}
-            />
-            {article.related_slugs.length > 0 ? (
-              <div className="mt-8 border-t border-neutral-100 pt-5">
-                <p className="text-[14px] font-semibold text-neutral-900">Related</p>
-                <ul className="mt-2 space-y-1">
-                  {article.related_slugs.map((s) => (
-                    <li key={s}>
-                      <button
-                        type="button"
-                        onClick={() => onOpenArticle(s)}
-                        className="text-left text-[14px] font-medium text-neutral-800 underline-offset-2 hover:underline"
-                      >
-                        {s.replace(/^(client|vendor)-/, "").replace(/-/g, " ")}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-          </>
+          <HelpArticleBody article={article} onOpenRelated={onOpenArticle} />
         )}
       </div>
 

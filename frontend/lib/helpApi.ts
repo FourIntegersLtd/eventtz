@@ -25,9 +25,15 @@ export type HelpArticleListItem = {
   sort_order: number;
 };
 
+export type HelpRelatedArticle = {
+  slug: string;
+  title: string;
+};
+
 export type HelpArticleDetail = HelpArticleListItem & {
   body_md: string;
   related_slugs: string[];
+  related_articles?: HelpRelatedArticle[];
 };
 
 export type HelpAskMessage = { message_role: "user" | "assistant"; content: string };
