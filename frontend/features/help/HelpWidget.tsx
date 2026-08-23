@@ -12,7 +12,6 @@ import {
   LifeBuoy,
   Mail,
   Maximize2,
-  MessageSquare,
   Minimize2,
   Newspaper,
   Sparkles,
@@ -274,7 +273,7 @@ function HomePanel({
   onContact: () => void;
   audience: HelpAudience;
 }) {
-  const heading = "How can we help";
+  const heading = "How can we help 👋";
 
   const onAskKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -305,7 +304,6 @@ function HomePanel({
             ...(contactHref
               ? [{ kind: "internal" as const, label: "Contact us", icon: Mail, href: contactHref }]
               : []),
-            { kind: "internal", label: "Message support", icon: MessageSquare, href: "/vendor/help" },
             { kind: "external", label: "Read our blog", icon: Newspaper, href: "/blog" },
             { kind: "external", label: "How vendors join", icon: Sparkles, href: "/#for-vendors" },
             { kind: "external", label: "Visit FAQ", icon: CircleHelp, href: "/#faq" },
@@ -315,7 +313,6 @@ function HomePanel({
             ...(contactHref
               ? [{ kind: "internal" as const, label: "Contact us", icon: Mail, href: contactHref }]
               : []),
-            { kind: "internal", label: "Message support", icon: MessageSquare, href: "/client/help" },
             { kind: "external", label: "Read our blog", icon: Newspaper, href: "/blog" },
             { kind: "external", label: "How booking works", icon: Sparkles, href: "/#booking-journey" },
             { kind: "external", label: "Visit FAQ", icon: CircleHelp, href: "/#faq" },

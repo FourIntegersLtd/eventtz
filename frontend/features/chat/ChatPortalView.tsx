@@ -86,7 +86,7 @@ export function ChatPortalView({
       hasSelection={!!selectedConversationId}
       list={
         <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
-          <div className={`flex h-full min-h-0 flex-1 flex-col overflow-hidden ${portalCard} max-md:rounded-none max-md:border-x-0 max-md:border-b-0`}>
+          <div className={`flex h-full min-h-0 flex-1 flex-col overflow-hidden ${portalCard}`}>
             <div className="border-b border-neutral-100 px-5 py-4 sm:px-6">
               <p className="text-sm font-semibold text-neutral-900">
                 {loading

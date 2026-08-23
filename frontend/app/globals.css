@@ -1036,13 +1036,9 @@ body::-webkit-scrollbar:vertical {
 }
 
 @media (max-width: 767px) {
-  /* Fill-height master-detail (messages, bookings): edge-to-edge, no FAB gutter */
-  .app-viewport-shell__main:has(.portal-fill-height) {
-    padding: 0;
-  }
-
+  /* Fill-height pages keep the same shell inset as other nav sections.
+   * Skip the Help FAB gutter so master-detail panes still fill remaining height. */
   .portal-content:has(> .portal-fill-height) {
-    margin-top: 0;
     padding-bottom: 0;
   }
 }

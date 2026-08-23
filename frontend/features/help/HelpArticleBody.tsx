@@ -10,7 +10,7 @@ import type { HelpArticleDetail, HelpRelatedArticle } from "@/lib/helpApi";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 export const helpArticleBodyClassName =
-  "help-article-body font-sans [&_.help-callout_p]:text-[15px] sm:[&_.help-callout_p]:text-[14px] [&_h2]:font-heading [&_h2]:mt-8 [&_h2]:text-[1.125rem] [&_h2]:font-semibold [&_h2]:text-neutral-950 [&_h3]:font-heading [&_li]:text-[15px] [&_li]:leading-relaxed [&_li]:text-neutral-700 sm:[&_li]:text-[14px] [&_ol]:mt-3 [&_p]:mt-3 [&_p]:text-[15px] [&_p]:leading-relaxed [&_p]:text-neutral-700 sm:[&_p]:text-[14px] [&_ul]:mt-3";
+  "help-article-body font-sans [&_.help-callout-icon]:align-bottom [&_.help-callout_p]:text-[15px] sm:[&_.help-callout_p]:text-[14px] [&_.help-callout_strong]:font-semibold [&_.help-callout--note_strong]:text-sky-950 [&_.help-callout--warning_strong]:text-orange-950 [&_.help-callout--important_strong]:text-red-950 [&_.help-list-label+strong]:font-normal [&_h2]:font-heading [&_h2]:mt-9 [&_h2]:text-[1.125rem] [&_h2]:font-semibold [&_h2]:text-neutral-950 [&_h3]:font-heading [&_li]:text-[15px] [&_li]:leading-relaxed [&_li]:text-neutral-700 sm:[&_li]:text-[14px] [&_ol]:mt-3 [&_p]:mt-3 [&_p]:text-[15px] [&_p]:leading-relaxed [&_p]:text-neutral-700 sm:[&_p]:text-[14px] [&_ul]:mt-3";
 
 export function helpRelatedArticles(article: HelpArticleDetail): HelpRelatedArticle[] {
   if (article.related_articles && article.related_articles.length > 0) {
