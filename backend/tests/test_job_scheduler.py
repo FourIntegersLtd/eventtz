@@ -6,6 +6,8 @@ from datetime import datetime, timezone
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
+from postgrest.exceptions import APIError
+
 from app.jobs.lock import try_claim_job_period
 from app.jobs.scheduler import (
     hour_period_key,
@@ -48,6 +50,36 @@ def test_claim_runs_when_table_missing(mock_get_db: MagicMock) -> None:
         Exception('relation "job_runs" does not exist')
     )
     assert try_claim_job_period("booking_maintenance", "2026-08-23T14") is True
+
+
+@patch("app.jobs.lock.get_db")
+def test_claim_runs_when_postgrest_schema_cache_misses_table(mock_get_db: MagicMock) -> None:
+    mock_get_db.return_value.table.return_value.insert.return_value.execute.side_effect = (
+        APIError(
+            {
+                "message": "Could not find the table 'public.job_runs' in the schema cache",
+                "code": "PGRST205",
+                "hint": None,
+                "details": None,
+            }
+        )
+    )
+    assert try_claim_job_period("booking_maintenance", "2026-08-23T14") is True
+
+
+@patch("app.jobs.lock.get_db")
+def test_claim_fails_closed_on_unexpected_api_error(mock_get_db: MagicMock) -> None:
+    mock_get_db.return_value.table.return_value.insert.return_value.execute.side_effect = (
+        APIError(
+            {
+                "message": "permission denied for table job_runs",
+                "code": "42501",
+                "hint": None,
+                "details": None,
+            }
+        )
+    )
+    assert try_claim_job_period("booking_maintenance", "2026-08-23T14") is False
 
 
 @patch("app.jobs.scheduler.run_booking_maintenance_main")
