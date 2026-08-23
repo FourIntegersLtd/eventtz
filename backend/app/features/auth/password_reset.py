@@ -331,6 +331,8 @@ def change_password(
     normalized = normalize_email(email)
     service = SupabaseAuthService()
     check = service.sign_in_with_password(email=normalized, password=current_password)
+    if check.get("unavailable"):
+        raise ValueError(auth_messages.AUTH_SERVICE_UNAVAILABLE)
     if not check.get("success"):
         raise ValueError(auth_messages.CURRENT_PASSWORD_INCORRECT)
     try:

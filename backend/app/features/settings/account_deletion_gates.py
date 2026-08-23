@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.core.db import get_db, rows_from_query_result
-from app.core.errors import ConflictError, ValidationError
+from app.core.errors import ConflictError, ServiceUnavailableError, ValidationError
 from app.core.logging import get_logger
 from app.features.auth import messages as auth_messages
 from app.features.auth.supabase import SupabaseAuthService
@@ -22,6 +22,8 @@ def assert_password(email: str, password: str) -> None:
     if not email or "@" not in email:
         raise ValidationError(auth_messages.CURRENT_PASSWORD_INCORRECT)
     result = SupabaseAuthService().sign_in_with_password(email=email, password=password)
+    if result.get("unavailable"):
+        raise ServiceUnavailableError(auth_messages.AUTH_SERVICE_UNAVAILABLE)
     if not result.get("success"):
         raise ValidationError(auth_messages.CURRENT_PASSWORD_INCORRECT)
 

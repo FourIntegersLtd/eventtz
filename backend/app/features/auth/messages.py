@@ -85,6 +85,7 @@ EMAIL_NOT_CONFIRMED_SUPABASE = (
     "Confirm your email before signing in. Check your inbox for the verification link."
 )
 SIGN_IN_UNAVAILABLE = "We couldn't sign you in right now. Please try again."
+AUTH_SERVICE_UNAVAILABLE = "Authentication is temporarily unavailable. Please try again."
 SIGNOUT_FAILED = "We couldn't sign you out. Please try again."
 
 # --- Account status ---
