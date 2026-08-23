@@ -35,3 +35,12 @@ class ClientOnboardingResponse(BaseModel):
 class ClientOnboardingPatchBody(BaseModel):
     preferred_name: str | None = Field(None, max_length=80)
     mark_completed: bool | None = None
+
+
+class AccountDeletionBody(BaseModel):
+    password: str = Field(min_length=1, max_length=200)
+
+
+class AccountDeletionResponse(BaseModel):
+    success: bool = True
+    message: str

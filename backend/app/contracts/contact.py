@@ -33,7 +33,6 @@ CONTACT_SUBJECT_LABELS: dict[str, str] = {
 
 
 class ContactSubmitBody(BaseModel):
-    subject: ContactSubject
     message: str = Field(min_length=10, max_length=5000)
     booking_id: str | None = None
 

@@ -14,7 +14,7 @@ export function PrivacyPolicyContent() {
       <p className="compliance-meta">
         Effective date: 1 July 2026
         <br />
-        Last updated: 14 July 2026
+        Last updated: 23 August 2026
       </p>
       <p>
         Eventtz (&quot;Eventtz&quot;, &quot;we&quot;, &quot;us&quot;, or
@@ -157,8 +157,12 @@ export function PrivacyPolicyContent() {
         <p>
           We retain personal data for as long as your account is active and as
           needed to provide services, resolve disputes, enforce agreements, and
-          meet legal obligations. Booking and financial records may be kept for
-          longer where required by law.
+          meet legal obligations. If you delete your account from Settings, we
+          remove your profile, login, messages, and saved details without undue
+          delay. Booking and payment records may be kept for about six years from
+          the end of the relevant financial year (UK tax and accounting rules),
+          stored without your name, email, or phone. The other person on a
+          booking still sees the contract details (date, venue, amounts).
         </p>
       </section>
 
@@ -168,14 +172,15 @@ export function PrivacyPolicyContent() {
         <ul>
           <li>access a copy of your personal data;</li>
           <li>rectify inaccurate data;</li>
-          <li>erase data in certain circumstances;</li>
+          <li>erase data in certain circumstances (including by deleting your account in Settings);</li>
           <li>restrict or object to processing;</li>
           <li>data portability where applicable;</li>
           <li>withdraw consent where processing is consent-based;</li>
           <li>lodge a complaint with the ICO (ico.org.uk).</li>
         </ul>
         <p>
-          To exercise your rights, contact{" "}
+          To exercise your rights, use Settings → Delete account while signed in,
+          or contact{" "}
           <a href={`mailto:${FOOTER_PRIVACY_EMAIL}`}>{FOOTER_PRIVACY_EMAIL}</a>.
         </p>
       </section>

@@ -22,14 +22,15 @@ def _handle_submit(
     user_id: str,
     portal: str,
     body: ContactSubmitBody,
+    subject: str | None = None,
 ) -> ContactSubmitResponse:
     try:
         submit_contact_message(
             user_id=user_id,
             portal=portal,
-            subject=body.subject,
             message=body.message,
             booking_id=body.booking_id,
+            subject=subject,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -74,5 +75,6 @@ def post_admin_contact(
     return _handle_submit(
         user_id=str(user.get("id") or ""),
         portal="admin",
-        body=ContactSubmitBody(subject="feedback_bug", message=body.message),
+        body=ContactSubmitBody(message=body.message),
+        subject="feedback_bug",
     )

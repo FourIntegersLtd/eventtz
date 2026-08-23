@@ -26,6 +26,14 @@ def _stripe() -> Any:
     return stripe
 
 
+def delete_connect_account(account_id: str) -> None:
+    """Best-effort delete of a vendor's Stripe Connect Express account."""
+    acct = str(account_id or "").strip()
+    if not acct:
+        return
+    _stripe().Account.delete(acct)
+
+
 def _to_pence(amount_gbp: float) -> int:
     return int(round(amount_gbp * 100))
 

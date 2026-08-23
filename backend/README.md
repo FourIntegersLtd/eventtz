@@ -224,6 +224,20 @@ railway domain          # generate *.up.railway.app URL
 - API: `https://<domain>/api/v1/...`
 - Stripe webhooks: `https://<domain>/api/v1/webhooks/stripe`
 
+### 6. UptimeRobot (email if the API is down)
+
+Railway’s `/health` check only **restarts** the process. It does not email you. Add a free [UptimeRobot](https://uptimerobot.com) HTTP(s) monitor so you get mail when the public API is gone.
+
+1. Sign in → **Add New Monitor**.
+2. **Monitor Type:** HTTP(s).
+3. **URL:** `https://<your-railway-domain>/health` (the FastAPI origin from `railway domain`, not the Next.js site).
+4. **Interval:** 5 minutes.
+5. **HTTP method:** HEAD is fine (`/health` accepts GET and HEAD, same as OSCE Guide Flask).
+6. **Alert:** email `hello@eventtz.com` (and your inbox if you want).
+7. Optional: keyword monitor, keyword `ok` (GET body is `{"status":"ok"}`).
+
+Keep `/health` shallow (no database ping). Railway uses the same path; a slow DB check would also restart the web process.
+
 ### Redeploy after code changes
 
 ```bash

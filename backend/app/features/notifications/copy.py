@@ -45,6 +45,9 @@ _USE_STORED_BODY: frozenset[str] = frozenset(
         "completion_confirmed_awaiting_other_party",
         "completion_reminder",
         "vendor_completion_reminder",
+        "event_tomorrow",
+        "vendor_event_tomorrow",
+        "pay_to_confirm",
     }
 )
 
@@ -344,6 +347,29 @@ _COPY: dict[str, dict[Portal, tuple[str, str]]] = {
             "Your booking request is with the vendor.\n\n"
             "We have notified them and will nudge them if they are slow to reply. "
             "Most vendors reply within a day. You can follow everything from your bookings page.",
+        ),
+    },
+    "event_tomorrow": {
+        "client": (
+            "Your event is tomorrow",
+            "A reminder that your Eventtz booking is tomorrow.\n\n"
+            "Open the booking for the time, venue and messages. If anything has changed, "
+            "message your vendor from there.",
+        ),
+    },
+    "vendor_event_tomorrow": {
+        "vendor": (
+            "You have an event tomorrow",
+            "A reminder that a paid Eventtz booking is tomorrow.\n\n"
+            "Open the booking for the time, venue and client messages so you can prepare.",
+        ),
+    },
+    "pay_to_confirm": {
+        "client": (
+            "Pay to confirm your date",
+            "The vendor has accepted your booking, but it is not confirmed until you pay.\n\n"
+            "Open the booking to complete payment when you are ready. The date is not held "
+            "until payment goes through.",
         ),
     },
 }

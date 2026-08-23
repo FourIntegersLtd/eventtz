@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { ContactSharingSettingsSection } from "@/features/settings/ContactSharingSettingsSection";
 import { SettingsAccountSection } from "@/features/settings/SettingsAccountSection";
 import { SettingsClientOnboardingSection } from "@/features/settings/SettingsClientOnboardingSection";
+import { SettingsDeleteAccountSection } from "@/features/settings/SettingsDeleteAccountSection";
 import { SettingsLegalSection } from "@/features/settings/SettingsLegalSection";
 import { SettingsNotificationsSection } from "@/features/settings/SettingsNotificationsSection";
 import { SettingsShortcutsSection } from "@/features/settings/SettingsShortcutsSection";
@@ -49,6 +50,7 @@ function SettingsTabPanel({ role, tab }: { role: PortalRole; tab: SettingsTabId 
         <div className="space-y-8">
           <SettingsAccountSection role={role} />
           {role === "client" ? <SettingsClientOnboardingSection /> : null}
+          <SettingsDeleteAccountSection />
           <SettingsSignOutSection />
         </div>
       );

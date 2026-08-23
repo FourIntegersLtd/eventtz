@@ -5,12 +5,12 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-from app.core.config import get_settings
 from app.core.db import get_db
 from app.core.logging import get_logger
 from app.contracts.contact import CONTACT_SUBJECT_LABELS
 from app.features.auth.accounts import fetch_user_profile
 from app.features.contact import messages as contact_messages
+from app.features.contact.classification import classify_contact_message
 from app.features.contact.cursor_webhook import (
     notify_cursor_automation_for_contact,
     should_notify_cursor_automation,
@@ -19,24 +19,25 @@ from app.features.email.dispatch import send_admin_contact_submitted_email
 
 logger = get_logger(__name__)
 
-_BOOKING_SUBJECTS = frozenset({"booking_problem", "payments"})
-
 
 def submit_contact_message(
     *,
     user_id: str,
     portal: str,
-    subject: str,
     message: str,
     booking_id: str | None = None,
+    subject: str | None = None,
 ) -> dict[str, Any]:
     body = message.strip()
     if len(body) < 10:
         raise ValueError(contact_messages.MESSAGE_TOO_SHORT)
 
-    subj = subject.strip().lower()
-    if subj not in CONTACT_SUBJECT_LABELS:
-        raise ValueError(contact_messages.INVALID_TOPIC)
+    if subject is not None:
+        subj = subject.strip().lower()
+        if subj not in CONTACT_SUBJECT_LABELS:
+            raise ValueError(contact_messages.INVALID_TOPIC)
+    else:
+        subj = classify_contact_message(portal=portal, message=body)
 
     resolved_booking_id: str | None = None
     if booking_id and booking_id.strip():
@@ -63,8 +64,6 @@ def submit_contact_message(
             raise ValueError(contact_messages.BOOKING_NOT_ON_ACCOUNT)
         if portal == "vendor" and vid != user_id:
             raise ValueError(contact_messages.BOOKING_NOT_ON_ACCOUNT)
-    elif subj in _BOOKING_SUBJECTS:
-        raise ValueError(contact_messages.BOOKING_REFERENCE_REQUIRED)
 
     label = CONTACT_SUBJECT_LABELS[subj]
     insert_res = (

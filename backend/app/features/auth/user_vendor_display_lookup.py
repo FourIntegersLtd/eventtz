@@ -5,8 +5,12 @@ from __future__ import annotations
 from app.core.logging import get_logger
 from app.features.auth import db_users as user_repository
 from app.features.auth import db_vendors as vendor_repository
+from app.features.auth.accounts import deleted_user_ids
 
 logger = get_logger(__name__)
+
+DELETED_USER_DISPLAY = "Deleted user"
+DELETED_VENDOR_DISPLAY = "Deleted vendor"
 
 # Remember after the first missing-column error - avoids log spam when migration 035 is not applied yet.
 _preferred_name_column_ok: bool | None = None
@@ -21,9 +25,13 @@ def vendor_display_names_by_id(vendor_ids: list[str]) -> dict[str, str]:
         logger.exception("user_lookup: batch load vendor display names failed")
         return {}
     out: dict[str, str] = {}
+    gone = deleted_user_ids(vendor_ids)
     for row in vendor_rows:
         uid = str(row.get("user_id") or "")
         if not uid:
+            continue
+        if uid in gone:
+            out[uid] = DELETED_VENDOR_DISPLAY
             continue
         payload = row.get("payload")
         name = "Vendor"
@@ -61,10 +69,14 @@ def user_emails_by_id(user_ids: list[str], *, fallback: str = "Client") -> dict[
     except Exception:
         logger.exception("user_lookup: batch load user emails failed")
         return {}
+    gone = deleted_user_ids(user_ids)
     out: dict[str, str] = {}
     for row in user_rows:
         uid = str(row.get("id") or "")
         if not uid:
+            continue
+        if uid in gone:
+            out[uid] = ""
             continue
         em = row.get("email")
         out[uid] = str(em).strip() if em else fallback
@@ -106,10 +118,14 @@ def client_display_names_by_id(user_ids: list[str]) -> dict[str, str]:
             return client_display_names_by_id(user_ids)
         logger.exception("user_lookup: batch load client display names failed")
         return {}
+    gone = deleted_user_ids(user_ids)
     out: dict[str, str] = {}
     for row in user_rows:
         uid = str(row.get("id") or "")
         if not uid:
+            continue
+        if uid in gone:
+            out[uid] = DELETED_USER_DISPLAY
             continue
         pn = row.get("preferred_name")
         if isinstance(pn, str) and pn.strip():
@@ -128,4 +144,9 @@ def client_emails_by_id(user_ids: list[str]) -> dict[str, str | None]:
     except Exception:
         logger.exception("user_lookup: batch load client emails failed")
         return {}
-    return {str(row["id"]): row.get("email") for row in user_rows if row.get("id")}
+    gone = deleted_user_ids(user_ids)
+    return {
+        str(row["id"]): (None if str(row["id"]) in gone else row.get("email"))
+        for row in user_rows
+        if row.get("id")
+    }

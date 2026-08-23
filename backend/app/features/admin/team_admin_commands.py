@@ -286,6 +286,33 @@ def _has_client_activity(user_id: str) -> bool:
     return False
 
 
+def _has_restricted_public_references(user_id: str) -> bool:
+    """True when migration 077 RESTRICT FKs would block DELETE public.users."""
+    client = get_db()
+    checks = (
+        ("booking_requests", "client_user_id"),
+        ("booking_requests", "vendor_user_id"),
+        ("conversations", "client_user_id"),
+        ("conversations", "vendor_user_id"),
+        ("booking_reviews", "client_user_id"),
+        ("booking_reviews", "vendor_user_id"),
+        ("dispute_cases", "opened_by_user_id"),
+    )
+    for table, column in checks:
+        try:
+            res = client.table(table).select(column).eq(column, user_id).limit(1).execute()
+            if getattr(res, "data", None):
+                return True
+        except Exception as e:
+            logger.warning(
+                "_has_restricted_public_references %s failed user_id=%s: %s",
+                table,
+                user_id,
+                e,
+            )
+    return False
+
+
 def _demote_admin_to(user_id: str, *, user_type: Literal["client", "vendor"]) -> None:
     get_db().table("users").update(
         {"user_type": user_type, "admin_role": None, "account_suspended": False},
@@ -373,7 +400,7 @@ def delete_admin_team_member(user_id: str, *, actor_user_id: str) -> dict[str, A
             "message": ADMIN_REMOVED_REMAINS_VENDOR,
         }
 
-    if _has_client_activity(user_id):
+    if _has_client_activity(user_id) or _has_restricted_public_references(user_id):
         _demote_admin_to(user_id, user_type="client")
         return {
             "user_id": user_id,

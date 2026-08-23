@@ -56,5 +56,9 @@ export const changePasswordSchema = z
     path: ["confirmPassword"],
   });
 
+export const deleteAccountSchema = z.object({
+  password: z.string().min(1, "Enter your current password."),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;

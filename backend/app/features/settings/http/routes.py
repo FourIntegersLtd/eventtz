@@ -4,11 +4,16 @@ from fastapi import APIRouter, Request, Response
 
 from app.features.auth.http.guards import require_user
 from app.contracts.user_settings import (
+    AccountDeletionBody,
+    AccountDeletionResponse,
     ContactSharingSettings,
     ContactSharingSettingsPutBody,
     ContactSharingSettingsResponse,
 )
+from app.features.auth.session import clear_session_cookies
+from app.features.settings.account_deletion import delete_own_account
 from app.features.settings.contact import get_contact_settings, update_contact_settings
+from app.features.settings import messages as settings_messages
 
 router = APIRouter(prefix="/user", tags=["user"])
 
@@ -53,3 +58,16 @@ def put_user_contact_settings(
             share_address=bool(raw.get("share_address", True)),
         ),
     )
+
+
+@router.post("/account/deletion", response_model=AccountDeletionResponse)
+def delete_own_user_account(
+    request: Request,
+    response: Response,
+    body: AccountDeletionBody,
+) -> AccountDeletionResponse:
+    user = require_user(request, response)
+    uid = str(user.get("id") or "")
+    delete_own_account(user_id=uid, password=body.password)
+    clear_session_cookies(response)
+    return AccountDeletionResponse(success=True, message=settings_messages.ACCOUNT_DELETED)

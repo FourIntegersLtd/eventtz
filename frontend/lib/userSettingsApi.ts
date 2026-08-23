@@ -23,3 +23,11 @@ export async function updateContactSharingSettings(
   );
   return data.settings;
 }
+
+export async function deleteOwnAccount(password: string): Promise<string> {
+  const { data } = await api.post<{ success: boolean; message: string }>(
+    "/api/v1/user/account/deletion",
+    { password },
+  );
+  return data.message;
+}

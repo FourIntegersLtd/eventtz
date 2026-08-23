@@ -11,12 +11,7 @@ import { helpHubTabHref } from "@/lib/helpHub";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { contactFormSchema, parseForm } from "@/lib/validation";
-import {
-  CONTACT_SUBJECT_OPTIONS,
-  submitClientContact,
-  submitVendorContact,
-  type ContactOrFeedbackSubject,
-} from "@/lib/contactApi";
+import { submitClientContact, submitVendorContact } from "@/lib/contactApi";
 import { formControlClass } from "@/components/ui/tokens";
 
 type Props = {
@@ -25,47 +20,37 @@ type Props = {
   embedded?: boolean;
 };
 
-const BOOKING_SUBJECTS = new Set<ContactOrFeedbackSubject>(["booking_problem", "payments"]);
-
 const fieldClass = formControlClass();
 
 export function ContactFormView({ role, embedded = false }: Props) {
   const { user } = useAuth();
   const { showToast } = useToast();
-  const [subject, setSubject] = useState<ContactOrFeedbackSubject>("general");
   const [message, setMessage] = useState("");
   const [bookingId, setBookingId] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const showBookingId = BOOKING_SUBJECTS.has(subject);
-
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    const parsed = parseForm(contactFormSchema, { subject, message, bookingId });
+    const parsed = parseForm(contactFormSchema, { message, bookingId });
     if (!parsed.ok) {
       setError(parsed.formError);
       return;
     }
     setBusy(true);
     try {
+      const booking = (parsed.data.bookingId ?? "").trim() || null;
       const body = {
-        subject: parsed.data.subject,
         message: parsed.data.message,
-        booking_id: BOOKING_SUBJECTS.has(parsed.data.subject)
-          ? (parsed.data.bookingId ?? "").trim() || null
-          : null,
+        booking_id: booking,
       };
       if (role === "client") {
         await submitClientContact(body);
       } else {
         await submitVendorContact(body);
       }
-      track(MixpanelEvents.contact_form_submitted, {
-        role,
-        subject: parsed.data.subject,
-      });
+      track(MixpanelEvents.contact_form_submitted, { role });
       setMessage("");
       setBookingId("");
       showToast({
@@ -115,35 +100,15 @@ export function ContactFormView({ role, embedded = false }: Props) {
             />
           </div>
 
-          <div className="space-y-1.5 px-5 py-4 sm:px-6">
-            <label htmlFor="contact-subject" className="block text-sm font-medium text-neutral-800">
-              Subject
-            </label>
-            <select
-              id="contact-subject"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value as ContactOrFeedbackSubject)}
-              className={fieldClass}
-            >
-              {CONTACT_SUBJECT_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+          <div className="px-5 py-4 sm:px-6">
+            <TextField
+              label="Booking reference"
+              value={bookingId}
+              onChange={(e) => setBookingId(e.target.value)}
+              placeholder="Paste your booking reference if this is about a booking"
+              hint="Optional. You can copy this from your booking details page."
+            />
           </div>
-
-          {showBookingId ? (
-            <div className="px-5 py-4 sm:px-6">
-              <TextField
-                label="Booking reference"
-                value={bookingId}
-                onChange={(e) => setBookingId(e.target.value)}
-                placeholder="Paste your booking reference"
-                hint="You can copy this from your booking details page."
-              />
-            </div>
-          ) : null}
 
           <div className="space-y-1.5 px-5 py-4 sm:px-6">
             <label htmlFor="contact-message" className="block text-sm font-medium text-neutral-800">

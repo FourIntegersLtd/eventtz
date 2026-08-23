@@ -9,6 +9,8 @@ from app.core.logging import get_logger
 from app.features.email.constants import APP_NAME, EMAIL_IMAGES, EMAIL_SUPPORT_ADDRESS
 from app.features.email.delivery_log import booking_template_id, claim_booking_email_send
 from app.features.email.branding import (
+    admin_alert_chip,
+    admin_login_email_url,
     base_email_context,
     client_welcome_showcase,
     display_name_from_email,
@@ -137,6 +139,7 @@ class EmailService:
         action_label: str | None = None,
         to: list[str],
     ) -> bool:
+        chip_label, chip_tone = admin_alert_chip(template_id)
         ctx = transactional_email_context(
             subject=subject,
             headline=headline,
@@ -145,6 +148,8 @@ class EmailService:
             body=body,
             action_url=action_url,
             action_label=action_label,
+            chip_label=chip_label,
+            chip_tone=chip_tone,
         )
         html = render_template("admin/alert.html", ctx)
         text = render_template("admin/alert.txt", ctx)
@@ -174,6 +179,8 @@ class EmailService:
             intro="Someone submitted the contact form.",
             fields=fields,
             body=message,
+            action_url=admin_login_email_url(),
+            action_label="Sign in to admin",
             to=to,
         )
 
@@ -241,6 +248,8 @@ class EmailService:
             headline="Stripe refund failed",
             fields=[("Booking", booking_id)],
             body=error_hint or "Check logs and Stripe dashboard.",
+            action_url=admin_login_email_url(),
+            action_label="Sign in to admin",
             to=to,
         )
 
@@ -261,6 +270,8 @@ class EmailService:
             headline="Vendor payout transfer failed",
             fields=fields,
             body=error_hint or "Stripe transfer failed. Vendor may need Connect verification.",
+            action_url=admin_login_email_url(),
+            action_label="Sign in to admin",
             to=to,
         )
 
@@ -528,6 +539,33 @@ class EmailService:
         return resend_send(
             to=[to_email],
             subject=f"Account suspended | {APP_NAME}",
+            html=html,
+            text=text,
+        )
+
+    def send_account_deleted(
+        self,
+        *,
+        to_email: str,
+    ) -> bool:
+        ctx = transactional_email_context(
+            subject="Your Eventtz account has been deleted",
+            headline="Account deleted",
+            subtitle="We have closed your Eventtz account as requested.",
+            body=(
+                "Your profile, login, messages, and saved details have been removed.\n\n"
+                "Booking and payment records that the law requires us to keep are stored "
+                "without your name, email, or phone. You can create a new account with the "
+                "same email if you return later."
+            ),
+            action_url=None,
+            action_label=None,
+        )
+        html = render_template("booking/notification.html", ctx)
+        text = render_template("booking/notification.txt", ctx)
+        return resend_send(
+            to=[to_email],
+            subject=f"Account deleted | {APP_NAME}",
             html=html,
             text=text,
         )
@@ -919,10 +957,15 @@ class EmailService:
             )
 
         if layout == "admin":
+            chip_label, chip_tone = admin_alert_chip("admin.contact_submitted")
             alert_ctx = transactional_email_context(
                 subject=f"Test admin alert | {APP_NAME}",
                 headline="Test admin alert",
                 intro="This is a sample ops notification from the admin console.",
+                chip_label=chip_label,
+                chip_tone=chip_tone,
+                action_url=admin_login_email_url(),
+                action_label="Sign in to admin",
                 **transactional_rich_body_fields(plain, body_html),
             )
             html = render_template("admin/alert.html", alert_ctx)

@@ -94,6 +94,10 @@ ACCOUNT_SUSPENDED_CONTACT = (
     "Your account has been suspended. "
     "Contact support if you think this is a mistake."
 )
+ACCOUNT_DELETED = "This account has been deleted."
+ACCOUNT_DELETED_SIGNIN = (
+    "This account has been deleted. You can create a new account with the same email."
+)
 ADMIN_ACCOUNT_SUSPENDED_SIGNIN = (
     "This account is suspended. Contact a super admin if you need access."
 )
