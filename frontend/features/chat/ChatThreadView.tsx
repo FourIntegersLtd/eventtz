@@ -72,8 +72,7 @@ export function ChatThreadView({
   initialDraft,
 }: ChatThreadViewProps) {
   const isDrawer = variant === "drawer";
-  const pageThreadShell =
-    "h-full min-h-0 flex-1 max-md:rounded-none max-md:border-x-0 max-md:border-b-0";
+  const pageThreadShell = "h-full min-h-0 flex-1";
   const { user } = useAuth();
   const uid = user?.id ?? "";
   const [conv, setConv] = useState<ChatConversation | null>(null);

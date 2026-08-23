@@ -2,22 +2,37 @@ import { describe, expect, it } from "vitest";
 import { helpMarkdownToHtml } from "@/features/help/helpContent";
 
 describe("helpMarkdownToHtml", () => {
-  it("renders NOTE callouts", () => {
+  it("renders NOTE callouts with help-callout classes and SVG icon", () => {
     const html = helpMarkdownToHtml(
       "> [!NOTE]\n> Only you can delete your own account.",
     );
+    expect(html).toContain("help-callout--note");
+    expect(html).toContain("border-sky-200");
     expect(html).toContain("bg-sky-50");
     expect(html).toContain("Only you can delete your own account.");
     expect(html).toContain('role="note"');
+    expect(html).toContain("<svg");
   });
 
   it("renders WARNING callouts with bold text", () => {
     const html = helpMarkdownToHtml(
       "> [!WARNING]\n> This cannot be undone. **Export** first.",
     );
+    expect(html).toContain("help-callout--warning");
     expect(html).toContain("bg-orange-50");
     expect(html).toContain("<strong>Export</strong>");
     expect(html).toContain("This cannot be undone.");
+    expect(html).toContain("<svg");
+  });
+
+  it("renders IMPORTANT callouts", () => {
+    const html = helpMarkdownToHtml(
+      "> [!IMPORTANT]\n> Do not confirm if something went wrong.",
+    );
+    expect(html).toContain("help-callout--important");
+    expect(html).toContain("bg-red-50");
+    expect(html).toContain("border-red-200");
+    expect(html).toContain("Do not confirm if something went wrong.");
   });
 
   it("renders numbered step headings", () => {
@@ -35,8 +50,28 @@ describe("helpMarkdownToHtml", () => {
     expect(html).toContain("<h2");
     expect(html).toContain("Before you start");
     expect(html).toContain("<ul");
-    expect(html).toContain("<strong>Upgrading.</strong>");
+    expect(html).toContain('<span class="help-list-label');
+    expect(html).toContain("Upgrading.");
     expect(html).toContain("Keep going.");
+  });
+
+  it("styles label bullets with colon", () => {
+    const html = helpMarkdownToHtml(
+      "- **Contact:** account problems or payment failures.",
+    );
+    expect(html).toContain('help-list-label');
+    expect(html).toContain("Contact:");
+    expect(html).toContain("account problems or payment failures.");
+  });
+
+  it("renders callouts at the bottom of the article body", () => {
+    const html = helpMarkdownToHtml(
+      "Intro paragraph.\n\n> [!NOTE]\n> Remember to save.\n\n## Next steps\n\nDo this next.",
+    );
+    const noteIndex = html.indexOf("help-callout--note");
+    const nextStepsIndex = html.indexOf("Next steps");
+    expect(noteIndex).toBeGreaterThan(nextStepsIndex);
+    expect(html).toContain("Remember to save.");
   });
 
   it("escapes raw HTML in article bodies", () => {
