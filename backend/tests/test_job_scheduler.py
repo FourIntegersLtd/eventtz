@@ -67,6 +67,21 @@ def test_claim_runs_when_postgrest_schema_cache_misses_table(mock_get_db: MagicM
     assert try_claim_job_period("booking_maintenance", "2026-08-23T14") is True
 
 
+@patch("app.jobs.lock.get_db")
+def test_claim_fails_closed_on_unexpected_api_error(mock_get_db: MagicMock) -> None:
+    mock_get_db.return_value.table.return_value.insert.return_value.execute.side_effect = (
+        APIError(
+            {
+                "message": "permission denied for table job_runs",
+                "code": "42501",
+                "hint": None,
+                "details": None,
+            }
+        )
+    )
+    assert try_claim_job_period("booking_maintenance", "2026-08-23T14") is False
+
+
 @patch("app.jobs.scheduler.run_booking_maintenance_main")
 @patch("app.jobs.scheduler.try_claim_job_period", return_value=False)
 def test_locked_run_skips_work_when_not_claimed(
