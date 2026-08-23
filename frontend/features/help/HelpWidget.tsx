@@ -204,9 +204,6 @@ export function HelpWidget({ audience }: Props) {
               onOpenCategory={(slug, title, description) =>
                 setView({ name: "category", slug, title, description })
               }
-              onOpenArticle={(slug, fromCategory) =>
-                setView({ name: "article", slug, fromCategory })
-              }
             />
           ) : null}
           {view.name === "category" ? (
@@ -291,10 +288,7 @@ function HomePanel({
   return (
     <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6 pt-5 sm:pb-5 sm:pt-6">
       <h1 className="font-heading text-[1.375rem] font-semibold tracking-tight text-neutral-950 sm:text-[1.25rem]">
-        {heading}{" "}
-        <span aria-hidden className="font-normal">
-          👋
-        </span>
+        {heading}
       </h1>
 
       <div className="mt-5 overflow-hidden rounded-xl border border-neutral-200">
@@ -380,25 +374,20 @@ function HomePanel({
 function BrowsePanel({
   audience,
   onOpenCategory,
-  onOpenArticle,
 }: {
   audience: HelpAudience;
   onOpenCategory: (slug: string, title: string, description: string) => void;
-  onOpenArticle: (slug: string, fromCategory?: string) => void;
 }) {
   const [categories, setCategories] = useState<HelpCategory[]>([]);
-  const [articles, setArticles] = useState<HelpArticleListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    void Promise.all([fetchHelpCategories(audience), fetchHelpArticles(audience)])
-      .then(([cats, rows]) => {
-        if (cancelled) return;
-        setCategories(cats);
-        setArticles(rows);
+    void fetchHelpCategories(audience)
+      .then((rows) => {
+        if (!cancelled) setCategories(rows);
       })
       .catch((e: unknown) => {
         if (!cancelled) setError(getApiErrorDetail(e) ?? "Could not load topics.");
@@ -411,58 +400,54 @@ function BrowsePanel({
     };
   }, [audience]);
 
-  const grouped = categories
-    .map((cat) => ({
-      category: cat,
-      articles: articles
-        .filter((a) => a.category_id === cat.id)
-        .sort((a, b) => a.sort_order - b.sort_order),
-    }))
-    .filter((g) => g.articles.length > 0);
-
   return (
     <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6 pt-4 sm:pb-5">
       <h1 className="font-heading text-[1.375rem] font-semibold tracking-tight text-neutral-950 sm:text-[1.25rem]">
         Help Center
       </h1>
       <p className="mt-1 text-[14px] text-neutral-500">
-        Guides for booking, payments, and your account.
+        Find answers in our knowledge base
       </p>
 
-      {loading ? (
-        <LoadingState label="Loading topics…" variant="inline" className="mt-6 py-8" />
-      ) : error ? (
-        <p className="mt-6 text-sm text-red-700">{error}</p>
-      ) : (
-        <div className="mt-6 space-y-7">
-          {grouped.map(({ category, articles: items }) => (
-            <section key={category.id}>
-              <button
-                type="button"
-                onClick={() =>
-                  onOpenCategory(category.slug, category.title, category.description)
-                }
-                className="text-left text-[15px] font-semibold text-neutral-900 hover:underline"
-              >
-                {category.title}
-              </button>
-              <ul className="mt-2 space-y-1.5">
-                {items.map((a) => (
-                  <li key={a.id}>
-                    <button
-                      type="button"
-                      onClick={() => onOpenArticle(a.slug, category.slug)}
-                      className="w-full rounded-md px-0 py-1 text-left text-[14px] text-neutral-700 underline-offset-4 hover:text-neutral-950 hover:underline"
-                    >
-                      {a.title}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
+      <div className="mt-5 overflow-hidden rounded-xl border border-neutral-200 bg-white">
+        <div className="border-b border-neutral-100 px-4 py-3">
+          <p className="text-[13px] font-medium text-neutral-600">Documentation</p>
         </div>
-      )}
+        {loading ? (
+          <LoadingState label="Loading topics…" variant="inline" className="px-4 py-8" />
+        ) : error ? (
+          <p className="px-4 py-4 text-sm text-red-700">{error}</p>
+        ) : (
+          <ul>
+            {categories.map((cat) => {
+              const Icon = helpCategoryIcon(cat.icon_key);
+              return (
+                <li key={cat.id} className="border-b border-neutral-100 last:border-b-0">
+                  <button
+                    type="button"
+                    onClick={() => onOpenCategory(cat.slug, cat.title, cat.description)}
+                    className="flex w-full items-start gap-3 px-4 py-3.5 text-left transition hover:bg-neutral-50"
+                  >
+                    <Icon
+                      className="mt-0.5 h-[18px] w-[18px] shrink-0 text-neutral-500"
+                      strokeWidth={1.75}
+                      aria-hidden
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[14px] font-medium text-neutral-900">
+                        {cat.title}
+                      </span>
+                      <span className="mt-0.5 block truncate text-[13px] text-neutral-500">
+                        {cat.description}
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
