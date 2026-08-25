@@ -59,4 +59,31 @@ describe("sentryBeforeSend", () => {
 
     expect(sentryBeforeSend(event)).toBe(event);
   });
+
+  it("drops Instagram in-app browser WKWebView bridge errors", () => {
+    const event: ErrorEvent = {
+      type: undefined,
+      exception: {
+        values: [
+          {
+            type: "TypeError",
+            value: "undefined is not an object (evaluating 'window.webkit.messageHandlers')",
+          },
+        ],
+      },
+    };
+
+    expect(sentryBeforeSend(event)).toBeNull();
+  });
+
+  it("does not drop unrelated TypeErrors that mention webkit without messageHandlers", () => {
+    const event: ErrorEvent = {
+      type: undefined,
+      exception: {
+        values: [{ type: "TypeError", value: "webkitRequestAnimationFrame is not a function" }],
+      },
+    };
+
+    expect(sentryBeforeSend(event)).toBe(event);
+  });
 });
