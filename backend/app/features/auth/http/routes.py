@@ -99,6 +99,11 @@ async def signup(
         body.email,
         result.get("error"),
     )
+    if result.get("unavailable"):
+        raise HTTPException(
+            status_code=503,
+            detail=result.get("error", auth_messages.AUTH_SERVICE_UNAVAILABLE),
+        )
     raise HTTPException(
         status_code=400,
         detail=result.get("error", auth_messages.SIGNUP_FAILED),
@@ -154,6 +159,11 @@ async def sign_in(
             user=app_user,
             session=_auth_session(result["session"]),
         )
+    if result.get("unavailable"):
+        raise HTTPException(
+            status_code=503,
+            detail=result.get("error", auth_messages.SIGN_IN_UNAVAILABLE),
+        )
     raise HTTPException(
         status_code=401,
         detail=result.get("error", auth_messages.LOGIN_CREDENTIALS_MISMATCH),
@@ -171,6 +181,11 @@ async def sign_out(
     if result.get("success"):
         clear_session_cookies(response)
         return SignOutResponse(success=True)
+    if result.get("unavailable"):
+        raise HTTPException(
+            status_code=503,
+            detail=result.get("error", auth_messages.AUTH_SERVICE_UNAVAILABLE),
+        )
     raise HTTPException(
         status_code=400,
         detail=result.get("error", auth_messages.SIGNOUT_FAILED),
@@ -198,6 +213,11 @@ async def refresh_session(
             success=True,
             user=build_app_user(result["user"]),
             session=_auth_session(result["session"]),
+        )
+    if result.get("unavailable"):
+        raise HTTPException(
+            status_code=503,
+            detail=result.get("error", auth_messages.AUTH_SERVICE_UNAVAILABLE),
         )
     clear_session_cookies(response)
     raise HTTPException(
@@ -331,7 +351,8 @@ async def change_password_route(
             client_ip=_client_ip(request),
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        status = 503 if str(e) == auth_messages.AUTH_SERVICE_UNAVAILABLE else 400
+        raise HTTPException(status_code=status, detail=str(e)) from e
     clear_session_cookies(response)
     return ChangePasswordResponse(
         message=auth_messages.PASSWORD_UPDATED_REAUTH,

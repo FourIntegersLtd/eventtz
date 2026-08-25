@@ -84,5 +84,10 @@ def get_current_user_or_raise(request: Request, response: Response) -> dict[str,
     result = service.get_user_from_access_token(access_token)
     if result.get("success"):
         return result["user"]
+    if result.get("unavailable"):
+        raise HTTPException(
+            status_code=503,
+            detail=result.get("error", auth_messages.AUTH_SERVICE_UNAVAILABLE),
+        )
     clear_session_cookies(response)
     raise HTTPException(status_code=401, detail=result.get("error", auth_messages.SIGN_IN_REQUIRED))
