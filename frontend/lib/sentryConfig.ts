@@ -30,6 +30,8 @@ export const SENTRY_REPLAYS_SESSION_SAMPLE_RATE = 0.05;
 export const SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE = 1;
 
 const SAFE_TO_IGNORE_PATTERN = /safe to ignore/i;
+/** Instagram/Facebook iOS in-app browsers inject a WKWebView bridge that throws this. */
+const WEBKIT_MESSAGE_HANDLERS_PATTERN = /webkit\.messageHandlers/i;
 
 function getEventMessages(event: Event | ErrorEvent): string[] {
   const messages: string[] = [];
@@ -41,11 +43,18 @@ function getEventMessages(event: Event | ErrorEvent): string[] {
   return messages;
 }
 
-/** Drop intentional console test errors (e.g. admin Sentry smoke tests). */
+function shouldDropSentryEvent(event: Event | ErrorEvent): boolean {
+  return getEventMessages(event).some(
+    (message) =>
+      SAFE_TO_IGNORE_PATTERN.test(message) || WEBKIT_MESSAGE_HANDLERS_PATTERN.test(message),
+  );
+}
+
+/** Drop smoke-test messages and known third-party in-app browser bridge noise. */
 export function sentryBeforeSend<T extends Event | ErrorEvent>(
   event: T,
 ): T | null {
-  if (getEventMessages(event).some((message) => SAFE_TO_IGNORE_PATTERN.test(message))) {
+  if (shouldDropSentryEvent(event)) {
     return null;
   }
   return event;
