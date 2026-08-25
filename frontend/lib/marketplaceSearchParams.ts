@@ -102,9 +102,9 @@ export function marketplaceStateFromSearchParams(
     : [];
 
   return {
-    query: q || legacyLocation,
+    query: q,
     types,
-    location: legacyLocation && q ? legacyLocation : "",
+    location: legacyLocation,
     country,
     dates,
     dateFlexible: parseBool(sp.get("flexible")),

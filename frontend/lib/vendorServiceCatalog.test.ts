@@ -44,4 +44,12 @@ describe("marketplaceSearchParams", () => {
     );
     expect(state.types).toEqual(["dj", "decor"]);
   });
+
+  it("keeps query and location as separate URL params", () => {
+    const state = marketplaceStateFromSearchParams(
+      new URLSearchParams("location=Leeds"),
+    );
+    expect(state.location).toBe("Leeds");
+    expect(state.query).toBe("");
+  });
 });

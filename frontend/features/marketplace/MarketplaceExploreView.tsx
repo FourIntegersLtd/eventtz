@@ -27,6 +27,7 @@ import { expandVendorsForSearchResults } from "@/features/marketplace/marketplac
 import { planOptionsLabel } from "@/features/marketplace/marketplacePlanCopy";
 import { ScrollToTopButton } from "@/components/ui/ScrollToTopButton";
 import { useMarketplaceExplore } from "@/features/marketplace/useMarketplaceExplore";
+import { useBrowseGeolocation } from "@/features/marketplace/useBrowseGeolocation";
 import { CLIENT_BOOKING_TOAST_COPY } from "@/features/bookings/bookingConfirmCopy";
 import type { ExploreSearchSection } from "@/lib/clientExploreApi";
 import { MARKETPLACE_PAGE_SIZE } from "@/lib/marketplaceSearchParams";
@@ -92,6 +93,12 @@ export function MarketplaceExploreView({
     matchNotice,
   } = explore;
 
+  const geo = useBrowseGeolocation({
+    state,
+    onCommit: commitFilters,
+    enabled: !savedOnly && mode === "browse",
+  });
+
   const pagination =
     !loading && !error && !isPlanMode && totalCount > MARKETPLACE_PAGE_SIZE ? (
       <MarketplacePagination
@@ -134,7 +141,19 @@ export function MarketplaceExploreView({
         initialState={state}
         submitMode="replace"
         showTypesField={false}
+        showDatesField
       />
+
+      {!savedOnly ? (
+        <MarketplaceFiltersBar
+          state={state}
+          onCommit={commitFilters}
+          onRequestCurrentLocation={geo.requestCurrentLocation}
+          geoLoading={geo.loading}
+          geoError={geo.error}
+          onClearGeoError={geo.clearError}
+        />
+      ) : null}
 
       {state.fromPlannerPlanId && !loading ? (
         <div className="mt-4 rounded-xl border border-primary/15 bg-[#faf8fc] px-4 py-3 text-sm text-neutral-800">
@@ -143,7 +162,7 @@ export function MarketplaceExploreView({
         </div>
       ) : null}
 
-      <div className="mt-6 flex flex-wrap items-start justify-between gap-4">
+      <div className="mt-6">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-neutral-900">
             {loading ? (
@@ -175,7 +194,6 @@ export function MarketplaceExploreView({
             </div>
           ) : null}
         </div>
-        <MarketplaceFiltersBar state={state} onCommit={commitFilters} />
       </div>
 
       {loading ? (
