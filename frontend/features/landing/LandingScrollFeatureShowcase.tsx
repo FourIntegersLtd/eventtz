@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import type { ReactNode } from "react";
+import { useRef } from "react";
 
 import { LandingSection } from "@/features/landing/LandingSection";
 import {
@@ -43,7 +44,7 @@ const MOBILE_STEP_BADGE_STYLES = [
 ] as const;
 
 const MOBILE_CAROUSEL_SCROLL_CLASS =
-  "-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:gap-5 sm:px-6 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden";
+  "flex snap-x snap-mandatory gap-4 overflow-x-auto pb-1 sm:gap-5 scroll-smooth [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden";
 
 function StepScreenshot({
   step,
@@ -110,17 +111,20 @@ function MobileJourneyStepCard({
   step,
   index,
   fallback,
+  stepRef,
 }: {
   step: LandingScrollFeatureStep;
   index: number;
   fallback?: ReactNode;
+  stepRef?: (el: HTMLElement | null) => void;
 }) {
   const badgeClass = MOBILE_STEP_BADGE_STYLES[index % MOBILE_STEP_BADGE_STYLES.length];
 
   return (
     <article
       id={step.id}
-      className="flex w-[min(82vw,20rem)] shrink-0 snap-start flex-col rounded-2xl border border-neutral-900 bg-white p-5 sm:w-[min(78vw,22rem)] sm:p-6"
+      ref={stepRef}
+      className="flex w-[min(92vw,28rem)] shrink-0 snap-start flex-col rounded-2xl border border-primary-border/50 bg-white p-5 sm:w-[min(90vw,30rem)] sm:p-6"
     >
       <span
         className={`inline-flex h-9 w-9 items-center justify-center rounded-lg text-base font-bold tabular-nums ${badgeClass}`}
@@ -131,7 +135,7 @@ function MobileJourneyStepCard({
       <p className="mt-3 flex-1 text-sm leading-relaxed text-neutral-700 sm:text-[15px] sm:leading-7">
         {step.description}
       </p>
-      <div className="mt-5 overflow-hidden rounded-xl border border-neutral-200/80 bg-white">
+      <div className="mt-5 overflow-hidden rounded-xl border border-primary-border/40 bg-white">
         {step.imageSrc ? (
           <Image
             src={step.imageSrc}
@@ -139,7 +143,7 @@ function MobileJourneyStepCard({
             width={LANDING_SCREENSHOT_DEFAULT_WIDTH}
             height={LANDING_SCREENSHOT_DEFAULT_HEIGHT}
             className="h-auto w-full"
-            sizes="82vw"
+            sizes="(max-width: 640px) 92vw, 30rem"
             priority={index === 0}
             unoptimized
           />
@@ -163,7 +167,9 @@ export function LandingScrollFeatureShowcase({
   tablistAriaLabel = "Journey steps",
   tone = "white",
 }: LandingScrollFeatureShowcaseProps) {
-  const { activeIndex, setStepRef, scrollToStep } = useLandingScrollSpy(steps.length);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const { activeIndex, setMobileStepRef, setDesktopStepRef, scrollToStep } =
+    useLandingScrollSpy(steps.length, carouselRef);
 
   const activeStepId = steps[activeIndex]?.id ?? steps[0]?.id;
   const stickyBarBg = `${LANDING_SECTION_BG[tone]}/95`;
@@ -173,9 +179,16 @@ export function LandingScrollFeatureShowcase({
     <LandingSection id={id} className={landingFeatureSectionClass(tone)} width="7xl">
       <div className="mx-auto max-w-5xl text-left lg:text-center">
         {eyebrow ? (
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{eyebrow}</p>
+          <>
+            <h2 className={`${LANDING_FEATURE_HEADLINE_CLASS} text-balance lg:hidden`}>{eyebrow}</h2>
+            <p className="hidden text-xs font-semibold uppercase tracking-[0.2em] text-primary lg:block">
+              {eyebrow}
+            </p>
+          </>
         ) : null}
-        <h2 className={`${LANDING_FEATURE_HEADLINE_CLASS} text-balance ${eyebrow ? "mt-2.5" : ""}`}>
+        <h2
+          className={`${LANDING_FEATURE_HEADLINE_CLASS} hidden text-balance lg:block ${eyebrow ? "mt-2.5" : ""}`}
+        >
           {title}
         </h2>
         {description ? (
@@ -186,16 +199,15 @@ export function LandingScrollFeatureShowcase({
       </div>
 
       <div
-        className={`z-30 mt-6 hidden justify-center py-2 sm:mt-8 lg:flex lg:sticky lg:top-[4.25rem] lg:py-3 lg:backdrop-blur-md ${stickyBarBg}`}
+        className={`z-30 mt-6 flex justify-center py-2 sm:mt-8 lg:sticky lg:top-[4.25rem] lg:py-3 lg:backdrop-blur-md ${stickyBarBg}`}
       >
         <div
-          className="flex w-full max-w-none items-center rounded-full bg-neutral-100 p-1 ring-1 ring-neutral-200/90 sm:max-w-lg"
+          className="flex w-full items-stretch gap-0.5 rounded-full bg-neutral-100 p-1 ring-1 ring-neutral-200/90 sm:gap-1 lg:mx-auto lg:max-w-lg"
           role="tablist"
           aria-label={tablistAriaLabel}
         >
           {steps.map((step, index) => {
             const active = activeStepId === step.id;
-            const StepIcon = step.Icon;
             return (
               <button
                 key={step.id}
@@ -204,13 +216,12 @@ export function LandingScrollFeatureShowcase({
                 aria-selected={active}
                 aria-controls={step.id}
                 onClick={() => scrollToStep(index)}
-                className={`flex min-h-11 flex-1 items-center justify-center gap-1 rounded-full px-2 py-2.5 text-center text-[11px] font-semibold transition-all duration-300 motion-reduce:transition-none sm:min-h-0 sm:gap-1.5 sm:px-3 sm:text-sm ${
+                className={`flex min-h-11 min-w-0 flex-1 items-center justify-center rounded-full px-2 py-2 text-center text-sm font-semibold leading-tight transition-all duration-300 motion-reduce:transition-none ${
                   active
                     ? "bg-primary text-white shadow-sm"
                     : "text-neutral-600 hover:text-primary"
                 }`}
               >
-                <StepIcon className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" strokeWidth={2.25} aria-hidden />
                 <span className="truncate">{step.stepLabel}</span>
               </button>
             );
@@ -219,22 +230,27 @@ export function LandingScrollFeatureShowcase({
       </div>
 
       <div className="mt-8 lg:hidden">
-        <div className={MOBILE_CAROUSEL_SCROLL_CLASS} aria-label="Booking steps">
+        <div
+          ref={carouselRef}
+          className={`-mx-4 px-4 sm:-mx-6 sm:px-6 ${MOBILE_CAROUSEL_SCROLL_CLASS}`}
+          aria-label="Booking steps"
+        >
           {steps.map((step, index) => (
             <MobileJourneyStepCard
               key={step.id}
               step={step}
               index={index}
               fallback={imageFallbacks?.[step.id]}
+              stepRef={setMobileStepRef(index)}
             />
           ))}
         </div>
       </div>
 
-      <div className="mt-4 hidden lg:mt-5 lg:grid lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)] lg:gap-8 xl:gap-10">
+      <div className="mt-4 hidden lg:mt-5 lg:grid lg:grid-cols-[minmax(0,1.55fr)_minmax(0,0.45fr)] lg:gap-6 xl:gap-8">
         <div className="relative hidden lg:block">
           <div className="sticky top-[7.5rem] flex min-h-[calc(100dvh-7.5rem)] w-full items-center">
-            <div className="relative aspect-[16/10] w-full">
+            <div className="relative aspect-[4/3] w-full">
               {steps.map((step, index) => (
                 <StepScreenshot
                   key={step.id}
@@ -255,7 +271,7 @@ export function LandingScrollFeatureShowcase({
             return (
               <article
                 key={step.id}
-                ref={setStepRef(index)}
+                ref={setDesktopStepRef(index)}
                 className="flex flex-col justify-center border-t border-neutral-200/80 py-6 first:border-t-0 first:pt-4 sm:py-10 lg:min-h-[calc(100dvh-7.5rem)] lg:py-0"
                 aria-current={active ? "step" : undefined}
               >
