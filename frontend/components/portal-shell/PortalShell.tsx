@@ -362,7 +362,7 @@ export function PortalShell({
 
       {/* Mobile drawer */}
       {mobileNavOpen ? (
-        <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-modal="true" aria-label="Menu">
+        <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Menu">
           <button
             type="button"
             className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
@@ -447,7 +447,7 @@ export function PortalShell({
         </main>
       </div>
 
-      <HelpWidget audience={portal} />
+      <HelpWidget audience={portal} hidden={mobileNavOpen} />
       {portal === "vendor" ? <VendorCopilotWidget /> : null}
     </div>
   );

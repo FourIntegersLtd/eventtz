@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/Button";
-import { TextField } from "@/components/ui/TextField";
 import { useToast } from "@/components/ui/Toast";
 import type { PortalRole } from "@/components/portal-shell/portalNav";
 import { helpHubTabHref } from "@/lib/helpHub";
@@ -13,6 +12,7 @@ import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { contactFormSchema, parseForm } from "@/lib/validation";
 import { submitClientContact, submitVendorContact } from "@/lib/contactApi";
 import { formControlClass } from "@/components/ui/tokens";
+import { RotatingContactMessagePlaceholder } from "@/features/contact/RotatingContactMessagePlaceholder";
 
 type Props = {
   role: PortalRole;
@@ -100,13 +100,16 @@ export function ContactFormView({ role, embedded = false }: Props) {
             />
           </div>
 
-          <div className="px-5 py-4 sm:px-6">
-            <TextField
-              label="Booking reference"
+          <div className="space-y-1.5 px-5 py-4 sm:px-6">
+            <label htmlFor="contact-booking" className="block text-sm font-medium text-neutral-800">
+              Booking reference <span className="font-normal text-neutral-500">(optional)</span>
+            </label>
+            <input
+              id="contact-booking"
               value={bookingId}
               onChange={(e) => setBookingId(e.target.value)}
-              placeholder="Paste your booking reference if this is about a booking"
-              hint="Optional. You can copy this from your booking details page."
+              placeholder="Paste from booking details"
+              className={fieldClass}
             />
           </div>
 
@@ -114,14 +117,20 @@ export function ContactFormView({ role, embedded = false }: Props) {
             <label htmlFor="contact-message" className="block text-sm font-medium text-neutral-800">
               Message
             </label>
-            <textarea
-              id="contact-message"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={6}
-              className={fieldClass}
-              placeholder="How can we help?"
-            />
+            <div className="relative">
+              <RotatingContactMessagePlaceholder
+                role={role}
+                visible={!message.trim()}
+              />
+              <textarea
+                id="contact-message"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={6}
+                className={fieldClass}
+                placeholder=""
+              />
+            </div>
           </div>
 
           <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">

@@ -78,9 +78,8 @@ export function SettingsDeleteAccountSection() {
       >
         <div className="px-5 py-4 sm:px-6">
           <p className="text-sm text-neutral-600">
-            We remove your profile, login, messages, and saved details. Booking and payment
-            records we must keep for tax are stored without your name, email, or phone. The
-            other person on a booking still sees the date, venue, and amounts.
+            Your profile and personal data are deleted. Anonymised booking and payment
+            records may be kept where UK law requires.
           </p>
           <Button
             type="button"

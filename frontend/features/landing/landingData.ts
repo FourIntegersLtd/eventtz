@@ -476,12 +476,8 @@ export const BROWSE_SECTION = {
 } as const;
 
 export const EXPLORE_NAV_LINKS = [
-  { href: "#browse", label: "Categories" },
-  { href: "#featured", label: "Featured vendors" },
-  { href: "#reviews", label: "Reviews" },
+  { href: "/client/browse", label: "Browse vendors" },
   { href: "#booking-journey", label: "How booking works" },
-  { href: "#why-eventtz", label: "Why Eventtz" },
-  { href: "#inspiration", label: "Celebrations" },
   { href: "#for-vendors", label: "For vendors" },
   { href: "#faq", label: "FAQ" },
 ] as const;
@@ -499,6 +495,23 @@ export const CONTACT_US_LINK = {
   label: "Contact us",
 } as const;
 
+/** Anchor targets on `/` - use `/#id` when linking from other routes. */
+export function landingSectionHref(
+  hash: string,
+  sectionLinkPrefix: "" | "/",
+): string {
+  const fragment = hash.startsWith("#") ? hash : `#${hash}`;
+  return `${sectionLinkPrefix}${fragment}`;
+}
+
+export function resolveLandingSectionPrefix(
+  pathname: string,
+  explicit: "" | "/" = "",
+): "" | "/" {
+  if (pathname !== "/") return "/";
+  return explicit;
+}
+
 export type MobileNavLink = {
   href: string;
   label: string;
@@ -506,6 +519,7 @@ export type MobileNavLink = {
 
 /** Short list for the mobile drawer - desktop keeps the full Explore dropdown. */
 export const MOBILE_NAV_SECTION_LINKS: MobileNavLink[] = [
+  { href: "/client/browse", label: "Browse vendors" },
   { href: "/blog", label: "Blog" },
   { href: "#booking-journey", label: "How booking works" },
   { href: "#for-vendors", label: "For vendors" },

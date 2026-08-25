@@ -49,12 +49,12 @@ type View =
   | { name: "article"; slug: string; fromCategory?: string }
   | { name: "ask"; initialQ?: string };
 
-type Props = { audience: HelpAudience };
+type Props = { audience: HelpAudience; /** Hide FAB while another overlay (e.g. mobile nav) is open. */ hidden?: boolean };
 
 const iconBtn =
   "rounded-md p-1.5 text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900";
 
-export function HelpWidget({ audience }: Props) {
+export function HelpWidget({ audience, hidden = false }: Props) {
   const pathname = usePathname();
   const copilot = useVendorCopilotOptional();
   const [open, setOpen] = useState(false);
@@ -62,6 +62,14 @@ export function HelpWidget({ audience }: Props) {
   const [view, setView] = useState<View>({ name: "home" });
   const [draft, setDraft] = useState("");
   const contactHref = helpContactPath(audience);
+
+  useEffect(() => {
+    if (!hidden) return;
+    setOpen(false);
+    setExpanded(false);
+    setView({ name: "home" });
+    setDraft("");
+  }, [hidden]);
 
   useEffect(() => {
     setOpen(false);
@@ -131,6 +139,8 @@ export function HelpWidget({ audience }: Props) {
     : "sm:h-[min(88vh,40rem)] sm:w-[min(100vw-1.5rem,24rem)]";
 
   const showBack = view.name !== "home";
+
+  if (hidden) return null;
 
   if (!open) {
     return (
