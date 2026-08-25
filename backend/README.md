@@ -28,6 +28,7 @@ Copy **`.env.example`** to **`.env`** and set values. Important keys:
 | `CORS_ALLOWED_ORIGINS` | Comma-separated frontend origins (e.g. `http://localhost:3000`) |
 | `SUPABASE_URL` | Project URL |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service role JWT (backend only; never expose to the browser) |
+| `AWS_ACCESS_KEY` / `AWS_SECRET_ACCESS_KEY` | S3 uploads (same names as OSCE Guide). Bucket `AWS_S3_BUCKET_NAME` (default `eventtz`), `AWS_REGION` (default `eu-west-2`) |
 | `FRONTEND_URL` | Base URL used to build Stripe Connect `return_url`/`refresh_url` and Checkout `success_url`/`cancel_url` (e.g. `http://localhost:3000`) |
 | `STRIPE_SECRET_KEY` | Stripe secret key (`sk_test_...` locally) |
 | `STRIPE_WEBHOOK_SECRET` | Signing secret for `POST /api/v1/webhooks/stripe` (`whsec_...`) |

@@ -5,9 +5,9 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from app.core.config import get_settings
 from app.core.errors import ValidationError
 from app.core.phone_validation import is_valid_phone_number
+from app.features.media.s3 import is_our_s3_url, public_object_url
 from app.features.vendors import messages as vendor_messages
 from app.features.vendors.markets import DEFAULT_COUNTRY_CODE, is_market_enabled, normalize_country_code
 from app.features.vendors.list_pricing import (
@@ -68,10 +68,9 @@ def _is_allowed_storage_url(url: str, user_id: str) -> bool:
     u = url.strip()
     if not u.startswith("https://") and not u.startswith("http://"):
         return False
-    if "/storage/v1/object/public/" not in u:
+    if f"/users/{user_id}/" not in u:
         return False
-    needle = f"/users/{user_id}/"
-    return needle in u
+    return is_our_s3_url(u)
 
 
 def _filter_url_list(raw: Any, user_id: str) -> list[str]:
@@ -359,7 +358,5 @@ def validate_payload_for_progress(
 
 
 def vendor_storage_url_prefix(user_id: str) -> str:
-    """Public URL path segment for this vendor's uploads."""
-    base = get_settings().supabase_url.rstrip("/")
-    bucket = get_settings().media_images_bucket.strip() or "eventtz-images"
-    return f"{base}/storage/v1/object/public/{bucket}/users/{user_id}/"
+    """Public URL path segment for this vendor's uploads (new files on S3)."""
+    return public_object_url(f"users/{user_id}/")

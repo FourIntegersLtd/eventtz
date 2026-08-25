@@ -117,7 +117,7 @@ def test_submit_rejects_invalid_service():
         "availableWeekdays": ["Mon"],
         "maxBookingsPerDay": "2",
         "portfolioFileNames": ["a", "b", "c", "d", "e"],
-        "profileImageUrl": "https://x.supabase.co/storage/v1/object/public/eventtz-images/users/u1/p.jpg",
+        "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/u1/p.jpg",
     }
     with pytest.raises(ValidationError, match="valid service"):
         validate_payload_for_progress(
@@ -137,7 +137,7 @@ def test_submit_rejects_invalid_discount():
         "availableWeekdays": ["Mon"],
         "maxBookingsPerDay": "2",
         "portfolioFileNames": ["a", "b", "c", "d", "e"],
-        "profileImageUrl": "https://x.supabase.co/storage/v1/object/public/eventtz-images/users/u1/p.jpg",
+        "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/u1/p.jpg",
         "offerDiscounts": True,
         "discountLabel": "Summer sale",
         "discountPercentage": "200",
@@ -224,13 +224,31 @@ def test_validate_step_4_rejects_short_package_details():
         validate_step_fields(4, payload)
 
 
-def test_normalize_strips_external_portfolio_url():
+def test_normalize_strips_external_portfolio_url(monkeypatch):
+    from types import SimpleNamespace
+
+    monkeypatch.setattr(
+        "app.features.media.s3.get_settings",
+        lambda: SimpleNamespace(aws_s3_bucket_name="eventtz", aws_region="eu-west-2"),
+    )
     payload = {
         "portfolioFileNames": [
             "https://evil.com/photo.jpg",
-            "https://x.supabase.co/storage/v1/object/public/eventtz-images/users/u1/a.jpg",
+            "https://eventtz.s3.eu-west-2.amazonaws.com/users/u1/a.jpg",
         ],
     }
     out = normalize_payload_fields(payload, "u1")
     assert len(out["portfolioFileNames"]) == 1
     assert "users/u1/" in out["portfolioFileNames"][0]
+
+
+def test_normalize_keeps_s3_urls(monkeypatch):
+    from types import SimpleNamespace
+
+    monkeypatch.setattr(
+        "app.features.media.s3.get_settings",
+        lambda: SimpleNamespace(aws_s3_bucket_name="eventtz", aws_region="eu-west-2"),
+    )
+    s3 = "https://eventtz.s3.eu-west-2.amazonaws.com/users/u1/b.jpg"
+    out = normalize_payload_fields({"portfolioFileNames": [s3, "https://evil.com/x.jpg"]}, "u1")
+    assert out["portfolioFileNames"] == [s3]

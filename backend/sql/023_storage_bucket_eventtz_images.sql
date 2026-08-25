@@ -1,7 +1,5 @@
--- Public bucket for vendor portfolio / uploads (paths like users/{id}/images/...).
--- Apply in Supabase SQL editor. Match MEDIA_IMAGES_BUCKET in backend/.env (default: eventtz-images).
--- If this fails, create the bucket in Dashboard → Storage instead.
+-- Originally created the Supabase Storage bucket eventtz-images.
+-- User media now lives on public S3 (AWS_S3_BUCKET_NAME). Kept as a no-op so
+-- numbered migrations stay contiguous.
 
-insert into storage.buckets (id, name, public)
-values ('eventtz-images', 'eventtz-images', true)
-on conflict (id) do update set public = excluded.public;
+select 1;
