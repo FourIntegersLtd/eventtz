@@ -47,6 +47,59 @@ export function helpCategoryIcon(iconKey: string): LucideIcon {
   }
 }
 
+export type HelpCategoryIconVisual = {
+  shell: string;
+  icon: string;
+};
+
+const HELP_CATEGORY_ICON_SHELL =
+  "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ring-1 ring-primary-border/50";
+
+const DEFAULT_HELP_CATEGORY_ICON_VISUAL: HelpCategoryIconVisual = {
+  shell: `${HELP_CATEGORY_ICON_SHELL} bg-primary-soft`,
+  icon: "text-primary",
+};
+
+const HELP_CATEGORY_ICON_VISUALS: Record<string, HelpCategoryIconVisual> = {
+  book: DEFAULT_HELP_CATEGORY_ICON_VISUAL,
+  rocket: {
+    shell: `${HELP_CATEGORY_ICON_SHELL} bg-primary-muted`,
+    icon: "text-primary",
+  },
+  sparkles: {
+    shell: `${HELP_CATEGORY_ICON_SHELL} bg-primary-soft`,
+    icon: "text-accent-violet",
+  },
+  calendar: {
+    shell: `${HELP_CATEGORY_ICON_SHELL} bg-primary-muted`,
+    icon: "text-accent-violet",
+  },
+  wallet: {
+    shell: `${HELP_CATEGORY_ICON_SHELL} bg-primary-soft`,
+    icon: "text-primary",
+  },
+  message: {
+    shell: `${HELP_CATEGORY_ICON_SHELL} bg-primary-muted`,
+    icon: "text-accent-violet",
+  },
+  shield: {
+    shell: `${HELP_CATEGORY_ICON_SHELL} bg-primary-soft`,
+    icon: "text-primary",
+  },
+  settings: {
+    shell: `${HELP_CATEGORY_ICON_SHELL} bg-primary-muted`,
+    icon: "text-primary",
+  },
+  user: {
+    shell: `${HELP_CATEGORY_ICON_SHELL} bg-primary-soft`,
+    icon: "text-accent-violet",
+  },
+};
+
+export function helpCategoryIconVisual(iconKey: string): HelpCategoryIconVisual {
+  return HELP_CATEGORY_ICON_VISUALS[iconKey] ?? DEFAULT_HELP_CATEGORY_ICON_VISUAL;
+}
+
 /** Tailwind prose classes for helpMarkdownToHtml output in co-pilot / help UI. */
 export const helpMarkdownProseClassName =
   "[&_p]:mt-2 [&_p:first-child]:mt-0 [&_strong]:font-semibold [&_strong]:text-neutral-900 [&_h2]:mt-4 [&_h2]:text-base [&_h3]:mt-3 [&_h3]:text-sm [&_ul]:mt-2 [&_ol]:mt-2 [&_li]:leading-relaxed";
@@ -194,7 +247,7 @@ export function helpMarkdownToHtml(md: string): string {
     if (step) {
       closeLists();
       html.push(
-        `<h3 class="mt-8 flex items-start gap-3 text-neutral-900"><span class="font-heading w-7 shrink-0 text-[1.75rem] font-semibold leading-none text-neutral-300">${escapeHtml(step[1])}</span><span class="font-heading pt-0.5 text-base font-semibold">${inline(step[2])}</span></h3>`,
+        `<h3 class="mt-8 flex items-start gap-3 text-neutral-900"><span class="font-heading w-7 shrink-0 text-[1.75rem] font-semibold leading-none text-primary/25">${escapeHtml(step[1])}</span><span class="font-heading pt-0.5 text-base font-semibold">${inline(step[2])}</span></h3>`,
       );
       i += 1;
       continue;
