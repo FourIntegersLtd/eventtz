@@ -37,14 +37,14 @@ function RelatedLinks({ items, onOpenRelated, relatedHref }: RelatedProps) {
               <button
                 type="button"
                 onClick={() => onOpenRelated(item.slug)}
-                className="text-left text-[15px] text-neutral-800 underline decoration-neutral-300 underline-offset-4 hover:decoration-neutral-800 sm:text-[14px]"
+                className="text-left text-[15px] font-medium text-primary underline decoration-primary/30 underline-offset-4 hover:decoration-primary sm:text-[14px]"
               >
                 {item.title}
               </button>
             ) : relatedHref ? (
               <Link
                 href={relatedHref(item.slug)}
-                className="text-[15px] text-neutral-800 underline decoration-neutral-300 underline-offset-4 hover:decoration-neutral-800 sm:text-[14px]"
+                className="text-[15px] font-medium text-primary underline decoration-primary/30 underline-offset-4 hover:decoration-primary sm:text-[14px]"
               >
                 {item.title}
               </Link>

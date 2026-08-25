@@ -1,5 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { helpMarkdownToHtml } from "@/features/help/helpContent";
+import { helpCategoryIconVisual, helpMarkdownToHtml } from "@/features/help/helpContent";
+
+describe("helpCategoryIconVisual", () => {
+  it("returns brand-colored shells for known icon keys", () => {
+    expect(helpCategoryIconVisual("book").shell).toContain("bg-primary-soft");
+    expect(helpCategoryIconVisual("book").icon).toBe("text-primary");
+    expect(helpCategoryIconVisual("sparkles").icon).toBe("text-accent-violet");
+  });
+
+  it("falls back for unknown icon keys", () => {
+    expect(helpCategoryIconVisual("unknown").shell).toContain("bg-primary-soft");
+    expect(helpCategoryIconVisual("unknown").icon).toBe("text-primary");
+  });
+});
 
 describe("helpMarkdownToHtml", () => {
   it("renders NOTE callouts with help-callout classes and SVG icon", () => {

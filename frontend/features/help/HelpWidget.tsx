@@ -14,6 +14,7 @@ import {
   Maximize2,
   Minimize2,
   Newspaper,
+  ShieldAlert,
   Sparkles,
   X,
 } from "lucide-react";
@@ -36,6 +37,7 @@ import { HelpAssistantThread } from "@/features/help/HelpAssistantThread";
 import { HelpArticleBody } from "@/features/help/HelpArticleBody";
 import {
   helpCategoryIcon,
+  helpCategoryIconVisual,
   helpContactPath,
 } from "@/features/help/helpContent";
 import { useVendorCopilotOptional } from "@/features/vendor/copilot/VendorCopilotContext";
@@ -305,7 +307,7 @@ function HomePanel({
               ? [{ kind: "internal" as const, label: "Contact us", icon: Mail, href: contactHref }]
               : []),
             { kind: "external", label: "Read our blog", icon: Newspaper, href: "/blog" },
-            { kind: "external", label: "How vendors join", icon: Sparkles, href: "/#for-vendors" },
+            { kind: "internal", label: "Disputes", icon: ShieldAlert, href: "/vendor/disputes" },
             { kind: "external", label: "Visit FAQ", icon: CircleHelp, href: "/#faq" },
           ]
         : [
@@ -325,9 +327,9 @@ function HomePanel({
       </h1>
 
       <div className="mt-5 overflow-hidden rounded-xl border border-neutral-200">
-        <div className="flex items-center gap-1.5 border-b border-neutral-200 bg-neutral-50 px-3.5 py-2.5">
-          <Sparkles className="h-3.5 w-3.5 text-neutral-500" aria-hidden strokeWidth={1.75} />
-          <p className="text-[13px] font-medium text-neutral-500">
+        <div className="flex items-center gap-1.5 border-b border-primary-border/60 bg-primary-soft px-3.5 py-2.5">
+          <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden strokeWidth={1.75} />
+          <p className="text-[13px] font-medium text-primary">
             Ask our assistant anything
           </p>
         </div>
@@ -434,8 +436,8 @@ function BrowsePanel({
       </p>
 
       <div className="mt-5 overflow-hidden rounded-xl border border-neutral-200 bg-white">
-        <div className="border-b border-neutral-100 px-4 py-3">
-          <p className="text-[13px] font-medium text-neutral-600">Documentation</p>
+        <div className="border-b border-primary-border/60 bg-primary-soft/50 px-4 py-3">
+          <p className="text-[13px] font-medium text-neutral-900">Documentation</p>
         </div>
         {loading ? (
           <LoadingState label="Loading topics…" variant="inline" className="px-4 py-8" />
@@ -445,18 +447,17 @@ function BrowsePanel({
           <ul>
             {categories.map((cat) => {
               const Icon = helpCategoryIcon(cat.icon_key);
+              const visual = helpCategoryIconVisual(cat.icon_key);
               return (
                 <li key={cat.id} className="border-b border-neutral-100 last:border-b-0">
                   <button
                     type="button"
                     onClick={() => onOpenCategory(cat.slug, cat.title, cat.description)}
-                    className="flex w-full items-start gap-3 px-4 py-3.5 text-left transition hover:bg-neutral-50"
+                    className="flex w-full items-start gap-3 px-4 py-3.5 text-left transition hover:bg-primary-soft/40"
                   >
-                    <Icon
-                      className="mt-0.5 h-[18px] w-[18px] shrink-0 text-neutral-500"
-                      strokeWidth={1.75}
-                      aria-hidden
-                    />
+                    <span className={visual.shell}>
+                      <Icon className={`h-4 w-4 ${visual.icon}`} strokeWidth={1.75} aria-hidden />
+                    </span>
                     <span className="min-w-0 flex-1">
                       <span className="block text-[14px] font-medium text-neutral-900">
                         {cat.title}
@@ -526,13 +527,21 @@ function CategoryPanel({
   const heading = title ?? category?.title ?? "Articles";
   const sub = description ?? category?.description ?? "";
   const Icon = helpCategoryIcon(category?.icon_key ?? "book");
+  const visual = helpCategoryIconVisual(category?.icon_key ?? "book");
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6 pt-4 sm:pb-5">
-      <h1 className="font-heading text-[1.375rem] font-semibold tracking-tight text-neutral-950 sm:text-[1.25rem]">
-        {heading}
-      </h1>
-      {sub ? <p className="mt-1 text-[14px] text-neutral-500">{sub}</p> : null}
+      <div className="flex items-start gap-3">
+        <span className={visual.shell}>
+          <Icon className={`h-4 w-4 ${visual.icon}`} strokeWidth={1.75} aria-hidden />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h1 className="font-heading text-[1.375rem] font-semibold tracking-tight text-neutral-950 sm:text-[1.25rem]">
+            {heading}
+          </h1>
+          {sub ? <p className="mt-1 text-[14px] text-neutral-500">{sub}</p> : null}
+        </div>
+      </div>
 
       {loading ? (
         <LoadingState label="Loading articles…" variant="inline" className="mt-6 py-8" />
@@ -541,10 +550,10 @@ function CategoryPanel({
       ) : articles.length === 0 ? (
         <p className="mt-6 text-sm text-neutral-600">No articles in this topic yet.</p>
       ) : (
-        <div className="mt-5 overflow-hidden rounded-xl border border-neutral-200">
-          <div className="flex items-center gap-2 border-b border-neutral-200 bg-neutral-50 px-4 py-3">
-            <Icon className="h-4 w-4 text-neutral-600" strokeWidth={1.75} aria-hidden />
-            <p className="text-[14px] font-medium text-neutral-900">{heading}</p>
+        <div className="mt-5 overflow-hidden rounded-xl border border-primary-border/60">
+          <div className="flex items-center gap-2 border-b border-primary-border/60 bg-primary-soft px-4 py-3">
+            <Icon className={`h-4 w-4 ${visual.icon}`} strokeWidth={1.75} aria-hidden />
+            <p className="text-[14px] font-medium text-neutral-900">Articles</p>
           </div>
           <ul className="bg-white p-1.5">
             {articles.map((a) => (
