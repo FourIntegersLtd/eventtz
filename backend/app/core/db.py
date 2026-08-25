@@ -47,7 +47,7 @@ def _create_supabase_client() -> Client:
 
 
 def get_supabase() -> Client:
-    """Main backend client for the database, file storage, and other server-only work."""
+    """Main backend client for the database, Auth admin APIs, and other server-only work."""
     global _service_client
     if _service_client is None:
         _service_client = _create_supabase_client()

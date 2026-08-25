@@ -5,12 +5,9 @@ import {
   publicListingImageUrlsFromPayload,
 } from "@/lib/vendorPortfolioImages";
 
-const PROFILE =
-  "https://x.supabase.co/storage/v1/object/public/eventtz-images/users/u1/profile.jpg";
-const A =
-  "https://x.supabase.co/storage/v1/object/public/eventtz-images/users/u1/a.jpg";
-const B =
-  "https://x.supabase.co/storage/v1/object/public/eventtz-images/users/u1/b.jpg";
+const PROFILE = "https://eventtz.s3.eu-west-2.amazonaws.com/users/u1/profile.jpg";
+const A = "https://eventtz.s3.eu-west-2.amazonaws.com/users/u1/a.jpg";
+const B = "https://eventtz.s3.eu-west-2.amazonaws.com/users/u1/b.jpg";
 
 function payload(extra: Record<string, unknown> = {}): Record<string, unknown> {
   return {

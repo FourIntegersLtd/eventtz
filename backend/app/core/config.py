@@ -46,10 +46,14 @@ class Settings(BaseSettings):
     #: Largest total of those extras, as a percentage of the quoted package prices (discounts don't count here).
     booking_max_adjustment_pct_of_subtotal: float = 100.0
 
-    #: Folder name in storage where images are kept.
-    media_images_bucket: str = "eventtz-images"
     #: Max size for videos and documents (e.g. certificates). Photos have no size limit in the app.
     media_max_file_upload_bytes: int = 50_000_000
+
+    #: Public S3 bucket for new user media (same env names as OSCE Guide).
+    aws_access_key: str = ""
+    aws_secret_access_key: str = ""
+    aws_s3_bucket_name: str = "eventtz"
+    aws_region: str = "eu-west-2"
 
     #: Key for AI helpers (vendor bio, search). Which AI models we use lives in ``constants.py``.
     openai_api_key: str = ""

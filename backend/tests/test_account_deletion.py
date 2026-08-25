@@ -147,10 +147,15 @@ def _patch_common(store, profile, password_ok=True):
     patches = [
         patch("app.features.settings.account_deletion.fetch_user_profile", return_value=profile),
         *[patch(f"{target}.get_db", return_value=db) for target in db_targets],
-        patch("app.features.settings.account_deletion_storage.get_supabase", return_value=MagicMock()),
         patch(
             "app.core.config.get_settings",
-            return_value=MagicMock(media_images_bucket="eventtz-images", mixpanel_token=""),
+            return_value=MagicMock(
+                mixpanel_token="",
+                aws_access_key="",
+                aws_secret_access_key="",
+                aws_s3_bucket_name="eventtz",
+                aws_region="eu-west-2",
+            ),
         ),
         patch("app.features.settings.account_deletion.send_account_deleted_email", return_value=True),
         patch("app.features.settings.account_deletion_erase.dispatch_booking_notification"),

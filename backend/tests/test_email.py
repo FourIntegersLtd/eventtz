@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.features.email.constants import ADMIN_NOTIFY_RECIPIENTS, EMAIL_FROM
+from app.features.email.constants import ADMIN_NOTIFY_RECIPIENTS, EMAIL_FROM, EMAIL_IMAGE_BASE, EMAIL_IMAGES
 from app.features.email.delivery_log import claim_booking_email_send, should_dedupe_booking_kind
 from app.features.email.dispatch import (
     dispatch_booking_notification,
@@ -16,6 +16,13 @@ from app.features.email.service import EmailService
 def test_constants_hardcoded_admin_recipients():
     assert "hello@eventtz.com" in ADMIN_NOTIFY_RECIPIENTS
     assert EMAIL_FROM == "Eventtz <hello@eventtz.com>"
+
+
+def test_email_images_use_eventtz_s3_bucket():
+    assert EMAIL_IMAGE_BASE == "https://eventtz.s3.eu-west-2.amazonaws.com/email"
+    assert EMAIL_IMAGES["logo"] == f"{EMAIL_IMAGE_BASE}/eventtz-logo.png"
+    assert EMAIL_IMAGES["welcome_clients"] == f"{EMAIL_IMAGE_BASE}/welcome-clients.png"
+    assert EMAIL_IMAGES["welcome_vendors"] == f"{EMAIL_IMAGE_BASE}/welcome-vendors.png"
 
 
 def test_payment_received_client_body_mentions_dispute_window() -> None:

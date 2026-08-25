@@ -121,7 +121,7 @@ features/<name>/
 | `admin/` | `/admin/*` | `messages.py`, `permissions.py`, `directory_search.py`, `marketplace_analytics.py`, `http/platform.py` (aggregates `platform_*.py` domain routers), `http/vendors.py`, `http/messages.py` (support inbox routes), `http/email.py` - **`super_admin`**: team invite/roles, booking money actions, financials CSV export, dispute resolve with refund/payout, vendor listing force publish/hide, support message audience broadcasts. **`admin`**: vendors/clients (approve/pending/ban, listing revert to auto), disputes triage, reviews, audit, targeted support compose/inbox, blog CMS, marketplace analytics. Frontend: `lib/adminPermissions.ts`. |
 | `favorites/` | `/client/favorites/*` | `service.py`, `http/client.py` - client saved vendors |
 | `geo/` | `/client/geo/*` | `uk_address.py`, `http/routes.py` |
-| `media/` | `/media/*` | `upload.py` - `POST /media/images` (images) and `POST /media/files` (PDF/video/docs for portfolio & certificates) |
+| `media/` | `/media/*` | `upload.py`, `s3.py` - `POST /media/images` (images) and `POST /media/files` (PDF/video/docs). Uploads go to public S3 (`AWS_S3_BUCKET_NAME`, default `eventtz`). |
 | `realtime/` | `/realtime/*` | `sse.py` - server-sent events for chat unread / data refresh |
 | `settings/` | `/user/*`, `/client/onboarding` | `contact.py` - contact-sharing prefs; **`apply_counterparty_contact_visibility`** masks email/phone until `payment_status` is paid (`paid`, `payout_released`, or `partially_refunded`); booking venue (`event_address`/`event_postcode`) is **never** masked from vendors. Vendor phone comes from vendor profile payload, not `users.contact_phone`. `client_onboarding.py` - first-visit client onboarding state (`users.preferred_name`, `users.client_onboarding_completed_at`, migration 035); `/me` includes `preferred_name` + `client_onboarding_completed` for clients, and vendor booking APIs expose a friendly `client_display_name` (from `client_display_names_by_id` in `auth/lookup.py` - never the raw email). **`account_deletion.py`** (+ `account_deletion_gates.py`, `account_deletion_erase.py`, `account_deletion_storage.py`) — `POST /user/account/deletion` (password confirm): tombstone `users.deleted_at`, erase PII, never `DELETE` `public.users` / `booking_requests` / DM threads; Auth `delete_user` after migration **077**. Mixpanel profile delete via **`analytics/mixpanel.py`** (httpx). Counterparties keep the booking contract; live names become “Deleted user”. |
 | `contact/` | `/client/contact`, `/vendor/contact`, `/admin/contact` | `service.py` + `classification.py` - authenticated support form (message + optional booking ref); LLM classifies subject via OpenAI `chat.completions.parse` (`OPENAI_CONTACT_MODEL`, fallback `other`); persists to `contact_submissions` (migrations 037 + **074** `portal=admin`) and emails admins via `features/email/` (Resend). Bug / booking / payments subjects POST the Cursor automation webhook. Admin **Report a bug** always sends `feedback_bug` (no LLM). |
@@ -129,7 +129,7 @@ features/<name>/
 | `planner/` | `/client/planner/*` | `plan_service.py`, `prompt_parser.py`, `category_planner.py`, `explore_vendor_adapter.py`, `budget.py`, `confidence.py`, `planner_summary_generation.py`, `db.py`, `http/routes.py` - AI Event Planner: one prompt → persisted celebration plan (`celebration_plans` / `celebration_plan_items`, migration 055). Intent `simple` → `ValidationError(code=simple_intent)` (use Browse). Ranking via **`vendors/ranking/`** (`VendorRankingEngine`); LLM only parses brief + grounded explanations (`OPENAI_PLANNER_MODEL`). |
 | `blog/` | `/admin/blog/*`, `/blog/*` | `service.py`, `sanitize.py`, `http/admin.py`, `http/public.py` - admin TipTap CMS (draft/publish) + public published posts; images via `/media/images`. No newsletter/comments in v1. |
 | `referrals/` | `/admin/referrals/*`, `/referrals/partners/{slug}` | `partners.py`, `attribution.py`, `referral_partner_admin_queries.py`, `links.py` - admin-created creator signup links (`?ref=slug` on `/vendor/register`); **`referral_attributions.shoutout_completed`** for shoutout tracking. Share links always use **`https://www.eventtz.com`** (`links.referral_register_url`). Signup: optional **`referral_code`** on `POST /auth/signup` (vendor only). Frontend cookie: **`lib/referralAttribution.ts`**. Migration **`064_referral_partners.sql`**. |
-| `email/` | (internal) | `constants.py`, `branding.py` (Eventtz colors; showcase images on S3 in `EMAIL_IMAGES`), `resend_client.py`, `render.py`, `service.py`, `delivery_log.py`, `dispatch.py` - Jinja templates under `templates/` with shared full-width white chrome in `partials/transactional/layout.html` and matching marketing `email_layout_open.html`; `partials/email/account_footer.html` for customer footers; `partials/email/bottom_spacer.html` prevents mobile footer clipping; `admin/alert.html` uses ops footer + type chips. Welcome keeps marketing body blocks; receipts inherit transactional shell. **`dispatch_booking_notification`** writes in-app notification + participant email; **`send_welcome_email`** after email verify (client/vendor); **`send_password_reset_email`** / **`send_email_verification_email`** for one-click links. Admin ops alerts to hardcoded ops inboxes. Env: **`RESEND_API_KEY`** (no-op when unset or `EMAIL_ENABLED=false`). Dedupe: `040_email_delivery_log.sql`. |
+| `email/` | (internal) | `constants.py`, `branding.py` (Eventtz colors; showcase images on S3 `eventtz` bucket under `email/` in `EMAIL_IMAGES`), `resend_client.py`, `render.py`, `service.py`, `delivery_log.py`, `dispatch.py` - Jinja templates under `templates/` with shared full-width white chrome in `partials/transactional/layout.html` and matching marketing `email_layout_open.html`; `partials/email/account_footer.html` for customer footers; `partials/email/bottom_spacer.html` prevents mobile footer clipping; `admin/alert.html` uses ops footer + type chips. Welcome keeps marketing body blocks; receipts inherit transactional shell. **`dispatch_booking_notification`** writes in-app notification + participant email; **`send_welcome_email`** after email verify (client/vendor); **`send_password_reset_email`** / **`send_email_verification_email`** for one-click links. Admin ops alerts to hardcoded ops inboxes. Env: **`RESEND_API_KEY`** (no-op when unset or `EMAIL_ENABLED=false`). Dedupe: `040_email_delivery_log.sql`. |
 | `ai/` | (internal) | `openai_helpers.py` - shared OpenAI client; `extract_json_object` + **`parse_completion`** (Pydantic structured output) for onboarding, marketplace search, Help Center, AI Event Planner, Vendor Growth Co-pilot |
 
 **Rules**
@@ -246,7 +246,7 @@ Order in code (matters if paths could overlap; several admin routers share **`pr
 | `features/planner/http/routes.py` | `/client/planner` | `client-planner` | AI Event Planner: **`POST /plans`**, list/get, replace item, archive |
 | `features/notifications/http/client.py` | `/client` | `client` | Client booking notifications |
 | `features/notifications/http/vendor.py` | `/vendor` | `vendor` | Vendor booking notifications |
-| `features/media/http/routes.py` | `/media` | `media` | **`POST /images`**, **`POST /files`** → Supabase Storage |
+| `features/media/http/routes.py` | `/media` | `media` | **`POST /images`**, **`POST /files`** → public S3 (`eventtz`) |
 | `features/payments/http/vendor.py` | `/vendor/payments` | `vendor-payments` | Stripe Connect Express onboarding + status + payout ledger (`GET /history`) |
 | `features/realtime/http/routes.py` | `/realtime` | `realtime` | SSE stream for live UI refresh |
 | `features/payments/http/webhooks.py` | `/webhooks` | `stripe-webhooks` | **`POST /stripe`** - signature-verified; checkout / Connect account events |
@@ -291,7 +291,7 @@ Order in code (matters if paths could overlap; several admin routers share **`pr
 | **`features/geo/`** | `uk_address.py`, `os_places.py`, `getaddress.py` |
 | **`features/notifications/`** | `service.py`, `copy.py`, `feed.py` - feed assembly (booking + dispute + chat summary); HTTP stays thin |
 | **`features/settings/`** | `contact.py`, `client_onboarding.py` |
-| **`features/media/`** | `upload.py` |
+| **`features/media/`** | `upload.py`, `s3.py` |
 | **`features/realtime/`** | `sse.py` |
 
 ### Auth, cookies, deps
@@ -312,7 +312,7 @@ Document every field in **`backend/.env.example`**. Current groups:
 | Supabase | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` |
 | Logging | `LOG_LEVEL`, `IS_PRODUCTION`, `LOG_DIR`, `LOG_FILE_NAME`, `LOG_MAX_BYTES`, `LOG_BACKUP_COUNT` |
 | Bookings | adjustment caps (`BOOKING_MAX_ADJUSTMENT_*`), `BOOKING_PAYOUT_AUTO_RELEASE_HOURS_AFTER_EVENT`, `ENQUIRY_RESPONSE_SLA_HOURS` - **service fee %** is `BOOKING_SERVICE_FEE_PERCENT` in `app/core/constants.py` |
-| Media | `MEDIA_IMAGES_BUCKET`, `MEDIA_MAX_FILE_UPLOAD_BYTES` (default **50MB** for video/PDF). Image uploads have **no app-level size limit** (`POST /media/images`). |
+| Media | `AWS_ACCESS_KEY`, `AWS_SECRET_ACCESS_KEY`, `AWS_S3_BUCKET_NAME` (default **eventtz**), `AWS_REGION` (default **eu-west-2**). User media and email template images are on S3. `MEDIA_MAX_FILE_UPLOAD_BYTES` (default **50MB** for video/PDF). Image uploads have **no app-level size limit** (`POST /media/images`). |
 | OpenAI | `OPENAI_API_KEY`, `MARKETPLACE_SEARCH_AI_CACHE_TTL_SECONDS`, `MARKETPLACE_SEARCH_AI_CACHE_MAX_ENTRIES` - model ids in `app/core/constants.py` |
 | UK addresses | `OS_PLACES_API_KEY`; `GETADDRESS_API_KEY` (fallback if OS empty) |
 | Frontend base URL | `FRONTEND_URL` - used to build Stripe `return_url`/`refresh_url` (Connect onboarding) and Checkout `success_url`/`cancel_url` |
@@ -355,7 +355,7 @@ Run in **numeric order** in Supabase (new changes → next `NNN_description.sql`
 | `020_booking_event_postcode.sql` | `event_postcode` |
 | `021_dispute_one_active_per_booking.sql` | Dispute constraint |
 | `022_dispute_conversation_id.sql` | Dispute + chat link |
-| `023_storage_bucket_eventtz_images.sql` | Storage bucket |
+| `023_storage_bucket_eventtz_images.sql` | Historical no-op for local stacks; user media is on S3 |
 | `024_booking_event_address.sql` | `event_address` |
 | `025_ensure_booking_event_postcode_address.sql` | Idempotent postcode+address ensure |
 | `026_stripe_connect_payments.sql` | Stripe Connect + payments: `vendors.stripe_*` columns, `booking_requests.payment_status` + payout/completion columns, `stripe_webhook_events` dedupe table, `dispute_cases.resolution_action`/`refund_amount_gbp` |
