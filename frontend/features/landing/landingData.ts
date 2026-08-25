@@ -309,8 +309,7 @@ export type LandingScrollFeatureStep = {
 export const PRICING_TRUST_SECTION: LandingScreenshotSection = {
   eyebrow: "Browse",
   title: "See prices before you message",
-  description:
-    "Vendors list their services and prices on their profile. Compare what you get and what it costs before you send a message.",
+  description: "Vendors list their services and prices on their profile.",
   screenshotSrc: "/images/landing-images/pricing.png",
   ctaHref: "/client/browse",
   ctaLabel: "Browse vendors",
@@ -320,7 +319,7 @@ export const BOOK_SECTION: LandingScreenshotSection = {
   eyebrow: "Request",
   title: "Send a booking request",
   description:
-    "Choose a service, add your date, time, and venue, and send the request.",
+    "Choose a service, add your date and venue, and send the request.",
   screenshotSrc: "/images/landing-images/book.png",
   ctaHref: "/client/browse",
   ctaLabel: "Browse vendors",
@@ -329,8 +328,7 @@ export const BOOK_SECTION: LandingScreenshotSection = {
 export const CHAT_SECTION: LandingScreenshotSection = {
   eyebrow: "Agree",
   title: "Chat and agree the details",
-  description:
-    "Ask questions, change the service if you need to, and get an updated quote back.",
+  description: "Ask questions, adjust the service, and get an updated quote.",
   screenshotSrc: "/images/landing-images/chat.png",
   ctaHref: "/client/browse",
   ctaLabel: "Browse vendors",
@@ -339,8 +337,7 @@ export const CHAT_SECTION: LandingScreenshotSection = {
 export const QUOTE_SECTION: LandingScreenshotSection = {
   eyebrow: "Confirm",
   title: "Vendor confirms, then you pay",
-  description:
-    "The vendor checks your request and confirms the final price. You pay only after they have accepted, not before you know what you are booking.",
+  description: "The vendor confirms the price; you pay after they accept.",
   screenshotSrc: "/images/landing-images/quote.png",
   ctaHref: "/client/browse",
   ctaLabel: "Browse vendors",
