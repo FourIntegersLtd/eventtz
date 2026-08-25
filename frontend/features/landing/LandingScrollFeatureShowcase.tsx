@@ -34,6 +34,17 @@ type LandingScrollFeatureShowcaseProps = {
   tone?: LandingSectionTone;
 };
 
+/** Preply-style numbered badge colors for the mobile horizontal carousel. */
+const MOBILE_STEP_BADGE_STYLES = [
+  "bg-primary-soft text-primary",
+  "bg-accent-gold text-neutral-900",
+  "bg-accent-violet text-white",
+  "bg-primary text-white",
+] as const;
+
+const MOBILE_CAROUSEL_SCROLL_CLASS =
+  "-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:gap-5 sm:px-6 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden";
+
 function StepScreenshot({
   step,
   fallback,
@@ -95,6 +106,51 @@ function StepScreenshot({
   );
 }
 
+function MobileJourneyStepCard({
+  step,
+  index,
+  fallback,
+}: {
+  step: LandingScrollFeatureStep;
+  index: number;
+  fallback?: ReactNode;
+}) {
+  const badgeClass = MOBILE_STEP_BADGE_STYLES[index % MOBILE_STEP_BADGE_STYLES.length];
+
+  return (
+    <article
+      id={step.id}
+      className="flex w-[min(82vw,20rem)] shrink-0 snap-start flex-col rounded-2xl border border-neutral-900 bg-white p-5 sm:w-[min(78vw,22rem)] sm:p-6"
+    >
+      <span
+        className={`inline-flex h-9 w-9 items-center justify-center rounded-lg text-base font-bold tabular-nums ${badgeClass}`}
+      >
+        {index + 1}
+      </span>
+      <h3 className="mt-4 text-xl font-bold leading-snug text-neutral-900">{step.title}</h3>
+      <p className="mt-3 flex-1 text-sm leading-relaxed text-neutral-700 sm:text-[15px] sm:leading-7">
+        {step.description}
+      </p>
+      <div className="mt-5 overflow-hidden rounded-xl border border-neutral-200/80 bg-white">
+        {step.imageSrc ? (
+          <Image
+            src={step.imageSrc}
+            alt={step.imageAlt}
+            width={LANDING_SCREENSHOT_DEFAULT_WIDTH}
+            height={LANDING_SCREENSHOT_DEFAULT_HEIGHT}
+            className="h-auto w-full"
+            sizes="82vw"
+            priority={index === 0}
+            unoptimized
+          />
+        ) : (
+          fallback
+        )}
+      </div>
+    </article>
+  );
+}
+
 /** KnowHow-style sticky image + scrolling copy; image crossfades per step. */
 export function LandingScrollFeatureShowcase({
   id,
@@ -115,7 +171,7 @@ export function LandingScrollFeatureShowcase({
 
   return (
     <LandingSection id={id} className={landingFeatureSectionClass(tone)} width="7xl">
-      <div className="mx-auto max-w-5xl text-center">
+      <div className="mx-auto max-w-5xl text-left lg:text-center">
         {eyebrow ? (
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{eyebrow}</p>
         ) : null}
@@ -130,7 +186,7 @@ export function LandingScrollFeatureShowcase({
       </div>
 
       <div
-        className={`z-30 mt-6 flex justify-center py-2 sm:mt-8 lg:sticky lg:top-[4.25rem] lg:py-3 lg:backdrop-blur-md ${stickyBarBg}`}
+        className={`z-30 mt-6 hidden justify-center py-2 sm:mt-8 lg:flex lg:sticky lg:top-[4.25rem] lg:py-3 lg:backdrop-blur-md ${stickyBarBg}`}
       >
         <div
           className="flex w-full max-w-none items-center rounded-full bg-neutral-100 p-1 ring-1 ring-neutral-200/90 sm:max-w-lg"
@@ -162,7 +218,20 @@ export function LandingScrollFeatureShowcase({
         </div>
       </div>
 
-      <div className="mt-4 lg:mt-5 lg:grid lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)] lg:gap-8 xl:gap-10">
+      <div className="mt-8 lg:hidden">
+        <div className={MOBILE_CAROUSEL_SCROLL_CLASS} aria-label="Booking steps">
+          {steps.map((step, index) => (
+            <MobileJourneyStepCard
+              key={step.id}
+              step={step}
+              index={index}
+              fallback={imageFallbacks?.[step.id]}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-4 hidden lg:mt-5 lg:grid lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)] lg:gap-8 xl:gap-10">
         <div className="relative hidden lg:block">
           <div className="sticky top-[7.5rem] flex min-h-[calc(100dvh-7.5rem)] w-full items-center">
             <div className="relative aspect-[16/10] w-full">
@@ -186,7 +255,6 @@ export function LandingScrollFeatureShowcase({
             return (
               <article
                 key={step.id}
-                id={step.id}
                 ref={setStepRef(index)}
                 className="flex flex-col justify-center border-t border-neutral-200/80 py-6 first:border-t-0 first:pt-4 sm:py-10 lg:min-h-[calc(100dvh-7.5rem)] lg:py-0"
                 aria-current={active ? "step" : undefined}
@@ -210,20 +278,10 @@ export function LandingScrollFeatureShowcase({
                   {step.description}
                 </p>
 
-                <div className="mt-5 max-h-[40dvh] overflow-hidden lg:hidden">
-                  <StepScreenshot
-                    step={step}
-                    fallback={imageFallbacks?.[step.id]}
-                    visible
-                    priority={index === 0}
-                    layout="inline"
-                  />
-                </div>
-
                 {step.ctaHref && step.ctaLabel ? (
                   <Link
                     href={step.ctaHref}
-                    className="mt-8 hidden w-fit items-center gap-2 text-base font-semibold text-primary transition hover:opacity-80 lg:inline-flex"
+                    className="mt-8 inline-flex w-fit items-center gap-2 text-base font-semibold text-primary transition hover:opacity-80"
                   >
                     {step.ctaLabel}
                     <ArrowRight className="h-4 w-4" strokeWidth={2.25} aria-hidden />
