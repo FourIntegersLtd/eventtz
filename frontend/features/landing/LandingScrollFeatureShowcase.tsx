@@ -62,7 +62,7 @@ function StepScreenshot({
   const imageClassName =
     layout === "inline"
       ? LANDING_SCREENSHOT_NATURAL_CLASS
-      : "h-full w-full object-contain object-top";
+      : "h-full w-full object-contain object-center";
 
   const frame = (
     <div
@@ -107,6 +107,13 @@ function StepScreenshot({
   );
 }
 
+const MOBILE_STEP_IMAGE_SCALE_CLASS = [
+  "scale-[1.22]",
+  "scale-[1.15]",
+  "scale-[1.2]",
+  "scale-[1.22]",
+] as const;
+
 function MobileJourneyStepCard({
   step,
   index,
@@ -124,26 +131,29 @@ function MobileJourneyStepCard({
     <article
       id={step.id}
       ref={stepRef}
-      className="flex w-[min(92vw,28rem)] shrink-0 snap-start flex-col rounded-2xl border border-primary-border/50 bg-white p-5 sm:w-[min(90vw,30rem)] sm:p-6"
+      className="flex w-[calc(100vw-0.75rem)] max-w-none shrink-0 snap-center flex-col overflow-hidden rounded-2xl border border-primary-border/50 bg-primary-soft/30 sm:w-[calc(100vw-1.5rem)]"
     >
-      <span
-        className={`inline-flex h-9 w-9 items-center justify-center rounded-lg text-base font-bold tabular-nums ${badgeClass}`}
-      >
-        {index + 1}
-      </span>
-      <h3 className="mt-4 text-xl font-bold leading-snug text-neutral-900">{step.title}</h3>
-      <p className="mt-3 flex-1 text-sm leading-relaxed text-neutral-700 sm:text-[15px] sm:leading-7">
-        {step.description}
-      </p>
-      <div className="mt-5 overflow-hidden rounded-xl border border-primary-border/40 bg-white">
+      <div className="bg-white p-3 sm:p-4">
+        <span
+          className={`inline-flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold tabular-nums ${badgeClass}`}
+        >
+          {index + 1}
+        </span>
+        <h3 className="mt-2.5 text-base font-bold leading-snug text-neutral-900 sm:mt-3 sm:text-lg">
+          {step.title}
+        </h3>
+        <p className="mt-1.5 text-sm leading-relaxed text-neutral-700 sm:mt-2">
+          {step.description}
+        </p>
+      </div>
+      <div className="relative aspect-[4/3] w-full overflow-hidden border-t border-primary-border/30 bg-primary-soft/30">
         {step.imageSrc ? (
           <Image
             src={step.imageSrc}
             alt={step.imageAlt}
-            width={LANDING_SCREENSHOT_DEFAULT_WIDTH}
-            height={LANDING_SCREENSHOT_DEFAULT_HEIGHT}
-            className="h-auto w-full"
-            sizes="(max-width: 640px) 92vw, 30rem"
+            fill
+            className={`object-contain object-center ${MOBILE_STEP_IMAGE_SCALE_CLASS[index] ?? "scale-[1.22]"}`}
+            sizes="100vw"
             priority={index === 0}
             unoptimized
           />
@@ -232,7 +242,7 @@ export function LandingScrollFeatureShowcase({
       <div className="mt-8 lg:hidden">
         <div
           ref={carouselRef}
-          className={`-mx-4 px-4 sm:-mx-6 sm:px-6 ${MOBILE_CAROUSEL_SCROLL_CLASS}`}
+          className={`-mx-4 px-1 sm:-mx-6 sm:px-2 ${MOBILE_CAROUSEL_SCROLL_CLASS}`}
           aria-label="Booking steps"
         >
           {steps.map((step, index) => (
@@ -250,7 +260,7 @@ export function LandingScrollFeatureShowcase({
       <div className="mt-4 hidden lg:mt-5 lg:grid lg:grid-cols-[minmax(0,1.55fr)_minmax(0,0.45fr)] lg:gap-6 xl:gap-8">
         <div className="relative hidden lg:block">
           <div className="sticky top-[7.5rem] flex min-h-[calc(100dvh-7.5rem)] w-full items-center">
-            <div className="relative aspect-[4/3] w-full">
+            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-primary-border/40 bg-primary-soft/30">
               {steps.map((step, index) => (
                 <StepScreenshot
                   key={step.id}

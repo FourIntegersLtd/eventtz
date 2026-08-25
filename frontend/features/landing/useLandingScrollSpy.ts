@@ -8,6 +8,8 @@ import {
   type RefObject,
 } from "react";
 
+const DESKTOP_MEDIA_QUERY = "(min-width: 1024px)";
+
 type StepSlot = {
   mobile: HTMLElement | null;
   desktop: HTMLElement | null;
@@ -15,7 +17,7 @@ type StepSlot = {
 
 /**
  * Tracks which scroll panel is most visible in the viewport.
- * Supports separate mobile carousel cards and desktop copy columns.
+ * Mobile uses the horizontal carousel root; desktop uses the copy column only.
  */
 export function useLandingScrollSpy(
   stepCount: number,
@@ -47,7 +49,7 @@ export function useLandingScrollSpy(
     if (stepCount <= 0) return;
 
     const ratios = new Array<number>(stepCount).fill(0);
-    const carousel = carouselRef.current;
+    const observers: IntersectionObserver[] = [];
 
     const pickActive = () => {
       let bestIndex = 0;
@@ -64,56 +66,79 @@ export function useLandingScrollSpy(
       }
     };
 
-    const observers: IntersectionObserver[] = [];
+    const disconnectObservers = () => {
+      for (const observer of observers) observer.disconnect();
+      observers.length = 0;
+      ratios.fill(0);
+    };
 
-    for (let index = 0; index < stepCount; index += 1) {
-      const slot = stepSlots.current[index];
-      if (!slot) continue;
+    const connectObservers = () => {
+      disconnectObservers();
 
-      if (slot.mobile && carousel) {
-        const observer = new IntersectionObserver(
-          (entries) => {
-            for (const entry of entries) {
-              if (entry.target === slot.mobile) {
-                ratios[index] = entry.intersectionRatio;
+      const isDesktop = window.matchMedia(DESKTOP_MEDIA_QUERY).matches;
+      const carousel = carouselRef.current;
+
+      for (let index = 0; index < stepCount; index += 1) {
+        const slot = stepSlots.current[index];
+        if (!slot) continue;
+
+        if (!isDesktop && slot.mobile && carousel) {
+          const mobileEl = slot.mobile;
+          const observer = new IntersectionObserver(
+            (entries) => {
+              for (const entry of entries) {
+                if (entry.target === mobileEl) {
+                  ratios[index] = entry.intersectionRatio;
+                }
               }
-            }
-            pickActive();
-          },
-          {
-            root: carousel,
-            threshold: [0, 0.35, 0.55, 0.75, 1],
-          },
-        );
-        observer.observe(slot.mobile);
-        observers.push(observer);
+              pickActive();
+            },
+            {
+              root: carousel,
+              threshold: [0, 0.35, 0.55, 0.75, 1],
+            },
+          );
+          observer.observe(mobileEl);
+          observers.push(observer);
+          continue;
+        }
+
+        if (isDesktop && slot.desktop) {
+          const desktopEl = slot.desktop;
+          const observer = new IntersectionObserver(
+            (entries) => {
+              for (const entry of entries) {
+                if (entry.target === desktopEl) {
+                  ratios[index] = entry.intersectionRatio;
+                }
+              }
+              pickActive();
+            },
+            {
+              root: null,
+              threshold: [0, 0.15, 0.35, 0.55, 0.75, 1],
+              rootMargin: "-18% 0px -32% 0px",
+            },
+          );
+          observer.observe(desktopEl);
+          observers.push(observer);
+        }
       }
 
-      if (slot.desktop) {
-        const observer = new IntersectionObserver(
-          (entries) => {
-            for (const entry of entries) {
-              if (entry.target === slot.desktop) {
-                ratios[index] = Math.max(ratios[index] ?? 0, entry.intersectionRatio);
-              }
-            }
-            pickActive();
-          },
-          {
-            root: null,
-            threshold: [0, 0.15, 0.35, 0.55, 0.75, 1],
-            rootMargin: "-18% 0px -32% 0px",
-          },
-        );
-        observer.observe(slot.desktop);
-        observers.push(observer);
-      }
-    }
+      pickActive();
+    };
 
-    pickActive();
+    connectObservers();
+
+    const mediaQuery = window.matchMedia(DESKTOP_MEDIA_QUERY);
+    const onBreakpointChange = () => {
+      connectObservers();
+    };
+    mediaQuery.addEventListener("change", onBreakpointChange);
 
     return () => {
-      for (const observer of observers) observer.disconnect();
+      mediaQuery.removeEventListener("change", onBreakpointChange);
+      disconnectObservers();
     };
   }, [stepCount, carouselRef]);
 
