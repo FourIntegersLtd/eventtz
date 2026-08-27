@@ -318,7 +318,7 @@ Document every field in **`backend/.env.example`**. Current groups:
 | Frontend base URL | `FRONTEND_URL` - used to build Stripe `return_url`/`refresh_url` (Connect onboarding) and Checkout `success_url`/`cancel_url` |
 | Stripe | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` (see **Payments (Stripe Connect)** below) |
 | Email (Resend) | `RESEND_API_KEY` only - sender, admin recipients, and enable flag live in `features/email/constants.py` |
-| Sentry | `SENTRY_DSN` - empty = no-op (SDK not initialized). `IS_PRODUCTION` maps to Sentry `environment`. Init in `app/core/sentry.py` before the FastAPI app; `/health` is not sampled as a transaction. |
+| Sentry | `SENTRY_DSN` - empty = no-op (SDK not initialized). `IS_PRODUCTION` maps to Sentry `environment`. Init in `app/core/sentry.py` before the FastAPI app; `/health` is not sampled as a transaction. `before_send` drops smoke-test messages and expected auth-unavailable HTTP 503s (GoTrue timeout; already logged as warning, cookies kept). |
 | Cursor Automations | `CURSOR_AUTOMATION_WEBHOOK_URL` (empty = no-op), `CURSOR_AUTOMATION_WEBHOOK_SECRET` (optional Bearer). Fired after persist for `feedback_bug` / `booking_problem` / `payments` (`CURSOR_AUTOMATION_SUBJECTS` in `contracts/contact.py`). Best-effort; never fails the contact API. |
 | Uptime | External UptimeRobot HTTP monitor on `GET /health` (email). Railway healthcheck on the same path restarts the process only. See `backend/README.md`. |
 
