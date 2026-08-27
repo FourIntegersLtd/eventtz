@@ -6,6 +6,8 @@ import asyncio
 import time
 from datetime import datetime, timezone
 
+import httpx
+
 from app.core.config import Settings, get_settings
 from app.core.logging import get_logger
 from app.jobs.lock import JOB_BOOKING_MAINTENANCE, try_claim_job_period
@@ -14,6 +16,11 @@ from app.jobs.run_booking_maintenance import main as run_booking_maintenance_mai
 logger = get_logger(__name__)
 
 _task: asyncio.Task[None] | None = None
+
+
+def _is_upstream_unavailable(exc: BaseException) -> bool:
+    """True when PostgREST/Supabase did not answer (timeout / network)."""
+    return isinstance(exc, (httpx.TimeoutException, httpx.NetworkError))
 
 
 def hour_period_key(now: datetime | None = None) -> str:
@@ -40,11 +47,21 @@ def run_locked_maintenance() -> None:
     started = time.monotonic()
     try:
         run_booking_maintenance_main()
-    except Exception:
+    except Exception as exc:
+        duration_ms = int((time.monotonic() - started) * 1000)
+        if _is_upstream_unavailable(exc):
+            # Retry next hour. logger.exception would page Sentry for a 30s PostgREST blip
+            # and re-raising double-logged the same timeout from the asyncio loop.
+            logger.warning(
+                "booking maintenance unavailable period=%s duration_ms=%s",
+                period,
+                duration_ms,
+            )
+            return
         logger.exception(
             "booking maintenance failed period=%s duration_ms=%s",
             period,
-            int((time.monotonic() - started) * 1000),
+            duration_ms,
         )
         raise
     logger.info(
