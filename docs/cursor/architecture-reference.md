@@ -63,7 +63,7 @@ Hardening: read-only `permissions`, SHA-pinned actions, concurrency with `cancel
 ### Stack
 
 - **Python 3.13+**, **Poetry**, **FastAPI**, **Pydantic v2**, **pydantic-settings**
-- **Supabase** (Postgres + Auth + Storage) via **`app/core/db.py`** - `get_supabase()`, `get_db()`, PostgREST helpers (`rows_from_query_result`, `first_row_from_query_result`, **`apply_recent_first_order`**). Naming rules: **[`backend/NAMING.md`](backend/NAMING.md)**.
+- **Supabase** (Postgres + Auth + Storage) via **`app/core/db.py`** - `get_supabase()`, `get_db()`, PostgREST helpers (`rows_from_query_result`, `first_row_from_query_result`, **`apply_recent_first_order`**, **`is_upstream_unavailable`**). Naming rules: **[`backend/NAMING.md`](backend/NAMING.md)**.
 - **List ordering:** backend list endpoints sort **most recent first** via `apply_recent_first_order()` - default `updated_at DESC, created_at DESC, id DESC`; booking list queries also run `sort_booking_rows_recent_first()` as a safety net. Use `column="created_at"` for append-only feeds (notifications, audit); chat **messages** stay `created_at ASC` (thread order); chat **conversations** use `last_message_at DESC, created_at DESC`.
 - **httpx** - outbound HTTP for **OS Places** and **getAddress.io** (not FastAPI-specific; used inside address services)
 - **OpenAI** - vendor onboarding bio + portfolio image QA; marketplace search query parsing; Help Center assistant (`openai` package, `features/ai/openai_helpers.py` - prefer `parse_completion` for structured output)
@@ -251,7 +251,7 @@ Order in code (matters if paths could overlap; several admin routers share **`pr
 | `features/realtime/http/routes.py` | `/realtime` | `realtime` | SSE stream for live UI refresh |
 | `features/payments/http/webhooks.py` | `/webhooks` | `stripe-webhooks` | **`POST /stripe`** - signature-verified; checkout / Connect account events |
 
-**Jobs** (`app/jobs/`): booking maintenance runs **inside the API** on an hourly asyncio loop when `IS_PRODUCTION=true` (`app/jobs/scheduler.py`, started from `main.py` lifespan). A `job_runs` row (migration **075**) claims each UTC hour so two processes do not both run. The same work is still a CLI: `PYTHONPATH=. python -m app.jobs.run_booking_maintenance`.
+**Jobs** (`app/jobs/`): booking maintenance runs **inside the API** on an hourly asyncio loop when `IS_PRODUCTION=true` (`app/jobs/scheduler.py`, started from `main.py` lifespan). A `job_runs` row (migration **075**) claims each UTC hour so two processes do not both run. The same work is still a CLI: `PYTHONPATH=. python -m app.jobs.run_booking_maintenance`. Best-effort PostgREST/httpx timeouts (`is_upstream_unavailable`) log a warning and skip that step until the next hourly retry — do not `logger.exception` them.
 
 | Module | Purpose |
 |--------|---------|
