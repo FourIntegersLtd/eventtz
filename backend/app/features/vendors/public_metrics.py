@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.core.config import get_settings
-from app.core.db import get_db
+from app.core.db import get_db, is_upstream_unavailable
 from app.core.logging import get_logger
 from app.features.vendors import messages as vendor_messages
 
@@ -101,8 +101,13 @@ def get_public_metrics_for_vendors(vendor_ids: list[str]) -> dict[str, dict[str,
             .execute()
         )
         rows = [r for r in (getattr(res, "data", None) or []) if isinstance(r, dict)]
-    except Exception:
-        logger.exception("public_vendor_metrics: load failed")
+    except Exception as exc:
+        if is_upstream_unavailable(exc):
+            # Browse enrichment only; search still returns vendors. logger.exception
+            # pages Sentry for a 30s PostgREST blip (EVENTTZ-BACKEND-V).
+            logger.warning("public_vendor_metrics: load unavailable")
+        else:
+            logger.exception("public_vendor_metrics: load failed")
         return {vid: empty_public_vendor_metrics() for vid in ids}
 
     by_vendor: dict[str, list[dict[str, Any]]] = {vid: [] for vid in ids}

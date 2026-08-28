@@ -15,6 +15,7 @@ from app.core.db import (
     get_db,
     is_approval_status_check_violation,
     is_missing_approval_status_column,
+    is_upstream_unavailable,
 )
 from app.features.vendors.profile import get_vendor_profile
 from app.features.vendors import messages as vendor_messages
@@ -609,11 +610,19 @@ def list_approved_vendors_for_explore(
     gone = deleted_user_ids(user_ids)
     emails_by_id: dict[str, str | None] = {}
     if user_ids:
-        ures = get_db().table("users").select("id,email").in_("id", user_ids).execute()
-        udata = getattr(ures, "data", None) or []
-        for urow in udata:
-            if isinstance(urow, dict) and urow.get("id"):
-                emails_by_id[str(urow["id"])] = urow.get("email")
+        try:
+            ures = get_db().table("users").select("id,email").in_("id", user_ids).execute()
+            udata = getattr(ures, "data", None) or []
+            for urow in udata:
+                if isinstance(urow, dict) and urow.get("id"):
+                    emails_by_id[str(urow["id"])] = urow.get("email")
+        except Exception as exc:
+            if is_upstream_unavailable(exc):
+                # Email is only haystack/optional row data. Timing out here used to
+                # 500 the whole explore search (EVENTTZ-BACKEND-T).
+                logger.warning("explore: vendor emails unavailable")
+            else:
+                raise
 
     out: list[dict[str, Any]] = []
     for row in data:

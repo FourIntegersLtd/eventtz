@@ -115,6 +115,11 @@ def apply_recent_first_order(
     return q
 
 
+def is_upstream_unavailable(exc: BaseException) -> bool:
+    """True when PostgREST/Supabase did not answer (timeout / network)."""
+    return isinstance(exc, (httpx.TimeoutException, httpx.NetworkError))
+
+
 def is_missing_approval_status_column(err: Exception) -> bool:
     """True when the database hasn't had the vendor approval column added yet."""
     if not isinstance(err, APIError):
