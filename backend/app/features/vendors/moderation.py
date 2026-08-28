@@ -8,7 +8,7 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.features.auth.accounts import deleted_user_ids, is_deleted_user_id
+from app.features.auth.accounts import is_deleted_user_id
 from app.features.vendors.markets import normalize_country_code
 from app.core.db import (
     apply_recent_first_order,
@@ -606,14 +606,27 @@ def list_approved_vendors_for_explore(
 
     data = getattr(res, "data", None) or []
     user_ids = [str(row.get("user_id")) for row in data if isinstance(row, dict) and row.get("user_id")]
-    gone = deleted_user_ids(user_ids)
+    gone: set[str] = set()
     emails_by_id: dict[str, str | None] = {}
     if user_ids:
-        ures = get_db().table("users").select("id,email").in_("id", user_ids).execute()
-        udata = getattr(ures, "data", None) or []
-        for urow in udata:
-            if isinstance(urow, dict) and urow.get("id"):
-                emails_by_id[str(urow["id"])] = urow.get("email")
+        try:
+            ures = (
+                get_db()
+                .table("users")
+                .select("id,email,deleted_at")
+                .in_("id", user_ids)
+                .execute()
+            )
+            udata = getattr(ures, "data", None) or []
+            for urow in udata:
+                if not isinstance(urow, dict) or not urow.get("id"):
+                    continue
+                uid = str(urow["id"])
+                emails_by_id[uid] = urow.get("email")
+                if urow.get("deleted_at"):
+                    gone.add(uid)
+        except Exception as e:
+            logger.warning("explore vendor users lookup failed: %s", e)
 
     out: list[dict[str, Any]] = []
     for row in data:

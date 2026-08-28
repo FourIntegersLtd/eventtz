@@ -101,8 +101,8 @@ def get_public_metrics_for_vendors(vendor_ids: list[str]) -> dict[str, dict[str,
             .execute()
         )
         rows = [r for r in (getattr(res, "data", None) or []) if isinstance(r, dict)]
-    except Exception:
-        logger.exception("public_vendor_metrics: load failed")
+    except Exception as e:
+        logger.warning("public_vendor_metrics: load failed: %s", e)
         return {vid: empty_public_vendor_metrics() for vid in ids}
 
     by_vendor: dict[str, list[dict[str, Any]]] = {vid: [] for vid in ids}

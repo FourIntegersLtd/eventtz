@@ -4,7 +4,14 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from app.features.vendors.moderation import get_approved_vendor_for_explore_by_id
+import httpx
+import pytest
+
+from app.features.vendors.moderation import (
+    get_approved_vendor_for_explore_by_id,
+    list_approved_vendors_for_explore,
+)
+from app.features.vendors.public_metrics import get_public_metrics_for_vendors
 from app.features.vendors.visibility import row_is_publicly_listable
 
 _STRIPE_READY = {
@@ -65,14 +72,30 @@ def test_visible_override_lists_without_stripe() -> None:
     assert row_is_publicly_listable({**row, "listing_override": "visible"}) is True
 
 
-def _explore_query_mock(*, data: list[dict[str, object]]) -> MagicMock:
+def _explore_query_mock(
+    *,
+    data: list[dict[str, object]] | None = None,
+    execute_error: BaseException | None = None,
+) -> MagicMock:
     q = MagicMock()
-    q.select.return_value = q
-    q.eq.return_value = q
-    q.neq.return_value = q
-    q.or_.return_value = q
-    q.limit.return_value = q
-    q.execute.return_value = MagicMock(data=data)
+    for name in (
+        "select",
+        "eq",
+        "neq",
+        "or_",
+        "in_",
+        "gte",
+        "lte",
+        "overlaps",
+        "ilike",
+        "order",
+        "limit",
+    ):
+        getattr(q, name).return_value = q
+    if execute_error is not None:
+        q.execute.side_effect = execute_error
+    else:
+        q.execute.return_value = MagicMock(data=data or [])
     return q
 
 
@@ -102,3 +125,75 @@ def test_explore_detail_returns_none_for_deleted_account(
         ],
     )
     assert get_approved_vendor_for_explore_by_id("v1") is None
+
+
+_LIST_VENDOR = {
+    "user_id": "v1",
+    "status": "complete",
+    "approval_status": "approved",
+    "payload": {"businessName": "Acme Catering"},
+    "updated_at": "2026-08-01T00:00:00+00:00",
+}
+
+
+@patch("app.features.vendors.moderation.get_db")
+def test_explore_list_returns_vendors_when_users_lookup_times_out(
+    mock_get_db: MagicMock,
+) -> None:
+    vendors = _explore_query_mock(data=[_LIST_VENDOR])
+    users = _explore_query_mock(execute_error=httpx.ReadTimeout("timed out"))
+    mock_get_db.return_value.table.side_effect = lambda name: vendors if name == "vendors" else users
+
+    rows = list_approved_vendors_for_explore(country_code="GB")
+    assert len(rows) == 1
+    assert rows[0]["user_id"] == "v1"
+    assert rows[0]["email"] is None
+    assert rows[0]["payload"]["businessName"] == "Acme Catering"
+
+
+@patch("app.features.vendors.moderation.get_db")
+def test_explore_list_skips_deleted_accounts_from_users_lookup(
+    mock_get_db: MagicMock,
+) -> None:
+    vendors = _explore_query_mock(
+        data=[
+            _LIST_VENDOR,
+            {**_LIST_VENDOR, "user_id": "v-gone", "payload": {"businessName": "Gone"}},
+        ],
+    )
+    users = _explore_query_mock(
+        data=[
+            {"id": "v1", "email": "vendor@example.com", "deleted_at": None},
+            {"id": "v-gone", "email": None, "deleted_at": "2026-08-01T00:00:00+00:00"},
+        ],
+    )
+    mock_get_db.return_value.table.side_effect = lambda name: vendors if name == "vendors" else users
+
+    rows = list_approved_vendors_for_explore(country_code="GB")
+    assert [r["user_id"] for r in rows] == ["v1"]
+    assert rows[0]["email"] == "vendor@example.com"
+
+
+@patch("app.features.vendors.moderation.get_db")
+def test_explore_list_reraises_timeout_on_vendors_query(mock_get_db: MagicMock) -> None:
+    mock_get_db.return_value.table.return_value = _explore_query_mock(
+        execute_error=httpx.ReadTimeout("timed out"),
+    )
+    with pytest.raises(httpx.ReadTimeout):
+        list_approved_vendors_for_explore(country_code="GB")
+
+
+@patch("app.features.vendors.public_metrics.get_db")
+def test_public_metrics_empty_on_read_timeout(
+    mock_get_db: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    mock_get_db.return_value.table.return_value = _explore_query_mock(
+        execute_error=httpx.ReadTimeout("timed out"),
+    )
+    with caplog.at_level("WARNING"):
+        stats = get_public_metrics_for_vendors(["v1"])
+    assert stats["v1"]["completed_bookings"] == 0
+    assert stats["v1"]["avg_response_seconds"] is None
+    assert any("public_vendor_metrics: load failed" in rec.message for rec in caplog.records)
+    assert not any(rec.levelname == "ERROR" for rec in caplog.records)
