@@ -15,7 +15,8 @@ import {
   computeBookingEstimateGbp,
   formatBookingEstimateLabel,
 } from "@/lib/vendorDiscountDisplay";
-import { getBookingServiceFeePercent } from "@/lib/bookingServiceFee";
+import { computeClientFeeBreakdown } from "@/lib/bookingServiceFee";
+import { ClientFeeBreakdownSummary } from "@/features/bookings/ClientFeeBreakdownSummary";
 import { todayIsoDate, isPastIsoDate } from "@/lib/eventDateValidation";
 import {
   type BrowsePricingOption,
@@ -190,6 +191,8 @@ export function VendorBookingModal({
       const sum = positiveLines.reduce((acc, l) => acc + (l.unitPriceGbp ?? 0), 0);
       return {
         label: formatBookingEstimateLabel(sum, hasTbc),
+        sumNumeric: sum,
+        hasTbc,
         autoLines: [] as { id: string; heading: string; unitPriceGbp: number | null }[],
       };
     }
@@ -200,22 +203,16 @@ export function VendorBookingModal({
     );
     return {
       label: formatBookingEstimateLabel(result.sumNumeric, result.hasTbc),
+      sumNumeric: result.sumNumeric,
+      hasTbc: result.hasTbc,
       autoLines: result.autoLines,
     };
   }, [lineItems, vendorPayload, eventDate]);
 
-  const clientEstimateLabel = useMemo(() => {
-    if (estimate.label === "TBC" || estimate.label.includes("TBC")) {
-      return estimate.label;
-    }
-    const match = estimate.label.match(/[\d,.]+/);
-    if (!match) return estimate.label;
-    const vendorPortion = Number.parseFloat(match[0].replace(/,/g, ""));
-    if (!Number.isFinite(vendorPortion)) return estimate.label;
-    const feePct = getBookingServiceFeePercent();
-    const withFee = Math.round(vendorPortion * (1 + feePct / 100) * 100) / 100;
-    return formatBookingEstimateLabel(withFee, false);
-  }, [estimate.label]);
+  const clientFeeBreakdown = useMemo(() => {
+    if (estimate.hasTbc) return null;
+    return computeClientFeeBreakdown({ vendorPortionGbp: estimate.sumNumeric });
+  }, [estimate.sumNumeric, estimate.hasTbc]);
 
   const minEventDate = todayIsoDate();
 
@@ -553,15 +550,24 @@ export function VendorBookingModal({
             </div>
 
             <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-neutral-600">Estimated total</span>
-                <span className="font-heading text-lg font-semibold text-neutral-900">
-                  {clientEstimateLabel}
-                </span>
-              </div>
-              <p className="mt-2 text-xs text-neutral-500">
-                Includes Eventtz fee. The vendor may adjust the price before you pay.
-              </p>
+              {clientFeeBreakdown ? (
+                <ClientFeeBreakdownSummary
+                  breakdown={clientFeeBreakdown}
+                  footnote="The vendor may adjust the price before you pay."
+                />
+              ) : (
+                <>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-neutral-600">Estimated total</span>
+                    <span className="font-heading text-lg font-semibold text-neutral-900">
+                      {estimate.label.replace(/^GBP\s/, "£")}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs text-neutral-500">
+                    The vendor may adjust the price before you pay.
+                  </p>
+                </>
+              )}
             </div>
 
             {validationError ? <LottieFailureInline message={validationError} /> : null}

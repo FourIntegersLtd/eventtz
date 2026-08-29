@@ -40,8 +40,22 @@ function JourneyPanelMock({ stage }: { stage: "browse" | "chat" | "pay" }) {
     <div className="p-4 sm:p-5">
       <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Accepted</p>
       <p className="font-heading mt-1 text-base font-semibold text-primary">Pay securely</p>
-      <p className="mt-2 text-2xl font-semibold text-primary">GBP 1,302</p>
-      <p className="mt-1 text-xs text-neutral-500">Includes Eventtz service fee</p>
+      <div className="mt-3 space-y-1.5 text-xs text-neutral-600">
+        <div className="flex justify-between gap-2">
+          <span>Vendor portion</span>
+          <span className="font-medium tabular-nums text-neutral-900">£1,240</span>
+        </div>
+        <div className="flex justify-between gap-2">
+          <span>
+            Eventtz fee <span className="text-neutral-400">(5%)</span>
+          </span>
+          <span className="font-medium tabular-nums text-neutral-900">£62</span>
+        </div>
+        <div className="flex justify-between gap-2 border-t border-neutral-200 pt-1.5 font-semibold text-primary">
+          <span>Total due</span>
+          <span className="tabular-nums">£1,302</span>
+        </div>
+      </div>
       <span className="mt-4 inline-block w-full rounded-xl bg-primary py-2.5 text-center text-xs font-semibold text-white">
         Pay now
       </span>

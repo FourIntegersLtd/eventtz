@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/Button";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
+import { ClientFeeBreakdownSummary } from "@/features/bookings/ClientFeeBreakdownSummary";
 import type { BookingPricing } from "@/features/bookings/BookingPricingBreakdown";
 
 type BookingPriceUpdateBannerProps = {
@@ -64,11 +65,22 @@ export function BookingPriceUpdateBanner({
                 </span>
               </li>
             ))}
-            <li className="flex items-start gap-2 text-neutral-400">
-              <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-neutral-300" aria-hidden />
-              <span>Eventtz fee included</span>
-            </li>
           </ul>
+        ) : null}
+
+        {pricing && !pricing.has_pricing_tbc ? (
+          <div className="mt-3 rounded-lg border border-neutral-200/80 bg-white/70 px-3 py-2.5">
+            <ClientFeeBreakdownSummary
+              breakdown={{
+                vendorPortionLabel: pricing.vendor_portion_label,
+                feeLabel: pricing.service_fee_label,
+                totalLabel: pricing.client_total_label,
+                feePercent: pricing.service_fee_percent,
+              }}
+              totalHeading="Total due"
+              compact
+            />
+          </div>
         ) : null}
       </div>
 

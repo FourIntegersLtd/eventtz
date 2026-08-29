@@ -27,6 +27,8 @@ import { BrowsePricingPackagesSection } from "@/features/vendors/display/BrowseP
 import { BrowsePricingSharedInfo } from "@/features/vendors/display/BrowsePricingSharedInfo";
 import { PortfolioImageGallery } from "@/features/vendors/display/PortfolioImageGallery";
 import { PortfolioVideoStrip } from "@/features/vendors/display/PortfolioVideoStrip";
+import { computeClientFeeBreakdown } from "@/lib/bookingServiceFee";
+import { ClientFeeBreakdownSummary } from "@/features/bookings/ClientFeeBreakdownSummary";
 import { marketLocationFallback } from "@/lib/markets";
 import { publicListingImageUrlsFromPayload } from "@/lib/vendorPortfolioImages";
 
@@ -118,6 +120,10 @@ export function VendorBrowseDetailBody({
     () => formatBookingTotalGbp(selectedLineItems),
     [selectedLineItems],
   );
+  const selectedFeeBreakdown = useMemo(() => {
+    if (selectedTotal.hasTbc) return null;
+    return computeClientFeeBreakdown({ vendorPortionGbp: selectedTotal.sumNumeric });
+  }, [selectedTotal.hasTbc, selectedTotal.sumNumeric]);
 
   const togglePackage = (id: string) => {
     setSelectedPackageIds((prev) => {
@@ -201,12 +207,16 @@ export function VendorBrowseDetailBody({
 
       {onRequestBooking && selectedPackageIds.size > 0 ? (
         <div className="border-t border-neutral-100 px-5 py-4">
-          <div className="flex items-baseline justify-between gap-3">
-            <p className="text-[13px] text-neutral-500">Estimated total</p>
-            <p className="text-base font-semibold tabular-nums text-neutral-900">
-              {selectedTotal.label.replace(/^GBP\s/, "£")}
-            </p>
-          </div>
+          {selectedFeeBreakdown ? (
+            <ClientFeeBreakdownSummary breakdown={selectedFeeBreakdown} compact />
+          ) : (
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="text-[13px] text-neutral-500">Estimated total</p>
+              <p className="text-base font-semibold tabular-nums text-neutral-900">
+                {selectedTotal.label.replace(/^GBP\s/, "£")}
+              </p>
+            </div>
+          )}
           {selectedTotal.hasTbc ? (
             <p className="mt-1 text-[12px] text-neutral-400">
               Includes items that need a custom quote.

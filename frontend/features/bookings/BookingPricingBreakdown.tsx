@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
+import { ClientFeeBreakdownSummary } from "@/features/bookings/ClientFeeBreakdownSummary";
 
 export type BookingPricing = {
   line_items_subtotal_gbp: number;
@@ -214,22 +215,16 @@ export function BookingPricingBreakdown({
       ) : null}
 
       {variant === "client" ? (
-        <div className="space-y-2 border-t border-neutral-100 px-5 py-3.5 text-sm">
-          <div className="flex justify-between gap-2 text-neutral-600">
-            <span>Vendor portion</span>
-            <span className="font-medium tabular-nums text-neutral-900">
-              {pricing.vendor_portion_label}
-            </span>
-          </div>
-          <div className="flex justify-between gap-2 text-neutral-600">
-            <span>
-              Eventtz fee
-              <span className="text-neutral-400"> ({pricing.service_fee_percent}%)</span>
-            </span>
-            <span className="font-medium tabular-nums text-neutral-900">
-              {pricing.service_fee_label}
-            </span>
-          </div>
+        <div className="border-t border-neutral-100 px-5 py-3.5">
+          <ClientFeeBreakdownSummary
+            breakdown={{
+              vendorPortionLabel: pricing.vendor_portion_label,
+              feeLabel: pricing.service_fee_label,
+              totalLabel: pricing.client_total_label,
+              feePercent: pricing.service_fee_percent,
+            }}
+            showTotal={false}
+          />
         </div>
       ) : null}
 
