@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
+import httpx
 from postgrest.exceptions import APIError
 
 from app.jobs.lock import try_claim_job_period
@@ -114,3 +115,19 @@ def test_locked_run_logs_failure_when_job_raises(
             raise AssertionError("expected RuntimeError")
     assert "booking maintenance failed period=" in caplog.text
     assert "duration_ms=" in caplog.text
+
+
+@patch("app.jobs.scheduler.run_booking_maintenance_main")
+@patch("app.jobs.scheduler.try_claim_job_period", return_value=True)
+def test_locked_run_treats_read_timeout_as_unavailable(
+    _mock_claim: MagicMock,
+    mock_main: MagicMock,
+    caplog,
+) -> None:
+    mock_main.side_effect = httpx.ReadTimeout("The read operation timed out")
+    with caplog.at_level("WARNING"):
+        run_locked_maintenance()
+    mock_main.assert_called_once()
+    assert "booking maintenance unavailable period=" in caplog.text
+    assert "duration_ms=" in caplog.text
+    assert "booking maintenance failed period=" not in caplog.text

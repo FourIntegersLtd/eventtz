@@ -251,7 +251,7 @@ Order in code (matters if paths could overlap; several admin routers share **`pr
 | `features/realtime/http/routes.py` | `/realtime` | `realtime` | SSE stream for live UI refresh |
 | `features/payments/http/webhooks.py` | `/webhooks` | `stripe-webhooks` | **`POST /stripe`** - signature-verified; checkout / Connect account events |
 
-**Jobs** (`app/jobs/`): booking maintenance runs **inside the API** on an hourly asyncio loop when `IS_PRODUCTION=true` (`app/jobs/scheduler.py`, started from `main.py` lifespan). A `job_runs` row (migration **075**) claims each UTC hour so two processes do not both run. The same work is still a CLI: `PYTHONPATH=. python -m app.jobs.run_booking_maintenance`.
+**Jobs** (`app/jobs/`): booking maintenance runs **inside the API** on an hourly asyncio loop when `IS_PRODUCTION=true` (`app/jobs/scheduler.py`, started from `main.py` lifespan). A `job_runs` row (migration **075**) claims each UTC hour so two processes do not both run. The same work is still a CLI: `PYTHONPATH=. python -m app.jobs.run_booking_maintenance`. PostgREST/httpx timeouts are fail-open (warning, skip that step or hour, retry next run) — do not `logger.exception` them.
 
 | Module | Purpose |
 |--------|---------|
