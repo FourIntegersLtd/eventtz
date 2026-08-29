@@ -12,9 +12,9 @@ type RequireVendorApprovedProps = {
 
 /**
  * Gates vendor portal pages (dashboard/bookings/payments/notifications) behind
- * `vendorIsLiveApproved`. `/vendor/profile` and `/vendor/help`
+ * `vendorIsLiveApproved`. `/vendor/profile`, `/vendor/help`, and `/vendor/settings`
  * skip this guard (`isVendorPreApprovalRoute` in the portal layout) so vendors can
- * finish onboarding, reach support, and read Eventtz Support threads while pending.
+ * finish onboarding, reach support, and change their password while pending.
  */
 export function RequireVendorApproved({ children }: RequireVendorApprovedProps) {
   const router = useRouter();
