@@ -12,8 +12,11 @@ from app.features.vendors import messages as vendor_messages
 from app.features.vendors.markets import DEFAULT_COUNTRY_CODE, is_market_enabled, normalize_country_code
 from app.features.vendors.list_pricing import (
     MAX_MONEY_GBP,
+    MAX_PACKAGE_UNIT_LABEL_CHARS,
     MIN_MONEY_GBP,
     parse_money_gbp,
+    parse_pricing_mode,
+    parse_quantity_input,
     parse_single_money_gbp,
     raise_if_invalid_single_money_gbp,
 )
@@ -125,6 +128,18 @@ def normalize_payload_fields(payload: dict[str, Any], user_id: str) -> dict[str,
                 continue
             pkg = dict(item)
             pkg["price"] = _clamp_money_str(_coerce_str(pkg, "price"))
+            pkg["pricingMode"] = parse_pricing_mode(pkg.get("pricingMode"))
+            pkg["unitLabel"] = _coerce_str(pkg, "unitLabel").strip()[:MAX_PACKAGE_UNIT_LABEL_CHARS]
+            min_qty, min_invalid = parse_quantity_input(pkg.get("minQuantity"))
+            max_qty, max_invalid = parse_quantity_input(pkg.get("maxQuantity"))
+            if min_qty is not None:
+                pkg["minQuantity"] = str(min_qty)
+            elif not min_invalid:
+                pkg["minQuantity"] = ""
+            if max_qty is not None:
+                pkg["maxQuantity"] = str(max_qty)
+            elif not max_invalid:
+                pkg["maxQuantity"] = ""
             cleaned.append(pkg)
         out["packages"] = cleaned
 

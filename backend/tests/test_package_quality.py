@@ -100,6 +100,45 @@ def test_package_quality_level():
     assert package_quality_level(payload_incomplete) == "needs_review"
 
 
+def test_per_unit_package_requires_unit_label():
+    pkg = _complete_pkg(pricingMode="per_unit", unitLabel="", price="2")
+    assert not is_complete_package(pkg)
+    with pytest.raises(ValidationError, match="unit name"):
+        from app.features.vendors.package_quality import validate_package_fields
+
+        validate_package_fields({**pkg, "unitLabel": ""}, strict=True)
+
+
+def test_per_unit_package_complete_with_unit_label():
+    pkg = _complete_pkg(
+        pricingMode="per_unit",
+        unitLabel="chair",
+        price="2",
+        minQuantity="10",
+        maxQuantity="200",
+    )
+    assert is_complete_package(pkg)
+
+
+def test_per_unit_package_rejects_min_above_max():
+    from app.features.vendors.package_quality import validate_package_fields
+
+    pkg = _complete_pkg(
+        pricingMode="per_unit",
+        unitLabel="chair",
+        price="2",
+        minQuantity="20",
+        maxQuantity="10",
+    )
+    assert not is_complete_package(pkg)
+    with pytest.raises(ValidationError, match="minimum quantity cannot be greater"):
+        validate_package_fields(pkg, strict=True)
+
+
+def test_missing_pricing_mode_is_fixed():
+    assert is_complete_package(_complete_pkg())
+
+
 def test_group_flat_tips_merges_by_package():
     from app.features.vendors.onboarding_ai import _group_flat_tips
 

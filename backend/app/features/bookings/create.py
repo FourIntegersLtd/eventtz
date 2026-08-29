@@ -172,6 +172,7 @@ def create_booking_request(
     selected_option_ids: list[str],
     client_search_context: dict[str, Any] | None = None,
     event_id: str | None = None,
+    quantities: dict[str, int] | None = None,
 ) -> dict[str, Any]:
     if client_user_id == vendor_user_id:
         raise ValueError(booking_messages.CANNOT_BOOK_OWN_VENDOR)
@@ -194,7 +195,7 @@ def create_booking_request(
 
     _enforce_max_bookings_per_day(vendor_user_id, payload, event_date, event_end_date)
 
-    line_items = resolve_line_items(payload, selected_option_ids)
+    line_items = resolve_line_items(payload, selected_option_ids, quantities)
     line_items = line_items + compute_automatic_discount_lines(payload, line_items, event_date)
 
     pb = build_pricing_breakdown(line_items=line_items, vendor_adjustments=[])

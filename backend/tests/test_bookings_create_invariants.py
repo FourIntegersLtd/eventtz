@@ -33,3 +33,26 @@ def test_create_booking_body_has_no_price_fields() -> None:
     dumped = body.model_dump()
     assert dumped["selected_option_ids"] == ["pkg-gold"]
     assert "line_items" not in dumped
+    assert dumped.get("quantities") is None
+
+
+def test_create_booking_body_allows_quantities() -> None:
+    body = CreateBookingRequestBody(
+        vendor_user_id="v1",
+        event_name="Birthday dinner",
+        event_date=date.today() + timedelta(days=14),
+        selected_option_ids=["pkg-chairs"],
+        quantities={"pkg-chairs": 50},
+    )
+    assert body.quantities == {"pkg-chairs": 50}
+
+
+def test_create_booking_body_rejects_fractional_quantities() -> None:
+    with pytest.raises(ValidationError):
+        CreateBookingRequestBody(
+            vendor_user_id="v1",
+            event_name="Birthday dinner",
+            event_date=date.today() + timedelta(days=14),
+            selected_option_ids=["pkg-chairs"],
+            quantities={"pkg-chairs": 1.5},
+        )

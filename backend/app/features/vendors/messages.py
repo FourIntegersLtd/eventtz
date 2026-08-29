@@ -20,6 +20,17 @@ NO_PUBLISHED_PRICES = "This vendor has no published prices for your selection."
 QUOTE_ONLY_NO_PRICED_OPTIONS = (
     "This vendor only accepts quote requests - no priced options to select."
 )
+PER_UNIT_QUANTITY_REQUIRED = (
+    "Choose how many you need for each priced-per-item package."
+)
+LINE_TOTAL_TOO_HIGH = "That quantity takes this package over the maximum price."
+
+
+def quantity_out_of_range(heading: str, min_qty: int, max_qty: int | None) -> str:
+    name = heading.strip() or "this package"
+    if max_qty is None:
+        return f"Choose at least {min_qty} for {name}."
+    return f"Choose between {min_qty} and {max_qty} for {name}."
 
 # --- Event date availability ---
 
@@ -48,6 +59,18 @@ COULD_NOT_READ_PACKAGE_SUGGESTIONS = "Could not read package suggestions. Try ag
 
 PACKAGE_NEEDS_CLEAR_NAME = "Step pricing: each package needs a clear name."
 PACKAGE_NEEDS_PRICE = "Step pricing: each package needs a price."
+PACKAGE_NEEDS_UNIT_PRICE = "Step pricing: each per-item package needs a unit price."
+PACKAGE_NEEDS_UNIT_LABEL = (
+    "Step pricing: each per-item package needs a unit name (e.g. chair, table)."
+)
+PACKAGE_UNIT_LABEL_TOO_LONG = "Step pricing: keep the unit name short."
+PACKAGE_MIN_QTY_INVALID = (
+    "Step pricing: minimum quantity must be a whole number of at least 1."
+)
+PACKAGE_MAX_QTY_INVALID = (
+    "Step pricing: maximum quantity must be a whole number of at least 1."
+)
+PACKAGE_MIN_ABOVE_MAX = "Step pricing: minimum quantity cannot be greater than maximum."
 PACKAGE_DETAILS_TOO_SHORT = (
     "Step pricing: tell clients what's included (at least a short sentence)."
 )

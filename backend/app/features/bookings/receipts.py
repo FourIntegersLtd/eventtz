@@ -78,11 +78,30 @@ def _transfer_reference(transfer_id: str | None) -> str | None:
 
 
 def _line_item_label(li: dict[str, Any]) -> str:
+    heading = ""
     for key in ("heading", "label", "name"):
         v = li.get(key)
         if isinstance(v, str) and v.strip():
-            return v.strip()[:200]
-    return "Item"
+            heading = v.strip()[:200]
+            break
+    if not heading:
+        heading = "Item"
+    qty = li.get("quantity")
+    rate = li.get("unit_rate_gbp")
+    unit_label = li.get("unit_label")
+    try:
+        qty_n = int(qty) if qty is not None else None
+    except (TypeError, ValueError):
+        qty_n = None
+    try:
+        rate_n = float(rate) if rate is not None else None
+    except (TypeError, ValueError):
+        rate_n = None
+    if qty_n and qty_n > 0 and rate_n is not None:
+        unit = str(unit_label).strip() if isinstance(unit_label, str) else ""
+        unit_bit = f" / {unit}" if unit else ""
+        return f"{heading} × {qty_n} @ {format_gbp(rate_n)}{unit_bit}"[:200]
+    return heading
 
 
 def _build_receipt_lines(

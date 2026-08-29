@@ -258,7 +258,7 @@ _CATEGORY_EXAMPLES: dict[str, str] = {
     "baking": "Celebration Cake – £120: two-tier cake, serves 30, standard flavours, delivery within 10 miles.",
     "makeup": "Silver Bridal Makeup – £300: bridal makeup on the day, lashes, skin prep, touch-up kit.",
     "photography": "Wedding Photography – £1,500: up to 8 hours, edited digital gallery, online sharing.",
-    "rentals": "Chair Hire – 50 pack – £150: 50 white folding chairs, 3-day hire, delivery and collection within 10 miles.",
+    "rentals": "Chair hire – £2 each: white folding chairs, 3-day hire, delivery and collection within 10 miles.",
     "event_planning": "Full Day Coordination – £800: timeline planning, vendor liaison, on-the-day management up to 10 hours.",
     "decor": "Gold Decor Package – £450: backdrop, balloon garland, table centrepieces for up to 10 tables.",
     "dj": "Wedding DJ – £600: 5 hours, professional sound system, dancefloor lighting.",
@@ -294,6 +294,10 @@ def _sanitize_payload_for_package_review(payload: dict[str, Any]) -> dict[str, A
                     "price": str(item.get("price") or "").strip()[:32],
                     "details": str(item.get("details") or "").strip()[:600],
                     "duration": str(item.get("duration") or "").strip()[:80],
+                    "pricingMode": str(item.get("pricingMode") or "fixed").strip()[:20],
+                    "unitLabel": str(item.get("unitLabel") or "").strip()[:40],
+                    "minQuantity": str(item.get("minQuantity") or "").strip()[:12],
+                    "maxQuantity": str(item.get("maxQuantity") or "").strip()[:12],
                 },
             )
         out["packages"] = cleaned
@@ -485,7 +489,7 @@ def review_vendor_packages(*, payload: dict[str, Any]) -> dict[str, Any]:
         "- suggested_* fields are pasted directly into the vendor form — write final copy, not advice.\n"
         "- ALWAYS rewrite weak packages. Do NOT return near-copies of the vendor's existing text.\n"
         "- suggested_title: 3–8 words, specific and bookable. Follow category_examples naming:\n"
-        "  • rentals: \"Chair Hire – 50 pack\", \"Table Rental – 6ft round\"\n"
+        "  • rentals: \"Chair hire\", \"Table hire\" (prefer per-item rates over fixed packs)\n"
         "  • catering: \"Small Chops – Large Pack\"\n"
         "  • photography: \"Wedding Photography\", \"Birthday Photography\"\n"
         "  Never use Gold/Silver/Package 1/Chairs/Tables alone.\n"

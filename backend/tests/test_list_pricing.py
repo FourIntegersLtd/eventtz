@@ -219,3 +219,80 @@ def test_reconcile_automatic_discount_lines_refreshes_bulk():
     assert len(auto) == 1
     assert auto[0]["id"] == AUTO_BULK_LINE_ID
     assert auto[0]["unit_price_gbp"] == -50.0
+
+
+def _per_unit_payload(**overrides: object) -> dict:
+    base = {
+        "packages": [
+            {
+                "id": "pkg-chairs",
+                "title": "Chair hire",
+                "price": "2",
+                "details": "White folding chairs, 3-day hire, delivery and collection within 10 miles.",
+                "duration": "3-day hire",
+                "pricingMode": "per_unit",
+                "unitLabel": "chair",
+                "minQuantity": "10",
+                "maxQuantity": "200",
+            },
+        ],
+        "hourlyRate": "",
+        "dailyRate": "",
+        "offerDiscounts": False,
+    }
+    base.update(overrides)
+    return base
+
+
+def test_per_unit_missing_mode_defaults_to_fixed():
+    payload = _vendor_payload()
+    items = resolve_line_items(payload, ["pkg-gold"])
+    assert items[0]["unit_price_gbp"] == 500.0
+    assert "quantity" not in items[0]
+
+
+def test_per_unit_multiplies_rate_by_quantity():
+    payload = _per_unit_payload()
+    items = resolve_line_items(payload, ["pkg-chairs"], {"pkg-chairs": 50})
+    assert len(items) == 1
+    assert items[0]["unit_price_gbp"] == 100.0
+    assert items[0]["quantity"] == 50
+    assert items[0]["unit_rate_gbp"] == 2.0
+    assert items[0]["unit_label"] == "chair"
+
+
+def test_per_unit_applies_headline_discount_to_unit_rate():
+    payload = _per_unit_payload(offerDiscounts=True, discountPercentage="10")
+    items = resolve_line_items(payload, ["pkg-chairs"], {"pkg-chairs": 50})
+    assert items[0]["unit_rate_gbp"] == 1.8
+    assert items[0]["unit_price_gbp"] == 90.0
+
+
+def test_per_unit_requires_quantity():
+    payload = _per_unit_payload()
+    with pytest.raises(ValueError, match="how many"):
+        resolve_line_items(payload, ["pkg-chairs"])
+
+
+def test_per_unit_rejects_quantity_below_min():
+    payload = _per_unit_payload()
+    with pytest.raises(ValueError, match="between 10 and 200"):
+        resolve_line_items(payload, ["pkg-chairs"], {"pkg-chairs": 5})
+
+
+def test_per_unit_rejects_quantity_above_max():
+    payload = _per_unit_payload()
+    with pytest.raises(ValueError, match="between 10 and 200"):
+        resolve_line_items(payload, ["pkg-chairs"], {"pkg-chairs": 201})
+
+
+def test_min_listing_price_uses_per_unit_rate():
+    payload = _per_unit_payload()
+    assert min_listing_price_gbp(payload) == 2.0
+
+
+def test_fixed_package_ignores_quantity():
+    payload = _vendor_payload()
+    items = resolve_line_items(payload, ["pkg-gold"], {"pkg-gold": 9})
+    assert items[0]["unit_price_gbp"] == 500.0
+    assert "quantity" not in items[0]
