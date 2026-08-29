@@ -21,7 +21,11 @@ import {
   normalizePublicBioText,
   portfolioImageCountFromData,
 } from "./reviewDisplayHelpers";
-import { isReturnedForEdits, resolveOnboardingStepFromProfile } from "./onboardingProgress";
+import {
+  canApplyOnboardingFormUpdate,
+  isReturnedForEdits,
+  resolveOnboardingStepFromProfile,
+} from "./onboardingProgress";
 import { RETURNED_FOR_EDITS_FEEDBACK } from "./returnedForEditsCopy";
 import {
   mergePayloadIntoVendorData,
@@ -178,11 +182,18 @@ export function useOnboardingPersistence({
 
   const update = useCallback(
     (patch: Partial<VendorOnboardingData>) => {
-      if (lockedPendingReview) return;
+      if (
+        !canApplyOnboardingFormUpdate({
+          lockedPendingReview,
+          canAddPortfolioWhilePending,
+        })
+      ) {
+        return;
+      }
       setData((prev) => ({ ...prev, ...patch }));
       setFormError(null);
     },
-    [lockedPendingReview],
+    [lockedPendingReview, canAddPortfolioWhilePending],
   );
 
   const onGenerateBioWithAI = useCallback(async () => {

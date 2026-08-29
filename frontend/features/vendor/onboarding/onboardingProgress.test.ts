@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { isReturnedForEdits, resolveOnboardingStepFromProfile } from "./onboardingProgress";
+import {
+  canApplyOnboardingFormUpdate,
+  isReturnedForEdits,
+  resolveOnboardingStepFromProfile,
+} from "./onboardingProgress";
 
 describe("isReturnedForEdits", () => {
   it("is true when the server set returnedForEditsAt", () => {
@@ -105,5 +109,34 @@ describe("resolveOnboardingStepFromProfile", () => {
         false,
       ),
     ).toBe(3);
+  });
+});
+
+describe("canApplyOnboardingFormUpdate", () => {
+  it("allows drafts to update", () => {
+    expect(
+      canApplyOnboardingFormUpdate({
+        lockedPendingReview: false,
+        canAddPortfolioWhilePending: false,
+      }),
+    ).toBe(true);
+  });
+
+  it("blocks submitted pending vendors who already have enough photos", () => {
+    expect(
+      canApplyOnboardingFormUpdate({
+        lockedPendingReview: true,
+        canAddPortfolioWhilePending: false,
+      }),
+    ).toBe(false);
+  });
+
+  it("allows submitted pending vendors who still need portfolio photos", () => {
+    expect(
+      canApplyOnboardingFormUpdate({
+        lockedPendingReview: true,
+        canAddPortfolioWhilePending: true,
+      }),
+    ).toBe(true);
   });
 });

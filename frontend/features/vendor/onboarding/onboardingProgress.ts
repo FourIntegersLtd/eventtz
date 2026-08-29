@@ -97,6 +97,18 @@ export function isReturnedForEdits(profile: OnboardingStepProfile): boolean {
   return profile.onboarding_status === "draft" && (profile.current_step ?? 0) >= 9;
 }
 
+/**
+ * Pending-review lock still allows form patches when the vendor must add
+ * portfolio photos before admin can continue the review.
+ */
+export function canApplyOnboardingFormUpdate(opts: {
+  lockedPendingReview: boolean;
+  canAddPortfolioWhilePending: boolean;
+}): boolean {
+  if (!opts.lockedPendingReview) return true;
+  return opts.canAddPortfolioWhilePending;
+}
+
 /** Wizard step after loading profile — keeps draft vendors off the submitted screen. */
 export function resolveOnboardingStepFromProfile(
   profile: OnboardingStepProfile,
