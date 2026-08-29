@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ImagePlus, Trash2, Video, X } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { portfolioFileKey } from "@/lib/portfolioFileKey";
+import { filterLikelyImageUploadFiles } from "@/lib/imageUploadFile";
 import { MAX_PORTFOLIO_IMAGES, MIN_PORTFOLIO_IMAGES, SOCIAL_PLATFORM_OPTIONS } from "../constants";
 import type { PortfolioImageQualityRow } from "../useVendorOnboardingController";
 import {
@@ -128,8 +129,15 @@ export function StepPortfolio({
   };
 
   const addPortfolioFiles = (files: File[]) => {
-    const images = files.filter((f) => f.type.startsWith("image/"));
-    if (images.length === 0) return;
+    const images = filterLikelyImageUploadFiles(files);
+    if (images.length === 0) {
+      if (files.length > 0) {
+        setDuplicateNotice(
+          "Those files don't look like photos. Try JPG, PNG, or HEIC images.",
+        );
+      }
+      return;
+    }
     const existingKeys = new Set(data.portfolioFiles.map((f) => portfolioFileKey(f)));
     const existingPersistedUrls = new Set(data.portfolioFileNamesPersisted);
     const next: File[] = [...data.portfolioFiles];

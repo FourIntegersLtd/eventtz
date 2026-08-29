@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from uuid import uuid4
 
@@ -14,6 +15,20 @@ from app.features.media import messages as media_messages
 from app.features.media.s3 import s3_configured, upload_bytes
 
 logger = get_logger(__name__)
+
+_IMAGE_EXT = re.compile(r"\.(avif|gif|heic|heif|jpe?g|png|webp)$", re.I)
+
+
+def _looks_like_image_filename(filename: str) -> bool:
+    return bool(_IMAGE_EXT.search((filename or "").strip()))
+
+
+def _image_content_type_allowed(content_type: str, filename: str) -> bool:
+    if content_type.startswith("image/"):
+        return True
+    if content_type in ("", "application/octet-stream") and _looks_like_image_filename(filename):
+        return True
+    return False
 
 
 @dataclass(frozen=True)
@@ -31,11 +46,12 @@ async def _upload_user_object(
     allowed_prefixes: tuple[str, ...],
     max_bytes: int | None,
     error_hint: str,
+    content_type_override: str | None = None,
 ) -> UploadedImage:
     if not user_id:
         raise ForbiddenError(media_messages.SIGN_IN_TO_UPLOAD)
 
-    content_type = (file.content_type or "").strip().lower()
+    content_type = (content_type_override or file.content_type or "").strip().lower()
     if not any(content_type.startswith(p) for p in allowed_prefixes):
         raise ValidationError(error_hint)
 
@@ -80,8 +96,32 @@ async def _upload_user_object(
     )
 
 
+def _guess_image_content_type(filename: str) -> str:
+    lower = (filename or "").strip().lower()
+    if lower.endswith(".png"):
+        return "image/png"
+    if lower.endswith(".webp"):
+        return "image/webp"
+    if lower.endswith(".gif"):
+        return "image/gif"
+    if lower.endswith(".heic"):
+        return "image/heic"
+    if lower.endswith(".heif"):
+        return "image/heif"
+    if lower.endswith(".avif"):
+        return "image/avif"
+    return "image/jpeg"
+
+
 async def upload_user_image(*, user_id: str, file: UploadFile) -> UploadedImage:
     # No app-level size cap for images (infra/proxy limits may still apply).
+    content_type = (file.content_type or "").strip().lower()
+    filename = (file.filename or "").strip()
+    if not _image_content_type_allowed(content_type, filename):
+        raise ValidationError(media_messages.IMAGE_ONLY)
+    content_type_override = (
+        _guess_image_content_type(filename) if not content_type.startswith("image/") else None
+    )
     return await _upload_user_object(
         user_id=user_id,
         file=file,
@@ -89,6 +129,7 @@ async def upload_user_image(*, user_id: str, file: UploadFile) -> UploadedImage:
         allowed_prefixes=("image/",),
         max_bytes=None,
         error_hint=media_messages.IMAGE_ONLY,
+        content_type_override=content_type_override,
     )
 
 
