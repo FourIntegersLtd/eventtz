@@ -86,4 +86,31 @@ describe("sentryBeforeSend", () => {
 
     expect(sentryBeforeSend(event)).toBe(event);
   });
+
+  it("drops Instagram Android in-app browser WebView bridge errors", () => {
+    const event: ErrorEvent = {
+      type: undefined,
+      exception: {
+        values: [
+          {
+            type: "Error",
+            value: "Error invoking postMessage: Java object is gone",
+          },
+        ],
+      },
+    };
+
+    expect(sentryBeforeSend(event)).toBeNull();
+  });
+
+  it("does not drop unrelated errors that mention postMessage", () => {
+    const event: ErrorEvent = {
+      type: undefined,
+      exception: {
+        values: [{ type: "Error", value: "Failed to postMessage to conversation" }],
+      },
+    };
+
+    expect(sentryBeforeSend(event)).toBe(event);
+  });
 });

@@ -32,6 +32,8 @@ export const SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE = 1;
 const SAFE_TO_IGNORE_PATTERN = /safe to ignore/i;
 /** Instagram/Facebook iOS in-app browsers inject a WKWebView bridge that throws this. */
 const WEBKIT_MESSAGE_HANDLERS_PATTERN = /webkit\.messageHandlers/i;
+/** Instagram/Facebook Android in-app browsers inject a WebView JS bridge that throws this on unload. */
+const ANDROID_WEBVIEW_JAVA_OBJECT_GONE_PATTERN = /Java object is gone/i;
 
 function getEventMessages(event: Event | ErrorEvent): string[] {
   const messages: string[] = [];
@@ -46,7 +48,9 @@ function getEventMessages(event: Event | ErrorEvent): string[] {
 function shouldDropSentryEvent(event: Event | ErrorEvent): boolean {
   return getEventMessages(event).some(
     (message) =>
-      SAFE_TO_IGNORE_PATTERN.test(message) || WEBKIT_MESSAGE_HANDLERS_PATTERN.test(message),
+      SAFE_TO_IGNORE_PATTERN.test(message) ||
+      WEBKIT_MESSAGE_HANDLERS_PATTERN.test(message) ||
+      ANDROID_WEBVIEW_JAVA_OBJECT_GONE_PATTERN.test(message),
   );
 }
 
