@@ -14,6 +14,9 @@ import {
 import type { ExploreVendorSearchRow } from "@/lib/clientExploreApi";
 import {
   initialOptionSelections,
+  initialQuantitiesForVendors,
+  defaultQuantityForOption,
+  pricingOptionsForVendor,
   vendorDisplayName,
 } from "@/features/bookings/multiVendorPackageSelection";
 import {
@@ -90,6 +93,10 @@ export function MultiVendorEnquireModal({
   const [selectedOptionByVendorId, setSelectedOptionByVendorId] = useState<
     Record<string, string>
   >(() => initialOptionSelections(vendors));
+  const [quantityByVendorId, setQuantityByVendorId] = useState<Record<string, number>>(
+    () =>
+      initialQuantitiesForVendors(vendors, initialOptionSelections(vendors)),
+  );
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const {
@@ -120,7 +127,9 @@ export function MultiVendorEnquireModal({
   }, [linkedPrefill]);
 
   useEffect(() => {
-    setSelectedOptionByVendorId(initialOptionSelections(vendors));
+    const next = initialOptionSelections(vendors);
+    setSelectedOptionByVendorId(next);
+    setQuantityByVendorId(initialQuantitiesForVendors(vendors, next));
   }, [vendors]);
 
   const submit = () => {
@@ -169,6 +178,13 @@ export function MultiVendorEnquireModal({
             event_address: (parsed.data.venueAddress ?? "").trim() || null,
             notes: (parsed.data.notes ?? "").trim() || null,
             selected_option_ids: [optionId!],
+            quantities: (() => {
+              const opt = pricingOptionsForVendor(vendor).find((o) => o.id === optionId);
+              if (opt?.pricingMode !== "per_unit") return undefined;
+              const qty =
+                quantityByVendorId[vendor.user_id] ?? defaultQuantityForOption(opt);
+              return { [optionId!]: qty };
+            })(),
             client_search_context: {
               ...clientSearchContext,
               batchSize,
@@ -262,6 +278,24 @@ export function MultiVendorEnquireModal({
           selectedOptionByVendorId={selectedOptionByVendorId}
           onSelectOption={(vendorUserId, optionId) => {
             setSelectedOptionByVendorId((prev) => ({ ...prev, [vendorUserId]: optionId }));
+            const vendor = vendors.find((v) => v.user_id === vendorUserId);
+            const opt = vendor
+              ? pricingOptionsForVendor(vendor).find((o) => o.id === optionId)
+              : undefined;
+            setQuantityByVendorId((prev) => {
+              const next = { ...prev };
+              if (opt?.pricingMode === "per_unit") {
+                next[vendorUserId] = defaultQuantityForOption(opt);
+              } else {
+                delete next[vendorUserId];
+              }
+              return next;
+            });
+            setError(null);
+          }}
+          quantityByVendorId={quantityByVendorId}
+          onQuantityChange={(vendorUserId, quantity) => {
+            setQuantityByVendorId((prev) => ({ ...prev, [vendorUserId]: quantity }));
             setError(null);
           }}
           vendorCategoryLabels={vendorCategoryLabels}

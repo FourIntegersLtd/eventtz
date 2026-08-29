@@ -29,11 +29,11 @@ export const STEP_COPY = {
   4: {
     headline: "How do you price your work?",
     subtext:
-      "Each package is one bookable option with a name, price, and what's included — so clients know what they're buying.",
+      "Each package is one bookable option with a name, price, and what's included — so clients know what they're buying. Use a fixed price, or charge per item (chairs, tables, people).",
     fixedRatesHeadline: "Hourly or daily rates? (optional)",
     packagesHeadline: "Your packages",
     packagesHint:
-      "Add one package per option you offer. Each needs a clear name, one fixed price (not a range or comma-separated list), and what's included.",
+      "Add one package per option you offer. Choose a fixed price or a per-item rate (clients pick the quantity when they enquire). Each needs a clear name, one amount (not a range), and what's included.",
     bookingHeadline: "Any discounts?",
   },
   5: {

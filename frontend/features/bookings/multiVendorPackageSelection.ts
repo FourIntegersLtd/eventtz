@@ -40,7 +40,28 @@ export function initialOptionSelections(
 export function optionLabel(option: BrowsePricingOption): string {
   const price =
     option.priceDisplay != null && option.priceDisplay !== ""
-      ? `£${option.priceDisplay}`
+      ? `£${option.priceDisplay}${option.priceSuffix ? ` ${option.priceSuffix}` : ""}`
       : "Quote on request";
   return `${option.heading} - ${price}`;
+}
+
+export function defaultQuantityForOption(option: BrowsePricingOption | undefined): number {
+  if (!option) return 1;
+  return option.pricingMode === "per_unit" ? option.minQuantity : 1;
+}
+
+export function initialQuantitiesForVendors(
+  vendors: ExploreVendorSearchRow[],
+  selectedOptionByVendorId: Record<string, string>,
+): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const vendor of vendors) {
+    const optionId = selectedOptionByVendorId[vendor.user_id];
+    if (!optionId) continue;
+    const opt = pricingOptionsForVendor(vendor).find((o) => o.id === optionId);
+    if (opt?.pricingMode === "per_unit") {
+      out[vendor.user_id] = defaultQuantityForOption(opt);
+    }
+  }
+  return out;
 }

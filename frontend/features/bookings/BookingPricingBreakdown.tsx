@@ -29,6 +29,9 @@ export type BookingLineItemRow = {
   description?: string | null;
   feature_lines?: string[];
   timeline_line?: string | null;
+  quantity?: number | null;
+  unit_rate_gbp?: number | null;
+  unit_label?: string | null;
 };
 
 function formatLineUnitPrice(unitPriceGbp: number | null, lineId?: string): string {
@@ -125,6 +128,18 @@ export function BookingPricingBreakdown({
                       }`}
                     >
                       {li.heading}
+                      {li.quantity != null &&
+                      li.quantity > 0 &&
+                      li.unit_rate_gbp != null &&
+                      !isDiscount
+                        ? ` · ${li.quantity} × £${Math.abs(li.unit_rate_gbp).toLocaleString(
+                            "en-GB",
+                            {
+                              minimumFractionDigits: li.unit_rate_gbp % 1 === 0 ? 0 : 2,
+                              maximumFractionDigits: 2,
+                            },
+                          )}${li.unit_label ? ` / ${li.unit_label}` : ""}`
+                        : ""}
                     </span>
                     <span
                       className={`shrink-0 text-sm font-semibold tabular-nums ${

@@ -30,6 +30,9 @@ export const clientBookingRequestSchema = z
     notes: z.string().trim().max(4000).optional().default(""),
     venueAddress: z.string().trim().max(500).optional().default(""),
     selectedOptionIds: z.array(z.string()).min(1, "Choose at least one package."),
+    quantities: z
+      .record(z.number().int().min(1).max(100_000))
+      .optional(),
   })
   .and(eventDatesSchema({ requireStart: true }));
 

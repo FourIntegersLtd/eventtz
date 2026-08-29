@@ -35,6 +35,8 @@ export type CreateBookingRequestPayload = {
   event_address?: string | null;
   notes: string | null;
   selected_option_ids: string[];
+  /** Client-chosen counts for per-item packages. */
+  quantities?: Record<string, number> | null;
   /** Marketplace filters at enquire time (for alternative-vendor nudges). */
   client_search_context?: ClientSearchContext | null;
   event_id?: string | null;

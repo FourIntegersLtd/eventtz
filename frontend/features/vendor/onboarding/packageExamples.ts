@@ -83,17 +83,17 @@ export const PACKAGE_EXAMPLES_BY_SERVICE: Record<string, ServicePackageExamples>
   rentals: {
     serviceKey: "rentals",
     label: "Rentals & hire",
-    intro: "Each hire item or bundle should be its own bookable package.",
+    intro: "Charge per item so clients can pick how many they need, or list a fixed bundle.",
     examples: [
       {
-        name: "Chair Hire – 50 pack",
-        price: "£150",
-        included: "50 white folding chairs, 3-day hire, delivery and collection within 10 miles.",
+        name: "Chair hire",
+        price: "£2 each",
+        included: "White folding chairs, 3-day hire, delivery and collection within 10 miles.",
       },
       {
-        name: "Table Rental – 6ft round",
-        price: "£25",
-        included: "One 6ft round table, seats up to 8, 3-day hire, delivery and collection included.",
+        name: "Table hire",
+        price: "£10 each",
+        included: "6ft round tables, seats up to 8, 3-day hire, delivery and collection included.",
       },
     ],
   },
@@ -216,7 +216,7 @@ export function packageNamePlaceholder(serviceKey: string | undefined): string {
     case "photography":
       return "e.g. Wedding photography – 8 hours";
     case "rentals":
-      return "e.g. Chair hire – 50 pack";
+      return "e.g. Chair hire";
     case "event_planning":
       return "e.g. Full day coordination";
     case "decor":
@@ -242,7 +242,7 @@ export function packageIncludedPlaceholder(serviceKey: string | undefined): stri
     case "photography":
       return "Hours covered, edited photos, gallery access, second shooter if included.";
     case "rentals":
-      return "List quantity, hire period, and delivery — e.g. 50 chairs, 3-day hire, delivery and collection included.";
+      return "What's included — e.g. white folding chairs, 3-day hire, delivery and collection.";
     case "event_planning":
       return "Hours covered, planning scope, vendor liaison, and on-the-day duties.";
     case "decor":

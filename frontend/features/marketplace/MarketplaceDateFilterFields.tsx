@@ -85,7 +85,6 @@ export function MarketplaceDateFilterFields({
 
       {dates.length < 3 && !dateFlexible ? (
         <div className={dates.length > 0 ? "mt-3 min-w-0" : "min-w-0"}>
-          <p className="mb-1.5 text-xs font-medium text-neutral-500">Pick a date</p>
           <DateInput
             value={draftEventDate}
             min={todayIsoDate()}

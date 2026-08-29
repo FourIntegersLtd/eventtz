@@ -270,6 +270,9 @@ export type BookingLineItem = {
   description?: string | null;
   feature_lines?: string[];
   timeline_line?: string | null;
+  quantity?: number | null;
+  unit_rate_gbp?: number | null;
+  unit_label?: string | null;
 };
 
 /** List filter: active = pending+accepted, closed = declined+cancelled (+ completed for some APIs). */

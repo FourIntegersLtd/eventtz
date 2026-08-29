@@ -46,6 +46,9 @@ export function ClientVendorBrowseDetailView() {
   const [chatOpen, setChatOpen] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [bookingSelectionIds, setBookingSelectionIds] = useState<string[]>([]);
+  const [bookingQuantities, setBookingQuantities] = useState<Record<string, number>>(
+    {},
+  );
   const { guardBooking, launchingSoonModal } = useLaunchingSoonBookingGuard();
 
   const marketplaceSearch = useMemo(
@@ -215,9 +218,10 @@ export function ClientVendorBrowseDetailView() {
           onContinue={() => router.push(browseListHref)}
           onRequestBooking={
             isClient
-              ? (ids) => {
+              ? (ids, quantities) => {
                   guardBooking(() => {
                     setBookingSelectionIds(ids);
+                    setBookingQuantities(quantities);
                     setBookingOpen(true);
                     track(MixpanelEvents.enquiry_started, { vendor_user_id: userId });
                   });
@@ -228,7 +232,7 @@ export function ClientVendorBrowseDetailView() {
         />
         {user && bookingOpen && vendor ? (
           <VendorBookingModal
-            key={`${bookingSelectionIds.slice().sort().join("|")}|${searchParams.toString()}`}
+            key={`${bookingSelectionIds.slice().sort().join("|")}|${JSON.stringify(bookingQuantities)}|${searchParams.toString()}`}
             onClose={() => setBookingOpen(false)}
             onSuccess={(bookingId) => {
               setBookingOpen(false);
@@ -243,6 +247,7 @@ export function ClientVendorBrowseDetailView() {
             vendorUserId={userId}
             pricingOptions={pricingOptions}
             initialSelectedIds={bookingSelectionIds}
+            initialQuantities={bookingQuantities}
             vendorPayload={vendorPayload}
             searchPrefill={bookingSearchPrefill}
             initialPrefill={plannerEventPrefill}

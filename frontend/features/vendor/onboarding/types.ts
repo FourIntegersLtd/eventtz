@@ -1,3 +1,8 @@
+import type { PackagePricingMode } from "@/lib/packagePricing";
+import { PACKAGE_PRICING_MODE_FIXED } from "@/lib/packagePricing";
+
+export type { PackagePricingMode };
+
 export type TravelRadius =
   | "under_50"
   | "from_50_to_100"
@@ -26,6 +31,14 @@ export type VendorPackageItem = {
   duration: string;
   /** Apply the same default travel / delivery rule as Step 3 for this package. */
   useDefaultTravelPackage: boolean;
+  /** Missing / unknown values are treated as a fixed lump-sum package. */
+  pricingMode: PackagePricingMode;
+  /** Unit name when `pricingMode` is `per_unit` (e.g. chair, table, person). */
+  unitLabel: string;
+  /** Optional min quantity for per-unit packages (form string). */
+  minQuantity: string;
+  /** Optional max quantity for per-unit packages (form string). */
+  maxQuantity: string;
 };
 
 /** Inline result after "Check approval status" on the submitted step. */
@@ -47,6 +60,10 @@ export function createVendorPackage(): VendorPackageItem {
     price: "",
     duration: "",
     useDefaultTravelPackage: true,
+    pricingMode: PACKAGE_PRICING_MODE_FIXED,
+    unitLabel: "",
+    minQuantity: "",
+    maxQuantity: "",
   };
 }
 
@@ -187,6 +204,10 @@ export const initialVendorOnboardingData: VendorOnboardingData = {
       price: "",
       duration: "",
       useDefaultTravelPackage: true,
+      pricingMode: PACKAGE_PRICING_MODE_FIXED,
+      unitLabel: "",
+      minQuantity: "",
+      maxQuantity: "",
     },
   ],
   allowQuoteRequests: true,

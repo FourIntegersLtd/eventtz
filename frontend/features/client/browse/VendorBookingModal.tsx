@@ -19,8 +19,11 @@ import { getBookingServiceFeePercent } from "@/lib/bookingServiceFee";
 import { todayIsoDate, isPastIsoDate } from "@/lib/eventDateValidation";
 import {
   type BrowsePricingOption,
+  bookingQuantitiesPayload,
   buildBookingLineItems,
 } from "./vendorBrowseDetailModel";
+import { QuantityStepper } from "@/components/ui/QuantityStepper";
+import { lineTotalGbp } from "@/lib/packagePricing";
 import { useVendorBookingSubmit } from "@/features/client/browse/useVendorBookingSubmit";
 import type { ClientSearchContext } from "@/lib/clientBookingsApi";
 import { ActiveEventPrefillBanner } from "@/features/bookings/ActiveEventPrefillBanner";
@@ -45,8 +48,10 @@ type VendorBookingModalProps = {
   vendorDisplayName: string;
   vendorUserId: string;
   pricingOptions: BrowsePricingOption[];
-  /** Package / rate ids selected on the profile sidebar - fixed for this modal; change selection by closing and re-picking there. */
+  /** Package / rate ids selected on the profile sidebar. */
   initialSelectedIds: string[];
+  /** Per-item counts from the profile sidebar. */
+  initialQuantities?: Record<string, number>;
   /** Vendor onboarding payload - used to warn if chosen dates conflict with calendar. */
   vendorPayload?: Record<string, unknown>;
   /** Dates/types from marketplace URL on `/client/browse/[id]?…`. */
@@ -65,14 +70,18 @@ export function VendorBookingModal({
   vendorUserId,
   pricingOptions,
   initialSelectedIds,
+  initialQuantities = {},
   vendorPayload,
   searchPrefill,
   initialPrefill,
   linkedEventId,
   clientSearchContext,
 }: VendorBookingModalProps) {
-  // Selection happens once, on the profile sidebar - this modal only confirms dates/venue/notes.
-  const selectedIds = useMemo(() => new Set(initialSelectedIds), [initialSelectedIds]);
+  // Packages are chosen on the profile; quantity for per-item rates can still change here.
+  const [selectedIds, setSelectedIds] = useState(() => new Set(initialSelectedIds));
+  const [quantities, setQuantities] = useState<Record<string, number>>(
+    () => ({ ...initialQuantities }),
+  );
   const [eventName, setEventName] = useState(initialPrefill?.eventName ?? "");
   const [eventDate, setEventDate] = useState(
     searchPrefill?.eventDate?.trim() ||
@@ -84,6 +93,19 @@ export function VendorBookingModal({
   );
   const [venueAddress, setVenueAddress] = useState(initialPrefill?.venueAddress ?? "");
   const [notes, setNotes] = useState(initialPrefill?.notes ?? "");
+
+  const setPackageQuantity = (id: string, qty: number) => {
+    const opt = pricingOptions.find((o) => o.id === id);
+    setQuantities((prev) => ({ ...prev, [id]: qty }));
+    if (opt?.pricingMode === "per_unit") {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        if (qty >= opt.minQuantity) next.add(id);
+        else next.delete(id);
+        return next;
+      });
+    }
+  };
   const {
     pendingPrefill,
     linkedPrefill,
@@ -153,8 +175,8 @@ export function VendorBookingModal({
   });
 
   const lineItems = useMemo(
-    () => buildBookingLineItems(pricingOptions, [...selectedIds]),
-    [pricingOptions, selectedIds],
+    () => buildBookingLineItems(pricingOptions, [...selectedIds], quantities),
+    [pricingOptions, selectedIds, quantities],
   );
 
   const estimate = useMemo(() => {
@@ -205,6 +227,11 @@ export function VendorBookingModal({
       venueAddress,
       notes,
       selectedOptionIds: [...selectedIds],
+      quantities: bookingQuantitiesPayload(
+        [...selectedIds],
+        pricingOptions,
+        quantities,
+      ),
     });
   };
 
@@ -427,36 +454,66 @@ export function VendorBookingModal({
               <ul className="mt-2 divide-y divide-neutral-100 rounded-lg border border-neutral-200">
                 {pricingOptions
                   .filter((opt) => selectedIds.has(opt.id))
-                  .map((opt) => (
-                    <li key={opt.id} className="flex flex-wrap items-baseline justify-between gap-2 px-3 py-2.5">
-                      <span className="text-sm font-medium text-neutral-900">{opt.heading}</span>
-                      <div className="shrink-0 text-right">
-                        {opt.priceDisplay != null ? (
-                          <>
-                            {opt.compareAtDisplay ? (
-                              <p className="text-xs text-neutral-500 line-through">
-                                GBP {opt.compareAtDisplay}
+                  .map((opt) => {
+                    const perUnit = opt.pricingMode === "per_unit";
+                    const qty = quantities[opt.id] ?? opt.minQuantity;
+                    const lineTotal = perUnit
+                      ? lineTotalGbp(opt.unitPriceGbp, qty)
+                      : opt.unitPriceGbp;
+                    const lineLabel =
+                      lineTotal != null
+                        ? `GBP ${lineTotal.toLocaleString("en-GB", {
+                            minimumFractionDigits: lineTotal % 1 === 0 ? 0 : 2,
+                            maximumFractionDigits: 2,
+                          })}`
+                        : null;
+                    return (
+                    <li key={opt.id} className="space-y-2 px-3 py-2.5">
+                      <div className="flex flex-wrap items-baseline justify-between gap-2">
+                        <span className="text-sm font-medium text-neutral-900">{opt.heading}</span>
+                        <div className="shrink-0 text-right">
+                          {lineLabel != null ? (
+                            <>
+                              {perUnit && opt.priceDisplay != null ? (
+                                <p className="text-xs text-neutral-500">
+                                  {qty} × GBP {opt.priceDisplay}
+                                  {opt.priceSuffix ? ` ${opt.priceSuffix}` : ""}
+                                </p>
+                              ) : opt.compareAtDisplay ? (
+                                <p className="text-xs text-neutral-500 line-through">
+                                  GBP {opt.compareAtDisplay}
+                                </p>
+                              ) : null}
+                              <p
+                                className={`text-sm font-semibold ${
+                                  opt.compareAtDisplay && !perUnit ? "text-primary" : "text-neutral-900"
+                                }`}
+                              >
+                                {lineLabel}
                               </p>
-                            ) : null}
-                            <p
-                              className={`text-sm font-semibold ${
-                                opt.compareAtDisplay ? "text-primary" : "text-neutral-900"
-                              }`}
-                            >
-                              GBP {opt.priceDisplay}
-                            </p>
-                            {opt.discountBadge ? (
-                              <p className="mt-0.5 text-xs font-medium text-green-700">
-                                {opt.discountBadge}
-                              </p>
-                            ) : null}
-                          </>
-                        ) : (
-                          <span className="text-sm font-semibold text-neutral-900">TBC</span>
-                        )}
+                              {opt.discountBadge ? (
+                                <p className="mt-0.5 text-xs font-medium text-green-700">
+                                  {opt.discountBadge}
+                                </p>
+                              ) : null}
+                            </>
+                          ) : (
+                            <span className="text-sm font-semibold text-neutral-900">TBC</span>
+                          )}
+                        </div>
                       </div>
+                      {perUnit ? (
+                        <QuantityStepper
+                          value={qty}
+                          min={opt.minQuantity}
+                          max={opt.maxQuantity}
+                          onChange={(next) => setPackageQuantity(opt.id, next)}
+                          aria-label={`Quantity for ${opt.heading}`}
+                        />
+                      ) : null}
                     </li>
-                  ))}
+                    );
+                  })}
                 {estimate.autoLines.map((line) => (
                   <li
                     key={line.id}

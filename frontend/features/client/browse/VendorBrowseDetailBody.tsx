@@ -39,7 +39,10 @@ type VendorBrowseDetailBodyProps = {
   registerHref: string;
   onContinue: () => void;
   /** Logged-in clients: opens booking with selected package/rate ids. Omit for non-clients - only contact is shown. */
-  onRequestBooking?: (selectedOptionIds: string[]) => void;
+  onRequestBooking?: (
+    selectedOptionIds: string[],
+    quantities: Record<string, number>,
+  ) => void;
   /** Logged-in only: opens in-app chat with this vendor (no email). */
   onContactVendor?: () => void;
   /** Where to return after sign-in/register from this screen (defaults to browse index). */
@@ -102,12 +105,14 @@ export function VendorBrowseDetailBody({
   const [selectedPackageIds, setSelectedPackageIds] = useState<Set<string>>(
     () => new Set(),
   );
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [detailOpenId, setDetailOpenId] = useState<string | null>(null);
   const [bookingSelectError, setBookingSelectError] = useState(false);
 
   const selectedLineItems = useMemo(
-    () => buildBookingLineItems(pricingOptions, [...selectedPackageIds]),
-    [pricingOptions, selectedPackageIds],
+    () =>
+      buildBookingLineItems(pricingOptions, [...selectedPackageIds], quantities),
+    [pricingOptions, selectedPackageIds, quantities],
   );
   const selectedTotal = useMemo(
     () => formatBookingTotalGbp(selectedLineItems),
@@ -119,6 +124,20 @@ export function VendorBrowseDetailBody({
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
+      return next;
+    });
+    setBookingSelectError(false);
+  };
+
+  const setPackageQuantity = (id: string, qty: number) => {
+    const opt = pricingOptions.find((o) => o.id === id);
+    setQuantities((prev) => ({ ...prev, [id]: qty }));
+    setSelectedPackageIds((prev) => {
+      const next = new Set(prev);
+      if (opt?.pricingMode === "per_unit") {
+        if (qty >= opt.minQuantity) next.add(id);
+        else next.delete(id);
+      }
       return next;
     });
     setBookingSelectError(false);
@@ -168,6 +187,12 @@ export function VendorBrowseDetailBody({
               showCheckbox={showCheckbox}
               selected={selected}
               onToggleSelect={() => togglePackage(opt.id)}
+              quantity={quantities[opt.id] ?? 0}
+              onQuantityChange={
+                showCheckbox && opt.pricingMode === "per_unit"
+                  ? (qty) => setPackageQuantity(opt.id, qty)
+                  : undefined
+              }
               onToggleDetails={() => setDetailOpenId(isOpen ? null : opt.id)}
             />
           );
@@ -226,7 +251,7 @@ export function VendorBrowseDetailBody({
                   setBookingSelectError(true);
                   return;
                 }
-                onRequestBooking([...selectedPackageIds]);
+                onRequestBooking([...selectedPackageIds], quantities);
               }}
             >
               Request booking

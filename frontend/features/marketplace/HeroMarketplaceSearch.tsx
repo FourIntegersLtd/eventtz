@@ -252,7 +252,7 @@ export function HeroMarketplaceSearch({
                   : "absolute left-0 right-0 top-full z-[70] mt-1 box-border min-w-0 max-w-full rounded-xl border border-neutral-200 bg-white p-3 shadow-lg"
               }
             >
-              <div className="flex items-center justify-between gap-2">
+              <div className="mb-2 flex items-center justify-between gap-2">
                 <p className="text-xs font-medium text-neutral-500">Pick a date</p>
                 <button
                   type="button"

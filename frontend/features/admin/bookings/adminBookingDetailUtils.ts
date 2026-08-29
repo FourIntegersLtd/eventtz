@@ -41,6 +41,9 @@ export function mapAdminLineItems(items: unknown[]): BookingLineItemRow[] {
         ? row.feature_lines.map((x) => String(x))
         : undefined,
       timeline_line: row.timeline_line != null ? String(row.timeline_line) : null,
+      quantity: typeof row.quantity === "number" ? row.quantity : null,
+      unit_rate_gbp: typeof row.unit_rate_gbp === "number" ? row.unit_rate_gbp : null,
+      unit_label: row.unit_label != null ? String(row.unit_label) : null,
     };
   });
 }

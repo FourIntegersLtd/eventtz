@@ -16,6 +16,7 @@ export type VendorBookingSubmitFields = {
   venueAddress: string;
   notes: string;
   selectedOptionIds: string[];
+  quantities?: Record<string, number>;
 };
 
 type UseVendorBookingSubmitArgs = {
@@ -48,6 +49,7 @@ export function useVendorBookingSubmit({
         venueAddress: fields.venueAddress,
         notes: fields.notes,
         selectedOptionIds: fields.selectedOptionIds,
+        quantities: fields.quantities,
       });
       if (!parsed.ok) {
         setValidationError(parsed.formError);
@@ -70,6 +72,7 @@ export function useVendorBookingSubmit({
         event_address: (parsed.data.venueAddress ?? "").trim() || null,
         notes: (parsed.data.notes ?? "").trim() || null,
         selected_option_ids: parsed.data.selectedOptionIds,
+        quantities: parsed.data.quantities,
         client_search_context: clientSearchContext ?? undefined,
         event_id: selectedEventId,
       })

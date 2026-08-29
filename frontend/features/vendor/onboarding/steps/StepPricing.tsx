@@ -26,6 +26,14 @@ import { PackageExamplesModal } from "../ui/PackageExamplesModal";
 import { consumeCoachScrollTarget } from "../packageCoachApply";
 import { labelClass, ClearableTextField, ClearableTextarea } from "./form-primitives";
 import { singleGbpAmountFieldError } from "@/lib/validation/money";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import {
+  PACKAGE_PRICING_MODE_FIXED,
+  PACKAGE_PRICING_MODE_PER_UNIT,
+  isPerUnitPricing,
+  perUnitPriceSuffix,
+  type PackagePricingMode,
+} from "@/lib/packagePricing";
 
 export type StepPricingProps = {
   data: VendorOnboardingData;
@@ -183,7 +191,12 @@ export function StepPricing({ data, update, usePostLaunchOptimizer = false }: St
               : hasPartial && !pkg.title.trim()
                 ? null
                 : `Package ${index + 1}`;
-            const pricePart = pkg.price.trim() ? `£${pkg.price.trim()}` : null;
+            const perUnit = isPerUnitPricing(pkg.pricingMode);
+            const pricePart = pkg.price.trim()
+              ? perUnit
+                ? `£${pkg.price.trim()} ${perUnitPriceSuffix(pkg.unitLabel)}`
+                : `£${pkg.price.trim()}`
+              : null;
             const durationPart = pkg.duration.trim() ? pkg.duration.trim() : "";
             const missingDetails =
               hasPartial && pkg.price.trim() && pkg.details.trim().length < MIN_PACKAGE_DESCRIPTION_CHARS;
@@ -260,35 +273,135 @@ export function StepPricing({ data, update, usePostLaunchOptimizer = false }: St
                         <p className="mt-1 text-xs text-amber-800">{errors.title}</p>
                       ) : null}
                     </div>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div>
-                        <label className={labelClass()}>Price (£) *</label>
-                        <ClearableTextField
-                          value={pkg.price}
-                          onChange={(v) =>
-                            update({
-                              packages: updatePackage(packages, pkg.id, { price: v }),
-                            })
-                          }
-                          placeholder="One fixed price, e.g. 150"
-                        />
-                        {errors.price ? (
-                          <p className="mt-1 text-xs text-amber-800">{errors.price}</p>
-                        ) : null}
-                      </div>
-                      <div>
-                        <label className={labelClass()}>Duration (optional)</label>
-                        <ClearableTextField
-                          value={pkg.duration}
-                          onChange={(v) =>
-                            update({
-                              packages: updatePackage(packages, pkg.id, { duration: v }),
-                            })
-                          }
-                          placeholder="e.g. 2 hr coverage"
-                        />
-                      </div>
+                    <div>
+                      <p className={`${labelClass()} mb-1.5`}>How is this priced? *</p>
+                      <SegmentedControl
+                        aria-label={`Pricing type for ${pkg.title.trim() || `package ${index + 1}`}`}
+                        stretch
+                        value={pkg.pricingMode ?? PACKAGE_PRICING_MODE_FIXED}
+                        onChange={(mode: PackagePricingMode) =>
+                          update({
+                            packages: updatePackage(packages, pkg.id, { pricingMode: mode }),
+                          })
+                        }
+                        options={[
+                          { value: PACKAGE_PRICING_MODE_FIXED, label: "Fixed price" },
+                          { value: PACKAGE_PRICING_MODE_PER_UNIT, label: "Price per item" },
+                        ]}
+                      />
                     </div>
+                    {perUnit ? (
+                      <>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div>
+                            <label className={labelClass()}>Price per item (£) *</label>
+                            <ClearableTextField
+                              value={pkg.price}
+                              onChange={(v) =>
+                                update({
+                                  packages: updatePackage(packages, pkg.id, { price: v }),
+                                })
+                              }
+                              placeholder="e.g. 2"
+                            />
+                            {errors.price ? (
+                              <p className="mt-1 text-xs text-amber-800">{errors.price}</p>
+                            ) : null}
+                          </div>
+                          <div>
+                            <label className={labelClass()}>Item name *</label>
+                            <ClearableTextField
+                              value={pkg.unitLabel}
+                              onChange={(v) =>
+                                update({
+                                  packages: updatePackage(packages, pkg.id, { unitLabel: v }),
+                                })
+                              }
+                              placeholder="e.g. chair, table, person"
+                            />
+                            {errors.unitLabel ? (
+                              <p className="mt-1 text-xs text-amber-800">{errors.unitLabel}</p>
+                            ) : null}
+                          </div>
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div>
+                            <label className={labelClass()}>Min quantity (optional)</label>
+                            <ClearableTextField
+                              inputMode="numeric"
+                              value={pkg.minQuantity}
+                              onChange={(v) =>
+                                update({
+                                  packages: updatePackage(packages, pkg.id, { minQuantity: v }),
+                                })
+                              }
+                              placeholder="e.g. 10"
+                            />
+                            {errors.minQuantity ? (
+                              <p className="mt-1 text-xs text-amber-800">{errors.minQuantity}</p>
+                            ) : null}
+                          </div>
+                          <div>
+                            <label className={labelClass()}>Max quantity (optional)</label>
+                            <ClearableTextField
+                              inputMode="numeric"
+                              value={pkg.maxQuantity}
+                              onChange={(v) =>
+                                update({
+                                  packages: updatePackage(packages, pkg.id, { maxQuantity: v }),
+                                })
+                              }
+                              placeholder="e.g. 200"
+                            />
+                            {errors.maxQuantity ? (
+                              <p className="mt-1 text-xs text-amber-800">{errors.maxQuantity}</p>
+                            ) : null}
+                          </div>
+                        </div>
+                        <div>
+                          <label className={labelClass()}>Hire period (optional)</label>
+                          <ClearableTextField
+                            value={pkg.duration}
+                            onChange={(v) =>
+                              update({
+                                packages: updatePackage(packages, pkg.id, { duration: v }),
+                              })
+                            }
+                            placeholder="e.g. 3-day hire"
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div>
+                          <label className={labelClass()}>Price (£) *</label>
+                          <ClearableTextField
+                            value={pkg.price}
+                            onChange={(v) =>
+                              update({
+                                packages: updatePackage(packages, pkg.id, { price: v }),
+                              })
+                            }
+                            placeholder="One fixed price, e.g. 150"
+                          />
+                          {errors.price ? (
+                            <p className="mt-1 text-xs text-amber-800">{errors.price}</p>
+                          ) : null}
+                        </div>
+                        <div>
+                          <label className={labelClass()}>Duration (optional)</label>
+                          <ClearableTextField
+                            value={pkg.duration}
+                            onChange={(v) =>
+                              update({
+                                packages: updatePackage(packages, pkg.id, { duration: v }),
+                              })
+                            }
+                            placeholder="e.g. 2 hr coverage"
+                          />
+                        </div>
+                      </div>
+                    )}
                     <div>
                       <label className={labelClass()}>What&apos;s included *</label>
                       <ClearableTextarea
