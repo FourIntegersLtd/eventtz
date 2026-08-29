@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 from app.core.sentry import bind_sentry_user, init_sentry, sentry_before_send, traces_sampler
+from app.features.auth import messages as auth_messages
 
 
 def test_health_transactions_are_not_sampled() -> None:
@@ -72,6 +73,54 @@ def test_sentry_before_send_drops_only_smoke_tests() -> None:
         },
     }
     assert sentry_before_send(real, None) is real
+
+
+def test_sentry_before_send_drops_auth_unavailable_http_exception() -> None:
+    event = {
+        "exception": {
+            "values": [
+                {
+                    "type": "HTTPException",
+                    "value": auth_messages.AUTH_SERVICE_UNAVAILABLE,
+                }
+            ],
+        },
+    }
+    assert sentry_before_send(event, None) is None
+
+
+def test_sentry_before_send_drops_sign_in_unavailable_http_exception() -> None:
+    event = {
+        "exception": {
+            "values": [
+                {
+                    "type": "HTTPException",
+                    "value": auth_messages.SIGN_IN_UNAVAILABLE,
+                }
+            ],
+        },
+    }
+    assert sentry_before_send(event, None) is None
+
+
+def test_sentry_before_send_keeps_other_http_exceptions() -> None:
+    not_found = {
+        "exception": {
+            "values": [{"type": "HTTPException", "value": "Vendor not found"}],
+        },
+    }
+    assert sentry_before_send(not_found, None) is not_found
+    timeout_as_other_type = {
+        "exception": {
+            "values": [
+                {
+                    "type": "ReadTimeout",
+                    "value": auth_messages.AUTH_SERVICE_UNAVAILABLE,
+                }
+            ],
+        },
+    }
+    assert sentry_before_send(timeout_as_other_type, None) is timeout_as_other_type
 
 
 def test_bind_sentry_user_sets_id_and_type_only() -> None:

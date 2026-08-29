@@ -12,6 +12,15 @@ from app.core.logging import get_logger
 logger = get_logger(__name__)
 
 _SAFE_TO_IGNORE = "safe to ignore"
+# Exact copy from ``features/auth/messages.py`` (core must not import features).
+# GoTrue timeouts already log a warning and return HTTP 503 without clearing cookies;
+# Starlette still reports those HTTPExceptions as errors.
+_EXPECTED_AUTH_UNAVAILABLE_HTTP = frozenset(
+    {
+        "Authentication is temporarily unavailable. Please try again.",
+        "We couldn't sign you in right now. Please try again.",
+    }
+)
 
 
 def traces_sampler(sampling_context: dict[str, Any]) -> float:
@@ -34,11 +43,12 @@ def traces_sampler(sampling_context: dict[str, Any]) -> float:
 
 
 def sentry_before_send(event: dict[str, Any], _hint: Any) -> dict[str, Any] | None:
-    """Drop intentional smoke-test noise; never hide real errors."""
+    """Drop intentional smoke-test noise and expected auth-unavailable 503s."""
     blobs: list[str] = []
     message = event.get("message")
     if isinstance(message, str):
         blobs.append(message)
+    http_exception_values: list[str] = []
     exception = event.get("exception")
     if isinstance(exception, dict):
         for item in exception.get("values") or []:
@@ -50,7 +60,11 @@ def sentry_before_send(event: dict[str, Any], _hint: Any) -> dict[str, Any] | No
             typ = item.get("type")
             if isinstance(typ, str):
                 blobs.append(typ)
+                if typ == "HTTPException" and isinstance(value, str):
+                    http_exception_values.append(value)
     if any(_SAFE_TO_IGNORE in blob.lower() for blob in blobs):
+        return None
+    if any(value in _EXPECTED_AUTH_UNAVAILABLE_HTTP for value in http_exception_values):
         return None
     return event
 
