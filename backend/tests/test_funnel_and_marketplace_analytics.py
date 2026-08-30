@@ -5,8 +5,14 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
+import httpx
+
 from app.features.admin.marketplace_analytics import get_marketplace_analytics
-from app.features.bookings.booking_funnel_timestamps import mark_vendor_first_response, response_time_seconds
+from app.features.bookings.booking_funnel_timestamps import (
+    mark_stale_enquiries_no_response,
+    mark_vendor_first_response,
+    response_time_seconds,
+)
 
 
 def test_response_time_seconds_non_negative():
@@ -66,6 +72,41 @@ def test_mark_vendor_first_response_sets_once(mock_get_client):
     patch_arg = mock_table.update.call_args[0][0]
     assert "vendor_first_response_at" in patch_arg
     assert patch_arg.get("vendor_response_time_seconds") == 600
+
+
+@patch("app.features.bookings.booking_funnel_timestamps.get_db")
+def test_mark_stale_enquiries_treats_read_timeout_as_unavailable(mock_get_client, caplog):
+    mock_table = MagicMock()
+    mock_get_client.return_value.table.return_value = mock_table
+    mock_table.select.return_value = mock_table
+    mock_table.eq.return_value = mock_table
+    mock_table.is_.return_value = mock_table
+    mock_table.lt.return_value = mock_table
+    mock_table.limit.return_value = mock_table
+    mock_table.execute.side_effect = httpx.ReadTimeout("The read operation timed out")
+
+    with caplog.at_level("WARNING"):
+        assert mark_stale_enquiries_no_response(sla_hours=72) == 0
+
+    assert "funnel: mark_stale_enquiries_no_response unavailable" in caplog.text
+    assert "funnel: mark_stale_enquiries_no_response failed" not in caplog.text
+
+
+@patch("app.features.bookings.booking_funnel_timestamps.get_db")
+def test_mark_stale_enquiries_still_logs_unexpected_errors(mock_get_client, caplog):
+    mock_table = MagicMock()
+    mock_get_client.return_value.table.return_value = mock_table
+    mock_table.select.return_value = mock_table
+    mock_table.eq.return_value = mock_table
+    mock_table.is_.return_value = mock_table
+    mock_table.lt.return_value = mock_table
+    mock_table.limit.return_value = mock_table
+    mock_table.execute.side_effect = RuntimeError("boom")
+
+    with caplog.at_level("ERROR"):
+        assert mark_stale_enquiries_no_response(sla_hours=72) == 0
+
+    assert "funnel: mark_stale_enquiries_no_response failed" in caplog.text
 
 
 @patch("app.features.admin.marketplace_analytics.get_db")
