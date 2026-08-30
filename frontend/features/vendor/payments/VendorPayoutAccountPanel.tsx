@@ -9,6 +9,7 @@ import {
   VendorPayoutSteps,
 } from "@/features/vendor/payments/VendorPayoutCard";
 import type { VendorPaymentsStatus } from "@/lib/vendorPaymentsApi";
+import { isVendorPayoutsReady } from "@/features/vendor/payments/useVendorPayoutsReady";
 
 type VendorPayoutAccountPanelProps = {
   status: VendorPaymentsStatus | null;
@@ -26,7 +27,7 @@ export function VendorPayoutAccountPanel({
   onConnect,
 }: VendorPayoutAccountPanelProps) {
   const started = Boolean(status?.stripe_account_id);
-  const payoutsReady = Boolean(status?.charges_enabled && status?.payouts_enabled);
+  const payoutsReady = isVendorPayoutsReady(status);
 
   const primaryLabel = connecting
     ? "Opening Stripe…"

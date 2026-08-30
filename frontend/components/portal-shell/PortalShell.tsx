@@ -86,7 +86,7 @@ function ShellNavLinks({
           vendorBookingsPending > 0;
         const showChatBadge =
           Boolean(user) &&
-          item.href === (portal === "client" ? "/client/messages" : "/vendor/messages") &&
+          item.href === (portal === "client" ? "/client/help" : "/vendor/help") &&
           chatUnread != null &&
           chatUnread > 0;
         const badgeCount = showBookingBadge
@@ -309,10 +309,10 @@ export function PortalShell({
       unreadCount={bellUnreadCount}
       onMarkedRead={refreshUnreadCounts}
       viewAllHref={
-        portal === "vendor" && vendorPreApproval ? "/vendor/messages" : undefined
+        portal === "vendor" && vendorPreApproval ? "/vendor/help" : undefined
       }
       viewAllLabel={
-        portal === "vendor" && vendorPreApproval ? "Open Messages" : undefined
+        portal === "vendor" && vendorPreApproval ? "Open Help" : undefined
       }
     />
   ) : null;
@@ -362,7 +362,7 @@ export function PortalShell({
 
       {/* Mobile drawer */}
       {mobileNavOpen ? (
-        <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-modal="true" aria-label="Menu">
+        <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Menu">
           <button
             type="button"
             className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
@@ -447,7 +447,7 @@ export function PortalShell({
         </main>
       </div>
 
-      <HelpWidget audience={portal} />
+      <HelpWidget audience={portal} hidden={mobileNavOpen} />
       {portal === "vendor" ? <VendorCopilotWidget /> : null}
     </div>
   );

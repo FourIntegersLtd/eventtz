@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { useRouter } from "next/navigation";
 import { getApiErrorDetail, saveVendorProfile } from "@/lib/vendorProfileApi";
-import { isHttpStatus } from "@/lib/api-errors";
+import { isHttpStatus, mediaUploadErrorMessage } from "@/lib/api-errors";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { vendorIsLiveApproved } from "@/lib/vendorAccess";
 import type { useToast } from "@/components/ui/Toast";
@@ -26,7 +26,6 @@ type PersistenceSlice = Pick<
   | "approvalStatus"
   | "lockedPendingReview"
   | "canAddPortfolioWhilePending"
-  | "returnedForEdits"
   | "formError"
   | "setFormError"
   | "applyVendorProfileResponse"
@@ -73,7 +72,6 @@ export function useOnboardingSteps({
     approvalStatus,
     lockedPendingReview,
     canAddPortfolioWhilePending,
-    returnedForEdits,
     setFormError,
     applyVendorProfileResponse,
     persistAdditionalInfoFiles,
@@ -83,24 +81,20 @@ export function useOnboardingSteps({
 
   useEffect(() => {
     if (loadStatus !== "ready") return;
-    // Draft vendors never stay on the submitted screen (admin unsubmit or stale step 9).
-    if (
-      !isWalkthrough &&
-      step === 9 &&
-      (returnedForEdits || profileStatus === "draft")
-    ) {
-      setStep(8);
-      setReturnToReview(false);
-      return;
-    }
+    // Pending review owns step 9. Check this first so a leftover returned-for-edits
+    // flag cannot bounce the wizard 8 ↔ 9 after submit.
     if (lockedPendingReview && step !== 9 && !(step === 6 && canAddPortfolioWhilePending)) {
       setStep(9);
+      return;
+    }
+    if (!isWalkthrough && step === 9 && profileStatus === "draft") {
+      setStep(8);
+      setReturnToReview(false);
     }
   }, [
     loadStatus,
     lockedPendingReview,
     canAddPortfolioWhilePending,
-    returnedForEdits,
     step,
     setStep,
     profileStatus,
@@ -186,13 +180,22 @@ export function useOnboardingSteps({
           dataToSave = await preparePortfolioFilesForSave(workingData);
           setData(dataToSave);
         } catch (e) {
-          setFormError(e instanceof Error ? e.message : "Could not upload portfolio images.");
+          setFormError(
+            e instanceof Error && e.message === "Please sign in again, then retry your upload."
+              ? e.message
+              : mediaUploadErrorMessage(e, "photo"),
+          );
           return;
         }
       }
       if (step === 7) {
-        dataToSave = await persistAdditionalInfoFiles(dataToSave);
-        setData(dataToSave);
+        try {
+          dataToSave = await persistAdditionalInfoFiles(dataToSave);
+          setData(dataToSave);
+        } catch (e) {
+          setFormError(mediaUploadErrorMessage(e, "document"));
+          return;
+        }
       }
       const res = await saveVendorProfile({
         current_step: walkthroughFinish ? 8 : nextStep,

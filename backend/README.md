@@ -28,11 +28,15 @@ Copy **`.env.example`** to **`.env`** and set values. Important keys:
 | `CORS_ALLOWED_ORIGINS` | Comma-separated frontend origins (e.g. `http://localhost:3000`) |
 | `SUPABASE_URL` | Project URL |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service role JWT (backend only; never expose to the browser) |
+| `AWS_ACCESS_KEY` / `AWS_SECRET_ACCESS_KEY` | S3 uploads (same names as OSCE Guide). Bucket `AWS_S3_BUCKET_NAME` (default `eventtz`), `AWS_REGION` (default `eu-west-2`) |
 | `FRONTEND_URL` | Base URL used to build Stripe Connect `return_url`/`refresh_url` and Checkout `success_url`/`cancel_url` (e.g. `http://localhost:3000`) |
 | `STRIPE_SECRET_KEY` | Stripe secret key (`sk_test_...` locally) |
 | `STRIPE_WEBHOOK_SECRET` | Signing secret for `POST /api/v1/webhooks/stripe` (`whsec_...`) |
 | `LOG_LEVEL` | `DEBUG`, `INFO`, … |
 | `IS_PRODUCTION` | `true` = compact logs; `false` = detailed logs + `backend/logs/eventtz.log` |
+| `SENTRY_DSN` | Optional. Empty = Sentry stays off. Production: FastAPI project DSN in Railway. |
+| `CURSOR_AUTOMATION_WEBHOOK_URL` | Optional. Cursor Automations webhook URL; empty = no-op. Fired for bug-related contact subjects (`feedback_bug`, `booking_problem`, `payments`). |
+| `CURSOR_AUTOMATION_WEBHOOK_SECRET` | Optional Bearer token for the Cursor webhook (from automation settings after save). |
 
 See **`.env.example`** for optional log file tuning (`LOG_DIR`, `LOG_MAX_BYTES`, …).
 
@@ -76,6 +80,25 @@ Also set `user_metadata.user_type` to `"admin"` for that user in the Auth dashbo
 ## Role resolution
 
 Guards in `app/api/authz.py` / `deps.py` resolve role from `public.users`, then JWT `user_metadata`, with safe fallbacks. Use these dependencies on protected routes instead of ad-hoc checks.
+
+## CI
+
+GitHub Actions runs on every pull request and on pushes to `main` (`.github/workflows/ci.yml`):
+
+| Job | Command |
+|-----|---------|
+| `frontend` | `npx tsc --noEmit`, `npm test` (Vitest) |
+| `backend` | `poetry run pytest -q` |
+| `ci-gate` | Fails if either job fails — use this as the **required** branch-protection check |
+
+No `.env` is needed in CI. Tests mock Supabase/Stripe; `SENTRY_DSN` is cleared so Sentry stays off.
+
+Run the same checks locally:
+
+```bash
+cd frontend && npm ci && npx tsc --noEmit && npm test
+cd backend && poetry install --extras dev && poetry run pytest -q
+```
 
 ## Payments (Stripe Connect)
 
@@ -201,6 +224,20 @@ railway domain          # generate *.up.railway.app URL
 - Health: `GET https://<domain>/health` → `{"status":"ok"}`
 - API: `https://<domain>/api/v1/...`
 - Stripe webhooks: `https://<domain>/api/v1/webhooks/stripe`
+
+### 6. UptimeRobot (email if the API is down)
+
+Railway’s `/health` check only **restarts** the process. It does not email you. Add a free [UptimeRobot](https://uptimerobot.com) HTTP(s) monitor so you get mail when the public API is gone.
+
+1. Sign in → **Add New Monitor**.
+2. **Monitor Type:** HTTP(s).
+3. **URL:** `https://<your-railway-domain>/health` (the FastAPI origin from `railway domain`, not the Next.js site).
+4. **Interval:** 5 minutes.
+5. **HTTP method:** HEAD is fine (`/health` accepts GET and HEAD, same as OSCE Guide Flask).
+6. **Alert:** email `hello@eventtz.com` (and your inbox if you want).
+7. Optional: keyword monitor, keyword `ok` (GET body is `{"status":"ok"}`).
+
+Keep `/health` shallow (no database ping). Railway uses the same path; a slow DB check would also restart the web process.
 
 ### Redeploy after code changes
 

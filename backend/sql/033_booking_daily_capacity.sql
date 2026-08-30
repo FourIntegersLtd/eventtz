@@ -38,7 +38,7 @@ AS $$
 DECLARE
   cap integer;
   payload jsonb;
-  day cursor_date date;
+  day date;
   day_end date;
   booking_count integer;
 BEGIN

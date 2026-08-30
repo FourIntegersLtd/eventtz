@@ -25,7 +25,7 @@ function httpUrl(raw: unknown): string | null {
   return isHttpUrl(url) ? url : null;
 }
 
-/** Public Supabase (or other) URLs saved under onboarding `portfolioFileNames`. */
+/** Public S3 URLs saved under onboarding `portfolioFileNames`. */
 export function portfolioImageUrlsFromPayload(
   payload: Record<string, unknown>,
 ): string[] {

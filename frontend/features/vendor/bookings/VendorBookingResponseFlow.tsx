@@ -10,7 +10,7 @@ import {
   draftsFromDetail,
   friendlyMoneyLabel,
   hasSavedPriceUpdate,
-  type AdjDraftRow,
+  type AdjustmentDraftRow,
 } from "@/features/vendor/bookings/vendorBookingResponseHelpers";
 import { fetchConversation } from "@/lib/chatApi";
 import type { VendorBookingDetail } from "@/lib/vendorBookingsApi";
@@ -20,10 +20,10 @@ type PendingDecision = "accept" | "decline";
 type VendorBookingResponseFlowProps = {
   detail: VendorBookingDetail;
   actionBusy: boolean;
-  adjSaving: boolean;
+  adjustmentSaving: boolean;
   onAcceptAtListedPrice: () => void;
   onDecline: () => void;
-  onSendUpdatedPrice: (rows: AdjDraftRow[]) => void;
+  onSendUpdatedPrice: (rows: AdjustmentDraftRow[]) => void;
   /** Opens the booking chat drawer so the vendor can read unread client messages. */
   onOpenChat: () => void;
   /** Prefill chat composer with an AI-drafted message. */
@@ -33,7 +33,7 @@ type VendorBookingResponseFlowProps = {
 export function VendorBookingResponseFlow({
   detail,
   actionBusy,
-  adjSaving,
+  adjustmentSaving,
   onAcceptAtListedPrice,
   onDecline,
   onSendUpdatedPrice,
@@ -48,20 +48,20 @@ export function VendorBookingResponseFlow({
 
   const waitingForClient = hasSavedPriceUpdate(detail);
   const [step, setStep] = useState<"review" | "adjust">("review");
-  const [adjustInitialLines, setAdjustInitialLines] = useState<AdjDraftRow[]>([]);
+  const [adjustInitialLines, setAdjustInitialLines] = useState<AdjustmentDraftRow[]>([]);
   const [adjustKey, setAdjustKey] = useState(0);
   const [pendingDecision, setPendingDecision] = useState<PendingDecision | null>(null);
   const [unreadGateOpen, setUnreadGateOpen] = useState(false);
   const [checkingDecision, setCheckingDecision] = useState<PendingDecision | null>(null);
 
-  const openAdjust = (saved: AdjDraftRow[]) => {
+  const openAdjust = (saved: AdjustmentDraftRow[]) => {
     setAdjustInitialLines(saved);
     setAdjustKey((k) => k + 1);
     setStep("adjust");
   };
 
   const requestDecision = async (kind: PendingDecision) => {
-    if (actionBusy || adjSaving || checkingDecision) return;
+    if (actionBusy || adjustmentSaving || checkingDecision) return;
     setCheckingDecision(kind);
     try {
       const conversationId = detail.conversation_id?.trim();
@@ -115,7 +115,7 @@ export function VendorBookingResponseFlow({
         pricing={detail.pricing}
         initialLines={adjustInitialLines}
         actionBusy={actionBusy}
-        adjSaving={adjSaving}
+        adjustmentSaving={adjustmentSaving}
         onBack={() => setStep("review")}
         onSendUpdatedPrice={onSendUpdatedPrice}
       />
@@ -144,7 +144,7 @@ export function VendorBookingResponseFlow({
           <Button
             variant="primary"
             className="w-full sm:w-auto"
-            disabled={actionBusy || adjSaving || !!checkingDecision}
+            disabled={actionBusy || adjustmentSaving || !!checkingDecision}
             loading={checkingDecision === "accept"}
             onClick={() => void requestDecision("accept")}
           >
@@ -153,7 +153,7 @@ export function VendorBookingResponseFlow({
           <Button
             variant="secondary"
             className="w-full sm:w-auto"
-            disabled={actionBusy || adjSaving || !!checkingDecision}
+            disabled={actionBusy || adjustmentSaving || !!checkingDecision}
             onClick={() => openAdjust([])}
           >
             Suggest a different price
@@ -162,7 +162,7 @@ export function VendorBookingResponseFlow({
         <div className="flex justify-end">
           <button
             type="button"
-            disabled={actionBusy || adjSaving || !!checkingDecision}
+            disabled={actionBusy || adjustmentSaving || !!checkingDecision}
             onClick={() => void requestDecision("decline")}
             className="text-sm font-medium text-red-700 hover:underline disabled:opacity-60"
           >

@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.features.email.constants import ADMIN_NOTIFY_RECIPIENTS, EMAIL_FROM
+from app.features.email.constants import ADMIN_NOTIFY_RECIPIENTS, EMAIL_FROM, EMAIL_IMAGE_BASE, EMAIL_IMAGES
 from app.features.email.delivery_log import claim_booking_email_send, should_dedupe_booking_kind
 from app.features.email.dispatch import (
     dispatch_booking_notification,
@@ -16,6 +16,13 @@ from app.features.email.service import EmailService
 def test_constants_hardcoded_admin_recipients():
     assert "hello@eventtz.com" in ADMIN_NOTIFY_RECIPIENTS
     assert EMAIL_FROM == "Eventtz <hello@eventtz.com>"
+
+
+def test_email_images_use_eventtz_s3_bucket():
+    assert EMAIL_IMAGE_BASE == "https://eventtz.s3.eu-west-2.amazonaws.com/email"
+    assert EMAIL_IMAGES["logo"] == f"{EMAIL_IMAGE_BASE}/eventtz-logo.png"
+    assert EMAIL_IMAGES["welcome_clients"] == f"{EMAIL_IMAGE_BASE}/welcome-clients.png"
+    assert EMAIL_IMAGES["welcome_vendors"] == f"{EMAIL_IMAGE_BASE}/welcome-vendors.png"
 
 
 def test_payment_received_client_body_mentions_dispute_window() -> None:
@@ -165,6 +172,53 @@ def test_welcome_template_renders_client_showcase(mock_svc_settings):
     assert "eventtz.com" in html
     assert "localhost" not in html
     assert "#3e1964" in html
+    assert 'background-color: #ffffff' in html
+
+
+def test_admin_alert_template_renders_ops_chrome():
+    from app.features.email.render import render_template
+    from app.features.email.branding import transactional_email_context
+
+    ctx = transactional_email_context(
+        subject="[Eventtz contact] Help",
+        headline="New contact message",
+        intro="Someone submitted the contact form.",
+        fields=[("From", "user@example.com"), ("Subject", "Help")],
+        body="Need assistance with my booking.",
+        chip_label="CONTACT",
+        chip_tone="gray",
+        action_url="https://www.eventtz.com/login?next=/admin/dashboard",
+        action_label="Sign in to admin",
+    )
+    html = render_template("admin/alert.html", ctx)
+    assert "CONTACT" in html
+    assert html.count("Sign in to admin") == 1
+    assert 'align="center"' in html
+    assert "Eventtz ops" not in html
+    assert "Internal notification" in html
+    assert "you have an Eventtz account" not in html
+    assert 'background-color: #ffffff' in html
+    assert "Need assistance with my booking." in html
+
+
+def test_transactional_notification_uses_full_width_white_layout():
+    from app.features.email.render import render_template
+    from app.features.email.branding import transactional_email_context
+
+    ctx = transactional_email_context(
+        subject="Booking accepted",
+        headline="Your booking was accepted",
+        body="The vendor confirmed your date.",
+        action_url="https://eventtz.com/client/bookings/1",
+        action_label="View booking",
+    )
+    html = render_template("booking/notification.html", ctx)
+    assert 'background-color: #ffffff' in html
+    assert "Your booking was accepted" in html
+    assert "View booking" in html
+    assert 'width="160"' in html
+    assert "bottom_spacer" not in html
+    assert "&nbsp;" in html
 
 
 @patch("app.features.email.service.resend_send", return_value=True)

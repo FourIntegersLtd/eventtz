@@ -1,5 +1,5 @@
 /** When true, clients can browse vendors but cannot send booking requests yet. */
-export const BOOKINGS_LAUNCHING_SOON = true;
+export const BOOKINGS_LAUNCHING_SOON = false;
 
 /**
  * Emails that can send booking requests before general launch (internal testing,

@@ -16,7 +16,7 @@ from app.core.config import get_settings
 from app.core.db import get_db
 from app.core.logging import get_logger
 from app.features.auth.user_vendor_display_lookup import client_display_names_by_id
-from app.features.bookings.pricing import build_pricing_breakdown, format_gbp
+from app.features.bookings.pricing import build_pricing_breakdown, format_gbp, resolve_booking_service_fee_percent
 
 logger = get_logger(__name__)
 
@@ -44,6 +44,7 @@ def vendor_amount_for_row(row: dict[str, Any]) -> float:
     pb = build_pricing_breakdown(
         line_items=line_items if isinstance(line_items, list) else [],
         vendor_adjustments=row.get("vendor_adjustments"),
+        service_fee_percent=resolve_booking_service_fee_percent(row),
     )
     return float(pb["vendor_portion_gbp"])
 

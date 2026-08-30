@@ -8,6 +8,7 @@ import type {
   VendorSocialLink,
 } from "./types";
 import { createVendorPackage, createVendorSocialLink, initialVendorOnboardingData } from "./types";
+import { parsePackagePricingMode } from "@/lib/packagePricing";
 
 /** JSONB may arrive as object or (rarely) string; numbers may appear instead of string fields. */
 export function normalizeVendorPayload(
@@ -159,6 +160,10 @@ export function vendorDataToPayload(
       price: p.price,
       duration: p.duration,
       useDefaultTravelPackage: p.useDefaultTravelPackage,
+      pricingMode: p.pricingMode,
+      unitLabel: p.unitLabel,
+      minQuantity: p.minQuantity,
+      maxQuantity: p.maxQuantity,
     })),
     allowQuoteRequests: data.allowQuoteRequests,
     offerDiscounts: data.offerDiscounts,
@@ -231,6 +236,10 @@ export function mergePayloadIntoVendorData(
           typeof o.useDefaultTravelPackage === "boolean"
             ? o.useDefaultTravelPackage
             : true,
+        pricingMode: parsePackagePricingMode(o.pricingMode),
+        unitLabel: coerceStr(o, "unitLabel"),
+        minQuantity: coerceStr(o, "minQuantity"),
+        maxQuantity: coerceStr(o, "maxQuantity"),
       };
     });
   }

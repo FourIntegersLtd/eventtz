@@ -155,7 +155,7 @@ export function VendorCopilotThread({
                 ) : null}
                 {item.escalate ? (
                   <Link
-                    href="/vendor/contact"
+                    href="/vendor/help?tab=contact"
                     className="inline-block text-xs font-semibold text-primary hover:underline"
                   >
                     Contact Eventtz support →

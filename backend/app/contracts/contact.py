@@ -13,6 +13,10 @@ ContactSubject = Literal[
     "payments",
     "account",
     "other",
+    "feedback_bug",
+    "feedback_feature",
+    "feedback_general",
+    "feedback_other",
 ]
 
 CONTACT_SUBJECT_LABELS: dict[str, str] = {
@@ -21,13 +25,28 @@ CONTACT_SUBJECT_LABELS: dict[str, str] = {
     "payments": "Payments",
     "account": "Account",
     "other": "Other",
+    "feedback_bug": "Bug report",
+    "feedback_feature": "Feature idea",
+    "feedback_general": "General feedback",
+    "feedback_other": "Other feedback",
 }
+
+#: Admin Report a bug always uses this key (no LLM). Also in CURSOR_AUTOMATION_SUBJECTS.
+ADMIN_BUG_REPORT_SUBJECT: ContactSubject = "feedback_bug"
+
+#: Contact subjects that POST the Cursor automation webhook. Admin email still goes out for all.
+CURSOR_AUTOMATION_SUBJECTS: frozenset[str] = frozenset(
+    {"feedback_bug", "booking_problem", "payments"}
+)
 
 
 class ContactSubmitBody(BaseModel):
-    subject: ContactSubject
     message: str = Field(min_length=10, max_length=5000)
     booking_id: str | None = None
+
+
+class AdminBugReportBody(BaseModel):
+    message: str = Field(min_length=10, max_length=5000)
 
 
 class ContactSubmitResponse(BaseModel):

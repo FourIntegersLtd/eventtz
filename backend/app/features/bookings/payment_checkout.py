@@ -70,6 +70,7 @@ def create_checkout_session_for_booking(client_user_id: str, booking_id: str) ->
     client_total = float(pb["client_total_gbp"])
     vendor_amount = float(pb["vendor_portion_gbp"])
     service_fee = float(pb["service_fee_gbp"])
+    referral_discount = float(pb.get("referral_fee_discount_gbp") or 0)
     if client_total <= 0:
         raise ValueError(booking_messages.NOTHING_TO_PAY)
 
@@ -84,6 +85,7 @@ def create_checkout_session_for_booking(client_user_id: str, booking_id: str) ->
         client_total_gbp=client_total,
         vendor_amount_gbp=vendor_amount,
         service_fee_gbp=service_fee,
+        referral_fee_discount_gbp=referral_discount,
         vendor_user_id=vendor_id,
         client_user_id=client_user_id,
         description=str(row.get("event_name") or "Eventtz booking"),

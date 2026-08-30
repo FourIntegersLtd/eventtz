@@ -7,7 +7,7 @@
  * Comments describe the **actual** artwork (verify when replacing files).
  */
 export const LOTTIE_ASSETS = {
-  /** Rocket + fireworks - launching soon / waitlist only. */
+  /** Rocket + fireworks — completion moments (request sent, profile live, onboarding finish). */
   launchingSoon: "/animations/launching-soon.json",
   /** Payment-style check burst - success confirms, paid, request sent. */
   successCheck: "/animations/success-check.json",

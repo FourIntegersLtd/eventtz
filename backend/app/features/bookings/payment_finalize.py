@@ -73,6 +73,58 @@ def _payment_fields_from_checkout_session(session: dict[str, Any]) -> tuple[str 
     return payment_intent_id, charge_id
 
 
+def _payment_intent_id_from_checkout_session(session: dict[str, Any]) -> str | None:
+    """Return the PaymentIntent id from a Checkout Session payload."""
+    pi_raw = session.get("payment_intent")
+    if isinstance(pi_raw, str) and pi_raw.startswith("pi_"):
+        return pi_raw
+    if isinstance(pi_raw, dict):
+        pid = pi_raw.get("id")
+        if isinstance(pid, str) and pid.startswith("pi_"):
+            return pid
+    return None
+
+
+def refund_checkout_payment(
+    session: dict[str, Any],
+    booking_id: str,
+    *,
+    idempotency_suffix: str,
+) -> bool:
+    """Refund a captured Checkout payment when the booking cannot be marked paid."""
+    payment_intent_id = _payment_intent_id_from_checkout_session(session)
+    if not payment_intent_id:
+        logger.error(
+            "cannot refund checkout booking=%s: session has no payment_intent",
+            booking_id,
+        )
+        return False
+    try:
+        stripe_service.create_refund(
+            payment_intent_id=payment_intent_id,
+            booking_id=booking_id,
+            idempotency_suffix=idempotency_suffix,
+        )
+    except Exception:
+        logger.exception(
+            "refund failed for checkout booking=%s payment_intent=%s suffix=%s",
+            booking_id,
+            payment_intent_id,
+            idempotency_suffix,
+        )
+        return False
+    get_db().table("booking_requests").update(
+        {"payment_status": "refunded"},
+    ).eq("id", booking_id).in_("payment_status", ["pending", "unpaid", "paid"]).execute()
+    logger.info(
+        "refunded checkout booking=%s payment_intent=%s suffix=%s",
+        booking_id,
+        payment_intent_id,
+        idempotency_suffix,
+    )
+    return True
+
+
 def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> bool:
     """Mark booking paid from a completed Checkout Session. Returns True if newly paid."""
     metadata = session.get("metadata") or {}
@@ -100,20 +152,22 @@ def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> 
     booking_row = existing_rows[0]
     if str(booking_row.get("status") or "") != "accepted":
         logger.warning(
-            "checkout session rejected: booking %s status=%s",
+            "checkout session rejected: booking %s status=%s — refunding if payment succeeded",
             booking_id,
             booking_row.get("status"),
         )
+        _refund_checkout_if_booking_no_longer_accepted(session, booking_id)
         return False
 
     stored_session = str(booking_row.get("stripe_checkout_session_id") or "").strip()
     if stored_session and session_id and stored_session != session_id:
         logger.warning(
-            "checkout session rejected as stale booking=%s session=%s current=%s",
+            "checkout session rejected as stale booking=%s session=%s current=%s — refunding if paid",
             booking_id,
             session_id,
             stored_session,
         )
+        refund_checkout_payment(session, booking_id, idempotency_suffix="stale-checkout-session")
         return False
 
     amount_total = session.get("amount_total")
@@ -147,6 +201,7 @@ def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> 
         return False
 
     payment_intent_id, charge_id = _payment_fields_from_checkout_session(session)
+    stripe_receipt_url = stripe_service.charge_receipt_url(charge_id)
 
     payment_amount_gbp = float(amount_total) / 100.0
     try:
@@ -166,9 +221,13 @@ def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> 
                 "paid_at": _now_iso(),
                 "stripe_payment_intent_id": payment_intent_id,
                 "stripe_charge_id": charge_id,
+                "stripe_receipt_url": stripe_receipt_url,
                 "payment_amount_gbp": payment_amount_gbp,
                 "vendor_amount_gbp": vendor_amount_gbp,
                 "platform_fee_gbp": platform_fee_gbp,
+                "referral_fee_discount_gbp": float(metadata["referral_fee_discount_gbp"])
+                if metadata.get("referral_fee_discount_gbp")
+                else None,
             },
         )
         .eq("id", booking_id)
@@ -178,10 +237,40 @@ def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> 
     )
     updated = getattr(upd, "data", None) or []
     if not updated:
-        logger.info(
-            "checkout session: booking %s not eligible for payment (status/payment); skipping",
-            booking_id,
+        reload_res = (
+            db.table("booking_requests")
+            .select("status,payment_status")
+            .eq("id", booking_id)
+            .limit(1)
+            .execute()
         )
+        reload_rows = getattr(reload_res, "data", None) or []
+        reloaded = reload_rows[0] if reload_rows and isinstance(reload_rows[0], dict) else {}
+        status = str(reloaded.get("status") or "")
+        payment_status = str(reloaded.get("payment_status") or "")
+        if payment_status in ("paid", "payout_released"):
+            logger.info(
+                "checkout session duplicate for already-paid booking=%s payment=%s",
+                booking_id,
+                payment_status,
+            )
+        elif status != "accepted" or payment_status not in ("pending", "unpaid"):
+            logger.warning(
+                "checkout session: booking %s no longer payable status=%s payment=%s — refunding",
+                booking_id,
+                status,
+                payment_status,
+            )
+            refund_checkout_payment(
+                session,
+                booking_id,
+                idempotency_suffix="checkout-not-eligible",
+            )
+        else:
+            logger.info(
+                "checkout session: booking %s not eligible for payment (status/payment); skipping",
+                booking_id,
+            )
         return False
     row = updated[0] if isinstance(updated[0], dict) else {}
     client_id = str(row.get("client_user_id") or "")
@@ -192,6 +281,7 @@ def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> 
             booking_id=booking_id,
             kind="payment_received",
             body=PAYMENT_RECEIVED_CLIENT_BODY,
+            send_email=False,
         )
     if vendor_id:
         dispatch_booking_notification(
@@ -199,7 +289,19 @@ def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> 
             booking_id=booking_id,
             kind="vendor_payment_received",
             body=VENDOR_PAYMENT_RECEIVED_BODY,
+            send_email=False,
         )
+    from app.features.bookings.receipts import (
+        dispatch_payment_receipts_after_checkout,
+        persist_payment_receipt_snapshots,
+    )
+
+    persist_payment_receipt_snapshots(booking_id)
+    dispatch_payment_receipts_after_checkout(
+        booking_id,
+        client_id=client_id,
+        vendor_id=vendor_id,
+    )
     _notify_pair(client_id, vendor_id)
     try:
         from app.features.analytics.events import record_marketplace_event
@@ -214,6 +316,15 @@ def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> 
     except Exception:
         pass
     return True
+
+
+def _refund_checkout_if_booking_no_longer_accepted(session: dict[str, Any], booking_id: str) -> None:
+    """Client paid Checkout after the booking left accepted — refund instead of keeping the funds."""
+    refund_checkout_payment(
+        session,
+        booking_id,
+        idempotency_suffix="stale-checkout-not-accepted",
+    )
 
 
 def handle_checkout_session_completed(event_id: str, session: dict[str, Any]) -> None:

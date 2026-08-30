@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { ChevronDown, Menu, X } from "lucide-react";
@@ -15,6 +16,7 @@ import {
   REGISTER_LINK,
   MOBILE_NAV_SECTION_LINKS,
   NAV_DROPDOWN_LINK_CLASS,
+  resolveLandingSectionPrefix,
   SIGN_IN_LINK,
 } from "@/features/landing/landingData";
 import { useLandingNavScroll } from "@/features/landing/useLandingNavScroll";
@@ -28,7 +30,7 @@ type NavLinkItemProps = {
 };
 
 function NavLinkItem({ href, className, children, onClick }: NavLinkItemProps) {
-  if (href.startsWith("#") || href.startsWith("mailto:")) {
+  if (href.startsWith("#") || href.startsWith("/#") || href.startsWith("mailto:")) {
     return (
       <a href={href} className={className} onClick={onClick}>
         {children}
@@ -68,7 +70,7 @@ function NavDropdown({ label, align = "right", items, darkNav = false }: NavDrop
         />
       </button>
       <div
-        className={`pointer-events-none absolute top-full z-[80] w-52 pt-1 opacity-0 transition group-hover:pointer-events-auto group-hover:opacity-100 ${panelAlign}`}
+        className={`pointer-events-none absolute top-full z-[80] w-52 pt-2 opacity-0 transition group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100 ${panelAlign}`}
       >
         <div className="rounded-xl border border-neutral-200 bg-white p-2 shadow-lg shadow-neutral-200/60">
           {items.map((item) => (
@@ -101,11 +103,13 @@ export function LandingNav({
   variant = "hero",
   sectionLinkPrefix = "",
 }: LandingNavProps) {
+  const pathname = usePathname();
   const scrollSolid = useLandingNavScroll();
   const { user } = useAuth();
   const navSolid = variant === "solid" || scrollSolid;
   const [mobileOpen, setMobileOpen] = useState(false);
   const darkNav = variant === "hero" && !navSolid;
+  const resolvedSectionPrefix = resolveLandingSectionPrefix(pathname, sectionLinkPrefix);
   const dashboardHref =
     user?.user_type === "client"
       ? "/client/dashboard"
@@ -115,12 +119,12 @@ export function LandingNav({
 
   const exploreLinks = EXPLORE_NAV_LINKS.map((item) => ({
     ...item,
-    href: withSectionPrefix(item.href, sectionLinkPrefix),
+    href: withSectionPrefix(item.href, resolvedSectionPrefix),
   }));
 
   const mobileSectionLinks = MOBILE_NAV_SECTION_LINKS.map((item) => ({
     ...item,
-    href: withSectionPrefix(item.href, sectionLinkPrefix),
+    href: withSectionPrefix(item.href, resolvedSectionPrefix),
   }));
 
   useEffect(() => {

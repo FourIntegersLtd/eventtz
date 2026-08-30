@@ -14,6 +14,12 @@ class BookingLineItemIn(BaseModel):
     id: str
     heading: str = Field(min_length=1, max_length=200)
     unit_price_gbp: float | None = None
+    #: Per-unit packages: client-chosen count. Omitted for fixed packages.
+    quantity: int | None = Field(default=None, ge=1, le=100_000)
+    #: Discounted unit rate before quantity (per-unit packages).
+    unit_rate_gbp: float | None = None
+    #: Item name for per-unit packages (e.g. chair).
+    unit_label: str | None = Field(default=None, max_length=40)
     #: Package / line narrative (e.g. onboarding “details” paragraph).
     description: str | None = Field(default=None, max_length=4000)
     #: Short bullet-style inclusions (e.g. services checklist).
@@ -64,7 +70,7 @@ class BookingLineItemIn(BaseModel):
             return s if s else None
         return None
 
-    @field_validator("unit_price_gbp")
+    @field_validator("unit_price_gbp", "unit_rate_gbp")
     @classmethod
     def bound_unit_price(cls, v: float | None) -> float | None:
         if v is None:
@@ -96,6 +102,13 @@ class BookingPricingBreakdown(BaseModel):
     service_fee_label: str
     client_total_label: str
     line_items_subtotal_label: str
+    service_fee_before_discount_gbp: float | None = None
+    service_fee_before_discount_label: str | None = None
+    referral_fee_discount_gbp: float = 0.0
+    referral_fee_discount_label: str | None = None
+    referral_tier_min_spend_gbp: float | None = None
+    vendor_referral_code: str | None = None
+    referral_fee_applied: bool = False
 
 
 class VendorAdjustmentIn(BaseModel):
@@ -112,6 +125,8 @@ class PutVendorBookingAdjustmentsBody(BaseModel):
 
 
 class CreateBookingRequestBody(BaseModel):
+    model_config = {"extra": "forbid"}
+
     vendor_user_id: str = Field(min_length=1)
     event_name: str = Field(min_length=1, max_length=500)
     event_date: date
@@ -122,9 +137,24 @@ class CreateBookingRequestBody(BaseModel):
     event_address: str | None = Field(default=None, max_length=500)
     notes: str | None = Field(default=None, max_length=4000)
     selected_option_ids: list[str] = Field(min_length=1)
+    #: Client-chosen counts keyed by option id. Required for per-unit packages; ignored for fixed.
+    quantities: dict[str, int] | None = None
     #: Marketplace search filters at enquire time (for alternative-vendor nudges).
     client_search_context: dict[str, Any] | None = None
     event_id: str | None = Field(default=None, max_length=36)
+    #: Vendor client referral code (?vref=) — up to 6 digits when valid.
+    vendor_referral_code: str | None = Field(default=None, max_length=6)
+
+    @field_validator("vendor_referral_code", mode="before")
+    @classmethod
+    def normalize_vendor_referral_code(cls, v: object) -> str | None:
+        if v is None:
+            return None
+        if isinstance(v, str):
+            from app.features.vendor_referrals.codes import normalize_client_referral_code
+
+            return normalize_client_referral_code(v)
+        return None
 
     @field_validator("event_postcode", mode="before")
     @classmethod
@@ -145,6 +175,30 @@ class CreateBookingRequestBody(BaseModel):
             s = v.strip()
             return s if s else None
         return None
+
+    @field_validator("quantities", mode="before")
+    @classmethod
+    def normalize_quantities(cls, v: object) -> dict[str, int] | None:
+        if v is None:
+            return None
+        if not isinstance(v, dict):
+            raise ValueError("Quantities must be a map of package id to count.")
+        out: dict[str, int] = {}
+        for key, raw in v.items():
+            kid = str(key).strip()
+            if not kid:
+                raise ValueError("Quantity keys must be package ids.")
+            if isinstance(raw, bool) or not isinstance(raw, (int, float, str)):
+                raise ValueError("Each quantity must be a whole number.")
+            if isinstance(raw, float) and not raw.is_integer():
+                raise ValueError("Each quantity must be a whole number.")
+            if isinstance(raw, str) and not raw.strip().isdigit():
+                raise ValueError("Each quantity must be a whole number.")
+            n = int(raw)
+            if n < 1 or n > 100_000:
+                raise ValueError("Each quantity must be between 1 and 100,000.")
+            out[kid] = n
+        return out or None
 
     @model_validator(mode="after")
     def event_dates_valid(self) -> Self:
@@ -331,6 +385,7 @@ class ClientBookingDetail(BaseModel):
     conversation_id: str | None = None
     event_id: str | None = None
     event_title: str | None = None
+    vendor_referral_code: str | None = None
     counterparty_phone: str | None = None
 
     model_config = {"populate_by_name": True}

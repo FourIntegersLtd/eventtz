@@ -14,6 +14,10 @@ type VendorBrowseBreadcrumbProps = {
 export function vendorBrowseCategoryLabel(serviceValue: string | undefined): string {
   if (!serviceValue) return "Vendors";
   if (serviceValue === "photography") return "Photographers";
+  if (serviceValue === "event_planning") return "Event planners";
+  if (serviceValue === "dj") return "DJs & bands";
+  if (serviceValue === "mc") return "MCs & alagas";
+  if (serviceValue === "hair_styling") return "Hair stylists";
   return (
     SERVICE_OPTIONS.find((o) => o.value === serviceValue)?.label ?? "Vendors"
   );

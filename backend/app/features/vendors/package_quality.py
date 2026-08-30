@@ -7,12 +7,22 @@ from typing import Any
 
 from app.core.errors import ValidationError
 from app.features.vendors import messages as vendor_messages
+from app.features.vendors.list_pricing import (
+    MAX_PACKAGE_UNIT_LABEL_CHARS,
+    PRICING_MODE_PER_UNIT,
+    parse_pricing_mode,
+    parse_quantity_input,
+    parse_single_money_gbp,
+    raise_if_invalid_single_money_gbp,
+)
 
 MIN_PACKAGE_DESCRIPTION_CHARS = 40
 MIN_PACKAGE_TITLE_CHARS = 3
 RECOMMENDED_PACKAGE_DESCRIPTION_CHARS = 80
 
-SERVICES_REQUIRING_PACKAGES = frozenset({"catering", "baking", "makeup"})
+SERVICES_REQUIRING_PACKAGES = frozenset(
+    {"catering", "baking", "makeup", "hair_styling", "decor", "event_planning"},
+)
 
 _VAGUE_DESCRIPTION_RE = re.compile(
     r"\b("
@@ -39,7 +49,11 @@ def is_configured_package(pkg: dict[str, Any]) -> bool:
     price = _coerce_str(pkg.get("price")).strip()
     details = _coerce_str(pkg.get("details")).strip()
     duration = _coerce_str(pkg.get("duration")).strip()
-    return bool(title or price or details or duration)
+    unit_label = _coerce_str(pkg.get("unitLabel")).strip()
+    min_raw = _coerce_str(pkg.get("minQuantity")).strip()
+    max_raw = _coerce_str(pkg.get("maxQuantity")).strip()
+    per_unit = parse_pricing_mode(pkg.get("pricingMode")) == PRICING_MODE_PER_UNIT
+    return bool(title or price or details or duration or unit_label or min_raw or max_raw or per_unit)
 
 
 def has_vague_package_description(details: str) -> bool:
@@ -52,9 +66,21 @@ def is_complete_package(pkg: dict[str, Any]) -> bool:
     details = _coerce_str(pkg.get("details")).strip()
     if len(title) < MIN_PACKAGE_TITLE_CHARS:
         return False
-    if not price:
+    if parse_single_money_gbp(price) is None:
         return False
-    return len(details) >= MIN_PACKAGE_DESCRIPTION_CHARS
+    if len(details) < MIN_PACKAGE_DESCRIPTION_CHARS:
+        return False
+    if parse_pricing_mode(pkg.get("pricingMode")) == PRICING_MODE_PER_UNIT:
+        unit_label = _coerce_str(pkg.get("unitLabel")).strip()
+        if not unit_label or len(unit_label) > MAX_PACKAGE_UNIT_LABEL_CHARS:
+            return False
+        min_qty, min_invalid = parse_quantity_input(pkg.get("minQuantity"))
+        max_qty, max_invalid = parse_quantity_input(pkg.get("maxQuantity"))
+        if min_invalid or max_invalid:
+            return False
+        if min_qty is not None and max_qty is not None and min_qty > max_qty:
+            return False
+    return True
 
 
 def services_requiring_packages(services: list[Any]) -> list[str]:
@@ -79,13 +105,35 @@ def validate_package_fields(pkg: dict[str, Any], *, strict: bool = False) -> Non
     title = _coerce_str(pkg.get("title")).strip()
     price = _coerce_str(pkg.get("price")).strip()
     details = _coerce_str(pkg.get("details")).strip()
+    per_unit = parse_pricing_mode(pkg.get("pricingMode")) == PRICING_MODE_PER_UNIT
     if not title or len(title) < MIN_PACKAGE_TITLE_CHARS:
         raise ValidationError(vendor_messages.PACKAGE_NEEDS_CLEAR_NAME)
     if not price:
-        raise ValidationError(vendor_messages.PACKAGE_NEEDS_PRICE)
+        raise ValidationError(
+            vendor_messages.PACKAGE_NEEDS_UNIT_PRICE if per_unit else vendor_messages.PACKAGE_NEEDS_PRICE,
+        )
+    raise_if_invalid_single_money_gbp(
+        price,
+        "Unit price" if per_unit else "Package price",
+        required=True,
+    )
     if strict or price:
         if len(details) < MIN_PACKAGE_DESCRIPTION_CHARS:
             raise ValidationError(vendor_messages.PACKAGE_DETAILS_TOO_SHORT)
+    if per_unit:
+        unit_label = _coerce_str(pkg.get("unitLabel")).strip()
+        if not unit_label:
+            raise ValidationError(vendor_messages.PACKAGE_NEEDS_UNIT_LABEL)
+        if len(unit_label) > MAX_PACKAGE_UNIT_LABEL_CHARS:
+            raise ValidationError(vendor_messages.PACKAGE_UNIT_LABEL_TOO_LONG)
+        min_qty, min_invalid = parse_quantity_input(pkg.get("minQuantity"))
+        max_qty, max_invalid = parse_quantity_input(pkg.get("maxQuantity"))
+        if min_invalid:
+            raise ValidationError(vendor_messages.PACKAGE_MIN_QTY_INVALID)
+        if max_invalid:
+            raise ValidationError(vendor_messages.PACKAGE_MAX_QTY_INVALID)
+        if min_qty is not None and max_qty is not None and min_qty > max_qty:
+            raise ValidationError(vendor_messages.PACKAGE_MIN_ABOVE_MAX)
 
 
 def validate_packages_for_payload(

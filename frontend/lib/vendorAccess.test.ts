@@ -22,17 +22,17 @@ describe("vendorIsLiveApproved", () => {
 });
 
 describe("isVendorPreApprovalRoute", () => {
-  it("allows profile, contact, and messages", () => {
+  it("allows profile, help hub, and settings", () => {
     expect(isVendorPreApprovalRoute("/vendor/profile")).toBe(true);
     expect(isVendorPreApprovalRoute("/vendor/profile/reviews")).toBe(true);
-    expect(isVendorPreApprovalRoute("/vendor/contact")).toBe(true);
-    expect(isVendorPreApprovalRoute("/vendor/messages")).toBe(true);
-    expect(isVendorPreApprovalRoute("/vendor/messages/abc")).toBe(true);
+    expect(isVendorPreApprovalRoute("/vendor/help")).toBe(true);
+    expect(isVendorPreApprovalRoute("/vendor/help/messages/abc")).toBe(true);
+    expect(isVendorPreApprovalRoute("/vendor/settings")).toBe(true);
   });
 
   it("does not allow dashboard or bookings", () => {
     expect(isVendorPreApprovalRoute("/vendor/dashboard")).toBe(false);
     expect(isVendorPreApprovalRoute("/vendor/bookings")).toBe(false);
-    expect(isVendorPreApprovalRoute("/vendor/settings")).toBe(false);
+    expect(isVendorPreApprovalRoute("/vendor/payments")).toBe(false);
   });
 });

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{ headline }} — {{ receipt.receipt_number }}</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        color: #2d2938;
+        margin: 40px;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      h1 {
+        color: #3e1964;
+        font-size: 22px;
+        margin: 0 0 4px;
+      }
+      .muted {
+        color: #6b6575;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+      }
+      th,
+      td {
+        padding: 8px 0;
+        border-bottom: 1px solid #e8e4ef;
+        text-align: left;
+      }
+      th:last-child,
+      td:last-child {
+        text-align: right;
+      }
+      .total td {
+        font-weight: 700;
+        color: #3e1964;
+        border-bottom: none;
+        padding-top: 12px;
+      }
+      .note {
+        margin-top: 16px;
+        color: #6b6575;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>{{ headline }}</h1>
+    <p class="muted">{{ subtitle }}</p>
+    <p>
+      <strong>{{ receipt.event_name }}</strong>
+      {% if receipt.event_date %} · {{ receipt.event_date }}{% endif %}<br />
+      {% if receipt.document_type == "client_payment_receipt" %}Vendor{% else %}Client{% endif %}:
+      {{ receipt.counterparty_name }}
+      {% if receipt.paid_at %}<br />Paid: {{ receipt.paid_at[:10] }}{% endif %}
+      {% if receipt.payout_released_at and receipt.document_type != "client_payment_receipt" %}<br />Payout: {{ receipt.payout_released_at[:10] }}{% endif %}
+      {% if receipt.payment_reference %}<br />Payment ref: {{ receipt.payment_reference }}{% endif %}
+      {% if receipt.transfer_reference %}<br />Transfer ref: {{ receipt.transfer_reference }}{% endif %}
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for line in receipt.line_items %}
+        <tr>
+          <td>{{ line.label }}</td>
+          <td>{{ line.amount_label }}</td>
+        </tr>
+        {% endfor %}
+        <tr class="total">
+          <td>Total</td>
+          <td>{{ receipt.total_label }}</td>
+        </tr>
+      </tbody>
+    </table>
+    {% if receipt.status_note %}
+    <p class="note">{{ receipt.status_note }}</p>
+    {% endif %}
+    <p class="note" style="margin-top: 32px; border-top: 1px solid #e8e4ef; padding-top: 16px">
+      {{ company_legal_name }} · Questions: {{ support_email }}
+    </p>
+  </body>
+</html>

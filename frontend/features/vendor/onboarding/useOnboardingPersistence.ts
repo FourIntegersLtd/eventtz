@@ -21,7 +21,11 @@ import {
   normalizePublicBioText,
   portfolioImageCountFromData,
 } from "./reviewDisplayHelpers";
-import { isReturnedForEdits, resolveOnboardingStepFromProfile } from "./onboardingProgress";
+import {
+  canApplyOnboardingFormUpdate,
+  isReturnedForEdits,
+  resolveOnboardingStepFromProfile,
+} from "./onboardingProgress";
 import { RETURNED_FOR_EDITS_FEEDBACK } from "./returnedForEditsCopy";
 import {
   mergePayloadIntoVendorData,
@@ -116,6 +120,11 @@ export function useOnboardingPersistence({
       }
       setListingVisible(Boolean(res.listing_visible));
       setPayoutsVerified(Boolean(res.payouts_verified));
+      if ((res.onboarding_status ?? "draft") === "submitted") {
+        setData((prev) => (prev.returnedForEditsAt ? { ...prev, returnedForEditsAt: "" } : prev));
+        // Drop leftover “returned for edits” copy from the load so submit shows pending.
+        setStatusCheckFeedback(null);
+      }
     },
     [],
   );
@@ -154,18 +163,6 @@ export function useOnboardingPersistence({
                 false,
               ),
         );
-        if (
-          !isWalkthrough &&
-          isReturnedForEdits({
-            onboarding_status: res.onboarding_status ?? "draft",
-            approval_status: res.approval_status,
-            current_step: res.current_step,
-            returnedForEditsAt:
-              typeof merged.returnedForEditsAt === "string" ? merged.returnedForEditsAt : "",
-          })
-        ) {
-          setStatusCheckFeedback(RETURNED_FOR_EDITS_FEEDBACK);
-        }
         setLoadStatus("ready");
       } catch (e) {
         if (cancelled) return;
@@ -185,11 +182,18 @@ export function useOnboardingPersistence({
 
   const update = useCallback(
     (patch: Partial<VendorOnboardingData>) => {
-      if (lockedPendingReview) return;
+      if (
+        !canApplyOnboardingFormUpdate({
+          lockedPendingReview,
+          canAddPortfolioWhilePending,
+        })
+      ) {
+        return;
+      }
       setData((prev) => ({ ...prev, ...patch }));
       setFormError(null);
     },
-    [lockedPendingReview],
+    [lockedPendingReview, canAddPortfolioWhilePending],
   );
 
   const onGenerateBioWithAI = useCallback(async () => {

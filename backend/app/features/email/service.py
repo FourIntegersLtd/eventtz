@@ -9,6 +9,8 @@ from app.core.logging import get_logger
 from app.features.email.constants import APP_NAME, EMAIL_IMAGES, EMAIL_SUPPORT_ADDRESS
 from app.features.email.delivery_log import booking_template_id, claim_booking_email_send
 from app.features.email.branding import (
+    admin_alert_chip,
+    admin_login_email_url,
     base_email_context,
     client_welcome_showcase,
     display_name_from_email,
@@ -67,6 +69,63 @@ class EmailService:
             )
         return ok
 
+    def send_receipt_email(
+        self,
+        *,
+        kind: str,
+        to_email: str,
+        recipient_user_id: str,
+        booking_id: str,
+        receipt_payload: dict,
+        action_url: str | None,
+        action_label: str = "View receipt",
+    ) -> bool:
+        from app.features.bookings.receipts import receipt_context_for_email
+
+        if not claim_booking_email_send(
+            kind=kind,
+            recipient_email=to_email,
+            recipient_user_id=recipient_user_id,
+            booking_id=booking_id,
+        ):
+            return False
+
+        ctx = receipt_context_for_email(receipt_payload)
+        ctx.update(
+            transactional_email_context(
+                subject=str(ctx.get("headline") or "Receipt"),
+                headline=str(ctx.get("headline") or "Receipt"),
+                subtitle=str(ctx.get("subtitle") or ""),
+                body=None,
+                action_url=action_url,
+                action_label=action_label,
+            ),
+        )
+
+        template_map = {
+            "payment_receipt": "booking/payment_receipt.html",
+            "vendor_payment_record": "booking/vendor_payment_record.html",
+            "vendor_payout_statement": "booking/vendor_payout_statement.html",
+        }
+        text_template_map = {
+            "payment_receipt": "booking/payment_receipt.txt",
+            "vendor_payment_record": "booking/vendor_payment_record.txt",
+            "vendor_payout_statement": "booking/vendor_payout_statement.txt",
+        }
+        template = template_map.get(kind, "booking/payment_receipt.html")
+        html = render_template(template, ctx)
+        text = render_template(text_template_map.get(kind, "booking/payment_receipt.txt"), ctx)
+        subject = f"{ctx['headline']} | {APP_NAME}"
+        ok = resend_send(to=[to_email], subject=subject, html=html, text=text)
+        if not ok:
+            logger.warning(
+                "receipt email failed kind=%s booking=%s user=%s",
+                kind,
+                booking_id,
+                recipient_user_id,
+            )
+        return ok
+
     def send_admin_alert(
         self,
         *,
@@ -80,6 +139,7 @@ class EmailService:
         action_label: str | None = None,
         to: list[str],
     ) -> bool:
+        chip_label, chip_tone = admin_alert_chip(template_id)
         ctx = transactional_email_context(
             subject=subject,
             headline=headline,
@@ -88,6 +148,8 @@ class EmailService:
             body=body,
             action_url=action_url,
             action_label=action_label,
+            chip_label=chip_label,
+            chip_tone=chip_tone,
         )
         html = render_template("admin/alert.html", ctx)
         text = render_template("admin/alert.txt", ctx)
@@ -117,6 +179,8 @@ class EmailService:
             intro="Someone submitted the contact form.",
             fields=fields,
             body=message,
+            action_url=admin_login_email_url(),
+            action_label="Sign in to admin",
             to=to,
         )
 
@@ -184,6 +248,8 @@ class EmailService:
             headline="Stripe refund failed",
             fields=[("Booking", booking_id)],
             body=error_hint or "Check logs and Stripe dashboard.",
+            action_url=admin_login_email_url(),
+            action_label="Sign in to admin",
             to=to,
         )
 
@@ -204,6 +270,8 @@ class EmailService:
             headline="Vendor payout transfer failed",
             fields=fields,
             body=error_hint or "Stripe transfer failed. Vendor may need Connect verification.",
+            action_url=admin_login_email_url(),
+            action_label="Sign in to admin",
             to=to,
         )
 
@@ -384,6 +452,46 @@ class EmailService:
             text=text,
         )
 
+    def send_vendor_setup_payouts_nudge(
+        self,
+        *,
+        to_email: str,
+        business_name: str | None,
+        payments_url: str,
+        dashboard_url: str,
+    ) -> bool:
+        biz = (business_name or "").strip()
+        name = biz or display_name_from_email(to_email)
+        headline = "Set up payouts to go live on Eventtz"
+        subtitle = "Your profile is approved — one step left before clients can find you."
+        body = (
+            f"Hi {name},\n\n"
+            "Your vendor profile has been approved on Eventtz. Before clients can discover "
+            "you and send booking requests, we need your payout details so we can pay you "
+            "when bookings are confirmed.\n\n"
+            "It usually takes 2–3 minutes in Stripe. Your listing goes live automatically "
+            "once payouts are verified.\n\n"
+            f"Questions? Reply to this email or write us at {EMAIL_SUPPORT_ADDRESS}."
+        )
+        ctx = transactional_email_context(
+            subject=headline,
+            headline=headline,
+            subtitle=subtitle,
+            body=body,
+            action_url=payments_url,
+            action_label="Set up payouts",
+            secondary_action_url=dashboard_url,
+            secondary_action_label="Open dashboard",
+        )
+        html = render_template("booking/notification.html", ctx)
+        text = render_template("booking/notification.txt", ctx)
+        return resend_send(
+            to=[to_email],
+            subject=f"{headline} | {APP_NAME}",
+            html=html,
+            text=text,
+        )
+
     def send_team_invite(
         self,
         *,
@@ -431,6 +539,33 @@ class EmailService:
         return resend_send(
             to=[to_email],
             subject=f"Account suspended | {APP_NAME}",
+            html=html,
+            text=text,
+        )
+
+    def send_account_deleted(
+        self,
+        *,
+        to_email: str,
+    ) -> bool:
+        ctx = transactional_email_context(
+            subject="Your Eventtz account has been deleted",
+            headline="Account deleted",
+            subtitle="We have closed your Eventtz account as requested.",
+            body=(
+                "Your profile, login, messages, and saved details have been removed.\n\n"
+                "Booking and payment records that the law requires us to keep are stored "
+                "without your name, email, or phone. You can create a new account with the "
+                "same email if you return later."
+            ),
+            action_url=None,
+            action_label=None,
+        )
+        html = render_template("booking/notification.html", ctx)
+        text = render_template("booking/notification.txt", ctx)
+        return resend_send(
+            to=[to_email],
+            subject=f"Account deleted | {APP_NAME}",
             html=html,
             text=text,
         )
@@ -822,10 +957,15 @@ class EmailService:
             )
 
         if layout == "admin":
+            chip_label, chip_tone = admin_alert_chip("admin.contact_submitted")
             alert_ctx = transactional_email_context(
                 subject=f"Test admin alert | {APP_NAME}",
                 headline="Test admin alert",
                 intro="This is a sample ops notification from the admin console.",
+                chip_label=chip_label,
+                chip_tone=chip_tone,
+                action_url=admin_login_email_url(),
+                action_label="Sign in to admin",
                 **transactional_rich_body_fields(plain, body_html),
             )
             html = render_template("admin/alert.html", alert_ctx)

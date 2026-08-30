@@ -215,3 +215,20 @@ export async function postAdminVendorProfileNudge(
     failures: data.failures ?? [],
   };
 }
+
+export async function postAdminVendorPayoutNudge(
+  userIds: string[],
+): Promise<AdminVendorProfileNudgeResult> {
+  const { data } = await api.post<{
+    sent: number;
+    skipped: number;
+    failures?: { user_id: string; error: string }[];
+  }>("/api/v1/admin/vendors/nudge-setup-payouts", {
+    user_ids: userIds,
+  });
+  return {
+    sent: data.sent ?? 0,
+    skipped: data.skipped ?? 0,
+    failures: data.failures ?? [],
+  };
+}

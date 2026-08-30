@@ -16,6 +16,10 @@ export type RotatingTypewriterPlaceholderProps = {
   /** Positioning and padding for the overlay (parent input should be `relative`). */
   className?: string;
   textClassName?: string;
+  /** Vertical alignment inside the field overlay. */
+  align?: "center" | "top";
+  /** Allow wrapped lines (e.g. textarea overlays) instead of single-line truncate. */
+  wrap?: boolean;
   typeMs?: number;
   deleteMs?: number;
   holdMs?: number;
@@ -27,6 +31,8 @@ export function RotatingTypewriterPlaceholder({
   compact = false,
   className = "",
   textClassName = "text-neutral-400",
+  align = "center",
+  wrap = false,
   typeMs = DEFAULT_TYPE_MS,
   deleteMs = DEFAULT_DELETE_MS,
   holdMs = DEFAULT_HOLD_MS,
@@ -86,13 +92,17 @@ export function RotatingTypewriterPlaceholder({
   const example = examples[index] ?? examples[0];
   const shown = reduceMotion ? example : example.slice(0, charCount);
   const sizeClass = compact ? "text-sm" : "text-base";
+  const alignClass = align === "top" ? "items-start" : "items-center";
+  const textWrapClass = wrap
+    ? "whitespace-normal leading-relaxed line-clamp-3 pr-3"
+    : "truncate";
 
   return (
     <span
-      className={`pointer-events-none absolute inset-y-0 left-0 right-0 flex items-center overflow-hidden ${sizeClass} ${className}`}
+      className={`pointer-events-none absolute inset-y-0 left-0 right-0 flex overflow-hidden ${alignClass} ${sizeClass} ${className}`}
       aria-hidden
     >
-      <span className={`block truncate ${textClassName}`}>
+      <span className={`block ${textWrapClass} ${textClassName}`}>
         {shown}
         {!reduceMotion ? (
           <span className="ml-0.5 inline-block h-[1.05em] w-px translate-y-[0.12em] bg-neutral-400 align-baseline animate-search-caret" />

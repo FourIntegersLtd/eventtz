@@ -141,6 +141,8 @@ def upsert_vendor_profile(
     merged_payload.update(_validate_and_normalize_payload(payload))
     merged_payload = normalize_payload_fields(merged_payload, user_id)
     st = status or (existing.get("status") if existing else None) or "draft"
+    if st == "submitted":
+        merged_payload.pop("returnedForEditsAt", None)
 
     validate_payload_for_progress(
         current_step=current_step,
@@ -183,8 +185,6 @@ def upsert_vendor_profile(
     out = get_vendor_profile(user_id)
     if not out:
         raise RuntimeError("vendors upsert returned no row")
-    if st == "submitted":
-        merged_payload.pop("returnedForEditsAt", None)
     if st == "submitted" and previous_status != "submitted":
         payload_bn = merged_payload.get("businessName")
         business_name = payload_bn.strip() if isinstance(payload_bn, str) else None

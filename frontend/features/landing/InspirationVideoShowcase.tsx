@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { InspirationMobileReel } from "@/features/landing/InspirationMobileReel";
 import { InspirationVideoTile } from "@/features/landing/InspirationVideoTile";
 import type { GalleryVideo } from "@/features/landing/landingData";
 import { useIndexedCarousel } from "@/lib/useIndexedCarousel";
-import { useMediaQuery } from "@/lib/useMediaQuery";
 import { usePrefersReducedMotion } from "@/lib/usePrefersReducedMotion";
 import { prefetchLandingVideo } from "@/lib/landingVideo";
 
@@ -26,7 +26,8 @@ function relativeOffset(index: number, activeIndex: number, total: number) {
 export function InspirationVideoShowcase({ videos }: InspirationVideoShowcaseProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
-  const compact = useMediaQuery("(max-width: 767px)");
+  // Default compact so iPhone Chrome never mounts the 3-clip desktop stack first.
+  const [compact, setCompact] = useState(true);
   const reduceMotion = usePrefersReducedMotion();
   const total = videos.length;
   const { index, goTo, goNext, goPrev, progressKey } = useIndexedCarousel({
@@ -37,12 +38,20 @@ export function InspirationVideoShowcase({ videos }: InspirationVideoShowcasePro
   const active = videos[index];
   const touchStartX = useRef<number | null>(null);
 
+  useLayoutEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const sync = () => setCompact(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   useEffect(() => {
     const node = containerRef.current;
     if (!node) return;
     const observer = new IntersectionObserver(
       ([entry]) => setInView(entry.isIntersecting),
-      { rootMargin: "200px 0px", threshold: 0.01 },
+      { rootMargin: "80px 0px", threshold: 0.15 },
     );
     observer.observe(node);
     return () => observer.disconnect();
@@ -51,10 +60,12 @@ export function InspirationVideoShowcase({ videos }: InspirationVideoShowcasePro
   useEffect(() => {
     if (!inView || total === 0) return;
     const next = videos[(index + 1) % total]?.src;
-    const prev = videos[(index - 1 + total) % total]?.src;
     if (next) prefetchLandingVideo(next);
-    if (prev) prefetchLandingVideo(prev);
-  }, [index, inView, total, videos]);
+    if (!compact) {
+      const prev = videos[(index - 1 + total) % total]?.src;
+      if (prev) prefetchLandingVideo(prev);
+    }
+  }, [compact, index, inView, total, videos]);
 
   const handleTouchStart = useCallback((event: React.TouchEvent) => {
     touchStartX.current = event.touches[0]?.clientX ?? null;
@@ -75,6 +86,27 @@ export function InspirationVideoShowcase({ videos }: InspirationVideoShowcasePro
 
   if (total === 0 || !active) return null;
 
+  const arrows = (
+    <>
+      <button
+        type="button"
+        onClick={goPrev}
+        className="absolute left-0 top-1/2 z-30 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-primary-border bg-white/95 text-primary shadow-primary-soft backdrop-blur-sm transition hover:bg-primary-soft sm:left-2 md:h-12 md:w-12"
+        aria-label="Previous celebration"
+      >
+        <ChevronLeft className="h-4 w-4 md:h-5 md:w-5" strokeWidth={2} />
+      </button>
+      <button
+        type="button"
+        onClick={goNext}
+        className="absolute right-0 top-1/2 z-30 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-primary-border bg-white/95 text-primary shadow-primary-soft backdrop-blur-sm transition hover:bg-primary-soft sm:right-2 md:h-12 md:w-12"
+        aria-label="Next celebration"
+      >
+        <ChevronRight className="h-4 w-4 md:h-5 md:w-5" strokeWidth={2} />
+      </button>
+    </>
+  );
+
   return (
     <div ref={containerRef} className="relative mt-6 overflow-x-clip md:mt-10 lg:mt-14">
       <div className="relative w-full md:left-1/2 md:w-screen md:max-w-[100vw] md:-translate-x-1/2 md:px-8">
@@ -87,56 +119,56 @@ export function InspirationVideoShowcase({ videos }: InspirationVideoShowcasePro
           aria-hidden
         />
 
-        <div
-          className="relative mx-auto aspect-[4/3] max-h-[min(52vw,240px)] w-full max-w-6xl touch-pan-x md:aspect-auto md:h-[min(52vw,580px)] md:max-h-none md:[perspective:1600px]"
-          style={{ transformStyle: "preserve-3d" }}
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-        >
-          {videos.map((video, videoIndex) => {
-            const offset = relativeOffset(videoIndex, index, total);
-            const isActive = videoIndex === index;
-            const shouldLoad = inView && Math.abs(offset) <= 1;
-            return (
-              <div
-                key={video.src}
-                className="inspiration-slide-frame"
-                data-offset={offset}
-                data-active={isActive ? "true" : undefined}
-              >
-                <InspirationVideoTile
-                  video={video}
-                  isActive={isActive}
-                  shouldLoad={shouldLoad}
-                  showTitle={false}
-                  onClick={isActive ? undefined : () => goTo(videoIndex)}
-                  className={`w-full shadow-2xl aspect-[4/3] max-h-[min(52vw,240px)] rounded-xl ring-1 ring-primary-border md:aspect-[2.35/1] md:max-h-none ${
-                    isActive
-                      ? "shadow-primary/20 md:rounded-2xl lg:rounded-3xl"
-                      : "shadow-primary/15 md:rounded-xl"
-                  }`}
-                />
-              </div>
-            );
-          })}
-
-          <button
-            type="button"
-            onClick={goPrev}
-            className="absolute left-0 top-1/2 z-30 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-primary-border bg-white/95 text-primary shadow-primary-soft backdrop-blur-sm transition hover:bg-primary-soft sm:left-2 md:h-12 md:w-12"
-            aria-label="Previous celebration"
+        {compact ? (
+          <div
+            className="relative mx-auto aspect-[4/3] max-h-[min(52vw,240px)] w-full max-w-6xl touch-pan-x"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
           >
-            <ChevronLeft className="h-4 w-4 md:h-5 md:w-5" strokeWidth={2} />
-          </button>
-          <button
-            type="button"
-            onClick={goNext}
-            className="absolute right-0 top-1/2 z-30 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-primary-border bg-white/95 text-primary shadow-primary-soft backdrop-blur-sm transition hover:bg-primary-soft sm:right-2 md:h-12 md:w-12"
-            aria-label="Next celebration"
+            <InspirationMobileReel
+              video={active}
+              inView={inView}
+              reduceMotion={reduceMotion}
+              className="aspect-[4/3] max-h-[min(52vw,240px)] w-full rounded-xl shadow-2xl shadow-primary/20 ring-1 ring-primary-border"
+            />
+            {arrows}
+          </div>
+        ) : (
+          <div
+            className="relative mx-auto aspect-auto h-[min(52vw,580px)] w-full max-w-6xl [perspective:1600px]"
+            style={{ transformStyle: "preserve-3d" }}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
           >
-            <ChevronRight className="h-4 w-4 md:h-5 md:w-5" strokeWidth={2} />
-          </button>
-        </div>
+            {videos.map((video, videoIndex) => {
+              const offset = relativeOffset(videoIndex, index, total);
+              const isActive = videoIndex === index;
+              const shouldLoad = inView && Math.abs(offset) <= 1;
+              return (
+                <div
+                  key={video.src}
+                  className="inspiration-slide-frame"
+                  data-offset={offset}
+                  data-active={isActive ? "true" : undefined}
+                >
+                  <InspirationVideoTile
+                    video={video}
+                    isActive={isActive}
+                    shouldLoad={shouldLoad}
+                    showTitle={false}
+                    onClick={isActive ? undefined : () => goTo(videoIndex)}
+                    className={`aspect-[2.35/1] w-full shadow-2xl ring-1 ring-primary-border ${
+                      isActive
+                        ? "rounded-2xl shadow-primary/20 lg:rounded-3xl"
+                        : "rounded-xl shadow-primary/15"
+                    }`}
+                  />
+                </div>
+              );
+            })}
+            {arrows}
+          </div>
+        )}
 
         <div className="mx-auto mt-4 flex max-w-5xl flex-col gap-4 sm:flex-row sm:items-end sm:justify-between md:mt-10">
           <div className="min-w-0 text-center sm:text-left">

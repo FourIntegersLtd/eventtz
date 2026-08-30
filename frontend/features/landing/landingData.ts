@@ -1,16 +1,11 @@
 import type { LucideIcon } from "lucide-react";
 import {
   BadgeCheck,
-  Camera,
-  Cake,
   CircleCheck,
   MessageCircle,
-  Package,
   Search,
   Send,
   ShieldCheck,
-  Sparkles,
-  UtensilsCrossed,
 } from "lucide-react";
 import type { IconType } from "react-icons";
 import {
@@ -20,6 +15,7 @@ import {
   SiTiktok,
   SiX,
 } from "react-icons/si";
+import { VENDOR_SERVICE_CATEGORIES } from "@/lib/vendorServiceCatalog";
 import { getBookingServiceFeePercent } from "@/lib/bookingServiceFee";
 import { FOOTER_CONTACT_EMAIL } from "@/lib/footerLinks";
 
@@ -38,51 +34,19 @@ export type LandingCategory = {
   iconColor: string;
 };
 
-export const CATEGORIES: LandingCategory[] = [
-  {
-    name: "Baking",
-    value: "baking",
-    Icon: Cake,
-    description: "Cakes and sweet tables worth showing off",
-    iconBg: "bg-orange-100",
-    iconColor: "text-orange-500",
-  },
-  {
-    name: "Catering",
-    value: "catering",
-    Icon: UtensilsCrossed,
-    description: "Food your guests will remember",
-    iconBg: "bg-rose-100",
-    iconColor: "text-rose-500",
-  },
-  {
-    name: "Photography",
-    value: "photography",
-    Icon: Camera,
-    description: "See services and prices on every profile before you send a message",
-    iconBg: "bg-violet-100",
-    iconColor: "text-violet-600",
-  },
-  {
-    name: "Makeup",
-    value: "makeup",
-    Icon: Sparkles,
-    description: "Bridal, party, and on-the-day looks",
-    iconBg: "bg-fuchsia-100",
-    iconColor: "text-fuchsia-500",
-  },
-  {
-    name: "Rentals",
-    value: "rentals",
-    Icon: Package,
-    description: "Décor, marquees, furniture, and hire",
-    iconBg: "bg-sky-100",
-    iconColor: "text-sky-600",
-  },
-];
+export const CATEGORIES: LandingCategory[] = VENDOR_SERVICE_CATEGORIES.map(
+  ({ value, label, description, Icon, iconBg, iconColor }) => ({
+    name: label,
+    value,
+    Icon,
+    description,
+    iconBg,
+    iconColor,
+  }),
+);
 
-/** Strip above the fold uses the same categories as the detailed grid. */
-export const BROWSE_CATEGORIES = CATEGORIES;
+/** Hero browse strip — original five categories only; full grid uses `CATEGORIES`. */
+export const BROWSE_CATEGORIES = CATEGORIES.slice(0, 5);
 
 export type GalleryVideo = {
   src: string;
@@ -156,7 +120,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       },
       {
         q: "Is there a service fee?",
-        a: `Yes. ${SERVICE_FEE_PERCENT_LABEL}, shown before you pay. No hidden extras`,
+        a: `Yes. ${SERVICE_FEE_PERCENT_LABEL} on the vendor total, shown before you pay. With a vendor referral link, clients can save £10–£15 off that fee at higher spend tiers`,
       },
       {
         q: "Is my payment safe?",
@@ -261,8 +225,6 @@ export const NAV_DROPDOWN_LINK_CLASS =
 export const HERO_VIDEO_SRC = "/videos/hero.mp4";
 
 /** Light marketing hero - left copy column. Right column reserved for hero image. */
-export const HERO_EYEBROW = "Trusted event vendors";
-
 export const HERO_HEADLINE = {
   lead: "Best place to hire top",
   sticky: "African",
@@ -347,8 +309,7 @@ export type LandingScrollFeatureStep = {
 export const PRICING_TRUST_SECTION: LandingScreenshotSection = {
   eyebrow: "Browse",
   title: "See prices before you message",
-  description:
-    "Vendors list their services and prices on their profile. Compare what you get and what it costs before you send a message.",
+  description: "Vendors list their services and prices on their profile.",
   screenshotSrc: "/images/landing-images/pricing.png",
   ctaHref: "/client/browse",
   ctaLabel: "Browse vendors",
@@ -358,7 +319,7 @@ export const BOOK_SECTION: LandingScreenshotSection = {
   eyebrow: "Request",
   title: "Send a booking request",
   description:
-    "Choose a service, add your date, time, and venue, and send the request.",
+    "Choose a service, add your date and venue, and send the request.",
   screenshotSrc: "/images/landing-images/book.png",
   ctaHref: "/client/browse",
   ctaLabel: "Browse vendors",
@@ -367,8 +328,7 @@ export const BOOK_SECTION: LandingScreenshotSection = {
 export const CHAT_SECTION: LandingScreenshotSection = {
   eyebrow: "Agree",
   title: "Chat and agree the details",
-  description:
-    "Ask questions, change the service if you need to, and get an updated quote back.",
+  description: "Ask questions, adjust the service, and get an updated quote.",
   screenshotSrc: "/images/landing-images/chat.png",
   ctaHref: "/client/browse",
   ctaLabel: "Browse vendors",
@@ -377,8 +337,7 @@ export const CHAT_SECTION: LandingScreenshotSection = {
 export const QUOTE_SECTION: LandingScreenshotSection = {
   eyebrow: "Confirm",
   title: "Vendor confirms, then you pay",
-  description:
-    "The vendor checks your request and confirms the final price. You pay only after they have accepted, not before you know what you are booking.",
+  description: "The vendor confirms the price; you pay after they accept.",
   screenshotSrc: "/images/landing-images/quote.png",
   ctaHref: "/client/browse",
   ctaLabel: "Browse vendors",
@@ -514,12 +473,8 @@ export const BROWSE_SECTION = {
 } as const;
 
 export const EXPLORE_NAV_LINKS = [
-  { href: "#browse", label: "Categories" },
-  { href: "#featured", label: "Featured vendors" },
-  { href: "#reviews", label: "Reviews" },
+  { href: "/client/browse", label: "Browse vendors" },
   { href: "#booking-journey", label: "How booking works" },
-  { href: "#why-eventtz", label: "Why Eventtz" },
-  { href: "#inspiration", label: "Celebrations" },
   { href: "#for-vendors", label: "For vendors" },
   { href: "#faq", label: "FAQ" },
 ] as const;
@@ -537,6 +492,23 @@ export const CONTACT_US_LINK = {
   label: "Contact us",
 } as const;
 
+/** Anchor targets on `/` - use `/#id` when linking from other routes. */
+export function landingSectionHref(
+  hash: string,
+  sectionLinkPrefix: "" | "/",
+): string {
+  const fragment = hash.startsWith("#") ? hash : `#${hash}`;
+  return `${sectionLinkPrefix}${fragment}`;
+}
+
+export function resolveLandingSectionPrefix(
+  pathname: string,
+  explicit: "" | "/" = "",
+): "" | "/" {
+  if (pathname !== "/") return "/";
+  return explicit;
+}
+
 export type MobileNavLink = {
   href: string;
   label: string;
@@ -544,6 +516,7 @@ export type MobileNavLink = {
 
 /** Short list for the mobile drawer - desktop keeps the full Explore dropdown. */
 export const MOBILE_NAV_SECTION_LINKS: MobileNavLink[] = [
+  { href: "/client/browse", label: "Browse vendors" },
   { href: "/blog", label: "Blog" },
   { href: "#booking-journey", label: "How booking works" },
   { href: "#for-vendors", label: "For vendors" },

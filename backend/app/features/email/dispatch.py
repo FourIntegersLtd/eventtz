@@ -74,6 +74,7 @@ def dispatch_booking_notification(
     mode: NotifyMode = "upsert",
     portal: Portal | None = None,
     event_name: str | None = None,
+    send_email: bool = True,
 ) -> None:
     """Create the in-app notification and send the participant email when email is configured."""
     if mode == "insert_if_absent":
@@ -123,6 +124,8 @@ def dispatch_booking_notification(
     )
 
     action_url = f"{_email_base()}{_booking_portal_path(resolved_portal, booking_id)}"
+    if not send_email:
+        return
     get_email_service().send_booking_notification(
         kind=kind,
         to_email=to_email,
@@ -132,6 +135,56 @@ def dispatch_booking_notification(
         subtitle=None,
         body=email_body,
         action_url=action_url,
+    )
+
+
+def _receipt_path(document_type: str, booking_id: str) -> str:
+    if document_type == "client_payment_receipt":
+        return f"/client/bookings/{booking_id}/receipt"
+    if document_type == "vendor_payment_record":
+        return f"/vendor/bookings/{booking_id}/payment-record"
+    return f"/vendor/bookings/{booking_id}/payout-statement"
+
+
+def dispatch_receipt_email(
+    *,
+    user_id: str,
+    booking_id: str,
+    receipt_payload: dict,
+) -> None:
+    """Send a structured payment receipt / vendor statement email."""
+    parties = _load_booking_parties(booking_id)
+    if not parties:
+        return
+
+    resolved_portal = _portal_for_user(user_id, parties)
+    if not resolved_portal:
+        return
+
+    emails = user_emails_by_id([user_id])
+    to_email = emails.get(user_id, "").strip()
+    if not to_email or "@" not in to_email:
+        return
+
+    document_type = str(receipt_payload.get("document_type") or "")
+    kind_map = {
+        "client_payment_receipt": "payment_receipt",
+        "vendor_payment_record": "vendor_payment_record",
+        "vendor_payout_statement": "vendor_payout_statement",
+    }
+    kind = kind_map.get(document_type)
+    if not kind:
+        return
+
+    action_url = f"{_email_base()}{_receipt_path(document_type, booking_id)}"
+    get_email_service().send_receipt_email(
+        kind=kind,
+        to_email=to_email,
+        recipient_user_id=user_id,
+        booking_id=booking_id,
+        receipt_payload=receipt_payload,
+        action_url=action_url,
+        action_label="View receipt",
     )
 
 
@@ -304,6 +357,25 @@ def send_vendor_complete_profile_nudge_email(
     )
 
 
+def send_vendor_setup_payouts_nudge_email(
+    *,
+    vendor_user_id: str,
+    vendor_email: str | None,
+    business_name: str | None,
+) -> bool:
+    if not vendor_email or "@" not in vendor_email:
+        emails = user_emails_by_id([vendor_user_id])
+        vendor_email = emails.get(vendor_user_id)
+    if not vendor_email or "@" not in vendor_email:
+        return False
+    return get_email_service().send_vendor_setup_payouts_nudge(
+        to_email=vendor_email,
+        business_name=business_name,
+        payments_url=public_email_url("/vendor/payments"),
+        dashboard_url=public_email_url("/vendor/dashboard"),
+    )
+
+
 def send_vendor_approval_email(
     *,
     vendor_user_id: str,
@@ -339,6 +411,17 @@ def send_team_invite_email(*, email: str) -> bool:
 def send_client_suspended_email(*, email: str) -> bool:
     support_url = f"{_email_base()}/contact"
     return get_email_service().send_client_suspended(to_email=email, support_url=support_url)
+
+
+def send_account_deleted_email(*, email: str) -> bool:
+    normalized = (email or "").strip().lower()
+    if not normalized or "@" not in normalized:
+        return False
+    try:
+        return get_email_service().send_account_deleted(to_email=normalized)
+    except Exception:
+        logger.exception("send_account_deleted_email failed")
+        return False
 
 
 def send_welcome_email(*, email: str, user_type: str) -> bool:

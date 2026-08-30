@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { isReturnedForEdits, resolveOnboardingStepFromProfile } from "./onboardingProgress";
+import {
+  canApplyOnboardingFormUpdate,
+  isReturnedForEdits,
+  resolveOnboardingStepFromProfile,
+} from "./onboardingProgress";
 
 describe("isReturnedForEdits", () => {
   it("is true when the server set returnedForEditsAt", () => {
@@ -13,14 +17,35 @@ describe("isReturnedForEdits", () => {
     ).toBe(true);
   });
 
-  it("is true for legacy draft profiles saved at review without the timestamp", () => {
+  it("is false for first-time review without the timestamp", () => {
     expect(
       isReturnedForEdits({
         onboarding_status: "draft",
         approval_status: "pending",
         current_step: 8,
       }),
+    ).toBe(false);
+  });
+
+  it("is true for a leftover submitted-screen step after unsubmit without the timestamp", () => {
+    expect(
+      isReturnedForEdits({
+        onboarding_status: "draft",
+        approval_status: "pending",
+        current_step: 9,
+      }),
     ).toBe(true);
+  });
+
+  it("is false after resubmit even if the timestamp is still on the payload", () => {
+    expect(
+      isReturnedForEdits({
+        onboarding_status: "submitted",
+        approval_status: "pending",
+        current_step: 9,
+        returnedForEditsAt: "2026-08-15T10:00:00+00:00",
+      }),
+    ).toBe(false);
   });
 
   it("is false for early draft onboarding", () => {
@@ -84,5 +109,34 @@ describe("resolveOnboardingStepFromProfile", () => {
         false,
       ),
     ).toBe(3);
+  });
+});
+
+describe("canApplyOnboardingFormUpdate", () => {
+  it("allows drafts to update", () => {
+    expect(
+      canApplyOnboardingFormUpdate({
+        lockedPendingReview: false,
+        canAddPortfolioWhilePending: false,
+      }),
+    ).toBe(true);
+  });
+
+  it("blocks submitted pending vendors who already have enough photos", () => {
+    expect(
+      canApplyOnboardingFormUpdate({
+        lockedPendingReview: true,
+        canAddPortfolioWhilePending: false,
+      }),
+    ).toBe(false);
+  });
+
+  it("allows submitted pending vendors who still need portfolio photos", () => {
+    expect(
+      canApplyOnboardingFormUpdate({
+        lockedPendingReview: true,
+        canAddPortfolioWhilePending: true,
+      }),
+    ).toBe(true);
   });
 });

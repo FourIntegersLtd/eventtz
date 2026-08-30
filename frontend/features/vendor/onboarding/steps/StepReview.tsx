@@ -7,10 +7,13 @@ import {
   WEEKDAY_LABELS,
 } from "../constants";
 import { bioWordCount } from "../onboardingLogic";
+import { isConfiguredPackage } from "../packageQuality";
 import {
   formatDiscountSummary,
   formatReviewBlockedDates,
   formatReviewEventTypes,
+  formatReviewPackagePrice,
+  formatReviewPackageQuantityBounds,
   formatReviewServices,
   hasAdditionalInfoContent,
   hasPortfolioContent,
@@ -220,14 +223,8 @@ export function StepReview({
   const portfolioImageCount =
     persistedPortfolioUrls.length + data.portfolioFiles.length;
 
-  const hasPackages = data.packages.some(
-    (p) =>
-      p.title.trim() || p.price.trim() || p.details.trim() || p.duration.trim(),
-  );
-  const configuredPackages = data.packages.filter(
-    (p) =>
-      p.title.trim() || p.price.trim() || p.details.trim() || p.duration.trim(),
-  );
+  const hasPackages = data.packages.some((p) => isConfiguredPackage(p));
+  const configuredPackages = data.packages.filter((p) => isConfiguredPackage(p));
 
   const profilePhotoBlock = (
     <VendorProfilePhotoField
@@ -373,7 +370,10 @@ export function StepReview({
           {readOnly || hasPackages ? (
             configuredPackages.length > 0 ? (
             <ul className="divide-y divide-neutral-100">
-              {configuredPackages.map((p) => (
+              {configuredPackages.map((p) => {
+                const priceLabel = formatReviewPackagePrice(p);
+                const quantityBounds = formatReviewPackageQuantityBounds(p);
+                return (
                 <li
                   key={p.id}
                   className="px-5 py-3.5 text-sm text-neutral-700 sm:px-6"
@@ -381,8 +381,11 @@ export function StepReview({
                   <span className="font-medium text-neutral-900">
                     {p.title.trim() || "Untitled package"}
                   </span>
-                  {p.price.trim() ? (
-                    <span className="text-neutral-600"> - £{p.price}</span>
+                  {priceLabel ? (
+                    <span className="text-neutral-600"> - {priceLabel}</span>
+                  ) : null}
+                  {quantityBounds ? (
+                    <span className="text-neutral-500"> · {quantityBounds}</span>
                   ) : null}
                   {p.duration.trim() ? (
                     <span className="text-neutral-500"> · {p.duration}</span>
@@ -398,7 +401,8 @@ export function StepReview({
                     )}
                   </p>
                 </li>
-              ))}
+                );
+              })}
             </ul>
             ) : (
               <p className="px-5 py-3.5 text-sm text-neutral-500 sm:px-6">

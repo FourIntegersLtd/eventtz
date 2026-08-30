@@ -39,21 +39,19 @@ export const LandingVideo = forwardRef<HTMLVideoElement, LandingVideoProps>(
       const el = innerRef.current;
       if (!el) return;
 
-      const markReady = () => {
-        if (el.readyState >= HTMLMediaElement.HAVE_METADATA) {
-          setIsReady(true);
-        }
-      };
+      const markReady = () => setIsReady(true);
 
-      markReady();
+      if (el.readyState >= HTMLMediaElement.HAVE_METADATA) {
+        markReady();
+      }
 
       const events = ["loadedmetadata", "loadeddata", "canplay", "playing"] as const;
       for (const event of events) {
         el.addEventListener(event, markReady);
       }
 
-      // Mobile Safari can miss the first readiness event on cold load.
-      const fallback = window.setTimeout(markReady, 1500);
+      // Mobile Safari can miss the first readiness event, especially after a src swap.
+      const fallback = window.setTimeout(markReady, 400);
 
       return () => {
         window.clearTimeout(fallback);

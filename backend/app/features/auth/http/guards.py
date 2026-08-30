@@ -7,9 +7,15 @@ from fastapi import HTTPException, Request, Response
 from app.contracts.auth import AuthUser
 from app.contracts.types import UserType
 from app.core.logging import get_logger
+from app.core.sentry import bind_sentry_user
 from app.features.auth import messages as auth_messages
-from app.features.auth.session import get_current_user_or_raise
-from app.features.auth.accounts import build_app_user, is_super_admin_user
+from app.features.auth.session import clear_session_cookies, get_current_user_or_raise
+from app.features.auth.accounts import (
+    build_app_user,
+    fetch_user_profile,
+    is_super_admin_user,
+    profile_is_deleted,
+)
 
 logger = get_logger(__name__)
 
@@ -18,11 +24,20 @@ def require_user(request: Request, response: Response) -> AuthUser:
     """Return session user with public.users role and email."""
     auth_user = get_current_user_or_raise(request, response)
     user = build_app_user(auth_user)
+    try:
+        db_profile = fetch_user_profile(user.id)
+    except Exception:
+        logger.warning("require_user: profile lookup failed user_id=%s", user.id)
+        db_profile = None
+    if profile_is_deleted(db_profile):
+        clear_session_cookies(response)
+        raise HTTPException(status_code=401, detail=auth_messages.ACCOUNT_DELETED)
     if user.account_suspended and user.user_type in ("client", "vendor"):
         raise HTTPException(
             status_code=403,
             detail=auth_messages.ACCOUNT_SUSPENDED_CONTACT,
         )
+    bind_sentry_user(user_id=user.id, user_type=user.user_type)
     return user
 
 

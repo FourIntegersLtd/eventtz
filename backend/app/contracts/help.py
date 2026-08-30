@@ -28,9 +28,15 @@ class HelpArticleListItem(BaseModel):
     sort_order: int
 
 
+class HelpRelatedArticle(BaseModel):
+    slug: str
+    title: str
+
+
 class HelpArticleDetail(HelpArticleListItem):
     body_md: str
     related_slugs: list[str] = Field(default_factory=list)
+    related_articles: list[HelpRelatedArticle] = Field(default_factory=list)
 
 
 class HelpCategoriesResponse(BaseModel):

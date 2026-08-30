@@ -14,15 +14,15 @@ from app.features.vendors.listing_media import (
 
 def _payload(
     *,
-    profile: str | None = "https://x.supabase.co/storage/v1/object/public/eventtz-images/users/u1/profile.jpg",
+    profile: str | None = "https://eventtz.s3.eu-west-2.amazonaws.com/users/u1/profile.jpg",
     portfolio: list[str] | None = None,
     display_order: list[str] | None = None,
     hidden: list[str] | None = None,
     legacy_cover: str | None = None,
 ) -> dict:
     portfolio = portfolio or [
-        "https://x.supabase.co/storage/v1/object/public/eventtz-images/users/u1/a.jpg",
-        "https://x.supabase.co/storage/v1/object/public/eventtz-images/users/u1/b.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/u1/a.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/u1/b.jpg",
     ]
     payload: dict = {"profileImageUrl": profile or "", "portfolioFileNames": portfolio}
     if display_order is not None:
@@ -40,10 +40,10 @@ def test_default_order_puts_profile_first():
 
 
 def test_public_order_uses_display_order():
-    profile = "https://x.supabase.co/storage/v1/object/public/eventtz-images/users/u1/profile.jpg"
+    profile = "https://eventtz.s3.eu-west-2.amazonaws.com/users/u1/profile.jpg"
     portfolio = [
-        "https://x.supabase.co/storage/v1/object/public/eventtz-images/users/u1/a.jpg",
-        "https://x.supabase.co/storage/v1/object/public/eventtz-images/users/u1/b.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/u1/a.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/u1/b.jpg",
     ]
     payload = _payload(
         profile=profile,
@@ -57,10 +57,10 @@ def test_public_order_uses_display_order():
 
 def test_hidden_urls_removed_from_public_order():
     portfolio = [
-        "https://x.supabase.co/storage/v1/object/public/eventtz-images/users/u1/a.jpg",
-        "https://x.supabase.co/storage/v1/object/public/eventtz-images/users/u1/b.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/u1/a.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/u1/b.jpg",
     ]
-    profile = "https://x.supabase.co/storage/v1/object/public/eventtz-images/users/u1/profile.jpg"
+    profile = "https://eventtz.s3.eu-west-2.amazonaws.com/users/u1/profile.jpg"
     payload = _payload(profile=profile, portfolio=portfolio, hidden=[profile])
     urls = public_listing_image_urls_from_payload(payload)
     assert profile not in urls
@@ -69,8 +69,8 @@ def test_hidden_urls_removed_from_public_order():
 
 def test_legacy_cover_moves_url_to_front_when_no_display_order():
     portfolio = [
-        "https://x.supabase.co/storage/v1/object/public/eventtz-images/users/u1/a.jpg",
-        "https://x.supabase.co/storage/v1/object/public/eventtz-images/users/u1/b.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/u1/a.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/u1/b.jpg",
     ]
     payload = _payload(portfolio=portfolio, legacy_cover=portfolio[1])
     assert listing_cover_image_url_from_payload(payload) == portfolio[1]

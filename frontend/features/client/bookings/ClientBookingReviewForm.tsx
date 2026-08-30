@@ -11,6 +11,11 @@ import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { TextArea } from "@/components/ui/TextArea";
 import { ReviewPhotoPicker } from "@/features/reviews/ReviewPhotoPicker";
+import {
+  CLIENT_BOOKING_ERROR_COPY,
+  CLIENT_BOOKING_TOAST_COPY,
+} from "@/features/bookings/bookingConfirmCopy";
+import { withMutationFeedback } from "@/lib/mutationFeedback";
 
 type ClientBookingReviewFormProps = {
   bookingId: string;
@@ -55,22 +60,32 @@ export function ClientBookingReviewForm({
       return;
     }
     setBusy(true);
-    try {
-      const res = await postBookingReview(bookingId, parsed.data);
+    let caught: unknown = null;
+    const res = await withMutationFeedback(showToast, {
+      successTitle: CLIENT_BOOKING_TOAST_COPY.reviewSubmitted,
+      showErrorToast: false,
+      run: async () => {
+        try {
+          return await postBookingReview(bookingId, parsed.data);
+        } catch (e) {
+          caught = e;
+          throw e;
+        }
+      },
+    });
+    if (res) {
       track(MixpanelEvents.review_submitted, {
         booking_id: bookingId,
         rating: parsed.data.rating,
         photo_count: parsed.data.image_urls.length,
       });
-      showToast({ title: "Review submitted", tone: "success" });
       onSubmitted(res.review);
       setBody("");
       setImageUrls([]);
-    } catch (e: unknown) {
-      setError(getApiErrorDetail(e) ?? "Could not submit your review.");
-    } finally {
-      setBusy(false);
+    } else if (caught) {
+      setError(getApiErrorDetail(caught) ?? CLIENT_BOOKING_ERROR_COPY.reviewFailed);
     }
+    setBusy(false);
   };
 
   return (

@@ -13,7 +13,11 @@ import {
   type HelpCategory,
 } from "@/lib/helpApi";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
-import { helpBasePath, helpCategoryIcon } from "@/features/help/helpContent";
+import {
+  helpBasePath,
+  helpCategoryIcon,
+  helpCategoryIconVisual,
+} from "@/features/help/helpContent";
 
 type Props = { audience: HelpAudience };
 
@@ -54,7 +58,7 @@ export function HelpCenterView({ audience }: Props) {
       </div>
 
       <div className={`${portalCard} ${portalCardPadding} !p-0 overflow-hidden`}>
-        <div className="border-b border-neutral-100 px-5 py-4">
+        <div className="border-b border-primary-border/60 bg-primary-soft/50 px-5 py-4">
           <h2 className="text-sm font-semibold text-neutral-900">Documentation</h2>
         </div>
         {loading ? (
@@ -71,6 +75,7 @@ export function HelpCenterView({ audience }: Props) {
           <ul className="divide-y divide-neutral-100">
             {categories.map((cat) => {
               const Icon = helpCategoryIcon(cat.icon_key);
+              const visual = helpCategoryIconVisual(cat.icon_key);
               return (
                 <li key={cat.id}>
                   <Link
@@ -82,10 +87,10 @@ export function HelpCenterView({ audience }: Props) {
                         category: cat.slug,
                       })
                     }
-                    className="flex items-start gap-3 px-5 py-4 transition hover:bg-neutral-50"
+                    className="flex items-start gap-3 px-5 py-4 transition hover:bg-primary-soft/40"
                   >
-                    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-neutral-600">
-                      <Icon className="h-4 w-4" aria-hidden />
+                    <span className={visual.shell}>
+                      <Icon className={`h-4 w-4 ${visual.icon}`} aria-hidden />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block text-sm font-semibold text-neutral-900">

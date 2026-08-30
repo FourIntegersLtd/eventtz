@@ -16,6 +16,7 @@ import {
   initMixpanel,
   resetMixpanel,
 } from "@/lib/mixpanelClient";
+import { identifySentryUser, resetSentryUser } from "@/lib/sentryUser";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { useRealtimeSse } from "@/lib/useRealtimeSse";
 import { clearVendorCopilotBriefCache } from "@/lib/vendorCopilotApi";
@@ -69,12 +70,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      resetSentryUser();
+      return;
+    }
     identifyMixpanelUser(user.id, {
       email: user.email,
       user_type: user.user_type ?? null,
       admin_role: user.admin_role ?? null,
     });
+    identifySentryUser(user.id, user.user_type ?? null);
   }, [user]);
 
   useRealtimeSse(user?.id);
@@ -109,6 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } finally {
           setUser(null);
           resetMixpanel();
+          resetSentryUser();
           clearVendorCopilotBriefCache();
         }
       },

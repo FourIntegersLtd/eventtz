@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { LandingBrowseStrip } from "@/features/landing/LandingBrowseStrip";
 import { LandingClientJourneyScroll } from "@/features/landing/LandingClientJourneyScroll";
 import { LandingFaq } from "@/features/landing/LandingFaq";
@@ -14,6 +15,18 @@ import { LandingWhyEventtz } from "@/features/landing/LandingWhyEventtz";
 import { ScrollToTopButton } from "@/components/ui/ScrollToTopButton";
 
 export default function LandingMarketplace() {
+  useEffect(() => {
+    const scrollToHash = () => {
+      const hash = window.location.hash;
+      if (!hash) return;
+      const target = document.querySelector(hash);
+      target?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+    requestAnimationFrame(() => requestAnimationFrame(scrollToHash));
+    window.addEventListener("hashchange", scrollToHash);
+    return () => window.removeEventListener("hashchange", scrollToHash);
+  }, []);
+
   return (
     <div className="min-h-dvh bg-page-bg text-neutral-900">
       <LandingNav variant="solid" />

@@ -11,6 +11,8 @@ export type DrawerProps = {
   onClose: () => void;
   title: string;
   subtitle?: string;
+  /** Optional action shown in the header row (e.g. "Clear all"). */
+  headerAction?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
   widthClassName?: string;
@@ -31,6 +33,7 @@ export function Drawer({
   onClose,
   title,
   subtitle,
+  headerAction,
   children,
   footer,
   widthClassName = "max-w-md",
@@ -111,13 +114,16 @@ export function Drawer({
             animate={{ x: 0 }}
             exit={reduceMotion ? undefined : { x: "100%" }}
             transition={transition}
-            className={`absolute inset-y-0 right-0 flex h-full w-full max-w-[100vw] flex-col border-l border-neutral-200 bg-white ${widthClassName} ${SHADOW.overlay}`}
+            className={`absolute inset-y-0 right-0 flex h-full max-h-[100dvh] w-full max-w-[100vw] flex-col overflow-hidden border-l border-neutral-200 bg-white ${widthClassName} ${SHADOW.overlay}`}
           >
-            <div className="flex items-start justify-between gap-3 border-b border-neutral-200 px-5 py-4">
-              <div className="min-w-0">
-                <h2 className="truncate font-heading text-lg font-semibold text-neutral-900">
-                  {title}
-                </h2>
+            <div className="flex shrink-0 items-start justify-between gap-3 border-b border-neutral-200 px-5 py-4">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="truncate font-heading text-lg font-semibold text-neutral-900">
+                    {title}
+                  </h2>
+                  {headerAction ? <div className="shrink-0">{headerAction}</div> : null}
+                </div>
                 {subtitle ? (
                   <p className="mt-0.5 truncate text-sm text-neutral-500">{subtitle}</p>
                 ) : null}
@@ -140,7 +146,11 @@ export function Drawer({
             >
               {children}
             </div>
-            {footer ? <div className="border-t border-neutral-200 px-5 py-4">{footer}</div> : null}
+            {footer ? (
+              <div className="relative z-10 shrink-0 border-t border-neutral-200 bg-white px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+                {footer}
+              </div>
+            ) : null}
           </motion.div>
         </div>
       ) : null}

@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from app.core.db import get_db
+from app.core.db import get_db, is_upstream_unavailable
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -236,6 +236,11 @@ def mark_stale_enquiries_no_response(*, sla_hours: int) -> int:
             if getattr(upd, "data", None):
                 count += 1
         return count
-    except Exception:
+    except Exception as exc:
+        if is_upstream_unavailable(exc):
+            # Analytics-only; retry next hourly run. logger.exception pages Sentry
+            # for a 30s PostgREST blip (EVENTTZ-BACKEND-N).
+            logger.warning("funnel: mark_stale_enquiries_no_response unavailable")
+            return 0
         logger.exception("funnel: mark_stale_enquiries_no_response failed")
         return 0

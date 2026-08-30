@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from app.core.errors import ValidationError
+from app.features.vendors.taxonomy import VENDOR_SERVICE_KEYS, filter_service_keys
 from app.features.vendors.profile_form_validation import (
     normalize_payload_fields,
     validate_payload_for_progress,
@@ -73,6 +74,60 @@ def test_multi_step_advance_validates_skipped_steps():
         )
 
 
+def test_filter_service_keys_accepts_new_categories():
+    assert filter_service_keys(
+        ["dj", "mc", "decor", "event_planning", "hair_styling"],
+    ) == ["dj", "mc", "decor", "event_planning", "hair_styling"]
+
+
+def test_filter_service_keys_rejects_unknown():
+    assert filter_service_keys(["catering", "not_a_real_type", "dj"]) == ["catering", "dj"]
+
+
+def test_vendor_service_keys_include_new_categories():
+    assert VENDOR_SERVICE_KEYS == frozenset(
+        {
+            "baking",
+            "catering",
+            "photography",
+            "makeup",
+            "rentals",
+            "event_planning",
+            "decor",
+            "dj",
+            "mc",
+            "hair_styling",
+        },
+    )
+
+
+def test_submit_rejects_invalid_service():
+    payload = {
+        "firstName": "Ada",
+        "lastName": "Lovelace",
+        "phone": "07123456789",
+        "businessName": "Biz",
+        "baseCity": "London",
+        "countryCode": "GB",
+        "deliveryModes": ["delivery"],
+        "travelRadius": "under_50",
+        "travelDeliveryPolicy": "fee_included",
+        "servicesOffered": ["not_a_real_type"],
+        "packages": [{"title": "Gold", "price": "500", "details": PACKAGE_DETAILS}],
+        "availableWeekdays": ["Mon"],
+        "maxBookingsPerDay": "2",
+        "portfolioFileNames": ["a", "b", "c", "d", "e"],
+        "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/u1/p.jpg",
+    }
+    with pytest.raises(ValidationError, match="valid service"):
+        validate_payload_for_progress(
+            current_step=9,
+            previous_step=8,
+            payload=payload,
+            status="submitted",
+        )
+
+
 def test_submit_rejects_invalid_discount():
     payload = {
         "businessName": "Biz",
@@ -82,7 +137,7 @@ def test_submit_rejects_invalid_discount():
         "availableWeekdays": ["Mon"],
         "maxBookingsPerDay": "2",
         "portfolioFileNames": ["a", "b", "c", "d", "e"],
-        "profileImageUrl": "https://x.supabase.co/storage/v1/object/public/eventtz-images/users/u1/p.jpg",
+        "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/u1/p.jpg",
         "offerDiscounts": True,
         "discountLabel": "Summer sale",
         "discountPercentage": "200",
@@ -143,6 +198,14 @@ def test_validate_step_4_rejects_zero_price():
         validate_step_fields(4, payload)
 
 
+def test_validate_step_4_rejects_comma_separated_package_price():
+    payload = {
+        "packages": [{"title": "Chairs", "price": "150, 180", "details": PACKAGE_DETAILS}],
+    }
+    with pytest.raises(ValidationError, match="one amount only"):
+        validate_step_fields(4, payload)
+
+
 def test_validate_step_4_requires_discount_option_when_enabled():
     payload = {
         "packages": [{"title": "Gold", "price": "500", "details": PACKAGE_DETAILS}],
@@ -161,13 +224,31 @@ def test_validate_step_4_rejects_short_package_details():
         validate_step_fields(4, payload)
 
 
-def test_normalize_strips_external_portfolio_url():
+def test_normalize_strips_external_portfolio_url(monkeypatch):
+    from types import SimpleNamespace
+
+    monkeypatch.setattr(
+        "app.features.media.s3.get_settings",
+        lambda: SimpleNamespace(aws_s3_bucket_name="eventtz", aws_region="eu-west-2"),
+    )
     payload = {
         "portfolioFileNames": [
             "https://evil.com/photo.jpg",
-            "https://x.supabase.co/storage/v1/object/public/eventtz-images/users/u1/a.jpg",
+            "https://eventtz.s3.eu-west-2.amazonaws.com/users/u1/a.jpg",
         ],
     }
     out = normalize_payload_fields(payload, "u1")
     assert len(out["portfolioFileNames"]) == 1
     assert "users/u1/" in out["portfolioFileNames"][0]
+
+
+def test_normalize_keeps_s3_urls(monkeypatch):
+    from types import SimpleNamespace
+
+    monkeypatch.setattr(
+        "app.features.media.s3.get_settings",
+        lambda: SimpleNamespace(aws_s3_bucket_name="eventtz", aws_region="eu-west-2"),
+    )
+    s3 = "https://eventtz.s3.eu-west-2.amazonaws.com/users/u1/b.jpg"
+    out = normalize_payload_fields({"portfolioFileNames": [s3, "https://evil.com/x.jpg"]}, "u1")
+    assert out["portfolioFileNames"] == [s3]

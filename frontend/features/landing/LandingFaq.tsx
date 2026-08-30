@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { getButtonClassName } from "@/components/ui/buttonStyles";
-import { FAQ_SECTION, FAQ_SECTIONS, WAITLIST_LINK_LABEL, WAITLIST_URL } from "@/features/landing/landingData";
+import { FAQ_SECTION, FAQ_SECTIONS } from "@/features/landing/landingData";
 import { LandingSectionHeading } from "@/features/landing/LandingSectionHeading";
 import { LandingSection } from "@/features/landing/LandingSection";
 import {
@@ -78,28 +77,6 @@ export function LandingFaq() {
             </div>
           );
         })}
-      </div>
-
-      <div className="mt-12 rounded-2xl border border-primary-border bg-primary-soft/40 px-5 py-6 text-center sm:mt-14 sm:px-8 sm:py-8">
-        <p className="font-heading text-lg font-semibold text-primary sm:text-xl">
-          More categories coming
-        </p>
-        <p className="mt-2 text-sm leading-relaxed text-neutral-600 sm:text-base">
-          Baking, catering, photography, makeup, and rentals are live today. Join the waitlist
-          to hear when we add more.
-        </p>
-        <a
-          href={WAITLIST_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={getButtonClassName({
-            variant: "primary",
-            shape: "default",
-            className: "mt-5 inline-flex px-6 py-3 text-sm font-semibold sm:mt-6",
-          })}
-        >
-          {WAITLIST_LINK_LABEL}
-        </a>
       </div>
     </LandingSection>
   );

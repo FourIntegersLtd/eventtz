@@ -56,6 +56,14 @@ export const BOOKING_CONFIRM_COPY = {
     confirmLabel: "Yes, cancel",
     confirmLoadingLabel: "Cancelling…",
   },
+  cancelVendorPending: {
+    title: "Cancel this booking?",
+    description:
+      "This ends the booking. If the client has started checkout, that payment will be cancelled or refunded so they are not charged for a cancelled booking.",
+    cancelLabel: "Keep booking",
+    confirmLabel: "Yes, cancel",
+    confirmLoadingLabel: "Cancelling…",
+  },
   cancelVendorPaid: {
     title: "Cancel this booking?",
     description:
@@ -105,6 +113,19 @@ export const PAYMENT_FLOW_COPY = {
   /** Payment success banner (client). */
   paymentSuccess:
     "Thank you, your payment is received. We are holding it safely until your event is complete. After your event, please confirm everything went well so your vendor can be paid. If anything was not right, you have 48 hours to report a problem and we will help.",
+  /** Stripe return URL landed with payment=cancelled. */
+  paymentCancelledReturn: "Payment cancelled. Try again when you're ready.",
+  /** Stripe return URL while webhook/sync is still catching up. */
+  paymentConfirming: "Confirming your payment…",
+  /** Sync failed after a successful Checkout; webhook may still complete. */
+  paymentSyncPending:
+    "Payment went through. Refresh in a moment if it doesn't update.",
+  paymentDueTitle: "Payment needed",
+  paymentDueSubtitle: "Pay now to confirm your booking.",
+  payNowLabel: "Pay now",
+  /** Deep-link to /pay when the booking is not accepted + unpaid/pending. */
+  payNotReady:
+    "This booking isn't ready for payment. Go back to the booking for the current status.",
   /** Cancelled + refunded booking state (client). */
   cancelledRefunded:
     "This booking was cancelled and your payment was refunded in full. Refunds usually take 5-10 working days to reach your card.",
@@ -120,6 +141,73 @@ export const PAYMENT_FLOW_COPY = {
     title: "Paying your vendor",
     body: "You've both confirmed the event went well. We're releasing the vendor's payout now — this usually takes a moment.",
   },
+} as const;
+
+/** Client booking mutation toasts and inline error fallbacks. */
+export const CLIENT_BOOKING_TOAST_COPY = {
+  bookingCancelled: "Booking cancelled",
+  quoteAccepted: "Quote accepted",
+  quoteDeclined: "Quote declined",
+  priceUpdateAccepted: "Price update accepted",
+  priceUpdateDeclined: "Price update declined",
+  completionConfirmed: "Completion confirmed",
+  reviewSubmitted: "Review submitted",
+  requestSent: "Request sent",
+  requestsSent: (count: number) => `${count} requests sent`,
+  requestsNotSent: "Requests not sent",
+  partialRequestsSent: (sent: number, total: number) => `${sent} of ${total} requests sent`,
+} as const;
+
+export const VENDOR_BOOKING_TOAST_COPY = {
+  bookingAccepted: "Booking accepted",
+  bookingDeclined: "Booking declined",
+  quoteWithdrawn: "Quote withdrawn",
+  bookingCancelled: "Booking cancelled",
+  completionConfirmed: "Completion confirmed",
+  updatedPriceSent: "Updated price sent",
+  quoteSent: "Quote sent",
+} as const;
+
+export const VENDOR_BOOKING_ERROR_COPY = {
+  acceptFailed: "Could not accept this booking.",
+  declineFailed: "Could not decline this booking.",
+  withdrawFailed: "Could not withdraw this quote.",
+  cancelFailed: "Could not cancel this booking.",
+  completionFailed: "Could not confirm completion.",
+  priceUpdateFailed: "Could not send the updated price.",
+  quoteFailed: "Could not send quote.",
+} as const;
+
+export const CLIENT_BOOKING_ERROR_COPY = {
+  cancelFailed: "Could not cancel this booking.",
+  quoteFailed: "Could not update this quote.",
+  priceUpdateFailed: "Could not update this booking.",
+  completionFailed: "Could not confirm completion.",
+  reviewFailed: "Could not submit your review.",
+  enquiryFailed: "Request failed. Try again.",
+  multiEnquireNone: "Could not send any requests.",
+} as const;
+
+/** Client dashboard attention-feed nudges (quotes, completion). */
+export const CLIENT_DASHBOARD_COPY = {
+  quoteTitle: (vendorName: string) => `Quote from ${vendorName}`,
+  quoteCta: "Review",
+  completionWaitTitle: (vendorName: string) => `Waiting for ${vendorName} to confirm`,
+  completionWaitSubtitle: (eventName: string) =>
+    `${eventName} · you've confirmed - the vendor is paid once they confirm too`,
+  completionConfirmTitle: "How did your event go?",
+  completionConfirmSubtitle: (eventName: string) =>
+    `${eventName} · confirm it's complete, or report a problem`,
+  completionCta: "Confirm",
+  completionViewCta: "View",
+} as const;
+
+/** Pay-page venue step and checkout preamble. */
+export const CLIENT_PAY_PAGE_COPY = {
+  venueTitle: "Event location",
+  venueIntro:
+    "We need your event address before you pay. You will see how we protect your payment on the next step.",
+  safetyIntro: "Review how we protect your payment, then continue.",
 } as const;
 
 /** Closed booking outcomes shown on detail views (declined / cancelled without refund). */

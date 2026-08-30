@@ -30,6 +30,25 @@ def test_is_complete_package_requires_description():
     assert is_complete_package(_complete_pkg(title="Package 1"))
 
 
+def test_is_complete_package_rejects_invalid_price():
+    assert not is_complete_package(_complete_pkg(price="150,180"))
+    assert not is_complete_package(_complete_pkg(price="150;180"))
+
+
+def test_validate_package_fields_rejects_semicolon_price():
+    from app.features.vendors.package_quality import validate_package_fields
+
+    with pytest.raises(ValidationError, match="one amount only"):
+        validate_package_fields(
+            {
+                "title": "Small Chops Pack",
+                "price": "150;180",
+                "details": "Ten spring rolls and ten samosas with delivery included.",
+            },
+            strict=True,
+        )
+
+
 def test_vague_description_helper_optional():
     assert has_vague_package_description("Contact for details about what's included")
     assert not has_vague_package_description("10 samosas and 10 spring rolls included.")
@@ -54,6 +73,24 @@ def test_catering_requires_complete_package_on_step():
         validate_packages_for_payload(payload, require_service_packages=True)
 
 
+def test_hair_styling_requires_complete_package_on_step():
+    payload = {
+        "servicesOffered": ["hair_styling"],
+        "packages": [{"title": "Bridal hair", "price": "200", "details": "short"}],
+    }
+    with pytest.raises(ValidationError, match="what's included"):
+        validate_packages_for_payload(payload, require_service_packages=True)
+
+
+def test_dj_does_not_require_package_on_step():
+    payload = {
+        "servicesOffered": ["dj"],
+        "packages": [],
+        "hourlyRate": "150",
+    }
+    validate_packages_for_payload(payload, require_service_packages=True)
+
+
 def test_package_quality_level():
     payload = {"packages": [_complete_pkg(), _complete_pkg(title="Large Pack", price="70")]}
     assert package_quality_level(payload) == "high"
@@ -61,6 +98,45 @@ def test_package_quality_level():
         "packages": [_complete_pkg(), {"title": "X", "price": "10", "details": ""}],
     }
     assert package_quality_level(payload_incomplete) == "needs_review"
+
+
+def test_per_unit_package_requires_unit_label():
+    pkg = _complete_pkg(pricingMode="per_unit", unitLabel="", price="2")
+    assert not is_complete_package(pkg)
+    with pytest.raises(ValidationError, match="unit name"):
+        from app.features.vendors.package_quality import validate_package_fields
+
+        validate_package_fields({**pkg, "unitLabel": ""}, strict=True)
+
+
+def test_per_unit_package_complete_with_unit_label():
+    pkg = _complete_pkg(
+        pricingMode="per_unit",
+        unitLabel="chair",
+        price="2",
+        minQuantity="10",
+        maxQuantity="200",
+    )
+    assert is_complete_package(pkg)
+
+
+def test_per_unit_package_rejects_min_above_max():
+    from app.features.vendors.package_quality import validate_package_fields
+
+    pkg = _complete_pkg(
+        pricingMode="per_unit",
+        unitLabel="chair",
+        price="2",
+        minQuantity="20",
+        maxQuantity="10",
+    )
+    assert not is_complete_package(pkg)
+    with pytest.raises(ValidationError, match="minimum quantity cannot be greater"):
+        validate_package_fields(pkg, strict=True)
+
+
+def test_missing_pricing_mode_is_fixed():
+    assert is_complete_package(_complete_pkg())
 
 
 def test_group_flat_tips_merges_by_package():

@@ -9,6 +9,10 @@ const basePkg = (overrides: Partial<VendorPackageItem> = {}): VendorPackageItem 
   price: "500",
   duration: "2 hr",
   useDefaultTravelPackage: true,
+  pricingMode: "fixed",
+  unitLabel: "",
+  minQuantity: "",
+  maxQuantity: "",
   ...overrides,
 });
 

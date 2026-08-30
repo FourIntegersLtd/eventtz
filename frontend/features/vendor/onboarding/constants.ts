@@ -1,3 +1,5 @@
+import { VENDOR_SERVICE_OPTIONS } from "@/lib/vendorServiceCatalog";
+
 export const STEP_LABELS = [
   "Account",
   "Business",
@@ -14,11 +16,7 @@ export const SERVICE_OPTIONS: {
   value: string;
   label: string;
 }[] = [
-  { value: "baking", label: "Baking" },
-  { value: "catering", label: "Catering" },
-  { value: "photography", label: "Photography" },
-  { value: "makeup", label: "Makeup" },
-  { value: "rentals", label: "Rentals" },
+  ...VENDOR_SERVICE_OPTIONS,
   { value: "other", label: "Other" },
 ];
 
@@ -42,7 +40,7 @@ export const EVENT_TYPE_OPTIONS: { value: string; label: string }[] = [
 export const VENDOR_WAITLIST_URL =
   "https://forms.gle/6c4Ezw5MNuQaYr238";
 
-/** Mirror backend `app/features/vendors/profile_form_validation.py`. */
+/** Mirror backend `app/features/vendors/list_pricing.py` and `profile_form_validation.py`. */
 export const MIN_MONEY_GBP = 0.1;
 export const MAX_DISCOUNT_PCT = 100;
 export const MAX_MONEY_GBP = 1_000_000;

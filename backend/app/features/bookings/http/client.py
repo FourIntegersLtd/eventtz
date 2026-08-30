@@ -20,6 +20,7 @@ from app.contracts.booking import (
     VendorBookingStatusResponse,
 )
 from app.features.bookings import messages as booking_messages
+from app.features.bookings.http.ids import parse_booking_id
 from app.features.bookings.http import participant_dispute_handlers as dh
 from app.contracts.disputes import (
     CreateParticipantDisputeBody,
@@ -33,6 +34,7 @@ from app.contracts.payments import (
     BookingCheckoutSyncResponse,
     ConfirmCompletionResponse,
 )
+from app.contracts.receipts import PaymentReceiptResponse
 from app.contracts.reviews import (
     ClientOwnerReviewItem,
     ClientOwnerReviewsResponse,
@@ -55,6 +57,12 @@ from app.features.bookings import (
     update_booking_venue_for_client,
 )
 from app.features.bookings.reviews import create_booking_review, list_reviews_for_client
+from app.features.bookings.receipts import (
+    build_client_payment_receipt,
+    load_payment_snapshot,
+    verify_client_receipt_with_stripe,
+)
+from app.features.bookings.receipt_document import payment_receipt_response, receipt_html_response
 
 router = APIRouter(prefix="/client", tags=["client"])
 logger = get_logger(__name__)
@@ -107,10 +115,7 @@ def get_client_booking(
 ) -> ClientBookingDetailResponse:
     user = require_client(request, response)
     client_id = str(user.get("id") or "")
-    try:
-        uuid.UUID(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+    parse_booking_id(booking_id)
 
     # Safety net between hourly runs: pay the vendor if the automatic payout date has passed.
     maybe_auto_release_payout_for_booking(booking_id)
@@ -119,6 +124,66 @@ def get_client_booking(
         raise HTTPException(status_code=404, detail=booking_messages.BOOKING_NOT_FOUND)
 
     return ClientBookingDetailResponse(booking=ClientBookingDetail(**row))
+
+
+@router.get("/booking-requests/{booking_id}/receipt", response_model=PaymentReceiptResponse)
+def get_client_booking_receipt(
+    request: Request,
+    response: Response,
+    booking_id: str,
+) -> PaymentReceiptResponse:
+    user = require_client(request, response)
+    client_id = str(user.get("id") or "")
+    parse_booking_id(booking_id)
+
+    row = get_booking_request_for_client(client_id, booking_id)
+    if not row:
+        raise HTTPException(status_code=404, detail=booking_messages.BOOKING_NOT_FOUND)
+
+    snap = load_payment_snapshot(booking_id)
+    verify_client_receipt_with_stripe(snap)
+    try:
+        payload = build_client_payment_receipt(
+            row,
+            vendor_display_name=str(row.get("vendor_display_name") or "Vendor"),
+            snapshot=snap,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+    return payment_receipt_response(payload)
+
+
+@router.get("/booking-requests/{booking_id}/receipt.html")
+def get_client_booking_receipt_html(
+    request: Request,
+    response: Response,
+    booking_id: str,
+) -> Response:
+    user = require_client(request, response)
+    client_id = str(user.get("id") or "")
+    parse_booking_id(booking_id)
+
+    row = get_booking_request_for_client(client_id, booking_id)
+    if not row:
+        raise HTTPException(status_code=404, detail=booking_messages.BOOKING_NOT_FOUND)
+
+    snap = load_payment_snapshot(booking_id)
+    verify_client_receipt_with_stripe(snap)
+    try:
+        payload = build_client_payment_receipt(
+            row,
+            vendor_display_name=str(row.get("vendor_display_name") or "Vendor"),
+            snapshot=snap,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+    return receipt_html_response(
+        payload,
+        filename=f"receipt-{payload['receipt_number']}.html",
+        inline=False,
+    )
 
 
 @router.post(
@@ -133,10 +198,7 @@ def post_client_booking_dispute(
 ) -> CreateParticipantDisputeResponse:
     user = require_client(request, response)
     uid = str(user.get("id") or "")
-    try:
-        uuid.UUID(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+    parse_booking_id(booking_id)
 
     return dh.create_booking_dispute(booking_id, uid, body)
 
@@ -152,10 +214,7 @@ def list_client_booking_disputes(
 ) -> ParticipantDisputesListResponse:
     user = require_client(request, response)
     uid = str(user.get("id") or "")
-    try:
-        uuid.UUID(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+    parse_booking_id(booking_id)
     return dh.list_booking_disputes(booking_id, uid)
 
 
@@ -199,10 +258,7 @@ def post_booking_review(
 ) -> PostBookingReviewResponse:
     user = require_client(request, response)
     client_id = str(user.get("id") or "")
-    try:
-        uuid.UUID(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+    parse_booking_id(booking_id)
 
     try:
         rev = create_booking_review(
@@ -230,16 +286,13 @@ def patch_client_booking_status(
 ) -> VendorBookingStatusResponse:
     user = require_client(request, response)
     client_id = str(user.get("id") or "")
-    try:
-        uuid.UUID(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+    parse_booking_id(booking_id)
 
     try:
         row = update_booking_request_status_for_client(
             client_id,
             booking_id,
-            new_status=body.status,
+            new_status=body.booking_status,
             event_postcode=body.event_postcode,
             event_address=body.event_address,
         )
@@ -263,10 +316,7 @@ def post_cancel_client_booking(
 ) -> VendorBookingStatusResponse:
     user = require_client(request, response)
     client_id = str(user.get("id") or "")
-    try:
-        uuid.UUID(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+    parse_booking_id(booking_id)
 
     try:
         row = cancel_booking_request_for_client(client_id, booking_id)
@@ -294,10 +344,7 @@ def patch_client_booking_venue(
 ) -> ClientBookingDetailResponse:
     user = require_client(request, response)
     client_id = str(user.get("id") or "")
-    try:
-        uuid.UUID(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+    parse_booking_id(booking_id)
     try:
         row = update_booking_venue_for_client(
             client_id,
@@ -323,10 +370,7 @@ def post_booking_checkout(
 ) -> BookingCheckoutResponse:
     user = require_client(request, response)
     client_id = str(user.get("id") or "")
-    try:
-        uuid.UUID(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+    parse_booking_id(booking_id)
 
     try:
         checkout_url = create_checkout_session_for_booking(client_id, booking_id)
@@ -355,10 +399,7 @@ def post_booking_checkout_sync(
     """Confirm payment after Stripe redirect when the webhook has not run yet (common in local dev)."""
     user = require_client(request, response)
     client_id = str(user.get("id") or "")
-    try:
-        uuid.UUID(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+    parse_booking_id(booking_id)
 
     try:
         row = sync_checkout_payment_for_client(client_id, booking_id, body.session_id)
@@ -390,10 +431,7 @@ def post_client_confirm_completion(
 ) -> ConfirmCompletionResponse:
     user = require_client(request, response)
     client_id = str(user.get("id") or "")
-    try:
-        uuid.UUID(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+    parse_booking_id(booking_id)
 
     try:
         result = confirm_completion_for_client(client_id, booking_id)
@@ -433,6 +471,8 @@ def post_booking_request(
             selected_option_ids=body.selected_option_ids,
             client_search_context=body.client_search_context,
             event_id=body.event_id,
+            quantities=body.quantities,
+            vendor_referral_code=body.vendor_referral_code,
         )
     except ValueError as e:
         logger.info("booking_request rejected: %s", e)

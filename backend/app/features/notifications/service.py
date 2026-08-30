@@ -38,6 +38,10 @@ BookingNotifyKind = Literal[
     "enquiry_reminder_6h",
     "enquiry_reminder_24h",
     "client_vendor_no_response",
+    "event_tomorrow",
+    "vendor_event_tomorrow",
+    "pay_to_confirm",
+    "payout_held_connect_incomplete",
 ]
 
 

@@ -4,13 +4,18 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from app.features.vendors.search import search_approved_vendors
+from app.features.vendors.search import _parse_types_param, search_approved_vendors
 from app.features.vendors.search_ai import (
     parse_marketplace_query,
     sanitize_marketplace_parse_result,
     token_only_marketplace_parse,
     why_for_need,
 )
+
+
+def test_parse_types_param_filters_unknown_keys():
+    assert _parse_types_param("dj,not_a_real_type,decor") == ["dj", "decor"]
+    assert _parse_types_param(None) == []
 
 
 def test_sanitize_related_fields_dedupes_and_filters_types():
@@ -76,9 +81,10 @@ def test_sanitize_plan_needs():
     )
     assert result.mode == "plan"
     assert result.plan_title == "Birthday essentials"
-    assert len(result.needs) == 2
+    assert len(result.needs) == 3
     assert result.needs[0].service_key == "baking"
     assert result.needs[1].label == "Small chops"
+    assert result.needs[2].service_key == "dj"
 
 
 def test_token_only_parse_does_not_map_baker_to_baking():

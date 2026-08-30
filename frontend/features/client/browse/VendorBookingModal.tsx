@@ -1,15 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CalendarRange, Pencil, X } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { DateInput } from "@/components/ui/DateInput";
-import { getApiErrorDetail } from "@/lib/api-errors";
-import { postBookingRequest, type ClientSearchContext } from "@/lib/clientBookingsApi";
-import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import {
   isoDatesInEventRange,
   vendorPayloadAllowsEventDates,
@@ -18,13 +15,19 @@ import {
   computeBookingEstimateGbp,
   formatBookingEstimateLabel,
 } from "@/lib/vendorDiscountDisplay";
-import { getBookingServiceFeePercent } from "@/lib/bookingServiceFee";
+import { computeClientFeeBreakdown } from "@/lib/bookingServiceFee";
+import { ClientFeeBreakdownSummary } from "@/features/bookings/ClientFeeBreakdownSummary";
 import { todayIsoDate, isPastIsoDate } from "@/lib/eventDateValidation";
-import { clientBookingRequestSchema, parseForm } from "@/lib/validation";
 import {
   type BrowsePricingOption,
+  bookingQuantitiesPayload,
   buildBookingLineItems,
 } from "./vendorBrowseDetailModel";
+import { QuantityStepper } from "@/components/ui/QuantityStepper";
+import { lineTotalGbp } from "@/lib/packagePricing";
+import { useVendorBookingSubmit } from "@/features/client/browse/useVendorBookingSubmit";
+import { useVendorReferralPreview } from "@/features/client/browse/useVendorReferralPreview";
+import type { ClientSearchContext } from "@/lib/clientBookingsApi";
 import { ActiveEventPrefillBanner } from "@/features/bookings/ActiveEventPrefillBanner";
 import type { EventEnquirePrefill } from "@/features/bookings/eventEnquirePrefill";
 import {
@@ -47,8 +50,10 @@ type VendorBookingModalProps = {
   vendorDisplayName: string;
   vendorUserId: string;
   pricingOptions: BrowsePricingOption[];
-  /** Package / rate ids selected on the profile sidebar - fixed for this modal; change selection by closing and re-picking there. */
+  /** Package / rate ids selected on the profile sidebar. */
   initialSelectedIds: string[];
+  /** Per-item counts from the profile sidebar. */
+  initialQuantities?: Record<string, number>;
   /** Vendor onboarding payload - used to warn if chosen dates conflict with calendar. */
   vendorPayload?: Record<string, unknown>;
   /** Dates/types from marketplace URL on `/client/browse/[id]?…`. */
@@ -58,6 +63,8 @@ type VendorBookingModalProps = {
   linkedEventId?: string | null;
   /** Marketplace filters to store on the booking for alternative-vendor nudges. */
   clientSearchContext?: ClientSearchContext | null;
+  /** Pre-filled from ?vref= on the browse URL. */
+  initialReferralCode?: string | null;
 };
 
 export function VendorBookingModal({
@@ -67,14 +74,19 @@ export function VendorBookingModal({
   vendorUserId,
   pricingOptions,
   initialSelectedIds,
+  initialQuantities = {},
   vendorPayload,
   searchPrefill,
   initialPrefill,
   linkedEventId,
   clientSearchContext,
+  initialReferralCode,
 }: VendorBookingModalProps) {
-  // Selection happens once, on the profile sidebar - this modal only confirms dates/venue/notes.
-  const selectedIds = useMemo(() => new Set(initialSelectedIds), [initialSelectedIds]);
+  // Packages are chosen on the profile; quantity for per-item rates can still change here.
+  const [selectedIds, setSelectedIds] = useState(() => new Set(initialSelectedIds));
+  const [quantities, setQuantities] = useState<Record<string, number>>(
+    () => ({ ...initialQuantities }),
+  );
   const [eventName, setEventName] = useState(initialPrefill?.eventName ?? "");
   const [eventDate, setEventDate] = useState(
     searchPrefill?.eventDate?.trim() ||
@@ -86,11 +98,29 @@ export function VendorBookingModal({
   );
   const [venueAddress, setVenueAddress] = useState(initialPrefill?.venueAddress ?? "");
   const [notes, setNotes] = useState(initialPrefill?.notes ?? "");
-  const [validationError, setValidationError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitResult, setSubmitResult] = useState<
-    null | { type: "error"; message: string } | { type: "success"; bookingId: string }
-  >(null);
+  const [referralFieldsOpen, setReferralFieldsOpen] = useState(
+    () => Boolean(initialReferralCode?.trim()),
+  );
+  const referralInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (initialReferralCode?.trim()) {
+      setReferralFieldsOpen(true);
+    }
+  }, [initialReferralCode]);
+
+  const setPackageQuantity = (id: string, qty: number) => {
+    const opt = pricingOptions.find((o) => o.id === id);
+    setQuantities((prev) => ({ ...prev, [id]: qty }));
+    if (opt?.pricingMode === "per_unit") {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        if (qty >= opt.minQuantity) next.add(id);
+        else next.delete(id);
+        return next;
+      });
+    }
+  };
   const {
     pendingPrefill,
     linkedPrefill,
@@ -145,11 +175,9 @@ export function VendorBookingModal({
     return !vendorPayloadAllowsEventDates(vendorPayload, range);
   }, [vendorPayload, eventDate, eventEndDate]);
 
-  const dismissResultModal = () => setSubmitResult(null);
-
   const lineItems = useMemo(
-    () => buildBookingLineItems(pricingOptions, [...selectedIds]),
-    [pricingOptions, selectedIds],
+    () => buildBookingLineItems(pricingOptions, [...selectedIds], quantities),
+    [pricingOptions, selectedIds, quantities],
   );
 
   const estimate = useMemo(() => {
@@ -163,6 +191,8 @@ export function VendorBookingModal({
       const sum = positiveLines.reduce((acc, l) => acc + (l.unitPriceGbp ?? 0), 0);
       return {
         label: formatBookingEstimateLabel(sum, hasTbc),
+        sumNumeric: sum,
+        hasTbc,
         autoLines: [] as { id: string; heading: string; unitPriceGbp: number | null }[],
       };
     }
@@ -173,76 +203,66 @@ export function VendorBookingModal({
     );
     return {
       label: formatBookingEstimateLabel(result.sumNumeric, result.hasTbc),
+      sumNumeric: result.sumNumeric,
+      hasTbc: result.hasTbc,
       autoLines: result.autoLines,
     };
   }, [lineItems, vendorPayload, eventDate]);
 
-  const clientEstimateLabel = useMemo(() => {
-    if (estimate.label === "TBC" || estimate.label.includes("TBC")) {
-      return estimate.label;
-    }
-    const match = estimate.label.match(/[\d,.]+/);
-    if (!match) return estimate.label;
-    const vendorPortion = Number.parseFloat(match[0].replace(/,/g, ""));
-    if (!Number.isFinite(vendorPortion)) return estimate.label;
-    const feePct = getBookingServiceFeePercent();
-    const withFee = Math.round(vendorPortion * (1 + feePct / 100) * 100) / 100;
-    return formatBookingEstimateLabel(withFee, false);
-  }, [estimate.label]);
+  const {
+    referralCode,
+    setReferralCode,
+    onReferralCodeBlur,
+    referralDiscountGbp,
+    validating: referralValidating,
+    error: referralError,
+    referralApplied,
+    normalizedCode: normalizedReferralCode,
+  } = useVendorReferralPreview({
+    vendorUserId,
+    vendorPortionGbp: estimate.sumNumeric,
+    initialCode: initialReferralCode,
+  });
+
+  const {
+    validationError,
+    setValidationError,
+    submitting,
+    submitResult,
+    dismissResultModal,
+    submit: submitBooking,
+  } = useVendorBookingSubmit({
+    vendorUserId,
+    selectedEventId,
+    clientSearchContext,
+    calendarConflict,
+  });
+
+  const clientFeeBreakdown = useMemo(() => {
+    if (estimate.hasTbc) return null;
+    return computeClientFeeBreakdown({
+      vendorPortionGbp: estimate.sumNumeric,
+      referralFeeDiscountGbp: referralDiscountGbp,
+    });
+  }, [estimate.sumNumeric, estimate.hasTbc, referralDiscountGbp]);
 
   const minEventDate = todayIsoDate();
 
   const submit = () => {
-    const parsed = parseForm(clientBookingRequestSchema, {
+    submitBooking({
       eventName,
       eventDate,
-      eventEndDate: eventEndDate || null,
+      eventEndDate,
       venueAddress,
       notes,
       selectedOptionIds: [...selectedIds],
+      quantities: bookingQuantitiesPayload(
+        [...selectedIds],
+        pricingOptions,
+        quantities,
+      ),
+      vendorReferralCode: normalizedReferralCode,
     });
-    if (!parsed.ok) {
-      setValidationError(parsed.formError);
-      return;
-    }
-    if (calendarConflict) {
-      setValidationError(
-        "These dates don’t match this vendor’s availability. Adjust the dates or message them to confirm.",
-      );
-      return;
-    }
-    setValidationError(null);
-    setSubmitting(true);
-    void postBookingRequest({
-      vendor_user_id: vendorUserId,
-      event_name: parsed.data.eventName,
-      event_date: parsed.data.eventDate,
-      event_end_date: parsed.data.eventEndDate?.trim() || null,
-      event_postcode: null,
-      event_address: (parsed.data.venueAddress ?? "").trim() || null,
-      notes: (parsed.data.notes ?? "").trim() || null,
-      selected_option_ids: parsed.data.selectedOptionIds,
-      client_search_context: clientSearchContext ?? undefined,
-      event_id: selectedEventId,
-    })
-      .then((created) => {
-        track(MixpanelEvents.enquiry_created, {
-          booking_id: created.booking_request_id,
-          vendor_user_id: vendorUserId,
-          option_count: parsed.data.selectedOptionIds.length,
-          source: "single",
-        });
-        setSubmitResult({ type: "success", bookingId: created.booking_request_id });
-        setSubmitting(false);
-      })
-      .catch((err: unknown) => {
-        track(MixpanelEvents.enquiry_failed, {
-          vendor_user_id: vendorUserId,
-          source: "single",
-        });
-        setSubmitResult({ type: "error", message: getApiErrorDetail(err) ?? "Request failed. Try again." });
-        setSubmitting(false);
-      });
   };
 
   return (
@@ -275,7 +295,7 @@ export function VendorBookingModal({
     >
       {submitResult?.type === "success" ? (
         <div className="flex flex-col items-center gap-3 text-center">
-          <LottieIllustration asset="successCheck" size="status" ariaLabel="" />
+          <LottieIllustration asset="launchingSoon" size="status" ariaLabel="" />
           <p className="text-sm leading-relaxed text-neutral-700">
             Your booking request was sent to {vendorDisplayName}. They&apos;ll respond in your
             bookings inbox.
@@ -464,36 +484,66 @@ export function VendorBookingModal({
               <ul className="mt-2 divide-y divide-neutral-100 rounded-lg border border-neutral-200">
                 {pricingOptions
                   .filter((opt) => selectedIds.has(opt.id))
-                  .map((opt) => (
-                    <li key={opt.id} className="flex flex-wrap items-baseline justify-between gap-2 px-3 py-2.5">
-                      <span className="text-sm font-medium text-neutral-900">{opt.heading}</span>
-                      <div className="shrink-0 text-right">
-                        {opt.priceDisplay != null ? (
-                          <>
-                            {opt.compareAtDisplay ? (
-                              <p className="text-xs text-neutral-500 line-through">
-                                GBP {opt.compareAtDisplay}
+                  .map((opt) => {
+                    const perUnit = opt.pricingMode === "per_unit";
+                    const qty = quantities[opt.id] ?? opt.minQuantity;
+                    const lineTotal = perUnit
+                      ? lineTotalGbp(opt.unitPriceGbp, qty)
+                      : opt.unitPriceGbp;
+                    const lineLabel =
+                      lineTotal != null
+                        ? `GBP ${lineTotal.toLocaleString("en-GB", {
+                            minimumFractionDigits: lineTotal % 1 === 0 ? 0 : 2,
+                            maximumFractionDigits: 2,
+                          })}`
+                        : null;
+                    return (
+                    <li key={opt.id} className="space-y-2 px-3 py-2.5">
+                      <div className="flex flex-wrap items-baseline justify-between gap-2">
+                        <span className="text-sm font-medium text-neutral-900">{opt.heading}</span>
+                        <div className="shrink-0 text-right">
+                          {lineLabel != null ? (
+                            <>
+                              {perUnit && opt.priceDisplay != null ? (
+                                <p className="text-xs text-neutral-500">
+                                  {qty} × GBP {opt.priceDisplay}
+                                  {opt.priceSuffix ? ` ${opt.priceSuffix}` : ""}
+                                </p>
+                              ) : opt.compareAtDisplay ? (
+                                <p className="text-xs text-neutral-500 line-through">
+                                  GBP {opt.compareAtDisplay}
+                                </p>
+                              ) : null}
+                              <p
+                                className={`text-sm font-semibold ${
+                                  opt.compareAtDisplay && !perUnit ? "text-primary" : "text-neutral-900"
+                                }`}
+                              >
+                                {lineLabel}
                               </p>
-                            ) : null}
-                            <p
-                              className={`text-sm font-semibold ${
-                                opt.compareAtDisplay ? "text-primary" : "text-neutral-900"
-                              }`}
-                            >
-                              GBP {opt.priceDisplay}
-                            </p>
-                            {opt.discountBadge ? (
-                              <p className="mt-0.5 text-xs font-medium text-green-700">
-                                {opt.discountBadge}
-                              </p>
-                            ) : null}
-                          </>
-                        ) : (
-                          <span className="text-sm font-semibold text-neutral-900">TBC</span>
-                        )}
+                              {opt.discountBadge ? (
+                                <p className="mt-0.5 text-xs font-medium text-green-700">
+                                  {opt.discountBadge}
+                                </p>
+                              ) : null}
+                            </>
+                          ) : (
+                            <span className="text-sm font-semibold text-neutral-900">TBC</span>
+                          )}
+                        </div>
                       </div>
+                      {perUnit ? (
+                        <QuantityStepper
+                          value={qty}
+                          min={opt.minQuantity}
+                          max={opt.maxQuantity}
+                          onChange={(next) => setPackageQuantity(opt.id, next)}
+                          aria-label={`Quantity for ${opt.heading}`}
+                        />
+                      ) : null}
                     </li>
-                  ))}
+                    );
+                  })}
                 {estimate.autoLines.map((line) => (
                   <li
                     key={line.id}
@@ -532,16 +582,71 @@ export function VendorBookingModal({
               <p className="mt-1 text-right text-xs text-neutral-400">{notes.length}/2000</p>
             </div>
 
-            <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-neutral-600">Estimated total</span>
-                <span className="font-heading text-lg font-semibold text-neutral-900">
-                  {clientEstimateLabel}
-                </span>
+            {referralFieldsOpen ? (
+              <div>
+                <label
+                  htmlFor="booking-referral-code"
+                  className="block text-xs font-semibold uppercase tracking-wide text-neutral-500"
+                >
+                  Referral code{" "}
+                  <span className="font-normal normal-case text-neutral-400">(optional)</span>
+                </label>
+                <input
+                  ref={referralInputRef}
+                  id="booking-referral-code"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value)}
+                  onBlur={onReferralCodeBlur}
+                  autoComplete="off"
+                  placeholder="Up to 6 digits from the vendor"
+                  className="mt-1.5 w-full rounded-lg border border-neutral-200 px-3 py-2 font-mono text-base text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 md:text-sm"
+                />
+                {referralValidating ? (
+                  <p className="mt-1 text-xs text-neutral-500">Checking code…</p>
+                ) : referralApplied ? (
+                  <p className="mt-1 text-xs font-medium text-emerald-700">
+                    Referral discount applied — {clientFeeBreakdown?.referralDiscountLabel?.replace("-", "")}{" "}
+                    off your Eventtz fee
+                  </p>
+                ) : referralError ? (
+                  <p className="mt-1 text-xs text-red-700">{referralError}</p>
+                ) : null}
               </div>
-              <p className="mt-2 text-xs text-neutral-500">
-                Includes Eventtz fee. The vendor may adjust the price before you pay.
-              </p>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setReferralFieldsOpen(true);
+                  window.setTimeout(() => referralInputRef.current?.focus(), 0);
+                }}
+                className="text-xs text-neutral-600 underline underline-offset-2 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2"
+              >
+                Referral code?
+              </button>
+            )}
+
+            <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3">
+              {clientFeeBreakdown ? (
+                <ClientFeeBreakdownSummary
+                  breakdown={clientFeeBreakdown}
+                  footnote="The vendor may adjust the price before you pay."
+                />
+              ) : (
+                <>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-neutral-600">Estimated total</span>
+                    <span className="font-heading text-lg font-semibold text-neutral-900">
+                      {estimate.label.replace(/^GBP\s/, "£")}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs text-neutral-500">
+                    The vendor may adjust the price before you pay.
+                  </p>
+                </>
+              )}
             </div>
 
             {validationError ? <LottieFailureInline message={validationError} /> : null}

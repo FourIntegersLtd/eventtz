@@ -28,9 +28,9 @@ def test_client_price_confirmation_not_required_without_adjustments():
     assert client_price_confirmation_required(row) is False
 
 
-@patch("app.features.bookings.status._get_vendor_stripe_fields", return_value={"stripe_account_id": "acct_1", "stripe_charges_enabled": True, "stripe_payouts_enabled": True})
-@patch("app.features.bookings.status.get_settings")
-@patch("app.features.bookings.status.get_db")
+@patch("app.features.bookings.status_shared._get_vendor_stripe_fields", return_value={"stripe_account_id": "acct_1", "stripe_charges_enabled": True, "stripe_payouts_enabled": True})
+@patch("app.features.bookings.status_vendor.get_settings")
+@patch("app.features.bookings.status_vendor.get_db")
 def test_vendor_cannot_accept_while_client_must_confirm_price(mock_get_client, mock_settings, _mock_stripe):
     mock_client = MagicMock()
     mock_get_client.return_value = mock_client
@@ -56,11 +56,11 @@ def test_vendor_cannot_accept_while_client_must_confirm_price(mock_get_client, m
         update_booking_request_status_for_vendor("v1", "b1", new_status="accepted")
 
 
-@patch("app.features.bookings.status.get_booking_request_for_vendor")
-@patch("app.features.bookings.status._notify_booking_changed")
-@patch("app.features.bookings.status.dispatch_booking_notification")
-@patch("app.features.bookings.status.get_settings")
-@patch("app.features.bookings.status.get_db")
+@patch("app.features.bookings.status_client.get_booking_request_for_vendor")
+@patch("app.features.bookings.status_client._notify_booking_changed")
+@patch("app.features.bookings.status_client.dispatch_booking_notification")
+@patch("app.features.bookings.status_client.get_settings")
+@patch("app.features.bookings.status_client.get_db")
 def test_client_can_accept_updated_price(
     mock_get_client,
     mock_settings,
@@ -100,10 +100,10 @@ def test_client_can_accept_updated_price(
     mock_notify.assert_called_once()
 
 
-@patch("app.features.bookings.status._notify_booking_changed")
-@patch("app.features.bookings.status.dispatch_booking_notification")
-@patch("app.features.bookings.status.get_settings")
-@patch("app.features.bookings.status.get_db")
+@patch("app.features.bookings.status_client._notify_booking_changed")
+@patch("app.features.bookings.status_client.dispatch_booking_notification")
+@patch("app.features.bookings.status_client.get_settings")
+@patch("app.features.bookings.status_client.get_db")
 def test_client_declining_updated_price_reverts_and_stays_pending(
     mock_get_client,
     mock_settings,
@@ -150,10 +150,10 @@ def test_client_declining_updated_price_reverts_and_stays_pending(
     assert mock_notify.call_args.kwargs["kind"] == "client_declined_updated_price"
 
 
-@patch("app.features.bookings.status._notify_booking_changed")
-@patch("app.features.bookings.status.dispatch_booking_notification")
-@patch("app.features.bookings.status.get_settings")
-@patch("app.features.bookings.status.get_db")
+@patch("app.features.bookings.status_client._notify_booking_changed")
+@patch("app.features.bookings.status_client.dispatch_booking_notification")
+@patch("app.features.bookings.status_client.get_settings")
+@patch("app.features.bookings.status_client.get_db")
 def test_client_declining_vendor_quote_closes_booking(
     mock_get_client,
     mock_settings,

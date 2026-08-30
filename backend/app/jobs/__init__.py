@@ -1,1 +1,1 @@
-"""Scheduled and one-off command-line tasks for Railway cron and operations."""
+"""Scheduled jobs (in-process hourly loop + optional CLI)."""

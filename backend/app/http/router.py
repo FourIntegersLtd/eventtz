@@ -12,6 +12,7 @@ from app.features.blog.http import public as public_blog
 from app.features.bookings.http import client as client_booking_requests
 from app.features.bookings.http import vendor as vendor_bookings
 from app.features.favorites.http import client as client_favorites
+from app.features.contact.http.routes import admin_router as contact_admin_router
 from app.features.contact.http.routes import client_router as contact_client_router
 from app.features.contact.http.routes import vendor_router as contact_vendor_router
 from app.features.chat.http import routes as chat
@@ -34,6 +35,8 @@ from app.features.vendors.http import onboarding_ai as vendor_onboarding_ai
 from app.features.vendors.http import profile as vendor_profile
 from app.features.vendors.http import analytics as vendor_analytics
 from app.features.vendor_copilot.http import routes as vendor_copilot
+from app.features.vendor_referrals.http import public as public_vendor_referrals
+from app.features.vendor_referrals.http import vendor as vendor_referrals
 
 api_router = APIRouter()
 
@@ -41,6 +44,7 @@ api_router.include_router(auth.router)
 api_router.include_router(client_favorites.router)
 api_router.include_router(contact_client_router)
 api_router.include_router(contact_vendor_router)
+api_router.include_router(contact_admin_router)
 api_router.include_router(chat.router)
 api_router.include_router(user_settings.router)
 api_router.include_router(client_onboarding_settings.router)
@@ -48,6 +52,8 @@ api_router.include_router(vendor_profile.router)
 api_router.include_router(vendor_onboarding_ai.router)
 api_router.include_router(vendor_analytics.router)
 api_router.include_router(vendor_copilot.router)
+api_router.include_router(vendor_referrals.router)
+api_router.include_router(public_vendor_referrals.router)
 api_router.include_router(vendor_bookings.router)
 api_router.include_router(admin_vendors.router)
 api_router.include_router(admin_platform.router)

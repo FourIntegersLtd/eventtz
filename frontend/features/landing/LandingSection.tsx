@@ -23,7 +23,10 @@ export function LandingSection({
   width = "7xl",
 }: LandingSectionProps) {
   return (
-    <section id={id} className={className}>
+    <section
+      id={id}
+      className={`${id ? "scroll-mt-24 sm:scroll-mt-28" : ""} ${className}`.trim()}
+    >
       <div className={`mx-auto w-full ${WIDTH_CLASS[width]} ${LANDING_HORIZONTAL_PADDING}`}>
         {children}
       </div>

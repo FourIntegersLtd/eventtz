@@ -192,6 +192,14 @@ class AdminVendorProfileNudgeResponse(BaseModel):
     failures: list[AdminVendorProfileNudgeFailure] = Field(default_factory=list)
 
 
+class AdminVendorPayoutNudgeBody(BaseModel):
+    user_ids: list[str] = Field(
+        min_length=1,
+        max_length=100,
+        description="Approved vendor user ids without verified payouts to nudge by email.",
+    )
+
+
 class ExploreVendorRow(BaseModel):
     user_id: str
     email: str | None = None

@@ -8,12 +8,14 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
+from app.features.auth.accounts import deleted_user_ids, is_deleted_user_id
 from app.features.vendors.markets import normalize_country_code
 from app.core.db import (
     apply_recent_first_order,
     get_db,
     is_approval_status_check_violation,
     is_missing_approval_status_column,
+    is_upstream_unavailable,
 )
 from app.features.vendors.profile import get_vendor_profile
 from app.features.vendors import messages as vendor_messages
@@ -31,6 +33,7 @@ from app.features.email.dispatch import (
     send_vendor_approval_email,
     send_vendor_complete_profile_nudge_email,
     send_vendor_returned_for_edits_email,
+    send_vendor_setup_payouts_nudge_email,
 )
 
 logger = get_logger(__name__)
@@ -397,6 +400,50 @@ def nudge_draft_vendors_to_complete_profile(user_ids: list[str]) -> dict[str, An
     return {"sent": sent, "skipped": skipped, "failures": failures}
 
 
+def nudge_vendors_to_setup_payouts(user_ids: list[str]) -> dict[str, Any]:
+    """Email approved vendors who have not finished Stripe payout setup."""
+    seen: set[str] = set()
+    sent = 0
+    skipped = 0
+    failures: list[dict[str, str]] = []
+
+    for raw_id in user_ids:
+        user_id = str(raw_id or "").strip()
+        if not user_id or user_id in seen:
+            continue
+        seen.add(user_id)
+
+        row = get_vendor_profile(user_id)
+        if not row:
+            failures.append({"user_id": user_id, "error": vendor_messages.VENDOR_PROFILE_NOT_FOUND})
+            continue
+
+        approval = str(row.get("approval_status") or "pending")
+        if approval != "approved" or vendor_payouts_verified(row):
+            skipped += 1
+            continue
+
+        payload = row.get("payload") if isinstance(row.get("payload"), dict) else {}
+        business_name = payload.get("businessName")
+        try:
+            ok = send_vendor_setup_payouts_nudge_email(
+                vendor_user_id=user_id,
+                vendor_email=row.get("email") if isinstance(row.get("email"), str) else None,
+                business_name=business_name.strip() if isinstance(business_name, str) else None,
+            )
+        except Exception:
+            logger.warning("vendor payout nudge email failed user=%s", user_id, exc_info=True)
+            failures.append({"user_id": user_id, "error": vendor_messages.EMAIL_COULD_NOT_BE_SENT})
+            continue
+
+        if ok:
+            sent += 1
+        else:
+            failures.append({"user_id": user_id, "error": vendor_messages.NO_EMAIL_ON_FILE})
+
+    return {"sent": sent, "skipped": skipped, "failures": failures}
+
+
 def unsubmit_vendor_profile(
     user_id: str,
     *,
@@ -432,18 +479,35 @@ def set_vendor_approval(user_id: str, approval_status: str) -> dict[str, Any] | 
         raise ValueError(vendor_messages.APPROVAL_STATUS_INVALID)
     previous = get_vendor_profile(user_id)
     prev_status = str(previous.get("approval_status") or "pending") if previous else None
+    patch: dict[str, Any] = {"approval_status": approval_status}
+    if approval_status == "approved" and prev_status != "approved":
+        patch["approved_at"] = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     try:
-        get_db().table("vendors").update({"approval_status": approval_status}).eq("user_id", user_id).execute()
+        get_db().table("vendors").update(patch).eq("user_id", user_id).execute()
     except Exception as e:
-        if is_approval_status_check_violation(e):
-            raise ValueError(
-                "Database constraint does not allow this status yet. Run backend/sql/005_allow_banned_vendor_approval_status.sql."
+        if "approved_at" in patch and (
+            "approved_at" in str(e).lower() or getattr(e, "code", None) == "42703"
+        ):
+            logger.warning("vendors.approved_at missing; run backend/sql/076_high_impact_reminders.sql")
+            try:
+                get_db().table("vendors").update({"approval_status": approval_status}).eq(
+                    "user_id",
+                    user_id,
+                ).execute()
+            except Exception as inner:
+                e = inner
+            else:
+                e = None
+        if e is not None:
+            if is_approval_status_check_violation(e):
+                raise ValueError(
+                    "Database constraint does not allow this status yet. Run backend/sql/005_allow_banned_vendor_approval_status.sql."
+                ) from e
+            if not is_missing_approval_status_column(e):
+                raise
+            raise RuntimeError(
+                "vendors.approval_status column is missing. Run backend/sql/004_vendors_approval_status.sql."
             ) from e
-        if not is_missing_approval_status_column(e):
-            raise
-        raise RuntimeError(
-            "vendors.approval_status column is missing. Run backend/sql/004_vendors_approval_status.sql."
-        ) from e
     row = get_vendor_profile(user_id)
     _notify_vendor_approval_change(
         user_id,
@@ -543,19 +607,30 @@ def list_approved_vendors_for_explore(
 
     data = getattr(res, "data", None) or []
     user_ids = [str(row.get("user_id")) for row in data if isinstance(row, dict) and row.get("user_id")]
+    gone = deleted_user_ids(user_ids)
     emails_by_id: dict[str, str | None] = {}
     if user_ids:
-        ures = get_db().table("users").select("id,email").in_("id", user_ids).execute()
-        udata = getattr(ures, "data", None) or []
-        for urow in udata:
-            if isinstance(urow, dict) and urow.get("id"):
-                emails_by_id[str(urow["id"])] = urow.get("email")
+        try:
+            ures = get_db().table("users").select("id,email").in_("id", user_ids).execute()
+            udata = getattr(ures, "data", None) or []
+            for urow in udata:
+                if isinstance(urow, dict) and urow.get("id"):
+                    emails_by_id[str(urow["id"])] = urow.get("email")
+        except Exception as exc:
+            if is_upstream_unavailable(exc):
+                # Email is only haystack/optional row data. Timing out here used to
+                # 500 the whole explore search (EVENTTZ-BACKEND-T).
+                logger.warning("explore: vendor emails unavailable")
+            else:
+                raise
 
     out: list[dict[str, Any]] = []
     for row in data:
         if not isinstance(row, dict):
             continue
         uid = str(row.get("user_id") or "")
+        if uid in gone:
+            continue
         out.append(
             {
                 "user_id": row.get("user_id"),
@@ -591,6 +666,8 @@ def get_approved_vendor_for_explore_by_id(vendor_user_id: str) -> dict[str, Any]
         return None
     row = rows[0]
     uid = str(row.get("user_id") or "")
+    if uid and is_deleted_user_id(uid):
+        return None
     email = None
     try:
         ures = get_db().table("users").select("email").eq("id", uid).limit(1).execute()
@@ -611,6 +688,8 @@ def get_approved_vendor_for_explore_by_id(vendor_user_id: str) -> dict[str, Any]
 
 def get_bookable_vendor_profile_form_data(vendor_user_id: str) -> dict[str, Any] | None:
     """Onboarding profile JSON for a listable vendor, or None if they cannot be booked."""
+    if vendor_user_id and is_deleted_user_id(vendor_user_id):
+        return None
     try:
         res = (
             apply_public_listing_filters(
@@ -631,6 +710,8 @@ def get_bookable_vendor_profile_form_data(vendor_user_id: str) -> dict[str, Any]
 
 def vendor_is_bookable_for_explore(vendor_user_id: str) -> bool:
     """True when the vendor is approved, Stripe-verified, and clients can book or message them."""
+    if vendor_user_id and is_deleted_user_id(vendor_user_id):
+        return False
     try:
         res = (
             apply_public_listing_filters(

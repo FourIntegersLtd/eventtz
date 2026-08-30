@@ -82,18 +82,103 @@ export const PACKAGE_EXAMPLES_BY_SERVICE: Record<string, ServicePackageExamples>
   },
   rentals: {
     serviceKey: "rentals",
-    label: "Rentals & fashion",
-    intro: "Each hire item or bundle should be its own bookable package.",
+    label: "Rentals & hire",
+    intro: "Charge per item so clients can pick how many they need, or list a fixed bundle.",
     examples: [
       {
-        name: "Chair Hire – 50 pack",
-        price: "£150",
-        included: "50 white folding chairs, 3-day hire, delivery and collection within 10 miles.",
+        name: "Chair hire",
+        price: "£2 each",
+        included: "White folding chairs, 3-day hire, delivery and collection within 10 miles.",
       },
       {
-        name: "Table Rental – 6ft round",
-        price: "£25",
-        included: "One 6ft round table, seats up to 8, 3-day hire, delivery and collection included.",
+        name: "Table hire",
+        price: "£10 each",
+        included: "6ft round tables, seats up to 8, 3-day hire, delivery and collection included.",
+      },
+    ],
+  },
+  event_planning: {
+    serviceKey: "event_planning",
+    label: "Event planning",
+    intro: "List each planning tier or coordination package with what's included.",
+    examples: [
+      {
+        name: "Full Day Coordination",
+        price: "£800",
+        included: "Timeline planning, vendor liaison, on-the-day management up to 10 hours.",
+      },
+      {
+        name: "Partial Planning",
+        price: "£450",
+        included: "Vendor recommendations, budget guidance, and checklist support for 4 weeks.",
+      },
+    ],
+  },
+  decor: {
+    serviceKey: "decor",
+    label: "Decor & styling",
+    intro: "Each decor package should list styling elements and coverage.",
+    examples: [
+      {
+        name: "Gold Decor Package",
+        price: "£450",
+        included: "Backdrop, balloon garland, and table centrepieces for up to 10 tables.",
+      },
+      {
+        name: "Bridal Table Styling",
+        price: "£200",
+        included: "Head table florals, linen styling, and candle centrepieces.",
+      },
+    ],
+  },
+  dj: {
+    serviceKey: "dj",
+    label: "DJ / music band",
+    intro: "Name each DJ set or band package with hours and equipment included.",
+    examples: [
+      {
+        name: "Wedding DJ – 5 hours",
+        price: "£600",
+        included: "Professional sound system, microphones, and dancefloor lighting.",
+      },
+      {
+        name: "Live Band – 3 sets",
+        price: "£1,200",
+        included: "Four-piece band, three 45-minute sets, and basic PA.",
+      },
+    ],
+  },
+  mc: {
+    serviceKey: "mc",
+    label: "MC / Alaga",
+    intro: "Describe each hosting package and what ceremonies or segments you cover.",
+    examples: [
+      {
+        name: "Wedding MC",
+        price: "£350",
+        included: "Bilingual hosting, ceremony coordination, and reception announcements.",
+      },
+      {
+        name: "Alaga – traditional segment",
+        price: "£250",
+        included: "Traditional introductions, gift presentation, and crowd engagement.",
+      },
+    ],
+  },
+  hair_styling: {
+    serviceKey: "hair_styling",
+    label: "Hair styling",
+    intro: "Create a package for each service (bridal, bridesmaids, trials, etc.).",
+    examples: [
+      {
+        name: "Bridal Hair Styling",
+        price: "£200",
+        included: "Consultation, trial, and styling on the wedding day.",
+      },
+      {
+        name: "Bridesmaid Hair",
+        price: "£70",
+        included: "Occasion styling with basic accessories placement.",
       },
     ],
   },
@@ -131,7 +216,17 @@ export function packageNamePlaceholder(serviceKey: string | undefined): string {
     case "photography":
       return "e.g. Wedding photography – 8 hours";
     case "rentals":
-      return "e.g. Chair hire – 50 pack";
+      return "e.g. Chair hire";
+    case "event_planning":
+      return "e.g. Full day coordination";
+    case "decor":
+      return "e.g. Gold decor package";
+    case "dj":
+      return "e.g. Wedding DJ – 5 hours";
+    case "mc":
+      return "e.g. Wedding MC package";
+    case "hair_styling":
+      return "e.g. Bridal hair styling";
     default:
       return "e.g. Gold wedding package";
   }
@@ -147,7 +242,17 @@ export function packageIncludedPlaceholder(serviceKey: string | undefined): stri
     case "photography":
       return "Hours covered, edited photos, gallery access, second shooter if included.";
     case "rentals":
-      return "List quantity, hire period, and delivery — e.g. 50 chairs, 3-day hire, delivery and collection included.";
+      return "What's included — e.g. white folding chairs, 3-day hire, delivery and collection.";
+    case "event_planning":
+      return "Hours covered, planning scope, vendor liaison, and on-the-day duties.";
+    case "decor":
+      return "Styling elements, table count, setup time, and teardown if included.";
+    case "dj":
+      return "Hours, sound system, lighting, and any MC duties if included.";
+    case "mc":
+      return "Ceremony segments covered, languages, and duration on the day.";
+    case "hair_styling":
+      return "What's included — e.g. trial, styling on the day, extensions if provided.";
     default:
       return "Exactly what the customer gets — items, duration, headcount, or deliverables.";
   }

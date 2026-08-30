@@ -21,8 +21,8 @@ EMAIL_PUBLIC_WEBSITE_LABEL = "eventtz.com"
 EMAIL_PRIVACY_URL = "https://eventtz.com/compliances/privacy-policy"
 EMAIL_TERMS_URL = "https://eventtz.com/compliances/terms-of-service"
 
-# Images hosted on S3 so they load reliably in email clients (not tied to FRONTEND_URL).
-EMAIL_IMAGE_BASE = "https://osceguide.s3.eu-west-2.amazonaws.com/Four+Integers+Ltd/eventtz"
+# Images hosted on the Eventtz public S3 bucket (not tied to FRONTEND_URL).
+EMAIL_IMAGE_BASE = "https://eventtz.s3.eu-west-2.amazonaws.com/email"
 EMAIL_IMAGES: dict[str, str] = {
     "logo": f"{EMAIL_IMAGE_BASE}/eventtz-logo.png",
     "hero": f"{EMAIL_IMAGE_BASE}/hero.png",
@@ -40,8 +40,11 @@ EMAIL_DEDUPE_KINDS: frozenset[str] = frozenset(
         "booking_completed",
         "booking_request_sent",
         "payment_received",
+        "payment_receipt",
         "vendor_payment_received",
+        "vendor_payment_record",
         "vendor_payout_released",
+        "vendor_payout_statement",
         "payment_refunded",
         "completion_reminder",
         "vendor_completion_reminder",
@@ -49,5 +52,8 @@ EMAIL_DEDUPE_KINDS: frozenset[str] = frozenset(
         "enquiry_reminder_6h",
         "enquiry_reminder_24h",
         "client_vendor_no_response",
+        "event_tomorrow",
+        "vendor_event_tomorrow",
+        "pay_to_confirm",
     }
 )

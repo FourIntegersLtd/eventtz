@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
   fetchExploreVendorsSearch,
@@ -63,19 +64,11 @@ export function LandingFeaturedVendors() {
       })}
       width="7xl"
     >
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <LandingSectionHeading
-          eyebrow={FEATURED_VENDORS_SECTION.eyebrow}
-          title={FEATURED_VENDORS_SECTION.title}
-          align="left"
-        />
-        <Link
-          href="/client/browse"
-          className="text-sm font-semibold text-primary transition hover:opacity-80"
-        >
-          View all vendors
-        </Link>
-      </div>
+      <LandingSectionHeading
+        eyebrow={FEATURED_VENDORS_SECTION.eyebrow}
+        title={FEATURED_VENDORS_SECTION.title}
+        align="left"
+      />
 
       {loading ? (
         <LoadingState label="Loading featured vendors…" variant="centered" className={`${LANDING_SECTION_CONTENT_MT} py-12`} branded />
@@ -109,6 +102,22 @@ export function LandingFeaturedVendors() {
           ))}
         </div>
       )}
+
+      <div className="mt-8 flex justify-center sm:mt-10">
+        <Link
+          href="/client/browse"
+          className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary transition hover:gap-2.5 hover:opacity-90"
+          onClick={() =>
+            track(MixpanelEvents.landing_cta_clicked, {
+              cta: "view_all",
+              location: "featured_vendors",
+            })
+          }
+        >
+          View all vendors
+          <ArrowRight className="h-4 w-4" aria-hidden />
+        </Link>
+      </div>
     </LandingSection>
   );
 }

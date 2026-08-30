@@ -145,6 +145,7 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
                       checkoutReturnMessage={c.checkoutReturnMessage}
                       paymentBanner={c.paymentBanner}
                       paymentSyncError={c.paymentSyncError}
+                      paymentConfirmed={c.paymentConfirmed}
                       showCancelledRefunded={c.showCancelledRefunded}
                       paymentDue={c.paymentDue}
                       paymentBannerRef={c.paymentBannerRef}

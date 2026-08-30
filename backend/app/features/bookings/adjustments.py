@@ -14,9 +14,10 @@ from app.features.bookings.notifications import (
     _notify_booking_changed,
 )
 from app.features.bookings.queries import _row_initiator, get_booking_request_for_vendor
-from app.features.bookings.pricing import (
-    build_pricing_breakdown,
-    persisted_booking_total_label,
+from app.features.bookings.pricing import persisted_booking_total_label
+from app.features.vendor_referrals.booking_discount import (
+    build_initial_pricing_breakdown_for_booking_row,
+    build_pricing_breakdown_for_booking_row,
 )
 from app.features.email.dispatch import dispatch_booking_notification
 
@@ -63,7 +64,9 @@ def put_vendor_booking_adjustments(
     client = get_db()
     res = (
         client.table("booking_requests")
-        .select("id,status,line_items,client_user_id,initiator,initial_client_total_label")
+        .select(
+            "id,status,line_items,client_user_id,vendor_user_id,vendor_referral_code,initiator,initial_client_total_label,service_fee_percent",
+        )
         .eq("id", booking_id)
         .eq("vendor_user_id", vendor_user_id)
         .limit(1)
@@ -108,7 +111,8 @@ def put_vendor_booking_adjustments(
 
     _validate_adjustment_caps(line_items, stored)
 
-    pb = build_pricing_breakdown(line_items=line_items, vendor_adjustments=stored)
+    pricing_row = {**row0, "vendor_adjustments": stored}
+    pb = build_pricing_breakdown_for_booking_row(pricing_row)
     if float(pb.get("vendor_portion_gbp") or 0) <= 0:
         raise ValueError(
             booking_messages.DISCOUNTS_TOO_HIGH,
@@ -118,9 +122,8 @@ def put_vendor_booking_adjustments(
 
     patch: dict[str, Any] = {"vendor_adjustments": adj_final, "total_label": total_label}
     if not str(row0.get("initial_client_total_label") or "").strip():
-        pb_initial = build_pricing_breakdown(line_items=line_items, vendor_adjustments=[])
-        patch["initial_client_total_label"] = str(
-            pb_initial.get("client_total_label") or persisted_booking_total_label(pb_initial),
+        patch["initial_client_total_label"] = persisted_booking_total_label(
+            build_initial_pricing_breakdown_for_booking_row(row0),
         )
 
     upd = (

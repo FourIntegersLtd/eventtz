@@ -24,6 +24,7 @@ from app.features.vendors.markets import normalize_country_code
 from app.features.vendors.list_pricing import min_listing_price_gbp
 from app.features.vendors.moderation import list_approved_vendors_for_explore
 from app.features.vendors.search_ai import parse_marketplace_query, why_for_need
+from app.features.vendors.taxonomy import filter_service_keys
 
 logger = get_logger(__name__)
 
@@ -44,7 +45,12 @@ _MATCH_HINT_BY_SERVICE: dict[str, str] = {
     "catering": "Offers catering",
     "photography": "Offers photography",
     "makeup": "Offers makeup",
-    "rentals": "Offers decor and hire",
+    "rentals": "Offers furniture and hire",
+    "event_planning": "Offers event planning",
+    "decor": "Offers decor and styling",
+    "dj": "Offers DJ and music",
+    "mc": "Offers MC and hosting",
+    "hair_styling": "Offers hair styling",
 }
 
 # Help pick review quotes that match the section the vendor was claimed under.
@@ -53,7 +59,12 @@ _REVIEW_PREFER_TERMS: dict[str, list[str]] = {
     "catering": ["food", "cater", "jollof", "chops", "meal", "rice", "buffet"],
     "photography": ["photo", "picture", "shot", "album", "camera"],
     "makeup": ["makeup", "glam", "mua", "bridal"],
-    "rentals": ["decor", "hire", "rental", "table", "chair", "balloon"],
+    "rentals": ["hire", "rental", "table", "chair", "marquee", "furniture"],
+    "event_planning": ["planner", "planning", "coordination", "timeline", "organise"],
+    "decor": ["decor", "balloon", "floral", "backdrop", "styling", "tablescape"],
+    "dj": ["dj", "music", "dancefloor", "band", "sound"],
+    "mc": ["mc", "host", "alaga", "emcee", "announce"],
+    "hair_styling": ["hair", "braids", "stylist", "weave", "wig", "bridal hair"],
 }
 
 
@@ -61,13 +72,14 @@ def _services_offered(payload: dict[str, Any]) -> list[str]:
     raw = payload.get("servicesOffered")
     if not isinstance(raw, list):
         return []
-    return [str(x).strip() for x in raw if str(x).strip()]
+    return filter_service_keys([str(x) for x in raw if str(x).strip()])
 
 
 def _parse_types_param(types: str | None) -> list[str]:
     if not types or not str(types).strip():
         return []
-    return [t.strip() for t in str(types).split(",") if t.strip()]
+    raw = [t.strip() for t in str(types).split(",") if t.strip()]
+    return filter_service_keys(raw)
 
 
 def _parse_dates_param(dates: str | None) -> list[str]:

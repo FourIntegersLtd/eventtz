@@ -32,8 +32,8 @@ export function CelebrationSummary({ plan }: CelebrationSummaryProps) {
       ) : null}
       {plan.brief.unsupported_categories_mentioned?.length ? (
         <p className="mt-2 text-xs text-neutral-500">
-          We don’t list {plan.brief.unsupported_categories_mentioned.join(", ")} as dedicated
-          categories yet - recommendations use catering, cake, photos, makeup, and rentals.
+          We don&apos;t list {plan.brief.unsupported_categories_mentioned.join(", ")} as dedicated
+          categories yet — try browsing related vendors or contact us for help.
         </p>
       ) : null}
     </header>

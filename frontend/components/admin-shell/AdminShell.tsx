@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {
   BookOpen,
+  Bug,
   LayoutDashboard,
   Link2,
   LogOut,
@@ -49,6 +50,7 @@ const ADMIN_NAV: readonly AdminNavItem[] = [
   { href: "/admin/directory?tab=vendors", label: "Directory", icon: Users },
   { href: "/admin/referrals", label: "Referrals", icon: Link2 },
   { href: "/admin/messages?tab=inbox", label: "Messages", icon: MessageSquare, id: "messages" },
+  { href: "/admin/report-bug", label: "Report a bug", icon: Bug },
   { href: "/admin/blog", label: "Blog", icon: BookOpen },
   { href: "/admin/trust?tab=disputes", label: "Trust & safety", icon: Shield },
   { href: "/admin/settings", label: "Settings", icon: Settings },
@@ -89,6 +91,9 @@ function navItemActive(pathname: string, itemHref: string): boolean {
   }
   if (itemHref.startsWith("/admin/messages")) {
     return pathname === "/admin/messages" || pathname.startsWith("/admin/messages/");
+  }
+  if (itemHref.startsWith("/admin/report-bug")) {
+    return pathname === "/admin/report-bug" || pathname.startsWith("/admin/report-bug/");
   }
   if (itemHref.startsWith("/admin/blog")) {
     return pathname === "/admin/blog" || pathname.startsWith("/admin/blog/");

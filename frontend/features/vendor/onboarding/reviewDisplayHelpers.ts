@@ -1,6 +1,8 @@
 import { EVENT_TYPE_OPTIONS, MIN_PORTFOLIO_IMAGES } from "@/features/vendor/onboarding/constants";
+import type { PackageLike } from "@/features/vendor/onboarding/packageQuality";
 import type { VendorOnboardingData } from "@/features/vendor/onboarding/types";
 import { displayEventTypes, displayServicesOffered } from "@/features/client/browse/browseLabels";
+import { isPerUnitPricing, perUnitPriceSuffix } from "@/lib/packagePricing";
 import { portfolioFileKey } from "@/lib/portfolioFileKey";
 
 export function formatReviewServices(values: string[]): string {
@@ -118,6 +120,27 @@ export function formatReviewBlockedDates(dates: string[]): string | null {
     .sort()
     .map(formatIso)
     .join(", ");
+}
+
+/** Review / admin: `£120` or `£2 / chair`. Null when the price field is empty. */
+export function formatReviewPackagePrice(pkg: PackageLike): string | null {
+  const price = (pkg.price ?? "").trim();
+  if (!price) return null;
+  if (isPerUnitPricing(pkg.pricingMode)) {
+    return `£${price} ${perUnitPriceSuffix(pkg.unitLabel ?? "")}`;
+  }
+  return `£${price}`;
+}
+
+/** Review / admin: optional min/max for per-item packages. */
+export function formatReviewPackageQuantityBounds(pkg: PackageLike): string | null {
+  if (!isPerUnitPricing(pkg.pricingMode)) return null;
+  const min = String(pkg.minQuantity ?? "").trim();
+  const max = String(pkg.maxQuantity ?? "").trim();
+  if (min && max) return `Min ${min} · max ${max}`;
+  if (min) return `Min ${min}`;
+  if (max) return `Max ${max}`;
+  return null;
 }
 
 export function packageTravelPolicyLabel(

@@ -26,6 +26,14 @@ def _stripe() -> Any:
     return stripe
 
 
+def delete_connect_account(account_id: str) -> None:
+    """Best-effort delete of a vendor's Stripe Connect Express account."""
+    acct = str(account_id or "").strip()
+    if not acct:
+        return
+    _stripe().Account.delete(acct)
+
+
 def _to_pence(amount_gbp: float) -> int:
     return int(round(amount_gbp * 100))
 
@@ -618,6 +626,7 @@ def create_checkout_session(
     vendor_user_id: str,
     client_user_id: str,
     description: str,
+    referral_fee_discount_gbp: float = 0.0,
 ) -> dict[str, str]:
     """Create a Checkout Session for the full client total. Money goes to Eventtz's Stripe
     balance first - the vendor is paid later via an explicit Transfer."""
@@ -629,6 +638,7 @@ def create_checkout_session(
         "client_total_gbp": f"{client_total_gbp:.2f}",
         "vendor_amount_gbp": f"{vendor_amount_gbp:.2f}",
         "service_fee_gbp": f"{service_fee_gbp:.2f}",
+        "referral_fee_discount_gbp": f"{max(0.0, referral_fee_discount_gbp):.2f}",
     }
     client_email = _get_user_email(client_user_id)
     session_kwargs: dict[str, Any] = {}
@@ -675,6 +685,100 @@ def construct_webhook_event(payload: bytes, sig_header: str) -> Any:
 
 def retrieve_payment_intent(payment_intent_id: str) -> Any:
     return _stripe().PaymentIntent.retrieve(payment_intent_id, expand=["latest_charge"])
+
+
+def retrieve_charge(charge_id: str) -> Any:
+    return _stripe().Charge.retrieve(charge_id)
+
+
+def charge_receipt_url(charge_id: str | None) -> str | None:
+    """Stripe-hosted card receipt URL, when available."""
+    cid = str(charge_id or "").strip()
+    if not cid.startswith("ch_"):
+        return None
+    try:
+        raw = retrieve_charge(cid)
+        ch = raw if isinstance(raw, dict) else stripe_object_to_dict(raw)
+        url = ch.get("receipt_url")
+        return str(url).strip() if url else None
+    except Exception:
+        logger.exception("Failed to retrieve Charge %s for receipt_url", cid)
+        return None
+
+
+class ReceiptVerificationError(Exception):
+    """Stripe receipt verification failed (download-time check)."""
+
+    def __init__(self, message: str, status_code: int = 503) -> None:
+        super().__init__(message)
+        self.status_code = status_code
+
+
+def verify_payment_for_receipt(
+    *,
+    payment_intent_id: str | None,
+    expected_amount_gbp: float | None,
+) -> None:
+    """Re-fetch Stripe and confirm the payment still matches our frozen snapshot."""
+    from app.features.bookings import messages as booking_messages
+
+    pi_id = str(payment_intent_id or "").strip()
+    if not pi_id.startswith("pi_"):
+        raise ReceiptVerificationError(booking_messages.RECEIPT_STRIPE_VERIFY_FAILED, 404)
+
+    try:
+        pi_raw = retrieve_payment_intent(pi_id)
+    except stripe.InvalidRequestError as exc:
+        code = str(getattr(exc, "code", "") or "")
+        if code == "resource_missing":
+            # Common when Stripe keys were rotated or booking paid on another account.
+            # Frozen snapshot + auth still gate the receipt; live verify is best-effort.
+            logger.warning(
+                "Receipt verify: PaymentIntent %s not in current Stripe account; "
+                "serving from frozen snapshot",
+                pi_id,
+            )
+            return
+        logger.warning("Receipt verify: PaymentIntent.retrieve failed for %s: %s", pi_id, exc)
+        raise ReceiptVerificationError(
+            booking_messages.RECEIPT_STRIPE_VERIFY_FAILED,
+            503,
+        ) from exc
+    except stripe.StripeError as exc:
+        logger.warning("Receipt verify: PaymentIntent.retrieve failed for %s: %s", pi_id, exc)
+        raise ReceiptVerificationError(
+            booking_messages.RECEIPT_STRIPE_VERIFY_FAILED,
+            503,
+        ) from exc
+
+    pi = pi_raw if isinstance(pi_raw, dict) else stripe_object_to_dict(pi_raw)
+    if str(pi.get("status") or "") != "succeeded":
+        raise ReceiptVerificationError("Payment is not completed", 403)
+
+    if expected_amount_gbp is None:
+        return
+
+    try:
+        amount_received_pence = int(pi.get("amount_received") or 0)
+        expected_pence = _to_pence(float(expected_amount_gbp))
+    except (TypeError, ValueError) as exc:
+        raise ReceiptVerificationError(
+            booking_messages.RECEIPT_STRIPE_VERIFY_FAILED,
+            503,
+        ) from exc
+
+    if amount_received_pence != expected_pence:
+        logger.warning(
+            "Receipt verify amount mismatch pi=%s stored_gbp=%s stripe_pence=%s expected_pence=%s",
+            pi_id,
+            expected_amount_gbp,
+            amount_received_pence,
+            expected_pence,
+        )
+        raise ReceiptVerificationError(
+            booking_messages.RECEIPT_STRIPE_VERIFY_FAILED,
+            503,
+        )
 
 
 def resolve_source_charge_id(
@@ -796,6 +900,19 @@ def create_transfer(
         if reclaimed:
             return reclaimed
         raise
+
+
+def expire_checkout_session(session_id: str | None) -> None:
+    """Best-effort close of an open Checkout Session so a cancelled booking cannot still be paid."""
+    sid = str(session_id or "").strip()
+    if not sid.startswith("cs_"):
+        return
+    try:
+        _stripe().checkout.Session.expire(sid)
+    except stripe.InvalidRequestError as e:
+        logger.info("checkout session expire skipped session=%s: %s", sid, e)
+    except Exception:
+        logger.exception("checkout session expire failed session=%s", sid)
 
 
 def create_refund(

@@ -6,14 +6,21 @@ from datetime import date
 
 import pytest
 
+from app.core.errors import ValidationError
 from app.features.vendors.list_pricing import (
     AUTO_BULK_LINE_ID,
     AUTO_OFF_PEAK_LINE_ID,
+    SingleMoneyErrorKind,
     compute_automatic_discount_lines,
     is_off_peak_date,
     min_listing_price_gbp,
+    parse_single_money_gbp,
+    parse_vendor_discount_config,
+    raise_if_invalid_single_money_gbp,
     resolve_line_items,
     sale_price_after_discount,
+    validate_single_money_gbp,
+    validate_single_money_gbp_kind,
 )
 
 
@@ -38,6 +45,41 @@ def _vendor_payload(**overrides: object) -> dict:
 
 def test_sale_price_after_discount():
     assert sale_price_after_discount(500, 10) == 450.0
+
+
+def test_parse_single_money_gbp_rejects_comma_prices():
+    assert parse_single_money_gbp("150, 180") is None
+    assert parse_single_money_gbp("150,180") is None
+    err = validate_single_money_gbp("150, 180", "Package price", required=True)
+    assert err and "one amount only" in err
+
+
+def test_single_money_error_kind_mapping():
+    assert validate_single_money_gbp_kind("150;180") is SingleMoneyErrorKind.MULTIPLE_AMOUNTS
+    with pytest.raises(ValidationError, match="one amount only"):
+        raise_if_invalid_single_money_gbp("150;180", "Package price", required=True)
+
+
+def test_bulk_threshold_uses_strict_parse():
+    config = parse_vendor_discount_config({"bulkDiscountThreshold": "150,180"})
+    assert config.bulk_threshold is None
+    config_ok = parse_vendor_discount_config({"bulkDiscountThreshold": "400"})
+    assert config_ok.bulk_threshold == 400.0
+
+
+def test_min_listing_price_ignores_invalid_package_price():
+    payload = _vendor_payload(
+        packages=[
+            {
+                "id": "pkg-bad",
+                "title": "Chairs",
+                "price": "150, 180",
+                "details": "Thirty chairs and ten tables with delivery and collection included.",
+                "duration": "2-hour hire",
+            }
+        ],
+    )
+    assert min_listing_price_gbp(payload) is None
 
 
 def test_main_discount_on_resolve():
@@ -177,3 +219,80 @@ def test_reconcile_automatic_discount_lines_refreshes_bulk():
     assert len(auto) == 1
     assert auto[0]["id"] == AUTO_BULK_LINE_ID
     assert auto[0]["unit_price_gbp"] == -50.0
+
+
+def _per_unit_payload(**overrides: object) -> dict:
+    base = {
+        "packages": [
+            {
+                "id": "pkg-chairs",
+                "title": "Chair hire",
+                "price": "2",
+                "details": "White folding chairs, 3-day hire, delivery and collection within 10 miles.",
+                "duration": "3-day hire",
+                "pricingMode": "per_unit",
+                "unitLabel": "chair",
+                "minQuantity": "10",
+                "maxQuantity": "200",
+            },
+        ],
+        "hourlyRate": "",
+        "dailyRate": "",
+        "offerDiscounts": False,
+    }
+    base.update(overrides)
+    return base
+
+
+def test_per_unit_missing_mode_defaults_to_fixed():
+    payload = _vendor_payload()
+    items = resolve_line_items(payload, ["pkg-gold"])
+    assert items[0]["unit_price_gbp"] == 500.0
+    assert "quantity" not in items[0]
+
+
+def test_per_unit_multiplies_rate_by_quantity():
+    payload = _per_unit_payload()
+    items = resolve_line_items(payload, ["pkg-chairs"], {"pkg-chairs": 50})
+    assert len(items) == 1
+    assert items[0]["unit_price_gbp"] == 100.0
+    assert items[0]["quantity"] == 50
+    assert items[0]["unit_rate_gbp"] == 2.0
+    assert items[0]["unit_label"] == "chair"
+
+
+def test_per_unit_applies_headline_discount_to_unit_rate():
+    payload = _per_unit_payload(offerDiscounts=True, discountPercentage="10")
+    items = resolve_line_items(payload, ["pkg-chairs"], {"pkg-chairs": 50})
+    assert items[0]["unit_rate_gbp"] == 1.8
+    assert items[0]["unit_price_gbp"] == 90.0
+
+
+def test_per_unit_requires_quantity():
+    payload = _per_unit_payload()
+    with pytest.raises(ValueError, match="how many"):
+        resolve_line_items(payload, ["pkg-chairs"])
+
+
+def test_per_unit_rejects_quantity_below_min():
+    payload = _per_unit_payload()
+    with pytest.raises(ValueError, match="between 10 and 200"):
+        resolve_line_items(payload, ["pkg-chairs"], {"pkg-chairs": 5})
+
+
+def test_per_unit_rejects_quantity_above_max():
+    payload = _per_unit_payload()
+    with pytest.raises(ValueError, match="between 10 and 200"):
+        resolve_line_items(payload, ["pkg-chairs"], {"pkg-chairs": 201})
+
+
+def test_min_listing_price_uses_per_unit_rate():
+    payload = _per_unit_payload()
+    assert min_listing_price_gbp(payload) == 2.0
+
+
+def test_fixed_package_ignores_quantity():
+    payload = _vendor_payload()
+    items = resolve_line_items(payload, ["pkg-gold"], {"pkg-gold": 9})
+    assert items[0]["unit_price_gbp"] == 500.0
+    assert "quantity" not in items[0]

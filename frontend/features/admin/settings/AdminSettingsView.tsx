@@ -6,6 +6,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/Button";
 import { loginPathWithNext } from "@/features/auth/authRouting";
 import { ChangePasswordModal } from "@/features/settings/ChangePasswordModal";
+import { AdminTestAccountsPanel } from "@/features/admin/settings/AdminTestAccountsPanel";
 import { resolveAdminRole } from "@/lib/adminRole";
 
 export function AdminSettingsView() {
@@ -71,6 +72,8 @@ export function AdminSettingsView() {
             </div>
           </dl>
         </section>
+
+        <AdminTestAccountsPanel />
       </div>
 
       <ChangePasswordModal

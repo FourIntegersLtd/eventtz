@@ -24,9 +24,11 @@ import { buildBrowsePricingOptions } from "@/features/client/browse/vendorBrowse
 import { useExploreVendor } from "@/features/client/browse/useExploreVendor";
 import { marketplaceStateFromSearchParams, buildMarketplaceSearchUrl, toClientSearchContext } from "@/lib/marketplaceSearchParams";
 import { eventEnquirePrefillFromSearchParams } from "@/features/bookings/eventEnquirePrefill";
+import { CLIENT_BOOKING_TOAST_COPY } from "@/features/bookings/bookingConfirmCopy";
 import { useLaunchingSoonBookingGuard } from "@/features/bookings/useLaunchingSoonBookingGuard";
 import { vendorMatchesMarketplaceSearch } from "@/lib/marketplaceVendorMatch";
 import { usualReplyExpectation } from "@/lib/vendorMetrics";
+import { captureVendorReferralFromSearchParams } from "@/lib/vendorReferralAttribution";
 
 function payloadStr(p: Record<string, unknown>, key: string): string {
   const v = p[key];
@@ -45,7 +47,17 @@ export function ClientVendorBrowseDetailView() {
   const [chatOpen, setChatOpen] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [bookingSelectionIds, setBookingSelectionIds] = useState<string[]>([]);
+  const [bookingQuantities, setBookingQuantities] = useState<Record<string, number>>(
+    {},
+  );
   const { guardBooking, launchingSoonModal } = useLaunchingSoonBookingGuard();
+  const [storedReferralCode, setStoredReferralCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!userId) return;
+    const code = captureVendorReferralFromSearchParams(userId, searchParams);
+    setStoredReferralCode(code);
+  }, [userId, searchParams]);
 
   const marketplaceSearch = useMemo(
     () => marketplaceStateFromSearchParams(searchParams),
@@ -211,12 +223,14 @@ export function ClientVendorBrowseDetailView() {
           loginHref="/login"
           registerHref="/register?type=client"
           detailReturnPath={detailPath}
+          storedReferralCode={storedReferralCode}
           onContinue={() => router.push(browseListHref)}
           onRequestBooking={
             isClient
-              ? (ids) => {
+              ? (ids, quantities) => {
                   guardBooking(() => {
                     setBookingSelectionIds(ids);
+                    setBookingQuantities(quantities);
                     setBookingOpen(true);
                     track(MixpanelEvents.enquiry_started, { vendor_user_id: userId });
                   });
@@ -227,12 +241,12 @@ export function ClientVendorBrowseDetailView() {
         />
         {user && bookingOpen && vendor ? (
           <VendorBookingModal
-            key={`${bookingSelectionIds.slice().sort().join("|")}|${searchParams.toString()}`}
+            key={`${bookingSelectionIds.slice().sort().join("|")}|${JSON.stringify(bookingQuantities)}|${searchParams.toString()}`}
             onClose={() => setBookingOpen(false)}
             onSuccess={(bookingId) => {
               setBookingOpen(false);
               showToast({
-                title: "Request sent",
+                title: CLIENT_BOOKING_TOAST_COPY.requestSent,
                 description: `${businessName} will be notified. ${usualReplyExpectation(vendor.avg_response_seconds)}`,
                 tone: "success",
               });
@@ -242,11 +256,13 @@ export function ClientVendorBrowseDetailView() {
             vendorUserId={userId}
             pricingOptions={pricingOptions}
             initialSelectedIds={bookingSelectionIds}
+            initialQuantities={bookingQuantities}
             vendorPayload={vendorPayload}
             searchPrefill={bookingSearchPrefill}
             initialPrefill={plannerEventPrefill}
             linkedEventId={linkedEventId}
             clientSearchContext={bookingClientSearchContext}
+            initialReferralCode={storedReferralCode}
           />
         ) : null}
         {user ? (

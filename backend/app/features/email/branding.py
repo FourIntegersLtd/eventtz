@@ -22,6 +22,27 @@ TEXT = "#2d2938"
 TEXT_MUTED = "#6b6575"
 TEXT_SUBTLE = "#8a8199"
 BORDER = "rgba(62, 25, 100, 0.14)"
+CANVAS_BG = "#ffffff"
+CARD_BG = "#ffffff"
+TEXT_HEADING = "#1d1d1f"
+TEXT_SECONDARY = "#6e6e73"
+HAIRLINE = "#e5e5ea"
+
+_ADMIN_ALERT_CHIPS: dict[str, tuple[str, str]] = {
+    "admin.contact_submitted": ("CONTACT", "gray"),
+    "admin.dispute_opened": ("DISPUTE", "amber"),
+    "admin.vendor_submitted": ("REVIEW", "gray"),
+    "admin.refund_failed": ("REFUND", "red"),
+    "admin.payout_stuck": ("PAYOUT", "red"),
+}
+
+
+def admin_login_email_url() -> str:
+    return public_email_url("/login?next=/admin/dashboard")
+
+
+def admin_alert_chip(template_id: str) -> tuple[str, str]:
+    return _ADMIN_ALERT_CHIPS.get(template_id, ("ALERT", "gray"))
 
 
 def email_public_base() -> str:
@@ -90,6 +111,11 @@ def base_email_context(**extra: object) -> dict[str, object]:
         "text_muted": TEXT_MUTED,
         "text_subtle": TEXT_SUBTLE,
         "border_color": BORDER,
+        "canvas_bg": CANVAS_BG,
+        "card_bg": CARD_BG,
+        "text_heading": TEXT_HEADING,
+        "text_secondary": TEXT_SECONDARY,
+        "hairline": HAIRLINE,
     }
     ctx.update(extra)
     return ctx

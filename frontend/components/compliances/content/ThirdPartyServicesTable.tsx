@@ -1,7 +1,7 @@
 const ROWS = [
   {
     service: "Supabase",
-    purpose: "Authentication, database, and file storage",
+    purpose: "Authentication and database",
     location: "EU (Frankfurt) / USA",
   },
   {
@@ -35,8 +35,19 @@ const ROWS = [
     location: "USA",
   },
   {
+    service: "Sentry",
+    purpose: "Application error monitoring (user id only; no email)",
+    location: "USA / EU",
+  },
+  {
+    service: "Cursor",
+    purpose:
+      "Engineering automation for bug, booking, and payment support reports (message and account email)",
+    location: "USA",
+  },
+  {
     service: "Amazon Web Services (S3)",
-    purpose: "Email template image hosting",
+    purpose: "User photos, videos, documents, and email template images",
     location: "United Kingdom (eu-west-2)",
   },
   {

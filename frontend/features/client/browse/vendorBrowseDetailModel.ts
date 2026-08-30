@@ -3,9 +3,18 @@ import { displayServicesOffered } from "@/features/client/browse/browseLabels";
 import {
   buildDiscountPromoLines,
   listPriceDisplay,
-  parseMoneyNumber,
   parseVendorDiscountConfig,
 } from "@/lib/vendorDiscountDisplay";
+import { parseSingleMoneyNumber } from "@/lib/validation/money";
+import {
+  defaultMinQuantity,
+  isPerUnitPricing,
+  lineTotalGbp,
+  parsePackagePricingMode,
+  parsePackageQuantity,
+  perUnitPriceSuffix,
+  type PackagePricingMode,
+} from "@/lib/packagePricing";
 
 /** One selectable pricing block - mirrors onboarding packages and/or fixed hourly & daily rates. */
 export type BrowsePricingOption = {
@@ -16,8 +25,14 @@ export type BrowsePricingOption = {
   heading: string;
   priceDisplay: string | null;
   compareAtDisplay: string | null;
-  /** Parsed GBP amount for sums (null = custom quote / TBC). */
+  /** Parsed GBP amount for sums (null = custom quote / TBC). For per-unit, this is the rate. */
   unitPriceGbp: number | null;
+  pricingMode: PackagePricingMode;
+  unitLabel: string | null;
+  minQuantity: number;
+  maxQuantity: number | null;
+  /** e.g. "/ chair" or "each" — appended to the displayed price. */
+  priceSuffix: string | null;
   /** e.g. "10% off - Easter discount" */
   discountBadge: string | null;
   /** Travel/delivery policy for this package or default vendor rule. */
@@ -42,19 +57,50 @@ export type BookingLineItem = {
   id: string;
   heading: string;
   unitPriceGbp: number | null;
+  quantity?: number;
+  unitRateGbp?: number | null;
+  unitLabel?: string | null;
 };
 
 /** Sum selected options for booking UI; handles mixed priced + TBC lines. */
 export function buildBookingLineItems(
   options: BrowsePricingOption[],
   selectedIds: string[],
+  quantities?: Record<string, number>,
 ): BookingLineItem[] {
   const set = new Set(selectedIds);
-  return options.filter((o) => set.has(o.id)).map((o) => ({
-    id: o.id,
-    heading: o.heading,
-    unitPriceGbp: o.unitPriceGbp,
-  }));
+  return options
+    .filter((o) => set.has(o.id))
+    .map((o) => {
+      const perUnit = o.pricingMode === "per_unit";
+      const qty = perUnit
+        ? Math.max(quantities?.[o.id] ?? o.minQuantity, o.minQuantity)
+        : 1;
+      return {
+        id: o.id,
+        heading: o.heading,
+        unitPriceGbp: lineTotalGbp(o.unitPriceGbp, qty),
+        quantity: perUnit ? qty : undefined,
+        unitRateGbp: perUnit ? o.unitPriceGbp : undefined,
+        unitLabel: perUnit ? o.unitLabel : undefined,
+      };
+    });
+}
+
+/** Quantities to send with a booking request (per-unit options only). */
+export function bookingQuantitiesPayload(
+  selectedIds: string[],
+  options: BrowsePricingOption[],
+  quantities: Record<string, number>,
+): Record<string, number> | undefined {
+  const byId = new Map(options.map((o) => [o.id, o]));
+  const out: Record<string, number> = {};
+  for (const id of selectedIds) {
+    const opt = byId.get(id);
+    if (!opt || opt.pricingMode !== "per_unit") continue;
+    out[id] = Math.max(quantities[id] ?? opt.minQuantity, opt.minQuantity);
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
 }
 
 /** Full line payload for the API so bookings retain package description, bullets, and duration. */
@@ -120,6 +166,10 @@ type RawPkg = {
   price: string;
   duration: string;
   useDefaultTravelPackage: boolean;
+  pricingMode: PackagePricingMode;
+  unitLabel: string;
+  minQuantity: string;
+  maxQuantity: string;
 };
 
 const TRAVEL_POLICY_LABELS: Record<string, string> = {
@@ -159,13 +209,19 @@ function normalizePackages(payload: Record<string, unknown>): RawPkg[] {
       price: coerceStr(o, "price").trim(),
       duration: coerceStr(o, "duration").trim(),
       useDefaultTravelPackage: o.useDefaultTravelPackage !== false,
+      pricingMode: parsePackagePricingMode(o.pricingMode),
+      unitLabel: coerceStr(o, "unitLabel").trim(),
+      minQuantity: coerceStr(o, "minQuantity").trim(),
+      maxQuantity: coerceStr(o, "maxQuantity").trim(),
     };
   });
 }
 
-/** Onboarding: name + price required for a package to count as complete. */
+/** Onboarding: name + strictly valid price required for a package to count as complete. */
 function isCompletePackage(p: RawPkg): boolean {
-  return Boolean(p.title && p.price);
+  if (!p.title || parseSingleMoneyNumber(p.price) === null) return false;
+  if (isPerUnitPricing(p.pricingMode) && !p.unitLabel) return false;
+  return true;
 }
 
 function tabLabelFromTitle(title: string, fallback: string): string {
@@ -224,8 +280,8 @@ export function packageSpecificTravelLine(
  */
 export function buildBrowsePricingOptions(vendor: ExploreVendor): BrowsePricingOption[] {
   const p = vendor.profile_form_data ?? {};
-  const hourly = parseMoneyNumber(coerceStr(p, "hourlyRate"));
-  const daily = parseMoneyNumber(coerceStr(p, "dailyRate"));
+  const hourly = parseSingleMoneyNumber(coerceStr(p, "hourlyRate"));
+  const daily = parseSingleMoneyNumber(coerceStr(p, "dailyRate"));
 
   const discountConfig = parseVendorDiscountConfig(p);
   const promoLines = buildDiscountPromoLines(discountConfig);
@@ -236,8 +292,11 @@ export function buildBrowsePricingOptions(vendor: ExploreVendor): BrowsePricingO
 
   if (completePkgs.length > 0) {
     return completePkgs.map((pkg, index) => {
-      const listPrice = parseMoneyNumber(pkg.price);
+      const listPrice = parseSingleMoneyNumber(pkg.price);
       const priced = listPriceDisplay(listPrice, discountConfig);
+      const perUnit = isPerUnitPricing(pkg.pricingMode);
+      const minQty = defaultMinQuantity(pkg.minQuantity);
+      const maxQty = parsePackageQuantity(pkg.maxQuantity);
 
       const timelineLine = pkg.duration.trim()
         ? pkg.duration.trim()
@@ -251,6 +310,11 @@ export function buildBrowsePricingOptions(vendor: ExploreVendor): BrowsePricingO
         priceDisplay: priced.priceDisplay,
         compareAtDisplay: priced.compareAtDisplay,
         unitPriceGbp: priced.unitPriceGbp,
+        pricingMode: pkg.pricingMode,
+        unitLabel: perUnit ? pkg.unitLabel || null : null,
+        minQuantity: minQty,
+        maxQuantity: maxQty,
+        priceSuffix: perUnit ? perUnitPriceSuffix(pkg.unitLabel) : null,
         discountBadge: priced.discountBadge,
         travelLine,
         promoLines,
@@ -274,6 +338,11 @@ export function buildBrowsePricingOptions(vendor: ExploreVendor): BrowsePricingO
       priceDisplay: priced.priceDisplay,
       compareAtDisplay: priced.compareAtDisplay,
       unitPriceGbp: priced.unitPriceGbp,
+      pricingMode: "fixed",
+      unitLabel: null,
+      minQuantity: 1,
+      maxQuantity: null,
+      priceSuffix: null,
       discountBadge: priced.discountBadge,
       travelLine: packageTravelLine(p, p.useDefaultTravelHourly !== false),
       promoLines,
@@ -292,6 +361,11 @@ export function buildBrowsePricingOptions(vendor: ExploreVendor): BrowsePricingO
       priceDisplay: priced.priceDisplay,
       compareAtDisplay: priced.compareAtDisplay,
       unitPriceGbp: priced.unitPriceGbp,
+      pricingMode: "fixed",
+      unitLabel: null,
+      minQuantity: 1,
+      maxQuantity: null,
+      priceSuffix: null,
       discountBadge: priced.discountBadge,
       travelLine: packageTravelLine(p, p.useDefaultTravelDaily !== false),
       promoLines,
@@ -313,6 +387,11 @@ export function buildBrowsePricingOptions(vendor: ExploreVendor): BrowsePricingO
       priceDisplay: null,
       compareAtDisplay: null,
       unitPriceGbp: null,
+      pricingMode: "fixed",
+      unitLabel: null,
+      minQuantity: 1,
+      maxQuantity: null,
+      priceSuffix: null,
       discountBadge: null,
       travelLine: null,
       promoLines: [],

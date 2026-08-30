@@ -242,7 +242,7 @@ export function VendorOnboarding() {
               <p className="mt-1 leading-relaxed text-sky-900/90">{RETURNED_FOR_EDITS_BODY}</p>
             </div>
             <Link
-              href="/vendor/messages"
+              href="/vendor/help"
               className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-95 sm:min-w-[10rem]"
             >
               Open Messages

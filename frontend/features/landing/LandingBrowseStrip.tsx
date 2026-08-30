@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight, BadgeCheck, CreditCard, MapPin, Tags } from "lucide-react";
-import { BROWSE_SECTION, CATEGORIES } from "@/features/landing/landingData";
+import { BROWSE_CATEGORIES, BROWSE_SECTION } from "@/features/landing/landingData";
 import {
   LANDING_HORIZONTAL_PADDING,
   LANDING_PAGE_MAX_WIDTH,
@@ -21,7 +21,7 @@ export function LandingBrowseStrip() {
   return (
     <section
       id="browse"
-      className={`${LANDING_SECTION_SHELL.content} z-10 bg-white`}
+      className={`scroll-mt-24 sm:scroll-mt-28 ${LANDING_SECTION_SHELL.content} z-10 bg-white`}
     >
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-neutral-100/80 to-transparent"
@@ -48,7 +48,7 @@ export function LandingBrowseStrip() {
           aria-label="Browse by category"
           className="mt-8 flex w-full flex-wrap items-start justify-center gap-x-8 gap-y-6 sm:mt-10 sm:gap-x-14 sm:gap-y-8 lg:gap-x-16"
         >
-          {CATEGORIES.map(({ name, value, Icon, iconBg, iconColor }) => (
+          {BROWSE_CATEGORIES.map(({ name, value, Icon, iconBg, iconColor }) => (
             <Link
               key={value}
               href={`/client/browse?types=${value}`}

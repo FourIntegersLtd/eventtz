@@ -47,7 +47,7 @@ def _create_supabase_client() -> Client:
 
 
 def get_supabase() -> Client:
-    """Main backend client for the database, file storage, and other server-only work."""
+    """Main backend client for the database, Auth admin APIs, and other server-only work."""
     global _service_client
     if _service_client is None:
         _service_client = _create_supabase_client()
@@ -113,6 +113,11 @@ def apply_recent_first_order(
     if final_tie_breaker and final_tie_breaker not in {column, tie_breaker}:
         q = q.order(final_tie_breaker, desc=True)
     return q
+
+
+def is_upstream_unavailable(exc: BaseException) -> bool:
+    """True when PostgREST/Supabase did not answer (timeout / network)."""
+    return isinstance(exc, (httpx.TimeoutException, httpx.NetworkError))
 
 
 def is_missing_approval_status_column(err: Exception) -> bool:

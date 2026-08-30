@@ -21,6 +21,7 @@ from app.contracts.booking import (
     VendorBookingsListResponse,
 )
 from app.features.bookings import messages as booking_messages
+from app.features.bookings.http.ids import parse_booking_id
 from app.features.bookings.http import participant_dispute_handlers as dh
 from app.contracts.disputes import (
     CreateParticipantDisputeBody,
@@ -29,18 +30,25 @@ from app.contracts.disputes import (
     ParticipantDisputesListResponse,
 )
 from app.contracts.payments import ConfirmCompletionResponse
+from app.contracts.receipts import PaymentReceiptResponse
 from app.features.bookings.payments import (
     confirm_completion_for_vendor,
     maybe_auto_release_payout_for_booking,
-    touch_completion_side_effects_for_booking_rows,
+    send_completion_reminders_for_booking_list,
 )
 from app.features.bookings import (
     create_vendor_quote_booking_request,
     get_booking_request_for_vendor,
     list_booking_requests_for_vendor,
-    put_vendor_booking_adjustments,
+    put_vendor_booking_adjustments as save_vendor_booking_adjustments,
     update_booking_request_status_for_vendor,
 )
+from app.features.bookings.receipts import (
+    build_vendor_payment_record,
+    build_vendor_payout_statement,
+    load_payment_snapshot,
+)
+from app.features.bookings.receipt_document import payment_receipt_response, receipt_html_response
 
 router = APIRouter(prefix="/vendor", tags=["vendor"])
 logger = get_logger(__name__)
@@ -125,7 +133,7 @@ def list_vendor_bookings(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     if g == "active":
-        touch_completion_side_effects_for_booking_rows(rows)
+        send_completion_reminders_for_booking_list(rows)
     bookings = [VendorBookingListItem(**r) for r in rows]
     return VendorBookingsListResponse(bookings=bookings)
 
@@ -134,7 +142,7 @@ def list_vendor_bookings(
     "/booking-requests/{booking_id}/adjustments",
     response_model=PutVendorBookingAdjustmentsResponse,
 )
-def put_vendor_booking_adjustments_ep(
+def put_vendor_booking_adjustments(
     request: Request,
     response: Response,
     booking_id: str,
@@ -142,14 +150,11 @@ def put_vendor_booking_adjustments_ep(
 ) -> PutVendorBookingAdjustmentsResponse:
     user = require_vendor(request, response)
     vendor_id = str(user.get("id") or "")
-    try:
-        uuid.UUID(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+    parse_booking_id(booking_id)
 
     payload = [a.model_dump() for a in body.adjustments]
     try:
-        row = put_vendor_booking_adjustments(vendor_id, booking_id, payload)
+        row = save_vendor_booking_adjustments(vendor_id, booking_id, payload)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
@@ -171,16 +176,13 @@ def patch_vendor_booking_status(
 ) -> VendorBookingStatusResponse:
     user = require_vendor(request, response)
     vendor_id = str(user.get("id") or "")
-    try:
-        uuid.UUID(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+    parse_booking_id(booking_id)
 
     try:
         row = update_booking_request_status_for_vendor(
             vendor_id,
             booking_id,
-            new_status=body.status,
+            new_status=body.booking_status,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -205,10 +207,7 @@ def post_vendor_confirm_completion(
 ) -> ConfirmCompletionResponse:
     user = require_vendor(request, response)
     vendor_id = str(user.get("id") or "")
-    try:
-        uuid.UUID(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+    parse_booking_id(booking_id)
 
     try:
         result = confirm_completion_for_vendor(vendor_id, booking_id)
@@ -229,10 +228,7 @@ def get_vendor_booking(
 ) -> VendorBookingDetailResponse:
     user = require_vendor(request, response)
     vendor_id = str(user.get("id") or "")
-    try:
-        uuid.UUID(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+    parse_booking_id(booking_id)
 
     # Safety net between hourly runs: pay the vendor if the automatic payout date has passed.
     maybe_auto_release_payout_for_booking(booking_id)
@@ -241,6 +237,87 @@ def get_vendor_booking(
         raise HTTPException(status_code=404, detail=booking_messages.BOOKING_NOT_FOUND)
 
     return VendorBookingDetailResponse(booking=VendorBookingDetail(**row))
+
+
+def _vendor_receipt_payload(vendor_id: str, booking_id: str, *, builder):
+    parse_booking_id(booking_id)
+    row = get_booking_request_for_vendor(vendor_id, booking_id)
+    if not row:
+        raise HTTPException(status_code=404, detail=booking_messages.BOOKING_NOT_FOUND)
+    try:
+        return builder(
+            row,
+            client_display_name=str(row.get("client_display_name") or "Client"),
+            snapshot=load_payment_snapshot(booking_id),
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+
+@router.get(
+    "/booking-requests/{booking_id}/payment-record",
+    response_model=PaymentReceiptResponse,
+)
+def get_vendor_booking_payment_record(
+    request: Request,
+    response: Response,
+    booking_id: str,
+) -> PaymentReceiptResponse:
+    user = require_vendor(request, response)
+    payload = _vendor_receipt_payload(
+        str(user.get("id") or ""), booking_id, builder=build_vendor_payment_record
+    )
+    return payment_receipt_response(payload)
+
+
+@router.get("/booking-requests/{booking_id}/payment-record.html")
+def get_vendor_booking_payment_record_html(
+    request: Request,
+    response: Response,
+    booking_id: str,
+) -> Response:
+    user = require_vendor(request, response)
+    payload = _vendor_receipt_payload(
+        str(user.get("id") or ""), booking_id, builder=build_vendor_payment_record
+    )
+    return receipt_html_response(
+        payload,
+        filename=f"payment-record-{payload['receipt_number']}.html",
+        inline=False,
+    )
+
+
+@router.get(
+    "/booking-requests/{booking_id}/payout-statement",
+    response_model=PaymentReceiptResponse,
+)
+def get_vendor_booking_payout_statement(
+    request: Request,
+    response: Response,
+    booking_id: str,
+) -> PaymentReceiptResponse:
+    user = require_vendor(request, response)
+    payload = _vendor_receipt_payload(
+        str(user.get("id") or ""), booking_id, builder=build_vendor_payout_statement
+    )
+    return payment_receipt_response(payload)
+
+
+@router.get("/booking-requests/{booking_id}/payout-statement.html")
+def get_vendor_booking_payout_statement_html(
+    request: Request,
+    response: Response,
+    booking_id: str,
+) -> Response:
+    user = require_vendor(request, response)
+    payload = _vendor_receipt_payload(
+        str(user.get("id") or ""), booking_id, builder=build_vendor_payout_statement
+    )
+    return receipt_html_response(
+        payload,
+        filename=f"payout-statement-{payload['receipt_number']}.html",
+        inline=False,
+    )
 
 
 @router.post(
@@ -255,10 +332,7 @@ def post_vendor_booking_dispute(
 ) -> CreateParticipantDisputeResponse:
     user = require_vendor(request, response)
     uid = str(user.get("id") or "")
-    try:
-        uuid.UUID(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+    parse_booking_id(booking_id)
 
     return dh.create_booking_dispute(booking_id, uid, body)
 
@@ -274,10 +348,7 @@ def list_vendor_booking_disputes(
 ) -> ParticipantDisputesListResponse:
     user = require_vendor(request, response)
     uid = str(user.get("id") or "")
-    try:
-        uuid.UUID(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=booking_messages.INVALID_BOOKING_ID) from e
+    parse_booking_id(booking_id)
     return dh.list_booking_disputes(booking_id, uid)
 
 

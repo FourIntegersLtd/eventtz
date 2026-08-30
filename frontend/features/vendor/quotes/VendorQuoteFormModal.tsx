@@ -10,7 +10,10 @@ import { TextField } from "@/components/ui/TextField";
 import { TextArea } from "@/components/ui/TextArea";
 import { Select } from "@/components/ui/Select";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { withMutationFeedback } from "@/lib/mutationFeedback";
+import { VENDOR_BOOKING_TOAST_COPY, VENDOR_BOOKING_ERROR_COPY } from "@/features/bookings/bookingConfirmCopy";
 import { todayIsoDate } from "@/lib/eventDateValidation";
+import { parseSingleMoneyNumber } from "@/lib/validation/money";
 import { parseForm, vendorQuoteSchema } from "@/lib/validation";
 import { postVendorQuote } from "@/lib/vendorBookingsApi";
 import { fetchVendorProfile } from "@/lib/vendorProfileApi";
@@ -35,12 +38,11 @@ type VendorPackageOption = {
   price: string;
 };
 
-/** A package's `price` field is free text (e.g. "£1,200" or "1200") - pull out
- * the leading number so it's usable to prefill the quote's price field. */
+/** Prefill quote price from a validated onboarding package price string. */
 function numericPricePrefill(raw: string): string {
-  const match = raw.match(/[\d,]+(\.\d+)?/);
-  if (!match) return "";
-  return match[0].replace(/,/g, "");
+  const amount = parseSingleMoneyNumber(raw);
+  if (amount == null) return "";
+  return amount % 1 === 0 ? String(amount) : amount.toFixed(2);
 }
 
 const CUSTOM_OPTION_ID = "__custom__";
@@ -150,40 +152,51 @@ export function VendorQuoteFormModal({
       parsed.data;
 
     setBusy(true);
-    try {
-      const id =
-        typeof crypto !== "undefined" && crypto.randomUUID
-          ? crypto.randomUUID()
-          : `li-${Date.now()}`;
-      const out = await postVendorQuote({
-        client_user_id: clientUserId,
-        conversation_id: conversationId,
-        event_name: name,
-        event_date: ed.slice(0, 10),
-        event_end_date: end?.trim() ? end.slice(0, 10) : null,
-        notes: noteText || null,
-        line_items: [
-          {
-            id,
-            heading: packageName,
-            unit_price_gbp: p,
-          },
-        ],
-      });
-      track(MixpanelEvents.vendor_quote_sent, {
-        booking_id: out.booking_request_id,
-        conversation_id: conversationId,
-        price_gbp: p,
-      });
-      showToast({ title: "Quote sent", tone: "success" });
+    let caught: unknown = null;
+    const out = await withMutationFeedback(showToast, {
+      successTitle: VENDOR_BOOKING_TOAST_COPY.quoteSent,
+      showErrorToast: false,
+      run: async () => {
+        try {
+          const id =
+            typeof crypto !== "undefined" && crypto.randomUUID
+              ? crypto.randomUUID()
+              : `li-${Date.now()}`;
+          const posted = await postVendorQuote({
+            client_user_id: clientUserId,
+            conversation_id: conversationId,
+            event_name: name,
+            event_date: ed.slice(0, 10),
+            event_end_date: end?.trim() ? end.slice(0, 10) : null,
+            notes: noteText || null,
+            line_items: [
+              {
+                id,
+                heading: packageName,
+                unit_price_gbp: p,
+              },
+            ],
+          });
+          track(MixpanelEvents.vendor_quote_sent, {
+            booking_id: posted.booking_request_id,
+            conversation_id: conversationId,
+            price_gbp: p,
+          });
+          return posted;
+        } catch (e) {
+          caught = e;
+          throw e;
+        }
+      },
+    });
+    if (out) {
       reset();
       onClose();
       router.push(`/vendor/bookings/${encodeURIComponent(out.booking_request_id)}`);
-    } catch (e: unknown) {
-      setError(getApiErrorDetail(e) ?? "Could not send quote.");
-    } finally {
-      setBusy(false);
+    } else if (caught) {
+      setError(getApiErrorDetail(caught) ?? VENDOR_BOOKING_ERROR_COPY.quoteFailed);
     }
+    setBusy(false);
   };
 
   return (
@@ -204,9 +217,9 @@ export function VendorQuoteFormModal({
     >
       <div className="space-y-4">
         <p className="text-sm leading-relaxed text-neutral-600">
-          A custom quote is a priced offer you send from chat - for a package you already
-          list, or a one-off price that isn&apos;t on your profile. It creates a booking
-          request the client can accept or decline from Bookings.
+          Send this client a price from chat. Use a package you already list, or enter a
+          one-off amount. They can accept or decline in Bookings. This stays on their
+          booking only — it won&apos;t appear on your listing.
         </p>
         {error ? <LottieFailureInline message={error} /> : null}
         <TextField

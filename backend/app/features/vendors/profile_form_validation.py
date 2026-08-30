@@ -5,20 +5,28 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from app.core.config import get_settings
 from app.core.errors import ValidationError
 from app.core.phone_validation import is_valid_phone_number
+from app.features.media.s3 import is_our_s3_url, public_object_url
 from app.features.vendors import messages as vendor_messages
 from app.features.vendors.markets import DEFAULT_COUNTRY_CODE, is_market_enabled, normalize_country_code
-from app.features.vendors.list_pricing import parse_money_gbp
+from app.features.vendors.list_pricing import (
+    MAX_MONEY_GBP,
+    MAX_PACKAGE_UNIT_LABEL_CHARS,
+    MIN_MONEY_GBP,
+    parse_money_gbp,
+    parse_pricing_mode,
+    parse_quantity_input,
+    parse_single_money_gbp,
+    raise_if_invalid_single_money_gbp,
+)
 from app.features.vendors.package_quality import (
     validate_package_fields,
     validate_packages_for_payload,
 )
+from app.features.vendors.taxonomy import filter_service_keys
 
 MAX_DISCOUNT_PCT = 100.0
-MAX_MONEY_GBP = 1_000_000.0
-MIN_MONEY_GBP = 0.1
 MIN_MAX_BOOKINGS_PER_DAY = 1
 MAX_MAX_BOOKINGS_PER_DAY = 20
 MIN_PORTFOLIO_IMAGES = 5
@@ -49,9 +57,9 @@ def _clamp_pct(raw: str) -> str:
 
 
 def _clamp_money_str(raw: str) -> str:
-    n = parse_money_gbp(raw)
+    n = parse_single_money_gbp(raw)
     if n is None:
-        return ""
+        return raw.strip()
     clamped = max(0.0, min(MAX_MONEY_GBP, n))
     if clamped == int(clamped):
         return str(int(clamped))
@@ -63,10 +71,9 @@ def _is_allowed_storage_url(url: str, user_id: str) -> bool:
     u = url.strip()
     if not u.startswith("https://") and not u.startswith("http://"):
         return False
-    if "/storage/v1/object/public/" not in u:
+    if f"/users/{user_id}/" not in u:
         return False
-    needle = f"/users/{user_id}/"
-    return needle in u
+    return is_our_s3_url(u)
 
 
 def _filter_url_list(raw: Any, user_id: str) -> list[str]:
@@ -121,6 +128,18 @@ def normalize_payload_fields(payload: dict[str, Any], user_id: str) -> dict[str,
                 continue
             pkg = dict(item)
             pkg["price"] = _clamp_money_str(_coerce_str(pkg, "price"))
+            pkg["pricingMode"] = parse_pricing_mode(pkg.get("pricingMode"))
+            pkg["unitLabel"] = _coerce_str(pkg, "unitLabel").strip()[:MAX_PACKAGE_UNIT_LABEL_CHARS]
+            min_qty, min_invalid = parse_quantity_input(pkg.get("minQuantity"))
+            max_qty, max_invalid = parse_quantity_input(pkg.get("maxQuantity"))
+            if min_qty is not None:
+                pkg["minQuantity"] = str(min_qty)
+            elif not min_invalid:
+                pkg["minQuantity"] = ""
+            if max_qty is not None:
+                pkg["maxQuantity"] = str(max_qty)
+            elif not max_invalid:
+                pkg["maxQuantity"] = ""
             cleaned.append(pkg)
         out["packages"] = cleaned
 
@@ -192,17 +211,13 @@ def _pct_in_range(raw: str, label: str) -> None:
 
 
 def _money_in_range(raw: str, label: str, *, required: bool = False) -> None:
-    if not raw.strip():
-        if required:
-            raise ValidationError(vendor_messages.step_pricing_label_required(label))
-        return
-    n = parse_money_gbp(raw)
-    if n is None:
-        raise ValidationError(vendor_messages.step_pricing_label_valid_amount(label))
-    if n < MIN_MONEY_GBP or n > MAX_MONEY_GBP:
-        if n < MIN_MONEY_GBP:
-            raise ValidationError(vendor_messages.step_pricing_label_min_gbp(label, MIN_MONEY_GBP))
-        raise ValidationError(vendor_messages.step_pricing_label_out_of_range(label))
+    raise_if_invalid_single_money_gbp(
+        raw,
+        label,
+        required=required,
+        min_gbp=MIN_MONEY_GBP,
+        max_gbp=MAX_MONEY_GBP,
+    )
 
 
 def _validate_step_location(payload: dict[str, Any]) -> None:
@@ -263,9 +278,6 @@ def validate_step_fields(step: int, payload: dict[str, Any]) -> None:
             for pkg in pkgs:
                 if isinstance(pkg, dict):
                     validate_package_fields(pkg, strict=True)
-                    price = _coerce_str(pkg, "price").strip()
-                    if price:
-                        _money_in_range(price, "Package price", required=True)
         validate_packages_for_payload(payload, on_submit=False, require_service_packages=True)
         has_rate = bool(_coerce_str(payload, "hourlyRate").strip()) or bool(
             _coerce_str(payload, "dailyRate").strip(),
@@ -348,6 +360,10 @@ def validate_payload_for_progress(
         svcs = payload.get("servicesOffered")
         if not isinstance(svcs, list) or not any(str(x).strip() for x in svcs):
             raise ValidationError(vendor_messages.SELECT_SERVICE_BEFORE_SUBMIT)
+        allowed = filter_service_keys([str(x) for x in svcs])
+        if not allowed:
+            raise ValidationError(vendor_messages.INVALID_SERVICE_OFFERED)
+        payload["servicesOffered"] = allowed
         validate_packages_for_payload(payload, on_submit=True)
         return
 
@@ -357,7 +373,5 @@ def validate_payload_for_progress(
 
 
 def vendor_storage_url_prefix(user_id: str) -> str:
-    """Public URL path segment for this vendor's uploads."""
-    base = get_settings().supabase_url.rstrip("/")
-    bucket = get_settings().media_images_bucket.strip() or "eventtz-images"
-    return f"{base}/storage/v1/object/public/{bucket}/users/{user_id}/"
+    """Public URL path segment for this vendor's uploads (new files on S3)."""
+    return public_object_url(f"users/{user_id}/")

@@ -2,6 +2,8 @@
 
 import { ChevronDown, CircleHelp, Clock, Truck } from "lucide-react";
 import type { BrowsePricingOption } from "@/features/client/browse/vendorBrowseDetailModel";
+import { QuantityStepper } from "@/components/ui/QuantityStepper";
+import { lineTotalGbp } from "@/lib/packagePricing";
 
 export type BrowsePricingOptionCardProps = {
   opt: BrowsePricingOption;
@@ -11,6 +13,8 @@ export type BrowsePricingOptionCardProps = {
   showCheckbox?: boolean;
   selected?: boolean;
   onToggleSelect?: () => void;
+  quantity?: number;
+  onQuantityChange?: (qty: number) => void;
   detailsMode?: "collapsible" | "always";
   isOpen?: boolean;
   onToggleDetails?: () => void;
@@ -29,9 +33,11 @@ export function BrowsePricingOptionCard({
   packageTravelLine = null,
   hideFeatureLines = false,
   hidePromoLines = false,
-  showCheckbox = false,
+  showCheckbox: showCheckboxProp = false,
   selected = false,
   onToggleSelect,
+  quantity = 0,
+  onQuantityChange,
   detailsMode = "collapsible",
   isOpen = false,
   onToggleDetails,
@@ -41,6 +47,12 @@ export function BrowsePricingOptionCard({
   const hasPackageDetails = Boolean(description) || showFeatureLines;
   const showPromoLines = !hidePromoLines && opt.promoLines.length > 0;
   const detailsExpanded = detailsMode === "always" || isOpen;
+  const perUnit = opt.pricingMode === "per_unit";
+  const showStepper = perUnit && Boolean(onQuantityChange);
+  const showCheckbox = showCheckboxProp && !showStepper;
+  const lineTotal = showStepper
+    ? lineTotalGbp(opt.unitPriceGbp, quantity)
+    : null;
 
   return (
     <div className="flex gap-3">
@@ -62,15 +74,46 @@ export function BrowsePricingOptionCard({
                 {opt.compareAtDisplay ? (
                   <span className="mr-1.5 text-xs font-normal text-neutral-400 line-through">
                     £{opt.compareAtDisplay}
+                    {opt.priceSuffix ? ` ${opt.priceSuffix}` : ""}
                   </span>
                 ) : null}
                 £{opt.priceDisplay}
+                {opt.priceSuffix ? (
+                  <span className="ml-1 text-xs font-medium text-neutral-500">
+                    {opt.priceSuffix}
+                  </span>
+                ) : null}
               </>
             ) : (
               <span className="font-medium text-neutral-500">Quote</span>
             )}
           </p>
         </div>
+
+        {showStepper && onQuantityChange ? (
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <QuantityStepper
+              value={quantity}
+              min={opt.minQuantity}
+              max={opt.maxQuantity}
+              onChange={onQuantityChange}
+              aria-label={`Quantity for ${opt.heading}`}
+            />
+            {quantity > 0 && lineTotal != null ? (
+              <p className="text-xs tabular-nums text-neutral-600">
+                {quantity} × £{opt.priceDisplay} = £
+                {lineTotal.toLocaleString("en-GB", {
+                  minimumFractionDigits: lineTotal % 1 === 0 ? 0 : 2,
+                  maximumFractionDigits: 2,
+                })}
+              </p>
+            ) : (
+              <p className="text-xs text-neutral-400">
+                {opt.minQuantity > 1 ? `Min ${opt.minQuantity}` : "Choose a quantity"}
+              </p>
+            )}
+          </div>
+        ) : null}
 
         {opt.discountBadge ? (
           <p>

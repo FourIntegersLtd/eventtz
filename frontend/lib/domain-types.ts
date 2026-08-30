@@ -165,13 +165,22 @@ export type BookingPricingBreakdown = {
   vendor_portion_gbp: number;
   service_fee_percent: number;
   service_fee_gbp: number;
+  service_fee_before_discount_gbp?: number | null;
+  service_fee_before_discount_label?: string | null;
+  referral_fee_discount_gbp?: number;
+  referral_fee_discount_label?: string | null;
   client_total_gbp: number;
   has_pricing_tbc: boolean;
   vendor_portion_label: string;
   service_fee_label: string;
   client_total_label: string;
   line_items_subtotal_label: string;
+  vendor_referral_code?: string | null;
+  referral_fee_applied?: boolean;
 };
+
+/** UI alias — same shape as API `BookingPricingBreakdown`. */
+export type BookingPricing = BookingPricingBreakdown;
 
 /**
  * Every status a booking can be in, across both portals. Server responses
@@ -270,6 +279,9 @@ export type BookingLineItem = {
   description?: string | null;
   feature_lines?: string[];
   timeline_line?: string | null;
+  quantity?: number | null;
+  unit_rate_gbp?: number | null;
+  unit_label?: string | null;
 };
 
 /** List filter: active = pending+accepted, closed = declined+cancelled (+ completed for some APIs). */

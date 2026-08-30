@@ -27,8 +27,8 @@ export function BlogSiteChrome({ children }: BlogSiteChromeProps) {
             <Link href="/blog" className="transition hover:text-primary">
               Blog
             </Link>
-            <Link href="/explore" className="transition hover:text-primary">
-              Explore
+            <Link href="/client/browse" className="transition hover:text-primary">
+              Browse
             </Link>
             <Link href="/" className="transition hover:text-primary">
               Home

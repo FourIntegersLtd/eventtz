@@ -104,6 +104,7 @@ def _mark_paid_from_payment_intent(row: dict[str, Any], pi_dict: dict[str, Any])
 
     payment_intent_id = str(pi_dict.get("id") or "").strip()
     _, charge_id = _payment_fields_from_checkout_session({"payment_intent": pi_dict})
+    stripe_receipt_url = stripe_module.charge_receipt_url(charge_id)
     payment_amount_gbp = float(amount_received) / 100.0
 
     vendor_amount_gbp = None
@@ -128,6 +129,7 @@ def _mark_paid_from_payment_intent(row: dict[str, Any], pi_dict: dict[str, Any])
                 "paid_at": _now_iso(),
                 "stripe_payment_intent_id": payment_intent_id,
                 "stripe_charge_id": charge_id,
+                "stripe_receipt_url": stripe_receipt_url,
                 "payment_amount_gbp": payment_amount_gbp,
                 "vendor_amount_gbp": vendor_amount_gbp,
                 "platform_fee_gbp": platform_fee_gbp,
@@ -177,7 +179,19 @@ def admin_sync_payment_for_booking(booking_id: str) -> dict[str, Any]:
     pi_dict = pi_raw if isinstance(pi_raw, dict) else stripe_module.stripe_object_to_dict(pi_raw)
     if not _mark_paid_from_payment_intent(row, pi_dict):
         raise ValueError(BOOKING_MARK_PAID_FAILED)
-    return _load_booking_row(booking_id)
+    from app.features.bookings.receipts import (
+        dispatch_payment_receipts_after_checkout,
+        persist_payment_receipt_snapshots,
+    )
+
+    persist_payment_receipt_snapshots(booking_id)
+    refreshed = _load_booking_row(booking_id)
+    dispatch_payment_receipts_after_checkout(
+        booking_id,
+        client_id=str(refreshed.get("client_user_id") or ""),
+        vendor_id=str(refreshed.get("vendor_user_id") or ""),
+    )
+    return refreshed
 
 
 def admin_retry_payout_for_booking(booking_id: str) -> dict[str, Any]:

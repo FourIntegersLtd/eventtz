@@ -14,6 +14,7 @@ import {
   type VendorPayoutHistory,
   type VendorPayoutRow,
 } from "@/lib/vendorPaymentsApi";
+import { ReceiptActions } from "@/features/receipts/ReceiptActions";
 
 function payoutStatusLabel(status: string): string {
   if (status === "paid_out") return "Paid out";
@@ -87,11 +88,8 @@ function PayoutListCard({ payout }: { payout: VendorPayoutRow }) {
   const paidOutOn = formatPaidOutDate(payout.paid_out_at);
 
   return (
-    <Link
-      href={`/vendor/bookings/${payout.booking_id}`}
-      className="group flex flex-col gap-4 rounded-2xl border border-neutral-200/80 bg-white p-5 shadow-sm transition hover:border-neutral-300 hover:shadow-md sm:flex-row sm:items-center sm:justify-between"
-    >
-      <div className="min-w-0 flex-1">
+    <div className="group flex flex-col gap-4 rounded-2xl border border-neutral-200/80 bg-white p-5 shadow-sm transition hover:border-neutral-300 hover:shadow-md sm:flex-row sm:items-center sm:justify-between">
+      <Link href={`/vendor/bookings/${payout.booking_id}`} className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <p className="font-heading text-base font-semibold text-neutral-900">{payout.event_name}</p>
           <span
@@ -109,18 +107,28 @@ function PayoutListCard({ payout }: { payout: VendorPayoutRow }) {
         ) : payout.status === "awaiting_payout" ? (
           <p className="mt-1 text-xs text-neutral-400">Released when the booking is complete</p>
         ) : null}
-      </div>
+      </Link>
 
-      <div className="flex shrink-0 items-center justify-between gap-4 sm:flex-col sm:items-end sm:justify-center">
+      <div className="flex shrink-0 flex-col items-end justify-center gap-2">
         <p className="font-heading text-xl font-semibold tabular-nums text-neutral-900">
           {payout.amount_label}
         </p>
-        <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary opacity-0 transition group-hover:opacity-100">
+        {payout.status === "paid_out" ? (
+          <ReceiptActions
+            bookingId={payout.booking_id}
+            documentType="vendor_payout_statement"
+            compact
+          />
+        ) : null}
+        <Link
+          href={`/vendor/bookings/${payout.booking_id}`}
+          className="inline-flex items-center gap-1 text-xs font-semibold text-primary opacity-0 transition group-hover:opacity-100"
+        >
           View booking
           <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
-        </span>
+        </Link>
       </div>
-    </Link>
+    </div>
   );
 }
 

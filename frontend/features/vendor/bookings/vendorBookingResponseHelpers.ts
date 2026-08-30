@@ -1,15 +1,18 @@
 import type { BookingPricing } from "@/features/bookings/BookingPricingBreakdown";
 import type { VendorBookingDetail } from "@/lib/vendorBookingsApi";
-import { getBookingServiceFeePercent } from "@/lib/bookingServiceFee";
+import {
+  computeClientFeeBreakdown,
+  referralDiscountForSpend,
+} from "@/lib/bookingServiceFee";
 
-export type AdjDraftRow = {
+export type AdjustmentDraftRow = {
   kind: "cost" | "discount";
   tag: string;
   label: string;
   amount: string;
 };
 
-export type AdjKind = "cost" | "discount";
+export type AdjustmentKind = "cost" | "discount";
 
 export function friendlyMoneyLabel(label: string): string {
   const match = label.match(/GBP\s*([\d,.]+)/i);
@@ -26,7 +29,7 @@ export function formatGbp(amount: number): string {
 
 export function previewClientTotalLabel(
   pricing: BookingPricing | null | undefined,
-  drafts: AdjDraftRow[],
+  drafts: AdjustmentDraftRow[],
 ): string | null {
   if (!pricing || pricing.has_pricing_tbc) return null;
   const draftTotal = drafts.reduce((sum, row) => {
@@ -37,29 +40,34 @@ export function previewClientTotalLabel(
   const lineSubtotal = pricing.line_items_subtotal_gbp;
   const vendorPortion = lineSubtotal + draftTotal;
   if (vendorPortion <= 0) return null;
-  const feePct = pricing.service_fee_percent || getBookingServiceFeePercent();
-  const feeBase = Math.max(0, lineSubtotal + Math.min(draftTotal, 0));
-  const fee = (feeBase * feePct) / 100;
-  return formatGbp(vendorPortion + fee);
+  const referralDiscount =
+    pricing.vendor_referral_code || pricing.referral_fee_applied
+      ? referralDiscountForSpend(vendorPortion)
+      : 0;
+  const breakdown = computeClientFeeBreakdown({
+    vendorPortionGbp: vendorPortion,
+    referralFeeDiscountGbp: referralDiscount,
+  });
+  return breakdown?.totalLabel ?? null;
 }
 
-export function lineKey(row: Pick<AdjDraftRow, "kind" | "tag">): string {
+export function adjustmentLineKey(row: Pick<AdjustmentDraftRow, "kind" | "tag">): string {
   return `${row.kind}:${row.tag}`;
 }
 
-export function rowForKind(lines: AdjDraftRow[], kind: AdjKind): AdjDraftRow | undefined {
+export function draftRowForAdjustmentKind(lines: AdjustmentDraftRow[], kind: AdjustmentKind): AdjustmentDraftRow | undefined {
   const tag = kind === "discount" ? "discount" : "other";
   return lines.find((l) => l.kind === kind && l.tag === tag);
 }
 
 export function applyDraftLine(
-  lines: AdjDraftRow[],
-  kind: AdjKind,
+  lines: AdjustmentDraftRow[],
+  kind: AdjustmentKind,
   rawAmount: string,
   reason: string,
-): AdjDraftRow[] {
+): AdjustmentDraftRow[] {
   const tag = kind === "discount" ? "discount" : "other";
-  const without = lines.filter((l) => lineKey(l) !== `${kind}:${tag}`);
+  const without = lines.filter((l) => adjustmentLineKey(l) !== `${kind}:${tag}`);
   const numeric = Number.parseFloat(rawAmount.replace(/^-/, "").trim());
   if (!rawAmount.trim() || !Number.isFinite(numeric) || numeric <= 0) return without;
   return [
@@ -73,7 +81,7 @@ export function applyDraftLine(
   ];
 }
 
-export function kindFromRow(row: AdjDraftRow): AdjKind {
+export function adjustmentKindFromRow(row: AdjustmentDraftRow): AdjustmentKind {
   return row.kind === "discount" ? "discount" : "cost";
 }
 
@@ -85,7 +93,7 @@ export function legacyLabelToReason(label: string): string {
   return trimmed;
 }
 
-export function draftsFromDetail(detail: VendorBookingDetail): AdjDraftRow[] {
+export function draftsFromDetail(detail: VendorBookingDetail): AdjustmentDraftRow[] {
   return detail.vendor_adjustments.map((a) => ({
     kind: a.amount_gbp < 0 ? "discount" : "cost",
     tag: a.adjustment_category || "other",
@@ -98,12 +106,12 @@ export function hasSavedPriceUpdate(detail: VendorBookingDetail): boolean {
   return detail.vendor_adjustments.length > 0;
 }
 
-export function formatLineSummary(row: AdjDraftRow): string {
+export function formatLineSummary(row: AdjustmentDraftRow): string {
   const amount = formatGbp(Number.parseFloat(row.amount));
   if (row.kind === "discount") return `Discount −${amount}`;
   return `${row.label || "Extra charge"} +${amount}`;
 }
 
-export function costNeedsReason(lines: AdjDraftRow[]): boolean {
+export function costNeedsReason(lines: AdjustmentDraftRow[]): boolean {
   return lines.some((row) => row.kind === "cost" && row.amount.trim() && !row.label.trim());
 }

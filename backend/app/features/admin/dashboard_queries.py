@@ -13,7 +13,7 @@ from app.core.logging import get_logger
 from app.core.db import get_db
 from app.features.admin.admin_optional_timestamps import opt_admin_ts
 from app.features.admin.booking_diagnostics import count_bookings_needing_support_attention
-from app.features.bookings.pricing import build_pricing_breakdown
+from app.features.vendor_referrals.booking_discount import build_pricing_breakdown_for_booking_row
 from app.features.bookings import _paid_at_iso
 
 logger = get_logger(__name__)
@@ -125,11 +125,7 @@ def _booking_gmv_gbp(row: dict[str, Any]) -> float:
             return float(pamt)
         except (TypeError, ValueError):
             pass
-    li = row.get("line_items")
-    if not isinstance(li, list):
-        li = []
-    va = row.get("vendor_adjustments")
-    pb = build_pricing_breakdown(line_items=li, vendor_adjustments=va)
+    pb = build_pricing_breakdown_for_booking_row(row)
     try:
         return float(pb.get("client_total_gbp") or 0)
     except (TypeError, ValueError):
@@ -173,11 +169,7 @@ def get_financials_summary(
     payout_released = 0.0
     held_in_balance = 0.0
     for row in rows:
-        li = row.get("line_items")
-        if not isinstance(li, list):
-            li = []
-        va = row.get("vendor_adjustments")
-        pb = build_pricing_breakdown(line_items=li, vendor_adjustments=va)
+        pb = build_pricing_breakdown_for_booking_row(row)
         row_gmv = _booking_gmv_gbp(row)
         gmv += row_gmv
         row_vportion = 0.0
@@ -188,7 +180,11 @@ def get_financials_summary(
         except (TypeError, ValueError):
             pass
         try:
-            row_pfee = float(pb.get("service_fee_gbp") or 0)
+            raw_pfee = row.get("platform_fee_gbp")
+            if raw_pfee is not None:
+                row_pfee = float(raw_pfee)
+            else:
+                row_pfee = float(pb.get("service_fee_gbp") or 0)
             pfee += row_pfee
         except (TypeError, ValueError):
             pass
@@ -265,12 +261,10 @@ def financials_export_csv_bytes(
         ],
     )
     for row in rows:
-        li = row.get("line_items")
-        if not isinstance(li, list):
-            li = []
-        va = row.get("vendor_adjustments")
-        pb = build_pricing_breakdown(line_items=li, vendor_adjustments=va)
+        pb = build_pricing_breakdown_for_booking_row(row)
         pamt = row.get("payment_amount_gbp")
+        raw_pfee = row.get("platform_fee_gbp")
+        service_fee = raw_pfee if raw_pfee is not None else pb.get("service_fee_gbp")
         w.writerow(
             [
                 str(row.get("id", "")),
@@ -280,7 +274,7 @@ def financials_export_csv_bytes(
                 _paid_at_iso(row) or "",
                 pb.get("client_total_gbp"),
                 pb.get("vendor_portion_gbp"),
-                pb.get("service_fee_gbp"),
+                service_fee,
                 float(pamt) if pamt is not None else "",
                 opt_admin_ts(row.get("payout_released_at")) or "",
             ],

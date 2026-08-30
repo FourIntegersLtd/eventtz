@@ -20,6 +20,17 @@ NO_PUBLISHED_PRICES = "This vendor has no published prices for your selection."
 QUOTE_ONLY_NO_PRICED_OPTIONS = (
     "This vendor only accepts quote requests - no priced options to select."
 )
+PER_UNIT_QUANTITY_REQUIRED = (
+    "Choose how many you need for each priced-per-item package."
+)
+LINE_TOTAL_TOO_HIGH = "That quantity takes this package over the maximum price."
+
+
+def quantity_out_of_range(heading: str, min_qty: int, max_qty: int | None) -> str:
+    name = heading.strip() or "this package"
+    if max_qty is None:
+        return f"Choose at least {min_qty} for {name}."
+    return f"Choose between {min_qty} and {max_qty} for {name}."
 
 # --- Event date availability ---
 
@@ -48,6 +59,18 @@ COULD_NOT_READ_PACKAGE_SUGGESTIONS = "Could not read package suggestions. Try ag
 
 PACKAGE_NEEDS_CLEAR_NAME = "Step pricing: each package needs a clear name."
 PACKAGE_NEEDS_PRICE = "Step pricing: each package needs a price."
+PACKAGE_NEEDS_UNIT_PRICE = "Step pricing: each per-item package needs a unit price."
+PACKAGE_NEEDS_UNIT_LABEL = (
+    "Step pricing: each per-item package needs a unit name (e.g. chair, table)."
+)
+PACKAGE_UNIT_LABEL_TOO_LONG = "Step pricing: keep the unit name short."
+PACKAGE_MIN_QTY_INVALID = (
+    "Step pricing: minimum quantity must be a whole number of at least 1."
+)
+PACKAGE_MAX_QTY_INVALID = (
+    "Step pricing: maximum quantity must be a whole number of at least 1."
+)
+PACKAGE_MIN_ABOVE_MAX = "Step pricing: minimum quantity cannot be greater than maximum."
 PACKAGE_DETAILS_TOO_SHORT = (
     "Step pricing: tell clients what's included (at least a short sentence)."
 )
@@ -87,6 +110,7 @@ STEP_AVAILABILITY_MAX_BOOKINGS_MIN = "Step availability: set max bookings per da
 BUSINESS_NAME_REQUIRED_BEFORE_SUBMIT = "Business name is required before submit."
 BASE_CITY_REQUIRED_BEFORE_SUBMIT = "Base city is required before submit."
 SELECT_SERVICE_BEFORE_SUBMIT = "Select at least one service before submit."
+INVALID_SERVICE_OFFERED = "Select a valid service category before submit."
 
 
 def step_pricing_label_valid_number(label: str) -> str:
@@ -111,6 +135,24 @@ def step_pricing_label_min_gbp(label: str, min_gbp: float) -> str:
 
 def step_pricing_label_out_of_range(label: str) -> str:
     return f"Step pricing: {label} is out of allowed range."
+
+
+def step_pricing_label_single_amount(label: str) -> str:
+    return f"Step pricing: {label} must be a single number (e.g. 150 or 150.00)."
+
+
+def step_pricing_label_one_amount_only(label: str) -> str:
+    return (
+        f"Step pricing: {label} must be one amount only — "
+        "add a separate package for each price."
+    )
+
+
+def step_pricing_label_no_range_price(label: str) -> str:
+    return (
+        f"Step pricing: {label} must be one fixed amount, "
+        "not a range or “starts from” price."
+    )
 
 
 def step_availability_max_bookings_range(min_val: int, max_val: int) -> str:
@@ -141,6 +183,7 @@ LISTING_MEDIA_URL_INVALID = (
 VENDOR_PROFILE_NOT_FOUND = "Vendor profile not found."
 EMAIL_COULD_NOT_BE_SENT = "Email could not be sent."
 NO_EMAIL_ON_FILE = "No email address on file."
+PAYOUT_NUDGE_NOT_ELIGIBLE = "Not approved or payouts already set up."
 
 # --- Public metrics ---
 

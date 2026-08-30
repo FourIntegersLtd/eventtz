@@ -1,0 +1,6 @@
+# Python cache (local tooling)
+.pycache_tmp/
+**/.pycache_tmp/
+
+# OS
+.DS_Store

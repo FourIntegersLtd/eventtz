@@ -1,26 +1,10 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
+import { ClientFeeBreakdownSummary } from "@/features/bookings/ClientFeeBreakdownSummary";
+import type { BookingPricing } from "@/lib/domain-types";
 
-export type BookingPricing = {
-  line_items_subtotal_gbp: number;
-  vendor_adjustments: {
-    id: string;
-    adjustment_category: string;
-    label: string;
-    amount_gbp: number;
-  }[];
-  adjustments_total_gbp: number;
-  vendor_portion_gbp: number;
-  service_fee_percent: number;
-  service_fee_gbp: number;
-  client_total_gbp: number;
-  has_pricing_tbc: boolean;
-  vendor_portion_label: string;
-  service_fee_label: string;
-  client_total_label: string;
-  line_items_subtotal_label: string;
-};
+export type { BookingPricing } from "@/lib/domain-types";
 
 export type BookingLineItemRow = {
   id: string;
@@ -29,6 +13,9 @@ export type BookingLineItemRow = {
   description?: string | null;
   feature_lines?: string[];
   timeline_line?: string | null;
+  quantity?: number | null;
+  unit_rate_gbp?: number | null;
+  unit_label?: string | null;
 };
 
 function formatLineUnitPrice(unitPriceGbp: number | null, lineId?: string): string {
@@ -125,6 +112,18 @@ export function BookingPricingBreakdown({
                       }`}
                     >
                       {li.heading}
+                      {li.quantity != null &&
+                      li.quantity > 0 &&
+                      li.unit_rate_gbp != null &&
+                      !isDiscount
+                        ? ` · ${li.quantity} × £${Math.abs(li.unit_rate_gbp).toLocaleString(
+                            "en-GB",
+                            {
+                              minimumFractionDigits: li.unit_rate_gbp % 1 === 0 ? 0 : 2,
+                              maximumFractionDigits: 2,
+                            },
+                          )}${li.unit_label ? ` / ${li.unit_label}` : ""}`
+                        : ""}
                     </span>
                     <span
                       className={`shrink-0 text-sm font-semibold tabular-nums ${
@@ -198,23 +197,32 @@ export function BookingPricingBreakdown({
         </div>
       ) : null}
 
+      {variant === "client" && pricing.referral_fee_applied ? (
+        <div className="border-t border-emerald-100 bg-emerald-50/60 px-5 py-3 text-xs text-emerald-900">
+          Referral discount applied
+          {pricing.referral_fee_discount_label ? (
+            <span> — {pricing.referral_fee_discount_label} off your Eventtz fee</span>
+          ) : null}
+          {pricing.vendor_referral_code ? (
+            <span className="text-emerald-800/80"> · Code {pricing.vendor_referral_code}</span>
+          ) : null}
+        </div>
+      ) : null}
+
       {variant === "client" ? (
-        <div className="space-y-2 border-t border-neutral-100 px-5 py-3.5 text-sm">
-          <div className="flex justify-between gap-2 text-neutral-600">
-            <span>Vendor portion</span>
-            <span className="font-medium tabular-nums text-neutral-900">
-              {pricing.vendor_portion_label}
-            </span>
-          </div>
-          <div className="flex justify-between gap-2 text-neutral-600">
-            <span>
-              Eventtz fee
-              <span className="text-neutral-400"> ({pricing.service_fee_percent}%)</span>
-            </span>
-            <span className="font-medium tabular-nums text-neutral-900">
-              {pricing.service_fee_label}
-            </span>
-          </div>
+        <div className="border-t border-neutral-100 px-5 py-3.5">
+          <ClientFeeBreakdownSummary
+            breakdown={{
+              vendorPortionLabel: pricing.vendor_portion_label,
+              feeLabel: pricing.service_fee_label,
+              totalLabel: pricing.client_total_label,
+              feePercent: pricing.service_fee_percent,
+              feeBeforeDiscountLabel: pricing.service_fee_before_discount_label,
+              referralDiscountLabel: pricing.referral_fee_discount_label,
+              referralApplied: pricing.referral_fee_applied,
+            }}
+            showTotal={false}
+          />
         </div>
       ) : null}
 

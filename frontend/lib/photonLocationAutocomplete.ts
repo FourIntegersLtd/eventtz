@@ -92,6 +92,46 @@ export async function fetchLocationSuggestions(
   return out;
 }
 
+export type ReverseGeocodeOptions = {
+  countryCode?: string;
+};
+
+/** Resolve coordinates to a city/area label via Photon reverse geocoding. */
+export async function reverseGeocodeLocation(
+  lat: number,
+  lon: number,
+  options: ReverseGeocodeOptions = {},
+): Promise<string | null> {
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+
+  const countryCode = normalizeCountryCode(options.countryCode);
+  const ccFilter = getMarket(countryCode).countryCode.toLowerCase();
+
+  const params = new URLSearchParams({
+    lat: String(lat),
+    lon: String(lon),
+    lang: "en",
+  });
+  const url = `https://photon.komoot.io/reverse?${params.toString()}`;
+  const res = await fetch(url);
+  if (!res.ok) return null;
+
+  const data = (await res.json()) as {
+    features?: Array<{ properties: Record<string, unknown> }>;
+  };
+  const features = data.features ?? [];
+
+  for (const f of features) {
+    const p = f.properties;
+    const cc = typeof p.countrycode === "string" ? p.countrycode.toLowerCase() : "";
+    if (cc && cc !== ccFilter) continue;
+    const label = formatPhotonLabel(p);
+    if (label) return label;
+  }
+
+  return null;
+}
+
 export function radiusOptionsForMarket(market: MarketConfig): {
   value: string;
   label: string;

@@ -1,0 +1,52 @@
+---
+description: FastAPI backend conventions for Eventtz
+globs: backend/**
+alwaysApply: false
+---
+
+# Backend rules
+
+## Stack
+
+Python 3.13+, Poetry, FastAPI, Pydantic v2, Supabase via **`app/core/db.py`**.
+
+## Feature layout
+
+```
+features/<name>/
+├── http/       # Thin routers: auth guard → logic → contract / HTTPException
+├── *.py        # Business logic
+└── db*.py      # Table access
+```
+
+- Logic must **not** import from feature `http/`.
+- User-facing API copy in **`messages.py`** or **`copy.py`** — not inline in routes.
+- Raise **`AppError`** subclasses; global handler in **`core/errors.py`**.
+- Auth: **`require_client(request, response)`** etc. from **`features/auth/http/guards.py`**.
+- **Sentry:** `SENTRY_DSN` empty = skip init (`app/core/sentry.py` before `FastAPI()`). Do not sample `/health` transactions. `before_send` drops smoke tests and expected GoTrue-timeout HTTP 503s (`AUTH_SERVICE_UNAVAILABLE` / `SIGN_IN_UNAVAILABLE`).
+- **Contact Cursor webhook:** `CURSOR_AUTOMATION_WEBHOOK_URL` empty = skip. Subjects live in `CURSOR_AUTOMATION_SUBJECTS` (`contracts/contact.py`). Dispatch is best-effort and must not fail the contact API.
+- **Scheduled jobs:** run in-process from `app/jobs/scheduler.py` (lifespan). Do not add host-specific cron services. New jobs: a function in `app/jobs/` + `job_runs` claim.
+
+## Registration & contracts
+
+- Register routers only in **`app/http/router.py`** (prefix `/api/v1`).
+- Request/response shapes in **`app/contracts/`**; shared literals in **`contracts/types.py`**.
+
+## Lists & ordering
+
+Use **`apply_recent_first_order()`** for most lists (recent first). Chat messages stay `created_at ASC`.
+
+## Payments & visibility
+
+- Money lifecycle: **`payment_status`** separate from booking **`status`**.
+- Public vendor listing: use **`vendors/visibility.py`** — never filter on `approval_status` alone. **`users.deleted_at`** means the account is a GDPR tombstone: never `DELETE` `public.users` or shared `booking_requests` for marketplace erasure; hide listings with `listing_override = hidden` plus empty payload.
+
+## Checklist (new feature)
+
+1. `features/<name>/*.py` + `db*.py`
+2. Contracts in `app/contracts/`
+3. Routes in `features/<name>/http/`
+4. Register in `app/http/router.py`
+5. Env → `.env.example`; DB → `sql/NNN_*.sql`
+
+Details: **`docs/cursor/architecture-reference.md`** (Backend section).

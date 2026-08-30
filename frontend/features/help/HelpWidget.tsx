@@ -7,13 +7,18 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleHelp,
+  ExternalLink,
+  FileText,
+  LifeBuoy,
   Mail,
   Maximize2,
   Minimize2,
+  Newspaper,
+  ShieldAlert,
   Sparkles,
   X,
 } from "lucide-react";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, KeyboardEvent, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { getApiErrorDetail } from "@/lib/api-errors";
@@ -29,13 +34,13 @@ import {
 } from "@/lib/helpApi";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { HelpAssistantThread } from "@/features/help/HelpAssistantThread";
+import { HelpArticleBody } from "@/features/help/HelpArticleBody";
 import {
   helpCategoryIcon,
+  helpCategoryIconVisual,
   helpContactPath,
-  helpMarkdownToHtml,
 } from "@/features/help/helpContent";
 import { useVendorCopilotOptional } from "@/features/vendor/copilot/VendorCopilotContext";
-import { VENDOR_COPILOT } from "@/features/vendor/copilot/copilotBranding";
 
 type View =
   | { name: "home" }
@@ -44,12 +49,12 @@ type View =
   | { name: "article"; slug: string; fromCategory?: string }
   | { name: "ask"; initialQ?: string };
 
-type Props = { audience: HelpAudience };
+type Props = { audience: HelpAudience; /** Hide FAB while another overlay (e.g. mobile nav) is open. */ hidden?: boolean };
 
 const iconBtn =
   "rounded-md p-1.5 text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900";
 
-export function HelpWidget({ audience }: Props) {
+export function HelpWidget({ audience, hidden = false }: Props) {
   const pathname = usePathname();
   const copilot = useVendorCopilotOptional();
   const [open, setOpen] = useState(false);
@@ -57,6 +62,14 @@ export function HelpWidget({ audience }: Props) {
   const [view, setView] = useState<View>({ name: "home" });
   const [draft, setDraft] = useState("");
   const contactHref = helpContactPath(audience);
+
+  useEffect(() => {
+    if (!hidden) return;
+    setOpen(false);
+    setExpanded(false);
+    setView({ name: "home" });
+    setDraft("");
+  }, [hidden]);
 
   useEffect(() => {
     setOpen(false);
@@ -74,14 +87,6 @@ export function HelpWidget({ audience }: Props) {
       source: "widget",
       panel: next.name,
     });
-  };
-
-  const openGrowthCopilot = () => {
-    setOpen(false);
-    setExpanded(false);
-    setView({ name: "home" });
-    setDraft("");
-    copilot?.openCopilot({ name: "home" });
   };
 
   const closeWidget = () => {
@@ -135,15 +140,16 @@ export function HelpWidget({ audience }: Props) {
 
   const showBack = view.name !== "home";
 
+  if (hidden) return null;
+
   if (!open) {
-    const isVendor = audience === "vendor" && copilot != null;
     return (
       <div className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-[max(1.25rem,env(safe-area-inset-right))] z-40">
         <button
           type="button"
           onClick={() => openWidget({ name: "home" })}
           className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-900 text-white shadow-lg transition hover:bg-neutral-800"
-          aria-label={isVendor ? VENDOR_COPILOT.openHelpLabel : "Open help"}
+          aria-label="Open help"
         >
           <CircleHelp className="h-6 w-6" aria-hidden strokeWidth={2.25} />
         </button>
@@ -195,7 +201,6 @@ export function HelpWidget({ audience }: Props) {
               onBrowse={() => setView({ name: "browse" })}
               onContact={() => setOpen(false)}
               audience={audience}
-              onOpenGrowthCopilot={audience === "vendor" && copilot ? openGrowthCopilot : undefined}
             />
           ) : null}
           {view.name === "browse" ? (
@@ -271,7 +276,6 @@ function HomePanel({
   onBrowse,
   onContact,
   audience,
-  onOpenGrowthCopilot,
 }: {
   draft: string;
   setDraft: (v: string) => void;
@@ -280,95 +284,124 @@ function HomePanel({
   onBrowse: () => void;
   onContact: () => void;
   audience: HelpAudience;
-  onOpenGrowthCopilot?: () => void;
 }) {
-  const heading =
-    audience === "admin" ? "How can we help" : "How can we help";
+  const heading = "How can we help 👋";
+
+  const onAskKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      onAskHome(e as unknown as FormEvent);
+    }
+  };
+
+  type HomeLink =
+    | { kind: "action"; label: string; icon: typeof BookOpen; onClick: () => void }
+    | { kind: "internal"; label: string; icon: typeof BookOpen; href: string }
+    | { kind: "external"; label: string; icon: typeof BookOpen; href: string };
+
+  const links: HomeLink[] =
+    audience === "admin"
+      ? [
+          { kind: "action", label: "Browse our docs", icon: BookOpen, onClick: onBrowse },
+          ...(contactHref
+            ? [{ kind: "internal" as const, label: "Report a bug", icon: LifeBuoy, href: contactHref }]
+            : []),
+          { kind: "internal", label: "Admin team", icon: Mail, href: "/admin/team" },
+          { kind: "internal", label: "Activity log", icon: FileText, href: "/admin/audit" },
+          { kind: "internal", label: "Blog CMS", icon: Newspaper, href: "/admin/blog" },
+        ]
+      : audience === "vendor"
+        ? [
+            { kind: "action", label: "Browse our docs", icon: BookOpen, onClick: onBrowse },
+            ...(contactHref
+              ? [{ kind: "internal" as const, label: "Contact us", icon: Mail, href: contactHref }]
+              : []),
+            { kind: "external", label: "Read our blog", icon: Newspaper, href: "/blog" },
+            { kind: "internal", label: "Disputes", icon: ShieldAlert, href: "/vendor/disputes" },
+            { kind: "external", label: "Visit FAQ", icon: CircleHelp, href: "/#faq" },
+          ]
+        : [
+            { kind: "action", label: "Browse our docs", icon: BookOpen, onClick: onBrowse },
+            ...(contactHref
+              ? [{ kind: "internal" as const, label: "Contact us", icon: Mail, href: contactHref }]
+              : []),
+            { kind: "external", label: "Read our blog", icon: Newspaper, href: "/blog" },
+            { kind: "external", label: "How booking works", icon: Sparkles, href: "/#booking-journey" },
+            { kind: "external", label: "Visit FAQ", icon: CircleHelp, href: "/#faq" },
+          ];
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6 pt-5 sm:pb-5 sm:pt-6">
       <h1 className="font-heading text-[1.375rem] font-semibold tracking-tight text-neutral-950 sm:text-[1.25rem]">
-        {heading}{" "}
-        <span aria-hidden className="font-normal">
-          👋
-        </span>
+        {heading}
       </h1>
 
       <div className="mt-5 overflow-hidden rounded-xl border border-neutral-200">
-        <div className="flex items-center gap-1.5 border-b border-neutral-200 bg-neutral-50 px-3.5 py-2.5">
-          <Sparkles className="h-3.5 w-3.5 text-neutral-500" aria-hidden strokeWidth={1.75} />
-          <p className="text-[13px] font-medium text-neutral-500">
+        <div className="flex items-center gap-1.5 border-b border-primary-border/60 bg-primary-soft px-3.5 py-2.5">
+          <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden strokeWidth={1.75} />
+          <p className="text-[13px] font-medium text-primary">
             Ask our assistant anything
           </p>
         </div>
         <form onSubmit={onAskHome}>
-          <input
+          <textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={onAskKeyDown}
             placeholder="Ask a question..."
-            className="w-full bg-white px-3.5 py-3.5 text-base text-neutral-900 outline-none placeholder:text-neutral-400 md:text-[15px]"
+            rows={4}
+            className="min-h-[6.5rem] w-full resize-none bg-white px-3.5 py-3.5 text-base leading-relaxed text-neutral-900 outline-none placeholder:text-neutral-400 md:text-[15px]"
           />
         </form>
       </div>
 
       <ul className="mt-2">
-        {onOpenGrowthCopilot ? (
-          <li className="border-b border-neutral-100">
-            <button
-              type="button"
-              onClick={onOpenGrowthCopilot}
-              className="flex w-full items-center gap-3 py-3.5 text-left transition hover:bg-neutral-50"
-            >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <Sparkles className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-[15px] font-medium text-neutral-900">{VENDOR_COPILOT.name}</span>
-                <span className="mt-0.5 block text-[13px] text-neutral-500">{VENDOR_COPILOT.tagline}</span>
-                <span className="mt-0.5 block text-[13px] text-primary underline decoration-primary underline-offset-2">
-                  {VENDOR_COPILOT.briefLink}
-                </span>
-              </span>
-              <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" strokeWidth={1.75} />
-            </button>
-          </li>
-        ) : null}
-        <li className={contactHref || onOpenGrowthCopilot ? "border-b border-neutral-100" : undefined}>
-          <button
-            type="button"
-            onClick={onBrowse}
-            className="flex w-full items-center gap-3 py-3.5 text-left transition hover:bg-neutral-50"
-          >
-            <BookOpen className="h-[18px] w-[18px] shrink-0 text-neutral-500" strokeWidth={1.75} />
-            <span className="flex-1 text-[15px] text-neutral-900">Browse our docs</span>
-            <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" strokeWidth={1.75} />
-          </button>
-        </li>
-        {contactHref ? (
-          <li>
-            <Link
-              href={contactHref}
-              onClick={onContact}
-              className="flex w-full items-center gap-3 py-3.5 text-left transition hover:bg-neutral-50"
-            >
-              <Mail className="h-[18px] w-[18px] shrink-0 text-neutral-500" strokeWidth={1.75} />
-              <span className="flex-1 text-[15px] text-neutral-900">Contact us</span>
-              <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" strokeWidth={1.75} />
-            </Link>
-          </li>
-        ) : audience === "admin" ? (
-          <li>
-            <Link
-              href="/admin/team"
-              onClick={onContact}
-              className="flex w-full items-center gap-3 py-3.5 text-left transition hover:bg-neutral-50"
-            >
-              <Mail className="h-[18px] w-[18px] shrink-0 text-neutral-500" strokeWidth={1.75} />
-              <span className="flex-1 text-[15px] text-neutral-900">Admin team</span>
-              <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" strokeWidth={1.75} />
-            </Link>
-          </li>
-        ) : null}
+        {links.map((item, index) => {
+          const Icon = item.icon;
+          const rowClass =
+            "flex w-full items-center gap-3 py-3.5 text-left transition hover:bg-neutral-50";
+          const isLast = index === links.length - 1;
+          const liClass = isLast ? undefined : "border-b border-neutral-100";
+
+          if (item.kind === "action") {
+            return (
+              <li key={item.label} className={liClass}>
+                <button type="button" onClick={item.onClick} className={rowClass}>
+                  <Icon className="h-[18px] w-[18px] shrink-0 text-neutral-500" strokeWidth={1.75} />
+                  <span className="flex-1 text-[15px] text-neutral-900">{item.label}</span>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" strokeWidth={1.75} />
+                </button>
+              </li>
+            );
+          }
+
+          if (item.kind === "external") {
+            return (
+              <li key={item.label} className={liClass}>
+                <a
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={rowClass}
+                >
+                  <Icon className="h-[18px] w-[18px] shrink-0 text-neutral-500" strokeWidth={1.75} />
+                  <span className="flex-1 text-[15px] text-neutral-900">{item.label}</span>
+                  <ExternalLink className="h-4 w-4 shrink-0 text-neutral-400" strokeWidth={1.75} />
+                </a>
+              </li>
+            );
+          }
+
+          return (
+            <li key={item.label} className={liClass}>
+              <Link href={item.href} onClick={onContact} className={rowClass}>
+                <Icon className="h-[18px] w-[18px] shrink-0 text-neutral-500" strokeWidth={1.75} />
+                <span className="flex-1 text-[15px] text-neutral-900">{item.label}</span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" strokeWidth={1.75} />
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
@@ -413,8 +446,8 @@ function BrowsePanel({
       </p>
 
       <div className="mt-5 overflow-hidden rounded-xl border border-neutral-200 bg-white">
-        <div className="border-b border-neutral-100 px-4 py-3">
-          <p className="text-[13px] font-medium text-neutral-600">Documentation</p>
+        <div className="border-b border-primary-border/60 bg-primary-soft/50 px-4 py-3">
+          <p className="text-[13px] font-medium text-neutral-900">Documentation</p>
         </div>
         {loading ? (
           <LoadingState label="Loading topics…" variant="inline" className="px-4 py-8" />
@@ -424,18 +457,17 @@ function BrowsePanel({
           <ul>
             {categories.map((cat) => {
               const Icon = helpCategoryIcon(cat.icon_key);
+              const visual = helpCategoryIconVisual(cat.icon_key);
               return (
                 <li key={cat.id} className="border-b border-neutral-100 last:border-b-0">
                   <button
                     type="button"
                     onClick={() => onOpenCategory(cat.slug, cat.title, cat.description)}
-                    className="flex w-full items-start gap-3 px-4 py-3.5 text-left transition hover:bg-neutral-50"
+                    className="flex w-full items-start gap-3 px-4 py-3.5 text-left transition hover:bg-primary-soft/40"
                   >
-                    <Icon
-                      className="mt-0.5 h-[18px] w-[18px] shrink-0 text-neutral-500"
-                      strokeWidth={1.75}
-                      aria-hidden
-                    />
+                    <span className={visual.shell}>
+                      <Icon className={`h-4 w-4 ${visual.icon}`} strokeWidth={1.75} aria-hidden />
+                    </span>
                     <span className="min-w-0 flex-1">
                       <span className="block text-[14px] font-medium text-neutral-900">
                         {cat.title}
@@ -505,13 +537,21 @@ function CategoryPanel({
   const heading = title ?? category?.title ?? "Articles";
   const sub = description ?? category?.description ?? "";
   const Icon = helpCategoryIcon(category?.icon_key ?? "book");
+  const visual = helpCategoryIconVisual(category?.icon_key ?? "book");
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6 pt-4 sm:pb-5">
-      <h1 className="font-heading text-[1.375rem] font-semibold tracking-tight text-neutral-950 sm:text-[1.25rem]">
-        {heading}
-      </h1>
-      {sub ? <p className="mt-1 text-[14px] text-neutral-500">{sub}</p> : null}
+      <div className="flex items-start gap-3">
+        <span className={visual.shell}>
+          <Icon className={`h-4 w-4 ${visual.icon}`} strokeWidth={1.75} aria-hidden />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h1 className="font-heading text-[1.375rem] font-semibold tracking-tight text-neutral-950 sm:text-[1.25rem]">
+            {heading}
+          </h1>
+          {sub ? <p className="mt-1 text-[14px] text-neutral-500">{sub}</p> : null}
+        </div>
+      </div>
 
       {loading ? (
         <LoadingState label="Loading articles…" variant="inline" className="mt-6 py-8" />
@@ -520,10 +560,10 @@ function CategoryPanel({
       ) : articles.length === 0 ? (
         <p className="mt-6 text-sm text-neutral-600">No articles in this topic yet.</p>
       ) : (
-        <div className="mt-5 overflow-hidden rounded-xl border border-neutral-200">
-          <div className="flex items-center gap-2 border-b border-neutral-200 bg-neutral-50 px-4 py-3">
-            <Icon className="h-4 w-4 text-neutral-600" strokeWidth={1.75} aria-hidden />
-            <p className="text-[14px] font-medium text-neutral-900">{heading}</p>
+        <div className="mt-5 overflow-hidden rounded-xl border border-primary-border/60">
+          <div className="flex items-center gap-2 border-b border-primary-border/60 bg-primary-soft px-4 py-3">
+            <Icon className={`h-4 w-4 ${visual.icon}`} strokeWidth={1.75} aria-hidden />
+            <p className="text-[14px] font-medium text-neutral-900">Articles</p>
           </div>
           <ul className="bg-white p-1.5">
             {articles.map((a) => (
@@ -581,11 +621,6 @@ function ArticlePanel({
     };
   }, [audience, slug]);
 
-  const html = useMemo(
-    () => (article ? helpMarkdownToHtml(article.body_md) : ""),
-    [article],
-  );
-
   const submitAsk = (e: FormEvent) => {
     e.preventDefault();
     const q = ask.trim();
@@ -602,33 +637,7 @@ function ArticlePanel({
         ) : error || !article ? (
           <p className="text-sm text-red-700">{error ?? ARTICLE_NOT_FOUND}</p>
         ) : (
-          <>
-            <h1 className="font-heading text-[1.375rem] font-semibold leading-snug tracking-tight text-neutral-950 sm:text-[1.25rem]">
-              {article.title}
-            </h1>
-            <div
-              className="help-article-body mt-4 font-sans [&_h2]:font-heading [&_h2]:mt-6 [&_h2]:text-[1.125rem] [&_h2]:font-semibold [&_h2]:text-neutral-950 [&_h3]:font-heading [&_h3]:mt-5 [&_h3]:text-[1rem] [&_h3]:font-semibold [&_li]:text-[15px] [&_li]:leading-relaxed [&_li]:text-neutral-700 sm:[&_li]:text-[14px] [&_ol]:mt-3 [&_p]:mt-3 [&_p]:text-[15px] [&_p]:leading-relaxed [&_p]:text-neutral-700 sm:[&_p]:text-[14px] [&_ul]:mt-3"
-              dangerouslySetInnerHTML={{ __html: html }}
-            />
-            {article.related_slugs.length > 0 ? (
-              <div className="mt-8 border-t border-neutral-100 pt-5">
-                <p className="text-[14px] font-semibold text-neutral-900">Related</p>
-                <ul className="mt-2 space-y-1">
-                  {article.related_slugs.map((s) => (
-                    <li key={s}>
-                      <button
-                        type="button"
-                        onClick={() => onOpenArticle(s)}
-                        className="text-left text-[14px] font-medium text-neutral-800 underline-offset-2 hover:underline"
-                      >
-                        {s.replace(/^(client|vendor)-/, "").replace(/-/g, " ")}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-          </>
+          <HelpArticleBody article={article} onOpenRelated={onOpenArticle} />
         )}
       </div>
 

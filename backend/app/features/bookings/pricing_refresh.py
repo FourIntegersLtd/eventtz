@@ -5,7 +5,8 @@ from __future__ import annotations
 from datetime import date
 from typing import Any
 
-from app.features.bookings.pricing import build_pricing_breakdown, persisted_booking_total_label
+from app.features.bookings.pricing import persisted_booking_total_label
+from app.features.vendor_referrals.booking_discount import build_pricing_breakdown_for_booking_row
 from app.features.bookings import messages as booking_messages
 from app.features.vendors.list_pricing import reconcile_automatic_discount_lines
 
@@ -37,7 +38,12 @@ def refresh_booking_pricing(
     raw_adj = row.get("vendor_adjustments")
     vendor_adjustments = raw_adj if isinstance(raw_adj, list) else []
 
-    pb = build_pricing_breakdown(line_items=line_items, vendor_adjustments=vendor_adjustments)
+    pricing_row = {
+        **row,
+        "line_items": line_items,
+        "vendor_adjustments": vendor_adjustments,
+    }
+    pb = build_pricing_breakdown_for_booking_row(pricing_row)
 
     if pb.get("has_pricing_tbc"):
         raise ValueError(booking_messages.PRICES_TO_CONFIRM)

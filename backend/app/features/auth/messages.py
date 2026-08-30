@@ -85,6 +85,7 @@ EMAIL_NOT_CONFIRMED_SUPABASE = (
     "Confirm your email before signing in. Check your inbox for the verification link."
 )
 SIGN_IN_UNAVAILABLE = "We couldn't sign you in right now. Please try again."
+AUTH_SERVICE_UNAVAILABLE = "Authentication is temporarily unavailable. Please try again."
 SIGNOUT_FAILED = "We couldn't sign you out. Please try again."
 
 # --- Account status ---
@@ -93,6 +94,10 @@ ACCOUNT_SUSPENDED = "This account is suspended."
 ACCOUNT_SUSPENDED_CONTACT = (
     "Your account has been suspended. "
     "Contact support if you think this is a mistake."
+)
+ACCOUNT_DELETED = "This account has been deleted."
+ACCOUNT_DELETED_SIGNIN = (
+    "This account has been deleted. You can create a new account with the same email."
 )
 ADMIN_ACCOUNT_SUSPENDED_SIGNIN = (
     "This account is suspended. Contact a super admin if you need access."

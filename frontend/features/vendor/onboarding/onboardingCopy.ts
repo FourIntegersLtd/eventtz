@@ -13,7 +13,8 @@ export const STEP_COPY = {
     subtext: "Who you are and what events you serve.",
     businessNameSupporting: "Must be unique.",
     servicesHeadline: "What services do you offer?",
-    servicesSubtext: "Pick your main service.",
+    servicesSubtext:
+      "Pick your main service. Tap “What we need here” if you’re unsure which category fits.",
     eventTypesHeadline: "Which events do you work on?",
   },
   3: {
@@ -28,11 +29,11 @@ export const STEP_COPY = {
   4: {
     headline: "How do you price your work?",
     subtext:
-      "Each package is one bookable option with a name, price, and what's included — so clients know what they're buying.",
+      "Each package is one bookable option with a name, price, and what's included — so clients know what they're buying. Use a fixed price, or charge per item (chairs, tables, people).",
     fixedRatesHeadline: "Hourly or daily rates? (optional)",
     packagesHeadline: "Your packages",
     packagesHint:
-      "Add one package per option you offer. Each needs a clear name, price, and what's included. Use AI review below for tailored suggestions.",
+      "Add one package per option you offer. Choose a fixed price or a per-item rate (clients pick the quantity when they enquire). Each needs a clear name, one amount (not a range), and what's included.",
     bookingHeadline: "Any discounts?",
   },
   5: {

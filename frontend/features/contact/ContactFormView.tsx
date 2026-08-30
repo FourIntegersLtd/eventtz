@@ -4,67 +4,53 @@ import Link from "next/link";
 import { useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/Button";
-import { TextField } from "@/components/ui/TextField";
 import { useToast } from "@/components/ui/Toast";
 import type { PortalRole } from "@/components/portal-shell/portalNav";
-import { portalRoute } from "@/components/portal-shell/portalNav";
+import { helpHubTabHref } from "@/lib/helpHub";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { contactFormSchema, parseForm } from "@/lib/validation";
-import {
-  CONTACT_SUBJECT_OPTIONS,
-  submitClientContact,
-  submitVendorContact,
-  type ContactSubject,
-} from "@/lib/contactApi";
+import { submitClientContact, submitVendorContact } from "@/lib/contactApi";
 import { formControlClass } from "@/components/ui/tokens";
+import { RotatingContactMessagePlaceholder } from "@/features/contact/RotatingContactMessagePlaceholder";
 
 type Props = {
   role: PortalRole;
+  /** When rendered inside the Help hub, show cross-links to other tabs. */
+  embedded?: boolean;
 };
-
-const BOOKING_SUBJECTS = new Set<ContactSubject>(["booking_problem", "payments"]);
 
 const fieldClass = formControlClass();
 
-export function ContactFormView({ role }: Props) {
+export function ContactFormView({ role, embedded = false }: Props) {
   const { user } = useAuth();
   const { showToast } = useToast();
-  const [subject, setSubject] = useState<ContactSubject>("general");
   const [message, setMessage] = useState("");
   const [bookingId, setBookingId] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const showBookingId = BOOKING_SUBJECTS.has(subject);
-  const disputesHref = portalRoute(role, "disputes");
-
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    const parsed = parseForm(contactFormSchema, { subject, message, bookingId });
+    const parsed = parseForm(contactFormSchema, { message, bookingId });
     if (!parsed.ok) {
       setError(parsed.formError);
       return;
     }
     setBusy(true);
     try {
+      const booking = (parsed.data.bookingId ?? "").trim() || null;
       const body = {
-        subject: parsed.data.subject,
         message: parsed.data.message,
-        booking_id: BOOKING_SUBJECTS.has(parsed.data.subject)
-          ? (parsed.data.bookingId ?? "").trim() || null
-          : null,
+        booking_id: booking,
       };
       if (role === "client") {
         await submitClientContact(body);
       } else {
         await submitVendorContact(body);
       }
-      track(MixpanelEvents.contact_form_submitted, {
-        role,
-        subject: parsed.data.subject,
-      });
+      track(MixpanelEvents.contact_form_submitted, { role });
       setMessage("");
       setBookingId("");
       showToast({
@@ -81,18 +67,23 @@ export function ContactFormView({ role }: Props) {
 
   return (
     <div className="w-full min-w-0 max-w-3xl">
-      <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+      <section className="rounded-2xl border border-neutral-100 bg-white">
         <div className="px-5 py-4 sm:px-6 sm:py-5">
           <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">
             Message the team
           </h2>
           <p className="mt-0.5 text-[13px] text-neutral-400">
-            We usually reply by email within two working days. For problems on a paid booking, you
-            can also{" "}
-            <Link href={disputesHref} className="font-medium text-primary hover:underline">
-              report a problem
-            </Link>{" "}
-            from the booking page.
+            We usually reply by email within two working days.
+            {embedded ? (
+              <>
+                {" "}
+                For ongoing chats with Eventtz, use the{" "}
+                <Link href={helpHubTabHref(role, "messages")} className="font-medium text-primary hover:underline">
+                  Messages
+                </Link>{" "}
+                tab.
+              </>
+            ) : null}
           </p>
         </div>
 
@@ -110,47 +101,36 @@ export function ContactFormView({ role }: Props) {
           </div>
 
           <div className="space-y-1.5 px-5 py-4 sm:px-6">
-            <label htmlFor="contact-subject" className="block text-sm font-medium text-neutral-800">
-              Subject
+            <label htmlFor="contact-booking" className="block text-sm font-medium text-neutral-800">
+              Booking reference <span className="font-normal text-neutral-500">(optional)</span>
             </label>
-            <select
-              id="contact-subject"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value as ContactSubject)}
+            <input
+              id="contact-booking"
+              value={bookingId}
+              onChange={(e) => setBookingId(e.target.value)}
+              placeholder="Paste from booking details"
               className={fieldClass}
-            >
-              {CONTACT_SUBJECT_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+            />
           </div>
-
-          {showBookingId ? (
-            <div className="px-5 py-4 sm:px-6">
-              <TextField
-                label="Booking reference"
-                value={bookingId}
-                onChange={(e) => setBookingId(e.target.value)}
-                placeholder="Paste your booking reference"
-                hint="You can copy this from your booking details page."
-              />
-            </div>
-          ) : null}
 
           <div className="space-y-1.5 px-5 py-4 sm:px-6">
             <label htmlFor="contact-message" className="block text-sm font-medium text-neutral-800">
               Message
             </label>
-            <textarea
-              id="contact-message"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={6}
-              className={fieldClass}
-              placeholder="How can we help?"
-            />
+            <div className="relative">
+              <RotatingContactMessagePlaceholder
+                role={role}
+                visible={!message.trim()}
+              />
+              <textarea
+                id="contact-message"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={6}
+                className={fieldClass}
+                placeholder=""
+              />
+            </div>
           </div>
 
           <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">

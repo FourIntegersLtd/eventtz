@@ -20,8 +20,10 @@ import {
   servicesRequiringPackages,
 } from "@/features/vendor/onboarding/packageQuality";
 import { parseMoneyNumber } from "@/lib/vendorDiscountDisplay";
-
-const BIO_MAX_WORDS = 100;
+import {
+  addSingleGbpAmountIssue,
+  singleGbpAmountFieldError,
+} from "@/lib/validation/money";
 
 const vendorDataSchema = z.custom<VendorOnboardingData>(
   (d) => d != null && typeof d === "object",
@@ -32,28 +34,13 @@ function bioWordCount(text: string): number {
   return text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
 }
 
-/** Returns a step-banner label/message, or null when valid. */
-function moneyFieldError(
-  raw: string,
-  label: string,
-  required = false,
-  minAmount = MIN_MONEY_GBP,
-): string | null {
-  const trimmed = raw.trim();
-  if (!trimmed) {
-    return required ? `${label} is required` : null;
-  }
-  const n = parseMoneyNumber(trimmed);
-  if (n === null) return `${label} must be a valid amount`;
-  if (n < minAmount || n > MAX_MONEY_GBP) {
-    if (n < minAmount) return `${label} must be at least £${minAmount.toFixed(2)}`;
-    return `${label} is out of allowed range`;
-  }
-  return null;
-}
+const BIO_MAX_WORDS = 100;
 
 /** Returns a step-banner label/message, or null when valid. */
-function pctFieldError(raw: string, label: string): string | null {
+function pctFieldError(
+  raw: string,
+  label: string,
+): string | null {
   const trimmed = raw.trim();
   if (!trimmed) return null;
   const n = parseMoneyNumber(trimmed);
@@ -115,11 +102,8 @@ const step3Schema = vendorDataSchema.superRefine((d, ctx) => {
 });
 
 const step4Schema = vendorDataSchema.superRefine((d, ctx) => {
-  const hourlyErr = moneyFieldError(d.hourlyRate, "Hourly rate");
-  if (hourlyErr) addIssue(ctx, hourlyErr);
-
-  const dailyErr = moneyFieldError(d.dailyRate, "Daily rate");
-  if (dailyErr) addIssue(ctx, dailyErr);
+  addSingleGbpAmountIssue(ctx, d.hourlyRate, "Hourly rate", { required: false, max: MAX_MONEY_GBP });
+  addSingleGbpAmountIssue(ctx, d.dailyRate, "Daily rate", { required: false, max: MAX_MONEY_GBP });
 
   const completePackages = d.packages.filter(
     (p) => isConfiguredPackage(p) && isCompletePackage(p),
@@ -137,13 +121,8 @@ const step4Schema = vendorDataSchema.superRefine((d, ctx) => {
   for (const p of d.packages) {
     if (!isConfiguredPackage(p)) continue;
     const pkgErrors = packageValidationErrors(p, { strict: true });
-    if (pkgErrors.length > 0) {
-      addIssue(ctx, pkgErrors[0]!);
-      break;
-    }
-    if (p.price.trim()) {
-      const pkgErr = moneyFieldError(p.price, "Package price", true);
-      if (pkgErr) addIssue(ctx, pkgErr);
+    for (const message of pkgErrors) {
+      addIssue(ctx, message);
     }
   }
 
@@ -170,8 +149,10 @@ const step4Schema = vendorDataSchema.superRefine((d, ctx) => {
       const err = pctFieldError(raw, label);
       if (err) addIssue(ctx, err);
     }
-    const bulkErr = moneyFieldError(d.bulkDiscountThreshold, "Bulk threshold");
-    if (bulkErr) addIssue(ctx, bulkErr);
+    addSingleGbpAmountIssue(ctx, d.bulkDiscountThreshold, "Bulk threshold", {
+      required: false,
+      max: MAX_MONEY_GBP,
+    });
   }
 });
 
@@ -214,9 +195,8 @@ const step8Schema = vendorDataSchema.superRefine((d, ctx) => {
   for (const p of d.packages) {
     if (!isConfiguredPackage(p)) continue;
     const pkgErrors = packageValidationErrors(p, { strict: true });
-    if (pkgErrors.length > 0) {
-      addIssue(ctx, pkgErrors[0]!);
-      break;
+    for (const message of pkgErrors) {
+      addIssue(ctx, message);
     }
   }
   if (!d.confirmTruthful) addIssue(ctx, "Confirmation that details are truthful");

@@ -88,8 +88,8 @@ export function LandingFooter({
               </h4>
               <ul className="space-y-3 text-sm">
                 <li>
-                  <Link href="/explore" className={FOOTER_LINK_CLASS}>
-                    Explore vendors
+                  <Link href="/client/browse" className={FOOTER_LINK_CLASS}>
+                    Browse vendors
                   </Link>
                 </li>
                 <li>

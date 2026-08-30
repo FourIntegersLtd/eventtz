@@ -18,25 +18,30 @@ import {
   getVendorListingOverride,
   VENDOR_LISTING_OVERRIDE_META,
 } from "@/lib/domain-types";
+import {
+  vendorIsBulkEmailSelectable,
+  vendorIsDraft,
+  vendorNeedsPayoutSetup,
+} from "@/features/admin/vendors/adminVendorBulkEmail";
 import { payloadStr } from "./vendorFormatters";
 
 type AdminVendorsTableProps = {
   rows: AdminVendorRow[];
   selectedUserIds: string[];
-  draftUserIdsOnPage: string[];
+  selectableUserIdsOnPage: string[];
   onToggleSelected: (userId: string, selected: boolean) => void;
-  onSelectAllDraft: () => void;
-  onClearDraftOnPage: () => void;
+  onSelectAllSelectable: () => void;
+  onClearSelectableOnPage: () => void;
   onSelect: (userId: string) => void;
 };
 
 export function AdminVendorsTable({
   rows,
   selectedUserIds,
-  draftUserIdsOnPage,
+  selectableUserIdsOnPage,
   onToggleSelected,
-  onSelectAllDraft,
-  onClearDraftOnPage,
+  onSelectAllSelectable,
+  onClearSelectableOnPage,
   onSelect,
 }: AdminVendorsTableProps) {
   if (rows.length === 0) {
@@ -45,9 +50,9 @@ export function AdminVendorsTable({
     );
   }
 
-  const allDraftSelected =
-    draftUserIdsOnPage.length > 0 &&
-    draftUserIdsOnPage.every((id) => selectedUserIds.includes(id));
+  const allSelectableSelected =
+    selectableUserIdsOnPage.length > 0 &&
+    selectableUserIdsOnPage.every((id) => selectedUserIds.includes(id));
 
   return (
     <AdminTable>
@@ -57,11 +62,13 @@ export function AdminVendorsTable({
             <input
               type="checkbox"
               className="h-4 w-4 rounded border-neutral-300"
-              checked={allDraftSelected}
-              disabled={draftUserIdsOnPage.length === 0}
-              onChange={() => (allDraftSelected ? onClearDraftOnPage() : onSelectAllDraft())}
-              aria-label="Select all draft vendors on this page"
-              title="Select draft vendors on this page"
+              checked={allSelectableSelected}
+              disabled={selectableUserIdsOnPage.length === 0}
+              onChange={() =>
+                allSelectableSelected ? onClearSelectableOnPage() : onSelectAllSelectable()
+              }
+              aria-label="Select all vendors on this page who can receive reminder emails"
+              title="Select draft vendors and approved vendors needing payouts"
             />
           </AdminTableHeaderCell>
           <AdminTableHeaderCell className="min-w-[11rem]">Email</AdminTableHeaderCell>
@@ -79,7 +86,9 @@ export function AdminVendorsTable({
             const email = r.email ?? "-";
             const updated = r.updated_at ? new Date(r.updated_at).toLocaleString() : "-";
             const pending = r.approval_status === "pending";
-            const isDraft = r.onboarding_status === "draft";
+            const isSelectable = vendorIsBulkEmailSelectable(r);
+            const isDraft = vendorIsDraft(r);
+            const needsPayout = vendorNeedsPayoutSetup(r);
             const approvedNotLive = r.approval_status === "approved" && !r.listing_visible;
             const override = getVendorListingOverride(r.listing_override);
             const selected = selectedUserIds.includes(r.user_id);
@@ -89,13 +98,20 @@ export function AdminVendorsTable({
                 className={pending || approvedNotLive ? "bg-amber-50/40" : undefined}
               >
                 <AdminTableCell className="w-10">
-                  {isDraft ? (
+                  {isSelectable ? (
                     <input
                       type="checkbox"
                       className="h-4 w-4 rounded border-neutral-300"
                       checked={selected}
                       onChange={(e) => onToggleSelected(r.user_id, e.target.checked)}
                       aria-label={`Select ${email}`}
+                      title={
+                        isDraft
+                          ? "Draft profile — complete profile email"
+                          : needsPayout
+                            ? "Approved — setup payouts email"
+                            : undefined
+                      }
                     />
                   ) : null}
                 </AdminTableCell>

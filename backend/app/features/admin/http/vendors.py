@@ -16,6 +16,7 @@ from app.contracts.vendor import (
     AdminVendorProfileNudgeBody,
     AdminVendorProfileNudgeFailure,
     AdminVendorProfileNudgeResponse,
+    AdminVendorPayoutNudgeBody,
     AdminVendorRestoreStripeConnectResponse,
     AdminVendorUnsubmitBody,
     AdminVendorUnsubmitResponse,
@@ -36,6 +37,7 @@ from app.features.vendors.moderation import (
     get_vendor_admin_insights,
     list_vendors_for_admin,
     nudge_draft_vendors_to_complete_profile,
+    nudge_vendors_to_setup_payouts,
     set_vendor_approval,
     set_vendor_listing_override,
     unsubmit_vendor_profile,
@@ -245,6 +247,47 @@ def admin_nudge_draft_vendors_profile(
     insert_admin_audit_log(
         admin_user_id=str(user.get("id") or ""),
         action="vendor.profile_nudge",
+        entity_type="vendor",
+        entity_id=None,
+        audit_event_details={
+            "user_ids": body.user_ids[:20],
+            "sent": result.get("sent", 0),
+            "skipped": result.get("skipped", 0),
+            "failure_count": len(result.get("failures") or []),
+        },
+    )
+    failures = [
+        AdminVendorProfileNudgeFailure(
+            user_id=str(item.get("user_id") or ""),
+            error=str(item.get("error") or ""),
+        )
+        for item in (result.get("failures") or [])
+        if isinstance(item, dict)
+    ]
+    return AdminVendorProfileNudgeResponse(
+        success=True,
+        sent=int(result.get("sent") or 0),
+        skipped=int(result.get("skipped") or 0),
+        failures=failures,
+    )
+
+
+@router.post("/vendors/nudge-setup-payouts", response_model=AdminVendorProfileNudgeResponse)
+def admin_nudge_vendors_setup_payouts(
+    body: AdminVendorPayoutNudgeBody,
+    request: Request,
+    response: Response,
+) -> AdminVendorProfileNudgeResponse:
+    user = require_admin(request, response)
+    logger.info(
+        "POST /admin/vendors/nudge-setup-payouts admin_user_id=%s count=%s",
+        user.get("id"),
+        len(body.user_ids),
+    )
+    result = nudge_vendors_to_setup_payouts(body.user_ids)
+    insert_admin_audit_log(
+        admin_user_id=str(user.get("id") or ""),
+        action="vendor.payout_nudge",
         entity_type="vendor",
         entity_id=None,
         audit_event_details={

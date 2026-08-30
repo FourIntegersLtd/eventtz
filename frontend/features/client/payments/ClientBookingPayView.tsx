@@ -7,6 +7,7 @@ import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieFailurePanel } from "@/components/ui/LottieFailurePanel";
 import { useClientBookingPay } from "@/features/client/payments/useClientBookingPay";
 import { PaymentSafetyModal } from "@/features/client/payments/PaymentSafetyModal";
+import { CLIENT_PAY_PAGE_COPY } from "@/features/bookings/bookingConfirmCopy";
 
 type ClientBookingPayViewProps = {
   bookingId: string;
@@ -58,11 +59,10 @@ export function ClientBookingPayView({ bookingId }: ClientBookingPayViewProps) {
       <div className="w-full max-w-3xl space-y-6">
         <BackLink href={bookingHref} label="Back to booking" />
         <header>
-          <h1 className="font-heading text-xl font-semibold text-neutral-900">Event location</h1>
-          <p className="mt-2 text-sm text-neutral-600">
-            We need your event address before you pay. You will see how we protect your payment on
-            the next step.
-          </p>
+          <h1 className="font-heading text-xl font-semibold text-neutral-900">
+            {CLIENT_PAY_PAGE_COPY.venueTitle}
+          </h1>
+          <p className="mt-2 text-sm text-neutral-600">{CLIENT_PAY_PAGE_COPY.venueIntro}</p>
         </header>
         {error ? (
           <LottieFailurePanel
@@ -122,7 +122,7 @@ export function ClientBookingPayView({ bookingId }: ClientBookingPayViewProps) {
           branded
         />
       ) : (
-        <p className="text-sm text-neutral-600">Review how we protect your payment, then continue.</p>
+        <p className="text-sm text-neutral-600">{CLIENT_PAY_PAGE_COPY.safetyIntro}</p>
       )}
       <PaymentSafetyModal
         isOpen={phase === "safety" || phase === "redirecting"}
