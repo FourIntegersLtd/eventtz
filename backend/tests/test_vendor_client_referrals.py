@@ -99,6 +99,7 @@ def test_set_vendor_referral_code_locked_after_first_set(mock_db: MagicMock, _mo
     assert set_vendor_referral_code("vendor-1", "224974") == "224974"
 
 
+@patch("app.features.vendor_referrals.bookings.apply_recent_first_order", side_effect=lambda q, **_: q)
 @patch("app.features.vendor_referrals.booking_discount.build_pricing_breakdown_for_booking_row")
 @patch("app.features.vendor_referrals.bookings.client_display_names_by_id", return_value={})
 @patch("app.features.vendor_referrals.bookings.get_db")
@@ -106,6 +107,7 @@ def test_list_referral_bookings_includes_retired_codes(
     mock_db: MagicMock,
     _mock_names: MagicMock,
     mock_pb: MagicMock,
+    _mock_order: MagicMock,
 ) -> None:
     from app.features.vendor_referrals.bookings import list_vendor_referral_bookings
 
