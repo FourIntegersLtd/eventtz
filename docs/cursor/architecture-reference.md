@@ -125,7 +125,7 @@ features/<name>/
 | `realtime/` | `/realtime/*` | `sse.py` - server-sent events for chat unread / data refresh |
 | `settings/` | `/user/*`, `/client/onboarding` | `contact.py` - contact-sharing prefs; **`apply_counterparty_contact_visibility`** masks email/phone until `payment_status` is paid (`paid`, `payout_released`, or `partially_refunded`); booking venue (`event_address`/`event_postcode`) is **never** masked from vendors. Vendor phone comes from vendor profile payload, not `users.contact_phone`. `client_onboarding.py` - first-visit client onboarding state (`users.preferred_name`, `users.client_onboarding_completed_at`, migration 035); `/me` includes `preferred_name` + `client_onboarding_completed` for clients, and vendor booking APIs expose a friendly `client_display_name` (from `client_display_names_by_id` in `auth/lookup.py` - never the raw email). **`account_deletion.py`** (+ `account_deletion_gates.py`, `account_deletion_erase.py`, `account_deletion_storage.py`) — `POST /user/account/deletion` (password confirm): tombstone `users.deleted_at`, erase PII, never `DELETE` `public.users` / `booking_requests` / DM threads; Auth `delete_user` after migration **077**. Mixpanel profile delete via **`analytics/mixpanel.py`** (httpx). Counterparties keep the booking contract; live names become “Deleted user”. |
 | `contact/` | `/client/contact`, `/vendor/contact`, `/admin/contact` | `service.py` + `classification.py` - authenticated support form (message + optional booking ref); LLM classifies subject via OpenAI `chat.completions.parse` (`OPENAI_CONTACT_MODEL`, fallback `other`); persists to `contact_submissions` (migrations 037 + **074** `portal=admin`) and emails admins via `features/email/` (Resend). Bug / booking / payments subjects POST the Cursor automation webhook. Admin **Report a bug** always sends `feedback_bug` (no LLM). |
-| `help/` | `/help/*` | `queries.py`, `help_article_keyword_search.py`, `assistant.py`, `http/routes.py` - signed-in Help Center: role-filtered categories/articles (`help_categories` / `help_articles`, migrations **051–087**) for `client` \| `vendor` \| `admin` + AI ask via OpenAI `chat.completions.parse` (`OPENAI_HELP_MODEL`). Content is **SQL seed only** (plain English, polite second-person voice, no em dashes; GitHub-style `> [!NOTE]` / `> [!WARNING]` / `> [!IMPORTANT]` callouts and `### N. Title` numbered steps). Portal money/dispute → escalate to Contact; admin escalate → **Report a bug**. Primary UX: **`HelpWidget` FAB** (standalone `/client/help` and `/vendor/help` redirect to dashboard). No TipTap CMS for help in v1. |
+| `help/` | `/help/*` | `queries.py`, `help_article_keyword_search.py`, `assistant.py`, `http/routes.py` - signed-in Help Center: role-filtered categories/articles (`help_categories` / `help_articles`, migrations **051–089**) for `client` \| `vendor` \| `admin` + AI ask via OpenAI `chat.completions.parse` (`OPENAI_HELP_MODEL`). Content is **SQL seed only** (plain English, polite second-person voice, no em dashes; GitHub-style `> [!NOTE]` / `> [!WARNING]` / `> [!IMPORTANT]` callouts and `### N. Title` numbered steps). Portal money/dispute → escalate to Contact; admin escalate → **Report a bug**. Primary UX: **`HelpWidget` FAB** (standalone `/client/help` and `/vendor/help` redirect to dashboard). No TipTap CMS for help in v1. |
 | `planner/` | `/client/planner/*` | `plan_service.py`, `prompt_parser.py`, `category_planner.py`, `explore_vendor_adapter.py`, `budget.py`, `confidence.py`, `planner_summary_generation.py`, `db.py`, `http/routes.py` - AI Event Planner: one prompt → persisted celebration plan (`celebration_plans` / `celebration_plan_items`, migration 055). Intent `simple` → `ValidationError(code=simple_intent)` (use Browse). Ranking via **`vendors/ranking/`** (`VendorRankingEngine`); LLM only parses brief + grounded explanations (`OPENAI_PLANNER_MODEL`). |
 | `blog/` | `/admin/blog/*`, `/blog/*` | `service.py`, `sanitize.py`, `http/admin.py`, `http/public.py` - admin TipTap CMS (draft/publish) + public published posts; images via `/media/images`. No newsletter/comments in v1. |
 | `referrals/` | `/admin/referrals/*`, `/referrals/partners/{slug}` | `partners.py`, `attribution.py`, `referral_partner_admin_queries.py`, `links.py` - admin-created creator signup links (`?ref=slug` on `/vendor/register`); **`referral_attributions.shoutout_completed`** for shoutout tracking. Share links always use **`https://www.eventtz.com`** (`links.referral_register_url`). Signup: optional **`referral_code`** on `POST /auth/signup` (vendor only). Frontend cookie: **`lib/referralAttribution.ts`**. Migration **`064_referral_partners.sql`**. |
@@ -418,6 +418,7 @@ Run in **numeric order** in Supabase (new changes → next `NNN_description.sql`
 | `086_help_center_referral_tiers.sql` | (superseded by **087**) placeholder |
 | `087_help_center_referral_docs.sql` | Help Center: tiered referral copy, fee-base alignment, new articles (`vendor-client-referrals`, payments hub, notifications, verify email, reviews inbox) |
 | `088_vendor_referral_short_codes.sql` | Numeric 1–6 digit referral codes; `POST /vendor/referral/code`; clears legacy slug codes |
+| `089_help_center_referrals_settings.sql` | Help Center: vendor client referrals live under Settings > Referrals (not Dashboard) |
 
 ### Client events (multi-vendor planning)
 
@@ -695,7 +696,7 @@ Legacy URLs (`/explore`, `/admin/vendors`, `/client/login`, …) redirect via **
 | `/vendor/profile` | `VendorOnboarding` wizard — available before admin approval |
 | `/vendor/contact`, `/vendor/messages` | Support form + Eventtz Support threads — available before admin approval (same portal layout exemption as profile) |
 | `/vendor/payments` | `VendorPaymentsView` (Stripe Connect) |
-| `/vendor/notifications`, `/vendor/disputes`, `/vendor/settings` | Same patterns as client (portal role); require approval except where noted |
+| `/vendor/notifications`, `/vendor/disputes`, `/vendor/settings` | Same patterns as client (portal role); vendor Settings includes a **Referrals** tab (`?tab=referrals`). Require approval except where noted |
 | `/admin/login` | Redirect → `/login?next=/admin/dashboard` |
 | `/admin` | Redirect → `/admin/dashboard` |
 | `/admin/dashboard` | `AdminDashboardView` |
@@ -751,7 +752,7 @@ Legacy URLs (`/explore`, `/admin/vendors`, `/client/login`, …) redirect via **
 | **`bookings/`** | Pricing breakdown, completion banner, dispute section, confirm copy, **`groupBookingsByEvent`**, **`ActiveEventPrefillBanner`**, **`useActiveEventPrefill`** |
 | **`disputes/`** | Participant disputes portal + detail panel |
 | **`notifications/`** | Unified notifications page view |
-| **`settings/`** | Shared settings sections (account, contact sharing, legal, …) |
+| **`settings/`** | Shared settings sections (account, contact sharing, legal, …). Vendor-only **Referrals** tab: client referral code, share link, and referral bookings |
 | **`contact/`** | `ContactFormView` |
 | **`help/`** | `HelpWidget` (FAB for client/vendor/admin) - browse + Ask AI in-panel; admin docs cover console ops. Content from API. |
 | **`portal/`** | Shared portal layout helpers |
@@ -854,4 +855,4 @@ Cross-feature data that is not an HTTP client may live next to its owner (e.g. *
 
 ---
 
-*Inventory last reconciled with `backend/app/`, `backend/sql/` (through `088_vendor_referral_short_codes.sql`), `frontend/app/` (incl. `(marketing)` / `(auth)` / `(portal)` route groups), `frontend/features/`, and `frontend/lib/`. Update the matching tables when you add routes, features, or API modules.*
+*Inventory last reconciled with `backend/app/`, `backend/sql/` (through `089_help_center_referrals_settings.sql`), `frontend/app/` (incl. `(marketing)` / `(auth)` / `(portal)` route groups), `frontend/features/`, and `frontend/lib/`. Update the matching tables when you add routes, features, or API modules.*

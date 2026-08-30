@@ -8,6 +8,7 @@ import { SettingsClientOnboardingSection } from "@/features/settings/SettingsCli
 import { SettingsDeleteAccountSection } from "@/features/settings/SettingsDeleteAccountSection";
 import { SettingsLegalSection } from "@/features/settings/SettingsLegalSection";
 import { SettingsNotificationsSection } from "@/features/settings/SettingsNotificationsSection";
+import { SettingsReferralsSection } from "@/features/settings/SettingsReferralsSection";
 import { SettingsShortcutsSection } from "@/features/settings/SettingsShortcutsSection";
 import { SettingsSignOutSection } from "@/features/settings/SettingsSignOutSection";
 import { SettingsTabs } from "@/features/settings/SettingsTabs";
@@ -19,13 +20,14 @@ export type SettingsViewProps = {
   role: PortalRole;
 };
 
-const TABS = [
+const ALL_TABS = [
   { id: "account", label: "Account" },
   { id: "privacy", label: "Privacy" },
+  { id: "referrals", label: "Referrals" },
   { id: "more", label: "More" },
 ] as const;
 
-type SettingsTabId = (typeof TABS)[number]["id"];
+type SettingsTabId = (typeof ALL_TABS)[number]["id"];
 
 const LEGACY_TAB_IDS: Record<string, SettingsTabId> = {
   contact: "privacy",
@@ -33,8 +35,14 @@ const LEGACY_TAB_IDS: Record<string, SettingsTabId> = {
   shortcuts: "more",
 };
 
-function resolveSettingsTabId(value: string | null): SettingsTabId {
-  if (value && TABS.some((tab) => tab.id === value)) {
+function tabsForRole(role: PortalRole) {
+  if (role === "vendor") return ALL_TABS;
+  return ALL_TABS.filter((tab) => tab.id !== "referrals");
+}
+
+function resolveSettingsTabId(value: string | null, role: PortalRole): SettingsTabId {
+  const allowed = tabsForRole(role);
+  if (value && allowed.some((tab) => tab.id === value)) {
     return value as SettingsTabId;
   }
   if (value && value in LEGACY_TAB_IDS) {
@@ -61,6 +69,13 @@ function SettingsTabPanel({ role, tab }: { role: PortalRole; tab: SettingsTabId 
           <SettingsNotificationsSection role={role} />
         </div>
       );
+    case "referrals":
+      if (role !== "vendor") return null;
+      return (
+        <div className="space-y-8">
+          <SettingsReferralsSection />
+        </div>
+      );
     case "more":
       return (
         <div className="space-y-8">
@@ -73,18 +88,19 @@ function SettingsTabPanel({ role, tab }: { role: PortalRole; tab: SettingsTabId 
 
 function SettingsViewContent({ role }: SettingsViewProps) {
   const searchParams = useSearchParams();
+  const tabs = useMemo(() => tabsForRole(role), [role]);
   const tab = useMemo(
-    (): SettingsTabId => resolveSettingsTabId(searchParams.get("tab")),
-    [searchParams],
+    (): SettingsTabId => resolveSettingsTabId(searchParams.get("tab"), role),
+    [searchParams, role],
   );
 
   const basePath = portalRoute(role, "settings");
 
   return (
     <div className="w-full min-w-0 max-w-3xl space-y-6">
-      <SettingsTabs tabs={TABS} activeId={tab} basePath={basePath} />
+      <SettingsTabs tabs={tabs} activeId={tab} basePath={basePath} />
 
-      <div role="tabpanel" aria-label={TABS.find((item) => item.id === tab)?.label}>
+      <div role="tabpanel" aria-label={tabs.find((item) => item.id === tab)?.label}>
         <SettingsTabPanel role={role} tab={tab} />
       </div>
     </div>

@@ -1,7 +1,8 @@
 "use client";
 
-import { CalendarHeart } from "lucide-react";
+import { CalendarHeart, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { FOCUS_RING, TOUCH_TARGET } from "@/components/ui/tokens";
 import type { ClientEventPrefill } from "@/lib/clientEventsApi";
 import { formatEventDate } from "@/lib/dateFormat";
 
@@ -19,7 +20,15 @@ export function ActiveEventPrefillBanner({
   const dateLabel = formatEventDate(prefill.eventDate);
 
   return (
-    <div className="rounded-xl border border-primary/20 bg-primary/[0.06] px-4 py-3">
+    <div className="relative rounded-xl border border-primary/20 bg-primary/[0.06] px-4 py-3 pr-12">
+      <button
+        type="button"
+        onClick={onNewEvent}
+        className={`absolute right-1 top-1 inline-flex ${TOUCH_TARGET} items-center justify-center rounded-lg text-neutral-400 hover:bg-white/70 hover:text-neutral-700 ${FOCUS_RING}`}
+        aria-label="Dismiss"
+      >
+        <X className="h-4 w-4" aria-hidden />
+      </button>
       <div className="flex gap-3">
         <CalendarHeart className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden />
         <div className="min-w-0 flex-1">
@@ -28,12 +37,9 @@ export function ActiveEventPrefillBanner({
             <span className="font-medium text-neutral-800">{prefill.eventName}</span>
             {dateLabel ? ` · ${dateLabel}` : null}
           </p>
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-3">
             <Button type="button" variant="primary" size="sm" onClick={onUse}>
               Use these details
-            </Button>
-            <Button type="button" variant="secondary" size="sm" onClick={onNewEvent}>
-              New event
             </Button>
           </div>
         </div>
