@@ -3,6 +3,13 @@
 ### User story
 A signed-in user calls `GET /api/v1/auth/me` to retrieve their own profile data — this tells the frontend "who am I right now?" and checks if the session cookie is still valid.
 
+### What changed since last lesson (Aug 2026 baseline)
+
+- **Sentry user context** — `AuthProvider` calls `identifySentryUser` / `resetSentryUser` alongside Mixpanel when `user` changes.
+- **Auth service unavailable → 503** — Supabase timeouts in `get_current_user_or_raise` return **503** (`AUTH_SERVICE_UNAVAILABLE`), not a false “session expired” 401.
+- **Deleted-account tombstones** — `public.users.deleted_at` marks closed accounts; `require_user` clears cookies and returns 401 `ACCOUNT_DELETED`; explore/jobs use `deleted_user_ids()` to hide tombstones.
+- **Guards bind Sentry** — `require_user` calls `bind_sentry_user` on the backend for error context.
+
 ---
 
 ## What those two lines do
@@ -40,7 +47,7 @@ Browser/app has loaded. `AuthProvider` needs to check: "Am I logged in?"
 
 **File:** `frontend/components/auth/AuthProvider.tsx`
 
-```57:68:frontend/components/auth/AuthProvider.tsx
+```59:70:frontend/components/auth/AuthProvider.tsx
   const refreshUser = async () => {
     try {
       const nextUser = await getMe();
@@ -76,7 +83,7 @@ Backend has a route handler for `GET /me`. It's part of the auth router.
 
 **File:** `backend/app/features/auth/http/routes.py`
 
-```212:219:backend/app/features/auth/http/routes.py
+```229:236:backend/app/features/auth/http/routes.py
 @router.get("/me", response_model=MeResponse)
 async def me(
     request: Request,
@@ -100,7 +107,7 @@ Backend needs to check: "Is this request from someone with a valid session?"
 
 **File:** `backend/app/features/auth/session.py`
 
-```70:88:backend/app/features/auth/session.py
+```70:93:backend/app/features/auth/session.py
 def get_current_user_or_raise(request: Request, response: Response) -> dict[str, Any]:
     """Validate session cookie and return the Supabase auth user (before merging public.users)."""
     access_token = request.cookies.get(ACCESS_COOKIE_NAME)
@@ -118,6 +125,11 @@ def get_current_user_or_raise(request: Request, response: Response) -> dict[str,
     result = service.get_user_from_access_token(access_token)
     if result.get("success"):
         return result["user"]
+    if result.get("unavailable"):
+        raise HTTPException(
+            status_code=503,
+            detail=result.get("error", auth_messages.AUTH_SERVICE_UNAVAILABLE),
+        )
     clear_session_cookies(response)
     raise HTTPException(status_code=401, detail=result.get("error", auth_messages.SIGN_IN_REQUIRED))
 ```
@@ -126,11 +138,35 @@ Breakdown:
 1. **Line 72:** Extract the access token from cookies (named `eventtz_access_token`)
 2. **Line 73-74:** If no token → raise 401 (not signed in)
 3. **Line 76-80:** If token doesn't look like a JWT (format: `xxx.yyy.zzz`) → clear cookies and raise 401 (session corrupted)
-4. **Line 82-87:** Ask Supabase "is this token valid?" 
-   - If yes → return the Supabase user object (id, email, user_type from auth metadata)
-   - If no → clear cookies, raise 401
+4. **Line 83-86:** Ask Supabase "is this token valid?" — if yes, return the Supabase user object
+5. **Line 87-91:** If Supabase is **temporarily unavailable** (timeout) → raise **503** — do **not** clear cookies or treat as expired session
+6. **Line 92-93:** Otherwise invalid token → clear cookies, raise 401
 
-If any check fails, session cookies are cleared and the frontend will get a 401 error.
+Protected routes use `require_user` (not raw `get_current_user_or_raise`), which also checks deleted tombstones:
+
+```23:41:backend/app/features/auth/http/guards.py
+def require_user(request: Request, response: Response) -> AuthUser:
+    """Return session user with public.users role and email."""
+    auth_user = get_current_user_or_raise(request, response)
+    user = build_app_user(auth_user)
+    try:
+        db_profile = fetch_user_profile(user.id)
+    except Exception:
+        logger.warning("require_user: profile lookup failed user_id=%s", user.id)
+        db_profile = None
+    if profile_is_deleted(db_profile):
+        clear_session_cookies(response)
+        raise HTTPException(status_code=401, detail=auth_messages.ACCOUNT_DELETED)
+    if user.account_suspended and user.user_type in ("client", "vendor"):
+        raise HTTPException(
+            status_code=403,
+            detail=auth_messages.ACCOUNT_SUSPENDED_CONTACT,
+        )
+    bind_sentry_user(user_id=user.id, user_type=user.user_type)
+    return user
+```
+
+**Deleted accounts** — `profile_is_deleted` in `accounts.py` checks `public.users.deleted_at`. Closed accounts keep a tombstone row (GDPR); they cannot sign in again and are excluded from marketplace listings via `deleted_user_ids()`.
 
 ---
 
@@ -206,7 +242,7 @@ Backend returned the user. Frontend now updates React state.
 
 **File:** `frontend/components/auth/AuthProvider.tsx`
 
-```57:64:frontend/components/auth/AuthProvider.tsx
+```59:66:frontend/components/auth/AuthProvider.tsx
   const refreshUser = async () => {
     try {
       const nextUser = await getMe();
@@ -219,17 +255,41 @@ Backend returned the user. Frontend now updates React state.
 
 - **Success:** `setUser(nextUser)` → all pages now see the user via `useAuth()` hook
 - **Failure (401 error):** `setUser(null)` → app treats user as logged out
+- **503 from auth:** axios interceptor may surface “service unavailable”; cookies are **not** cleared server-side
 
-**File:** `frontend/components/auth/AuthProvider.tsx`
+**Sentry + Mixpanel identity** — when `user` changes, analytics and error monitoring attach the user id:
 
-```81:86:frontend/components/auth/AuthProvider.tsx
-    () => ({
-      user,
-      loading,
-      isAuthenticated: Boolean(user),
-      signIn: async (email, password) => {
-        await apiSignIn(email, password);
-        await refreshUser();
+```72:83:frontend/components/auth/AuthProvider.tsx
+  useEffect(() => {
+    if (!user?.id) {
+      resetSentryUser();
+      return;
+    }
+    identifyMixpanelUser(user.id, {
+      email: user.email,
+      user_type: user.user_type ?? null,
+      admin_role: user.admin_role ?? null,
+    });
+    identifySentryUser(user.id, user.user_type ?? null);
+  }, [user]);
+```
+
+`identifySentryUser` (`frontend/lib/sentryUser.ts`) sets `Sentry.setUser({ id })` and a `user_type` tag — no email in Sentry.
+
+**Sign-out** clears both Mixpanel and Sentry:
+
+```110:119:frontend/components/auth/AuthProvider.tsx
+      signOut: async () => {
+        try {
+          track(MixpanelEvents.user_signed_out);
+          await apiSignOut();
+        } finally {
+          setUser(null);
+          resetMixpanel();
+          resetSentryUser();
+          clearVendorCopilotBriefCache();
+        }
+      },
 ```
 
 Now any component can call `useAuth()` and read:
@@ -286,6 +346,8 @@ Next render: pages redirect to login
 |---------|-------------------|
 | User sees "Not signed in" after logging in | `frontend/components/auth/AuthProvider.tsx` (check if `refreshUser` is being called) |
 | `/me` returns 401 but user has a valid cookie | `backend/app/features/auth/session.py` (check Supabase auth validation) |
+| `/me` returns 503 | `session.py` — Supabase timeout; not an expired session |
+| Deleted user can still hit protected routes | `guards.py` — `profile_is_deleted` should clear cookies |
 | User sees their data but then suddenly logs out | `backend/app/features/auth/session.py` (cookies may be getting cleared) |
 | Frontend receives user data but it's not stored in state | `frontend/components/auth/AuthProvider.tsx` (check `setUser` is being called) |
 
