@@ -120,7 +120,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       },
       {
         q: "Is there a service fee?",
-        a: `Yes. ${SERVICE_FEE_PERCENT_LABEL}, shown before you pay. No hidden extras`,
+        a: `Yes. ${SERVICE_FEE_PERCENT_LABEL} on the vendor total, shown before you pay. With a vendor referral link, clients can save £10–£15 off that fee at higher spend tiers`,
       },
       {
         q: "Is my payment safe?",

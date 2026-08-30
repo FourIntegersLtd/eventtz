@@ -5,6 +5,9 @@ export type ClientFeeBreakdownLabels = {
   feeLabel: string;
   totalLabel: string;
   feePercent: number;
+  feeBeforeDiscountLabel?: string | null;
+  referralDiscountLabel?: string | null;
+  referralApplied?: boolean;
 };
 
 type ClientFeeBreakdownSummaryProps = {
@@ -28,6 +31,10 @@ export function ClientFeeBreakdownSummary({
   const rowText = compact ? "text-[13px]" : "text-sm";
   const totalText = compact ? "text-sm" : "text-sm";
   const totalValue = compact ? "text-base font-semibold" : "font-heading text-lg font-semibold";
+  const showReferralRows =
+    breakdown.referralApplied &&
+    breakdown.feeBeforeDiscountLabel &&
+    breakdown.referralDiscountLabel;
 
   return (
     <div className={className}>
@@ -38,15 +45,39 @@ export function ClientFeeBreakdownSummary({
             {breakdown.vendorPortionLabel}
           </span>
         </div>
-        <div className="flex justify-between gap-2 text-neutral-600">
-          <span>
-            Eventtz fee
-            <span className="text-neutral-400"> ({breakdown.feePercent}%)</span>
-          </span>
-          <span className="font-medium tabular-nums text-neutral-900">
-            {breakdown.feeLabel}
-          </span>
-        </div>
+        {showReferralRows ? (
+          <>
+            <div className="flex justify-between gap-2 text-neutral-600">
+              <span>
+                Eventtz fee
+                <span className="text-neutral-400"> ({breakdown.feePercent}%)</span>
+              </span>
+              <span className="font-medium tabular-nums text-neutral-500 line-through">
+                {breakdown.feeBeforeDiscountLabel}
+              </span>
+            </div>
+            <div className="flex justify-between gap-2 text-emerald-800">
+              <span>Referral discount</span>
+              <span className="font-medium tabular-nums">{breakdown.referralDiscountLabel}</span>
+            </div>
+            <div className="flex justify-between gap-2 text-neutral-600">
+              <span>Eventtz fee due</span>
+              <span className="font-medium tabular-nums text-neutral-900">
+                {breakdown.feeLabel}
+              </span>
+            </div>
+          </>
+        ) : (
+          <div className="flex justify-between gap-2 text-neutral-600">
+            <span>
+              Eventtz fee
+              <span className="text-neutral-400"> ({breakdown.feePercent}%)</span>
+            </span>
+            <span className="font-medium tabular-nums text-neutral-900">
+              {breakdown.feeLabel}
+            </span>
+          </div>
+        )}
       </div>
 
       {showTotal ? (

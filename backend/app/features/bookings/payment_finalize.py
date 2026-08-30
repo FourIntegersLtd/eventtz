@@ -225,6 +225,9 @@ def _finalize_booking_payment_from_checkout_session(session: dict[str, Any]) -> 
                 "payment_amount_gbp": payment_amount_gbp,
                 "vendor_amount_gbp": vendor_amount_gbp,
                 "platform_fee_gbp": platform_fee_gbp,
+                "referral_fee_discount_gbp": float(metadata["referral_fee_discount_gbp"])
+                if metadata.get("referral_fee_discount_gbp")
+                else None,
             },
         )
         .eq("id", booking_id)

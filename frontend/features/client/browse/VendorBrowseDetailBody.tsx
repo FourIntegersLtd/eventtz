@@ -29,6 +29,7 @@ import { PortfolioImageGallery } from "@/features/vendors/display/PortfolioImage
 import { PortfolioVideoStrip } from "@/features/vendors/display/PortfolioVideoStrip";
 import { computeClientFeeBreakdown } from "@/lib/bookingServiceFee";
 import { ClientFeeBreakdownSummary } from "@/features/bookings/ClientFeeBreakdownSummary";
+import { useVendorReferralPreview } from "./useVendorReferralPreview";
 import { marketLocationFallback } from "@/lib/markets";
 import { publicListingImageUrlsFromPayload } from "@/lib/vendorPortfolioImages";
 
@@ -49,6 +50,8 @@ type VendorBrowseDetailBodyProps = {
   onContactVendor?: () => void;
   /** Where to return after sign-in/register from this screen (defaults to browse index). */
   detailReturnPath?: string;
+  /** Stored referral code from ?vref= (logged-in browse). */
+  storedReferralCode?: string | null;
 };
 
 function payloadStr(p: Record<string, unknown>, key: string): string {
@@ -65,6 +68,7 @@ export function VendorBrowseDetailBody({
   onRequestBooking,
   onContactVendor,
   detailReturnPath,
+  storedReferralCode,
 }: VendorBrowseDetailBodyProps) {
   const p = vendor.profile_form_data ?? {};
   const businessName =
@@ -120,10 +124,18 @@ export function VendorBrowseDetailBody({
     () => formatBookingTotalGbp(selectedLineItems),
     [selectedLineItems],
   );
+  const { referralDiscountGbp } = useVendorReferralPreview({
+    vendorUserId: vendor.user_id,
+    vendorPortionGbp: selectedTotal.sumNumeric,
+    initialCode: storedReferralCode,
+  });
   const selectedFeeBreakdown = useMemo(() => {
     if (selectedTotal.hasTbc) return null;
-    return computeClientFeeBreakdown({ vendorPortionGbp: selectedTotal.sumNumeric });
-  }, [selectedTotal.hasTbc, selectedTotal.sumNumeric]);
+    return computeClientFeeBreakdown({
+      vendorPortionGbp: selectedTotal.sumNumeric,
+      referralFeeDiscountGbp: referralDiscountGbp,
+    });
+  }, [selectedTotal.hasTbc, selectedTotal.sumNumeric, referralDiscountGbp]);
 
   const togglePackage = (id: string) => {
     setSelectedPackageIds((prev) => {

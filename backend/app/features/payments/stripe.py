@@ -626,6 +626,7 @@ def create_checkout_session(
     vendor_user_id: str,
     client_user_id: str,
     description: str,
+    referral_fee_discount_gbp: float = 0.0,
 ) -> dict[str, str]:
     """Create a Checkout Session for the full client total. Money goes to Eventtz's Stripe
     balance first - the vendor is paid later via an explicit Transfer."""
@@ -637,6 +638,7 @@ def create_checkout_session(
         "client_total_gbp": f"{client_total_gbp:.2f}",
         "vendor_amount_gbp": f"{vendor_amount_gbp:.2f}",
         "service_fee_gbp": f"{service_fee_gbp:.2f}",
+        "referral_fee_discount_gbp": f"{max(0.0, referral_fee_discount_gbp):.2f}",
     }
     client_email = _get_user_email(client_user_id)
     session_kwargs: dict[str, Any] = {}

@@ -18,17 +18,17 @@ def test_client_total_with_line_discount_only():
     assert pb["client_total_label"] == "GBP 94.50"
 
 
-def test_surcharge_does_not_increase_service_fee():
-    """£90 quote + £20 setup: fee stays on quoted £90, client pays £114.50."""
+def test_surcharge_increases_service_fee():
+    """£90 quote + £20 setup: fee is 5% of full £110 vendor portion."""
     pb = build_pricing_breakdown(
         line_items=[{"unit_price_gbp": 90.0}],
         vendor_adjustments=[{"tag": "other", "label": "setup fee", "amount_gbp": 20.0}],
         service_fee_percent=5.0,
     )
     assert pb["vendor_portion_gbp"] == 110.0
-    assert pb["service_fee_gbp"] == 4.5
-    assert pb["client_total_gbp"] == 114.5
-    assert pb["client_total_label"] == "GBP 114.50"
+    assert pb["service_fee_gbp"] == 5.5
+    assert pb["client_total_gbp"] == 115.5
+    assert pb["client_total_label"] == "GBP 115.50"
 
 
 def test_vendor_discount_adjustment_reduces_fee_base():
@@ -40,6 +40,33 @@ def test_vendor_discount_adjustment_reduces_fee_base():
     assert pb["vendor_portion_gbp"] == 90.0
     assert pb["service_fee_gbp"] == 4.5
     assert pb["client_total_gbp"] == 94.5
+
+
+def test_referral_tier_discount_on_service_fee():
+    pb = build_pricing_breakdown(
+        line_items=[{"unit_price_gbp": 400.0}],
+        vendor_adjustments=[],
+        service_fee_percent=5.0,
+        referral_fee_discount_gbp=10.0,
+    )
+    assert pb["service_fee_before_discount_gbp"] == 20.0
+    assert pb["referral_fee_discount_gbp"] == 10.0
+    assert pb["service_fee_gbp"] == 10.0
+    assert pb["client_total_gbp"] == 410.0
+    assert pb["referral_fee_applied"] is True
+
+
+def test_referral_discount_capped_at_standard_fee():
+    pb = build_pricing_breakdown(
+        line_items=[{"unit_price_gbp": 50.0}],
+        vendor_adjustments=[],
+        service_fee_percent=5.0,
+        referral_fee_discount_gbp=10.0,
+    )
+    assert pb["service_fee_before_discount_gbp"] == 2.5
+    assert pb["referral_fee_discount_gbp"] == 2.5
+    assert pb["service_fee_gbp"] == 0.0
+    assert pb["client_total_gbp"] == 50.0
 
 
 def test_initial_label_repaired_when_backfill_matches_updated_total():
@@ -54,7 +81,7 @@ def test_initial_label_repaired_when_backfill_matches_updated_total():
         vendor_adjustments=row["vendor_adjustments"],
         service_fee_percent=5.0,
     )
-    assert pb["client_total_gbp"] == 114.5
+    assert pb["client_total_gbp"] == 115.5
     label = _initial_client_total_label(row, pb)
     assert label == "GBP 94.50"
 
@@ -69,7 +96,7 @@ def test_client_booking_detail_model_keeps_initial_client_total_label():
         vendor_display_name="Vendor",
         event_name="Test",
         event_date="2026-08-01",
-        total_label="GBP 114.50",
+        total_label="GBP 115.50",
         selected_option_ids=[],
         line_items=[],
         initial_client_total_label="GBP 94.50",

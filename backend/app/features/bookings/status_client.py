@@ -14,7 +14,8 @@ from app.features.bookings.notifications import (
     _notify_booking_changed,
 )
 from app.features.bookings.pricing_confirmation import client_price_confirmation_required
-from app.features.bookings.pricing import build_pricing_breakdown, persisted_booking_total_label
+from app.features.bookings.pricing import persisted_booking_total_label
+from app.features.vendor_referrals.booking_discount import build_initial_pricing_breakdown_for_booking_row
 from app.features.bookings.queries import (
     _row_initiator,
     get_booking_request_for_vendor,
@@ -112,7 +113,9 @@ def update_booking_request_status_for_client(
     db = get_db()
     res = (
         db.table("booking_requests")
-        .select("id,status,vendor_user_id,initiator,vendor_adjustments,line_items")
+        .select(
+            "id,status,vendor_user_id,vendor_referral_code,initiator,vendor_adjustments,line_items,service_fee_percent",
+        )
         .eq("id", booking_id)
         .eq("client_user_id", client_user_id)
         .limit(1)
@@ -136,10 +139,7 @@ def update_booking_request_status_for_client(
 
     if new_status == "declined":
         if is_updated_price:
-            line_items = row0.get("line_items")
-            if not isinstance(line_items, list):
-                line_items = []
-            pb = build_pricing_breakdown(line_items=line_items, vendor_adjustments=[])
+            pb = build_initial_pricing_breakdown_for_booking_row(row0)
             revert_payload: dict[str, Any] = {
                 "vendor_adjustments": [],
                 "total_label": persisted_booking_total_label(pb),

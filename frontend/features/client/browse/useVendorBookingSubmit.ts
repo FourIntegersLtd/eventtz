@@ -17,6 +17,7 @@ export type VendorBookingSubmitFields = {
   notes: string;
   selectedOptionIds: string[];
   quantities?: Record<string, number>;
+  vendorReferralCode?: string | null;
 };
 
 type UseVendorBookingSubmitArgs = {
@@ -75,6 +76,7 @@ export function useVendorBookingSubmit({
         quantities: parsed.data.quantities,
         client_search_context: clientSearchContext ?? undefined,
         event_id: selectedEventId,
+        vendor_referral_code: fields.vendorReferralCode?.trim() || null,
       })
         .then((created) => {
           track(MixpanelEvents.enquiry_created, {

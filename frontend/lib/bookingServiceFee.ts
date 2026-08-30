@@ -1,19 +1,42 @@
-/** Matches backend `BOOKING_SERVICE_FEE_PERCENT` in `app/core/constants.py`. */
+/** Matches backend `BOOKING_SERVICE_FEE_PERCENT` and referral tiers. */
 
 export const BOOKING_SERVICE_FEE_PERCENT = 5;
+
+export const REFERRAL_FEE_TIERS = [
+  { minSpendGbp: 600, feeDiscountGbp: 15 },
+  { minSpendGbp: 400, feeDiscountGbp: 10 },
+] as const;
+
+/** Lowest spend threshold for any referral tier (mirrors backend `tiers.py`). */
+export const REFERRAL_LOWEST_TIER_SPEND_GBP = Math.min(
+  ...REFERRAL_FEE_TIERS.map((tier) => tier.minSpendGbp),
+);
 
 export function getBookingServiceFeePercent(): number {
   return BOOKING_SERVICE_FEE_PERCENT;
 }
 
+export function referralDiscountForSpend(vendorPortionGbp: number): number {
+  const spend = Math.max(0, vendorPortionGbp);
+  for (const tier of REFERRAL_FEE_TIERS) {
+    if (spend >= tier.minSpendGbp) return tier.feeDiscountGbp;
+  }
+  return 0;
+}
+
 export type ClientFeeBreakdown = {
   vendorPortionGbp: number;
+  feeBeforeDiscountGbp: number;
+  referralDiscountGbp: number;
   feeGbp: number;
   totalGbp: number;
   feePercent: number;
   vendorPortionLabel: string;
+  feeBeforeDiscountLabel: string;
+  referralDiscountLabel: string | null;
   feeLabel: string;
   totalLabel: string;
+  referralApplied: boolean;
 };
 
 /** Friendly £ label for browse/modal estimates (matches breakdown row styling). */
@@ -33,24 +56,31 @@ export function formatBookingMoneyLabel(amount: number): string {
 export function computeClientFeeBreakdown(input: {
   vendorPortionGbp: number;
   feePercent?: number;
-  /** Fee base when discounts reduce the taxable amount (defaults to vendor portion). */
-  feeBaseGbp?: number;
+  referralFeeDiscountGbp?: number;
 }): ClientFeeBreakdown | null {
   const vendorPortion = Math.round(input.vendorPortionGbp * 100) / 100;
   if (!Number.isFinite(vendorPortion) || vendorPortion < 0) return null;
 
   const feePct = input.feePercent ?? getBookingServiceFeePercent();
-  const feeBase = Math.round(Math.max(0, input.feeBaseGbp ?? vendorPortion) * 100) / 100;
-  const fee = Math.round(feeBase * (feePct / 100) * 100) / 100;
+  const feeBefore = Math.round(vendorPortion * (feePct / 100) * 100) / 100;
+  const rawDiscount = Math.max(0, input.referralFeeDiscountGbp ?? 0);
+  const discountApplied = Math.round(Math.min(rawDiscount, feeBefore) * 100) / 100;
+  const fee = Math.round(Math.max(0, feeBefore - discountApplied) * 100) / 100;
   const total = Math.round((vendorPortion + fee) * 100) / 100;
 
   return {
     vendorPortionGbp: vendorPortion,
+    feeBeforeDiscountGbp: feeBefore,
+    referralDiscountGbp: discountApplied,
     feeGbp: fee,
     totalGbp: total,
     feePercent: feePct,
     vendorPortionLabel: formatBookingMoneyLabel(vendorPortion),
+    feeBeforeDiscountLabel: formatBookingMoneyLabel(feeBefore),
+    referralDiscountLabel:
+      discountApplied > 0 ? `-${formatBookingMoneyLabel(discountApplied).replace("£", "£")}` : null,
     feeLabel: formatBookingMoneyLabel(fee),
     totalLabel: formatBookingMoneyLabel(total),
+    referralApplied: discountApplied > 0,
   };
 }

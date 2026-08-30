@@ -16,6 +16,7 @@ import { VendorGrowthGlanceTile } from "@/features/vendor/copilot/VendorGrowthGl
 import { useVendorDashboard } from "./useVendorDashboard";
 import { VendorBookingsCalendarCard } from "./VendorBookingsCalendarCard";
 import { VendorPayoutSetupBanner } from "./VendorPayoutSetupBanner";
+import { VendorReferralShareCard } from "./VendorReferralShareCard";
 
 function daysUntil(iso: string): number {
   const start = new Date(`${iso.slice(0, 10)}T00:00:00`);
@@ -175,6 +176,8 @@ export function VendorDashboardView() {
         connecting={payoutsConnecting}
         onConnect={() => void connectPayouts("/vendor/payments")}
       />
+
+      {loadStatus === "ready" ? <VendorReferralShareCard /> : null}
 
       {loadStatus === "ready" ? (
         <div className="grid w-full min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">

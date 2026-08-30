@@ -12,7 +12,11 @@ from app.features.bookings.completion_rules import (
     compute_payout_auto_release_at,
 )
 from app.features.bookings.list_order import sort_booking_rows_recent_first
-from app.features.bookings.pricing import build_pricing_breakdown
+from app.features.bookings.pricing import persisted_booking_total_label
+from app.features.vendor_referrals.booking_discount import (
+    build_initial_pricing_breakdown_for_booking_row,
+    build_pricing_breakdown_for_booking_row,
+)
 from app.features.bookings.pricing_confirmation import normalize_vendor_adjustments_list
 from app.features.bookings.reviews import (
     get_client_review_for_booking,
@@ -86,22 +90,14 @@ def _normalize_date_str(value: Any) -> str:
 
 def _attach_pricing_fields(row: dict[str, Any]) -> None:
     """Add vendor_adjustments (normalised) and a pricing breakdown to the row."""
-    line_items = row.get("line_items")
-    if not isinstance(line_items, list):
-        line_items = []
-    raw_adj = row.get("vendor_adjustments")
-    pb = build_pricing_breakdown(line_items=line_items, vendor_adjustments=raw_adj)
+    pb = build_pricing_breakdown_for_booking_row(row)
     row["vendor_adjustments"] = pb["vendor_adjustments"]
     row["pricing"] = pb
 
 
 def _initial_client_total_label(row: dict[str, Any], pb: dict[str, Any] | None = None) -> str | None:
-    line_items = row.get("line_items")
-    if not isinstance(line_items, list):
-        line_items = []
-
     if _has_price_update(row):
-        pre_adj = build_pricing_breakdown(line_items=line_items, vendor_adjustments=[])
+        pre_adj = build_initial_pricing_breakdown_for_booking_row(row)
         computed = str(pre_adj.get("client_total_label") or "").strip()
         if computed:
             raw = row.get("initial_client_total_label")
@@ -178,7 +174,7 @@ def list_booking_requests_for_vendor(
         get_db()
         .table("booking_requests")
         .select(
-            "id,status,event_name,event_date,event_end_date,total_label,client_user_id,created_at,updated_at,line_items,vendor_adjustments,initiator,conversation_id,payment_status,client_completion_confirmed_at,vendor_completion_confirmed_at,completion_reminder_sent_at",
+            "id,status,event_name,event_date,event_end_date,total_label,client_user_id,vendor_user_id,created_at,updated_at,line_items,vendor_adjustments,initiator,conversation_id,payment_status,client_completion_confirmed_at,vendor_completion_confirmed_at,completion_reminder_sent_at,service_fee_percent,vendor_referral_code",
         )
         .eq("vendor_user_id", vendor_user_id)
     )
@@ -212,10 +208,7 @@ def list_booking_requests_for_vendor(
         line_items = row.get("line_items")
         if not isinstance(line_items, list):
             line_items = []
-        pb = build_pricing_breakdown(
-            line_items=line_items,
-            vendor_adjustments=row.get("vendor_adjustments"),
-        )
+        pb = build_pricing_breakdown_for_booking_row(row)
         conv = row.get("conversation_id")
         out.append(
             {
@@ -307,6 +300,8 @@ def get_booking_request_for_vendor(vendor_user_id: str, booking_id: str) -> dict
         "completion_waiting_on": completion_waiting_on(row),
         "initiator": _row_initiator(row),
         "conversation_id": str(conv) if conv else None,
+        "service_fee_percent": row.get("service_fee_percent"),
+        "vendor_referral_code": row.get("vendor_referral_code"),
     }
     _attach_pricing_fields(out)
     out["initial_client_total_label"] = _initial_client_total_label(row, out.get("pricing"))
@@ -339,7 +334,7 @@ def list_booking_requests_for_client(
         get_db()
         .table("booking_requests")
         .select(
-            "id,status,event_name,event_date,event_end_date,total_label,vendor_user_id,created_at,updated_at,line_items,vendor_adjustments,initiator,conversation_id,payment_status,client_completion_confirmed_at,vendor_completion_confirmed_at,completion_reminder_sent_at,event_id",
+            "id,status,event_name,event_date,event_end_date,total_label,vendor_user_id,created_at,updated_at,line_items,vendor_adjustments,initiator,conversation_id,payment_status,client_completion_confirmed_at,vendor_completion_confirmed_at,completion_reminder_sent_at,event_id,service_fee_percent,vendor_referral_code",
         )
         .eq("client_user_id", client_user_id)
     )
@@ -384,10 +379,7 @@ def list_booking_requests_for_client(
         line_items = row.get("line_items")
         if not isinstance(line_items, list):
             line_items = []
-        pb = build_pricing_breakdown(
-            line_items=line_items,
-            vendor_adjustments=row.get("vendor_adjustments"),
-        )
+        pb = build_pricing_breakdown_for_booking_row(row)
         conv = row.get("conversation_id")
         eid = str(row.get("event_id") or "") or None
         out.append(
@@ -479,6 +471,8 @@ def get_booking_request_for_client(client_user_id: str, booking_id: str) -> dict
         "conversation_id": str(conv) if conv else None,
         "event_id": eid,
         "event_title": event_titles.get(eid) if eid else None,
+        "service_fee_percent": row.get("service_fee_percent"),
+        "vendor_referral_code": row.get("vendor_referral_code"),
     }
     _attach_pricing_fields(out)
     out["initial_client_total_label"] = _initial_client_total_label(row, out.get("pricing"))

@@ -19,7 +19,10 @@ from app.features.bookings.calendar import (
 )
 from app.features.bookings.line_item_validation import validate_quote_line_items
 from app.features.bookings.notifications import _notify_booking_changed
+from app.core.constants import BOOKING_SERVICE_FEE_PERCENT
+from app.core.constants import BOOKING_SERVICE_FEE_PERCENT
 from app.features.bookings.pricing import build_pricing_breakdown, persisted_booking_total_label
+from app.features.vendor_referrals.validate import resolve_referral_pricing_inputs
 from app.features.chat.service import (
     assert_conversation_matches_pair,
     get_or_create_conversation,
@@ -173,6 +176,7 @@ def create_booking_request(
     client_search_context: dict[str, Any] | None = None,
     event_id: str | None = None,
     quantities: dict[str, int] | None = None,
+    vendor_referral_code: str | None = None,
 ) -> dict[str, Any]:
     if client_user_id == vendor_user_id:
         raise ValueError(booking_messages.CANNOT_BOOK_OWN_VENDOR)
@@ -198,7 +202,20 @@ def create_booking_request(
     line_items = resolve_line_items(payload, selected_option_ids, quantities)
     line_items = line_items + compute_automatic_discount_lines(payload, line_items, event_date)
 
-    pb = build_pricing_breakdown(line_items=line_items, vendor_adjustments=[])
+    li_sum = sum(float(li.get("unit_price_gbp") or 0) for li in line_items if isinstance(li, dict))
+    vendor_portion_est = round(li_sum, 2)
+    normalized_referral, referral_discount, tier_min = resolve_referral_pricing_inputs(
+        vendor_user_id,
+        vendor_referral_code,
+        vendor_portion_est,
+    )
+    pb = build_pricing_breakdown(
+        line_items=line_items,
+        vendor_adjustments=[],
+        service_fee_percent=float(BOOKING_SERVICE_FEE_PERCENT),
+        referral_fee_discount_gbp=referral_discount,
+        referral_tier_min_spend_gbp=tier_min,
+    )
     if float(pb.get("vendor_portion_gbp") or 0) <= 0 and not pb.get("has_pricing_tbc"):
         raise ValueError(booking_messages.BOOKING_NO_VALID_PRICE)
     client_total = str(pb.get("client_total_label") or persisted_booking_total_label(pb))
@@ -228,6 +245,8 @@ def create_booking_request(
         "initial_client_total_label": client_total,
         "vendor_adjustments": [],
         "initiator": "client",
+        "service_fee_percent": float(BOOKING_SERVICE_FEE_PERCENT),
+        "vendor_referral_code": normalized_referral,
     }
     if search_ctx is not None:
         row_out["client_search_context"] = search_ctx
@@ -355,7 +374,11 @@ def create_vendor_quote_booking_request(
 
     line_items = validate_quote_line_items(line_items)
 
-    pb = build_pricing_breakdown(line_items=line_items, vendor_adjustments=[])
+    pb = build_pricing_breakdown(
+        line_items=line_items,
+        vendor_adjustments=[],
+        service_fee_percent=float(BOOKING_SERVICE_FEE_PERCENT),
+    )
     if pb.get("has_pricing_tbc"):
         raise ValueError(booking_messages.QUOTE_LINE_NEEDS_PRICE)
     if float(pb.get("vendor_portion_gbp") or 0) <= 0:
@@ -376,6 +399,7 @@ def create_vendor_quote_booking_request(
         "vendor_adjustments": [],
         "initiator": "vendor",
         "event_postcode": None,
+        "service_fee_percent": float(BOOKING_SERVICE_FEE_PERCENT),
     }
     if conversation_id and conversation_id.strip():
         row_out["conversation_id"] = conversation_id.strip()

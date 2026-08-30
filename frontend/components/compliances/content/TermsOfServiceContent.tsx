@@ -56,8 +56,10 @@ export function TermsOfServiceContent() {
             agree to Stripe&apos;s applicable terms.
           </li>
           <li>
-            A platform service fee of {serviceFeePercent}% may apply to client
-            bookings, as displayed before payment.
+            A platform service fee of {serviceFeePercent}% applies to the full vendor
+            total on client bookings, as displayed before payment. Vendors may share
+            referral links that give clients fixed savings off this fee at qualifying
+            spend tiers (£10 off at £400+, £15 off at £600+).
           </li>
           <li>
             Vendor payouts are handled through Stripe Connect subject to

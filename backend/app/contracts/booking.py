@@ -102,6 +102,13 @@ class BookingPricingBreakdown(BaseModel):
     service_fee_label: str
     client_total_label: str
     line_items_subtotal_label: str
+    service_fee_before_discount_gbp: float | None = None
+    service_fee_before_discount_label: str | None = None
+    referral_fee_discount_gbp: float = 0.0
+    referral_fee_discount_label: str | None = None
+    referral_tier_min_spend_gbp: float | None = None
+    vendor_referral_code: str | None = None
+    referral_fee_applied: bool = False
 
 
 class VendorAdjustmentIn(BaseModel):
@@ -135,6 +142,19 @@ class CreateBookingRequestBody(BaseModel):
     #: Marketplace search filters at enquire time (for alternative-vendor nudges).
     client_search_context: dict[str, Any] | None = None
     event_id: str | None = Field(default=None, max_length=36)
+    #: Vendor client referral code (?vref=) — up to 6 digits when valid.
+    vendor_referral_code: str | None = Field(default=None, max_length=6)
+
+    @field_validator("vendor_referral_code", mode="before")
+    @classmethod
+    def normalize_vendor_referral_code(cls, v: object) -> str | None:
+        if v is None:
+            return None
+        if isinstance(v, str):
+            from app.features.vendor_referrals.codes import normalize_client_referral_code
+
+            return normalize_client_referral_code(v)
+        return None
 
     @field_validator("event_postcode", mode="before")
     @classmethod
@@ -365,6 +385,7 @@ class ClientBookingDetail(BaseModel):
     conversation_id: str | None = None
     event_id: str | None = None
     event_title: str | None = None
+    vendor_referral_code: str | None = None
     counterparty_phone: str | None = None
 
     model_config = {"populate_by_name": True}

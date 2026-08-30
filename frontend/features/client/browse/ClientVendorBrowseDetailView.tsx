@@ -28,6 +28,7 @@ import { CLIENT_BOOKING_TOAST_COPY } from "@/features/bookings/bookingConfirmCop
 import { useLaunchingSoonBookingGuard } from "@/features/bookings/useLaunchingSoonBookingGuard";
 import { vendorMatchesMarketplaceSearch } from "@/lib/marketplaceVendorMatch";
 import { usualReplyExpectation } from "@/lib/vendorMetrics";
+import { captureVendorReferralFromSearchParams } from "@/lib/vendorReferralAttribution";
 
 function payloadStr(p: Record<string, unknown>, key: string): string {
   const v = p[key];
@@ -50,6 +51,13 @@ export function ClientVendorBrowseDetailView() {
     {},
   );
   const { guardBooking, launchingSoonModal } = useLaunchingSoonBookingGuard();
+  const [storedReferralCode, setStoredReferralCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!userId) return;
+    const code = captureVendorReferralFromSearchParams(userId, searchParams);
+    setStoredReferralCode(code);
+  }, [userId, searchParams]);
 
   const marketplaceSearch = useMemo(
     () => marketplaceStateFromSearchParams(searchParams),
@@ -215,6 +223,7 @@ export function ClientVendorBrowseDetailView() {
           loginHref="/login"
           registerHref="/register?type=client"
           detailReturnPath={detailPath}
+          storedReferralCode={storedReferralCode}
           onContinue={() => router.push(browseListHref)}
           onRequestBooking={
             isClient
@@ -253,6 +262,7 @@ export function ClientVendorBrowseDetailView() {
             initialPrefill={plannerEventPrefill}
             linkedEventId={linkedEventId}
             clientSearchContext={bookingClientSearchContext}
+            initialReferralCode={storedReferralCode}
           />
         ) : null}
         {user ? (

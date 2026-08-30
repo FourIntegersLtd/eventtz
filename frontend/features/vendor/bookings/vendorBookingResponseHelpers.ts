@@ -1,6 +1,9 @@
 import type { BookingPricing } from "@/features/bookings/BookingPricingBreakdown";
 import type { VendorBookingDetail } from "@/lib/vendorBookingsApi";
-import { getBookingServiceFeePercent } from "@/lib/bookingServiceFee";
+import {
+  computeClientFeeBreakdown,
+  referralDiscountForSpend,
+} from "@/lib/bookingServiceFee";
 
 export type AdjustmentDraftRow = {
   kind: "cost" | "discount";
@@ -37,10 +40,15 @@ export function previewClientTotalLabel(
   const lineSubtotal = pricing.line_items_subtotal_gbp;
   const vendorPortion = lineSubtotal + draftTotal;
   if (vendorPortion <= 0) return null;
-  const feePct = pricing.service_fee_percent || getBookingServiceFeePercent();
-  const feeBase = Math.max(0, lineSubtotal + Math.min(draftTotal, 0));
-  const fee = (feeBase * feePct) / 100;
-  return formatGbp(vendorPortion + fee);
+  const referralDiscount =
+    pricing.vendor_referral_code || pricing.referral_fee_applied
+      ? referralDiscountForSpend(vendorPortion)
+      : 0;
+  const breakdown = computeClientFeeBreakdown({
+    vendorPortionGbp: vendorPortion,
+    referralFeeDiscountGbp: referralDiscount,
+  });
+  return breakdown?.totalLabel ?? null;
 }
 
 export function adjustmentLineKey(row: Pick<AdjustmentDraftRow, "kind" | "tag">): string {

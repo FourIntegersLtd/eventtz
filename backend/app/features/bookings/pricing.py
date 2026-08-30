@@ -81,16 +81,31 @@ def normalize_vendor_adjustments_stored(raw: Any) -> list[dict[str, Any]]:
     return out[:20]
 
 
+def resolve_booking_service_fee_percent(row: dict[str, Any] | Any) -> float:
+    """Use snapshotted service_fee_percent on a booking row, else the platform default."""
+    if isinstance(row, dict):
+        raw = row.get("service_fee_percent")
+        if raw is not None:
+            try:
+                pct = float(raw)
+                if 0.0 <= pct <= 100.0:
+                    return pct
+            except (TypeError, ValueError):
+                pass
+    return float(BOOKING_SERVICE_FEE_PERCENT)
+
+
 def build_pricing_breakdown(
     *,
     line_items: list[dict[str, Any]] | Any,
     vendor_adjustments: list[dict[str, Any]] | Any,
     service_fee_percent: float | None = None,
+    referral_fee_discount_gbp: float = 0.0,
+    referral_tier_min_spend_gbp: float | None = None,
 ) -> dict[str, Any]:
     """
-    vendor_portion = sum(line items) + sum(adjustments). Adjustments may be negative (discounts).
-    service_fee = fee_base * (fee_percent/100), where fee_base is line items plus any discounts
-    (negative adjustments). Extra charges (positive adjustments) are not included in the fee base.
+    vendor_portion = sum(line items) + sum(adjustments).
+    service_fee = vendor_portion * (fee_percent/100) minus referral_fee_discount (capped at fee).
     client_total = vendor_portion + service_fee (when no TBC in lines).
     """
     pct = service_fee_percent
@@ -103,8 +118,11 @@ def build_pricing_breakdown(
     adj_sum = sum(a["amount_gbp"] for a in adj_list)
 
     vendor_portion = round(li_sum + adj_sum, 2)
-    fee_base = round(max(0.0, li_sum + min(adj_sum, 0)), 2)
-    fee = round(fee_base * (pct / 100.0), 2)
+    fee_base = round(max(0.0, vendor_portion), 2)
+    fee_before = round(fee_base * (pct / 100.0), 2)
+    raw_discount = max(0.0, float(referral_fee_discount_gbp or 0))
+    discount_applied = round(min(raw_discount, fee_before), 2)
+    fee = round(max(0.0, fee_before - discount_applied), 2)
     client_total = round(vendor_portion + fee, 2)
 
     return {
@@ -113,10 +131,16 @@ def build_pricing_breakdown(
         "adjustments_total_gbp": round(adj_sum, 2),
         "vendor_portion_gbp": vendor_portion,
         "service_fee_percent": pct,
+        "service_fee_before_discount_gbp": fee_before,
+        "referral_fee_discount_gbp": discount_applied,
+        "referral_tier_min_spend_gbp": referral_tier_min_spend_gbp,
+        "referral_fee_applied": discount_applied > 0,
         "service_fee_gbp": fee,
         "client_total_gbp": client_total,
         "has_pricing_tbc": has_tbc_lines,
         "vendor_portion_label": format_gbp(vendor_portion),
+        "service_fee_before_discount_label": format_gbp(fee_before),
+        "referral_fee_discount_label": format_gbp(-discount_applied) if discount_applied > 0 else None,
         "service_fee_label": format_gbp(fee),
         "client_total_label": format_gbp(client_total),
         "line_items_subtotal_label": format_gbp(li_sum),

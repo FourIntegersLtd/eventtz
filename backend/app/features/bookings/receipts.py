@@ -5,7 +5,8 @@ from __future__ import annotations
 from typing import Any, Literal
 
 from app.core.db import get_db
-from app.features.bookings.pricing import build_pricing_breakdown, format_gbp
+from app.features.bookings.pricing import format_gbp
+from app.features.vendor_referrals.booking_discount import build_pricing_breakdown_for_booking_row
 from app.features.email.constants import COMPANY_LEGAL_NAME, EMAIL_SUPPORT_ADDRESS
 from app.features.bookings import messages as booking_messages
 
@@ -143,6 +144,8 @@ def _build_receipt_lines(
         lines.append({"label": label, "amount_label": format_gbp(amt)})
 
     if include_service_fee:
+        fee_before = pb.get("service_fee_before_discount_gbp")
+        referral_discount = pb.get("referral_fee_discount_gbp")
         fee = pb.get("service_fee_gbp")
         pct = pb.get("service_fee_percent")
         if fee is not None:
@@ -154,7 +157,27 @@ def _build_receipt_lines(
                     if pct_f is not None
                     else "Eventtz service fee"
                 )
-                lines.append({"label": fee_label, "amount_label": format_gbp(fee_f)})
+                if referral_discount and float(referral_discount) > 0 and fee_before is not None:
+                    lines.append(
+                        {
+                            "label": fee_label,
+                            "amount_label": format_gbp(float(fee_before)),
+                        },
+                    )
+                    lines.append(
+                        {
+                            "label": "Referral discount",
+                            "amount_label": format_gbp(-float(referral_discount)),
+                        },
+                    )
+                    lines.append(
+                        {
+                            "label": "Eventtz fee due",
+                            "amount_label": format_gbp(fee_f),
+                        },
+                    )
+                else:
+                    lines.append({"label": fee_label, "amount_label": format_gbp(fee_f)})
             except (TypeError, ValueError):
                 pass
 
@@ -185,13 +208,7 @@ def _snapshot_amount(row: dict[str, Any], key: str, fallback_pb_key: str | None,
 
 
 def _attach_pricing(row: dict[str, Any]) -> dict[str, Any]:
-    line_items = row.get("line_items")
-    if not isinstance(line_items, list):
-        line_items = []
-    return build_pricing_breakdown(
-        line_items=line_items,
-        vendor_adjustments=row.get("vendor_adjustments"),
-    )
+    return build_pricing_breakdown_for_booking_row(row)
 
 
 def load_payment_snapshot(booking_id: str) -> dict[str, Any] | None:

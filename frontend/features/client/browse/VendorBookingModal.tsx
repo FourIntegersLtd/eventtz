@@ -26,6 +26,7 @@ import {
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { lineTotalGbp } from "@/lib/packagePricing";
 import { useVendorBookingSubmit } from "@/features/client/browse/useVendorBookingSubmit";
+import { useVendorReferralPreview } from "@/features/client/browse/useVendorReferralPreview";
 import type { ClientSearchContext } from "@/lib/clientBookingsApi";
 import { ActiveEventPrefillBanner } from "@/features/bookings/ActiveEventPrefillBanner";
 import type { EventEnquirePrefill } from "@/features/bookings/eventEnquirePrefill";
@@ -62,6 +63,8 @@ type VendorBookingModalProps = {
   linkedEventId?: string | null;
   /** Marketplace filters to store on the booking for alternative-vendor nudges. */
   clientSearchContext?: ClientSearchContext | null;
+  /** Pre-filled from ?vref= on the browse URL. */
+  initialReferralCode?: string | null;
 };
 
 export function VendorBookingModal({
@@ -77,6 +80,7 @@ export function VendorBookingModal({
   initialPrefill,
   linkedEventId,
   clientSearchContext,
+  initialReferralCode,
 }: VendorBookingModalProps) {
   // Packages are chosen on the profile; quantity for per-item rates can still change here.
   const [selectedIds, setSelectedIds] = useState(() => new Set(initialSelectedIds));
@@ -161,20 +165,6 @@ export function VendorBookingModal({
     return !vendorPayloadAllowsEventDates(vendorPayload, range);
   }, [vendorPayload, eventDate, eventEndDate]);
 
-  const {
-    validationError,
-    setValidationError,
-    submitting,
-    submitResult,
-    dismissResultModal,
-    submit: submitBooking,
-  } = useVendorBookingSubmit({
-    vendorUserId,
-    selectedEventId,
-    clientSearchContext,
-    calendarConflict,
-  });
-
   const lineItems = useMemo(
     () => buildBookingLineItems(pricingOptions, [...selectedIds], quantities),
     [pricingOptions, selectedIds, quantities],
@@ -209,10 +199,42 @@ export function VendorBookingModal({
     };
   }, [lineItems, vendorPayload, eventDate]);
 
+  const {
+    referralCode,
+    setReferralCode,
+    onReferralCodeBlur,
+    referralDiscountGbp,
+    validating: referralValidating,
+    error: referralError,
+    referralApplied,
+    normalizedCode: normalizedReferralCode,
+  } = useVendorReferralPreview({
+    vendorUserId,
+    vendorPortionGbp: estimate.sumNumeric,
+    initialCode: initialReferralCode,
+  });
+
+  const {
+    validationError,
+    setValidationError,
+    submitting,
+    submitResult,
+    dismissResultModal,
+    submit: submitBooking,
+  } = useVendorBookingSubmit({
+    vendorUserId,
+    selectedEventId,
+    clientSearchContext,
+    calendarConflict,
+  });
+
   const clientFeeBreakdown = useMemo(() => {
     if (estimate.hasTbc) return null;
-    return computeClientFeeBreakdown({ vendorPortionGbp: estimate.sumNumeric });
-  }, [estimate.sumNumeric, estimate.hasTbc]);
+    return computeClientFeeBreakdown({
+      vendorPortionGbp: estimate.sumNumeric,
+      referralFeeDiscountGbp: referralDiscountGbp,
+    });
+  }, [estimate.sumNumeric, estimate.hasTbc, referralDiscountGbp]);
 
   const minEventDate = todayIsoDate();
 
@@ -229,6 +251,7 @@ export function VendorBookingModal({
         pricingOptions,
         quantities,
       ),
+      vendorReferralCode: normalizedReferralCode,
     });
   };
 
@@ -547,6 +570,37 @@ export function VendorBookingModal({
                 className="mt-1.5 w-full resize-y rounded-lg border border-neutral-200 px-3 py-2 text-base text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 md:text-sm"
               />
               <p className="mt-1 text-right text-xs text-neutral-400">{notes.length}/2000</p>
+            </div>
+
+            <div>
+              <label
+                htmlFor="booking-referral-code"
+                className="block text-xs font-semibold uppercase tracking-wide text-neutral-500"
+              >
+                Referral code <span className="font-normal normal-case text-neutral-400">(optional)</span>
+              </label>
+              <input
+                id="booking-referral-code"
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                value={referralCode}
+                onChange={(e) => setReferralCode(e.target.value)}
+                onBlur={onReferralCodeBlur}
+                autoComplete="off"
+                placeholder="Up to 6 digits from the vendor"
+                className="mt-1.5 w-full rounded-lg border border-neutral-200 px-3 py-2 font-mono text-base text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 md:text-sm"
+              />
+              {referralValidating ? (
+                <p className="mt-1 text-xs text-neutral-500">Checking code…</p>
+              ) : referralApplied ? (
+                <p className="mt-1 text-xs font-medium text-emerald-700">
+                  Referral discount applied — {clientFeeBreakdown?.referralDiscountLabel?.replace("-", "")} off your
+                  Eventtz fee
+                </p>
+              ) : referralError ? (
+                <p className="mt-1 text-xs text-red-700">{referralError}</p>
+              ) : null}
             </div>
 
             <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3">
