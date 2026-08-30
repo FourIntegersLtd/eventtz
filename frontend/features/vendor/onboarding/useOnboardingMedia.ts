@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
+import { mediaUploadErrorMessage } from "@/lib/api-errors";
 import { uploadFile, uploadImage } from "@/lib/mediaApi";
 import { portfolioFileKey } from "@/lib/portfolioFileKey";
 import {
@@ -181,8 +182,8 @@ export function useOnboardingMedia({
           [uploaded.public_url]: file.name,
         },
       }));
-    } catch {
-      setVideoUploadError("Could not upload video. Check your connection and try again.");
+    } catch (e) {
+      setVideoUploadError(mediaUploadErrorMessage(e, "video"));
     } finally {
       setUploadingVideo(false);
     }
@@ -218,10 +219,8 @@ export function useOnboardingMedia({
         if (profileStatus === "submitted" && persistProfileImageUrl) {
           await persistProfileImageUrl(uploaded.public_url);
         }
-      } catch {
-        setProfileImageError(
-          "Could not upload profile image. Check your connection and try again.",
-        );
+      } catch (e) {
+        setProfileImageError(mediaUploadErrorMessage(e, "photo"));
       } finally {
         setUploadingProfileImage(false);
       }
@@ -266,8 +265,8 @@ export function useOnboardingMedia({
             uploadedFileLabels: labelPatch,
           };
         });
-      } catch {
-        showToast({ title: "Upload failed. Check your connection and try again.", tone: "error" });
+      } catch (e) {
+        showToast({ title: mediaUploadErrorMessage(e, "document"), tone: "error" });
       } finally {
         setUploadingDoc((prev) => ({ ...prev, [kind]: false }));
       }
