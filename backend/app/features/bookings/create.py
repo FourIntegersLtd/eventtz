@@ -23,6 +23,7 @@ from app.features.bookings.notifications import _notify_booking_changed
 from app.core.constants import BOOKING_SERVICE_FEE_PERCENT
 from app.core.constants import BOOKING_SERVICE_FEE_PERCENT
 from app.features.bookings.pricing import build_pricing_breakdown, persisted_booking_total_label
+from app.features.vendor_referrals.booking_discount import pricing_snapshot_fields
 from app.features.vendor_referrals.validate import resolve_referral_pricing_inputs
 from app.features.chat.service import (
     assert_conversation_matches_pair,
@@ -245,7 +246,7 @@ def create_booking_request(
         "status": "pending",
         "selected_option_ids": selected_option_ids,
         "line_items": line_items,
-        "total_label": persisted_booking_total_label(pb),
+        **pricing_snapshot_fields(pb),
         "initial_client_total_label": client_total,
         "vendor_adjustments": [],
         "initiator": "client",
@@ -409,7 +410,7 @@ def create_vendor_quote_booking_request(
         "status": "pending",
         "selected_option_ids": [],
         "line_items": line_items,
-        "total_label": persisted_booking_total_label(pb),
+        **pricing_snapshot_fields(pb),
         "initial_client_total_label": str(pb.get("client_total_label") or persisted_booking_total_label(pb)),
         "vendor_adjustments": [],
         "initiator": "vendor",

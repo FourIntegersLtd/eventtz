@@ -167,7 +167,10 @@ def _assert_payment_invariant(pb: dict[str, object]) -> None:
     assert round(vendor + fee, 2) == total
 
 
-@patch("app.features.vendor_referrals.validate.get_vendor_referral_row_by_code")
+_BOOKING_ROW_LOOKUP = "app.features.vendor_referrals.booking_discount.get_vendor_referral_row_by_code"
+
+
+@patch(_BOOKING_ROW_LOOKUP)
 def test_build_pricing_breakdown_for_booking_row_applies_tier(mock_lookup: MagicMock) -> None:
     mock_lookup.return_value = {
         "user_id": "vendor-1",
@@ -190,7 +193,7 @@ def test_build_pricing_breakdown_for_booking_row_applies_tier(mock_lookup: Magic
     _assert_payment_invariant(pb)
 
 
-@patch("app.features.vendor_referrals.validate.get_vendor_referral_row_by_code")
+@patch(_BOOKING_ROW_LOOKUP)
 def test_build_pricing_breakdown_for_booking_row_middle_tier(mock_lookup: MagicMock) -> None:
     mock_lookup.return_value = {
         "user_id": "vendor-1",
@@ -212,26 +215,89 @@ def test_build_pricing_breakdown_for_booking_row_middle_tier(mock_lookup: MagicM
     _assert_payment_invariant(pb)
 
 
-@patch("app.features.vendor_referrals.validate.get_vendor_referral_row_by_code")
-def test_build_pricing_breakdown_for_booking_row_invalid_code_no_discount(
-    mock_lookup: MagicMock,
-) -> None:
+@patch(_BOOKING_ROW_LOOKUP)
+def test_stored_referral_still_applies_when_live_code_is_gone(mock_lookup: MagicMock) -> None:
+    """Vendor rotated/disabled the live code — existing bookings keep the tier."""
     mock_lookup.return_value = None
     row = {
         "vendor_user_id": "vendor-1",
-        "vendor_referral_code": "999999",
-        "line_items": [{"unit_price_gbp": 600.0}],
+        "vendor_referral_code": "254106",
+        "line_items": [{"unit_price_gbp": 500.0}],
+        "vendor_adjustments": [],
+        "service_fee_percent": 5.0,
+    }
+    pb = build_pricing_breakdown_for_booking_row(row)
+    assert float(pb["referral_fee_discount_gbp"]) == 10.0
+    assert float(pb["client_total_gbp"]) == 515.0
+    _assert_payment_invariant(pb)
+
+
+@patch(_BOOKING_ROW_LOOKUP)
+def test_stored_referral_recovers_vendor_id_from_code(mock_lookup: MagicMock) -> None:
+    """API projections that omit vendor_user_id must still match client totals."""
+    mock_lookup.return_value = {
+        "user_id": "vendor-1",
+        "client_referral_enabled": False,
+        "approval_status": "approved",
+        "client_referral_code": "254106",
+    }
+    row = {
+        "vendor_referral_code": "254106",
+        "line_items": [{"unit_price_gbp": 500.0}],
+        "vendor_adjustments": [],
+        "service_fee_percent": 5.0,
+    }
+    pb = build_pricing_breakdown_for_booking_row(row)
+    assert float(pb["referral_fee_discount_gbp"]) == 10.0
+    assert float(pb["client_total_gbp"]) == 515.0
+    _assert_payment_invariant(pb)
+
+
+@patch(_BOOKING_ROW_LOOKUP)
+def test_referral_code_for_another_vendor_does_not_discount(mock_lookup: MagicMock) -> None:
+    mock_lookup.return_value = {
+        "user_id": "other-vendor",
+        "client_referral_enabled": True,
+        "approval_status": "approved",
+        "client_referral_code": "482910",
+    }
+    row = {
+        "vendor_user_id": "vendor-1",
+        "vendor_referral_code": "482910",
+        "line_items": [{"unit_price_gbp": 500.0}],
         "vendor_adjustments": [],
         "service_fee_percent": 5.0,
     }
     pb = build_pricing_breakdown_for_booking_row(row)
     assert float(pb["referral_fee_discount_gbp"]) == 0.0
-    assert float(pb["service_fee_gbp"]) == 30.0
-    assert float(pb["client_total_gbp"]) == 630.0
+    assert float(pb["client_total_gbp"]) == 525.0
+    _assert_payment_invariant(pb)
+
+
+@patch(_BOOKING_ROW_LOOKUP)
+def test_stored_code_without_vendor_id_honors_tier(mock_lookup: MagicMock) -> None:
+    """Rotated/disabled live code — honor stored code even without vendor_user_id."""
+    mock_lookup.return_value = None
+    row = {
+        "vendor_referral_code": "254106",
+        "line_items": [{"unit_price_gbp": 500.0}],
+        "vendor_adjustments": [],
+        "service_fee_percent": 5.0,
+    }
+    pb = build_pricing_breakdown_for_booking_row(row)
+    assert float(pb["referral_fee_discount_gbp"]) == 10.0
+    assert float(pb["client_total_gbp"]) == 515.0
     _assert_payment_invariant(pb)
 
 
 @patch("app.features.vendor_referrals.validate.get_vendor_referral_row_by_code")
+def test_resolve_referral_pricing_inputs_invalid_code_raises(mock_lookup: MagicMock) -> None:
+    mock_lookup.return_value = None
+    with pytest.raises(ValueError):
+        resolve_referral_pricing_inputs("vendor-1", "999999", 500.0)
+
+
+@patch(_BOOKING_ROW_LOOKUP)
 def test_build_pricing_breakdown_uses_normalized_adjustments_for_tier(
     mock_lookup: MagicMock,
 ) -> None:
@@ -255,7 +321,7 @@ def test_build_pricing_breakdown_uses_normalized_adjustments_for_tier(
     _assert_payment_invariant(pb)
 
 
-@patch("app.features.vendor_referrals.validate.get_vendor_referral_row_by_code")
+@patch(_BOOKING_ROW_LOOKUP)
 def test_build_initial_pricing_ignores_adjustments_for_tier(mock_lookup: MagicMock) -> None:
     """Initial quote tier uses line items only — not surcharges added later."""
     mock_lookup.return_value = {
@@ -280,3 +346,55 @@ def test_build_initial_pricing_ignores_adjustments_for_tier(mock_lookup: MagicMo
     assert float(current["client_total_gbp"]) == 420.5
     _assert_payment_invariant(initial)
     _assert_payment_invariant(current)
+
+
+@patch(_BOOKING_ROW_LOOKUP)
+def test_attach_pricing_from_projection_applies_referral_without_vendor_id(
+    mock_lookup: MagicMock,
+) -> None:
+    from app.features.bookings.queries import _attach_pricing_fields
+
+    mock_lookup.return_value = {
+        "user_id": "vendor-1",
+        "client_referral_enabled": True,
+        "approval_status": "approved",
+        "client_referral_code": "254106",
+    }
+    out = {
+        "line_items": [{"unit_price_gbp": 500.0}],
+        "vendor_adjustments": [],
+        "vendor_referral_code": "254106",
+        "service_fee_percent": 5.0,
+    }
+    _attach_pricing_fields(out)
+    assert float(out["pricing"]["referral_fee_discount_gbp"]) == 10.0
+    assert float(out["pricing"]["client_total_gbp"]) == 515.0
+    assert out["pricing"]["client_total_label"] == "GBP 515"
+
+
+@patch(_BOOKING_ROW_LOOKUP)
+def test_admin_booking_list_item_uses_discounted_client_total(mock_lookup: MagicMock) -> None:
+    from app.features.admin.booking_admin_commands import _booking_list_item
+
+    mock_lookup.return_value = {
+        "user_id": "vendor-1",
+        "client_referral_enabled": True,
+        "approval_status": "approved",
+        "client_referral_code": "254106",
+    }
+    row = {
+        "id": "b1",
+        "status": "pending",
+        "event_name": "Graduation",
+        "event_date": "2026-09-30",
+        "client_user_id": "c1",
+        "vendor_user_id": "vendor-1",
+        "vendor_referral_code": "254106",
+        "line_items": [{"unit_price_gbp": 500.0}],
+        "vendor_adjustments": [],
+        "service_fee_percent": 5.0,
+        "payment_status": "unpaid",
+    }
+    item = _booking_list_item(row, emails={}, names={}, support=None)
+    assert item["client_total_label"] == "GBP 515"
+

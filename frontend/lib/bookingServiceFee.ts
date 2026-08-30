@@ -24,6 +24,22 @@ export function referralDiscountForSpend(vendorPortionGbp: number): number {
   return 0;
 }
 
+export type BookingReferralPricingFields = {
+  vendor_referral_code?: string | null;
+  referral_fee_applied?: boolean;
+  service_fee_percent?: number;
+};
+
+/** Tier discount for live previews when a booking already has a stored referral code. */
+export function referralDiscountForBookingPreview(
+  pricing: BookingReferralPricingFields | null | undefined,
+  vendorPortionGbp: number,
+): number {
+  if (!pricing) return 0;
+  if (!pricing.vendor_referral_code && !pricing.referral_fee_applied) return 0;
+  return referralDiscountForSpend(vendorPortionGbp);
+}
+
 export type ClientFeeBreakdown = {
   vendorPortionGbp: number;
   feeBeforeDiscountGbp: number;

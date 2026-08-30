@@ -1,8 +1,8 @@
 import { getVendorApprovalStatusMeta } from "@/lib/domain-types";
+import { payloadStr as payloadStrFromLib } from "@/lib/vendorPayload";
 
 export function payloadStr(p: Record<string, unknown>, key: string): string {
-  const v = p[key];
-  return typeof v === "string" ? v : v != null ? String(v) : "";
+  return payloadStrFromLib(p, key);
 }
 
 export function payloadStrArr(p: Record<string, unknown>, key: string): string[] {

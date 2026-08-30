@@ -5,8 +5,10 @@ from __future__ import annotations
 from datetime import date
 from typing import Any
 
-from app.features.bookings.pricing import persisted_booking_total_label
-from app.features.vendor_referrals.booking_discount import build_pricing_breakdown_for_booking_row
+from app.features.vendor_referrals.booking_discount import (
+    build_pricing_breakdown_for_booking_row,
+    pricing_snapshot_fields,
+)
 from app.features.bookings import messages as booking_messages
 from app.features.vendors.list_pricing import reconcile_automatic_discount_lines
 
@@ -53,6 +55,6 @@ def refresh_booking_pricing(
 
     return {
         "line_items": line_items,
-        "total_label": persisted_booking_total_label(pb),
+        **pricing_snapshot_fields(pb),
         "pricing_breakdown": pb,
     }

@@ -9,7 +9,7 @@ from app.core.config import get_settings
 from app.core.logging import get_logger
 from app.core.db import get_db
 from app.features.admin.dashboard_queries import _PAID_PAYMENT_STATUSES
-from app.features.bookings.pricing import build_pricing_breakdown
+from app.features.vendor_referrals.booking_discount import build_pricing_breakdown_for_booking_row
 from app.features.bookings import _paid_at_iso
 
 logger = get_logger(__name__)
@@ -58,7 +58,13 @@ def _booking_gmv_gbp(row: dict[str, Any]) -> float:
     if not isinstance(li, list):
         li = []
     va = row.get("vendor_adjustments")
-    pb = build_pricing_breakdown(line_items=li, vendor_adjustments=va)
+    pb = build_pricing_breakdown_for_booking_row(
+        {
+            **row,
+            "line_items": li,
+            "vendor_adjustments": va,
+        },
+    )
     try:
         return float(pb.get("client_total_gbp") or 0)
     except (TypeError, ValueError):

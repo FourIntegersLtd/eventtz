@@ -2,7 +2,7 @@ import type { BookingPricing } from "@/features/bookings/BookingPricingBreakdown
 import type { VendorBookingDetail } from "@/lib/vendorBookingsApi";
 import {
   computeClientFeeBreakdown,
-  referralDiscountForSpend,
+  referralDiscountForBookingPreview,
 } from "@/lib/bookingServiceFee";
 
 export type AdjustmentDraftRow = {
@@ -40,12 +40,10 @@ export function previewClientTotalLabel(
   const lineSubtotal = pricing.line_items_subtotal_gbp;
   const vendorPortion = lineSubtotal + draftTotal;
   if (vendorPortion <= 0) return null;
-  const referralDiscount =
-    pricing.vendor_referral_code || pricing.referral_fee_applied
-      ? referralDiscountForSpend(vendorPortion)
-      : 0;
+  const referralDiscount = referralDiscountForBookingPreview(pricing, vendorPortion);
   const breakdown = computeClientFeeBreakdown({
     vendorPortionGbp: vendorPortion,
+    feePercent: pricing.service_fee_percent,
     referralFeeDiscountGbp: referralDiscount,
   });
   return breakdown?.totalLabel ?? null;
@@ -110,6 +108,15 @@ export function formatLineSummary(row: AdjustmentDraftRow): string {
   const amount = formatGbp(Number.parseFloat(row.amount));
   if (row.kind === "discount") return `Discount −${amount}`;
   return `${row.label || "Extra charge"} +${amount}`;
+}
+
+export function vendorReferralFeeNote(
+  pricing: BookingPricing | null | undefined,
+): string | null {
+  if (!pricing?.referral_fee_applied) return null;
+  const amount = Number(pricing.referral_fee_discount_gbp ?? 0);
+  if (!Number.isFinite(amount) || amount <= 0) return null;
+  return `They used your referral code — ${formatGbp(amount)} off the Eventtz fee. Your payout is unchanged.`;
 }
 
 export function costNeedsReason(lines: AdjustmentDraftRow[]): boolean {

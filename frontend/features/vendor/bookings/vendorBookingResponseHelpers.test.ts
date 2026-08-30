@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { previewClientTotalLabel } from "@/features/vendor/bookings/vendorBookingResponseHelpers";
+import { clientTotalBeforeVendorAdjustments } from "@/features/bookings/bookingPriceLabels";
+import {
+  previewClientTotalLabel,
+  vendorReferralFeeNote,
+} from "@/features/vendor/bookings/vendorBookingResponseHelpers";
 import type { BookingPricing } from "@/features/bookings/BookingPricingBreakdown";
 
 function pricing(overrides: Partial<BookingPricing> = {}): BookingPricing {
@@ -50,5 +54,41 @@ describe("previewClientTotalLabel", () => {
       [],
     );
     expect(label).toBe("£399");
+  });
+});
+
+describe("vendorReferralFeeNote", () => {
+  it("explains the fee discount without changing payout", () => {
+    expect(vendorReferralFeeNote(pricing())).toBe(
+      "They used your referral code — £10 off the Eventtz fee. Your payout is unchanged.",
+    );
+  });
+
+  it("is omitted when no referral discount applies", () => {
+    expect(
+      vendorReferralFeeNote(
+        pricing({
+          referral_fee_applied: false,
+          referral_fee_discount_gbp: 0,
+          vendor_referral_code: null,
+        }),
+      ),
+    ).toBeNull();
+  });
+});
+
+describe("clientTotalBeforeVendorAdjustments", () => {
+  it("includes referral discount on the line-item fee", () => {
+    const label = clientTotalBeforeVendorAdjustments(
+      pricing({
+        line_items_subtotal_gbp: 500,
+        vendor_portion_gbp: 500,
+        client_total_gbp: 515,
+        referral_fee_discount_gbp: 10,
+        referral_fee_applied: true,
+        vendor_referral_code: "254106",
+      }),
+    );
+    expect(label).toMatch(/515/);
   });
 });

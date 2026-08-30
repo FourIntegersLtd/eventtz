@@ -1,5 +1,9 @@
 import type { BookingPricing } from "@/features/bookings/BookingPricingBreakdown";
 import { DEFAULT_CURRENCY, formatMoney } from "@/lib/markets";
+import {
+  computeClientFeeBreakdown,
+  referralDiscountForBookingPreview,
+} from "@/lib/bookingServiceFee";
 
 /** Match backend pricing labels for price-update banners. */
 export function formatGbpLabel(amount: number, currency: string = DEFAULT_CURRENCY): string {
@@ -12,10 +16,17 @@ export function clientTotalBeforeVendorAdjustments(
   currency: string = DEFAULT_CURRENCY,
 ): string | null {
   if (!pricing || pricing.has_pricing_tbc) return null;
-  const fee =
-    Math.round(pricing.line_items_subtotal_gbp * (pricing.service_fee_percent / 100) * 100) / 100;
-  const total = Math.round((pricing.line_items_subtotal_gbp + fee) * 100) / 100;
-  return formatGbpLabel(total, currency);
+  const referralDiscount = referralDiscountForBookingPreview(
+    pricing,
+    pricing.line_items_subtotal_gbp,
+  );
+  const breakdown = computeClientFeeBreakdown({
+    vendorPortionGbp: pricing.line_items_subtotal_gbp,
+    feePercent: pricing.service_fee_percent,
+    referralFeeDiscountGbp: referralDiscount,
+  });
+  if (!breakdown) return null;
+  return formatGbpLabel(breakdown.totalGbp, currency);
 }
 
 export function resolveWasClientTotalLabel(detail: {

@@ -7,10 +7,11 @@ import { BOOKING_CONFIRM_COPY } from "@/features/bookings/bookingConfirmCopy";
 import { VendorBookingResponseAdjustments } from "@/features/vendor/bookings/VendorBookingResponseAdjustments";
 import { VendorDraftReplyPanel } from "@/features/vendor/copilot/VendorDraftReplyPanel";
 import {
-  draftsFromDetail,
-  friendlyMoneyLabel,
-  hasSavedPriceUpdate,
-  type AdjustmentDraftRow,
+    draftsFromDetail,
+    friendlyMoneyLabel,
+    hasSavedPriceUpdate,
+    vendorReferralFeeNote,
+    type AdjustmentDraftRow,
 } from "@/features/vendor/bookings/vendorBookingResponseHelpers";
 import { fetchConversation } from "@/lib/chatApi";
 import type { VendorBookingDetail } from "@/lib/vendorBookingsApi";
@@ -45,6 +46,7 @@ export function VendorBookingResponseFlow({
     detail.initial_client_total_label ??
     detail.total_label;
   const friendlyTotal = friendlyMoneyLabel(listedTotal);
+  const referralNote = vendorReferralFeeNote(detail.pricing);
 
   const waitingForClient = hasSavedPriceUpdate(detail);
   const [step, setStep] = useState<"review" | "adjust">("review");
@@ -140,6 +142,9 @@ export function VendorBookingResponseFlow({
           <span className="font-semibold text-neutral-900">{friendlyTotal}</span>
           <span className="text-neutral-500"> (incl. Eventtz fee)</span>
         </p>
+        {referralNote ? (
+          <p className="text-xs text-emerald-800">{referralNote}</p>
+        ) : null}
         <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
           <Button
             variant="primary"

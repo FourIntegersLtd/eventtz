@@ -52,13 +52,16 @@ def draft_enquiry_reply(
         "tips: up to 2 brief reminders for the vendor (e.g. reply within 2 hours)."
     )
 
+    pricing = booking.get("pricing") if isinstance(booking.get("pricing"), dict) else {}
     booking_facts = {
         "business_name": biz,
         "event_name": booking.get("event_name"),
         "event_date": booking.get("event_date"),
         "event_address": booking.get("event_address"),
         "notes": (booking.get("notes") or "")[:800],
-        "total_label": booking.get("total_label") or booking.get("initial_client_total_label"),
+        "total_label": pricing.get("client_total_label")
+        or booking.get("total_label")
+        or booking.get("initial_client_total_label"),
         "status": booking.get("status"),
         "intent": intent,
     }

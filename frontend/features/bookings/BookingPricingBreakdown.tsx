@@ -66,11 +66,6 @@ export function BookingPricingBreakdown({
     );
   }
 
-  const totalLabel =
-    variant === "vendor" ? "Your payout" : "Total due";
-  const totalValue =
-    variant === "vendor" ? pricing.vendor_portion_label : pricing.client_total_label;
-
   return (
     <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
       <div className="flex items-baseline justify-between gap-3 px-5 py-4">
@@ -197,11 +192,15 @@ export function BookingPricingBreakdown({
         </div>
       ) : null}
 
-      {variant === "client" && pricing.referral_fee_applied ? (
+      {pricing.referral_fee_applied ? (
         <div className="border-t border-emerald-100 bg-emerald-50/60 px-5 py-3 text-xs text-emerald-900">
           Referral discount applied
           {pricing.referral_fee_discount_label ? (
-            <span> — {pricing.referral_fee_discount_label} off your Eventtz fee</span>
+            <span>
+              {" "}
+              — {pricing.referral_fee_discount_label} off{" "}
+              {variant === "vendor" ? "their" : "your"} Eventtz fee
+            </span>
           ) : null}
           {pricing.vendor_referral_code ? (
             <span className="text-emerald-800/80"> · Code {pricing.vendor_referral_code}</span>
@@ -209,36 +208,51 @@ export function BookingPricingBreakdown({
         </div>
       ) : null}
 
-      {variant === "client" ? (
-        <div className="border-t border-neutral-100 px-5 py-3.5">
-          <ClientFeeBreakdownSummary
-            breakdown={{
-              vendorPortionLabel: pricing.vendor_portion_label,
-              feeLabel: pricing.service_fee_label,
-              totalLabel: pricing.client_total_label,
-              feePercent: pricing.service_fee_percent,
-              feeBeforeDiscountLabel: pricing.service_fee_before_discount_label,
-              referralDiscountLabel: pricing.referral_fee_discount_label,
-              referralApplied: pricing.referral_fee_applied,
-            }}
-            showTotal={false}
-          />
-        </div>
-      ) : null}
+      <div className="border-t border-neutral-100 px-5 py-3.5">
+        <ClientFeeBreakdownSummary
+          breakdown={{
+            vendorPortionLabel: pricing.vendor_portion_label,
+            feeLabel: pricing.service_fee_label,
+            totalLabel: pricing.client_total_label,
+            feePercent: pricing.service_fee_percent,
+            feeBeforeDiscountLabel: pricing.service_fee_before_discount_label,
+            referralDiscountLabel: pricing.referral_fee_discount_label,
+            referralApplied: pricing.referral_fee_applied,
+          }}
+          showTotal={false}
+        />
+      </div>
 
       {/* Highlighted total - pops without nested cards */}
       <div className="border-t border-neutral-100 bg-neutral-50 px-5 py-4">
-        <div className="flex items-baseline justify-between gap-3">
-          <p className="text-sm font-medium text-neutral-700">{totalLabel}</p>
-          <p className="text-right text-lg font-semibold tabular-nums tracking-tight text-neutral-900">
-            {compareTotalLabel && variant === "client" ? (
-              <span className="mr-2 text-sm font-normal text-neutral-400 line-through">
-                {compareTotalLabel}
-              </span>
-            ) : null}
-            {totalValue}
-          </p>
-        </div>
+        {variant === "vendor" ? (
+          <div className="space-y-2">
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="text-sm font-medium text-neutral-700">They pay</p>
+              <p className="text-right text-lg font-semibold tabular-nums tracking-tight text-neutral-900">
+                {pricing.client_total_label}
+              </p>
+            </div>
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="text-sm font-medium text-neutral-700">Your payout</p>
+              <p className="text-right text-lg font-semibold tabular-nums tracking-tight text-neutral-900">
+                {pricing.vendor_portion_label}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-baseline justify-between gap-3">
+            <p className="text-sm font-medium text-neutral-700">Total due</p>
+            <p className="text-right text-lg font-semibold tabular-nums tracking-tight text-neutral-900">
+              {compareTotalLabel ? (
+                <span className="mr-2 text-sm font-normal text-neutral-400 line-through">
+                  {compareTotalLabel}
+                </span>
+              ) : null}
+              {pricing.client_total_label}
+            </p>
+          </div>
+        )}
         {pricing.has_pricing_tbc ? (
           <p className="mt-1.5 text-[12px] text-amber-700">
             Some items are TBC and may change the total.

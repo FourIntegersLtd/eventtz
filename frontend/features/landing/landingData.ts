@@ -255,6 +255,8 @@ export type LandingValuePillar = {
   title: string;
   description: string;
   Icon: LucideIcon;
+  iconBg: string;
+  iconColor: string;
 };
 
 export const WHY_EVENTTZ_SECTION = {
@@ -267,17 +269,23 @@ export const WHY_EVENTTZ_PILLARS: LandingValuePillar[] = [
     title: "Checked before you book",
     description: "Every vendor is reviewed before going live on Eventtz",
     Icon: BadgeCheck,
+    iconBg: "bg-orange-100",
+    iconColor: "text-orange-500",
   },
   {
     title: "One thread, one booking",
     description: "Message, agree a price, and book without switching apps",
     Icon: MessageCircle,
+    iconBg: "bg-rose-100",
+    iconColor: "text-rose-500",
   },
   {
     title: "Pay when it's confirmed",
     description:
       "See the full price before you pay. If something goes wrong, we hold payment until it's sorted",
     Icon: ShieldCheck,
+    iconBg: "bg-violet-100",
+    iconColor: "text-violet-600",
   },
 ];
 
