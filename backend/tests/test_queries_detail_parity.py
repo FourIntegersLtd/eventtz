@@ -9,8 +9,8 @@ from app.features.bookings.queries import (
 from app.features.vendor_referrals.booking_discount import build_pricing_breakdown_for_booking_row
 
 
-def _sample_booking_row() -> dict:
-    return {
+def _sample_booking_row(*, with_referral_code: bool = True) -> dict:
+    row = {
         "id": "br-parity-1",
         "status": "pending",
         "event_name": "Summer party",
@@ -31,13 +31,16 @@ def _sample_booking_row() -> dict:
         "initiator": "client",
         "conversation_id": "conv-1",
         "service_fee_percent": 5.0,
-        "vendor_referral_code": "VREF10",
         "vendor_user_id": "vendor-1",
     }
+    if with_referral_code:
+        row["vendor_referral_code"] = "VREF10"
+    return row
 
 
 def test_list_pricing_breakdown_matches_direct_builder():
-    row = _sample_booking_row()
+    # No referral code — avoids Supabase lookup in CI (referral pricing covered elsewhere).
+    row = _sample_booking_row(with_referral_code=False)
     assert _list_pricing_breakdown(row) == build_pricing_breakdown_for_booking_row(row)
 
 
