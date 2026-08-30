@@ -17,7 +17,10 @@ from app.features.vendor_referrals.booking_discount import (
     build_initial_pricing_breakdown_for_booking_row,
     build_pricing_breakdown_for_booking_row,
 )
-from app.features.bookings.pricing_confirmation import normalize_vendor_adjustments_list
+from app.features.bookings.pricing_confirmation import (
+    client_price_confirmation_required,
+    normalize_vendor_adjustments_list,
+)
 from app.features.bookings.reviews import (
     get_client_review_for_booking,
     get_client_reviewed_booking_ids,
@@ -126,6 +129,57 @@ def _has_price_update(row: dict[str, Any]) -> bool:
     return len(normalize_vendor_adjustments_list(row.get("vendor_adjustments"))) > 0
 
 
+def _list_has_price_update(row: dict[str, Any]) -> bool:
+    """List badge: client must respond to a vendor price change on a pending enquiry."""
+    return client_price_confirmation_required(row)
+
+
+def _list_pricing_breakdown(row: dict[str, Any]) -> dict[str, Any]:
+    bucket: dict[str, Any] = {}
+    _attach_pricing_fields(bucket, source=row)
+    return bucket["pricing"]
+
+
+def _booking_detail_shared_fields(row: dict[str, Any]) -> dict[str, Any]:
+    line_items = row.get("line_items")
+    if not isinstance(line_items, list):
+        line_items = []
+    sel = row.get("selected_option_ids")
+    selected_option_ids = [str(x) for x in sel] if isinstance(sel, list) else []
+    raw_adj = row.get("vendor_adjustments")
+    if not isinstance(raw_adj, list):
+        raw_adj = []
+    ev_end = row.get("event_end_date")
+    ep = row.get("event_postcode")
+    ea = row.get("event_address")
+    conv = row.get("conversation_id")
+    return {
+        "id": str(row.get("id", "")),
+        "status": str(row.get("status", "pending")),
+        "event_name": str(row.get("event_name", "")),
+        "event_date": _normalize_date_str(row.get("event_date")),
+        "event_end_date": _normalize_date_str(ev_end) if ev_end else None,
+        "event_postcode": str(ep).strip() if ep else None,
+        "event_address": str(ea).strip() if ea else None,
+        "notes": row.get("notes"),
+        "total_label": str(row.get("total_label", "")),
+        "selected_option_ids": selected_option_ids,
+        "line_items": line_items,
+        "vendor_adjustments": raw_adj,
+        "created_at": row.get("created_at"),
+        "paid_at": _paid_at_iso(row),
+        "payment_status": str(row.get("payment_status") or "unpaid"),
+        "client_completion_confirmed_at": _opt_ts(row.get("client_completion_confirmed_at")),
+        "vendor_completion_confirmed_at": _opt_ts(row.get("vendor_completion_confirmed_at")),
+        "payout_auto_release_at": _auto_release_at_iso(row),
+        "completion_waiting_on": completion_waiting_on(row),
+        "initiator": _row_initiator(row),
+        "conversation_id": str(conv) if conv else None,
+        "service_fee_percent": row.get("service_fee_percent"),
+        "vendor_referral_code": row.get("vendor_referral_code"),
+    }
+
+
 def _client_total_label_for_list(pb: dict[str, Any]) -> str | None:
     if pb.get("has_pricing_tbc"):
         return None
@@ -215,7 +269,7 @@ def list_booking_requests_for_vendor(
         line_items = row.get("line_items")
         if not isinstance(line_items, list):
             line_items = []
-        pb = build_pricing_breakdown_for_booking_row(row)
+        pb = _list_pricing_breakdown(row)
         conv = row.get("conversation_id")
         out.append(
             {
@@ -232,7 +286,7 @@ def list_booking_requests_for_vendor(
                 "initiator": _row_initiator(row),
                 "conversation_id": str(conv) if conv else None,
                 "payment_status": str(row.get("payment_status") or "unpaid"),
-                "has_price_update": _has_price_update(row),
+                "has_price_update": _list_has_price_update(row),
                 "completion_waiting_on": completion_waiting_on(row),
                 "vendor_completion_confirmed_at": _opt_ts(row.get("vendor_completion_confirmed_at")),
                 # Used by list-touch completion reminders; stripped by response models.
@@ -266,51 +320,15 @@ def get_booking_request_for_vendor(vendor_user_id: str, booking_id: str) -> dict
     cid = str(row.get("client_user_id") or "")
     emails = _client_emails_by_id([cid]) if cid else {}
     display_names = client_display_names_by_id([cid]) if cid else {}
-    line_items = row.get("line_items")
-    if not isinstance(line_items, list):
-        line_items = []
-    sel = row.get("selected_option_ids")
-    if isinstance(sel, list):
-        selected_option_ids = [str(x) for x in sel]
-    else:
-        selected_option_ids = []
-
-    ev_end = row.get("event_end_date")
-    raw_adj = row.get("vendor_adjustments")
-    if not isinstance(raw_adj, list):
-        raw_adj = []
-    conv = row.get("conversation_id")
-    ep = row.get("event_postcode")
-    ea = row.get("event_address")
-    out = {
-        "id": str(row.get("id", "")),
-        "status": str(row.get("status", "pending")),
-        "event_name": str(row.get("event_name", "")),
-        "event_date": _normalize_date_str(row.get("event_date")),
-        "event_end_date": _normalize_date_str(ev_end) if ev_end else None,
-        "event_postcode": str(ep).strip() if ep else None,
-        "event_address": str(ea).strip() if ea else None,
-        "notes": row.get("notes"),
-        "total_label": str(row.get("total_label", "")),
-        "selected_option_ids": selected_option_ids,
-        "line_items": line_items,
-        "vendor_adjustments": raw_adj,
-        "client_user_id": cid or None,
-        "client_email": emails.get(cid),
-        "client_display_name": display_names.get(cid),
-        "created_at": row.get("created_at"),
-        "paid_at": _paid_at_iso(row),
-        "payment_status": str(row.get("payment_status") or "unpaid"),
-        "client_completion_confirmed_at": _opt_ts(row.get("client_completion_confirmed_at")),
-        "vendor_completion_confirmed_at": _opt_ts(row.get("vendor_completion_confirmed_at")),
-        "payout_auto_release_at": _auto_release_at_iso(row),
-        "completion_waiting_on": completion_waiting_on(row),
-        "initiator": _row_initiator(row),
-        "conversation_id": str(conv) if conv else None,
-        "service_fee_percent": row.get("service_fee_percent"),
-        "vendor_referral_code": row.get("vendor_referral_code"),
-        "vendor_user_id": vendor_user_id,
-    }
+    out = _booking_detail_shared_fields(row)
+    out.update(
+        {
+            "client_user_id": cid or None,
+            "client_email": emails.get(cid),
+            "client_display_name": display_names.get(cid),
+            "vendor_user_id": vendor_user_id,
+        },
+    )
     _attach_pricing_fields(out, source=row)
     out["initial_client_total_label"] = _initial_client_total_label(row, out.get("pricing"))
     bid = str(row.get("id", ""))
@@ -387,7 +405,7 @@ def list_booking_requests_for_client(
         line_items = row.get("line_items")
         if not isinstance(line_items, list):
             line_items = []
-        pb = build_pricing_breakdown_for_booking_row(row)
+        pb = _list_pricing_breakdown(row)
         conv = row.get("conversation_id")
         eid = str(row.get("event_id") or "") or None
         out.append(
@@ -408,7 +426,7 @@ def list_booking_requests_for_client(
                 "event_title": event_titles.get(eid) if eid else None,
                 "has_review": str(row.get("id", "")) in reviewed_ids,
                 "payment_status": str(row.get("payment_status") or "unpaid"),
-                "has_price_update": _has_price_update(row),
+                "has_price_update": _list_has_price_update(row),
                 "completion_waiting_on": completion_waiting_on(row),
                 "client_completion_confirmed_at": _opt_ts(row.get("client_completion_confirmed_at")),
                 # Used by list-touch completion reminders; stripped by response models.
@@ -436,53 +454,17 @@ def get_booking_request_for_client(client_user_id: str, booking_id: str) -> dict
     vid = str(row.get("vendor_user_id") or "")
     # Vendor display names omit GDPR tombstones via deleted_user_ids in display lookup.
     names = _vendor_display_names_by_id([vid]) if vid else {}
-    line_items = row.get("line_items")
-    if not isinstance(line_items, list):
-        line_items = []
-    sel = row.get("selected_option_ids")
-    if isinstance(sel, list):
-        selected_option_ids = [str(x) for x in sel]
-    else:
-        selected_option_ids = []
-
-    ev_end = row.get("event_end_date")
-    raw_adj = row.get("vendor_adjustments")
-    if not isinstance(raw_adj, list):
-        raw_adj = []
-    conv = row.get("conversation_id")
-    ep = row.get("event_postcode")
-    ea = row.get("event_address")
     eid = str(row.get("event_id") or "") or None
     event_titles = _client_event_titles_by_id([eid] if eid else [])
-    out = {
-        "id": str(row.get("id", "")),
-        "status": str(row.get("status", "pending")),
-        "vendor_user_id": vid,
-        "vendor_display_name": names.get(vid, "Vendor"),
-        "event_name": str(row.get("event_name", "")),
-        "event_date": _normalize_date_str(row.get("event_date")),
-        "event_end_date": _normalize_date_str(ev_end) if ev_end else None,
-        "event_postcode": str(ep).strip() if ep else None,
-        "event_address": str(ea).strip() if ea else None,
-        "notes": row.get("notes"),
-        "total_label": str(row.get("total_label", "")),
-        "selected_option_ids": selected_option_ids,
-        "line_items": line_items,
-        "vendor_adjustments": raw_adj,
-        "created_at": row.get("created_at"),
-        "paid_at": _paid_at_iso(row),
-        "payment_status": str(row.get("payment_status") or "unpaid"),
-        "client_completion_confirmed_at": _opt_ts(row.get("client_completion_confirmed_at")),
-        "vendor_completion_confirmed_at": _opt_ts(row.get("vendor_completion_confirmed_at")),
-        "payout_auto_release_at": _auto_release_at_iso(row),
-        "completion_waiting_on": completion_waiting_on(row),
-        "initiator": _row_initiator(row),
-        "conversation_id": str(conv) if conv else None,
-        "event_id": eid,
-        "event_title": event_titles.get(eid) if eid else None,
-        "service_fee_percent": row.get("service_fee_percent"),
-        "vendor_referral_code": row.get("vendor_referral_code"),
-    }
+    out = _booking_detail_shared_fields(row)
+    out.update(
+        {
+            "vendor_user_id": vid,
+            "vendor_display_name": names.get(vid, "Vendor"),
+            "event_id": eid,
+            "event_title": event_titles.get(eid) if eid else None,
+        },
+    )
     _attach_pricing_fields(out, source=row)
     out["initial_client_total_label"] = _initial_client_total_label(row, out.get("pricing"))
     try:

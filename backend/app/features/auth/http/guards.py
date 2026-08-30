@@ -10,13 +10,11 @@ from app.core.logging import get_logger
 from app.core.sentry import bind_sentry_user
 from app.features.auth import messages as auth_messages
 from app.core.constants import ACCESS_COOKIE_NAME
-from app.core.db import get_supabase_auth_client
 from app.features.auth.session import (
     clear_session_cookies,
     get_current_user_or_raise,
-    looks_like_jwt,
+    validate_session_access_token,
 )
-from app.features.auth.supabase import SupabaseAuthService
 from app.features.auth.accounts import (
     build_app_user,
     fetch_user_profile,
@@ -121,18 +119,16 @@ def get_optional_session_user(request: Request, response: Response) -> AuthUser 
     access_token = request.cookies.get(ACCESS_COOKIE_NAME)
     if not access_token:
         return None
-    if not looks_like_jwt(access_token):
-        clear_session_cookies(response)
+
+    auth_user, _failure_detail = validate_session_access_token(
+        access_token,
+        response,
+        unavailable_raises=False,
+    )
+    if auth_user is None:
         return None
 
-    service = SupabaseAuthService(get_supabase_auth_client())
-    result = service.get_user_from_access_token(access_token)
-    if not result.get("success"):
-        if not result.get("unavailable"):
-            clear_session_cookies(response)
-        return None
-
-    user = build_app_user(result["user"])
+    user = build_app_user(auth_user)
     try:
         db_profile = fetch_user_profile(user.id)
     except Exception:

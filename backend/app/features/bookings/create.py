@@ -21,7 +21,6 @@ from app.features.bookings.calendar import (
 from app.features.bookings.line_item_validation import validate_quote_line_items
 from app.features.bookings.notifications import _notify_booking_changed
 from app.core.constants import BOOKING_SERVICE_FEE_PERCENT
-from app.core.constants import BOOKING_SERVICE_FEE_PERCENT
 from app.features.bookings.pricing import build_pricing_breakdown, persisted_booking_total_label
 from app.features.vendor_referrals.booking_discount import pricing_snapshot_fields
 from app.features.vendor_referrals.validate import resolve_referral_pricing_inputs

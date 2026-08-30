@@ -72,27 +72,56 @@ def looks_like_jwt(token: str) -> bool:
     return _looks_like_jwt(token)
 
 
+def validate_session_access_token(
+    access_token: str,
+    response: Response,
+    *,
+    unavailable_raises: bool,
+) -> tuple[dict[str, Any] | None, str | None]:
+    """Validate a JWT access token and return ``(user, failure_detail)``.
+
+    ``failure_detail`` is set when ``user`` is None after a rejected token (malformed JWT
+    or failed Supabase lookup). Optional-session callers ignore the detail and treat
+    rejection as anonymous.
+
+    When ``unavailable_raises`` is True (protected routes), Supabase outages raise 503.
+    """
+    if not _looks_like_jwt(access_token):
+        clear_session_cookies(response)
+        return None, auth_messages.SESSION_EXPIRED
+
+    service = SupabaseAuthService(get_supabase_auth_client())
+    result = service.get_user_from_access_token(access_token)
+    if result.get("success"):
+        return result["user"], None
+    if result.get("unavailable"):
+        if unavailable_raises:
+            raise HTTPException(
+                status_code=503,
+                detail=result.get("error", auth_messages.AUTH_SERVICE_UNAVAILABLE),
+            )
+        return None, None
+    clear_session_cookies(response)
+    error_detail = result.get("error")
+    if isinstance(error_detail, str) and error_detail.strip():
+        return None, error_detail
+    return None, auth_messages.SIGN_IN_REQUIRED
+
+
 def get_current_user_or_raise(request: Request, response: Response) -> dict[str, Any]:
     """Validate session cookie and return the Supabase auth user (before merging public.users)."""
     access_token = request.cookies.get(ACCESS_COOKIE_NAME)
     if not access_token:
         raise HTTPException(status_code=401, detail=auth_messages.SIGN_IN_REQUIRED)
 
-    if not _looks_like_jwt(access_token):
-        clear_session_cookies(response)
-        raise HTTPException(
-            status_code=401,
-            detail=auth_messages.SESSION_EXPIRED,
-        )
-
-    service = SupabaseAuthService(get_supabase_auth_client())
-    result = service.get_user_from_access_token(access_token)
-    if result.get("success"):
-        return result["user"]
-    if result.get("unavailable"):
-        raise HTTPException(
-            status_code=503,
-            detail=result.get("error", auth_messages.AUTH_SERVICE_UNAVAILABLE),
-        )
-    clear_session_cookies(response)
-    raise HTTPException(status_code=401, detail=result.get("error", auth_messages.SIGN_IN_REQUIRED))
+    user, failure_detail = validate_session_access_token(
+        access_token,
+        response,
+        unavailable_raises=True,
+    )
+    if user is not None:
+        return user
+    raise HTTPException(
+        status_code=401,
+        detail=failure_detail or auth_messages.SIGN_IN_REQUIRED,
+    )

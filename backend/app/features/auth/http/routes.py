@@ -26,6 +26,7 @@ from app.contracts.auth import (
     VerifyEmailResponse,
 )
 from app.features.auth.http.dependencies import get_supabase_auth_service
+from app.features.auth.http.guards import require_user
 from app.core.logging import get_logger
 from app.features.auth import messages as auth_messages
 from app.features.auth.session import (
@@ -232,8 +233,7 @@ async def me(
     response: Response,
 ):
     """Return the signed-in user from the cookie access token."""
-    user = get_current_user_or_raise(request, response)
-    return MeResponse(user=build_app_user(user))
+    return MeResponse(user=require_user(request, response))
 
 
 def _client_ip(request: Request) -> str | None:

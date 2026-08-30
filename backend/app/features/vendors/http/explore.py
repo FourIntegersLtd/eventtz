@@ -1,5 +1,7 @@
 """Approved vendors for client explore and search."""
 
+from typing import Any
+
 import uuid
 
 from fastapi import APIRouter, HTTPException, Query, Request, Response
@@ -35,6 +37,12 @@ router = APIRouter(prefix="/vendors", tags=["vendors"])
 logger = get_logger(__name__)
 
 
+def _merge_explore_vendor_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Attach public review stats and marketplace metrics (list + detail share this)."""
+    rows = merge_review_stats_into_vendor_rows(rows)
+    return merge_public_metrics_into_vendor_rows(rows)
+
+
 def _parse_vendor_ids(raw: str | None) -> list[str] | None:
     if not raw or not str(raw).strip():
         return None
@@ -53,12 +61,12 @@ def get_explore_vendors(
     country: str | None = Query(None, description="ISO country code (default GB)."),
 ) -> ExploreVendorsResponse:
     viewer = explore_viewer_from_auth(get_optional_session_user(request, response))
-    rows = list_approved_vendors_for_explore(
-        country_code=normalize_country_code(country),
-        viewer=viewer,
+    rows = _merge_explore_vendor_rows(
+        list_approved_vendors_for_explore(
+            country_code=normalize_country_code(country),
+            viewer=viewer,
+        ),
     )
-    rows = merge_review_stats_into_vendor_rows(rows)
-    rows = merge_public_metrics_into_vendor_rows(rows)
     logger.info("GET /vendors/explore approved_vendors_count=%s", len(rows))
     return ExploreVendorsResponse(success=True, vendors=rows)
 
@@ -81,8 +89,7 @@ def get_explore_vendor_by_id(
         logger.info("GET /vendors/explore/vendor/%s not found", vendor_user_id)
         raise HTTPException(status_code=404, detail=vendor_messages.VENDOR_NOT_FOUND_OR_NOT_LISTED)
 
-    merged = merge_review_stats_into_vendor_rows([row])
-    merged = merge_public_metrics_into_vendor_rows(merged)
+    merged = _merge_explore_vendor_rows([row])
     if not merged:
         raise HTTPException(status_code=404, detail=vendor_messages.VENDOR_NOT_FOUND_OR_NOT_LISTED)
     r0 = merged[0]

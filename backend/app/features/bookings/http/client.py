@@ -68,6 +68,24 @@ router = APIRouter(prefix="/client", tags=["client"])
 logger = get_logger(__name__)
 
 
+def _run_checkout_handler(
+    *,
+    booking_id: str,
+    client_id: str,
+    log_action: str,
+    server_error_detail: str,
+    fn,
+):
+    """Map checkout ValueErrors to 400 and unexpected failures to 500."""
+    try:
+        return fn()
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception:
+        logger.exception("%s booking=%s client=%s", log_action, booking_id, client_id)
+        raise HTTPException(status_code=500, detail=server_error_detail) from None
+
+
 @router.get("/booking-requests", response_model=ClientBookingsListResponse)
 def list_client_bookings(
     request: Request,
@@ -373,15 +391,15 @@ def post_booking_checkout(
     parse_booking_id(booking_id)
 
     try:
-        checkout_url = create_checkout_session_for_booking(client_id, booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
-    except Exception:
-        logger.exception("checkout session creation failed booking=%s client=%s", booking_id, client_id)
-        raise HTTPException(
-            status_code=500,
-            detail=booking_messages.COULD_NOT_START_CHECKOUT,
-        ) from None
+        checkout_url = _run_checkout_handler(
+            booking_id=booking_id,
+            client_id=client_id,
+            log_action="checkout session creation failed",
+            server_error_detail=booking_messages.COULD_NOT_START_CHECKOUT,
+            fn=lambda: create_checkout_session_for_booking(client_id, booking_id),
+        )
+    except HTTPException:
+        raise
 
     return BookingCheckoutResponse(checkout_url=checkout_url)
 
@@ -402,20 +420,15 @@ def post_booking_checkout_sync(
     parse_booking_id(booking_id)
 
     try:
-        row = sync_checkout_payment_for_client(client_id, booking_id, body.session_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
-    except Exception:
-        logger.exception(
-            "checkout sync failed booking=%s client=%s session=%s",
-            booking_id,
-            client_id,
-            body.session_id,
+        row = _run_checkout_handler(
+            booking_id=booking_id,
+            client_id=client_id,
+            log_action=f"checkout sync failed session={body.session_id}",
+            server_error_detail=booking_messages.COULD_NOT_CONFIRM_PAYMENT,
+            fn=lambda: sync_checkout_payment_for_client(client_id, booking_id, body.session_id),
         )
-        raise HTTPException(
-            status_code=500,
-            detail=booking_messages.COULD_NOT_CONFIRM_PAYMENT,
-        ) from None
+    except HTTPException:
+        raise
 
     return BookingCheckoutSyncResponse(payment_status=str(row.get("payment_status") or "paid"))
 

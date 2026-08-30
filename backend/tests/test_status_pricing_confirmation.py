@@ -14,6 +14,15 @@ from app.features.bookings.status import (
 )
 
 
+def test_client_price_confirmation_not_required_for_vendor_initiated_quote():
+    row = {
+        "status": "pending",
+        "initiator": "vendor",
+        "vendor_adjustments": [{"amount_gbp": 50.0}],
+    }
+    assert client_price_confirmation_required(row) is False
+
+
 def test_client_price_confirmation_required_when_adjustments_present():
     row = {
         "status": "pending",
