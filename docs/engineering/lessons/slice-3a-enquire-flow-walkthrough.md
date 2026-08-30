@@ -1,10 +1,11 @@
 # Slice 3a — Enquire flow walkthrough (thorough)
 
-Trace **one enquire click** from button → DB row → redirect. Read this when `slice-3a-client-booking-enquire.md` feels too high-level.
+Trace **one enquire click** from button → `useVendorBookingSubmit.submit()` → `POST` → `create_booking_request` → DB row → redirect. Read this when `slice-3a-client-booking-enquire.md` feels too high-level.
 
-**For the full booking form UI, state, validation, and parameter mapping (form → API → DB), see the main lesson Steps 3–8.**
+**For the full booking form UI, per-unit pricing, referral codes, fee breakdown, and parameter mapping (form → API → DB), see the main lesson.**
 
 **Endpoint:** `POST /api/v1/client/booking-requests`  
+**Submit hook:** `useVendorBookingSubmit` in `frontend/features/client/browse/useVendorBookingSubmit.ts`  
 **Orchestrator:** `create_booking_request` in `backend/app/features/bookings/create.py`
 
 ---
@@ -12,30 +13,37 @@ Trace **one enquire click** from button → DB row → redirect. Read this when 
 ## 0. Mental model
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│  UI — pick package IDs on profile (prices shown for UX only) │
-│  guardBooking → VendorBrowseDetailBody → VendorBookingModal  │
-└────────────────────────────┬─────────────────────────────────┘
-                             │ postBookingRequest({ selected_option_ids, ... })
-┌────────────────────────────▼─────────────────────────────────┐
-│  HTTP — require_client, CreateBookingRequestBody validation  │
-│  client.py → create_booking_request()                          │
-└────────────────────────────┬─────────────────────────────────┘
-                             │ resolve_line_items + resolve_event_for_booking
-┌────────────────────────────▼─────────────────────────────────┐
-│  DB — booking_requests row: pending, line_items JSON snapshot │
-│  + chat notes + notifications + analytics + success modal      │
-│  → View booking → redirect to booking detail                   │
-└──────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│  UI — pick package IDs + per-unit quantities on profile              │
+│  guardBooking → VendorBrowseDetailBody → VendorBookingModal          │
+│  ?vref= → useVendorReferralPreview → ClientFeeBreakdownSummary         │
+└────────────────────────────┬─────────────────────────────────────────┘
+                             │ useVendorBookingSubmit.submit()
+                             │ postBookingRequest({ ids, quantities, vendor_referral_code, ... })
+┌────────────────────────────▼─────────────────────────────────────────┐
+│  HTTP — require_client, CreateBookingRequestBody validation          │
+│  client.py → create_booking_request()                                │
+└────────────────────────────┬─────────────────────────────────────────┘
+                             │ resolve_line_items(..., quantities)
+                             │ resolve_referral_pricing_inputs → build_pricing_breakdown
+┌────────────────────────────▼─────────────────────────────────────────┐
+│  DB — booking_requests row: pending, line_items JSON,                │
+│       service_fee_percent, vendor_referral_code                        │
+│  + chat notes + notifications + analytics + success modal              │
+│  → View booking → redirect to booking detail                           │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
-**Rule:** Browser sends **IDs only**. Server copies prices into `line_items`. Client cannot POST `£1`.
+**Rules:**
+- Browser sends **IDs + quantities + optional referral code** — never prices.
+- Server copies prices into `line_items` (qty × unit rate for per-unit packages).
+- Client cannot POST `£1`.
 
 ---
 
-## Scenario — single vendor enquire
+## Scenario — single vendor enquire with per-unit + referral
 
-**Setup:** Client logged in. Opens `/client/browse/abc-vendor-uuid`. Ticks “Gold package” (`id: pkg-gold`). Clicks “Request booking”. Fills event name “Ada’s 30th”, date 2026-09-20, notes “Outdoor garden”.
+**Setup:** Client logged in. Opens `/client/browse/abc-vendor-uuid?vref=482910`. Ticks “Chair hire” (`id: pkg-chairs`, per-unit £12/chair). Sets quantity **50** on profile sidebar. Clicks “Request booking”. Fills event name “Ada’s 30th”, date 2026-09-20, notes “Outdoor garden”.
 
 ---
 
@@ -57,70 +65,107 @@ No enquire logic here — all in `ClientVendorBrowseDetailView`.
 
 ---
 
-## Step 2 — Load vendor (read-only, Slice 2)
+## Step 2 — Load vendor + capture `?vref=`
 
 **File:** `ClientVendorBrowseDetailView.tsx`
 
-```43:43:frontend/features/client/browse/ClientVendorBrowseDetailView.tsx
+```45:45:frontend/features/client/browse/ClientVendorBrowseDetailView.tsx
   const { vendor, loading, error, notFound } = useExploreVendor(userId);
+```
+
+```56:60:frontend/features/client/browse/ClientVendorBrowseDetailView.tsx
+  useEffect(() => {
+    if (!userId) return;
+    const code = captureVendorReferralFromSearchParams(userId, searchParams);
+    setStoredReferralCode(code);
+  }, [userId, searchParams]);
 ```
 
 `useExploreVendor` → `GET /api/v1/vendors/explore/vendor/{id}` (public, no auth).
 
+`?vref=482910` is stored per vendor and passed to the profile body and booking modal as `initialReferralCode`.
+
 ---
 
-## Step 3 — Build pricing options from profile JSON
+## Step 3 — Build pricing options (including per-unit mode)
 
 **File:** `vendorBrowseDetailModel.ts` — `buildBrowsePricingOptions(vendor)`
 
-Reads `vendor.profile_form_data.packages` (or hourly/daily rates, or quote-only).
-
-Each option gets a stable `id` (e.g. `pkg-gold`, `fixed-hourly`, `quote`).
+Reads `vendor.profile_form_data.packages`. Each option gets `pricingMode` (`fixed` or `per_unit`), `minQuantity`, `maxQuantity`, and `unitPriceGbp` (rate for per-unit).
 
 **File:** `VendorBrowseDetailBody.tsx`
 
-```102:110:frontend/features/client/browse/VendorBrowseDetailBody.tsx
-  const [selectedPackageIds, setSelectedPackageIds] = useState<Set<string>>(
-    () => new Set(),
-  );
+```118:122:frontend/features/client/browse/VendorBrowseDetailBody.tsx
   const selectedLineItems = useMemo(
-    () => buildBookingLineItems(pricingOptions, [...selectedPackageIds]),
-    [pricingOptions, selectedPackageIds],
+    () =>
+      buildBookingLineItems(pricingOptions, [...selectedPackageIds], quantities),
+    [pricingOptions, selectedPackageIds, quantities],
   );
 ```
 
-`buildBookingLineItems` — UI estimate only. **Not sent to API as prices.**
+For per-unit option `pkg-chairs` with qty 50:
+
+```75:83:frontend/features/client/browse/vendorBrowseDetailModel.ts
+      const perUnit = o.pricingMode === "per_unit";
+      const qty = perUnit
+        ? Math.max(quantities?.[o.id] ?? o.minQuantity, o.minQuantity)
+        : 1;
+      return {
+        id: o.id,
+        heading: o.heading,
+        unitPriceGbp: lineTotalGbp(o.unitPriceGbp, qty),
+```
+
+UI estimate: £12 × 50 = **£600** vendor portion. **Not sent to API as prices.**
+
+**Fee preview on sidebar** — `useVendorReferralPreview` + `computeClientFeeBreakdown`:
+
+```127:137:frontend/features/client/browse/VendorBrowseDetailBody.tsx
+  const { referralDiscountGbp } = useVendorReferralPreview({
+    vendorUserId: vendor.user_id,
+    vendorPortionGbp: selectedTotal.sumNumeric,
+    initialCode: storedReferralCode,
+  });
+  const selectedFeeBreakdown = useMemo(() => {
+    if (selectedTotal.hasTbc) return null;
+    return computeClientFeeBreakdown({
+      vendorPortionGbp: selectedTotal.sumNumeric,
+      referralFeeDiscountGbp: referralDiscountGbp,
+    });
+  }, [selectedTotal.hasTbc, selectedTotal.sumNumeric, referralDiscountGbp]);
+```
+
+At £600 vendor portion, referral tier gives −£15 off the 5% Eventtz fee.
 
 ---
 
 ## Step 4 — Guest vs client on the button
 
-```193:233:frontend/features/client/browse/VendorBrowseDetailBody.tsx
-        {requireLoginForActions ? (
-          <> Create account / Sign in ... </>
-        ) : onRequestBooking ? (
-          <Button onClick={() => {
-                if (selectedPackageIds.size === 0) { setBookingSelectError(true); return; }
-                onRequestBooking([...selectedPackageIds]);
-              }}>
-            Request booking
-          </Button>
+```271:277:frontend/features/client/browse/VendorBrowseDetailBody.tsx
+              onClick={() => {
+                if (selectedPackageIds.size === 0) {
+                  setBookingSelectError(true);
+                  return;
+                }
+                onRequestBooking([...selectedPackageIds], quantities);
+              }}
 ```
 
 | `requireLoginForActions` | `onRequestBooking` | What user sees |
 |--------------------------|-------------------|----------------|
 | `true` (guest) | — | Register / sign in |
 | `false` + client | defined | Request booking |
-| `false` + no hook | undefined | Continue only |
+| `false` + no hook | undefined | Contact only |
 
 **File:** `ClientVendorBrowseDetailView.tsx`
 
-```215:225:frontend/features/client/browse/ClientVendorBrowseDetailView.tsx
+```228:238:frontend/features/client/browse/ClientVendorBrowseDetailView.tsx
           onRequestBooking={
             isClient
-              ? (ids) => {
+              ? (ids, quantities) => {
                   guardBooking(() => {
                     setBookingSelectionIds(ids);
+                    setBookingQuantities(quantities);
                     setBookingOpen(true);
                     track(MixpanelEvents.enquiry_started, { vendor_user_id: userId });
                   });
@@ -129,23 +174,21 @@ Each option gets a stable `id` (e.g. `pkg-gold`, `fixed-hourly`, `quote`).
           }
 ```
 
-`guardBooking` (from `useLaunchingSoonBookingGuard`) may show a launching-soon modal instead of opening the booking form when the feature flag is on.
-
-`isClient` = `user?.user_type === "client"`.
+`guardBooking` (from `useLaunchingSoonBookingGuard`) may show a launching-soon modal when `BOOKINGS_LAUNCHING_SOON` is `true`. **Currently `BOOKINGS_LAUNCHING_SOON = false`** in `bookingsLaunchingSoon.ts` — enquires proceed.
 
 ---
 
-## Step 5 — Modal opens with fixed package selection
+## Step 5 — Modal opens with packages, quantities, referral prefill
 
-```228:250:frontend/features/client/browse/ClientVendorBrowseDetailView.tsx
+```242:266:frontend/features/client/browse/ClientVendorBrowseDetailView.tsx
         {user && bookingOpen && vendor ? (
           <VendorBookingModal
-            key={`${bookingSelectionIds.slice().sort().join("|")}|${searchParams.toString()}`}
+            key={`${bookingSelectionIds.slice().sort().join("|")}|${JSON.stringify(bookingQuantities)}|${searchParams.toString()}`}
             onClose={() => setBookingOpen(false)}
             onSuccess={(bookingId) => {
               setBookingOpen(false);
               showToast({
-                title: "Request sent",
+                title: CLIENT_BOOKING_TOAST_COPY.requestSent,
                 description: `${businessName} will be notified. ${usualReplyExpectation(vendor.avg_response_seconds)}`,
                 tone: "success",
               });
@@ -155,75 +198,125 @@ Each option gets a stable `id` (e.g. `pkg-gold`, `fixed-hourly`, `quote`).
             vendorUserId={userId}
             pricingOptions={pricingOptions}
             initialSelectedIds={bookingSelectionIds}
+            initialQuantities={bookingQuantities}
             vendorPayload={vendorPayload}
             searchPrefill={bookingSearchPrefill}
             initialPrefill={plannerEventPrefill}
             linkedEventId={linkedEventId}
             clientSearchContext={bookingClientSearchContext}
+            initialReferralCode={storedReferralCode}
           />
         ) : null}
 ```
 
-Modal does **not** let you change packages — close modal, re-pick on profile.
+**File:** `VendorBookingModal.tsx` — wires hooks:
 
-**Prefill:** browse URL dates (`searchPrefill`), planner query params (`initialPrefill`), linked celebration (`linkedEventId` → `useActiveEventPrefill`), or active-event banner (`ActiveEventPrefillBanner`).
-
-**File:** `VendorBookingModal.tsx` — packages are fixed from profile:
-
-```76:77:frontend/features/client/browse/VendorBookingModal.tsx
-  // Selection happens once, on the profile sidebar - this modal only confirms dates/venue/notes.
-  const selectedIds = useMemo(() => new Set(initialSelectedIds), [initialSelectedIds]);
+```227:239:frontend/features/client/browse/VendorBookingModal.tsx
+  const {
+    validationError,
+    setValidationError,
+    submitting,
+    submitResult,
+    dismissResultModal,
+    submit: submitBooking,
+  } = useVendorBookingSubmit({
+    vendorUserId,
+    selectedEventId,
+    clientSearchContext,
+    calendarConflict,
+  });
 ```
 
-**Form fields** (event name, dates, venue, notes) — see main lesson Step 5 for full JSX snippets.
+Per-unit lines show `QuantityStepper` in the modal (can adjust before submit).
+
+**Prefill sources:** browse URL dates, planner query params, linked celebration (`linkedEventId`), `?vref=` referral code, active-event banner.
 
 ---
 
-## Step 6 — Client fills form + submit
+## Step 6 — Client clicks “Send booking request”
 
-Fields: `eventName`, `eventDate`, `eventEndDate`, `venueAddress`, `notes`.
+**File:** `VendorBookingModal.tsx` — thin submit wrapper:
 
-**Calendar soft block** — before POST, if dates conflict with vendor calendar:
-
-```208:212:frontend/features/client/browse/VendorBookingModal.tsx
-    if (calendarConflict) {
-      setValidationError(
-        "These dates don’t match this vendor’s availability. Adjust the dates or message them to confirm.",
-      );
-      return;
-    }
+```251:266:frontend/features/client/browse/VendorBookingModal.tsx
+  const submit = () => {
+    submitBooking({
+      eventName,
+      eventDate,
+      eventEndDate,
+      venueAddress,
+      notes,
+      selectedOptionIds: [...selectedIds],
+      quantities: bookingQuantitiesPayload(
+        [...selectedIds],
+        pricingOptions,
+        quantities,
+      ),
+      vendorReferralCode: normalizedReferralCode,
+    });
+  };
 ```
 
-Validation — **File:** `frontend/lib/validation/bookings.ts`
+**File:** `useVendorBookingSubmit.ts` — validation + POST:
 
-```27:34:frontend/lib/validation/bookings.ts
+```44:80:frontend/features/client/browse/useVendorBookingSubmit.ts
+  const submit = useCallback(
+    (fields: VendorBookingSubmitFields) => {
+      const parsed = parseForm(clientBookingRequestSchema, {
+        eventName: fields.eventName,
+        eventDate: fields.eventDate,
+        eventEndDate: fields.eventEndDate || null,
+        venueAddress: fields.venueAddress,
+        notes: fields.notes,
+        selectedOptionIds: fields.selectedOptionIds,
+        quantities: fields.quantities,
+      });
+      if (!parsed.ok) {
+        setValidationError(parsed.formError);
+        return;
+      }
+      if (calendarConflict) {
+        setValidationError(
+          "These dates don't match this vendor's availability. Adjust the dates or message them to confirm.",
+        );
+        return;
+      }
+      setValidationError(null);
+      setSubmitting(true);
+      void postBookingRequest({
+        vendor_user_id: vendorUserId,
+        event_name: parsed.data.eventName,
+        event_date: parsed.data.eventDate,
+        event_end_date: parsed.data.eventEndDate?.trim() || null,
+        event_postcode: null,
+        event_address: (parsed.data.venueAddress ?? "").trim() || null,
+        notes: (parsed.data.notes ?? "").trim() || null,
+        selected_option_ids: parsed.data.selectedOptionIds,
+        quantities: parsed.data.quantities,
+        client_search_context: clientSearchContext ?? undefined,
+        event_id: selectedEventId,
+        vendor_referral_code: fields.vendorReferralCode?.trim() || null,
+      })
+```
+
+**Calendar soft block** runs inside the hook when `calendarConflict` is true (passed from modal).
+
+**Zod schema** — `frontend/lib/validation/bookings.ts`:
+
+```27:37:frontend/lib/validation/bookings.ts
 export const clientBookingRequestSchema = z
   .object({
     eventName: z.string().trim().min(1, "Enter an event name.").max(500),
     notes: z.string().trim().max(4000).optional().default(""),
     venueAddress: z.string().trim().max(500).optional().default(""),
     selectedOptionIds: z.array(z.string()).min(1, "Choose at least one package."),
+    quantities: z
+      .record(z.number().int().min(1).max(100_000))
+      .optional(),
   })
   .and(eventDatesSchema({ requireStart: true }));
 ```
 
-Submit builds payload — **no prices:**
-
-```216:227:frontend/features/client/browse/VendorBookingModal.tsx
-    void postBookingRequest({
-      vendor_user_id: vendorUserId,
-      event_name: parsed.data.eventName,
-      event_date: parsed.data.eventDate,
-      event_end_date: parsed.data.eventEndDate?.trim() || null,
-      event_address: (parsed.data.venueAddress ?? "").trim() || null,
-      notes: (parsed.data.notes ?? "").trim() || null,
-      selected_option_ids: parsed.data.selectedOptionIds,
-      client_search_context: clientSearchContext ?? undefined,
-      event_id: selectedEventId,
-    })
-```
-
-### HTTP request (example)
+### HTTP request (example for this scenario)
 
 ```http
 POST /api/v1/client/booking-requests
@@ -236,7 +329,9 @@ Cookie: eventtz_access_token=...
   "event_end_date": null,
   "event_address": null,
   "notes": "Outdoor garden",
-  "selected_option_ids": ["pkg-gold"],
+  "selected_option_ids": ["pkg-chairs"],
+  "quantities": { "pkg-chairs": 50 },
+  "vendor_referral_code": "482910",
   "client_search_context": { "q": "...", "country": "GB" }
 }
 ```
@@ -245,7 +340,7 @@ Cookie: eventtz_access_token=...
 
 ## Step 7 — `postBookingRequest`
 
-```51:56:frontend/lib/clientBookingsApi.ts
+```54:58:frontend/lib/clientBookingsApi.ts
 export async function postBookingRequest(
   payload: CreateBookingRequestPayload,
 ): Promise<BookingRequestCreated> {
@@ -262,22 +357,27 @@ export async function postBookingRequest(
 
 Router: `APIRouter(prefix="/client")` + app `/api/v1` → `/api/v1/client/booking-requests`
 
-```409:436:backend/app/features/bookings/http/client.py
-@router.post("/booking-requests", response_model=BookingRequestCreated)
-def post_booking_request(...) -> BookingRequestCreated:
-    user = require_client(request, response)
-    client_id = str(user.get("id") or "")
-    out = create_booking_request(
-        client_user_id=client_id,
-        vendor_user_id=vendor_id,
-        ...
-        selected_option_ids=body.selected_option_ids,
-    )
+```461:476:backend/app/features/bookings/http/client.py
+        out = create_booking_request(
+            client_user_id=client_id,
+            vendor_user_id=vendor_id,
+            event_name=body.event_name,
+            event_date=body.event_date,
+            event_end_date=body.event_end_date,
+            event_postcode=body.event_postcode,
+            event_address=body.event_address,
+            notes=body.notes,
+            selected_option_ids=body.selected_option_ids,
+            client_search_context=body.client_search_context,
+            event_id=body.event_id,
+            quantities=body.quantities,
+            vendor_referral_code=body.vendor_referral_code,
+        )
 ```
 
 `require_client` — 401 without session, 403 if not `user_type=client`.
 
-**Contract** `CreateBookingRequestBody` — past dates rejected, min 1 option id.
+**Contract** `CreateBookingRequestBody` — past dates rejected, min 1 option id, optional `quantities` and `vendor_referral_code`.
 
 ---
 
@@ -292,47 +392,54 @@ def post_booking_request(...) -> BookingRequestCreated:
 - `_enforce_max_bookings_per_day` — capacity per day
 - `BOOKING_NO_VALID_PRICE` — no priced lines and no TBC flag
 
-### 9b — Snapshot prices
+### 9b — Snapshot prices with quantities
 
-```197:202:backend/app/features/bookings/create.py
-    line_items = resolve_line_items(payload, selected_option_ids)
+```202:218:backend/app/features/bookings/create.py
+    line_items = resolve_line_items(payload, selected_option_ids, quantities)
     line_items = line_items + compute_automatic_discount_lines(payload, line_items, event_date)
-    pb = build_pricing_breakdown(line_items=line_items, vendor_adjustments=[])
-    if float(pb.get("vendor_portion_gbp") or 0) <= 0 and not pb.get("has_pricing_tbc"):
-        raise ValueError(booking_messages.BOOKING_NO_VALID_PRICE)
+
+    li_sum = sum(float(li.get("unit_price_gbp") or 0) for li in line_items if isinstance(li, dict))
+    vendor_portion_est = round(li_sum, 2)
+    normalized_referral, referral_discount, tier_min = resolve_referral_pricing_inputs(
+        vendor_user_id,
+        vendor_referral_code,
+        vendor_portion_est,
+    )
+    pb = build_pricing_breakdown(
+        line_items=line_items,
+        vendor_adjustments=[],
+        service_fee_percent=float(BOOKING_SERVICE_FEE_PERCENT),
+        referral_fee_discount_gbp=referral_discount,
+        referral_tier_min_spend_gbp=tier_min,
+    )
 ```
 
-**File:** `list_pricing.py` — `resolve_line_items`
+**File:** `list_pricing.py` — for `pkg-chairs` with qty 50:
 
-For each id in `selected_option_ids`:
-
-1. Find option in `build_pricing_options(payload)`
-2. If missing → `PACKAGES_NO_LONGER_AVAILABLE`
-3. Append `_option_to_line_item(opt)` with `unit_price_gbp`, heading, description, etc.
+1. `_quantity_for_option` reads `quantities["pkg-chairs"]` → 50
+2. `_option_to_line_item` sets `unit_price_gbp: 600.0`, `quantity: 50`, `unit_rate_gbp: 12.0`
 
 **Example `line_items` JSON stored on row:**
 
 ```json
 [
   {
-    "id": "pkg-gold",
-    "heading": "Gold package",
-    "unit_price_gbp": 450.0,
-    "description": "Full day coverage...",
-    "feature_lines": ["Photography"],
-    "timeline_line": "6 hours"
-  },
-  {
-    "id": "auto-bulk-10",
-    "heading": "10% off - Easter discount",
-    "unit_price_gbp": -45.0
+    "id": "pkg-chairs",
+    "heading": "Chair hire",
+    "unit_price_gbp": 600.0,
+    "quantity": 50,
+    "unit_rate_gbp": 12.0,
+    "unit_label": "chair",
+    "description": "White folding chairs…",
+    "feature_lines": ["Delivery included"],
+    "timeline_line": null
   }
 ]
 ```
 
 ### 9c — Resolve celebration event (before insert)
 
-```209:217:backend/app/features/bookings/create.py
+```227:235:backend/app/features/bookings/create.py
     resolved_event_id, event_fields = resolve_event_for_booking(
         client_user_id,
         event_id=event_id,
@@ -344,27 +451,36 @@ For each id in `selected_option_ids`:
     )
 ```
 
-If `event_id` is set, links to that celebration. Otherwise creates a new `client_events` row. Returns denormalized event columns merged into the booking insert.
+If `event_id` is set, links to that celebration. Otherwise creates a new `client_events` row.
 
 ### 9d — Insert row
 
-```218:235:backend/app/features/bookings/create.py
-    row_out = {
+```236:255:backend/app/features/bookings/create.py
+    row_out: dict[str, Any] = {
         "client_user_id": client_user_id,
         "vendor_user_id": vendor_user_id,
         **event_fields,
-        ...
+        "notes": (notes.strip() if notes else None),
         "status": "pending",
         "selected_option_ids": selected_option_ids,
         "line_items": line_items,
         "total_label": persisted_booking_total_label(pb),
         "initial_client_total_label": client_total,
+        "vendor_adjustments": [],
         "initiator": "client",
+        "service_fee_percent": float(BOOKING_SERVICE_FEE_PERCENT),
+        "vendor_referral_code": normalized_referral,
     }
-    res = get_db().table("booking_requests").insert(row_out).execute()
+    if search_ctx is not None:
+        row_out["client_search_context"] = search_ctx
+
+    try:
+        res = get_db().table("booking_requests").insert(row_out).execute()
 ```
 
-Table: `backend/sql/010_booking_requests.sql` — `status` default `pending`, `line_items` jsonb.
+At £600 vendor portion with referral: `total_label` reflects vendor £600 + fee £15 − referral £15 = **£615** client total (5% of £600 = £30 fee, −£15 referral).
+
+Table: `backend/sql/010_booking_requests.sql` — `status` default `pending`, `line_items` jsonb. Referral/fee columns: `backend/sql/083_vendor_client_referrals.sql`.
 
 ### 9e — After insert
 
@@ -391,30 +507,47 @@ Table: `backend/sql/010_booking_requests.sql` — `status` default `pending`, `l
 
 ## Step 10 — Back to browser
 
-**File:** `VendorBookingModal.tsx`
+**File:** `useVendorBookingSubmit.ts` — POST success:
 
-POST success → modal shows success overlay with **View booking** button → `onSuccess(bookingId)`.
-
-```228:236:frontend/features/client/browse/VendorBookingModal.tsx
-      .then((created) => {
-        track(MixpanelEvents.enquiry_created, {
-          booking_id: created.booking_request_id,
-          vendor_user_id: vendorUserId,
-          option_count: parsed.data.selectedOptionIds.length,
-          source: "single",
-        });
-        setSubmitResult({ type: "success", bookingId: created.booking_request_id });
+```81:89:frontend/features/client/browse/useVendorBookingSubmit.ts
+        .then((created) => {
+          track(MixpanelEvents.enquiry_created, {
+            booking_id: created.booking_request_id,
+            vendor_user_id: vendorUserId,
+            option_count: parsed.data.selectedOptionIds.length,
+            source: "single",
+          });
+          setSubmitResult({ type: "success", bookingId: created.booking_request_id });
+          setSubmitting(false);
 ```
 
-**File:** `ClientVendorBrowseDetailView.tsx`
+**File:** `VendorBookingModal.tsx` — success modal → View booking → `onSuccess`:
 
-```232:239:frontend/features/client/browse/ClientVendorBrowseDetailView.tsx
-            onSuccess={(bookingId) => {
-              setBookingOpen(false);
-              showToast({ title: "Request sent", ... });
-              router.push(`/client/bookings/${bookingId}`);
+```277:284:frontend/features/client/browse/VendorBookingModal.tsx
+        submitResult?.type === "success" ? (
+          <Button
+            variant="primary"
+            onClick={() => {
+              const id = submitResult.bookingId;
+              dismissResultModal();
+              onSuccess?.(id);
             }}
 ```
+
+**File:** `ClientVendorBrowseDetailView.tsx` — toast + redirect:
+
+```246:253:frontend/features/client/browse/ClientVendorBrowseDetailView.tsx
+            onSuccess={(bookingId) => {
+              setBookingOpen(false);
+              showToast({
+                title: CLIENT_BOOKING_TOAST_COPY.requestSent,
+                description: `${businessName} will be notified. ${usualReplyExpectation(vendor.avg_response_seconds)}`,
+                tone: "success",
+              });
+              router.push(`/client/bookings/${bookingId}`);
+```
+
+POST failure uses `CLIENT_BOOKING_ERROR_COPY.enquiryFailed` as fallback message.
 
 Slice 3b starts at the redirect.
 
@@ -424,31 +557,43 @@ Slice 3b starts at the redirect.
 
 **File:** `MultiVendorEnquireModal.tsx`
 
-Loop — one POST per vendor:
+Loop — one POST per vendor, with per-vendor quantities:
 
-```154:173:frontend/features/marketplace/MultiVendorEnquireModal.tsx
+```169:195:frontend/features/marketplace/MultiVendorEnquireModal.tsx
       for (let i = 0; i < optionIdsByVendor.length; i += 1) {
-        const created = await postBookingRequest({
-          vendor_user_id: vendor.user_id,
-          ...
-          selected_option_ids: [optionId!],
-          client_search_context: {
-            ...clientSearchContext,
-            batchSize,
-            batchIndex: i,
-            source: enquirySource,
-          },
-          event_id: linkedEventId,
-        });
-        if (created.event_id && !linkedEventId) {
-          linkedEventId = created.event_id;
-        }
-      }
+        const { vendor, optionId } = optionIdsByVendor[i]!;
+        try {
+          const created = await postBookingRequest({
+            vendor_user_id: vendor.user_id,
+            event_name: parsed.data.eventName,
+            event_date: parsed.data.eventDate,
+            event_end_date: parsed.data.eventEndDate?.trim() || null,
+            event_postcode: null,
+            event_address: (parsed.data.venueAddress ?? "").trim() || null,
+            notes: (parsed.data.notes ?? "").trim() || null,
+            selected_option_ids: [optionId!],
+            quantities: (() => {
+              const opt = pricingOptionsForVendor(vendor).find((o) => o.id === optionId);
+              if (opt?.pricingMode !== "per_unit") return undefined;
+              const qty =
+                quantityByVendorId[vendor.user_id] ?? defaultQuantityForOption(opt);
+              return { [optionId!]: qty };
+            })(),
+            client_search_context: {
+              ...clientSearchContext,
+              batchSize,
+              batchIndex: i,
+              source: resolvedSource,
+            },
+            event_id: linkedEventId,
+          });
 ```
+
+Note: multi-vendor flow does **not** send `vendor_referral_code` today (referral is single-vendor profile flow via `?vref=`).
 
 First success returns `event_id`; later enquiries reuse it → one celebration, many vendor rows.
 
-**Partial failure:** loop continues on error; if some fail, modal shows errors and toast reports partial send. Only when all succeed does `onSuccess(createdIds)` run.
+**Partial failure:** loop continues on error; uses `CLIENT_BOOKING_ERROR_COPY.multiEnquireNone` and `CLIENT_BOOKING_TOAST_COPY.partialRequestsSent`.
 
 **Redirect** (`MarketplaceExploreView`):
 
@@ -469,22 +614,26 @@ Request booking click
   ClientVendorBrowseDetailView
     guardBooking() → setBookingOpen(true) → track(enquiry_started)
   VendorBookingModal.submit()
-    calendarConflict check (soft)
-    postBookingRequest()
-      POST /api/v1/client/booking-requests
-        post_booking_request()
-          require_client()
-          create_booking_request()
-            guards (calendar, capacity, price)
-            resolve_line_items()
-            resolve_event_for_booking()
-            build_pricing_breakdown()
-            booking_requests.insert()
-            _post_client_booking_notes_to_chat()
-            dispatch_booking_notification() × 2
-            mark_vendor_notified + analytics
-    success modal → View booking → onSuccess()
-  toast + router.push(/client/bookings/{id})
+    useVendorBookingSubmit.submit()
+      parseForm(clientBookingRequestSchema)
+      calendarConflict check (soft)
+      postBookingRequest()
+        POST /api/v1/client/booking-requests
+          post_booking_request()
+            require_client()
+            create_booking_request()
+              guards (calendar, capacity, price)
+              resolve_line_items(..., quantities)
+              resolve_referral_pricing_inputs()
+              build_pricing_breakdown(service_fee_percent=5)
+              resolve_event_for_booking()
+              booking_requests.insert()
+              _post_client_booking_notes_to_chat()
+              dispatch_booking_notification() × 2
+              mark_vendor_notified + analytics
+      setSubmitResult(success)
+  success modal → View booking → onSuccess()
+  toast (CLIENT_BOOKING_TOAST_COPY.requestSent) + router.push(/client/bookings/{id})
 ```
 
 ---
@@ -494,17 +643,21 @@ Request booking click
 | Symptom | Check |
 |---------|--------|
 | Button missing | `isClient`, `onRequestBooking` wired |
-| Modal never opens | `guardBooking` / launching-soon flag |
+| Modal never opens | `guardBooking` / `BOOKINGS_LAUNCHING_SOON` (currently `false`) |
 | 401 | Session cookie / login |
 | Packages no longer available | Stale option id vs vendor profile |
+| Per-unit quantity rejected | `quantities` missing or out of min/max range |
+| Referral code 400 | `resolve_referral_pricing_inputs` — wrong vendor or invalid code |
+| Referral preview shows no discount | Vendor portion below `REFERRAL_LOWEST_TIER_SPEND_GBP` (£400) |
 | Calendar rejected | `calendar.py` vs modal warning (soft vs hard) |
 | No valid price | Quote-only with no TBC |
-| Wrong price on booking | Server `line_items` — not UI estimate |
-| Multi partial send | `MultiVendorEnquireModal` failures + toast |
+| Fee mismatch UI vs booking | `computeClientFeeBreakdown` vs server `build_pricing_breakdown` |
+| Generic submit error | `CLIENT_BOOKING_ERROR_COPY.enquiryFailed` |
+| Multi partial send | `MultiVendorEnquireModal` failures + `partialRequestsSent` toast |
 
 ---
 
 ## Related
 
 - `slice-3a-client-booking-enquire.md` — route list + concepts
-- Slice 2 — how vendor profile JSON becomes `pricingOptions`
+- Slice 2 — how vendor profile JSON becomes `pricingOptions` (including `per_unit`)
