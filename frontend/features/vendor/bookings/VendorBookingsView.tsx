@@ -138,7 +138,7 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
                       bookingId={controller.detail.booking_request_id}
                       role="vendor"
                       bookingStatus={controller.detail.booking_status}
-                      presentation="drawer"
+                      presentation="header"
                     />
                   ) : (
                     <></>

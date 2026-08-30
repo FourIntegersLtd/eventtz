@@ -55,4 +55,32 @@ describe("groupBookingsByEvent", () => {
     expect(groups).toHaveLength(2);
     expect(groups.every((g) => g.eventId === null)).toBe(true);
   });
+
+  it("orders event groups by latest booking activity, not event date", () => {
+    const rows = [row("older-event", "Test custom quote"), row("recent", "Graduation")];
+    const items = new Map([
+      [
+        "older-event",
+        item("older-event", {
+          event_id: "evt-old",
+          event_title: "Test custom quote",
+          event_date: "2026-08-21",
+          created_at: "2026-08-01T10:00:00Z",
+          updated_at: "2026-08-01T10:00:00Z",
+        }),
+      ],
+      [
+        "recent",
+        item("recent", {
+          event_id: "evt-new",
+          event_title: "Graduation",
+          event_date: "2026-09-30",
+          created_at: "2026-08-20T10:00:00Z",
+          updated_at: "2026-08-30T18:00:00Z",
+        }),
+      ],
+    ]);
+    const groups = groupBookingsByEvent(rows, items);
+    expect(groups.map((g) => g.title)).toEqual(["Graduation", "Test custom quote"]);
+  });
 });

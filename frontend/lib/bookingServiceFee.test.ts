@@ -114,4 +114,14 @@ describe("bookingServiceFee", () => {
     expect(breakdown?.feeGbp).toBe(5.5);
     expect(breakdown?.totalGbp).toBe(115.5);
   });
+
+  it("applies fixed referral discount when vendor portion rises with a surcharge", () => {
+    const breakdown = computeClientFeeBreakdown({
+      vendorPortionGbp: 510,
+      referralFeeDiscountGbp: 10,
+    });
+    expect(breakdown?.feeBeforeDiscountGbp).toBe(25.5);
+    expect(breakdown?.feeGbp).toBe(15.5);
+    expect(breakdown?.totalGbp).toBe(525.5);
+  });
 });

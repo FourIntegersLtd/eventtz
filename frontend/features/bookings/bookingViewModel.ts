@@ -85,6 +85,6 @@ export type BookingDetailSlots = {
   afterSections?: ReactNode;
   /** Pinned below the scroll area - primary actions for this booking (e.g. accept / decline). */
   footerSection?: ReactNode;
-  /** Always rendered last. */
+  /** Rendered in the detail header (top right), e.g. help & disputes. */
   disputeSection: ReactNode;
 };

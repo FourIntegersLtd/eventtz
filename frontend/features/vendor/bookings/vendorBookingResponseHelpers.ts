@@ -1,6 +1,7 @@
 import type { BookingPricing } from "@/features/bookings/BookingPricingBreakdown";
 import type { VendorBookingDetail } from "@/lib/vendorBookingsApi";
 import {
+  type ClientFeeBreakdown,
   computeClientFeeBreakdown,
   referralDiscountForBookingPreview,
 } from "@/lib/bookingServiceFee";
@@ -27,26 +28,90 @@ export function formatGbp(amount: number): string {
   return `£${display}`;
 }
 
-export function previewClientTotalLabel(
-  pricing: BookingPricing | null | undefined,
-  drafts: AdjustmentDraftRow[],
-): string | null {
-  if (!pricing || pricing.has_pricing_tbc) return null;
-  const draftTotal = drafts.reduce((sum, row) => {
+function draftAdjustmentsTotalGbp(drafts: AdjustmentDraftRow[]): number {
+  return drafts.reduce((sum, row) => {
     const raw = Number.parseFloat(row.amount);
     if (!Number.isFinite(raw) || raw <= 0) return sum;
     return sum + (row.kind === "discount" ? -raw : raw);
   }, 0);
-  const lineSubtotal = pricing.line_items_subtotal_gbp;
-  const vendorPortion = lineSubtotal + draftTotal;
+}
+
+function vendorPortionFromDrafts(
+  pricing: BookingPricing,
+  drafts: AdjustmentDraftRow[],
+): number | null {
+  const vendorPortion = pricing.line_items_subtotal_gbp + draftAdjustmentsTotalGbp(drafts);
   if (vendorPortion <= 0) return null;
+  return vendorPortion;
+}
+
+export function previewClientFeeBreakdown(
+  pricing: BookingPricing | null | undefined,
+  drafts: AdjustmentDraftRow[],
+): ClientFeeBreakdown | null {
+  if (!pricing || pricing.has_pricing_tbc) return null;
+  const vendorPortion = vendorPortionFromDrafts(pricing, drafts);
+  if (vendorPortion == null) return null;
   const referralDiscount = referralDiscountForBookingPreview(pricing, vendorPortion);
-  const breakdown = computeClientFeeBreakdown({
+  return computeClientFeeBreakdown({
     vendorPortionGbp: vendorPortion,
     feePercent: pricing.service_fee_percent,
     referralFeeDiscountGbp: referralDiscount,
   });
-  return breakdown?.totalLabel ?? null;
+}
+
+export function previewClientTotalLabel(
+  pricing: BookingPricing | null | undefined,
+  drafts: AdjustmentDraftRow[],
+): string | null {
+  return previewClientFeeBreakdown(pricing, drafts)?.totalLabel ?? null;
+}
+
+/** Change in client total vs the booking's current stored total. */
+export function previewTotalDeltaGbp(
+  pricing: BookingPricing | null | undefined,
+  drafts: AdjustmentDraftRow[],
+): number | null {
+  const breakdown = previewClientFeeBreakdown(pricing, drafts);
+  const currentTotal = pricing?.client_total_gbp;
+  if (!breakdown || currentTotal == null || !Number.isFinite(currentTotal)) return null;
+  const delta = Math.round((breakdown.totalGbp - currentTotal) * 100) / 100;
+  if (delta === 0) return null;
+  return delta;
+}
+
+export function formatTotalDeltaLabel(delta: number): string {
+  const abs = formatGbp(Math.abs(delta));
+  if (delta > 0) return `+${abs}`;
+  if (delta < 0) return `−${abs}`;
+  return abs;
+}
+
+/** Plain-language split when a draft changes the client total by more than the vendor amount. */
+export function adjustmentPreviewDeltaExplanation(
+  pricing: BookingPricing | null | undefined,
+  drafts: AdjustmentDraftRow[],
+  deltaGbp: number,
+): string | null {
+  const vendorDelta = draftAdjustmentsTotalGbp(drafts);
+  if (vendorDelta === 0 || deltaGbp === 0) return null;
+
+  const feePct = pricing?.service_fee_percent ?? 5;
+  const deltaLabel = formatTotalDeltaLabel(deltaGbp);
+
+  if (vendorDelta > 0 && deltaGbp > 0) {
+    const feeExtra = Math.round((deltaGbp - vendorDelta) * 100) / 100;
+    if (feeExtra <= 0) return null;
+    return `${deltaLabel} for them: ${formatGbp(vendorDelta)} to you + ${formatGbp(feeExtra)} Eventtz fee (${feePct}%).`;
+  }
+
+  if (vendorDelta < 0 && deltaGbp < 0) {
+    const feeReduction = Math.round((Math.abs(vendorDelta) - Math.abs(deltaGbp)) * 100) / 100;
+    if (feeReduction <= 0) return null;
+    return `${deltaLabel} for them: ${formatGbp(Math.abs(vendorDelta))} off your quote − ${formatGbp(feeReduction)} less Eventtz fee.`;
+  }
+
+  return null;
 }
 
 export function adjustmentLineKey(row: Pick<AdjustmentDraftRow, "kind" | "tag">): string {
@@ -108,15 +173,6 @@ export function formatLineSummary(row: AdjustmentDraftRow): string {
   const amount = formatGbp(Number.parseFloat(row.amount));
   if (row.kind === "discount") return `Discount −${amount}`;
   return `${row.label || "Extra charge"} +${amount}`;
-}
-
-export function vendorReferralFeeNote(
-  pricing: BookingPricing | null | undefined,
-): string | null {
-  if (!pricing?.referral_fee_applied) return null;
-  const amount = Number(pricing.referral_fee_discount_gbp ?? 0);
-  if (!Number.isFinite(amount) || amount <= 0) return null;
-  return `They used your referral code — ${formatGbp(amount)} off the Eventtz fee. Your payout is unchanged.`;
 }
 
 export function costNeedsReason(lines: AdjustmentDraftRow[]): boolean {

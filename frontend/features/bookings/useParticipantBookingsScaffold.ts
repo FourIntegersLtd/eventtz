@@ -2,17 +2,27 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { BookingListTab } from "@/features/bookings/BookingListPanel";
+import {
+  type BookingListActivityFields,
+  sortBookingListItemsRecentFirst,
+} from "@/features/bookings/bookingListOrder";
 import { bookingTabForStatus } from "@/features/bookings/bookingListConstants";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 
-type UseParticipantBookingsScaffoldOptions<TListItem, TDetail> = {
+type UseParticipantBookingsScaffoldOptions<
+  TListItem extends BookingListActivityFields,
+  TDetail,
+> = {
   selectedBookingId?: string;
   fetchList: (tab: BookingListTab) => Promise<TListItem[]>;
   fetchDetail: (id: string) => Promise<TDetail>;
   getDetailStatus: (detail: TDetail) => string;
 };
 
-export function useParticipantBookingsScaffold<TListItem, TDetail>({
+export function useParticipantBookingsScaffold<
+  TListItem extends BookingListActivityFields,
+  TDetail,
+>({
   selectedBookingId,
   fetchList,
   fetchDetail,
@@ -33,7 +43,7 @@ export function useParticipantBookingsScaffold<TListItem, TDetail>({
     setListLoading(true);
     setListError(null);
     try {
-      setList(await fetchList(tab));
+      setList(sortBookingListItemsRecentFirst(await fetchList(tab)));
     } catch {
       setListError("Could not load bookings.");
       setList([]);

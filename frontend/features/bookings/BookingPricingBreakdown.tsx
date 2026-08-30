@@ -192,14 +192,13 @@ export function BookingPricingBreakdown({
         </div>
       ) : null}
 
-      {pricing.referral_fee_applied ? (
+      {pricing.referral_fee_applied && variant !== "vendor" ? (
         <div className="border-t border-emerald-100 bg-emerald-50/60 px-5 py-3 text-xs text-emerald-900">
           Referral discount applied
           {pricing.referral_fee_discount_label ? (
             <span>
               {" "}
-              — {pricing.referral_fee_discount_label} off{" "}
-              {variant === "vendor" ? "their" : "your"} Eventtz fee
+              — {pricing.referral_fee_discount_label} off your Eventtz fee
             </span>
           ) : null}
           {pricing.vendor_referral_code ? (
@@ -208,7 +207,11 @@ export function BookingPricingBreakdown({
         </div>
       ) : null}
 
-      <div className="border-t border-neutral-100 px-5 py-3.5">
+      <div
+        className={`border-t border-neutral-100 px-5 py-4 ${
+          variant === "vendor" ? "bg-neutral-50" : "py-3.5"
+        }`}
+      >
         <ClientFeeBreakdownSummary
           breakdown={{
             vendorPortionLabel: pricing.vendor_portion_label,
@@ -219,28 +222,27 @@ export function BookingPricingBreakdown({
             referralDiscountLabel: pricing.referral_fee_discount_label,
             referralApplied: pricing.referral_fee_applied,
           }}
-          showTotal={false}
+          feeDisplay={variant === "vendor" ? "condensed" : "full"}
+          showTotal={variant === "vendor"}
+          totalHeading="They pay"
+          footnote={
+            variant === "vendor" && pricing.vendor_referral_code
+              ? `Referral code ${pricing.vendor_referral_code}`
+              : null
+          }
         />
+        {variant === "vendor" ? (
+          <div className="mt-3 flex items-baseline justify-between gap-3 border-t border-neutral-200 pt-3 text-sm">
+            <p className="font-medium text-neutral-700">Your payout</p>
+            <p className="text-right text-lg font-semibold tabular-nums tracking-tight text-neutral-900">
+              {pricing.vendor_portion_label}
+            </p>
+          </div>
+        ) : null}
       </div>
 
-      {/* Highlighted total - pops without nested cards */}
-      <div className="border-t border-neutral-100 bg-neutral-50 px-5 py-4">
-        {variant === "vendor" ? (
-          <div className="space-y-2">
-            <div className="flex items-baseline justify-between gap-3">
-              <p className="text-sm font-medium text-neutral-700">They pay</p>
-              <p className="text-right text-lg font-semibold tabular-nums tracking-tight text-neutral-900">
-                {pricing.client_total_label}
-              </p>
-            </div>
-            <div className="flex items-baseline justify-between gap-3">
-              <p className="text-sm font-medium text-neutral-700">Your payout</p>
-              <p className="text-right text-lg font-semibold tabular-nums tracking-tight text-neutral-900">
-                {pricing.vendor_portion_label}
-              </p>
-            </div>
-          </div>
-        ) : (
+      {variant !== "vendor" ? (
+        <div className="border-t border-neutral-100 bg-neutral-50 px-5 py-4">
           <div className="flex items-baseline justify-between gap-3">
             <p className="text-sm font-medium text-neutral-700">Total due</p>
             <p className="text-right text-lg font-semibold tabular-nums tracking-tight text-neutral-900">
@@ -252,13 +254,17 @@ export function BookingPricingBreakdown({
               {pricing.client_total_label}
             </p>
           </div>
-        )}
-        {pricing.has_pricing_tbc ? (
-          <p className="mt-1.5 text-[12px] text-amber-700">
-            Some items are TBC and may change the total.
-          </p>
-        ) : null}
-      </div>
+          {pricing.has_pricing_tbc ? (
+            <p className="mt-1.5 text-[12px] text-amber-700">
+              Some items are TBC and may change the total.
+            </p>
+          ) : null}
+        </div>
+      ) : pricing.has_pricing_tbc ? (
+        <div className="border-t border-neutral-100 bg-neutral-50 px-5 py-3">
+          <p className="text-[12px] text-amber-700">Some items are TBC and may change the total.</p>
+        </div>
+      ) : null}
     </div>
   );
 }

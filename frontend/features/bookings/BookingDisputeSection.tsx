@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, CircleHelp } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Drawer } from "@/components/ui/Drawer";
@@ -34,8 +34,8 @@ type Props = {
   role: PortalRole;
   /** Current booking row status - gates “open new dispute” to match backend rules. */
   bookingStatus: string;
-  /** Inline card (default) or compact row + slide-over drawer (booking detail panels). */
-  presentation?: "inline" | "drawer";
+  /** Inline card, compact header trigger, or full-width row + drawer (legacy). */
+  presentation?: "inline" | "drawer" | "header";
 };
 
 export function BookingDisputeSection({
@@ -207,6 +207,52 @@ export function BookingDisputeSection({
       )}
     </>
   );
+
+  if (presentation === "header") {
+    return (
+      <>
+        <ConfirmDialog
+          isOpen={submitConfirmOpen}
+          title={BOOKING_CONFIRM_COPY.openDispute.title}
+          description={BOOKING_CONFIRM_COPY.openDispute.description}
+          cancelLabel={BOOKING_CONFIRM_COPY.openDispute.cancelLabel}
+          confirmLabel={BOOKING_CONFIRM_COPY.openDispute.confirmLabel}
+          confirmLoadingLabel={BOOKING_CONFIRM_COPY.openDispute.confirmLoadingLabel}
+          confirmVariant="destructive"
+          lottie="pendingReview"
+          loading={busy}
+          onCancel={() => setSubmitConfirmOpen(false)}
+          onConfirm={() => void submitDispute()}
+        />
+        <button
+          type="button"
+          onClick={() => setDrawerOpen(true)}
+          className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-neutral-600 transition hover:bg-neutral-100 hover:text-neutral-900"
+          aria-label="Help and disputes"
+        >
+          {loading ? (
+            <LoadingSpinner size="sm" className="text-neutral-400" />
+          ) : (
+            <CircleHelp className="h-4 w-4 shrink-0" aria-hidden />
+          )}
+          <span>Help</span>
+          {!loading && hasActive ? (
+            <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
+              Open
+            </span>
+          ) : null}
+          {!loading && !hasActive && disputes.length > 0 ? (
+            <span className="text-[11px] font-medium tabular-nums text-neutral-400">
+              {disputes.length}
+            </span>
+          ) : null}
+        </button>
+        <Drawer isOpen={drawerOpen} onClose={closeDrawer} title="Help & disputes">
+          <div className="mt-3">{body}</div>
+        </Drawer>
+      </>
+    );
+  }
 
   if (presentation === "drawer") {
     return (

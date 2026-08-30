@@ -115,11 +115,12 @@ export function BookingDetailPanel({
             ) : null}
           </div>
         </div>
-        {headerActions.length > 0 ? (
-          <div className="flex flex-shrink-0 flex-wrap items-center gap-2 sm:justify-end">
+        {headerActions.length > 0 || slots.disputeSection ? (
+          <div className="flex flex-shrink-0 flex-wrap items-center justify-end gap-2 self-start">
             {headerActions.map((a) => (
               <ActionButton key={a.key} action={a} />
             ))}
+            {slots.disputeSection}
           </div>
         ) : null}
       </div>
@@ -240,8 +241,6 @@ export function BookingDetailPanel({
         ) : null}
 
         {slots.afterSections}
-
-        {slots.disputeSection}
 
         {hasFooter ? (
           <section className="border-t border-neutral-100 pt-6">

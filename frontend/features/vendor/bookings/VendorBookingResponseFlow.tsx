@@ -10,7 +10,6 @@ import {
     draftsFromDetail,
     friendlyMoneyLabel,
     hasSavedPriceUpdate,
-    vendorReferralFeeNote,
     type AdjustmentDraftRow,
 } from "@/features/vendor/bookings/vendorBookingResponseHelpers";
 import { fetchConversation } from "@/lib/chatApi";
@@ -46,7 +45,6 @@ export function VendorBookingResponseFlow({
     detail.initial_client_total_label ??
     detail.total_label;
   const friendlyTotal = friendlyMoneyLabel(listedTotal);
-  const referralNote = vendorReferralFeeNote(detail.pricing);
 
   const waitingForClient = hasSavedPriceUpdate(detail);
   const [step, setStep] = useState<"review" | "adjust">("review");
@@ -137,14 +135,6 @@ export function VendorBookingResponseFlow({
   return (
     <>
       <div className="space-y-3">
-        <p className="text-sm text-neutral-600">
-          Their estimate:{" "}
-          <span className="font-semibold text-neutral-900">{friendlyTotal}</span>
-          <span className="text-neutral-500"> (incl. Eventtz fee)</span>
-        </p>
-        {referralNote ? (
-          <p className="text-xs text-emerald-800">{referralNote}</p>
-        ) : null}
         <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
           <Button
             variant="primary"
@@ -169,9 +159,9 @@ export function VendorBookingResponseFlow({
             type="button"
             disabled={actionBusy || adjustmentSaving || !!checkingDecision}
             onClick={() => void requestDecision("decline")}
-            className="text-sm font-medium text-red-700 hover:underline disabled:opacity-60"
+            className="text-sm font-medium text-red-700 underline disabled:opacity-60"
           >
-            Can&apos;t take this one
+            Can&apos;t take this one?
           </button>
         </div>
         <VendorDraftReplyPanel

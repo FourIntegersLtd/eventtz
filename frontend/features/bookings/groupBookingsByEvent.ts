@@ -1,5 +1,9 @@
 import type { ClientBookingListItem } from "@/lib/clientBookingsApi";
 import type { BookingListRowViewModel } from "@/features/bookings/bookingViewModel";
+import {
+  bookingListActivityTimestamp,
+  compareBookingsRecentFirst,
+} from "@/features/bookings/bookingListOrder";
 import { formatEventDate } from "@/lib/dateFormat";
 
 export type BookingEventGroup = {
@@ -44,9 +48,31 @@ export function groupBookingsByEvent(
     group.bookingCount += 1;
   }
 
-  return [...buckets.values()].sort((a, b) => {
-    const ad = itemsById.get(a.rows[0]?.id ?? "")?.event_date ?? "";
-    const bd = itemsById.get(b.rows[0]?.id ?? "")?.event_date ?? "";
-    return ad.localeCompare(bd);
-  });
+  return [...buckets.values()]
+    .map((group) => ({
+      ...group,
+      rows: [...group.rows].sort((a, b) =>
+        compareBookingsRecentFirst(
+          itemsById.get(a.id) ?? {},
+          itemsById.get(b.id) ?? {},
+        ),
+      ),
+    }))
+    .sort((a, b) => {
+      const aTs = a.rows.reduce(
+        (max, row) => {
+          const ts = bookingListActivityTimestamp(itemsById.get(row.id));
+          return ts > max ? ts : max;
+        },
+        "",
+      );
+      const bTs = b.rows.reduce(
+        (max, row) => {
+          const ts = bookingListActivityTimestamp(itemsById.get(row.id));
+          return ts > max ? ts : max;
+        },
+        "",
+      );
+      return bTs.localeCompare(aTs);
+    });
 }

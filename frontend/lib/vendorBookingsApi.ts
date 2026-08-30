@@ -41,6 +41,7 @@ export type VendorBookingListItem = {
   /** Friendly client name (preferred name or derived) - safe to show pre-payment. */
   client_display_name: string | null;
   created_at: string | null;
+  updated_at?: string | null;
   /** Full amount incl. vendor additions + Eventtz fee (when quote is all priced). */
   client_total_label: string | null;
   review: VendorReviewSummary | null;
