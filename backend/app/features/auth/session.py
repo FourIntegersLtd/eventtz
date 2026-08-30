@@ -67,6 +67,11 @@ def _looks_like_jwt(token: str) -> bool:
     return token.count(".") == 2 and " " not in token
 
 
+def looks_like_jwt(token: str) -> bool:
+    """True when the cookie value looks like a JWT access token."""
+    return _looks_like_jwt(token)
+
+
 def get_current_user_or_raise(request: Request, response: Response) -> dict[str, Any]:
     """Validate session cookie and return the Supabase auth user (before merging public.users)."""
     access_token = request.cookies.get(ACCESS_COOKIE_NAME)

@@ -23,6 +23,7 @@ from app.core.logging import get_logger
 from app.features.vendors.markets import normalize_country_code
 from app.features.vendors.list_pricing import min_listing_price_gbp
 from app.features.vendors.moderation import list_approved_vendors_for_explore
+from app.features.vendors.qa_visibility import ExploreViewer
 from app.features.vendors.search_ai import parse_marketplace_query, why_for_need
 from app.features.vendors.taxonomy import filter_service_keys
 
@@ -678,6 +679,7 @@ def search_approved_vendors(
     country: str | None = None,
     limit: int = 200,
     offset: int = 0,
+    viewer: ExploreViewer | None = None,
 ) -> MarketplaceSearchResult:
     """
     Return approved vendors with optional filters, ordered exact → related → fallback.
@@ -707,6 +709,7 @@ def search_approved_vendors(
         service_types=chip_types or None,
         city_query=city_query,
         country_code=market_country,
+        viewer=viewer,
     )
 
     primary_types = list(chip_types)

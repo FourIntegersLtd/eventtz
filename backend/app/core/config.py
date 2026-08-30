@@ -92,6 +92,11 @@ class Settings(BaseSettings):
 
     #: Comma-separated emails that count as top-level admins until roles are set in the database.
     super_admin_emails: str = "hello@eventtz.com"
+    #: QA-only marketplace visibility: ``client_email:vendor_user_id`` pairs (comma-separated).
+    #: Those vendors appear in explore only when that client is signed in — never publicly.
+    qa_client_vendor_visibility: str = (
+        "y.hkehinde@yahoo.com:f8207160-65ee-4d68-8f84-69175803da97"
+    )
     #: Key for sending transactional email.
     resend_api_key: str = ""
 
@@ -111,6 +116,29 @@ class Settings(BaseSettings):
     @property
     def super_admin_emails_list(self) -> list[str]:
         return [e.strip().lower() for e in self.super_admin_emails.split(",") if e.strip()]
+
+    @property
+    def qa_client_vendor_visibility_map(self) -> dict[str, frozenset[str]]:
+        """Lowercased client email → vendor user ids visible only to that client."""
+        out: dict[str, set[str]] = {}
+        for part in self.qa_client_vendor_visibility.split(","):
+            chunk = part.strip()
+            if not chunk or ":" not in chunk:
+                continue
+            client_email, vendor_id = chunk.split(":", 1)
+            ce = client_email.strip().lower()
+            vid = vendor_id.strip()
+            if not ce or not vid:
+                continue
+            out.setdefault(ce, set()).add(vid)
+        return {email: frozenset(vids) for email, vids in out.items()}
+
+    @property
+    def qa_scoped_vendor_ids(self) -> frozenset[str]:
+        ids: set[str] = set()
+        for vendor_ids in self.qa_client_vendor_visibility_map.values():
+            ids.update(vendor_ids)
+        return frozenset(ids)
 
     @property
     def cors_origins_list(self) -> list[str]:

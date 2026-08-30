@@ -29,6 +29,15 @@ from app.features.vendors.visibility import (
     row_is_publicly_listable,
     vendor_payouts_verified,
 )
+from app.features.vendors.qa_visibility import (
+    ExploreViewer,
+    fetch_qa_vendor_for_explore_by_id,
+    fetch_qa_vendor_payload,
+    fetch_qa_vendors_for_viewer,
+    filter_explore_rows,
+    is_qa_scoped_vendor,
+    viewer_may_see_qa_vendor,
+)
 from app.features.email.dispatch import (
     send_vendor_approval_email,
     send_vendor_complete_profile_nudge_email,
@@ -562,6 +571,7 @@ def list_approved_vendors_for_explore(
     service_types: list[str] | None = None,
     city_query: str | None = None,
     country_code: str | None = None,
+    viewer: ExploreViewer | None = None,
 ) -> list[dict[str, Any]]:
     select_cols = (
         "user_id,status,approval_status,payload,updated_at,"
@@ -641,11 +651,30 @@ def list_approved_vendors_for_explore(
                 "updated_at": row.get("updated_at"),
             }
         )
-    return out
+    rows = filter_explore_rows(out, viewer)
+    qa_rows = fetch_qa_vendors_for_viewer(viewer, country_code=country)
+    if qa_rows:
+        seen = {str(r.get("user_id") or "") for r in rows}
+        for qa_row in qa_rows:
+            uid = str(qa_row.get("user_id") or "")
+            if uid and uid not in seen:
+                rows.append(qa_row)
+                seen.add(uid)
+    return rows
 
 
-def get_approved_vendor_for_explore_by_id(vendor_user_id: str) -> dict[str, Any] | None:
+def get_approved_vendor_for_explore_by_id(
+    vendor_user_id: str,
+    *,
+    viewer: ExploreViewer | None = None,
+) -> dict[str, Any] | None:
     """One listable vendor for the browse detail page (direct lookup, not a full list scan)."""
+    uid = str(vendor_user_id or "").strip()
+    if is_qa_scoped_vendor(uid):
+        if not viewer_may_see_qa_vendor(viewer, uid):
+            return None
+        return fetch_qa_vendor_for_explore_by_id(uid, viewer)
+
     try:
         res = (
             apply_public_listing_filters(
@@ -686,10 +715,17 @@ def get_approved_vendor_for_explore_by_id(vendor_user_id: str) -> dict[str, Any]
     }
 
 
-def get_bookable_vendor_profile_form_data(vendor_user_id: str) -> dict[str, Any] | None:
+def get_bookable_vendor_profile_form_data(
+    vendor_user_id: str,
+    *,
+    viewer: ExploreViewer | None = None,
+    operator: bool = False,
+) -> dict[str, Any] | None:
     """Onboarding profile JSON for a listable vendor, or None if they cannot be booked."""
     if vendor_user_id and is_deleted_user_id(vendor_user_id):
         return None
+    if is_qa_scoped_vendor(vendor_user_id):
+        return fetch_qa_vendor_payload(vendor_user_id, viewer, operator=operator)
     try:
         res = (
             apply_public_listing_filters(
@@ -708,10 +744,19 @@ def get_bookable_vendor_profile_form_data(vendor_user_id: str) -> dict[str, Any]
     return p if isinstance(p, dict) else {}
 
 
-def vendor_is_bookable_for_explore(vendor_user_id: str) -> bool:
+def vendor_is_bookable_for_explore(
+    vendor_user_id: str,
+    *,
+    viewer: ExploreViewer | None = None,
+) -> bool:
     """True when the vendor is approved, Stripe-verified, and clients can book or message them."""
     if vendor_user_id and is_deleted_user_id(vendor_user_id):
         return False
+    if is_qa_scoped_vendor(vendor_user_id):
+        if not viewer_may_see_qa_vendor(viewer, vendor_user_id):
+            return False
+        payload = fetch_qa_vendor_payload(vendor_user_id, viewer)
+        return payload is not None
     try:
         res = (
             apply_public_listing_filters(
@@ -725,3 +770,31 @@ def vendor_is_bookable_for_explore(vendor_user_id: str) -> bool:
         return False
     rows = getattr(res, "data", None) or []
     return bool(rows)
+
+
+def vendor_is_approved_for_booking_operations(vendor_user_id: str) -> bool:
+    """True when the vendor may operate bookings on their account (quotes, calendar).
+
+    QA-scoped test vendors skip the public Stripe explore gate here — they still need
+    admin approval. Client-only explore visibility is enforced separately via ``viewer``.
+    """
+    uid = str(vendor_user_id or "").strip()
+    if not uid or is_deleted_user_id(uid):
+        return False
+    if is_qa_scoped_vendor(uid):
+        try:
+            res = (
+                get_db()
+                .table("vendors")
+                .select("user_id")
+                .eq("user_id", uid)
+                .eq("approval_status", "approved")
+                .limit(1)
+                .execute()
+            )
+        except Exception as e:
+            logger.warning("vendor_is_approved_for_booking_operations failed: %s", e, exc_info=True)
+            return False
+        rows = getattr(res, "data", None) or []
+        return bool(rows)
+    return vendor_is_bookable_for_explore(vendor_user_id)

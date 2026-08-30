@@ -2,7 +2,7 @@
 
 import uuid
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request, Response
 
 from app.core.logging import get_logger
 from app.contracts.reviews import PublicReviewItem, VendorPublicReviewsResponse
@@ -24,6 +24,8 @@ from app.features.vendors.moderation import (
     get_approved_vendor_for_explore_by_id,
     list_approved_vendors_for_explore,
 )
+from app.features.vendors.qa_visibility import explore_viewer_from_auth
+from app.features.auth.http.guards import get_optional_session_user
 from app.features.vendors.markets import normalize_country_code
 from app.features.vendors import messages as vendor_messages
 
@@ -46,9 +48,15 @@ def _parse_vendor_ids(raw: str | None) -> list[str] | None:
 
 @router.get("/explore", response_model=ExploreVendorsResponse)
 def get_explore_vendors(
+    request: Request,
+    response: Response,
     country: str | None = Query(None, description="ISO country code (default GB)."),
 ) -> ExploreVendorsResponse:
-    rows = list_approved_vendors_for_explore(country_code=normalize_country_code(country))
+    viewer = explore_viewer_from_auth(get_optional_session_user(request, response))
+    rows = list_approved_vendors_for_explore(
+        country_code=normalize_country_code(country),
+        viewer=viewer,
+    )
     rows = merge_review_stats_into_vendor_rows(rows)
     rows = merge_public_metrics_into_vendor_rows(rows)
     logger.info("GET /vendors/explore approved_vendors_count=%s", len(rows))
@@ -56,14 +64,19 @@ def get_explore_vendors(
 
 
 @router.get("/explore/vendor/{vendor_user_id}", response_model=ExploreVendorSingleResponse)
-def get_explore_vendor_by_id(vendor_user_id: str) -> ExploreVendorSingleResponse:
+def get_explore_vendor_by_id(
+    vendor_user_id: str,
+    request: Request,
+    response: Response,
+) -> ExploreVendorSingleResponse:
     """One approved vendor for the client browse detail page (direct lookup)."""
     try:
         uuid.UUID(vendor_user_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=vendor_messages.VENDOR_NOT_FOUND_INVALID_ID) from e
 
-    row = get_approved_vendor_for_explore_by_id(vendor_user_id)
+    viewer = explore_viewer_from_auth(get_optional_session_user(request, response))
+    row = get_approved_vendor_for_explore_by_id(vendor_user_id, viewer=viewer)
     if not row:
         logger.info("GET /vendors/explore/vendor/%s not found", vendor_user_id)
         raise HTTPException(status_code=404, detail=vendor_messages.VENDOR_NOT_FOUND_OR_NOT_LISTED)
@@ -95,6 +108,8 @@ def get_explore_vendor_by_id(vendor_user_id: str) -> ExploreVendorSingleResponse
 
 @router.get("/explore/search", response_model=ExploreVendorSearchResponse)
 def get_explore_vendors_search(
+    request: Request,
+    response: Response,
     types: str | None = Query(None, description="Comma-separated service keys (e.g. photography,catering)."),
     location: str | None = Query(None, description="Substring match against city, name, services."),
     q: str | None = Query(None, description="Free-text search (vendor name, city, services)."),
@@ -114,6 +129,7 @@ def get_explore_vendors_search(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
 ) -> ExploreVendorSearchResponse:
+    viewer = explore_viewer_from_auth(get_optional_session_user(request, response))
     result = search_approved_vendors(
         types=types,
         location=location,
@@ -127,6 +143,7 @@ def get_explore_vendors_search(
         country=country,
         limit=limit,
         offset=offset,
+        viewer=viewer,
     )
     logger.info(
         "GET /vendors/explore/search total_count=%s page=%s mode=%s exact=%s related=%s sort=%s",
