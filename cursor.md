@@ -1,6 +1,6 @@
 # Eventtz - architecture index
 
-This is a **short index**. The full architecture reference lives in **[`docs/cursor/architecture-reference.md`](./docs/cursor/architecture-reference.md)** (~800 lines). Use **`@architecture-reference.md`** in chat when you need route tables, feature inventory, or deep conventions.
+This is a **short index**. The full architecture reference lives in **[`docs/architecture-reference.md`](./docs/architecture-reference.md)** (~800 lines). Use **`@architecture-reference.md`** in chat when you need route tables, feature inventory, or deep conventions.
 
 ## How Cursor loads rules
 
@@ -9,9 +9,9 @@ This is a **short index**. The full architecture reference lives in **[`docs/cur
    - `core.mdc` — always apply (~40 lines)
    - `backend.mdc` — `backend/**`
    - `frontend.mdc` — `frontend/**`
-3. **Ad hoc** — `@docs/cursor/architecture-reference.md` for full detail.
+3. **Ad hoc** — `@docs/architecture-reference.md` for full detail.
 
-**Token tips:** [`docs/cursor/token-usage-guide.md`](./docs/cursor/token-usage-guide.md)
+**Token tips:** [`docs/token-usage-guide.md`](./docs/token-usage-guide.md)
 
 ## Repository layout
 
@@ -19,7 +19,7 @@ This is a **short index**. The full architecture reference lives in **[`docs/cur
 eventtz/
 ├── AGENTS.md              # Short agent entrypoint
 ├── cursor.md              # This file — index only
-├── docs/cursor/           # Full reference + usage guide
+├── docs/                  # architecture-reference.md, token-usage-guide.md (not auto-loaded)
 ├── backend/               # Python (Poetry), FastAPI, Supabase
 │   ├── app/
 │   └── sql/               # Ordered Postgres migrations
@@ -43,7 +43,7 @@ eventtz/
 - **Errors:** `AppError` subclasses → `core/errors.py` handler.
 - **Run:** `poetry run uvicorn app.main:app --reload` from `backend/`.
 
-See **Backend** section in [`docs/cursor/architecture-reference.md`](./docs/cursor/architecture-reference.md) for feature table, routes, payments, migrations.
+See **Backend** section in [`docs/architecture-reference.md`](./docs/architecture-reference.md) for feature table, routes, payments, migrations.
 
 ## Frontend (summary)
 
@@ -52,7 +52,7 @@ See **Backend** section in [`docs/cursor/architecture-reference.md`](./docs/curs
 - **UI:** reuse `components/ui/*`; Tailwind + `globals.css` tokens.
 - **No raw HTTP in route files** for app APIs.
 
-See **Frontend** section in [`docs/cursor/architecture-reference.md`](./docs/cursor/architecture-reference.md) for route map, `lib/` modules, conventions.
+See **Frontend** section in [`docs/architecture-reference.md`](./docs/architecture-reference.md) for route map, `lib/` modules, conventions.
 
 ## Quick checklist (new backend feature)
 
@@ -75,4 +75,4 @@ See **Frontend** section in [`docs/cursor/architecture-reference.md`](./docs/cur
 - **Backend:** Supabase/business rules inline in HTTP routes; importing `http/` from logic; routers outside `http/router.py`.
 - **Frontend:** Duplicated API path strings; god `page.tsx` files; raw HTTP in `app/`.
 
-Full anti-patterns and inventory: [`docs/cursor/architecture-reference.md`](./docs/cursor/architecture-reference.md).
+Full anti-patterns and inventory: [`docs/architecture-reference.md`](./docs/architecture-reference.md).

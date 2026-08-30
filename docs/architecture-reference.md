@@ -2,9 +2,9 @@
 
 **Full reference** — not auto-loaded on every Agent turn (saves tokens). Loaded via:
 
-- **`@docs/cursor/architecture-reference.md`** or **`@architecture-reference.md`** in chat when needed
+- **`@docs/architecture-reference.md`** or **`@architecture-reference.md`** in chat when needed
 - Scoped rules in **`.cursor/rules/`** (`core.mdc`, `backend.mdc`, `frontend.mdc`) cover day-to-day essentials
-- Short index: **[`cursor.md`](../../cursor.md)** at repo root
+- Short index: **[`cursor.md`](../cursor.md)** at repo root
 
 This file describes how we structure and extend the codebase. Follow it when adding features, refactoring, or reviewing changes.
 

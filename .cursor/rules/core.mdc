@@ -11,7 +11,7 @@ alwaysApply: true
 eventtz/
 ├── backend/     # FastAPI, Supabase — features/<name>/http/ + logic
 ├── frontend/    # Next.js App Router — features/<domain>/ + lib/*Api.ts
-└── docs/cursor/ # Full architecture reference (not auto-loaded)
+└── docs/ # architecture-reference.md + token-usage-guide.md (not auto-loaded)
 ```
 
 ## Maintainability (both stacks)
@@ -29,6 +29,6 @@ Change only what the task requires. Prefer reuse over copy-paste.
 
 ## Deep reference
 
-Full route tables, feature inventory, and conventions: **`docs/cursor/architecture-reference.md`** (or `@cursor.md` in chat when doing architecture work).
+Full route tables, feature inventory, and conventions: **`docs/architecture-reference.md`** (or `@cursor.md` in chat when doing architecture work).
 
-Token/cost tips: **`docs/cursor/token-usage-guide.md`**.
+Token/cost tips: **`docs/token-usage-guide.md`**.

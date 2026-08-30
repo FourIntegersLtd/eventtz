@@ -52,7 +52,7 @@ Set a **spend limit** under **Settings → Billing** to avoid surprise overages.
 | [`.cursor/rules/core.mdc`](../.cursor/rules/core.mdc) | Short always-on rules (~40 lines) |
 | [`.cursor/rules/backend.mdc`](../.cursor/rules/backend.mdc) | Backend rules when editing `backend/**` |
 | [`.cursor/rules/frontend.mdc`](../.cursor/rules/frontend.mdc) | Frontend rules when editing `frontend/**` |
-| [`docs/cursor/architecture-reference.md`](./architecture-reference.md) | Full architecture — use `@architecture-reference.md` when needed |
+| [`docs/architecture-reference.md`](./architecture-reference.md) | Full architecture — use `@architecture-reference.md` when needed |
 
 **User Rules** (Cursor → Customize → Rules): keep global rules short. Move detailed git/PR workflows to manual `@mention` rules so they are not sent on every chat.
 

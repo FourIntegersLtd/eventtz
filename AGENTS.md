@@ -6,9 +6,9 @@ Scoped rules in **`.cursor/rules/`** apply automatically:
 - **`backend.mdc`** — when editing `backend/**`
 - **`frontend.mdc`** — when editing `frontend/**`
 
-For deep architecture (route tables, feature inventory, payments, etc.), reference **`@docs/cursor/architecture-reference.md`** or **`@cursor.md`** in chat — do not rely on loading the full doc every turn.
+For deep architecture (route tables, feature inventory, payments, etc.), reference **`@docs/architecture-reference.md`** or **`@cursor.md`** in chat — do not rely on loading the full doc every turn.
 
-**Token/cost tips:** [`docs/cursor/token-usage-guide.md`](./docs/cursor/token-usage-guide.md)
+**Token/cost tips:** [`docs/token-usage-guide.md`](./docs/token-usage-guide.md)
 
 ## Backend (short)
 
@@ -27,9 +27,9 @@ For deep architecture (route tables, feature inventory, payments, etc.), referen
 ## Maintainability
 
 - Prefer **small, focused diffs** and **reuse** existing helpers and types over copy-paste.
-- Avoid **spaghetti**: no god-components, no duplicated API paths, no inverted import layers (see **Anti-patterns** in `docs/cursor/architecture-reference.md`).
+- Avoid **spaghetti**: no god-components, no duplicated API paths, no inverted import layers (see **Anti-patterns** in `docs/architecture-reference.md`).
 
-When you introduce a **new cross-cutting pattern** (middleware, `lib/` convention, env vars, top-level feature area), update **`docs/cursor/architecture-reference.md`** and the relevant **`.cursor/rules/*.mdc`** in the same change.
+When you introduce a **new cross-cutting pattern** (middleware, `lib/` convention, env vars, top-level feature area), update **`docs/architecture-reference.md`** and the relevant **`.cursor/rules/*.mdc`** in the same change.
 
 ## Cursor Cloud specific instructions
 

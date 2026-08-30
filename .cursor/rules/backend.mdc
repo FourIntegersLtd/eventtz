@@ -49,4 +49,4 @@ Use **`apply_recent_first_order()`** for most lists (recent first). Chat message
 4. Register in `app/http/router.py`
 5. Env → `.env.example`; DB → `sql/NNN_*.sql`
 
-Details: **`docs/cursor/architecture-reference.md`** (Backend section).
+Details: **`docs/architecture-reference.md`** (Backend section).
