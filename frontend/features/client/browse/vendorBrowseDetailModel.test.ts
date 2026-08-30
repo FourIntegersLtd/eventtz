@@ -3,6 +3,7 @@ import {
   bookingQuantitiesPayload,
   buildBookingLineItems,
   buildBrowsePricingOptions,
+  formatBookingTotalGbp,
 } from "./vendorBrowseDetailModel";
 import type { ExploreVendor } from "@/lib/clientExploreApi";
 
@@ -60,5 +61,33 @@ describe("browse per-unit pricing", () => {
       { "pkg-chairs": 50, "pkg-gold": 3 },
     );
     expect(payload).toEqual({ "pkg-chairs": 50 });
+  });
+
+  it("keeps empty selection total at GBP 0.00", () => {
+    expect(formatBookingTotalGbp([])).toEqual({
+      label: "GBP 0.00",
+      sumNumeric: 0,
+      hasTbc: false,
+    });
+  });
+
+  it("clamps per-unit quantities to package minimums", () => {
+    const options = buildBrowsePricingOptions(vendor([chairs]));
+    const payload = bookingQuantitiesPayload(["pkg-chairs"], options, { "pkg-chairs": 3 });
+    expect(payload).toEqual({ "pkg-chairs": 10 });
+  });
+
+  it("returns undefined when no per-unit packages are selected", () => {
+    const options = buildBrowsePricingOptions(
+      vendor([
+        {
+          id: "pkg-gold",
+          title: "Full setup",
+          price: "500",
+          details: "Full setup including delivery and collection on the day.",
+        },
+      ]),
+    );
+    expect(bookingQuantitiesPayload(["pkg-gold"], options, {})).toBeUndefined();
   });
 });

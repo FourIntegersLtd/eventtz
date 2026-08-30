@@ -17,12 +17,12 @@ import {
 } from "@/lib/vendorDiscountDisplay";
 import { computeClientFeeBreakdown } from "@/lib/bookingServiceFee";
 import { ClientFeeBreakdownSummary } from "@/features/bookings/ClientFeeBreakdownSummary";
-import { todayIsoDate, isPastIsoDate } from "@/lib/eventDateValidation";
+import { todayIsoDate } from "@/lib/eventDateValidation";
 import {
   type BrowsePricingOption,
   bookingQuantitiesPayload,
-  buildBookingLineItems,
 } from "./vendorBrowseDetailModel";
+import { usePerUnitPackageSelection } from "./usePerUnitPackageSelection";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { lineTotalGbp } from "@/lib/packagePricing";
 import { useVendorBookingSubmit } from "@/features/client/browse/useVendorBookingSubmit";
@@ -30,18 +30,11 @@ import { useVendorReferralPreview } from "@/features/client/browse/useVendorRefe
 import type { ClientSearchContext } from "@/lib/clientBookingsApi";
 import { ActiveEventPrefillBanner } from "@/features/bookings/ActiveEventPrefillBanner";
 import type { EventEnquirePrefill } from "@/features/bookings/eventEnquirePrefill";
-import {
-  applyPrefillToFields,
-  applyLinkedPrefillToForm,
-  useActiveEventPrefill,
-} from "@/features/bookings/useActiveEventPrefill";
+import { useEnquireEventFormState } from "@/features/bookings/useEnquireEventFormState";
+import type { MarketplaceBookingSearchPrefill } from "@/lib/marketplaceSearchParams";
+import { CLIENT_BOOKING_NOTES_MAX_LENGTH } from "@/lib/validation/bookings";
 
-export type VendorBookingSearchPrefill = {
-  /** YYYY-MM-DD from marketplace search (first selected day). */
-  eventDate?: string;
-  eventEndDate?: string;
-  datesFlexible: boolean;
-};
+export type VendorBookingSearchPrefill = MarketplaceBookingSearchPrefill;
 
 type VendorBookingModalProps = {
   onClose: () => void;
@@ -82,22 +75,37 @@ export function VendorBookingModal({
   clientSearchContext,
   initialReferralCode,
 }: VendorBookingModalProps) {
-  // Packages are chosen on the profile; quantity for per-item rates can still change here.
-  const [selectedIds, setSelectedIds] = useState(() => new Set(initialSelectedIds));
-  const [quantities, setQuantities] = useState<Record<string, number>>(
-    () => ({ ...initialQuantities }),
-  );
-  const [eventName, setEventName] = useState(initialPrefill?.eventName ?? "");
-  const [eventDate, setEventDate] = useState(
-    searchPrefill?.eventDate?.trim() ||
-      initialPrefill?.eventDate?.trim() ||
-      todayIsoDate(),
-  );
-  const [eventEndDate, setEventEndDate] = useState(
-    searchPrefill?.eventEndDate ?? initialPrefill?.eventEndDate ?? "",
-  );
-  const [venueAddress, setVenueAddress] = useState(initialPrefill?.venueAddress ?? "");
-  const [notes, setNotes] = useState(initialPrefill?.notes ?? "");
+  const {
+    selectedIds,
+    quantities,
+    setPackageQuantity,
+    lineItems,
+  } = usePerUnitPackageSelection({
+    pricingOptions,
+    initialSelectedIds,
+    initialQuantities,
+  });
+  const {
+    eventName,
+    setEventName,
+    eventDate,
+    setEventDate,
+    eventEndDate,
+    setEventEndDate,
+    venueAddress,
+    setVenueAddress,
+    notes,
+    setNotes,
+    pendingPrefill,
+    bannerVisible,
+    dismissForNewEvent,
+    applyBannerPrefill,
+    selectedEventId,
+  } = useEnquireEventFormState({
+    searchPrefill,
+    initialPrefill,
+    linkedEventId,
+  });
   const [referralFieldsOpen, setReferralFieldsOpen] = useState(
     () => Boolean(initialReferralCode?.trim()),
   );
@@ -109,27 +117,6 @@ export function VendorBookingModal({
     }
   }, [initialReferralCode]);
 
-  const setPackageQuantity = (id: string, qty: number) => {
-    const opt = pricingOptions.find((o) => o.id === id);
-    setQuantities((prev) => ({ ...prev, [id]: qty }));
-    if (opt?.pricingMode === "per_unit") {
-      setSelectedIds((prev) => {
-        const next = new Set(prev);
-        if (qty >= opt.minQuantity) next.add(id);
-        else next.delete(id);
-        return next;
-      });
-    }
-  };
-  const {
-    pendingPrefill,
-    linkedPrefill,
-    selectedEventId,
-    bannerVisible,
-    applyPrefill,
-    dismissForNewEvent,
-  } = useActiveEventPrefill({ linkedEventId });
-
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -138,35 +125,6 @@ export function VendorBookingModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  useEffect(() => {
-    if (searchPrefill?.eventDate) {
-      const d = searchPrefill.eventDate;
-      setEventDate(isPastIsoDate(d) ? "" : d);
-    }
-    if (searchPrefill?.eventEndDate !== undefined) {
-      const end = searchPrefill.eventEndDate ?? "";
-      setEventEndDate(end && isPastIsoDate(end) ? "" : end);
-    }
-  }, [searchPrefill?.eventDate, searchPrefill?.eventEndDate]);
-
-  useEffect(() => {
-    if (selectedEventId || bannerVisible || linkedPrefill || !initialPrefill) return;
-    if (initialPrefill.eventName) setEventName(initialPrefill.eventName);
-    if (initialPrefill.eventDate) setEventDate(initialPrefill.eventDate);
-    if (initialPrefill.eventEndDate) setEventEndDate(initialPrefill.eventEndDate);
-    if (initialPrefill.venueAddress) setVenueAddress(initialPrefill.venueAddress);
-    if (initialPrefill.notes) setNotes(initialPrefill.notes);
-  }, [initialPrefill, selectedEventId, bannerVisible, linkedPrefill]);
-
-  useEffect(() => {
-    applyLinkedPrefillToForm(linkedPrefill, {
-      setEventName,
-      setEventDate,
-      setEventEndDate,
-      setVenueAddress,
-    });
-  }, [linkedPrefill]);
-
   const calendarConflict = useMemo(() => {
     if (!vendorPayload || !eventDate.trim()) return false;
     const end = eventEndDate.trim() || null;
@@ -174,11 +132,6 @@ export function VendorBookingModal({
     if (range.length === 0) return false;
     return !vendorPayloadAllowsEventDates(vendorPayload, range);
   }, [vendorPayload, eventDate, eventEndDate]);
-
-  const lineItems = useMemo(
-    () => buildBookingLineItems(pricingOptions, [...selectedIds], quantities),
-    [pricingOptions, selectedIds, quantities],
-  );
 
   const estimate = useMemo(() => {
     const positiveLines = lineItems.map((li) => ({
@@ -373,11 +326,7 @@ export function VendorBookingModal({
               <ActiveEventPrefillBanner
                 prefill={pendingPrefill}
                 onUse={() => {
-                  const fields = applyPrefillToFields(applyPrefill(pendingPrefill));
-                  setEventName(fields.eventName);
-                  setEventDate(fields.eventDate);
-                  setEventEndDate(fields.eventEndDate);
-                  setVenueAddress(fields.venueAddress);
+                  applyBannerPrefill();
                   setValidationError(null);
                 }}
                 onNewEvent={dismissForNewEvent}
@@ -575,11 +524,13 @@ export function VendorBookingModal({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={4}
-                maxLength={2000}
+                maxLength={CLIENT_BOOKING_NOTES_MAX_LENGTH}
                 placeholder="Guest count, venue, dietary needs, timeline, or questions…"
                 className="mt-1.5 w-full resize-y rounded-lg border border-neutral-200 px-3 py-2 text-base text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 md:text-sm"
               />
-              <p className="mt-1 text-right text-xs text-neutral-400">{notes.length}/2000</p>
+              <p className="mt-1 text-right text-xs text-neutral-400">
+                {notes.length}/{CLIENT_BOOKING_NOTES_MAX_LENGTH}
+              </p>
             </div>
 
             {referralFieldsOpen ? (

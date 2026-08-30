@@ -1,4 +1,4 @@
-import type { MarketplaceSort } from "@/lib/clientExploreApi";
+import type { ExploreSearchQuery, MarketplaceSort } from "@/lib/clientExploreApi";
 import type { ClientSearchContext } from "@/lib/clientBookingsApi";
 import { DEFAULT_COUNTRY_CODE, normalizeCountryCode } from "@/lib/markets";
 import { VENDOR_SERVICE_OPTIONS } from "@/lib/vendorServiceCatalog";
@@ -168,5 +168,67 @@ export function toClientSearchContext(state: MarketplaceSearchState): ClientSear
     country: state.country || undefined,
     dates: state.dates.length ? state.dates : undefined,
     dateFlexible: state.dateFlexible || undefined,
+  };
+}
+
+/** Dates from browse filters for booking modal prefill. */
+export type MarketplaceBookingSearchPrefill = {
+  eventDate: string;
+  eventEndDate?: string;
+  datesFlexible: boolean;
+};
+
+export function marketplaceSearchPrefillFromState(
+  state: MarketplaceSearchState,
+): MarketplaceBookingSearchPrefill {
+  const dates = state.dates;
+  const first = dates[0];
+  let eventEndDate: string | undefined;
+  if (dates.length === 2 && first && dates[1] && dates[1] >= first) {
+    eventEndDate = dates[1];
+  }
+  return {
+    eventDate: first ?? "",
+    eventEndDate,
+    datesFlexible: state.dateFlexible,
+  };
+}
+
+/** Browse filters + optional planner handoff for booking analytics context. */
+export function clientSearchContextFromBrowse(
+  state: MarketplaceSearchState,
+  searchParams?: URLSearchParams | null,
+): ClientSearchContext {
+  const base = toClientSearchContext(state);
+  const planId =
+    state.fromPlannerPlanId?.trim() ||
+    searchParams?.get("fromPlanner")?.trim() ||
+    null;
+  if (!planId) return base;
+  return { ...base, source: "planner" as const, plannerPlanId: planId };
+}
+
+/** Map URL marketplace state to explore search API query params. */
+export function marketplaceStateToExploreQuery(
+  state: MarketplaceSearchState,
+  options?: {
+    vendorIds?: string[];
+    limit?: number;
+    offset?: number;
+  },
+): ExploreSearchQuery {
+  return {
+    query: state.query || undefined,
+    types: state.types.length ? state.types : undefined,
+    location: state.location || undefined,
+    country: state.country,
+    dates: state.dates,
+    flexible: state.dateFlexible,
+    budgetMin: state.budgetMin,
+    budgetMax: state.budgetMax,
+    sort: state.sort,
+    vendorIds: options?.vendorIds,
+    limit: options?.limit,
+    offset: options?.offset,
   };
 }

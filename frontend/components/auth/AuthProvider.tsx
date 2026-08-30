@@ -20,12 +20,13 @@ import { identifySentryUser, resetSentryUser } from "@/lib/sentryUser";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { useRealtimeSse } from "@/lib/useRealtimeSse";
 import { clearVendorCopilotBriefCache } from "@/lib/vendorCopilotApi";
+import { SESSION_VERIFY_FAILED } from "@/lib/auth-messages";
 
 type AuthContextValue = {
   user: AuthUser | null;
   loading: boolean;
   isAuthenticated: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<AuthUser>;
   signUp: (
     email: string,
     password: string,
@@ -91,8 +92,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isAuthenticated: Boolean(user),
       signIn: async (email, password) => {
         await apiSignIn(email, password);
-        await refreshUser();
-        track(MixpanelEvents.user_signed_in);
+        try {
+          const nextUser = await getMe();
+          setUser(nextUser);
+          track(MixpanelEvents.user_signed_in);
+          return nextUser;
+        } catch {
+          setUser(null);
+          throw new Error(SESSION_VERIFY_FAILED);
+        }
       },
       signUp: async (email, password, userType = "client", referralCode) => {
         const result = await apiSignUp(email, password, userType, referralCode);

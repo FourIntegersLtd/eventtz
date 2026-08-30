@@ -7,6 +7,7 @@ import { GENERIC_AUTH_ERROR } from "@/lib/auth-messages";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { resolvePostAuthPath } from "@/features/auth/authRouting";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
+import { clearFieldError } from "@/lib/formHelpers";
 import {
   captureReferralFromSearchParams,
   fetchReferralPartnerDisplayName,
@@ -107,13 +108,8 @@ export function useUnifiedRegister() {
     }
   };
 
-  const clearFieldError = (field: string) => {
-    setFieldErrors((prev) => {
-      if (!prev[field]) return prev;
-      const next = { ...prev };
-      delete next[field];
-      return next;
-    });
+  const onFieldErrorClear = (field: string) => {
+    setFieldErrors((prev) => clearFieldError(prev, field));
   };
 
   return {
@@ -121,17 +117,17 @@ export function useUnifiedRegister() {
     setAccountType: (value: RegisterAccountType) => {
       if (referralLocked) return;
       setAccountType(value);
-      clearFieldError("accountType");
+      onFieldErrorClear("accountType");
     },
     email,
     setEmail: (value: string) => {
       setEmail(value);
-      clearFieldError("email");
+      onFieldErrorClear("email");
     },
     password,
     setPassword: (value: string) => {
       setPassword(value);
-      clearFieldError("password");
+      onFieldErrorClear("password");
     },
     error,
     fieldErrors,

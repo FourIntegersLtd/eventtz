@@ -81,3 +81,25 @@ export function vendorPayloadAllowsEventDates(
   }
   return true;
 }
+
+type VendorCalendarPayload = {
+  user_id: string;
+  profile_form_data?: Record<string, unknown>;
+};
+
+/** Vendor user ids whose onboarding calendar rejects the proposed event dates. */
+export function vendorUserIdsWithCalendarConflict(
+  vendors: VendorCalendarPayload[],
+  eventDate: string,
+  eventEndDate: string,
+): string[] {
+  const range = isoDatesInEventRange(eventDate.trim(), eventEndDate.trim() || null);
+  if (range.length === 0) return [];
+  return vendors
+    .filter((vendor) => {
+      const payload = vendor.profile_form_data;
+      if (!payload || typeof payload !== "object" || Array.isArray(payload)) return false;
+      return !vendorPayloadAllowsEventDates(payload, range);
+    })
+    .map((vendor) => vendor.user_id);
+}

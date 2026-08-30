@@ -88,11 +88,18 @@ def _normalize_date_str(value: Any) -> str:
     return s[:10] if len(s) >= 10 else s
 
 
-def _attach_pricing_fields(row: dict[str, Any]) -> None:
-    """Add vendor_adjustments (normalised) and a pricing breakdown to the row."""
-    pb = build_pricing_breakdown_for_booking_row(row)
-    row["vendor_adjustments"] = pb["vendor_adjustments"]
-    row["pricing"] = pb
+def _attach_pricing_fields(
+    target: dict[str, Any],
+    source: dict[str, Any] | None = None,
+) -> None:
+    """Add vendor_adjustments (normalised) and a pricing breakdown.
+
+    Price from ``source`` (the DB row) when given. Projected API dicts often
+    omit ``vendor_user_id``, which would skip the referral fee discount.
+    """
+    pb = build_pricing_breakdown_for_booking_row(source if source is not None else target)
+    target["vendor_adjustments"] = pb["vendor_adjustments"]
+    target["pricing"] = pb
 
 
 def _initial_client_total_label(row: dict[str, Any], pb: dict[str, Any] | None = None) -> str | None:
@@ -302,8 +309,9 @@ def get_booking_request_for_vendor(vendor_user_id: str, booking_id: str) -> dict
         "conversation_id": str(conv) if conv else None,
         "service_fee_percent": row.get("service_fee_percent"),
         "vendor_referral_code": row.get("vendor_referral_code"),
+        "vendor_user_id": vendor_user_id,
     }
-    _attach_pricing_fields(out)
+    _attach_pricing_fields(out, source=row)
     out["initial_client_total_label"] = _initial_client_total_label(row, out.get("pricing"))
     bid = str(row.get("id", ""))
     out["review"] = get_vendor_review_for_booking(vendor_user_id, bid)
@@ -426,6 +434,7 @@ def get_booking_request_for_client(client_user_id: str, booking_id: str) -> dict
         return None
     row = data[0]
     vid = str(row.get("vendor_user_id") or "")
+    # Vendor display names omit GDPR tombstones via deleted_user_ids in display lookup.
     names = _vendor_display_names_by_id([vid]) if vid else {}
     line_items = row.get("line_items")
     if not isinstance(line_items, list):
@@ -474,7 +483,7 @@ def get_booking_request_for_client(client_user_id: str, booking_id: str) -> dict
         "service_fee_percent": row.get("service_fee_percent"),
         "vendor_referral_code": row.get("vendor_referral_code"),
     }
-    _attach_pricing_fields(out)
+    _attach_pricing_fields(out, source=row)
     out["initial_client_total_label"] = _initial_client_total_label(row, out.get("pricing"))
     try:
         out["review"] = get_client_review_for_booking(booking_id, client_user_id)
