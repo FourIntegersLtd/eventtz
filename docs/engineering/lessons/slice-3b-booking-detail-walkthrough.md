@@ -4,7 +4,9 @@ Trace **one booking** from post-enquire redirect → detail load → vendor pric
 
 **Detail endpoint:** `GET /api/v1/client/booking-requests/{id}`  
 **Status endpoint:** `PATCH /api/v1/client/booking-requests/{id}/status`  
-**Orchestrator:** `get_booking_request_for_client` in `queries.py`; `update_booking_request_status_for_client` in `status.py`
+**Cancel endpoint:** `POST /api/v1/client/booking-requests/{id}/cancel`  
+**Detail query:** `get_booking_request_for_client` in `queries.py`  
+**Status logic:** `update_booking_request_status_for_client` in `status_client.py` (shared helpers in `status_shared.py`)
 
 ---
 
@@ -15,7 +17,8 @@ Trace **one booking** from post-enquire redirect → detail load → vendor pric
 │  Slice 3a — enquire creates pending/unpaid row             │
 │  redirect → /client/bookings/{id}                          │
 └────────────────────────────┬─────────────────────────────────┘
-                             │ fetchClientBookingDetail
+                             │ useClientBookingsController
+                             │   → scaffold fetchDetail
 ┌────────────────────────────▼─────────────────────────────────┐
 │  Detail — status badge + snapshot line_items + pricing       │
 │  BookingDetailPanel + ClientBookingDetailExtras              │
@@ -23,11 +26,21 @@ Trace **one booking** from post-enquire redirect → detail load → vendor pric
                              │ vendor PUT adjustments (optional)
 ┌────────────────────────────▼─────────────────────────────────┐
 │  Price update — BookingPriceUpdateBanner                     │
-│  client PATCH status accepted → accepted/unpaid              │
+│  useClientBookingActions.applyClientUpdatedPriceResponse     │
+│  → PATCH status accepted → accepted/unpaid                   │
+│  → useClientBookingPaymentReturn.paymentDue                  │
 └──────────────────────────────────────────────────────────────┘
 ```
 
 **Rule:** `line_items` are frozen at enquire. Adjustments are **extra lines** the vendor adds before accept. Client must confirm.
+
+**Hook split:**
+
+| Hook | Responsibility |
+|------|----------------|
+| `useClientBookingsController` | Orchestrator — scaffold, view model, banner flags, header/footer actions |
+| `useClientBookingActions` | Mutations — cancel, quote accept/decline, price accept/decline, completion |
+| `useClientBookingPaymentReturn` | Payment due, checkout return sync, return banners |
 
 ---
 
@@ -41,21 +54,55 @@ Trace **one booking** from post-enquire redirect → detail load → vendor pric
 
 **File:** `frontend/app/client/(portal)/bookings/[bookingId]/page.tsx`
 
-```tsx
-<ClientBookingsView selectedBookingId={bookingId} />
+```8:15:frontend/app/client/(portal)/bookings/[bookingId]/page.tsx
+export default function ClientBookingDetailPage() {
+  const params = useParams();
+  const bookingId = typeof params.bookingId === "string" ? params.bookingId : "";
+  return (
+    <Suspense fallback={<LoadingState label="Loading booking…" variant="centered" />}>
+      <ClientBookingsView selectedBookingId={bookingId} />
+    </Suspense>
+  );
+}
 ```
 
-No fetch here — `useClientBookingsController` inside the view handles it.
+No fetch here — `ClientBookingsView` calls `useClientBookingsController({ selectedBookingId })`.
 
 ---
 
-### Step 2 — Scaffold fetches detail
+### Step 2 — Orchestrator starts scaffold fetch
+
+**File:** `useClientBookingsController.ts`
+
+```38:69:frontend/features/client/bookings/useClientBookingsController.ts
+  const fetchList = useCallback(
+    (t: "active" | "closed") =>
+      fetchClientBookings({
+        group: t,
+        ...(listStatusFilter === "pending" ? { status: "pending" } : {}),
+      }),
+    [listStatusFilter],
+  );
+  const fetchDetail = useCallback((id: string) => fetchClientBookingDetail(id), []);
+  const getDetailStatus = useCallback((b: ClientBookingDetail) => b.booking_status, []);
+
+  const {
+    ...
+    detail,
+    detailLoading,
+    bumpDetail,
+    ...
+  } = useParticipantBookingsScaffold({
+    selectedBookingId,
+    fetchList,
+    fetchDetail,
+    getDetailStatus,
+  });
+```
 
 **File:** `useParticipantBookingsScaffold.ts`
 
-When `selectedBookingId` is set, the scaffold calls `fetchDetail(selectedBookingId)` and stores the result in `detail`.
-
-Parallel: fetches the **list** for the left panel (`fetchClientBookings({ group: tab })`).
+When `selectedBookingId` is set, the scaffold calls `fetchDetail(selectedBookingId)` and stores the result in `detail`. Parallel: fetches the **list** for the left panel.
 
 ---
 
@@ -66,6 +113,17 @@ Parallel: fetches the **list** for the left panel (`fetchClientBookings({ group:
 ```
 GET /api/v1/client/booking-requests/abc-booking-uuid
 Cookie: eventtz_access_token=...
+```
+
+```178:185:frontend/lib/clientBookingsApi.ts
+export async function fetchClientBookingDetail(
+  bookingId: string,
+): Promise<ClientBookingDetail> {
+  const { data } = await api.get<ClientBookingDetailResponse>(
+    `/api/v1/client/booking-requests/${bookingId}`,
+  );
+  return data.booking;
+}
 ```
 
 **File:** `client.py` → `require_client` → `get_booking_request_for_client(client_id, booking_id)`
@@ -93,13 +151,19 @@ Cookie: eventtz_access_token=...
     "vendor_adjustments": [],
     "pricing": {
       "subtotal_gbp": 200,
+      "service_fee_percent": 5,
+      "service_fee_gbp": 10,
+      "service_fee_label": "£10 Eventtz fee",
       "client_total_gbp": 210,
-      "client_total_label": "£210"
+      "client_total_label": "£210",
+      "referral_fee_applied": false
     },
     "vendor_display_name": "Sparkle Events"
   }
 }
 ```
+
+If the client used a vendor referral code at enquire time, `pricing.referral_fee_applied` is `true` and `referral_fee_discount_label` shows the fee reduction.
 
 ---
 
@@ -118,9 +182,20 @@ Maps API fields to `BookingDetailViewModel` (shared with vendor portal).
 
 **File:** `ClientBookingDetailExtras.tsx`
 
-- No price update banner (`vendor_adjustments` empty)
-- No payment due banner (`booking_status !== "accepted"`)
-- Footer: **Cancel booking** available
+- No price update banner (`showUpdatedPriceBanner` is false — `vendor_adjustments` empty)
+- No payment due banner (`paymentDue` is false — `booking_status !== "accepted"`)
+- Footer: **Cancel booking** available (from orchestrator `footerActions`)
+
+**Orchestrator banner flags on fresh load:**
+
+```149:152:frontend/features/client/bookings/useClientBookingsController.ts
+  const showUpdatedPriceBanner =
+    detail?.booking_status === "pending" &&
+    detail.initiator === "client" &&
+    detail.vendor_adjustments.length > 0;
+```
+
+All false for a fresh enquiry → no price banner.
 
 ---
 
@@ -149,7 +224,7 @@ Maps API fields to `BookingDetailViewModel` (shared with vendor portal).
 - Validates `status === pending` and `initiator === client`
 - Validates surcharge caps (`booking_max_adjustment_gbp`, `booking_max_adjustment_pct_of_subtotal`)
 - Stores `vendor_adjustments` JSON on row
-- Recomputes `total_label` via `build_pricing_breakdown`
+- Recomputes `total_label` via `build_pricing_breakdown` (service fee recalculated on new vendor portion)
 - Sets `initial_client_total_label` on first adjustment (snapshot “was £210”)
 - Notifies client (`booking_pricing_updated`)
 
@@ -159,24 +234,24 @@ Maps API fields to `BookingDetailViewModel` (shared with vendor portal).
 
 Realtime event `bookings:refresh` or navigation bump triggers `bumpDetail()` → re-fetch detail.
 
-**Controller:**
+**Orchestrator** — `showUpdatedPriceBanner` becomes true:
 
-```typescript
-const showUpdatedPriceBanner =
-  detail?.booking_status === "pending" &&
-  detail.initiator === "client" &&
-  detail.vendor_adjustments.length > 0;
-// → true
+```149:152:frontend/features/client/bookings/useClientBookingsController.ts
+  const showUpdatedPriceBanner =
+    detail?.booking_status === "pending" &&
+    detail.initiator === "client" &&
+    detail.vendor_adjustments.length > 0;
 ```
 
-**File:** `BookingPriceUpdateBanner.tsx`
+**File:** `ClientBookingDetailExtras.tsx` → `BookingPriceUpdateBanner`
 
 | UI element | Source |
 |------------|--------|
 | Was price | `resolveWasClientTotalLabel(detail)` → `initial_client_total_label` or pre-adjustment total |
 | Now price | `detail.pricing.client_total_label` → e.g. “£262.50” |
 | Line items | `pricing.vendor_adjustments` → Travel surcharge £50 |
-| Accept / Decline | `onAccept` / `onDecline` → `applyClientUpdatedPriceResponse` |
+| Fee breakdown | `ClientFeeBreakdownSummary` inside banner — vendor portion + service fee |
+| Accept / Decline | `onAccept` / `onDecline` → orchestrator passes `applyClientUpdatedPriceResponse` |
 
 List row subtext (left panel): “New price. Your response needed” via `has_price_update` flag from list API.
 
@@ -184,12 +259,20 @@ List row subtext (left panel): “New price. Your response needed” via `has_pr
 
 ### Step 7a — Client accepts updated price
 
-**UI:** Click **Accept** on banner.
+**UI:** Click **Accept new price** on banner.
 
-**File:** `useClientBookingsController.ts`
+**File:** `useClientBookingActions.ts`
 
-```typescript
-await patchClientBookingStatus(bookingId, "accepted");
+```106:137:frontend/features/client/bookings/useClientBookingActions.ts
+  const applyClientUpdatedPriceResponse = async (next: "accepted" | "declined") => {
+    if (!detail?.booking_request_id) return;
+    if (detail.initiator !== "client" || detail.booking_status !== "pending") return;
+    if (detail.vendor_adjustments.length === 0) return;
+    ...
+    await patchClientBookingStatus(bookingId, next);
+    ...
+    bumpDetail();
+  };
 ```
 
 **HTTP:**
@@ -199,35 +282,45 @@ PATCH /api/v1/client/booking-requests/abc-booking-uuid/status
 { "booking_status": "accepted" }
 ```
 
-**File:** `status.py` → `update_booking_request_status_for_client`
+**File:** `status_client.py` → `update_booking_request_status_for_client`
 
-- Confirms `client_price_confirmation_required(row)` is true
+- Confirms `client_price_confirmation_required(row)` is true (`is_updated_price`)
 - Updates `status` to `accepted`
-- Notifies vendor
+- Notifies vendor (`_notify_client_confirmed_updated_price`)
 - Returns updated row
 
 **UI after refresh:**
 
 - `StatusBadge` → “Accepted”
-- Price banner gone
-- `paymentDue` → true → “Payment needed” banner with **Pay now** → `/client/bookings/{id}/pay` (Slice 4)
+- Price banner gone (`showUpdatedPriceBanner` false — no longer `pending`)
+- `useClientBookingPaymentReturn` sets `paymentDue` → true → “Payment needed” banner with **Pay now** → `/client/bookings/{id}/pay` (Slice 4)
+
+```37:39:frontend/features/client/bookings/useClientBookingPaymentReturn.ts
+  const paymentDue = detail ? bookingCanBePaid(detail) : false;
+  const paymentConfirmed =
+    detail?.payment_status === "paid" || detail?.payment_status === "payout_released";
+```
 
 ---
 
 ### Step 7b — Client declines updated price (alternate path)
 
-**UI:** Click **Decline** on banner → confirm dialog.
+**UI:** Click **Decline** on banner → confirm dialog (`declinePriceOpen` from `useClientBookingActions`).
 
 **HTTP:** same `PATCH` with `{ "booking_status": "declined" }`
 
-**File:** `status.py` (updated-price branch)
+**File:** `status_client.py` (updated-price branch)
 
-```python
-revert_payload = {
-    "vendor_adjustments": [],
-    "total_label": persisted_booking_total_label(pb),  # original snapshot total
-}
-# status stays "pending"
+```140:169:backend/app/features/bookings/status_client.py
+    if new_status == "declined":
+        if is_updated_price:
+            ...
+            revert_payload: dict[str, Any] = {
+                "vendor_adjustments": [],
+                "total_label": persisted_booking_total_label(pb),
+            }
+            ...
+            return {"id": booking_id, "status": "pending"}
 ```
 
 **UI after refresh:**
@@ -248,18 +341,80 @@ revert_payload = {
 | Condition | UI |
 |-----------|-----|
 | `initiator === "vendor"` + `pending` | Header: **Accept quote** / **Decline** (not price banner) |
-| Accept | `PATCH status accepted` — may require venue postcode in body |
-| Decline | `PATCH status declined` — booking closes |
+| Accept | `applyClientQuoteResponse("accepted")` in `useClientBookingActions` |
+| Decline | confirm dialog → `applyClientQuoteResponse("declined")` |
 
-Same endpoint, different backend branch in `status.py` (`is_vendor_quote` vs `is_updated_price`).
+**Orchestrator builds header actions:**
+
+```195:217:frontend/features/client/bookings/useClientBookingsController.ts
+  if (detail && detail.initiator === "vendor" && detail.booking_status === "pending") {
+    headerActions.push(
+      { key: "accept", label: "Accept quote", ... onClick: () => void applyClientQuoteResponse("accepted") },
+      { key: "decline", label: "Decline", ... onClick: () => setDeclineQuoteOpen(true) },
+    );
+  }
+```
+
+**File:** `useClientBookingActions.ts` — quote handler:
+
+```68:104:frontend/features/client/bookings/useClientBookingActions.ts
+  const applyClientQuoteResponse = async (next: "accepted" | "declined") => {
+    if (!detail?.booking_request_id) return;
+    if (detail.initiator !== "vendor" || detail.booking_status !== "pending") return;
+    ...
+    await patchClientBookingStatus(bookingId, next);
+    ...
+    bumpDetail();
+  };
+```
+
+Same endpoint, different backend branch in **`status_client.py`** (`is_vendor_quote` vs `is_updated_price`):
+
+```133:138:backend/app/features/bookings/status_client.py
+    is_vendor_quote = initiator == "vendor"
+    is_updated_price = initiator == "client" and client_price_confirmation_required(row0)
+```
+
+- **Accept quote** → `status=accepted`; may require `event_postcode` in PATCH body (`ClientBookingStatusBody`)
+- **Decline quote** → `status=declined`; booking closes (not the “revert to pending” path)
 
 ---
 
 ## Scenario D — Cancel from detail
 
-**UI:** Footer **Cancel booking** → confirm dialog.
+**UI:** Footer **Cancel booking** → confirm dialog (`cancelOpen` from `useClientBookingActions`).
+
+**File:** `useClientBookingActions.ts`
+
+```40:66:frontend/features/client/bookings/useClientBookingActions.ts
+  const confirmCancelBooking = async () => {
+    if (!detail?.booking_request_id) return;
+    ...
+    await postCancelClientBooking(bookingId);
+    ...
+    bumpDetail();
+  };
+```
 
 **HTTP:** `POST /api/v1/client/booking-requests/{id}/cancel`
+
+**File:** `status_client.py` → `cancel_booking_request_for_client`
+
+Uses shared helpers from **`status_shared.py`**:
+
+- `assert_booking_may_be_cancelled` — not after payout, not with open dispute
+- `expire_pending_checkout_session` — close in-flight Stripe session
+- `refund_paid_booking_before_cancel` — full refund if already paid
+
+**Orchestrator cancel guard** — vendor-quote pending bookings cannot be cancelled by client (must accept/decline instead):
+
+```164:168:frontend/features/client/bookings/useClientBookingsController.ts
+  const canCancel =
+    detail &&
+    (detail.booking_status === "pending" || detail.booking_status === "accepted") &&
+    detail.payment_status !== "payout_released" &&
+    !(detail.initiator === "vendor" && detail.booking_status === "pending");
+```
 
 **Result:** `booking_status = cancelled`. If already paid, refund logic runs (Slice 4/6 territory).
 
@@ -270,7 +425,7 @@ Same endpoint, different backend branch in `status.py` (`is_vendor_quote` vs `is
 | booking_status | payment_status | Typical client view |
 |----------------|----------------|---------------------|
 | `pending` | `unpaid` | Waiting for vendor / price update banner |
-| `accepted` | `unpaid` | Payment needed banner |
+| `accepted` | `unpaid` | Payment needed banner (`useClientBookingPaymentReturn.paymentDue`) |
 | `accepted` | `paid` | Confirmed; may show completion banner after event |
 | `completed` | `payout_released` | Done; review form |
 | `declined` | `unpaid` | Closed |
@@ -283,15 +438,20 @@ Same endpoint, different backend branch in `status.py` (`is_vendor_quote` vs `is
 | Step | File |
 |------|------|
 | Route | `[bookingId]/page.tsx` |
-| Fetch + banners | `useClientBookingsController.ts` |
-| API types | `clientBookingsApi.ts` |
+| Orchestrator | `useClientBookingsController.ts` |
+| Mutations | `useClientBookingActions.ts` |
+| Payment return | `useClientBookingPaymentReturn.ts` |
+| API types | `clientBookingsApi.ts`, `domain-types.ts` |
 | GET handler | `bookings/http/client.py` |
 | Detail query | `bookings/queries.py` |
 | Pricing math | `bookings/pricing.py` |
-| Status patch | `bookings/status.py` |
+| Pricing contract | `contracts/booking.py` (`BookingPricingBreakdown`) |
+| Client status patch | `bookings/status_client.py` |
+| Shared cancel/refund | `bookings/status_shared.py` |
 | Adjustment write | `bookings/adjustments.py` |
 | Price confirmation guard | `bookings/pricing_confirmation.py` |
 | Shared panel | `BookingDetailPanel.tsx` |
+| Client banners | `ClientBookingDetailExtras.tsx` |
 | Price banner | `BookingPriceUpdateBanner.tsx` |
 
 ---
