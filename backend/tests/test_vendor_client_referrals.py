@@ -18,6 +18,10 @@ from app.features.vendor_referrals.booking_discount import (
     build_initial_pricing_breakdown_for_booking_row,
     build_pricing_breakdown_for_booking_row,
 )
+from app.features.vendor_referrals.validate import (
+    preview_referral_discount_for_vendor,
+    resolve_referral_pricing_inputs,
+)
 
 
 def test_resolve_booking_service_fee_percent_defaults_to_standard():
@@ -65,15 +69,12 @@ def test_generate_unique_referral_code_is_six_digits(_mock_taken: MagicMock) -> 
 
 @patch("app.features.vendor_referrals.codes._code_taken", return_value=False)
 @patch("app.features.vendor_referrals.codes.get_db")
-def test_set_vendor_referral_code_custom(_mock_taken: MagicMock, mock_db: MagicMock) -> None:
+def test_set_vendor_referral_code_custom(mock_db: MagicMock, _mock_taken: MagicMock) -> None:
     table = MagicMock()
     mock_db.return_value.table.return_value = table
-    select_chain = table.select.return_value
-    select_chain.eq.return_value.limit.return_value.execute.return_value.data = [
+    table.select.return_value.eq.return_value.limit.return_value.execute.return_value.data = [
         {"user_id": "vendor-1", "approval_status": "approved", "client_referral_code": None},
     ]
-    taken_chain = table.select.return_value
-    taken_chain.eq.return_value.limit.return_value.execute.return_value.data = []
     table.update.return_value.eq.return_value.execute.return_value.data = [{}]
 
     code = set_vendor_referral_code("vendor-1", "1234")
@@ -275,4 +276,7 @@ def test_build_initial_pricing_ignores_adjustments_for_tier(mock_lookup: MagicMo
     assert float(initial["referral_fee_discount_gbp"]) == 0.0
     assert float(initial["client_total_gbp"]) == 367.5
     assert float(current["referral_fee_discount_gbp"]) == 10.0
-    assert float(current["client_total_gbp"]) == 410.0
+    assert float(current["vendor_portion_gbp"]) == 410.0
+    assert float(current["client_total_gbp"]) == 420.5
+    _assert_payment_invariant(initial)
+    _assert_payment_invariant(current)
