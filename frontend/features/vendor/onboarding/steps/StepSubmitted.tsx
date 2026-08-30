@@ -157,13 +157,13 @@ export function StepSubmitted({
       <AnimatedStepItem index={0}>
         <LottieIllustration
           asset={
-            awaitingPayouts || listingPaused
+            awaitingPayouts || listingPaused || showReturnedForEdits || portfolioBlocked
               ? "pendingReview"
               : approved
-                ? "successCheck"
+                ? "launchingSoon"
                 : banned
                   ? "failure"
-                  : "pendingReview"
+                  : "launchingSoon"
           }
           size="status"
           ariaLabel=""

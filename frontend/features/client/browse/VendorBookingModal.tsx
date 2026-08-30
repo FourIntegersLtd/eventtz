@@ -262,7 +262,7 @@ export function VendorBookingModal({
     >
       {submitResult?.type === "success" ? (
         <div className="flex flex-col items-center gap-3 text-center">
-          <LottieIllustration asset="successCheck" size="status" ariaLabel="" />
+          <LottieIllustration asset="launchingSoon" size="status" ariaLabel="" />
           <p className="text-sm leading-relaxed text-neutral-700">
             Your booking request was sent to {vendorDisplayName}. They&apos;ll respond in your
             bookings inbox.
