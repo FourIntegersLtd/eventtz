@@ -100,7 +100,7 @@ def test_set_vendor_referral_code_locked_after_first_set(mock_db: MagicMock, _mo
 
 
 @patch("app.features.vendor_referrals.bookings.apply_recent_first_order", side_effect=lambda q, **_: q)
-@patch("app.features.vendor_referrals.booking_discount.build_pricing_breakdown_for_booking_row")
+@patch("app.features.vendor_referrals.bookings.build_pricing_breakdown_for_booking_row")
 @patch("app.features.vendor_referrals.bookings.client_display_names_by_id", return_value={})
 @patch("app.features.vendor_referrals.bookings.get_db")
 def test_list_referral_bookings_includes_retired_codes(
