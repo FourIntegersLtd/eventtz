@@ -12,6 +12,7 @@ Teach me Feature Slice [N] — [SLICE NAME].
 Read and follow:
 - docs/engineering/lessons/_SPINOFF_RULES.md
 - docs/engineering/FEATURE_TRACK.md
+- docs/engineering/lessons/slice-[N]-*.md (main lesson + walkthrough if listed in lessons/README.md)
 
 ## Rules
 - List the complete file route FIRST (every path, frontend → backend)

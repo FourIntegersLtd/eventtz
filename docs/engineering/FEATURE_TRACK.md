@@ -25,12 +25,12 @@
 | 2 | **Client browse** — explore, vendor profile (read-only) | **complete** | [slice-2-client-browse.md](./lessons/slice-2-client-browse.md) |
 | 3a | **Client booking — enquire** | **complete** | [slice-3a-client-booking-enquire.md](./lessons/slice-3a-client-booking-enquire.md) |
 | 3b | **Client booking — detail, status, adjustments** | **complete** | [slice-3b-client-booking-detail.md](./lessons/slice-3b-client-booking-detail.md) |
-| 4 | **Client payment** — Checkout, sync, webhook | not started | [slice-4-client-payment.md](./lessons/slice-4-client-payment.md) |
-| 5 | **Vendor booking lifecycle** — quotes, accept, adjustments | not started | [slice-5-vendor-booking.md](./lessons/slice-5-vendor-booking.md) |
-| 6 | **Payout, completion, refunds** — Stripe Connect | not started | [slice-6-vendor-payout.md](./lessons/slice-6-vendor-payout.md) |
-| 7a | **Client workspace** — dashboard, planner, events, favorites | not started | [slice-7a-client-workspace.md](./lessons/slice-7a-client-workspace.md) |
-| 7b | **Comms + realtime** — chat, notifications, email, contact | not started | [slice-7b-comms-realtime.md](./lessons/slice-7b-comms-realtime.md) |
-| 7c | **Trust & ops** — vendor onboarding, reviews, disputes, admin | not started | [slice-7c-trust-and-admin.md](./lessons/slice-7c-trust-and-admin.md) |
+| 4 | **Client payment** — Checkout, sync, webhook | **lesson written** | [slice-4-client-payment.md](./lessons/slice-4-client-payment.md) |
+| 5 | **Vendor booking lifecycle** — quotes, accept, adjustments | **lesson written** | [slice-5-vendor-booking.md](./lessons/slice-5-vendor-booking.md) |
+| 6 | **Payout, completion, refunds** — Stripe Connect | **lesson written** | [slice-6-vendor-payout.md](./lessons/slice-6-vendor-payout.md) |
+| 7a | **Client workspace** — dashboard, planner, events, favorites | **lesson written** | [slice-7a-client-workspace.md](./lessons/slice-7a-client-workspace.md) |
+| 7b | **Comms + realtime** — chat, notifications, email, contact | **lesson written** | [slice-7b-comms-realtime.md](./lessons/slice-7b-comms-realtime.md) |
+| 7c | **Trust & ops** — vendor onboarding, reviews, disputes, admin | **lesson written** | [slice-7c-trust-and-admin.md](./lessons/slice-7c-trust-and-admin.md) |
 
 **Slice 7** is three lessons (7a / 7b / 7c). Together with slices 1–6, they cover every major product area.
 
@@ -43,9 +43,14 @@
 | Auth | `/login`, `/register`, `/verify-email` | **1** |
 | Marketing landing | `/` | ref in **2** |
 | Client browse + vendor profile (read) | `/client/browse`, `/client/browse/[id]` | **2** |
+| Browse geolocation sort | `useBrowseGeolocation`, search `lat`/`lng` | **2** |
 | Client booking enquire | browse → modal → POST | **3a** |
+| Per-unit package quantities | `QuantityStepper`, `quantities` on create | **3a** |
+| Vendor client referral at enquire | `?vref=`, `vendor_referral_code` | **3a** (+ settings **7c**) |
+| Service fee on booking | `ClientFeeBreakdownSummary`, `service_fee_percent` | **3a**, **3b**, **4** |
 | Client booking detail | `/client/bookings/[id]` | **3b** |
-| Client payment | `/client/bookings/[id]/pay` | **4** |
+| Client payment | `/client/bookings/[id]/pay`, `/client/payments` | **4** |
+| Payment receipts | receipt snapshots after finalize | **4** |
 | Vendor bookings portal | `/vendor/bookings` | **5** |
 | Vendor quote from chat | messages → quote modal | **5** |
 | Vendor accept/decline + adjustments | vendor booking detail | **5** |
@@ -64,7 +69,9 @@
 | Reviews | booking detail, `/vendor/profile/reviews` | **7c** |
 | Disputes | `/disputes`, admin trust | **7c** |
 | Admin console | `/admin/*` | **7c** |
-| Referrals (admin) | `/admin/referrals` | **7c** (attribution in **1**) |
+| Referrals (admin partners) | `/admin/referrals` | **7c** (signup attribution in **1**) |
+| Vendor client referrals (tiered) | Settings → referrals, `?vref=` on browse | **3a**, **7c** |
+| S3 media uploads | vendor onboarding portfolio | **7c** |
 | Blog | `/blog`, `/admin/blog` | **7c** |
 
 **Out of scope:** `/internal/ui-kit`, help content pages, geo autocomplete helpers.

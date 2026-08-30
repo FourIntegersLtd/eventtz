@@ -23,10 +23,6 @@ Personal engineering course using the real Eventtz codebase.
 
 ## Track at a glance
 
-Slices **1 → 3b** (complete): auth → browse → client booking enquire → booking detail.
+Slices **1 → 7c** all have **full lesson docs** (and walkthroughs for 2, 3a, 3b, 4, 5). Teaching progress is tracked in [PROGRESS.md](./PROGRESS.md).
 
-Slices **4 → 6** (planned): client payment → vendor booking lifecycle → payout & completion.
-
-Slice **7** (planned, three lessons): **7a** client workspace · **7b** comms & realtime · **7c** trust, vendor onboarding & admin.
-
-By end of **7c**, every major product area is walkable end to end.
+**Last code sync:** merged `main` at `2b42850` (Aug 2026) — browse refactor, per-unit pricing, vendor referrals, service fee, status module split, receipts, S3 media.

@@ -57,8 +57,8 @@ Do not recap previous slices unless I ask. Start with the route for [NAME].
 | 2 | Client browse | `slice-2-client-browse.md` + walkthrough |
 | 3a | Client booking — enquire | `slice-3a-client-booking-enquire.md` + walkthrough |
 | 3b | Client booking — detail | `slice-3b-client-booking-detail.md` + walkthrough |
-| 4 | Client payment | `slice-4-client-payment.md` |
-| 5 | Vendor booking lifecycle | `slice-5-vendor-booking.md` |
+| 4 | Client payment | `slice-4-client-payment.md` + walkthrough |
+| 5 | Vendor booking lifecycle | `slice-5-vendor-booking.md` + walkthrough |
 | 6 | Payout + completion | `slice-6-vendor-payout.md` |
 | 7a | Client workspace | `slice-7a-client-workspace.md` |
 | 7b | Comms + realtime | `slice-7b-comms-realtime.md` |

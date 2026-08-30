@@ -597,7 +597,7 @@ First success returns `event_id`; later enquiries reuse it → one celebration, 
 
 **Redirect** (`MarketplaceExploreView`):
 
-```646:650:frontend/features/marketplace/MarketplaceExploreView.tsx
+```383:387:frontend/features/marketplace/MarketplaceExploreView.tsx
             router.push(
               createdIds.length === 1
                 ? `/client/bookings/${createdIds[0]}`
