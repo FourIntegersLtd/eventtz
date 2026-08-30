@@ -235,7 +235,7 @@ def list_booking_requests_for_vendor(
         get_db()
         .table("booking_requests")
         .select(
-            "id,status,event_name,event_date,event_end_date,total_label,client_user_id,vendor_user_id,created_at,updated_at,line_items,vendor_adjustments,initiator,conversation_id,payment_status,client_completion_confirmed_at,vendor_completion_confirmed_at,completion_reminder_sent_at,service_fee_percent,vendor_referral_code",
+            "id,status,event_name,event_date,event_end_date,total_label,client_user_id,vendor_user_id,created_at,updated_at,line_items,vendor_adjustments,initiator,conversation_id,payment_status,client_completion_confirmed_at,vendor_completion_confirmed_at,completion_reminder_sent_at,event_id,service_fee_percent,vendor_referral_code",
         )
         .eq("vendor_user_id", vendor_user_id)
     )
@@ -271,6 +271,7 @@ def list_booking_requests_for_vendor(
             line_items = []
         pb = _list_pricing_breakdown(row)
         conv = row.get("conversation_id")
+        eid = str(row.get("event_id") or "") or None
         out.append(
             {
                 "id": str(row.get("id", "")),
@@ -286,6 +287,8 @@ def list_booking_requests_for_vendor(
                 "client_total_label": _client_total_label_for_list(pb),
                 "initiator": _row_initiator(row),
                 "conversation_id": str(conv) if conv else None,
+                "event_id": eid,
+                "event_title": str(row.get("event_name", "")) if eid else None,
                 "payment_status": str(row.get("payment_status") or "unpaid"),
                 "has_price_update": _list_has_price_update(row),
                 "completion_waiting_on": completion_waiting_on(row),

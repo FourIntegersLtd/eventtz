@@ -95,6 +95,15 @@ def set_vendor_referral_code(user_id: str, raw_code: str | None, *, generate: bo
     if str(row.get("approval_status") or "") != "approved":
         raise ValueError(referral_messages.REFERRAL_NOT_FOUND)
 
+    existing = normalize_client_referral_code(row.get("client_referral_code"))
+    if existing:
+        if generate:
+            raise ValueError(referral_messages.REFERRAL_CODE_LOCKED)
+        requested = normalize_client_referral_code(raw_code)
+        if requested == existing:
+            return existing
+        raise ValueError(referral_messages.REFERRAL_CODE_LOCKED)
+
     if generate or not (raw_code and str(raw_code).strip()):
         code = generate_unique_referral_code(exclude_user_id=uid)
     else:

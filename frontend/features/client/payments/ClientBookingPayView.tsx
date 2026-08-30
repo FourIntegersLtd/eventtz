@@ -125,7 +125,7 @@ export function ClientBookingPayView({ bookingId }: ClientBookingPayViewProps) {
         <p className="text-sm text-neutral-600">{CLIENT_PAY_PAGE_COPY.safetyIntro}</p>
       )}
       <PaymentSafetyModal
-        isOpen={phase === "safety" || phase === "redirecting"}
+        isOpen={!error && (phase === "safety" || phase === "redirecting")}
         loading={busy || phase === "redirecting"}
         onConfirm={confirmSafetyAndPay}
         onCancel={() => router.push(bookingHref)}

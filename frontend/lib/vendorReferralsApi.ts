@@ -38,6 +38,7 @@ export type VendorReferralBookingRow = {
   payment_status: string;
   vendor_portion_gbp: number;
   referral_fee_discount_gbp: number;
+  referral_code?: string;
   client_display_name: string | null;
   created_at: string | null;
 };

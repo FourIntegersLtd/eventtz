@@ -7,13 +7,17 @@ import type { VendorReferralBookingRow } from "@/lib/vendorReferralsApi";
 
 type SettingsReferralBookingsTableProps = {
   bookings: VendorReferralBookingRow[];
+  currentReferralCode?: string;
 };
 
 function statusLabel(status: string): string {
   return status.replace(/_/g, " ");
 }
 
-export function SettingsReferralBookingsTable({ bookings }: SettingsReferralBookingsTableProps) {
+export function SettingsReferralBookingsTable({
+  bookings,
+  currentReferralCode = "",
+}: SettingsReferralBookingsTableProps) {
   if (bookings.length === 0) {
     return (
       <p className="px-5 py-4 text-sm text-neutral-500 sm:px-6">
@@ -22,6 +26,10 @@ export function SettingsReferralBookingsTable({ bookings }: SettingsReferralBook
     );
   }
 
+  const showCodeColumn = bookings.some(
+    (row) => row.referral_code && row.referral_code !== currentReferralCode,
+  );
+
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full text-left text-sm">
@@ -29,6 +37,7 @@ export function SettingsReferralBookingsTable({ bookings }: SettingsReferralBook
           <tr>
             <th className="px-5 py-3 sm:px-6">Event</th>
             <th className="px-4 py-3">Client</th>
+            {showCodeColumn ? <th className="px-4 py-3">Code used</th> : null}
             <th className="px-4 py-3">Date</th>
             <th className="px-4 py-3">Status</th>
             <th className="px-4 py-3 text-right">Vendor total</th>
@@ -47,6 +56,9 @@ export function SettingsReferralBookingsTable({ bookings }: SettingsReferralBook
                 </Link>
               </td>
               <td className="px-4 py-3 text-neutral-600">{row.client_display_name || "Client"}</td>
+              {showCodeColumn ? (
+                <td className="px-4 py-3 font-mono text-xs text-neutral-500">{row.referral_code || "—"}</td>
+              ) : null}
               <td className="px-4 py-3 tabular-nums text-neutral-600">
                 {row.event_date ? formatEventDate(row.event_date) : "—"}
               </td>

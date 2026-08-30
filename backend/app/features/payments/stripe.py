@@ -507,15 +507,28 @@ def sync_connect_account_status(vendor_user_id: str) -> dict[str, Any]:
 
 def get_vendor_connect_status_response(vendor_user_id: str) -> dict[str, Any]:
     """Vendor-facing Connect status: read DB first; sync from Stripe only while onboarding."""
+    from app.features.bookings.booking_payment_helpers import _get_vendor_stripe_fields
+    from app.features.bookings.status_shared import vendor_connect_can_receive_payouts
+    from app.features.vendors.visibility import payout_gate_waived
+
     row = _get_vendor_row(vendor_user_id)
     if not row or not row.get("stripe_account_id"):
-        return _connect_status_from_row(row)
-    if row.get("stripe_charges_enabled") and row.get("stripe_payouts_enabled"):
-        return _connect_status_from_row(row)
-    settings = get_settings()
-    if not settings.stripe_secret_key.strip():
-        return _connect_status_from_row(row)
-    return sync_connect_account_status(vendor_user_id)
+        status = _connect_status_from_row(row)
+    elif row.get("stripe_charges_enabled") and row.get("stripe_payouts_enabled"):
+        status = _connect_status_from_row(row)
+    else:
+        settings = get_settings()
+        if not settings.stripe_secret_key.strip():
+            status = _connect_status_from_row(row)
+        else:
+            status = sync_connect_account_status(vendor_user_id)
+
+    stripe_gate_row = _get_vendor_stripe_fields(vendor_user_id)
+    return {
+        **status,
+        "can_accept_bookings": vendor_connect_can_receive_payouts(vendor_user_id),
+        "payout_gate_waived": payout_gate_waived(stripe_gate_row),
+    }
 
 
 def restore_vendor_connect_from_payout_history(vendor_user_id: str) -> dict[str, Any]:

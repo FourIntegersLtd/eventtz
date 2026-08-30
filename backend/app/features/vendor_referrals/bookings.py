@@ -7,15 +7,14 @@ from typing import Any
 from app.core.db import apply_recent_first_order, get_db
 from app.features.auth.user_vendor_display_lookup import client_display_names_by_id
 from app.features.vendor_referrals.booking_discount import build_pricing_breakdown_for_booking_row
-from app.features.vendor_referrals.codes import get_vendor_referral_code
 
 _PAID_STATUSES = frozenset({"paid", "payout_released", "refunded", "partially_refunded"})
 
 
 def list_vendor_referral_bookings(vendor_user_id: str) -> dict[str, Any]:
+    """All bookings for this vendor that used any referral code (including retired codes)."""
     uid = str(vendor_user_id or "").strip()
-    code = get_vendor_referral_code(uid)
-    if not code:
+    if not uid:
         return {
             "total_referral_bookings": 0,
             "total_fee_savings_gbp": 0.0,
@@ -32,7 +31,7 @@ def list_vendor_referral_bookings(vendor_user_id: str) -> dict[str, Any]:
                 "vendor_referral_code,service_fee_percent,referral_fee_discount_gbp",
             )
             .eq("vendor_user_id", uid)
-            .eq("vendor_referral_code", code),
+            .not_.is_("vendor_referral_code", "null"),
         )
         .limit(200)
         .execute()
@@ -44,6 +43,9 @@ def list_vendor_referral_bookings(vendor_user_id: str) -> dict[str, Any]:
     bookings: list[dict[str, Any]] = []
     total_savings = 0.0
     for row in rows:
+        code_used = str(row.get("vendor_referral_code") or "").strip()
+        if not code_used:
+            continue
         pb = build_pricing_breakdown_for_booking_row(row)
         vendor_portion = float(pb.get("vendor_portion_gbp") or 0)
         payment_status = str(row.get("payment_status") or "unpaid")
@@ -67,6 +69,7 @@ def list_vendor_referral_bookings(vendor_user_id: str) -> dict[str, Any]:
                 "payment_status": payment_status,
                 "vendor_portion_gbp": vendor_portion,
                 "referral_fee_discount_gbp": round(discount, 2),
+                "referral_code": code_used,
                 "client_display_name": names.get(cid),
                 "created_at": row.get("created_at")
                 if isinstance(row.get("created_at"), str)

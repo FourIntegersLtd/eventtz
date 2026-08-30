@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CopyReferralLinkButton } from "@/features/admin/referrals/CopyReferralLinkButton";
 import { Button } from "@/components/ui/Button";
+import { CopyToClipboardButton } from "@/components/ui/CopyToClipboardButton";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { TextField } from "@/components/ui/TextField";
@@ -22,13 +22,6 @@ import {
 import { useToast } from "@/components/ui/Toast";
 import { SettingsReferralBookingsTable } from "./SettingsReferralBookingsTable";
 import { SettingsSection } from "./SettingsSection";
-
-const SECTION_DESCRIPTION = (
-  <>
-    Share a link or a short code (up to {VENDOR_REFERRAL_CODE_MAX_LEN} digits) so clients save on the
-    Eventtz booking fee. You still receive your full quoted amount.
-  </>
-);
 
 export function SettingsReferralsSection() {
   const { showToast } = useToast();
@@ -69,10 +62,13 @@ export function SettingsReferralsSection() {
     };
   }, []);
 
-  const applyCode = async (input: { code?: string; generate?: boolean }) => {
+  const createCode = async () => {
     setSaving(true);
     try {
-      const result = await setVendorReferralCode(input);
+      const trimmed = draftCode.trim();
+      const result = await setVendorReferralCode(
+        trimmed ? { code: trimmed } : { generate: true },
+      );
       setInfo((prev) =>
         prev
           ? {
@@ -84,15 +80,13 @@ export function SettingsReferralsSection() {
           : prev,
       );
       setDraftCode(result.referral_code);
-      showToast({
-        title: "Referral code saved",
-        description: "Share the link or code with your clients.",
-        tone: "success",
-      });
+      const referralBookings = await fetchVendorReferralBookings();
+      setBookings(referralBookings);
+      showToast({ title: "Referral code created", tone: "success" });
     } catch {
       showToast({
-        title: "Could not save code",
-        description: "Use 1 to 6 digits, or generate a random code.",
+        title: "Could not create code",
+        description: "Use 1 to 6 digits, or leave blank for a random code.",
         tone: "error",
       });
     } finally {
@@ -100,9 +94,13 @@ export function SettingsReferralsSection() {
     }
   };
 
+  const copyToast = (title: string) => {
+    showToast({ title, tone: "success" });
+  };
+
   if (loading) {
     return (
-      <SettingsSection title="Client referrals" description={SECTION_DESCRIPTION}>
+      <SettingsSection title="Client referrals">
         <div className="px-5 py-5 sm:px-6">
           <LoadingState label="Loading referral link…" variant="inline" />
         </div>
@@ -112,7 +110,7 @@ export function SettingsReferralsSection() {
 
   if (unavailable) {
     return (
-      <SettingsSection title="Client referrals" description={SECTION_DESCRIPTION}>
+      <SettingsSection title="Client referrals">
         <p className="px-5 py-4 text-sm text-neutral-600 sm:px-6">
           Client referrals are available after Eventtz approves your listing.
         </p>
@@ -122,7 +120,7 @@ export function SettingsReferralsSection() {
 
   if (error || !info) {
     return (
-      <SettingsSection title="Client referrals" description={SECTION_DESCRIPTION}>
+      <SettingsSection title="Client referrals">
         <div className="px-5 py-4 sm:px-6">
           <LottieFailureInline message={error ?? "Could not load your referral link."} />
         </div>
@@ -137,22 +135,13 @@ export function SettingsReferralsSection() {
 
   return (
     <>
-      <SettingsSection
-        title="Client referrals"
-        description={
-          <>
-            Share a link or a short code (up to {VENDOR_REFERRAL_CODE_MAX_LEN} digits) so clients save
-            on the Eventtz booking fee ({info.service_fee_percent}% standard). You still receive your
-            full quoted amount.
-          </>
-        }
-      >
+      <SettingsSection title="Client referrals">
         <div className="overflow-hidden border-t border-neutral-100">
           <table className="min-w-full text-left text-sm">
             <thead className="bg-neutral-50 text-xs font-semibold uppercase tracking-wide text-neutral-500">
               <tr>
-                <th className="px-5 py-2.5 sm:px-6">Vendor total</th>
-                <th className="px-5 py-2.5 text-right sm:px-6">Client saves on Eventtz fee</th>
+                <th className="px-5 py-2.5 sm:px-6">Booking total</th>
+                <th className="px-5 py-2.5 text-right sm:px-6">Client saves</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
@@ -170,61 +159,55 @@ export function SettingsReferralsSection() {
           </table>
         </div>
 
-        <div className="border-t border-neutral-100 px-5 py-4 sm:px-6">
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Your code</p>
+        <div className="space-y-4 border-t border-neutral-100 px-5 py-4 sm:px-6">
           {hasCode ? (
-            <p className="mt-1 font-mono text-lg font-semibold tracking-widest text-neutral-900">
-              {info.referral_code}
-            </p>
+            <>
+              <div className="flex items-center gap-2">
+                <p className="font-mono text-2xl font-semibold tracking-widest text-neutral-900">
+                  {info.referral_code}
+                </p>
+                <CopyToClipboardButton
+                  text={info.referral_code}
+                  ariaLabel="Copy referral code"
+                  onCopied={() => copyToast("Code copied")}
+                />
+              </div>
+              {info.share_link ? (
+                <div className="flex items-center gap-2 rounded-xl bg-neutral-50 px-3 py-2.5 ring-1 ring-neutral-100">
+                  <p className="min-w-0 flex-1 truncate text-sm text-neutral-700" title={info.share_link}>
+                    {info.share_link}
+                  </p>
+                  <CopyToClipboardButton
+                    text={info.share_link}
+                    ariaLabel="Copy referral link"
+                    onCopied={() => copyToast("Link copied")}
+                  />
+                </div>
+              ) : null}
+            </>
           ) : (
-            <p className="mt-1 text-sm text-neutral-600">Create a code to start sharing.</p>
-          )}
-
-          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
-            <div className="min-w-0 flex-1">
-              <TextField
-                label="Custom referral code"
-                inputMode="numeric"
-                maxLength={VENDOR_REFERRAL_CODE_MAX_LEN}
-                value={draftCode}
-                onChange={(e) => setDraftCode(formatVendorReferralCodeInput(e.target.value))}
-                placeholder={`1–${VENDOR_REFERRAL_CODE_MAX_LEN} digits`}
-                className="font-mono"
-              />
-            </div>
-            <div className="flex shrink-0 gap-2 sm:mb-0.5">
-              <Button
-                type="button"
-                variant="secondary"
-                loading={saving}
-                disabled={!draftCode}
-                onClick={() => void applyCode({ code: draftCode })}
-              >
-                Save code
-              </Button>
-              <Button type="button" loading={saving} onClick={() => void applyCode({ generate: true })}>
-                Generate
-              </Button>
-            </div>
-          </div>
-
-          {hasCode && info.share_link ? (
-            <div className="mt-4 flex items-center gap-2 border-t border-neutral-100 pt-4">
-              <p className="min-w-0 flex-1 truncate text-sm text-neutral-700" title={info.share_link}>
-                {info.share_link}
+            <div className="space-y-3">
+              <p className="text-sm text-neutral-600">
+                Choose a code once — it cannot be changed later. Leave blank for a random 6-digit code.
               </p>
-              <CopyReferralLinkButton
-                link={info.share_link}
-                onCopied={() =>
-                  showToast({
-                    title: "Link copied",
-                    description: "Clients can also enter your code when booking.",
-                    tone: "success",
-                  })
-                }
-              />
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <div className="min-w-0 flex-1">
+                  <TextField
+                    label="Referral code (optional)"
+                    inputMode="numeric"
+                    maxLength={VENDOR_REFERRAL_CODE_MAX_LEN}
+                    value={draftCode}
+                    onChange={(e) => setDraftCode(formatVendorReferralCodeInput(e.target.value))}
+                    placeholder={`Random, or 1–${VENDOR_REFERRAL_CODE_MAX_LEN} digits`}
+                    className="font-mono"
+                  />
+                </div>
+                <Button type="button" loading={saving} onClick={() => void createCode()}>
+                  Create code
+                </Button>
+              </div>
             </div>
-          ) : null}
+          )}
         </div>
       </SettingsSection>
 
@@ -234,7 +217,10 @@ export function SettingsReferralsSection() {
           description={`${bookingCount} booking${bookingCount === 1 ? "" : "s"} · ${formatBookingMoneyLabel(totalSavings)} saved for clients`}
         >
           <div className="border-t border-neutral-100">
-            <SettingsReferralBookingsTable bookings={bookings.bookings} />
+            <SettingsReferralBookingsTable
+              bookings={bookings.bookings}
+              currentReferralCode={info.referral_code}
+            />
           </div>
         </SettingsSection>
       ) : null}

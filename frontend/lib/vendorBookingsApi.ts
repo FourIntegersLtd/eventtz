@@ -52,6 +52,8 @@ export type VendorBookingListItem = {
   /** Who still needs to confirm the event went well (accepted + paid bookings). */
   completion_waiting_on?: "client" | "vendor" | "both" | null;
   vendor_completion_confirmed_at?: string | null;
+  event_id?: string | null;
+  event_title?: string | null;
 };
 
 export type VendorBookingsListResponse = {

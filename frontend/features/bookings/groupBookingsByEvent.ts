@@ -1,4 +1,3 @@
-import type { ClientBookingListItem } from "@/lib/clientBookingsApi";
 import type { BookingListRowViewModel } from "@/features/bookings/bookingViewModel";
 import {
   bookingListActivityTimestamp,
@@ -6,18 +5,32 @@ import {
 } from "@/features/bookings/bookingListOrder";
 import { formatEventDate } from "@/lib/dateFormat";
 
+/** Minimal list fields used to bucket bookings under one client event. */
+export type BookingEventGroupingItem = {
+  event_id?: string | null;
+  event_title?: string | null;
+  event_name?: string;
+  event_date?: string;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+export type BookingEventGroupCounterparty = "vendor" | "client";
+
 export type BookingEventGroup = {
   key: string;
   eventId: string | null;
   title: string;
   dateLabel: string;
   bookingCount: number;
+  counterpartyNoun: BookingEventGroupCounterparty;
   rows: BookingListRowViewModel[];
 };
 
 export function groupBookingsByEvent(
   rows: BookingListRowViewModel[],
-  itemsById: Map<string, ClientBookingListItem>,
+  itemsById: Map<string, BookingEventGroupingItem>,
+  counterpartyNoun: BookingEventGroupCounterparty = "vendor",
 ): BookingEventGroup[] {
   const buckets = new Map<string, BookingEventGroup>();
 
@@ -40,6 +53,7 @@ export function groupBookingsByEvent(
         title,
         dateLabel: dateKey ? formatEventDate(dateKey) : "",
         bookingCount: 0,
+        counterpartyNoun,
         rows: [],
       };
       buckets.set(key, group);
@@ -75,4 +89,16 @@ export function groupBookingsByEvent(
       );
       return bTs.localeCompare(aTs);
     });
+}
+
+/** Group headers only when an event has multiple counterparties (e.g. several vendors). */
+export function bookingEventGroupsForList(
+  rows: BookingListRowViewModel[],
+  itemsById: Map<string, BookingEventGroupingItem>,
+  counterpartyNoun: BookingEventGroupCounterparty,
+  enabled: boolean,
+): BookingEventGroup[] | null {
+  if (!enabled || rows.length === 0) return null;
+  const groups = groupBookingsByEvent(rows, itemsById, counterpartyNoun);
+  return groups.some((group) => group.bookingCount > 1) ? groups : null;
 }

@@ -21,6 +21,9 @@ type VendorBookingResponseFlowProps = {
   detail: VendorBookingDetail;
   actionBusy: boolean;
   adjustmentSaving: boolean;
+  payoutsLoading: boolean;
+  payoutsReady: boolean;
+  onPayoutSetupRequired: () => void;
   onAcceptAtListedPrice: () => void;
   onDecline: () => void;
   onSendUpdatedPrice: (rows: AdjustmentDraftRow[]) => void;
@@ -34,6 +37,9 @@ export function VendorBookingResponseFlow({
   detail,
   actionBusy,
   adjustmentSaving,
+  payoutsLoading,
+  payoutsReady,
+  onPayoutSetupRequired,
   onAcceptAtListedPrice,
   onDecline,
   onSendUpdatedPrice,
@@ -132,6 +138,15 @@ export function VendorBookingResponseFlow({
     : "The client left details on this booking. Review “Notes from client” above, then try again.";
   const unreadGateConfirmLabel = hasChatThread ? unreadCopy.confirmLabel : "OK";
 
+  const requestAcceptDecision = async () => {
+    if (actionBusy || adjustmentSaving || checkingDecision || payoutsLoading) return;
+    if (!payoutsReady) {
+      onPayoutSetupRequired();
+      return;
+    }
+    await requestDecision("accept");
+  };
+
   return (
     <>
       <div className="space-y-3">
@@ -139,9 +154,9 @@ export function VendorBookingResponseFlow({
           <Button
             variant="primary"
             className="w-full sm:w-auto"
-            disabled={actionBusy || adjustmentSaving || !!checkingDecision}
+            disabled={actionBusy || adjustmentSaving || !!checkingDecision || payoutsLoading}
             loading={checkingDecision === "accept"}
-            onClick={() => void requestDecision("accept")}
+            onClick={() => void requestAcceptDecision()}
           >
             Accept booking
           </Button>

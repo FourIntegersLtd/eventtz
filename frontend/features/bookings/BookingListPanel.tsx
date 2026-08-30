@@ -1,10 +1,15 @@
+"use client";
+
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LottieFailurePanel } from "@/components/ui/LottieFailurePanel";
 import { SkeletonListRows } from "@/components/ui/Skeleton";
 import { SegmentedControl, type SegmentedControlOption } from "@/components/ui/SegmentedControl";
 import { StatusBadge } from "@/components/badges/StatusBadge";
+import { CopyToClipboardButton } from "@/components/ui/CopyToClipboardButton";
+import { useToast } from "@/components/ui/Toast";
 import type { BookingListRowViewModel } from "@/features/bookings/bookingViewModel";
 import type { BookingEventGroup } from "@/features/bookings/groupBookingsByEvent";
+import { shortId } from "@/lib/shortId";
 
 /** `closed` covers every booking that's no longer active - completed, declined, and
  * cancelled - with per-row status badges distinguishing the outcome. */
@@ -43,12 +48,19 @@ export function BookingListPanel({
   emptyTitle,
   eventGroups,
 }: BookingListPanelProps) {
-  const renderRow = (row: BookingListRowViewModel) => {
+  const { showToast } = useToast();
+
+  const copyBookingRef = () => {
+    showToast({ title: "Booking reference copied", tone: "success" });
+  };
+
+  const renderRow = (row: BookingListRowViewModel, options?: { compact?: boolean }) => {
+    const compact = options?.compact ?? false;
     const sel = selectedId === row.id;
-    const hint =
-      row.warningBadge ||
-      row.pendingSubtext ||
-      (row.initiatorBadgeLabel && row.status !== "pending" ? row.initiatorBadgeLabel : null);
+    const hint = row.warningBadge || row.pendingSubtext || row.reviewLine || null;
+    const metaLine = compact
+      ? null
+      : [row.counterpartyLine, row.dateLabel].filter(Boolean).join(" · ");
 
     return (
       <li key={row.id}>
@@ -56,35 +68,43 @@ export function BookingListPanel({
           type="button"
           onClick={() => onSelect(row.id)}
           aria-current={sel}
-          className={`relative w-full px-5 py-6 text-left transition duration-150 ease-out sm:px-6 sm:py-7 ${
-            sel ? "bg-primary/[0.05]" : "hover:bg-neutral-50/90"
-          }`}
+          className={`relative w-full text-left transition duration-150 ease-out ${
+            compact ? "px-5 py-4 sm:px-6 sm:py-5" : "px-5 py-5 sm:px-6 sm:py-6"
+          } ${sel ? "bg-primary/[0.05]" : "hover:bg-neutral-50/90"}`}
         >
           {sel ? (
             <span
-              className="absolute inset-y-4 left-0 w-[3px] rounded-full bg-primary"
+              className="absolute inset-y-3 left-0 w-[3px] rounded-full bg-primary"
               aria-hidden
             />
           ) : null}
 
-          <div className="flex items-start justify-between gap-4">
-            <p className="min-w-0 text-[15px] font-semibold leading-snug tracking-tight text-neutral-900 line-clamp-2">
-              {row.eventName}
-            </p>
-            <StatusBadge status={row.status} />
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-[15px] font-semibold leading-snug tracking-tight text-neutral-900 line-clamp-2">
+                {compact ? row.counterpartyLine : row.eventName}
+              </p>
+              {metaLine ? (
+                <p className="mt-1 truncate text-sm text-neutral-500">{metaLine}</p>
+              ) : null}
+            </div>
+            <div className="flex shrink-0 items-center gap-0.5">
+              <CopyToClipboardButton
+                text={row.id}
+                ariaLabel={`Copy booking reference ${shortId(row.id) ?? ""}`}
+                onCopied={copyBookingRef}
+              />
+              <StatusBadge status={row.status} />
+            </div>
           </div>
 
-          <div className="mt-4 space-y-1.5">
-            <p className="truncate text-sm text-neutral-600">{row.counterpartyLine}</p>
-            <p className="text-sm text-neutral-500">{row.dateLabel}</p>
-            <p className="pt-1 text-sm font-semibold tabular-nums text-neutral-900">
-              {row.totalLabel}
-            </p>
-          </div>
+          <p className={`${compact ? "mt-2" : "mt-3"} text-sm font-semibold tabular-nums text-neutral-900`}>
+            {row.totalLabel}
+          </p>
 
           {hint ? (
             <p
-              className={`mt-4 text-[13px] leading-snug ${
+              className={`mt-2 text-[13px] leading-snug ${
                 row.warningBadge ? "font-medium text-amber-700" : "text-neutral-500"
               }`}
             >
@@ -126,22 +146,33 @@ export function BookingListPanel({
           />
         ) : eventGroups && eventGroups.length > 0 ? (
           <div className="divide-y divide-neutral-100">
-            {eventGroups.map((group) => (
-              <section key={group.key}>
-                <div className="border-b border-neutral-100 bg-neutral-50/90 px-5 py-3 sm:px-6">
-                  <p className="text-sm font-semibold text-neutral-900">{group.title}</p>
-                  <p className="mt-0.5 text-xs text-neutral-500">
-                    {[group.dateLabel, `${group.bookingCount} vendor${group.bookingCount === 1 ? "" : "s"}`]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </p>
-                </div>
-                <ul className="divide-y divide-neutral-100">{group.rows.map(renderRow)}</ul>
-              </section>
-            ))}
+            {eventGroups.map((group) =>
+              group.bookingCount > 1 ? (
+                <section key={group.key}>
+                  <div className="border-b border-neutral-100 bg-neutral-50/90 px-5 py-3 sm:px-6">
+                    <p className="text-sm font-semibold text-neutral-900">{group.title}</p>
+                    <p className="mt-0.5 text-xs text-neutral-500">
+                      {[
+                        group.dateLabel,
+                        `${group.bookingCount} ${group.counterpartyNoun}${group.bookingCount === 1 ? "" : "s"}`,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
+                  </div>
+                  <ul className="divide-y divide-neutral-100">
+                    {group.rows.map((row) => renderRow(row, { compact: true }))}
+                  </ul>
+                </section>
+              ) : (
+                <ul key={group.key} className="divide-y divide-neutral-100">
+                  {group.rows.map((row) => renderRow(row))}
+                </ul>
+              ),
+            )}
           </div>
         ) : (
-          <ul className="divide-y divide-neutral-100">{rows.map(renderRow)}</ul>
+          <ul className="divide-y divide-neutral-100">{rows.map((row) => renderRow(row))}</ul>
         )}
       </div>
     </div>

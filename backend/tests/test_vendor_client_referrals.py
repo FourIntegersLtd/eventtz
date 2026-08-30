@@ -81,6 +81,73 @@ def test_set_vendor_referral_code_custom(mock_db: MagicMock, _mock_taken: MagicM
     assert code == "1234"
 
 
+@patch("app.features.vendor_referrals.codes._code_taken", return_value=False)
+@patch("app.features.vendor_referrals.codes.get_db")
+def test_set_vendor_referral_code_locked_after_first_set(mock_db: MagicMock, _mock_taken: MagicMock) -> None:
+    table = MagicMock()
+    mock_db.return_value.table.return_value = table
+    table.select.return_value.eq.return_value.limit.return_value.execute.return_value.data = [
+        {"user_id": "vendor-1", "approval_status": "approved", "client_referral_code": "224974"},
+    ]
+
+    with pytest.raises(ValueError, match="cannot be changed"):
+        set_vendor_referral_code("vendor-1", "999999", generate=False)
+
+    with pytest.raises(ValueError, match="cannot be changed"):
+        set_vendor_referral_code("vendor-1", None, generate=True)
+
+    assert set_vendor_referral_code("vendor-1", "224974") == "224974"
+
+
+@patch("app.features.vendor_referrals.booking_discount.build_pricing_breakdown_for_booking_row")
+@patch("app.features.vendor_referrals.bookings.client_display_names_by_id", return_value={})
+@patch("app.features.vendor_referrals.bookings.get_db")
+def test_list_referral_bookings_includes_retired_codes(
+    mock_db: MagicMock,
+    _mock_names: MagicMock,
+    mock_pb: MagicMock,
+) -> None:
+    from app.features.vendor_referrals.bookings import list_vendor_referral_bookings
+
+    mock_pb.return_value = {
+        "vendor_portion_gbp": 500.0,
+        "referral_fee_discount_gbp": 10.0,
+    }
+    table = MagicMock()
+    mock_db.return_value.table.return_value = table
+    table.select.return_value = table
+    table.eq.return_value = table
+    table.not_.is_.return_value = table
+    table.limit.return_value = table
+    table.execute.return_value.data = [
+        {
+            "id": "b-old",
+            "status": "accepted",
+            "payment_status": "paid",
+            "event_name": "Party",
+            "event_date": "2026-08-31",
+            "client_user_id": "c1",
+            "vendor_referral_code": "111111",
+            "referral_fee_discount_gbp": 10.0,
+        },
+        {
+            "id": "b-new",
+            "status": "pending",
+            "payment_status": "unpaid",
+            "event_name": "Wedding",
+            "event_date": "2026-09-01",
+            "client_user_id": "c2",
+            "vendor_referral_code": "224974",
+            "referral_fee_discount_gbp": 0.0,
+        },
+    ]
+
+    out = list_vendor_referral_bookings("vendor-1")
+    assert out["total_referral_bookings"] == 2
+    codes = {row["referral_code"] for row in out["bookings"]}
+    assert codes == {"111111", "224974"}
+
+
 @patch("app.features.vendor_referrals.validate.get_vendor_referral_row_by_code")
 def test_resolve_referral_pricing_inputs_valid(mock_lookup: MagicMock) -> None:
     mock_lookup.return_value = {
