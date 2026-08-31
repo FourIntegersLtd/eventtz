@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/Card";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { TextField } from "@/components/ui/TextField";
+import type { UserType } from "@/lib/domain-types";
 import { dashboardPathForUserType } from "@/features/auth/authRouting";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { GENERIC_AUTH_ERROR } from "@/lib/auth-messages";
@@ -49,13 +50,9 @@ export function VerifyEmailView() {
         setStatus("success");
         if (res.session) {
           await refreshUser();
-          const meType =
-            res.user?.user_type === "vendor"
-              ? "vendor"
-              : res.user?.user_type === "admin"
-                ? "admin"
-                : "client";
-          router.replace(dashboardPathForUserType(meType));
+          router.replace(
+            dashboardPathForUserType(res.user?.user_type as UserType | undefined),
+          );
           return;
         }
       } catch (e: unknown) {

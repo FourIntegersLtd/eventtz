@@ -7,10 +7,10 @@ import { BOOKING_CONFIRM_COPY } from "@/features/bookings/bookingConfirmCopy";
 import { VendorBookingResponseAdjustments } from "@/features/vendor/bookings/VendorBookingResponseAdjustments";
 import { VendorDraftReplyPanel } from "@/features/vendor/copilot/VendorDraftReplyPanel";
 import {
-  draftsFromDetail,
-  friendlyMoneyLabel,
-  hasSavedPriceUpdate,
-  type AdjustmentDraftRow,
+    draftsFromDetail,
+    friendlyMoneyLabel,
+    hasSavedPriceUpdate,
+    type AdjustmentDraftRow,
 } from "@/features/vendor/bookings/vendorBookingResponseHelpers";
 import { fetchConversation } from "@/lib/chatApi";
 import type { VendorBookingDetail } from "@/lib/vendorBookingsApi";
@@ -21,6 +21,9 @@ type VendorBookingResponseFlowProps = {
   detail: VendorBookingDetail;
   actionBusy: boolean;
   adjustmentSaving: boolean;
+  payoutsLoading: boolean;
+  payoutsReady: boolean;
+  onPayoutSetupRequired: () => void;
   onAcceptAtListedPrice: () => void;
   onDecline: () => void;
   onSendUpdatedPrice: (rows: AdjustmentDraftRow[]) => void;
@@ -34,6 +37,9 @@ export function VendorBookingResponseFlow({
   detail,
   actionBusy,
   adjustmentSaving,
+  payoutsLoading,
+  payoutsReady,
+  onPayoutSetupRequired,
   onAcceptAtListedPrice,
   onDecline,
   onSendUpdatedPrice,
@@ -132,21 +138,25 @@ export function VendorBookingResponseFlow({
     : "The client left details on this booking. Review “Notes from client” above, then try again.";
   const unreadGateConfirmLabel = hasChatThread ? unreadCopy.confirmLabel : "OK";
 
+  const requestAcceptDecision = async () => {
+    if (actionBusy || adjustmentSaving || checkingDecision || payoutsLoading) return;
+    if (!payoutsReady) {
+      onPayoutSetupRequired();
+      return;
+    }
+    await requestDecision("accept");
+  };
+
   return (
     <>
       <div className="space-y-3">
-        <p className="text-sm text-neutral-600">
-          Their estimate:{" "}
-          <span className="font-semibold text-neutral-900">{friendlyTotal}</span>
-          <span className="text-neutral-500"> (incl. Eventtz fee)</span>
-        </p>
         <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
           <Button
             variant="primary"
             className="w-full sm:w-auto"
-            disabled={actionBusy || adjustmentSaving || !!checkingDecision}
+            disabled={actionBusy || adjustmentSaving || !!checkingDecision || payoutsLoading}
             loading={checkingDecision === "accept"}
-            onClick={() => void requestDecision("accept")}
+            onClick={() => void requestAcceptDecision()}
           >
             Accept booking
           </Button>
@@ -164,9 +174,9 @@ export function VendorBookingResponseFlow({
             type="button"
             disabled={actionBusy || adjustmentSaving || !!checkingDecision}
             onClick={() => void requestDecision("decline")}
-            className="text-sm font-medium text-red-700 hover:underline disabled:opacity-60"
+            className="text-sm font-medium text-red-700 underline disabled:opacity-60"
           >
-            Can&apos;t take this one
+            Can&apos;t take this one?
           </button>
         </div>
         <VendorDraftReplyPanel

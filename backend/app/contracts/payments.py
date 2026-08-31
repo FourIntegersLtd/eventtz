@@ -16,6 +16,9 @@ class VendorPaymentsStatusResponse(BaseModel):
     stripe_account_id: str | None = None
     charges_enabled: bool = False
     payouts_enabled: bool = False
+    #: Same rule as vendor accept on client-initiated bookings (includes admin listing waiver).
+    can_accept_bookings: bool = False
+    payout_gate_waived: bool = False
 
 
 class VendorPayoutRow(BaseModel):

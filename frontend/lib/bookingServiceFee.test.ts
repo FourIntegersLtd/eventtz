@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   computeClientFeeBreakdown,
   formatBookingMoneyLabel,
+  referralDiscountForBookingPreview,
   referralDiscountForSpend,
 } from "@/lib/bookingServiceFee";
 
@@ -46,6 +47,22 @@ describe("bookingServiceFee", () => {
     expect(referralDiscountForSpend(599)).toBe(10);
     expect(referralDiscountForSpend(599.99)).toBe(10);
     expect(referralDiscountForSpend(600)).toBe(15);
+  });
+
+  it("referralDiscountForBookingPreview mirrors tier when code is on pricing", () => {
+    expect(referralDiscountForBookingPreview(null, 500)).toBe(0);
+    expect(referralDiscountForBookingPreview({ vendor_referral_code: "254106" }, 500)).toBe(10);
+    expect(referralDiscountForBookingPreview({ referral_fee_applied: true }, 500)).toBe(10);
+    expect(referralDiscountForBookingPreview({ vendor_referral_code: "254106" }, 350)).toBe(0);
+    const breakdown = computeClientFeeBreakdown({
+      vendorPortionGbp: 500,
+      referralFeeDiscountGbp: referralDiscountForBookingPreview(
+        { vendor_referral_code: "254106", service_fee_percent: 5 },
+        500,
+      ),
+      feePercent: 5,
+    });
+    expect(breakdown?.totalGbp).toBe(515);
   });
 
   it("applies referral tier discount to service fee only", () => {
@@ -96,5 +113,15 @@ describe("bookingServiceFee", () => {
     const breakdown = computeClientFeeBreakdown({ vendorPortionGbp: vendorPortion });
     expect(breakdown?.feeGbp).toBe(5.5);
     expect(breakdown?.totalGbp).toBe(115.5);
+  });
+
+  it("applies fixed referral discount when vendor portion rises with a surcharge", () => {
+    const breakdown = computeClientFeeBreakdown({
+      vendorPortionGbp: 510,
+      referralFeeDiscountGbp: 10,
+    });
+    expect(breakdown?.feeBeforeDiscountGbp).toBe(25.5);
+    expect(breakdown?.feeGbp).toBe(15.5);
+    expect(breakdown?.totalGbp).toBe(525.5);
   });
 });

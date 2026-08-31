@@ -10,6 +10,9 @@ import {
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 export function isVendorPayoutsReady(status: VendorPaymentsStatus | null | undefined): boolean {
+  if (typeof status?.can_accept_bookings === "boolean") {
+    return status.can_accept_bookings;
+  }
   return Boolean(status?.charges_enabled && status?.payouts_enabled);
 }
 

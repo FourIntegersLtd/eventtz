@@ -219,6 +219,7 @@ def load_payment_snapshot(booking_id: str) -> dict[str, Any] | None:
             "id,payment_status,paid_at,payout_released_at,payment_amount_gbp,"
             "vendor_amount_gbp,platform_fee_gbp,stripe_charge_id,stripe_transfer_id,"
             "stripe_receipt_url,stripe_payment_intent_id,line_items,vendor_adjustments,"
+            "vendor_user_id,vendor_referral_code,service_fee_percent,"
             "payment_receipt_snapshot,vendor_payment_record_snapshot,"
             "vendor_payout_statement_snapshot",
         )

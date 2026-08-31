@@ -14,8 +14,10 @@ from app.features.bookings.notifications import (
     _notify_booking_changed,
 )
 from app.features.bookings.pricing_confirmation import client_price_confirmation_required
-from app.features.bookings.pricing import persisted_booking_total_label
-from app.features.vendor_referrals.booking_discount import build_initial_pricing_breakdown_for_booking_row
+from app.features.vendor_referrals.booking_discount import (
+    build_initial_pricing_breakdown_for_booking_row,
+    pricing_snapshot_fields,
+)
 from app.features.bookings.queries import (
     _row_initiator,
     get_booking_request_for_vendor,
@@ -142,7 +144,7 @@ def update_booking_request_status_for_client(
             pb = build_initial_pricing_breakdown_for_booking_row(row0)
             revert_payload: dict[str, Any] = {
                 "vendor_adjustments": [],
-                "total_label": persisted_booking_total_label(pb),
+                **pricing_snapshot_fields(pb),
             }
             upd = (
                 db.table("booking_requests")

@@ -36,6 +36,10 @@ export const clientBookingRequestSchema = z
   })
   .and(eventDatesSchema({ requireStart: true }));
 
+export const CLIENT_BOOKING_NOTES_MAX_LENGTH = 4000;
+
+export type ClientBookingRequestInput = z.infer<typeof clientBookingRequestSchema>;
+
 export const vendorQuoteSchema = z
   .object({
     eventName: z.string().trim().min(1, "Enter an event name.").max(500),

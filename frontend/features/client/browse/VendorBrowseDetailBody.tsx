@@ -15,12 +15,12 @@ import {
   hasBrowseGoodToKnowContent,
 } from "./BrowseProfileGoodToKnowCard";
 import {
-  buildBookingLineItems,
   buildBrowsePricingOptions,
   extractBrowsePricingSharedContext,
   formatBookingTotalGbp,
   packageSpecificTravelLine,
 } from "./vendorBrowseDetailModel";
+import { usePerUnitPackageSelection } from "./usePerUnitPackageSelection";
 import { VendorReviewsSection } from "./VendorReviewsSection";
 import { BrowsePricingOptionCard } from "@/features/vendors/display/BrowsePricingOptionCard";
 import { BrowsePricingPackagesSection } from "@/features/vendors/display/BrowsePricingPackagesSection";
@@ -31,6 +31,7 @@ import { computeClientFeeBreakdown } from "@/lib/bookingServiceFee";
 import { ClientFeeBreakdownSummary } from "@/features/bookings/ClientFeeBreakdownSummary";
 import { useVendorReferralPreview } from "./useVendorReferralPreview";
 import { marketLocationFallback } from "@/lib/markets";
+import { payloadStringField } from "@/lib/vendorPayload";
 import { publicListingImageUrlsFromPayload } from "@/lib/vendorPortfolioImages";
 
 type VendorBrowseDetailBodyProps = {
@@ -54,11 +55,6 @@ type VendorBrowseDetailBodyProps = {
   storedReferralCode?: string | null;
 };
 
-function payloadStr(p: Record<string, unknown>, key: string): string {
-  const v = p[key];
-  return typeof v === "string" ? v : "";
-}
-
 export function VendorBrowseDetailBody({
   vendor,
   requireLoginForActions,
@@ -72,13 +68,13 @@ export function VendorBrowseDetailBody({
 }: VendorBrowseDetailBodyProps) {
   const p = vendor.profile_form_data ?? {};
   const businessName =
-    payloadStr(p, "businessName").trim() || "Vendor";
+    payloadStringField(p, "businessName").trim() || "Vendor";
   const facts = useMemo(() => buildBrowseVendorProfileFacts(p), [p]);
   const city =
     facts.locationLine ||
-    marketLocationFallback(payloadStr(p, "countryCode") || undefined);
+    marketLocationFallback(payloadStringField(p, "countryCode") || undefined);
   const bio =
-    payloadStr(p, "aiBioDraft").trim() ||
+    payloadStringField(p, "aiBioDraft").trim() ||
     "This vendor has not added a bio yet.";
   const services = Array.isArray(p.servicesOffered)
     ? p.servicesOffered.map((s) => String(s))
@@ -108,18 +104,20 @@ export function VendorBrowseDetailBody({
     () => extractBrowsePricingSharedContext(p, pricingOptions),
     [p, pricingOptions],
   );
-  const [selectedPackageIds, setSelectedPackageIds] = useState<Set<string>>(
-    () => new Set(),
-  );
-  const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [detailOpenId, setDetailOpenId] = useState<string | null>(null);
   const [bookingSelectError, setBookingSelectError] = useState(false);
 
-  const selectedLineItems = useMemo(
-    () =>
-      buildBookingLineItems(pricingOptions, [...selectedPackageIds], quantities),
-    [pricingOptions, selectedPackageIds, quantities],
-  );
+  const {
+    selectedIds: selectedPackageIds,
+    quantities,
+    togglePackage,
+    setPackageQuantity,
+    lineItems: selectedLineItems,
+  } = usePerUnitPackageSelection({
+    pricingOptions,
+    onSelectionChange: () => setBookingSelectError(false),
+  });
+
   const selectedTotal = useMemo(
     () => formatBookingTotalGbp(selectedLineItems),
     [selectedLineItems],
@@ -136,30 +134,6 @@ export function VendorBrowseDetailBody({
       referralFeeDiscountGbp: referralDiscountGbp,
     });
   }, [selectedTotal.hasTbc, selectedTotal.sumNumeric, referralDiscountGbp]);
-
-  const togglePackage = (id: string) => {
-    setSelectedPackageIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-    setBookingSelectError(false);
-  };
-
-  const setPackageQuantity = (id: string, qty: number) => {
-    const opt = pricingOptions.find((o) => o.id === id);
-    setQuantities((prev) => ({ ...prev, [id]: qty }));
-    setSelectedPackageIds((prev) => {
-      const next = new Set(prev);
-      if (opt?.pricingMode === "per_unit") {
-        if (qty >= opt.minQuantity) next.add(id);
-        else next.delete(id);
-      }
-      return next;
-    });
-    setBookingSelectError(false);
-  };
 
   const returnPath = detailReturnPath ?? "/client/browse";
   const appendAuthParams = (href: string) => {

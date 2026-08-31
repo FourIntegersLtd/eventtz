@@ -15,13 +15,14 @@ from app.features.bookings.calendar import (
     _enforce_max_bookings_per_day,
     _enforce_vendor_calendar,
     _vendor_is_approved_for_explore,
+    _vendor_is_approved_for_operating_bookings,
     rethrow_booking_capacity_db_error,
 )
 from app.features.bookings.line_item_validation import validate_quote_line_items
 from app.features.bookings.notifications import _notify_booking_changed
 from app.core.constants import BOOKING_SERVICE_FEE_PERCENT
-from app.core.constants import BOOKING_SERVICE_FEE_PERCENT
 from app.features.bookings.pricing import build_pricing_breakdown, persisted_booking_total_label
+from app.features.vendor_referrals.booking_discount import pricing_snapshot_fields
 from app.features.vendor_referrals.validate import resolve_referral_pricing_inputs
 from app.features.chat.service import (
     assert_conversation_matches_pair,
@@ -37,6 +38,7 @@ from app.features.vendors.list_pricing import (
     resolve_line_items,
 )
 from app.features.vendors.moderation import get_bookable_vendor_profile_form_data
+from app.features.vendors.qa_visibility import explore_viewer_for_client_user_id
 from app.features.auth.accounts import assert_user_not_suspended
 
 logger = get_logger(__name__)
@@ -181,7 +183,9 @@ def create_booking_request(
     if client_user_id == vendor_user_id:
         raise ValueError(booking_messages.CANNOT_BOOK_OWN_VENDOR)
 
-    if not _vendor_is_approved_for_explore(vendor_user_id):
+    viewer = explore_viewer_for_client_user_id(client_user_id)
+
+    if not _vendor_is_approved_for_explore(vendor_user_id, viewer=viewer):
         raise ValueError(
             booking_messages.VENDOR_NOT_AVAILABLE_FULL,
         )
@@ -189,9 +193,9 @@ def create_booking_request(
     assert_user_not_suspended(client_user_id)
     assert_user_not_suspended(vendor_user_id)
 
-    _enforce_vendor_calendar(vendor_user_id, event_date, event_end_date)
+    _enforce_vendor_calendar(vendor_user_id, event_date, event_end_date, viewer=viewer)
 
-    payload = get_bookable_vendor_profile_form_data(vendor_user_id)
+    payload = get_bookable_vendor_profile_form_data(vendor_user_id, viewer=viewer)
     if payload is None:
         raise ValueError(
             booking_messages.VENDOR_NOT_AVAILABLE_FULL,
@@ -241,7 +245,7 @@ def create_booking_request(
         "status": "pending",
         "selected_option_ids": selected_option_ids,
         "line_items": line_items,
-        "total_label": persisted_booking_total_label(pb),
+        **pricing_snapshot_fields(pb),
         "initial_client_total_label": client_total,
         "vendor_adjustments": [],
         "initiator": "client",
@@ -349,7 +353,7 @@ def create_vendor_quote_booking_request(
     if client_user_id == vendor_user_id:
         raise ValueError(booking_messages.CANNOT_QUOTE_SELF)
 
-    if not _vendor_is_approved_for_explore(vendor_user_id):
+    if not _vendor_is_approved_for_operating_bookings(vendor_user_id):
         raise ValueError(
             booking_messages.VENDOR_PROFILE_NOT_AVAILABLE,
         )
@@ -367,9 +371,20 @@ def create_vendor_quote_booking_request(
             vendor_user_id=vendor_user_id,
         )
 
-    _enforce_vendor_calendar(vendor_user_id, event_date, event_end_date)
+    operator_viewer = explore_viewer_for_client_user_id(vendor_user_id)
+    _enforce_vendor_calendar(
+        vendor_user_id,
+        event_date,
+        event_end_date,
+        viewer=operator_viewer,
+        operator=True,
+    )
 
-    vpayload = get_bookable_vendor_profile_form_data(vendor_user_id) or {}
+    vpayload = get_bookable_vendor_profile_form_data(
+        vendor_user_id,
+        viewer=operator_viewer,
+        operator=True,
+    ) or {}
     _enforce_max_bookings_per_day(vendor_user_id, vpayload, event_date, event_end_date)
 
     line_items = validate_quote_line_items(line_items)
@@ -394,7 +409,7 @@ def create_vendor_quote_booking_request(
         "status": "pending",
         "selected_option_ids": [],
         "line_items": line_items,
-        "total_label": persisted_booking_total_label(pb),
+        **pricing_snapshot_fields(pb),
         "initial_client_total_label": str(pb.get("client_total_label") or persisted_booking_total_label(pb)),
         "vendor_adjustments": [],
         "initiator": "vendor",

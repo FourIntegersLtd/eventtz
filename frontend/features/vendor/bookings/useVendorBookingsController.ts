@@ -18,6 +18,7 @@ import {
 } from "@/features/vendor/bookings/vendorBookingViewModel";
 import { useVendorBookingActions } from "@/features/vendor/bookings/useVendorBookingActions";
 import { useVendorPayoutAcceptResume } from "@/features/vendor/bookings/useVendorPayoutAcceptResume";
+import { bookingEventGroupsForList } from "@/features/bookings/groupBookingsByEvent";
 
 type UseVendorBookingsControllerArgs = {
   selectedBookingId?: string;
@@ -135,6 +136,15 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
     );
   }, [list, payoutsReady, payoutsLoading]);
 
+  const listItemsById = useMemo(
+    () => new Map(list.map((item) => [item.booking_request_id, item])),
+    [list],
+  );
+  const eventGroups = useMemo(
+    () => bookingEventGroupsForList(rows, listItemsById, "client", tab === "active"),
+    [tab, rows, listItemsById],
+  );
+
   const viewModel = detail
     ? toVendorBookingDetailViewModel(detail, () => setChatOpen(true))
     : null;
@@ -246,6 +256,7 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
     chatPrefill,
     setChatPrefill,
     rows,
+    eventGroups,
     viewModel,
     headerActions,
     footerActions,
@@ -257,6 +268,8 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
     handleConfirmAction,
     payoutModalOpen,
     setPayoutModalOpen,
+    payoutsLoading,
+    payoutsReady,
     connectingPayouts,
     payoutConnectError,
     setPayoutConnectError,

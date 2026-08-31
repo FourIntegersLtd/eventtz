@@ -10,8 +10,10 @@ from app.core.logging import get_logger
 from app.core.db import get_db
 from app.features.vendors.moderation import (
     get_bookable_vendor_profile_form_data,
+    vendor_is_approved_for_booking_operations,
     vendor_is_bookable_for_explore,
 )
+from app.features.vendors.qa_visibility import ExploreViewer, explore_viewer_for_client_user_id
 from app.features.vendors.profile_form_validation import MAX_MAX_BOOKINGS_PER_DAY, MIN_MAX_BOOKINGS_PER_DAY
 from app.features.vendors.list_pricing import parse_money_gbp
 from app.features.vendors.search import assert_vendor_payload_allows_event_dates, iso_dates_in_event_range
@@ -55,17 +57,32 @@ def _parse_max_bookings_from_payload(payload: dict[str, Any]) -> int:
     return max(MIN_MAX_BOOKINGS_PER_DAY, min(MAX_MAX_BOOKINGS_PER_DAY, int(n)))
 
 
-def _vendor_is_approved_for_explore(vendor_user_id: str) -> bool:
-    return vendor_is_bookable_for_explore(vendor_user_id)
+def _vendor_is_approved_for_explore(
+    vendor_user_id: str,
+    *,
+    viewer: ExploreViewer | None = None,
+) -> bool:
+    return vendor_is_bookable_for_explore(vendor_user_id, viewer=viewer)
+
+
+def _vendor_is_approved_for_operating_bookings(vendor_user_id: str) -> bool:
+    return vendor_is_approved_for_booking_operations(vendor_user_id)
 
 
 def _enforce_vendor_calendar(
     vendor_user_id: str,
     event_date: date,
     event_end_date: date | None,
+    *,
+    viewer: ExploreViewer | None = None,
+    operator: bool = False,
 ) -> None:
     """Blocked dates and available weekdays from vendor onboarding (same rules as explore search)."""
-    payload = get_bookable_vendor_profile_form_data(vendor_user_id)
+    payload = get_bookable_vendor_profile_form_data(
+        vendor_user_id,
+        viewer=viewer,
+        operator=operator,
+    )
     if not payload:
         raise ValueError(
             booking_messages.VENDOR_NOT_AVAILABLE_CALENDAR,

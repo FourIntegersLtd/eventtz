@@ -9,7 +9,12 @@ from app.contracts.types import UserType
 from app.core.logging import get_logger
 from app.core.sentry import bind_sentry_user
 from app.features.auth import messages as auth_messages
-from app.features.auth.session import clear_session_cookies, get_current_user_or_raise
+from app.core.constants import ACCESS_COOKIE_NAME
+from app.features.auth.session import (
+    clear_session_cookies,
+    get_current_user_or_raise,
+    validate_session_access_token,
+)
 from app.features.auth.accounts import (
     build_app_user,
     fetch_user_profile,
@@ -103,3 +108,33 @@ def require_client(request: Request, response: Response) -> AuthUser:
         role="client",
         forbidden_detail=auth_messages.CLIENT_PORTAL_FORBIDDEN,
     )
+
+
+def get_optional_session_user(request: Request, response: Response) -> AuthUser | None:
+    """Return the signed-in user when a valid session cookie is present, else None.
+
+    Public browse routes use this to scope QA test vendors without requiring sign-in.
+    Invalid or expired sessions are treated as anonymous (cookies cleared, no 401).
+    """
+    access_token = request.cookies.get(ACCESS_COOKIE_NAME)
+    if not access_token:
+        return None
+
+    auth_user, _failure_detail = validate_session_access_token(
+        access_token,
+        response,
+        unavailable_raises=False,
+    )
+    if auth_user is None:
+        return None
+
+    user = build_app_user(auth_user)
+    try:
+        db_profile = fetch_user_profile(user.id)
+    except Exception:
+        logger.warning("get_optional_session_user: profile lookup failed user_id=%s", user.id)
+        db_profile = None
+    if profile_is_deleted(db_profile):
+        clear_session_cookies(response)
+        return None
+    return user

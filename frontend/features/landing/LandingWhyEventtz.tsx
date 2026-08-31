@@ -26,10 +26,12 @@ export function LandingWhyEventtz() {
       </div>
 
       <div className="mx-auto mt-8 grid max-w-5xl gap-8 sm:mt-10 sm:grid-cols-3 sm:gap-y-8">
-        {WHY_EVENTTZ_PILLARS.map(({ title, description, Icon }) => (
+        {WHY_EVENTTZ_PILLARS.map(({ title, description, Icon, iconBg, iconColor }) => (
           <div key={title} className="text-center md:px-2">
-            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent-gold/15 text-primary sm:h-16 sm:w-16">
-              <Icon className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.6} aria-hidden />
+            <span
+              className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full sm:h-16 sm:w-16 ${iconBg}`}
+            >
+              <Icon className={`h-6 w-6 sm:h-7 sm:w-7 ${iconColor}`} strokeWidth={1.6} aria-hidden />
             </span>
             <h3 className="font-heading mt-2.5 text-sm font-semibold text-neutral-900 sm:mt-3 sm:text-base">
               {title}

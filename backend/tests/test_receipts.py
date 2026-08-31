@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from unittest.mock import MagicMock, patch
+
 import pytest
 
 from app.features.bookings import messages as booking_messages
@@ -201,19 +203,25 @@ def test_payment_receipt_payload_serializes_booking_request_id():
     assert "booking_id" not in dumped
 
 
-def test_payment_receipt_payload_serializes_booking_request_id():
-    from app.contracts.receipts import PaymentReceiptPayload
-
-    payload = PaymentReceiptPayload(
-        document_type="client_payment_receipt",
-        receipt_number="EVT-A1B2C3D4",
-        booking_request_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-        event_name="Summer party",
-        event_date="2026-09-15",
-        payment_status="paid",
-        counterparty_name="Ada Events",
-        total_label="GBP 525",
+@patch("app.features.vendor_referrals.booking_discount.get_vendor_referral_row_by_code")
+def test_client_receipt_live_lines_include_referral_discount(mock_lookup: MagicMock) -> None:
+    mock_lookup.return_value = {
+        "user_id": "vendor-1",
+        "client_referral_enabled": True,
+        "approval_status": "approved",
+        "client_referral_code": "254106",
+    }
+    row = _paid_row(
+        vendor_user_id="vendor-1",
+        vendor_referral_code="254106",
+        payment_amount_gbp=515.0,
+        platform_fee_gbp=15.0,
     )
-    dumped = payload.model_dump(mode="json", by_alias=True)
-    assert dumped["booking_request_id"] == "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-    assert "booking_id" not in dumped
+    out = build_client_payment_receipt(row, vendor_display_name="Ada Events", snapshot=row)
+    assert out["total_label"] == "GBP 515"
+    assert any(li["label"] == "Referral discount" for li in out["line_items"])
+    assert any(
+        li["amount_label"] == "GBP -10"
+        for li in out["line_items"]
+        if li["label"] == "Referral discount"
+    )

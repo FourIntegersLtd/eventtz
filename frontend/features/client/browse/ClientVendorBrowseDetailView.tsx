@@ -22,18 +22,19 @@ import {
 import { ChatDrawer } from "@/features/chat/ChatDrawer";
 import { buildBrowsePricingOptions } from "@/features/client/browse/vendorBrowseDetailModel";
 import { useExploreVendor } from "@/features/client/browse/useExploreVendor";
-import { marketplaceStateFromSearchParams, buildMarketplaceSearchUrl, toClientSearchContext } from "@/lib/marketplaceSearchParams";
+import {
+  buildMarketplaceSearchUrl,
+  clientSearchContextFromBrowse,
+  marketplaceSearchPrefillFromState,
+  marketplaceStateFromSearchParams,
+} from "@/lib/marketplaceSearchParams";
+import { payloadStringField } from "@/lib/vendorPayload";
 import { eventEnquirePrefillFromSearchParams } from "@/features/bookings/eventEnquirePrefill";
 import { CLIENT_BOOKING_TOAST_COPY } from "@/features/bookings/bookingConfirmCopy";
 import { useLaunchingSoonBookingGuard } from "@/features/bookings/useLaunchingSoonBookingGuard";
 import { vendorMatchesMarketplaceSearch } from "@/lib/marketplaceVendorMatch";
 import { usualReplyExpectation } from "@/lib/vendorMetrics";
 import { captureVendorReferralFromSearchParams } from "@/lib/vendorReferralAttribution";
-
-function payloadStr(p: Record<string, unknown>, key: string): string {
-  const v = p[key];
-  return typeof v === "string" ? v : "";
-}
 
 /** Client browse vendor detail: portal shell for clients, public chrome otherwise. */
 export function ClientVendorBrowseDetailView() {
@@ -80,7 +81,7 @@ export function ClientVendorBrowseDetailView() {
 
   const businessName = useMemo(() => {
     const p = vendor?.profile_form_data ?? {};
-    return payloadStr(p, "businessName").trim() || "Vendor";
+    return payloadStringField(p, "businessName").trim() || "Vendor";
   }, [vendor]);
 
   const pricingOptions = useMemo(
@@ -88,19 +89,10 @@ export function ClientVendorBrowseDetailView() {
     [vendor],
   );
 
-  const bookingSearchPrefill = useMemo((): VendorBookingSearchPrefill => {
-    const d = marketplaceSearch.dates;
-    const first = d[0];
-    let eventEndDate: string | undefined;
-    if (d.length === 2 && first && d[1] && d[1] >= first) {
-      eventEndDate = d[1];
-    }
-    return {
-      eventDate: first ?? "",
-      eventEndDate,
-      datesFlexible: marketplaceSearch.dateFlexible,
-    };
-  }, [marketplaceSearch]);
+  const bookingSearchPrefill = useMemo(
+    (): VendorBookingSearchPrefill => marketplaceSearchPrefillFromState(marketplaceSearch),
+    [marketplaceSearch],
+  );
 
   const plannerEventPrefill = useMemo(
     () => eventEnquirePrefillFromSearchParams(searchParams),
@@ -109,12 +101,10 @@ export function ClientVendorBrowseDetailView() {
 
   const linkedEventId = searchParams.get("event_id")?.trim() || null;
 
-  const bookingClientSearchContext = useMemo(() => {
-    const base = toClientSearchContext(marketplaceSearch);
-    const planId = searchParams.get("fromPlanner")?.trim();
-    if (!planId) return base;
-    return { ...base, source: "planner" as const, plannerPlanId: planId };
-  }, [marketplaceSearch, searchParams]);
+  const bookingClientSearchContext = useMemo(
+    () => clientSearchContextFromBrowse(marketplaceSearch, searchParams),
+    [marketplaceSearch, searchParams],
+  );
 
   const marketplaceSearchMismatchReasons = useMemo(() => {
     if (!vendor) return null;

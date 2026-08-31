@@ -24,3 +24,16 @@ def test_client_price_confirmation_aligns_with_has_price_update():
     }
     assert _has_price_update(row) is True
     assert client_price_confirmation_required(row) is True
+
+
+def test_list_has_price_update_false_for_vendor_initiated_quote():
+    from app.features.bookings.queries import _list_has_price_update
+
+    row = {
+        "status": "pending",
+        "initiator": "vendor",
+        "vendor_adjustments": [{"amount_gbp": 10.0}],
+    }
+    assert _has_price_update(row) is True
+    assert client_price_confirmation_required(row) is False
+    assert _list_has_price_update(row) is False

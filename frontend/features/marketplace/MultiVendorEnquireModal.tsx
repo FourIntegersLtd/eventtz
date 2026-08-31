@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { DateInput } from "@/components/ui/DateInput";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { buildBookingRequestPayload } from "@/lib/bookingEnquireSubmit";
 import {
   postBookingRequest,
   type ClientSearchContext,
@@ -22,9 +23,11 @@ import {
 import {
   MultiVendorPackagePicker,
 } from "@/features/bookings/MultiVendorPackagePicker";
+import { bookingQuantitiesPayload } from "@/features/client/browse/vendorBrowseDetailModel";
 import { todayIsoDate } from "@/lib/eventDateValidation";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { clientBookingRequestSchema, parseForm } from "@/lib/validation";
+import { CLIENT_BOOKING_NOTES_MAX_LENGTH } from "@/lib/validation/bookings";
 import {
   CLIENT_BOOKING_ERROR_COPY,
   CLIENT_BOOKING_TOAST_COPY,
@@ -32,20 +35,14 @@ import {
 import { withMutationFeedback } from "@/lib/mutationFeedback";
 import { ActiveEventPrefillBanner } from "@/features/bookings/ActiveEventPrefillBanner";
 import type { EventEnquirePrefill } from "@/features/bookings/eventEnquirePrefill";
-import {
-  applyPrefillToFields,
-  applyLinkedPrefillToForm,
-  useActiveEventPrefill,
-} from "@/features/bookings/useActiveEventPrefill";
+import { useEnquireEventFormState } from "@/features/bookings/useEnquireEventFormState";
+import type { MarketplaceBookingSearchPrefill } from "@/lib/marketplaceSearchParams";
+import { vendorUserIdsWithCalendarConflict } from "@/lib/vendorAvailability";
 
 type MultiVendorEnquireModalProps = {
   vendors: ExploreVendorSearchRow[];
   clientSearchContext: ClientSearchContext;
-  searchPrefill?: {
-    eventDate?: string;
-    eventEndDate?: string;
-    datesFlexible: boolean;
-  };
+  searchPrefill?: MarketplaceBookingSearchPrefill;
   /** Pre-fill event fields (e.g. from AI planner) when no active client event exists. */
   initialPrefill?: EventEnquirePrefill;
   enquirySource?: "multi" | "planner";
@@ -58,8 +55,8 @@ type MultiVendorEnquireModalProps = {
   onSuccess: (createdIds: string[]) => void;
 };
 
-function vendorLabel(v: ExploreVendorSearchRow): string {
-  return vendorDisplayName(v);
+function vendorLabel(vendor: ExploreVendorSearchRow): string {
+  return vendorDisplayName(vendor);
 }
 
 /**
@@ -79,17 +76,27 @@ export function MultiVendorEnquireModal({
   onSuccess,
 }: MultiVendorEnquireModalProps) {
   const { showToast } = useToast();
-  const [eventName, setEventName] = useState(initialPrefill?.eventName ?? "");
-  const [eventDate, setEventDate] = useState(
-    searchPrefill?.eventDate?.trim() ||
-      initialPrefill?.eventDate?.trim() ||
-      todayIsoDate(),
-  );
-  const [eventEndDate, setEventEndDate] = useState(
-    searchPrefill?.eventEndDate ?? initialPrefill?.eventEndDate ?? "",
-  );
-  const [venueAddress, setVenueAddress] = useState(initialPrefill?.venueAddress ?? "");
-  const [notes, setNotes] = useState(initialPrefill?.notes ?? "");
+  const {
+    eventName,
+    setEventName,
+    eventDate,
+    setEventDate,
+    eventEndDate,
+    setEventEndDate,
+    venueAddress,
+    setVenueAddress,
+    notes,
+    setNotes,
+    pendingPrefill,
+    bannerVisible,
+    dismissForNewEvent,
+    applyBannerPrefill,
+    selectedEventId,
+  } = useEnquireEventFormState({
+    searchPrefill,
+    initialPrefill,
+    linkedEventId,
+  });
   const [selectedOptionByVendorId, setSelectedOptionByVendorId] = useState<
     Record<string, string>
   >(() => initialOptionSelections(vendors));
@@ -99,32 +106,6 @@ export function MultiVendorEnquireModal({
   );
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const {
-    pendingPrefill,
-    linkedPrefill,
-    selectedEventId,
-    bannerVisible,
-    applyPrefill,
-    dismissForNewEvent,
-  } = useActiveEventPrefill({ linkedEventId });
-
-  useEffect(() => {
-    if (selectedEventId || bannerVisible || linkedPrefill || !initialPrefill) return;
-    if (initialPrefill.eventName) setEventName(initialPrefill.eventName);
-    if (initialPrefill.eventDate) setEventDate(initialPrefill.eventDate);
-    if (initialPrefill.eventEndDate) setEventEndDate(initialPrefill.eventEndDate);
-    if (initialPrefill.venueAddress) setVenueAddress(initialPrefill.venueAddress);
-    if (initialPrefill.notes) setNotes(initialPrefill.notes);
-  }, [initialPrefill, selectedEventId, bannerVisible, linkedPrefill]);
-
-  useEffect(() => {
-    applyLinkedPrefillToForm(linkedPrefill, {
-      setEventName,
-      setEventDate,
-      setEventEndDate,
-      setVenueAddress,
-    });
-  }, [linkedPrefill]);
 
   useEffect(() => {
     const next = initialOptionSelections(vendors);
@@ -132,12 +113,25 @@ export function MultiVendorEnquireModal({
     setQuantityByVendorId(initialQuantitiesForVendors(vendors, next));
   }, [vendors]);
 
+  const calendarConflictVendorIds = useMemo(
+    () => vendorUserIdsWithCalendarConflict(vendors, eventDate, eventEndDate),
+    [vendors, eventDate, eventEndDate],
+  );
+
+  const calendarConflictMessage = useMemo(() => {
+    if (calendarConflictVendorIds.length === 0 || !eventDate.trim()) return null;
+    const names = vendors
+      .filter((vendor) => calendarConflictVendorIds.includes(vendor.user_id))
+      .map(vendorLabel);
+    return `These dates don't match availability for: ${names.join(", ")}. Adjust the dates or remove those vendors.`;
+  }, [calendarConflictVendorIds, eventDate, vendors]);
+
   const submit = () => {
-    const optionIdsByVendor = vendors.map((v) => ({
-      vendor: v,
-      optionId: selectedOptionByVendorId[v.user_id] ?? null,
+    const optionIdsByVendor = vendors.map((vendor) => ({
+      vendor,
+      optionId: selectedOptionByVendorId[vendor.user_id] ?? null,
     }));
-    const missing = optionIdsByVendor.filter((x) => !x.optionId);
+    const missing = optionIdsByVendor.filter((entry) => !entry.optionId);
     if (missing.length > 0) {
       setError(
         `${vendorLabel(missing[0]!.vendor)} has no bookable packages yet. Remove them and try again.`,
@@ -158,6 +152,11 @@ export function MultiVendorEnquireModal({
       return;
     }
 
+    if (calendarConflictVendorIds.length > 0) {
+      setError(calendarConflictMessage);
+      return;
+    }
+
     setError(null);
     setSubmitting(true);
     void (async () => {
@@ -165,37 +164,38 @@ export function MultiVendorEnquireModal({
       const failures: string[] = [];
       const batchSize = optionIdsByVendor.length;
       const resolvedSource = clientSearchContext.source ?? enquirySource;
-      let linkedEventId = selectedEventId;
-      for (let i = 0; i < optionIdsByVendor.length; i += 1) {
-        const { vendor, optionId } = optionIdsByVendor[i]!;
+      let linkedEventIdForBatch = selectedEventId;
+      for (let index = 0; index < optionIdsByVendor.length; index += 1) {
+        const { vendor, optionId } = optionIdsByVendor[index]!;
+        const pricingOptions = pricingOptionsForVendor(vendor);
         try {
-          const created = await postBookingRequest({
-            vendor_user_id: vendor.user_id,
-            event_name: parsed.data.eventName,
-            event_date: parsed.data.eventDate,
-            event_end_date: parsed.data.eventEndDate?.trim() || null,
-            event_postcode: null,
-            event_address: (parsed.data.venueAddress ?? "").trim() || null,
-            notes: (parsed.data.notes ?? "").trim() || null,
-            selected_option_ids: [optionId!],
-            quantities: (() => {
-              const opt = pricingOptionsForVendor(vendor).find((o) => o.id === optionId);
-              if (opt?.pricingMode !== "per_unit") return undefined;
-              const qty =
-                quantityByVendorId[vendor.user_id] ?? defaultQuantityForOption(opt);
-              return { [optionId!]: qty };
-            })(),
-            client_search_context: {
-              ...clientSearchContext,
-              batchSize,
-              batchIndex: i,
-              source: resolvedSource,
-            },
-            event_id: linkedEventId,
-          });
+          const created = await postBookingRequest(
+            buildBookingRequestPayload(parsed.data, {
+              vendorUserId: vendor.user_id,
+              selectedOptionIds: [optionId!],
+              quantities: bookingQuantitiesPayload(
+                [optionId!],
+                pricingOptions,
+                {
+                  [optionId!]:
+                    quantityByVendorId[vendor.user_id] ??
+                    defaultQuantityForOption(
+                      pricingOptions.find((option) => option.id === optionId)!,
+                    ),
+                },
+              ),
+              clientSearchContext: {
+                ...clientSearchContext,
+                batchSize,
+                batchIndex: index,
+                source: resolvedSource,
+              },
+              eventId: linkedEventIdForBatch,
+            }),
+          );
           createdIds.push(created.booking_request_id);
-          if (created.event_id && !linkedEventId) {
-            linkedEventId = created.event_id;
+          if (created.event_id && !linkedEventIdForBatch) {
+            linkedEventIdForBatch = created.event_id;
           }
           track(MixpanelEvents.enquiry_created, {
             booking_id: created.booking_request_id,
@@ -278,14 +278,14 @@ export function MultiVendorEnquireModal({
           selectedOptionByVendorId={selectedOptionByVendorId}
           onSelectOption={(vendorUserId, optionId) => {
             setSelectedOptionByVendorId((prev) => ({ ...prev, [vendorUserId]: optionId }));
-            const vendor = vendors.find((v) => v.user_id === vendorUserId);
-            const opt = vendor
-              ? pricingOptionsForVendor(vendor).find((o) => o.id === optionId)
+            const vendor = vendors.find((entry) => entry.user_id === vendorUserId);
+            const option = vendor
+              ? pricingOptionsForVendor(vendor).find((entry) => entry.id === optionId)
               : undefined;
             setQuantityByVendorId((prev) => {
               const next = { ...prev };
-              if (opt?.pricingMode === "per_unit") {
-                next[vendorUserId] = defaultQuantityForOption(opt);
+              if (option?.pricingMode === "per_unit") {
+                next[vendorUserId] = defaultQuantityForOption(option);
               } else {
                 delete next[vendorUserId];
               }
@@ -301,6 +301,11 @@ export function MultiVendorEnquireModal({
           vendorCategoryLabels={vendorCategoryLabels}
         />
         {error ? <LottieFailureInline message={error} /> : null}
+        {calendarConflictMessage ? (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+            {calendarConflictMessage}
+          </div>
+        ) : null}
         {loadWarning ? (
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 whitespace-pre-wrap">
             {loadWarning}
@@ -310,11 +315,7 @@ export function MultiVendorEnquireModal({
           <ActiveEventPrefillBanner
             prefill={pendingPrefill}
             onUse={() => {
-              const fields = applyPrefillToFields(applyPrefill(pendingPrefill));
-              setEventName(fields.eventName);
-              setEventDate(fields.eventDate);
-              setEventEndDate(fields.eventEndDate);
-              setVenueAddress(fields.venueAddress);
+              applyBannerPrefill();
               setError(null);
             }}
             onNewEvent={dismissForNewEvent}
@@ -369,7 +370,7 @@ export function MultiVendorEnquireModal({
             rows={3}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            maxLength={4000}
+            maxLength={CLIENT_BOOKING_NOTES_MAX_LENGTH}
           />
         </label>
       </div>

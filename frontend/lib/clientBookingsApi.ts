@@ -88,6 +88,7 @@ export type ClientBookingListItem = {
   vendor_user_id: string;
   vendor_display_name: string;
   created_at: string | null;
+  updated_at?: string | null;
   initiator?: BookingInitiator;
   conversation_id: string | null;
   /** Only meaningful for `group: "completed"` rows - powers the review nudge. */

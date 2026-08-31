@@ -1,17 +1,23 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { inputClass, labelClass, ToggleChip } from "@/features/vendor/onboarding/steps/form-primitives";
 import { parseForm, vendorPriceAdjustmentsSchema } from "@/lib/validation";
 import {
+  adjustmentLineKey,
+  adjustmentPreviewDeltaExplanation,
   applyDraftLine,
   costNeedsReason,
   formatLineSummary,
+  formatTotalDeltaLabel,
   adjustmentKindFromRow,
+  friendlyMoneyLabel,
   legacyLabelToReason,
-  previewClientTotalLabel,
+  previewClientFeeBreakdown,
+  previewTotalDeltaGbp,
   draftRowForAdjustmentKind,
   type AdjustmentDraftRow,
   type AdjustmentKind,
@@ -54,12 +60,27 @@ export function VendorBookingResponseAdjustments({
   const [adjError, setAdjError] = useState<string | null>(null);
 
   const adjustDrafts = lines;
-  const previewTotal = previewClientTotalLabel(pricing, adjustDrafts);
-  const otherKind: AdjustmentKind = adjKind === "cost" ? "discount" : "cost";
-  const otherLine = draftRowForAdjustmentKind(lines, otherKind);
+  const previewBreakdown = previewClientFeeBreakdown(pricing, adjustDrafts);
+  const previewDelta = previewTotalDeltaGbp(pricing, adjustDrafts);
+  const previewDeltaExplanation =
+    previewDelta != null
+      ? adjustmentPreviewDeltaExplanation(pricing, adjustDrafts, previewDelta)
+      : null;
+  const currentTotalLabel = pricing?.client_total_label
+    ? friendlyMoneyLabel(pricing.client_total_label)
+    : null;
 
   const syncLines = (kind: AdjustmentKind, amount: string, reason: string) => {
     setLines((prev) => applyDraftLine(prev, kind, amount, reason));
+  };
+
+  const handleRemoveDraft = (kind: AdjustmentKind) => {
+    const nextLines = applyDraftLine(lines, kind, "", "");
+    setLines(nextLines);
+    if (kind === adjKind) {
+      setAmountInput("");
+      if (kind === "cost") setReasonInput("");
+    }
   };
 
   const handleAmountChange = (raw: string) => {
@@ -117,76 +138,105 @@ export function VendorBookingResponseAdjustments({
         <p className="mt-1 text-sm text-neutral-600">Say what changed. They need to accept first.</p>
       </div>
 
-      <div className="space-y-4 rounded-xl border border-neutral-200 bg-white p-4">
-        <div className="flex flex-wrap gap-2">
-          <ToggleChip active={adjKind === "cost"} onClick={() => handleKindChange("cost")}>
-            Add to price
-          </ToggleChip>
-          <ToggleChip active={adjKind === "discount"} onClick={() => handleKindChange("discount")}>
-            Discount
-          </ToggleChip>
-        </div>
+      <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
+        <div className="space-y-4 p-4">
+          <div className="flex flex-wrap gap-2">
+            <ToggleChip active={adjKind === "cost"} onClick={() => handleKindChange("cost")}>
+              Add to price
+            </ToggleChip>
+            <ToggleChip active={adjKind === "discount"} onClick={() => handleKindChange("discount")}>
+              Discount
+            </ToggleChip>
+          </div>
 
-        {adjKind === "cost" ? (
+          {adjKind === "cost" ? (
+            <div>
+              <label className={labelClass()} htmlFor="adj-reason">
+                What is this for?
+              </label>
+              <input
+                id="adj-reason"
+                type="text"
+                value={reasonInput}
+                maxLength={200}
+                placeholder="e.g. travel, extra hour, setup fee"
+                className={inputClass()}
+                onChange={(e) => handleReasonChange(e.target.value)}
+              />
+            </div>
+          ) : null}
+
           <div>
-            <label className={labelClass()} htmlFor="adj-reason">
-              What is this for?
+            <label className={labelClass()} htmlFor="adj-amount">
+              {adjKind === "discount" ? "Amount off" : "Amount"}
             </label>
-            <input
-              id="adj-reason"
-              type="text"
-              value={reasonInput}
-              maxLength={200}
-              placeholder="e.g. travel, extra hour, setup fee"
-              className={inputClass()}
-              onChange={(e) => handleReasonChange(e.target.value)}
-            />
+            <div className="relative">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-neutral-500">
+                £
+              </span>
+              <input
+                id="adj-amount"
+                type="text"
+                inputMode="decimal"
+                value={amountInput}
+                placeholder="0"
+                className={`${inputClass()} pl-7`}
+                onChange={(e) => handleAmountChange(e.target.value)}
+              />
+            </div>
+            {adjKind === "discount" ? (
+              <p className="mt-1.5 text-xs text-neutral-500">Type − for a discount.</p>
+            ) : null}
           </div>
-        ) : null}
 
-        <div>
-          <label className={labelClass()} htmlFor="adj-amount">
-            {adjKind === "discount" ? "Amount off" : "Amount"}
-          </label>
-          <div className="relative">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-neutral-500">
-              £
-            </span>
-            <input
-              id="adj-amount"
-              type="text"
-              inputMode="decimal"
-              value={amountInput}
-              placeholder="0"
-              className={`${inputClass()} pl-7`}
-              onChange={(e) => handleAmountChange(e.target.value)}
-            />
-          </div>
-          {adjKind === "discount" ? (
-            <p className="mt-1.5 text-xs text-neutral-500">Type − for a discount.</p>
+          {adjKind === "cost" && amountInput.trim() && !reasonInput.trim() ? (
+            <p className="text-xs text-amber-700">Add a reason for the extra charge.</p>
           ) : null}
         </div>
+
+        {lines.length > 0 || (previewDelta != null && previewBreakdown) ? (
+          <div className="space-y-3 border-t border-neutral-100 bg-neutral-50/70 px-4 py-3">
+            {lines.length > 0 ? (
+              <ul className="space-y-2">
+                {lines.map((row) => (
+                  <li
+                    key={adjustmentLineKey(row)}
+                    className="flex items-center justify-between gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2"
+                  >
+                    <span className="min-w-0 text-sm text-neutral-800">{formatLineSummary(row)}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveDraft(row.kind)}
+                      aria-label={`Remove ${row.kind === "discount" ? "discount" : "extra charge"}`}
+                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-800"
+                    >
+                      <X className="h-3.5 w-3.5" strokeWidth={2.5} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+
+            {previewDelta != null && previewBreakdown ? (
+              <div className="text-sm text-neutral-700">
+                <p>
+                  New total for them:{" "}
+                  <span className="font-semibold text-neutral-900">{previewBreakdown.totalLabel}</span>
+                  {currentTotalLabel ? (
+                    <span className="text-neutral-500"> (was {currentTotalLabel})</span>
+                  ) : null}
+                </p>
+                <p className="mt-1 text-neutral-600">
+                  {previewDeltaExplanation ??
+                    `${formatTotalDeltaLabel(previewDelta)} from their current total.`}
+                </p>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
-      {otherLine ? (
-        <p className="text-sm text-neutral-600">
-          Also included:{" "}
-          <span className="font-medium text-neutral-900">{formatLineSummary(otherLine)}</span>
-        </p>
-      ) : null}
-
-      {adjKind === "cost" && amountInput.trim() && !reasonInput.trim() ? (
-        <p className="text-xs text-amber-700">Add a reason for the extra charge.</p>
-      ) : null}
-
       {adjError ? <LottieFailureInline message={adjError} /> : null}
-
-      {previewTotal ? (
-        <p className="text-sm text-neutral-600">
-          New total for them:{" "}
-          <span className="font-semibold text-neutral-900">{previewTotal}</span>
-        </p>
-      ) : null}
 
       <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
         <Button

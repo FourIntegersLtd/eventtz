@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Calendar, ExternalLink, MapPin, MessageCircle } from "lucide-react";
 import { portalPanelShell } from "@/components/portal-shell/portalTheme";
 import { Button } from "@/components/ui/Button";
+import { CopyToClipboardButton } from "@/components/ui/CopyToClipboardButton";
 import { StatusBadge } from "@/components/badges/StatusBadge";
 import { PaymentStatusBadge } from "@/components/badges/PaymentStatusBadge";
 import { SkeletonDetailHeader } from "@/components/ui/Skeleton";
@@ -11,6 +12,7 @@ import { LottieFailurePanel } from "@/components/ui/LottieFailurePanel";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { BookingPricingBreakdown } from "@/features/bookings/BookingPricingBreakdown";
 import { BOOKING_OUTCOME_COPY } from "@/features/bookings/bookingConfirmCopy";
+import { shortId } from "@/lib/shortId";
 import type {
   BookingDetailAction,
   BookingDetailSlots,
@@ -107,7 +109,19 @@ export function BookingDetailPanel({
       <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         <div className="min-w-0 flex-1">
           <h2 className="font-heading text-xl font-semibold text-neutral-900">{booking.eventName}</h2>
-          <p className="mt-1 text-xs text-neutral-500">{booking.timelineLabel}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-neutral-500">
+            <span>{booking.timelineLabel}</span>
+            <span className="text-neutral-300" aria-hidden>
+              ·
+            </span>
+            <span className="inline-flex items-center gap-0.5 font-mono text-neutral-400">
+              <span title={booking.id}>Ref {shortId(booking.id)}</span>
+              <CopyToClipboardButton
+                text={booking.id}
+                ariaLabel="Copy booking reference"
+              />
+            </span>
+          </div>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <StatusBadge status={booking.status} />
             {booking.paymentStatus ? (
@@ -115,11 +129,12 @@ export function BookingDetailPanel({
             ) : null}
           </div>
         </div>
-        {headerActions.length > 0 ? (
-          <div className="flex flex-shrink-0 flex-wrap items-center gap-2 sm:justify-end">
+        {headerActions.length > 0 || slots.disputeSection ? (
+          <div className="flex flex-shrink-0 flex-wrap items-center justify-end gap-2 self-start">
             {headerActions.map((a) => (
               <ActionButton key={a.key} action={a} />
             ))}
+            {slots.disputeSection}
           </div>
         ) : null}
       </div>
@@ -240,8 +255,6 @@ export function BookingDetailPanel({
         ) : null}
 
         {slots.afterSections}
-
-        {slots.disputeSection}
 
         {hasFooter ? (
           <section className="border-t border-neutral-100 pt-6">

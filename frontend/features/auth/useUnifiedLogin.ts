@@ -3,9 +3,9 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { getMe } from "@/lib/auth-api";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { GENERIC_AUTH_ERROR, SESSION_VERIFY_FAILED, wrongAdminPortalMessage } from "@/lib/auth-messages";
+import { clearFieldError } from "@/lib/formHelpers";
 import { isAdminLoginIntent, resolvePostAuthPath } from "@/features/auth/authRouting";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { loginSchema, parseForm } from "@/lib/validation";
@@ -35,53 +35,44 @@ export function useUnifiedLogin() {
     }
     setSubmitting(true);
     try {
-      await signIn(parsed.data.email, parsed.data.password);
+      const signedInUser = await signIn(parsed.data.email, parsed.data.password);
+      const nextPath = searchParams.get("next");
+      if (isAdminLoginIntent(nextPath) && signedInUser.user_type !== "admin") {
+        await signOut();
+        setError(wrongAdminPortalMessage(signedInUser.user_type));
+        return;
+      }
+      router.push(resolvePostAuthPath(nextPath, signedInUser.user_type));
     } catch (err: unknown) {
-      track(MixpanelEvents.login_failed, { reason: "credentials" });
-      const detail = getApiErrorDetail(err) ?? GENERIC_AUTH_ERROR;
+      const detail =
+        getApiErrorDetail(err) ??
+        (err instanceof Error && err.message.trim() ? err.message : GENERIC_AUTH_ERROR);
+      track(MixpanelEvents.login_failed, {
+        reason: detail === SESSION_VERIFY_FAILED ? "session_verify" : "credentials",
+      });
       setError(detail);
       if (/verify your email/i.test(detail)) {
         setNeedsVerification(true);
       }
-      setSubmitting(false);
-      return;
-    }
-    try {
-      const me = await getMe();
-      const nextPath = searchParams.get("next");
-      if (isAdminLoginIntent(nextPath) && me.user_type !== "admin") {
-        await signOut();
-        setError(wrongAdminPortalMessage(me.user_type));
-        return;
-      }
-      router.push(resolvePostAuthPath(nextPath, me.user_type));
-    } catch {
-      track(MixpanelEvents.login_failed, { reason: "session_verify" });
-      setError(SESSION_VERIFY_FAILED);
     } finally {
       setSubmitting(false);
     }
   };
 
-  const clearFieldError = (field: string) => {
-    setFieldErrors((prev) => {
-      if (!prev[field]) return prev;
-      const next = { ...prev };
-      delete next[field];
-      return next;
-    });
+  const onFieldErrorClear = (field: string) => {
+    setFieldErrors((prev) => clearFieldError(prev, field));
   };
 
   return {
     email,
     setEmail: (value: string) => {
       setEmail(value);
-      clearFieldError("email");
+      onFieldErrorClear("email");
     },
     password,
     setPassword: (value: string) => {
       setPassword(value);
-      clearFieldError("password");
+      onFieldErrorClear("password");
     },
     error,
     fieldErrors,

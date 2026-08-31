@@ -6,6 +6,9 @@ export type VendorPaymentsStatus = {
   stripe_account_id: string | null;
   charges_enabled: boolean;
   payouts_enabled: boolean;
+  /** Mirrors backend accept gate (Stripe ready or admin listing waiver). */
+  can_accept_bookings?: boolean;
+  payout_gate_waived?: boolean;
 };
 
 export type VendorPayoutStatus = "paid_out" | "awaiting_payout";

@@ -66,7 +66,7 @@ export function useClientBookingPay(bookingId: string | undefined) {
     } catch (e: unknown) {
       track(MixpanelEvents.booking_checkout_failed, { booking_id: bookingId });
       setError(getApiErrorDetail(e) ?? COULD_NOT_START_CHECKOUT);
-      setPhase("safety");
+      setPhase("error");
       setBusy(false);
     }
   };

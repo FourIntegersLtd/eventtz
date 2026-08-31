@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { groupBookingsByEvent } from "@/features/bookings/groupBookingsByEvent";
+import {
+  bookingEventGroupsForList,
+  groupBookingsByEvent,
+} from "@/features/bookings/groupBookingsByEvent";
 import type { BookingListRowViewModel } from "@/features/bookings/bookingViewModel";
 import type { ClientBookingListItem } from "@/lib/clientBookingsApi";
 
@@ -54,5 +57,56 @@ describe("groupBookingsByEvent", () => {
     const groups = groupBookingsByEvent(rows, items);
     expect(groups).toHaveLength(2);
     expect(groups.every((g) => g.eventId === null)).toBe(true);
+  });
+
+  it("orders event groups by latest booking activity, not event date", () => {
+    const rows = [row("older-event", "Test custom quote"), row("recent", "Graduation")];
+    const items = new Map([
+      [
+        "older-event",
+        item("older-event", {
+          event_id: "evt-old",
+          event_title: "Test custom quote",
+          event_date: "2026-08-21",
+          created_at: "2026-08-01T10:00:00Z",
+          updated_at: "2026-08-01T10:00:00Z",
+        }),
+      ],
+      [
+        "recent",
+        item("recent", {
+          event_id: "evt-new",
+          event_title: "Graduation",
+          event_date: "2026-09-30",
+          created_at: "2026-08-20T10:00:00Z",
+          updated_at: "2026-08-30T18:00:00Z",
+        }),
+      ],
+    ]);
+    const groups = groupBookingsByEvent(rows, items);
+    expect(groups.map((g) => g.title)).toEqual(["Graduation", "Test custom quote"]);
+  });
+});
+
+describe("bookingEventGroupsForList", () => {
+  it("returns null when every event has only one booking", () => {
+    const rows = [row("b1", "Party A"), row("b2", "Party B")];
+    const items = new Map([
+      ["b1", item("b1", { event_id: "evt-1" })],
+      ["b2", item("b2", { event_id: "evt-2", event_name: "Party B" })],
+    ]);
+    expect(bookingEventGroupsForList(rows, items, "vendor", true)).toBeNull();
+  });
+
+  it("returns groups when an event has multiple vendors", () => {
+    const rows = [row("b1", "Sarah's wedding"), row("b2", "Sarah's wedding")];
+    const items = new Map([
+      ["b1", item("b1", { event_id: "evt-1" })],
+      ["b2", item("b2", { event_id: "evt-1" })],
+    ]);
+    const groups = bookingEventGroupsForList(rows, items, "vendor", true);
+    expect(groups).toHaveLength(1);
+    expect(groups?.[0]?.counterpartyNoun).toBe("vendor");
+    expect(groups?.[0]?.bookingCount).toBe(2);
   });
 });

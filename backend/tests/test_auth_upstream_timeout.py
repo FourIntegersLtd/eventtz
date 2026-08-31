@@ -111,6 +111,7 @@ def test_session_invalid_token_still_clears_cookies() -> None:
         with pytest.raises(HTTPException) as exc:
             get_current_user_or_raise(request, response)
     assert exc.value.status_code == 401
+    assert exc.value.detail == auth_messages.SIGN_IN_REQUIRED
     assert response.delete_cookie.called
 
 

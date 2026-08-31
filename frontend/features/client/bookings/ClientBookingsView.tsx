@@ -185,7 +185,7 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
                       bookingId={c.detail.booking_request_id}
                       role="client"
                       bookingStatus={c.detail.booking_status}
-                      presentation="drawer"
+                      presentation="header"
                     />
                   ) : (
                     <></>

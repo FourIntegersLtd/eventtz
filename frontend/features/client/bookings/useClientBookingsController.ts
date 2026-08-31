@@ -12,7 +12,7 @@ import {
   toClientBookingDetailViewModel,
   toClientBookingRowViewModel,
 } from "@/features/client/bookings/clientBookingViewModel";
-import { groupBookingsByEvent } from "@/features/bookings/groupBookingsByEvent";
+import { bookingEventGroupsForList } from "@/features/bookings/groupBookingsByEvent";
 import {
   BOOKING_NOTIFICATIONS_CLEARED_EVENT,
   markAllClientBookingNotificationsRead,
@@ -137,11 +137,10 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
     () => new Map(list.map((item) => [item.booking_request_id, item])),
     [list],
   );
-  const eventGroups = useMemo(() => {
-    if (tab !== "active" || rows.length === 0) return null;
-    const groups = groupBookingsByEvent(rows, listItemsById);
-    return groups.length > 1 || groups.some((g) => g.eventId) ? groups : null;
-  }, [tab, rows, listItemsById]);
+  const eventGroups = useMemo(
+    () => bookingEventGroupsForList(rows, listItemsById, "vendor", tab === "active"),
+    [tab, rows, listItemsById],
+  );
   const viewModel = detail
     ? toClientBookingDetailViewModel(detail, () => setChatOpen(true))
     : null;

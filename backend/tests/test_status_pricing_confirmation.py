@@ -14,6 +14,15 @@ from app.features.bookings.status import (
 )
 
 
+def test_client_price_confirmation_not_required_for_vendor_initiated_quote():
+    row = {
+        "status": "pending",
+        "initiator": "vendor",
+        "vendor_adjustments": [{"amount_gbp": 50.0}],
+    }
+    assert client_price_confirmation_required(row) is False
+
+
 def test_client_price_confirmation_required_when_adjustments_present():
     row = {
         "status": "pending",
@@ -148,6 +157,62 @@ def test_client_declining_updated_price_reverts_and_stays_pending(
     assert "status" not in update_payload
     mock_notify.assert_called_once()
     assert mock_notify.call_args.kwargs["kind"] == "client_declined_updated_price"
+
+
+@patch("app.features.vendor_referrals.booking_discount.get_vendor_referral_row_by_code")
+@patch("app.features.bookings.status_client._notify_booking_changed")
+@patch("app.features.bookings.status_client.dispatch_booking_notification")
+@patch("app.features.bookings.status_client.get_settings")
+@patch("app.features.bookings.status_client.get_db")
+def test_client_declining_updated_price_reverts_referral_snapshot(
+    mock_get_client,
+    mock_settings,
+    mock_notify,
+    _mock_sse,
+    mock_lookup: MagicMock,
+):
+    mock_lookup.return_value = {
+        "user_id": "v1",
+        "client_referral_enabled": True,
+        "approval_status": "approved",
+        "client_referral_code": "254106",
+    }
+    mock_client = MagicMock()
+    mock_get_client.return_value = mock_client
+    mock_table = MagicMock()
+    mock_client.table.return_value = mock_table
+    mock_table.select.return_value = mock_table
+    mock_table.eq.return_value = mock_table
+    mock_table.limit.return_value = mock_table
+    mock_table.update.return_value = mock_table
+    line_items = [{"unit_price_gbp": 500.0, "label": "Package"}]
+    expected_total = "GBP 515"
+    mock_table.execute.side_effect = [
+        MagicMock(
+            data=[
+                {
+                    "id": "b1",
+                    "status": "pending",
+                    "vendor_user_id": "v1",
+                    "initiator": "client",
+                    "vendor_adjustments": [{"amount_gbp": 10.0, "label": "Extra hour"}],
+                    "line_items": line_items,
+                    "vendor_referral_code": "254106",
+                    "service_fee_percent": 5.0,
+                    "initial_client_total_label": expected_total,
+                },
+            ],
+        ),
+        MagicMock(data=[{"id": "b1"}]),
+    ]
+
+    result = update_booking_request_status_for_client("c1", "b1", new_status="declined")
+
+    assert result == {"id": "b1", "status": "pending"}
+    update_payload = mock_table.update.call_args[0][0]
+    assert update_payload["vendor_adjustments"] == []
+    assert update_payload["total_label"] == expected_total
+    assert update_payload["referral_fee_discount_gbp"] == 10.0
 
 
 @patch("app.features.bookings.status_client._notify_booking_changed")

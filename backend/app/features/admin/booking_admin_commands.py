@@ -11,7 +11,7 @@ from app.core.db import apply_recent_first_order, get_db
 from app.features.bookings.list_order import sort_booking_rows_recent_first
 from app.features.admin.admin_optional_timestamps import opt_admin_ts
 from app.features.admin.booking_payment_patch import patch_booking_payment_fields
-from app.features.bookings.pricing import build_pricing_breakdown
+from app.features.vendor_referrals.booking_discount import build_pricing_breakdown_for_booking_row
 from app.features.bookings import (
     _attach_pricing_fields,
     _client_emails_by_id,
@@ -36,7 +36,7 @@ _LIST_SELECT = (
     "id,status,event_name,event_date,event_end_date,client_user_id,vendor_user_id,created_at,updated_at,"
     "line_items,vendor_adjustments,paid_at,payment_status,stripe_payment_intent_id,stripe_checkout_session_id,"
     "stripe_transfer_id,support_hold,client_completion_confirmed_at,vendor_completion_confirmed_at,"
-    "payout_auto_released_at"
+    "payout_auto_released_at,vendor_referral_code,service_fee_percent"
 )
 
 _NEEDS_ATTENTION_SCAN_LIMIT = 400
@@ -51,11 +51,7 @@ def _booking_list_item(
 ) -> dict[str, Any]:
     cid = str(row.get("client_user_id") or "")
     vid = str(row.get("vendor_user_id") or "")
-    li = row.get("line_items")
-    if not isinstance(li, list):
-        li = []
-    va = row.get("vendor_adjustments")
-    pb = build_pricing_breakdown(line_items=li, vendor_adjustments=va)
+    pb = build_pricing_breakdown_for_booking_row(row)
     return {
         "id": str(row.get("id", "")),
         "status": str(row.get("status", "")),
@@ -208,7 +204,7 @@ def get_booking_detail_for_admin(booking_id: str) -> dict[str, Any] | None:
         "client_completion_confirmed_at": opt_admin_ts(row.get("client_completion_confirmed_at")),
         "vendor_completion_confirmed_at": opt_admin_ts(row.get("vendor_completion_confirmed_at")),
     }
-    _attach_pricing_fields(out)
+    _attach_pricing_fields(out, source=row)
     out["review_vendor"] = get_vendor_review_for_booking(vid, booking_id) if vid else None
     out["review_client_summary"] = (
         get_client_review_for_booking(booking_id, cid) if cid else None

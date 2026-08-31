@@ -72,6 +72,8 @@ def test_sync_permission_error_soft_fails(
     mock_clear.assert_not_called()
 
 
+@patch("app.features.bookings.booking_payment_helpers._get_vendor_stripe_fields", return_value={})
+@patch("app.features.bookings.status_shared.vendor_connect_can_receive_payouts", return_value=True)
 @patch("app.features.payments.stripe.sync_connect_account_status")
 @patch("app.features.payments.stripe.get_settings")
 @patch("app.features.payments.stripe._get_vendor_row")
@@ -79,6 +81,8 @@ def test_status_response_skips_sync_when_fully_enabled(
     mock_row: MagicMock,
     mock_settings: MagicMock,
     mock_sync: MagicMock,
+    _mock_payouts_ready: MagicMock,
+    _mock_stripe_fields: MagicMock,
 ) -> None:
     settings = MagicMock()
     settings.stripe_secret_key = "sk_test_123"
@@ -90,6 +94,7 @@ def test_status_response_skips_sync_when_fully_enabled(
     }
     out = stripe_module.get_vendor_connect_status_response("vendor-1")
     assert out["stripe_account_id"] == "acct_123"
+    assert out["can_accept_bookings"] is True
     mock_sync.assert_not_called()
 
 

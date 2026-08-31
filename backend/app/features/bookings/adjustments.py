@@ -18,6 +18,7 @@ from app.features.bookings.pricing import persisted_booking_total_label
 from app.features.vendor_referrals.booking_discount import (
     build_initial_pricing_breakdown_for_booking_row,
     build_pricing_breakdown_for_booking_row,
+    pricing_snapshot_fields,
 )
 from app.features.email.dispatch import dispatch_booking_notification
 
@@ -117,10 +118,12 @@ def put_vendor_booking_adjustments(
         raise ValueError(
             booking_messages.DISCOUNTS_TOO_HIGH,
         )
-    total_label = persisted_booking_total_label(pb)
     adj_final = pb.get("vendor_adjustments") or []
 
-    patch: dict[str, Any] = {"vendor_adjustments": adj_final, "total_label": total_label}
+    patch: dict[str, Any] = {
+        "vendor_adjustments": adj_final,
+        **pricing_snapshot_fields(pb),
+    }
     if not str(row0.get("initial_client_total_label") or "").strip():
         patch["initial_client_total_label"] = persisted_booking_total_label(
             build_initial_pricing_breakdown_for_booking_row(row0),

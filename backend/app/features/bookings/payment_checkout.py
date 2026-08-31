@@ -7,6 +7,7 @@ from app.core.db import get_db
 from app.features.bookings import messages as booking_messages
 from app.features.bookings.booking_payment_helpers import _get_vendor_stripe_fields
 from app.features.bookings.pricing_refresh import refresh_booking_pricing
+from app.features.vendor_referrals.booking_discount import pricing_snapshot_fields
 from app.features.payments import stripe as stripe_service
 from app.features.vendors.moderation import get_bookable_vendor_profile_form_data
 from app.features.vendors.visibility import payout_gate_waived
@@ -63,7 +64,7 @@ def create_checkout_session_for_booking(client_user_id: str, booking_id: str) ->
     db.table("booking_requests").update(
         {
             "line_items": line_items,
-            "total_label": refreshed["total_label"],
+            **pricing_snapshot_fields(pb),
         },
     ).eq("id", booking_id).eq("client_user_id", client_user_id).execute()
 

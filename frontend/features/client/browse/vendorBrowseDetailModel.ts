@@ -15,6 +15,7 @@ import {
   perUnitPriceSuffix,
   type PackagePricingMode,
 } from "@/lib/packagePricing";
+import { formatBookingEstimateLabel } from "@/lib/vendorDiscountDisplay";
 
 /** One selectable pricing block - mirrors onboarding packages and/or fixed hourly & daily rates. */
 export type BrowsePricingOption = {
@@ -103,26 +104,6 @@ export function bookingQuantitiesPayload(
   return Object.keys(out).length > 0 ? out : undefined;
 }
 
-/** Full line payload for the API so bookings retain package description, bullets, and duration. */
-export function bookingLineItemPayloadFromOption(o: BrowsePricingOption): {
-  id: string;
-  heading: string;
-  unit_price_gbp: number | null;
-  description: string | null;
-  feature_lines: string[];
-  timeline_line: string | null;
-} {
-  const desc = o.description.trim();
-  return {
-    id: o.id,
-    heading: o.heading,
-    unit_price_gbp: o.unitPriceGbp,
-    description: desc ? desc : null,
-    feature_lines: o.featureLines.map((s) => s.trim()).filter(Boolean).slice(0, 25),
-    timeline_line: o.timelineLine?.trim() ? o.timelineLine.trim() : null,
-  };
-}
-
 export function formatBookingTotalGbp(lines: BookingLineItem[]): {
   label: string;
   sumNumeric: number;
@@ -137,18 +118,11 @@ export function formatBookingTotalGbp(lines: BookingLineItem[]): {
   if (lines.length === 0) {
     return { label: "GBP 0.00", sumNumeric: 0, hasTbc: false };
   }
-  const formatted = sum.toLocaleString("en-GB", {
-    minimumFractionDigits: sum % 1 === 0 ? 0 : 2,
-    maximumFractionDigits: 2,
-  });
-  if (hasTbc) {
-    return {
-      label: sum > 0 ? `GBP ${formatted} + TBC` : "TBC",
-      sumNumeric: sum,
-      hasTbc: true,
-    };
-  }
-  return { label: `GBP ${formatted}`, sumNumeric: sum, hasTbc: false };
+  return {
+    label: formatBookingEstimateLabel(sum, hasTbc),
+    sumNumeric: sum,
+    hasTbc,
+  };
 }
 
 function coerceStr(p: Record<string, unknown>, k: string): string {

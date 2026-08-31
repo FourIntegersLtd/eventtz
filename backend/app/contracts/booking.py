@@ -252,6 +252,7 @@ class VendorBookingListItem(BaseModel):
     client_email: str | None = None
     client_display_name: str | None = None
     created_at: str | None = None
+    updated_at: str | None = None
     client_total_label: str | None = None
     review: VendorReviewSummary | None = None
     initiator: Literal["client", "vendor"] = "client"
@@ -260,6 +261,8 @@ class VendorBookingListItem(BaseModel):
     has_price_update: bool = False
     completion_waiting_on: Literal["client", "vendor", "both"] | None = None
     vendor_completion_confirmed_at: str | None = None
+    event_id: str | None = None
+    event_title: str | None = None
 
     model_config = {"populate_by_name": True}
 
@@ -338,6 +341,7 @@ class ClientBookingListItem(BaseModel):
     vendor_user_id: str
     vendor_display_name: str
     created_at: str | None = None
+    updated_at: str | None = None
     initiator: Literal["client", "vendor"] = "client"
     conversation_id: str | None = None
     has_review: bool = False

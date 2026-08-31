@@ -11,9 +11,11 @@ import {
 } from "@/lib/clientExploreApi";
 import {
   buildMarketplaceSearchUrl,
+  clientSearchContextFromBrowse,
+  marketplaceSearchPrefillFromState,
   marketplaceStateFromSearchParams,
+  marketplaceStateToExploreQuery,
   MARKETPLACE_PAGE_SIZE,
-  toClientSearchContext,
   type MarketplaceSearchState,
 } from "@/lib/marketplaceSearchParams";
 import type { EventEnquirePrefill } from "@/features/bookings/eventEnquirePrefill";
@@ -95,20 +97,13 @@ export function useMarketplaceExplore(mode: "browse" | "favorites" = "browse") {
       setError(null);
       try {
         const page = state.page;
-        const result = await fetchExploreVendorsSearch({
-          query: state.query || undefined,
-          types: state.types.length ? state.types : undefined,
-          location: state.location || undefined,
-          country: state.country,
-          dates: state.dates,
-          flexible: state.dateFlexible,
-          budgetMin: state.budgetMin,
-          budgetMax: state.budgetMax,
-          sort: state.sort,
-          vendorIds: savedOnly ? favoriteVendorIds : searchVendorIds,
-          limit: MARKETPLACE_PAGE_SIZE,
-          offset: (page - 1) * MARKETPLACE_PAGE_SIZE,
-        });
+        const result = await fetchExploreVendorsSearch(
+          marketplaceStateToExploreQuery(state, {
+            vendorIds: savedOnly ? favoriteVendorIds : searchVendorIds,
+            limit: MARKETPLACE_PAGE_SIZE,
+            offset: (page - 1) * MARKETPLACE_PAGE_SIZE,
+          }),
+        );
         if (!cancelled) {
           setVendors(result.vendors);
           setTotalCount(result.totalCount);
@@ -176,19 +171,10 @@ export function useMarketplaceExplore(mode: "browse" | "favorites" = "browse") {
 
   const isPlanMode = searchMode === "plan" && sections.length > 0 && !savedOnly;
 
-  const searchPrefill = useMemo(() => {
-    const d = state.dates;
-    const first = d[0];
-    let eventEndDate: string | undefined;
-    if (d.length === 2 && first && d[1] && d[1] >= first) {
-      eventEndDate = d[1];
-    }
-    return {
-      eventDate: first ?? "",
-      eventEndDate,
-      datesFlexible: state.dateFlexible,
-    };
-  }, [state.dates, state.dateFlexible]);
+  const searchPrefill = useMemo(
+    () => marketplaceSearchPrefillFromState(state),
+    [state],
+  );
 
   const planEventPrefill = useMemo((): EventEnquirePrefill | undefined => {
     if (state.eventName.trim() || state.venue.trim() || state.planNotes.trim()) {
@@ -221,17 +207,10 @@ export function useMarketplaceExplore(mode: "browse" | "favorites" = "browse") {
     state.location,
   ]);
 
-  const multiEnquireContext = useMemo(() => {
-    const base = toClientSearchContext(state);
-    if (state.fromPlannerPlanId) {
-      return {
-        ...base,
-        source: "planner" as const,
-        plannerPlanId: state.fromPlannerPlanId,
-      };
-    }
-    return base;
-  }, [state]);
+  const multiEnquireContext = useMemo(
+    () => clientSearchContextFromBrowse(state),
+    [state],
+  );
 
   const commit = useCallback(
     (next: MarketplaceSearchState) => {

@@ -53,6 +53,7 @@ class VendorReferralBookingRow(BaseModel):
     payment_status: str
     vendor_portion_gbp: float
     referral_fee_discount_gbp: float
+    referral_code: str = ""
     client_display_name: str | None = None
     created_at: str | None = None
 

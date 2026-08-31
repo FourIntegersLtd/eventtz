@@ -80,6 +80,7 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
             selectedId={selectedBookingId ?? null}
             onSelect={controller.selectBooking}
             emptyTitle={BOOKING_EMPTY_LIST_TITLE[controller.tab]}
+            eventGroups={controller.eventGroups}
           />
         }
         detail={
@@ -117,6 +118,9 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
                       detail={controller.detail}
                       actionBusy={controller.actionBusy}
                       adjustmentSaving={controller.adjustmentSaving}
+                      payoutsLoading={controller.payoutsLoading}
+                      payoutsReady={controller.payoutsReady}
+                      onPayoutSetupRequired={() => controller.setPayoutModalOpen(true)}
                       onAcceptAtListedPrice={() => controller.requestAccept()}
                       onDecline={() => void controller.applyBookingStatus("declined")}
                       onSendUpdatedPrice={(rows) => void controller.sendUpdatedPrice(rows)}
@@ -138,7 +142,7 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
                       bookingId={controller.detail.booking_request_id}
                       role="vendor"
                       bookingStatus={controller.detail.booking_status}
-                      presentation="drawer"
+                      presentation="header"
                     />
                   ) : (
                     <></>

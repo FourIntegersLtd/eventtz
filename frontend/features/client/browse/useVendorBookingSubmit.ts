@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { buildBookingRequestPayload } from "@/lib/bookingEnquireSubmit";
 import { postBookingRequest, type ClientSearchContext } from "@/lib/clientBookingsApi";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { clientBookingRequestSchema, parseForm } from "@/lib/validation";
@@ -64,20 +65,16 @@ export function useVendorBookingSubmit({
       }
       setValidationError(null);
       setSubmitting(true);
-      void postBookingRequest({
-        vendor_user_id: vendorUserId,
-        event_name: parsed.data.eventName,
-        event_date: parsed.data.eventDate,
-        event_end_date: parsed.data.eventEndDate?.trim() || null,
-        event_postcode: null,
-        event_address: (parsed.data.venueAddress ?? "").trim() || null,
-        notes: (parsed.data.notes ?? "").trim() || null,
-        selected_option_ids: parsed.data.selectedOptionIds,
-        quantities: parsed.data.quantities,
-        client_search_context: clientSearchContext ?? undefined,
-        event_id: selectedEventId,
-        vendor_referral_code: fields.vendorReferralCode?.trim() || null,
-      })
+      void postBookingRequest(
+        buildBookingRequestPayload(parsed.data, {
+          vendorUserId,
+          selectedOptionIds: parsed.data.selectedOptionIds,
+          quantities: parsed.data.quantities,
+          clientSearchContext,
+          eventId: selectedEventId,
+          vendorReferralCode: fields.vendorReferralCode,
+        }),
+      )
         .then((created) => {
           track(MixpanelEvents.enquiry_created, {
             booking_id: created.booking_request_id,

@@ -41,6 +41,7 @@ export type VendorBookingListItem = {
   /** Friendly client name (preferred name or derived) - safe to show pre-payment. */
   client_display_name: string | null;
   created_at: string | null;
+  updated_at?: string | null;
   /** Full amount incl. vendor additions + Eventtz fee (when quote is all priced). */
   client_total_label: string | null;
   review: VendorReviewSummary | null;
@@ -51,6 +52,8 @@ export type VendorBookingListItem = {
   /** Who still needs to confirm the event went well (accepted + paid bookings). */
   completion_waiting_on?: "client" | "vendor" | "both" | null;
   vendor_completion_confirmed_at?: string | null;
+  event_id?: string | null;
+  event_title?: string | null;
 };
 
 export type VendorBookingsListResponse = {

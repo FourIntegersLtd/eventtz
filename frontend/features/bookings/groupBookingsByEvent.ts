@@ -1,6 +1,21 @@
-import type { ClientBookingListItem } from "@/lib/clientBookingsApi";
 import type { BookingListRowViewModel } from "@/features/bookings/bookingViewModel";
+import {
+  bookingListActivityTimestamp,
+  compareBookingsRecentFirst,
+} from "@/features/bookings/bookingListOrder";
 import { formatEventDate } from "@/lib/dateFormat";
+
+/** Minimal list fields used to bucket bookings under one client event. */
+export type BookingEventGroupingItem = {
+  event_id?: string | null;
+  event_title?: string | null;
+  event_name?: string;
+  event_date?: string;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+export type BookingEventGroupCounterparty = "vendor" | "client";
 
 export type BookingEventGroup = {
   key: string;
@@ -8,12 +23,14 @@ export type BookingEventGroup = {
   title: string;
   dateLabel: string;
   bookingCount: number;
+  counterpartyNoun: BookingEventGroupCounterparty;
   rows: BookingListRowViewModel[];
 };
 
 export function groupBookingsByEvent(
   rows: BookingListRowViewModel[],
-  itemsById: Map<string, ClientBookingListItem>,
+  itemsById: Map<string, BookingEventGroupingItem>,
+  counterpartyNoun: BookingEventGroupCounterparty = "vendor",
 ): BookingEventGroup[] {
   const buckets = new Map<string, BookingEventGroup>();
 
@@ -36,6 +53,7 @@ export function groupBookingsByEvent(
         title,
         dateLabel: dateKey ? formatEventDate(dateKey) : "",
         bookingCount: 0,
+        counterpartyNoun,
         rows: [],
       };
       buckets.set(key, group);
@@ -44,9 +62,43 @@ export function groupBookingsByEvent(
     group.bookingCount += 1;
   }
 
-  return [...buckets.values()].sort((a, b) => {
-    const ad = itemsById.get(a.rows[0]?.id ?? "")?.event_date ?? "";
-    const bd = itemsById.get(b.rows[0]?.id ?? "")?.event_date ?? "";
-    return ad.localeCompare(bd);
-  });
+  return [...buckets.values()]
+    .map((group) => ({
+      ...group,
+      rows: [...group.rows].sort((a, b) =>
+        compareBookingsRecentFirst(
+          itemsById.get(a.id) ?? {},
+          itemsById.get(b.id) ?? {},
+        ),
+      ),
+    }))
+    .sort((a, b) => {
+      const aTs = a.rows.reduce(
+        (max, row) => {
+          const ts = bookingListActivityTimestamp(itemsById.get(row.id));
+          return ts > max ? ts : max;
+        },
+        "",
+      );
+      const bTs = b.rows.reduce(
+        (max, row) => {
+          const ts = bookingListActivityTimestamp(itemsById.get(row.id));
+          return ts > max ? ts : max;
+        },
+        "",
+      );
+      return bTs.localeCompare(aTs);
+    });
+}
+
+/** Group headers only when an event has multiple counterparties (e.g. several vendors). */
+export function bookingEventGroupsForList(
+  rows: BookingListRowViewModel[],
+  itemsById: Map<string, BookingEventGroupingItem>,
+  counterpartyNoun: BookingEventGroupCounterparty,
+  enabled: boolean,
+): BookingEventGroup[] | null {
+  if (!enabled || rows.length === 0) return null;
+  const groups = groupBookingsByEvent(rows, itemsById, counterpartyNoun);
+  return groups.some((group) => group.bookingCount > 1) ? groups : null;
 }
