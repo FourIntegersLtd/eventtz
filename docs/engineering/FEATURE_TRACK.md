@@ -44,11 +44,15 @@
 | Marketing landing | `/` | ref in **2** |
 | Client browse + vendor profile (read) | `/client/browse`, `/client/browse/[id]` | **2** |
 | Browse geolocation sort | `useBrowseGeolocation`, search `lat`/`lng` | **2** |
+| QA test vendor visibility | `qa_visibility.py`, optional session on explore | **2** |
+| Browse date availability | `apply_date_availability`, `vendorAvailability.ts` | **2**, **3a** |
 | Client booking enquire | browse → modal → POST | **3a** |
 | Per-unit package quantities | `QuantityStepper`, `quantities` on create | **3a** |
 | Vendor client referral at enquire | `?vref=`, `vendor_referral_code` | **3a** (+ settings **7c**) |
 | Service fee on booking | `ClientFeeBreakdownSummary`, `service_fee_percent` | **3a**, **3b**, **4** |
 | Client booking detail | `/client/bookings/[id]` | **3b** |
+| Booking list sort + event groups | `bookingListOrder.ts`, `groupBookingsByEvent.ts` | **3b**, **5** |
+| Read-path referral pricing | `booking_discount.py` on list/detail/checkout | **3b**, **4**, **7c** |
 | Client payment | `/client/bookings/[id]/pay`, `/client/payments` | **4** |
 | Payment receipts | receipt snapshots after finalize | **4** |
 | Vendor bookings portal | `/vendor/bookings` | **5** |
