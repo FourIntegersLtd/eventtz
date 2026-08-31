@@ -8,6 +8,36 @@ A **signed-in client** opens `/client/dashboard` and sees what needs attention r
 
 ---
 
+## What changed since last lesson (2026-08-31)
+
+| Area | Before | Now |
+|------|--------|-----|
+| Bookings list ordering | Implicit / `created_at` | `sortBookingListItemsRecentFirst` — `updated_at` then `created_at` (Slice 3b scaffold) |
+| Booking detail header | Event name + badges only | `Ref {shortId}` + `CopyToClipboardButton` in shared `BookingDetailPanel` (Slice 3b) |
+
+Plain English: dashboard attention feed is unchanged; the **bookings master-detail** under `/client/bookings` now surfaces recent activity and a copyable booking reference — see Slice 3b for the shared list/detail shell.
+
+List ordering (shared bookings scaffold):
+
+```13:24:frontend/features/bookings/bookingListOrder.ts
+export function compareBookingsRecentFirst(
+  a: BookingListActivityFields,
+  b: BookingListActivityFields,
+): number {
+  return bookingListActivityTimestamp(b).localeCompare(bookingListActivityTimestamp(a));
+}
+
+export function sortBookingListItemsRecentFirst<T extends BookingListActivityFields>(
+  items: T[],
+): T[] {
+  return [...items].sort(compareBookingsRecentFirst);
+}
+```
+
+Used by `useParticipantBookingsScaffold` when loading client/vendor booking lists.
+
+---
+
 ## What the client workspace does
 
 ```typescript
@@ -573,6 +603,8 @@ export async function removeClientFavorite(vendorUserId: string): Promise<void> 
 - **Primary event pick** — most active bookings wins for banner prefill.
 - **Favorites** — persisted vendor IDs; page reuses marketplace explore.
 - **SSE refresh** — dashboard reloads on `bookings:refresh` without full page reload (Slice 7b).
+- **Bookings list order** — `bookingListOrder.ts` sorts by `updated_at` (Slice 3b cross-ref).
+- **Booking ref in header** — `BookingDetailPanel` shows `Ref {shortId(id)}` + copy button (Slice 3b cross-ref).
 
 ---
 
@@ -591,5 +623,6 @@ export async function removeClientFavorite(vendorUserId: string): Promise<void> 
 ## Related lessons
 
 - Slice 3a: `slice-3a-client-booking-enquire.md` (`useActiveEventPrefill`, `event_id` on create)
+- Slice 3b: `slice-3b-client-booking-detail.md` (`bookingListOrder.ts` recent-first list; `BookingDetailPanel` ref + copy)
 - Slice 2: `slice-2-client-browse.md` (marketplace explore, favorites hearts)
 - Slice 7b: `slice-7b-comms-realtime.md` (SSE drives dashboard refresh)

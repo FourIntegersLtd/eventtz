@@ -20,12 +20,16 @@ Personal engineering course using the real Eventtz codebase.
 
 | Date | Action |
 |------|--------|
+| 2026-08-31 | Merged `main` into course branch — synced lessons **6**, **7a–7c** (payout readiness API, booking list order, detail header UX, referrals settings rewrite) |
 | 2026-08-30 | Merged `main` (`2b42850`) into `cursor/engineering-course-28c8` — 99 commits of product changes |
 | 2026-08-30 | Re-synced lessons **1–3b** to match current code (browse hooks, submit hook, controller split, status modules, Sentry, deleted accounts) |
 | 2026-08-30 | Wrote full lessons **4–7c** (+ payment and vendor booking walkthroughs) |
 
 **Major deltas since Aug-2026 lesson baseline:**
 
+- Payout readiness: `can_accept_bookings` + `payout_gate_waived` on `GET /vendor/payments/status`; `isVendorPayoutsReady` mirrors `vendor_connect_can_receive_payouts`
+- Booking list/detail: `bookingListOrder.ts` (`updated_at` first); `BookingDetailPanel` ref + copy; dispute `presentation="header"`
+- Vendor referrals settings: tier table, one-time code (`REFERRAL_CODE_LOCKED`), historical **Code used** column; `booking_discount.py` two-phase model; shared `bookingServiceFee.ts` tiers
 - Browse: `useMarketplaceExplore`, `useBrowseGeolocation`, filter component split
 - Booking enquire: `useVendorBookingSubmit`, per-unit `quantities`, vendor client referrals (`?vref=`), service fee breakdown
 - Booking detail: `useClientBookingActions`, `useClientBookingPaymentReturn`, `status_client.py` / `status_vendor.py`

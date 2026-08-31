@@ -10,6 +10,20 @@ A **new vendor** completes multi-step onboarding at `/vendor/profile`, uploads p
 
 ---
 
+## What changed since last lesson (2026-08-31)
+
+| Area | Before | Now |
+|------|--------|-----|
+| Settings referrals UI | Simple code field + share link | Tier table, one-time **Create code** flow, `CopyToClipboardButton` on code + link |
+| Code changes | Editable after set | Locked after first set — backend `REFERRAL_CODE_LOCKED` |
+| Referral bookings table | Current code only | **Code used** column when historical codes differ from today's code |
+| Pricing on existing rows | Re-validated live code | `booking_discount.py` two-phase: live validation at enquire; stored code on row thereafter |
+| Frontend tier math | Duplicated in settings | Shared `bookingServiceFee.ts` — `REFERRAL_FEE_TIERS`, `formatBookingMoneyLabel` |
+
+Plain English: vendors pick a referral code once, see tier savings in a table, and copy code/link with one tap. Bookings keep the code they were created with even if the vendor later rotates or disables the live code.
+
+---
+
 ## What trust & admin does
 
 ```typescript
@@ -31,7 +45,10 @@ await patchVendorApproval(vendorUserId, { approval_status: "approved" });
 | `mediaApi.ts` | `POST /media/images`, `/media/files` |
 | `media/s3.py` | boto3 upload to public bucket |
 | `visibility.py` | Single rule: approved + Stripe ready (or admin waive) |
-| `vendorReferralsApi.ts` | Vendor referral link, preview, bookings table |
+| `vendorReferralsApi.ts` | Referral info, preview, bookings, one-time set code |
+| `SettingsReferralsSection.tsx` | Tier table, create-once code, copy buttons |
+| `SettingsReferralBookingsTable.tsx` | Attributed bookings + historical **Code used** column |
+| `bookingServiceFee.ts` | Shared tier math + `formatBookingMoneyLabel` (settings + enquire) |
 | `vendor_referrals/tiers.py` | Tiered fee discounts off Eventtz service fee |
 | `reviews.py` | One review per completed booking |
 | `disputes.py` | Problem reports; can block payout release |
@@ -125,11 +142,12 @@ Admin /admin/trust → reviews moderation, dispute resolution, support chat
 ### Frontend
 
 1. `frontend/lib/vendorReferralsApi.ts` — referral info, preview, bookings, set code
-2. `frontend/features/settings/SettingsReferralsSection.tsx` — vendor settings UI
-3. `frontend/features/settings/SettingsReferralBookingsTable.tsx` — attributed bookings
-4. `frontend/features/client/browse/useVendorReferralPreview.ts` — live preview in enquire modal
-5. `frontend/lib/vendorReferralAttribution.ts` — `?vref=` capture from URL
-6. `frontend/features/bookings/BookingPricingBreakdown.tsx` — shows code + discount
+2. `frontend/features/settings/SettingsReferralsSection.tsx` — tier table + one-time code creation
+3. `frontend/features/settings/SettingsReferralBookingsTable.tsx` — attributed bookings + code-used column
+4. `frontend/lib/bookingServiceFee.ts` — shared tier thresholds and money labels
+5. `frontend/features/client/browse/useVendorReferralPreview.ts` — live preview in enquire modal
+6. `frontend/lib/vendorReferralAttribution.ts` — `?vref=` capture from URL
+7. `frontend/features/bookings/BookingPricingBreakdown.tsx` — shows code + discount
 
 ### Backend
 
@@ -137,10 +155,11 @@ Admin /admin/trust → reviews moderation, dispute resolution, support chat
 8. `backend/app/features/vendor_referrals/http/public.py` — `referral-preview` on explore
 9. `backend/app/features/vendor_referrals/service.py` — `get_vendor_client_referral_info`
 10. `backend/app/features/vendor_referrals/tiers.py` — `REFERRAL_FEE_TIERS`
-11. `backend/app/features/vendor_referrals/validate.py` — `resolve_referral_pricing_inputs`
-12. `backend/app/features/vendor_referrals/booking_discount.py` — row-level discount helpers
+11. `backend/app/features/vendor_referrals/validate.py` — `resolve_referral_pricing_inputs` (live enquire validation)
+12. `backend/app/features/vendor_referrals/booking_discount.py` — stored-code pricing on existing rows
 13. `backend/app/features/vendor_referrals/bookings.py` — referral booking list for vendor
-14. `backend/app/features/bookings/create.py` — stores `vendor_referral_code` on enquire
+14. `backend/app/features/vendor_referrals/codes.py` — set code once (`REFERRAL_CODE_LOCKED`)
+15. `backend/app/features/bookings/create.py` — stores `vendor_referral_code` on enquire
 
 **Cross-ref Slice 3a:** referral code flows from `?vref=` → `useVendorReferralPreview` → `postBookingRequest({ vendor_referral_code })` → `resolve_referral_pricing_inputs` at create time. See `slice-3a-client-booking-enquire.md` Steps 5–7.
 
@@ -381,7 +400,14 @@ Admin approval alone does **not** guarantee explore visibility unless override o
 
 ## Step 4 — Vendor client referrals (tiered)
 
-**Tiers** — discount off **Eventtz service fee**, not vendor portion:
+**Tiers** — discount off **Eventtz service fee**, not vendor portion. Backend source of truth in `tiers.py`; frontend mirrors in `bookingServiceFee.ts`:
+
+```5:8:frontend/lib/bookingServiceFee.ts
+export const REFERRAL_FEE_TIERS = [
+  { minSpendGbp: 600, feeDiscountGbp: 15 },
+  { minSpendGbp: 400, feeDiscountGbp: 10 },
+] as const;
+```
 
 ```7:11:backend/app/features/vendor_referrals/tiers.py
 REFERRAL_FEE_TIERS: tuple[dict[str, float], ...] = (
@@ -395,6 +421,24 @@ REFERRAL_FEE_TIERS: tuple[dict[str, float], ...] = (
 | ≥ £600 | £15 off service fee |
 | ≥ £400 | £10 off service fee |
 | &lt; £400 | £0 (code may still validate) |
+
+**Two-phase pricing model** (`booking_discount.py`):
+
+| Phase | When | Rule |
+|-------|------|------|
+| Live validation | Enquire / browse preview | `resolve_referral_pricing_inputs` in `validate.py` — strict code + vendor match |
+| Stored code | Existing booking rows | `build_pricing_breakdown_for_booking_row` — honor `vendor_referral_code` on row; skip only on proven cross-vendor mismatch |
+
+```1:10:backend/app/features/vendor_referrals/booking_discount.py
+"""
+Bridge booking rows to referral-aware pricing.
+
+Two-phase model:
+- **Enquire / browse:** ``resolve_referral_pricing_inputs`` in ``validate.py`` (strict live validation).
+- **Existing booking:** ``build_pricing_breakdown_for_booking_row`` only — honor stored
+  ``vendor_referral_code`` and tier spend; skip discount only on proven cross-vendor mismatch.
+"""
+```
 
 **Vendor info API:**
 
@@ -430,9 +474,34 @@ export async function fetchVendorReferralPreview(
 }
 ```
 
-**Slice 3a integration** — at booking create, `resolve_referral_pricing_inputs` validates code against vendor, computes tier from vendor portion sum, stores normalized code on row. Re-pricing on accept/pay uses `booking_discount.py` to re-read stored code.
+**Slice 3a integration** — at booking create, `resolve_referral_pricing_inputs` validates code against vendor, computes tier from vendor portion sum, stores normalized code on row. Accept/pay/receipt totals use `booking_discount.py` to re-read the stored code.
 
-**Vendor settings** — `SettingsReferralsSection` calls `setVendorReferralCode` to set or auto-generate 6-digit code.
+**Vendor settings** — `SettingsReferralsSection`:
+
+- Tier savings table (uses `formatBookingMoneyLabel` from `bookingServiceFee.ts`)
+- **Create code once** — custom digits or random 6-digit; no edits after set (`REFERRAL_CODE_LOCKED`)
+- `CopyToClipboardButton` on code and share link when code exists
+
+```98:105:backend/app/features/vendor_referrals/codes.py
+    existing = normalize_client_referral_code(row.get("client_referral_code"))
+    if existing:
+        if generate:
+            raise ValueError(referral_messages.REFERRAL_CODE_LOCKED)
+        requested = normalize_client_referral_code(raw_code)
+        if requested == existing:
+            return existing
+        raise ValueError(referral_messages.REFERRAL_CODE_LOCKED)
+```
+
+```29:41:frontend/features/settings/SettingsReferralBookingsTable.tsx
+  const showCodeColumn = bookings.some(
+    (row) => row.referral_code && row.referral_code !== currentReferralCode,
+  );
+  ...
+            {showCodeColumn ? <th className="px-4 py-3">Code used</th> : null}
+```
+
+Shows **Code used** when attributed bookings used a historical code that differs from the vendor's current code.
 
 ---
 
@@ -494,26 +563,39 @@ def try_attribute_vendor_signup(*, user_id: str, referral_code: str | None) -> b
 
 ---
 
-## Step 7 — Disputes
+## Step 7 — Disputes (booking detail header)
 
-**Participant UI** on booking detail:
+**Participant UI** on booking detail — three presentation modes:
 
-```41:70:frontend/features/bookings/BookingDisputeSection.tsx
-export function BookingDisputeSection({
-  bookingId,
-  role,
-  bookingStatus,
-  presentation = "inline",
-}: Props) {
-  ...
-  const load = useCallback(async () => {
-    ...
-      const rows =
-        role === "client"
-          ? await fetchClientBookingDisputes(bookingId)
-          : await fetchVendorBookingDisputes(bookingId);
-      setDisputes(rows);
+| Mode | Where | UX |
+|------|-------|-----|
+| `header` | `BookingDetailPanel` top-right (default on client/vendor list+detail) | Compact **Help** button → drawer |
+| `inline` | Card embedded in detail body | Full dispute card |
+| `drawer` | Legacy compact row | Full-width row opening slide-over |
+
+**Header mode** — compact trigger in the detail shell:
+
+```211:238:frontend/features/bookings/BookingDisputeSection.tsx
+  if (presentation === "header") {
+    return (
+      <>
+        <ConfirmDialog
+          isOpen={submitConfirmOpen}
+          title={BOOKING_CONFIRM_COPY.openDispute.title}
+          ...
+        />
+        <button
+          type="button"
+          onClick={() => setDrawerOpen(true)}
+          className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-neutral-600 transition hover:bg-neutral-100 hover:text-neutral-900"
+          aria-label="Help and disputes"
+        >
+          ...
+          <span>Help</span>
+          {!loading && hasActive ? (
 ```
+
+Wired from client/vendor booking views with `presentation="header"` (see `ClientBookingsView.tsx` / `VendorBookingsView.tsx`).
 
 **Open new dispute** — gated by `canOpenDisputeForBookingStatus(bookingStatus)` matching backend `_ALLOWED_BOOKING_STATUSES_FOR_NEW_DISPUTE` (`pending`, `accepted`, `completed`).
 
@@ -521,10 +603,6 @@ export function BookingDisputeSection({
 - Validates party membership
 - Links `conversation_id` from booking or DM pair lookup
 - `send_admin_dispute_opened_email` + `notify_user(..., "dispute_changed")`
-
-**Presentation modes:**
-- `inline` — card on booking detail
-- `drawer` — compact row opening slide-over (vendor/client booking panels)
 
 **Portal list** — `/client/disputes`, `/vendor/disputes` for all cases.
 
@@ -708,7 +786,9 @@ Backend `referrals/http/admin.py` — `GET/POST /admin/referrals/partners`, sign
 - **Onboarding** — wizard collects trust payload; media in S3, metadata in Postgres JSON.
 - **Visibility triad** — `approval_status` + Stripe Connect + `listing_override`.
 - **Two referral programs** — partner (`?ref=` signup) vs vendor client (`?vref=` booking).
-- **Tiered fee discount** — off Eventtz 5% service fee based on vendor portion spend.
+- **Tiered fee discount** — off Eventtz 5% service fee based on vendor portion spend; shared tier constants in `bookingServiceFee.ts` + `tiers.py`.
+- **Two-phase referral pricing** — live validation at enquire; stored `vendor_referral_code` on row for all later totals.
+- **One-time referral code** — `REFERRAL_CODE_LOCKED` after first set; historical codes visible in referral bookings table.
 - **Reviews** — one per completed booking; admin can hide.
 - **Disputes** — participants open; admin resolves; may hold payout.
 - **Admin console** — directory (people), commerce (money), trust (safety), referrals (growth), blog (content).
@@ -726,10 +806,10 @@ Backend `referrals/http/admin.py` — `GET/POST /admin/referrals/partners`, sign
 
 - **Onboarding** = `/vendor/profile` wizard + `uploadImage`/`uploadFile` → S3 → `PUT /vendor/profile`.
 - **Go live** = admin approve + Stripe ready (or `listing_override=visible`).
-- **Client referrals** = vendor `?vref=` code → tiered fee discount on enquire (Slice 3a).
+- **Client referrals** = vendor `?vref=` code → tiered fee discount on enquire (Slice 3a); code locked after first create.
 - **Partner referrals** = `?ref=` on vendor signup → `referral_attributions` (Slice 1 signup path).
 - **Reviews** = post-`completed` only; one per booking; admin can hide.
-- **Disputes** = booking detail + `/admin/trust`; may block payout (Slice 6).
+- **Disputes** = booking detail **Help** header button + `/admin/trust`; may block payout (Slice 6).
 - **Admin** = `/admin/dashboard`, `/directory`, `/commerce`, `/trust`, `/referrals`, `/blog`.
 - **Email** = dispute/contact notifications via `dispatch.py` (Slice 7b).
 

@@ -12,6 +12,18 @@ If a **paid** booking is **cancelled** before payout, the client is **refunded f
 
 ---
 
+## What changed since last lesson (2026-08-31)
+
+| Area | Before | Now |
+|------|--------|-----|
+| Payout readiness hook | `charges_enabled && payouts_enabled` only | `isVendorPayoutsReady` prefers `can_accept_bookings` from `GET /vendor/payments/status` |
+| Status API contract | Stripe flags only | `VendorPaymentsStatusResponse` adds `can_accept_bookings`, `payout_gate_waived` |
+| Backend status builder | `_connect_status_from_row` | `get_vendor_connect_status_response` calls `vendor_connect_can_receive_payouts` + `payout_gate_waived` |
+
+Plain English: the frontend no longer re-implements the accept gate — it reads the same boolean the backend uses when a vendor tries to accept a booking (Stripe Connect ready **or** admin listing waiver).
+
+---
+
 ## What payout and completion do
 
 ```typescript
@@ -25,7 +37,7 @@ await postClientConfirmCompletion(bookingId); // or postVendorConfirmCompletion
 | `VendorPaymentsView` | `/vendor/payments` — Connect onboarding + payout history tabs |
 | `VendorPayoutAccountPanel` | Connect CTA, setup progress, manage-on-Stripe |
 | `vendorPaymentsApi.ts` | `POST connect-account`, `GET status`, `GET history` |
-| `useVendorPayoutsReady` | Shared `charges_enabled` + `payouts_enabled` gate |
+| `useVendorPayoutsReady` | `can_accept_bookings` from status API (mirrors `vendor_connect_can_receive_payouts`; Stripe-flag fallback) |
 | `BookingCompletionBanner` | Post-event nudge — who still needs to confirm |
 | `BookingPayoutPendingBanner` | Both confirmed but Transfer not done — vendor retry |
 | `payment_completion.py` | Record confirmations, `release_vendor_payout_and_complete_booking` |
@@ -213,12 +225,29 @@ A vendor can finish their profile but still be hidden until Connect is ready (`V
   }, [searchParams, router, refresh, showToast]);
 ```
 
-**Readiness check** — both flags required:
+**Readiness check** — prefers backend accept gate; falls back to raw Stripe flags when `can_accept_bookings` is absent:
 
-```12:14:frontend/features/vendor/payments/useVendorPayoutsReady.ts
+```12:17:frontend/features/vendor/payments/useVendorPayoutsReady.ts
 export function isVendorPayoutsReady(status: VendorPaymentsStatus | null | undefined): boolean {
+  if (typeof status?.can_accept_bookings === "boolean") {
+    return status.can_accept_bookings;
+  }
   return Boolean(status?.charges_enabled && status?.payouts_enabled);
 }
+```
+
+**Status type** — mirrors `VendorPaymentsStatusResponse`:
+
+```4:12:frontend/lib/vendorPaymentsApi.ts
+export type VendorPaymentsStatus = {
+  success: boolean;
+  stripe_account_id: string | null;
+  charges_enabled: boolean;
+  payouts_enabled: boolean;
+  /** Mirrors backend accept gate (Stripe ready or admin listing waiver). */
+  can_accept_bookings?: boolean;
+  payout_gate_waived?: boolean;
+};
 ```
 
 **Start Connect** — redirects to Stripe hosted onboarding:
@@ -265,7 +294,7 @@ export async function fetchVendorStripeConnectStatus(): Promise<VendorPaymentsSt
 
 ## Step 2 — Backend: Connect onboarding link
 
-**File:** `payments/http/vendor.py` — thin routes:
+**File:** `payments/http/vendor.py` — thin routes; status returns `VendorPaymentsStatusResponse`:
 
 ```24:41:backend/app/features/payments/http/vendor.py
 @router.post("/connect-account", response_model=VendorPaymentsConnectResponse)
@@ -285,6 +314,50 @@ def get_vendor_stripe_connect_status(request: Request, response: Response) -> Ve
     uid = str(user.get("id") or "")
     data = get_vendor_connect_status_response(uid)
     return VendorPaymentsStatusResponse(**data)
+```
+
+**Contract** — accept gate fields on the status payload:
+
+```14:21:backend/app/contracts/payments.py
+class VendorPaymentsStatusResponse(BaseModel):
+    success: bool = True
+    stripe_account_id: str | None = None
+    charges_enabled: bool = False
+    payouts_enabled: bool = False
+    #: Same rule as vendor accept on client-initiated bookings (includes admin listing waiver).
+    can_accept_bookings: bool = False
+    payout_gate_waived: bool = False
+```
+
+**File:** `stripe.py` — status builder aligns with `vendor_connect_can_receive_payouts`:
+
+```508:531:backend/app/features/payments/stripe.py
+def get_vendor_connect_status_response(vendor_user_id: str) -> dict[str, Any]:
+    """Vendor-facing Connect status: read DB first; sync from Stripe only while onboarding."""
+    ...
+    stripe_gate_row = _get_vendor_stripe_fields(vendor_user_id)
+    return {
+        **status,
+        "can_accept_bookings": vendor_connect_can_receive_payouts(vendor_user_id),
+        "payout_gate_waived": payout_gate_waived(stripe_gate_row),
+    }
+```
+
+**Accept gate** (same rule as Slice 5 accept):
+
+```63:79:backend/app/features/bookings/status_shared.py
+def vendor_connect_can_receive_payouts(vendor_user_id: str) -> bool:
+    """True when Stripe Connect can charge and pay out (required before accept)."""
+    row = _get_vendor_stripe_fields(vendor_user_id)
+    if row is None:
+        return False
+    if payout_gate_waived(row):
+        return True
+    return bool(
+        row.get("stripe_account_id")
+        and row.get("stripe_charges_enabled")
+        and row.get("stripe_payouts_enabled")
+    )
 ```
 
 **File:** `stripe.py` — create Express account + AccountLink:
@@ -699,7 +772,7 @@ UI shows refunded message in `ClientBookingDetailExtras` / `VendorBookingDetailE
 | Event | When |
 |-------|------|
 | `vendor_payout_setup_started` | Before Stripe Connect redirect |
-| `vendor_payouts_ready` | Connect return + both flags true |
+| `vendor_payouts_ready` | Connect return + `isVendorPayoutsReady` true (`can_accept_bookings`) |
 | `vendor_booking_completed` | Vendor confirms completion |
 | `booking_completed` | Backend marketplace event on payout release |
 
@@ -740,7 +813,7 @@ UI shows refunded message in `ClientBookingDetailExtras` / `VendorBookingDetailE
 
 ## Key concepts from this slice
 
-- **Stripe Connect** — Express accounts; `charges_enabled` + `payouts_enabled` gate listing and payout.
+- **Stripe Connect** — Express accounts; `can_accept_bookings` on status API = `vendor_connect_can_receive_payouts` (Stripe ready or admin `payout_gate_waived`).
 - **Connect ≠ profile** — bank verification is separate from listing copy/photos.
 - **Dual completion** — both `*_completion_confirmed_at` timestamps before Transfer (unless auto-release).
 - **Auto-release** — `BOOKING_PAYOUT_AUTO_RELEASE_HOURS_AFTER_EVENT` (48h) after event end; skipped if dispute/support hold.

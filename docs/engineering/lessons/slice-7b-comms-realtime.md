@@ -8,6 +8,17 @@ A **signed-in client or vendor** receives live UI updates without refreshing the
 
 ---
 
+## What changed since last lesson (2026-08-31)
+
+| Area | Before | Now |
+|------|--------|-----|
+| Dispute entry on booking detail | `inline` card or `drawer` row | `presentation="header"` — compact **Help** button in `BookingDetailPanel` header (Slice 3b) |
+| Booking reference copy | — | `CopyToClipboardButton` beside `Ref {shortId}` in detail header (`BookingDetailPanel`) |
+
+Plain English: disputes and support still load the same APIs; the booking detail header now hosts a compact Help trigger and a one-click copy for the full booking UUID.
+
+---
+
 ## What comms + realtime does
 
 ```typescript
@@ -343,6 +354,29 @@ export function useRealtimeRefresh(
 - `NotificationsPageView` — `booking_notifications:refresh`
 - `BookingDisputeSection` — `disputes:refresh` (with 50s poll fallback)
 
+**Booking detail header (Slice 3b cross-ref):** client and vendor detail views pass `BookingDisputeSection` with `presentation="header"` into `BookingDetailPanel` slots. The header shows a **Help** button that opens the dispute drawer; booking ref uses `CopyToClipboardButton`:
+
+```117:123:frontend/features/bookings/BookingDetailPanel.tsx
+            <span className="inline-flex items-center gap-0.5 font-mono text-neutral-400">
+              <span title={booking.id}>Ref {shortId(booking.id)}</span>
+              <CopyToClipboardButton
+                text={booking.id}
+                ariaLabel="Copy booking reference"
+              />
+            </span>
+```
+
+```183:189:frontend/features/client/bookings/ClientBookingsView.tsx
+                  disputeSection: c.detail ? (
+                    <BookingDisputeSection
+                      bookingId={c.detail.booking_request_id}
+                      role="client"
+                      bookingStatus={c.detail.booking_status}
+                      presentation="header"
+                    />
+                  ) : (
+```
+
 ---
 
 ## Step 5 — Notification bell + feed
@@ -613,6 +647,7 @@ dispute opened
 - **`realtimeBus`** — decouples one SSE connection from many feature hooks.
 - **Debounced refresh** — burst events coalesce to one refetch.
 - **Bell mark-read** — opening dropdown clears unread (visible action).
+- **Booking detail header** — `Ref {shortId}` + copy; disputes via `presentation="header"` Help button (Slice 3b).
 - **Chat ≠ contact** — DMs are realtime; contact form is async team ticket.
 - **Email dispatch** — server-side Resend; parallel to in-app notifications.
 
@@ -640,6 +675,7 @@ dispute opened
 ## Related lessons
 
 - Slice 1: `slice-1-auth-me.md` (`AuthProvider`, session cookies)
+- Slice 3b: `slice-3b-client-booking-detail.md` (`BookingDetailPanel` ref + copy; dispute `presentation="header"`)
 - Slice 7a: `slice-7a-client-workspace.md` (dashboard SSE consumer)
 - Slice 4: `slice-4-client-payment.md` (`dispatch_receipt_email`)
 - Slice 7c: `slice-7c-trust-and-admin.md` (admin messages, disputes)
