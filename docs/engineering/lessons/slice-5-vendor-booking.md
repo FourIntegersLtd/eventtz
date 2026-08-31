@@ -10,6 +10,20 @@ A **signed-in vendor** manages booking requests in `/vendor/bookings`: accepts o
 
 ---
 
+## What changed (2026-08-31)
+
+| Area | Before | Now |
+|------|--------|-----|
+| Payout gate on accept | `requestAccept` in controller only | Also inside `VendorBookingResponseFlow` (`payoutsLoading`, `payoutsReady`, `onPayoutSetupRequired`) |
+| Response flow pricing | Inline "Their estimate: £…" copy | Removed — pricing lives in `BookingPricingBreakdown` on detail panel |
+| Adjustment preview | `previewClientTotalLabel` only | `previewClientFeeBreakdown`, `previewTotalDeltaGbp`, `adjustmentPreviewDeltaExplanation` (referral-aware) |
+| List sort order | Implicit / `created_at` | `bookingListOrder.ts` + `list_order.py` — `updated_at` then `created_at` |
+| Booking reference | Full UUID in UI | `shortId` + `CopyToClipboardButton` on list rows and detail header |
+| Dispute entry | Inline section | `BookingDisputeSection` with `presentation="header"` in portal header actions |
+| Event grouping | Always grouped | `bookingEventGroupsForList` — headers only when multiple bookings share an event |
+
+---
+
 ## What vendor booking management does
 
 ```typescript
@@ -21,9 +35,13 @@ await patchVendorBookingStatus(bookingId, "accepted");
 | `VendorBookingsView` | Master-detail portal UI |
 | `useVendorBookingsController` | List/detail state, payout gate, action wiring |
 | `vendorBookingViewModel` | Maps API rows → shared `BookingDetailViewModel` |
-| `VendorBookingResponseFlow` | Accept / decline / suggest price for client enquiries |
-| `VendorBookingResponseAdjustments` | Adjustment form UI |
-| `vendorBookingResponseHelpers` | Draft rows, preview totals, validation helpers |
+| `VendorBookingResponseFlow` | Accept / decline / suggest price — payout gate on accept |
+| `VendorBookingResponseAdjustments` | Adjustment form + `previewClientFeeBreakdown` / delta copy |
+| `vendorBookingResponseHelpers` | Draft rows, fee previews, `adjustmentPreviewDeltaExplanation` |
+| `bookingListOrder.ts` | Frontend sort by `updated_at` (mirrors backend) |
+| `list_order.py` | `sort_booking_rows_recent_first` for API lists |
+| `BookingDisputeSection` | Dispute CTA — `presentation="header"` in detail header |
+| `groupBookingsByEvent` | Event sections via `bookingEventGroupsForList` (deduped) |
 | `useVendorBookingActions` | PATCH status, PUT adjustments, withdraw, cancel |
 | `useVendorPayoutsReady` | Connect readiness gate before accept |
 | `VendorQuoteFormModal` | Send quote from chat thread |
@@ -62,13 +80,12 @@ Vendor opens /vendor/bookings or /vendor/bookings/{id}
 ## Example: vendor accepts client enquiry
 
 1. Client sent enquiry in Slice 3a — booking `br-v-001` is `pending` / `unpaid`, `initiator: client`.
-2. Vendor opens `/vendor/bookings/br-v-001`.
-3. `VendorBookingResponseFlow` shows "Their estimate: £450".
-4. Vendor clicks **Accept booking** → unread chat gate (if messages) → confirm dialog.
-5. `useVendorPayoutsReady` — if not ready, `PayoutSetupRequiredModal` opens instead of PATCH.
-6. If ready: `PATCH .../status` `{ booking_status: "accepted" }`.
-7. `update_booking_request_status_for_vendor` updates row, notifies client.
-8. Client detail shows payment due banner (Slice 4).
+2. Vendor opens `/vendor/bookings/br-v-001` — pricing in `BookingPricingBreakdown` (incl. referral fee rows when applicable).
+3. `VendorBookingResponseFlow` shows accept / suggest price / decline actions (no duplicate total copy).
+4. Vendor clicks **Accept booking** → payout gate in flow (if Connect not ready, `onPayoutSetupRequired`) → unread chat gate (if messages) → confirm dialog.
+5. If payouts ready: `PATCH .../status` `{ booking_status: "accepted" }`.
+6. `update_booking_request_status_for_vendor` updates row, notifies client.
+7. Client detail shows payment due banner (Slice 4).
 
 ---
 
@@ -86,25 +103,32 @@ Vendor opens /vendor/bookings or /vendor/bookings/{id}
 8. `frontend/features/vendor/bookings/vendorBookingResponseHelpers.ts` — pricing preview helpers
 9. `frontend/features/vendor/bookings/useVendorBookingActions.ts` — mutations
 10. `frontend/features/vendor/bookings/VendorBookingDetailExtras.tsx` — completion banners
-11. `frontend/features/bookings/useParticipantBookingsScaffold.ts` — shared list/detail loading
-12. `frontend/features/vendor/payments/useVendorPayoutsReady.ts` — payout gate
-13. `frontend/features/vendor/payments/PayoutSetupRequiredModal.tsx` — blocked accept UX
-14. `frontend/features/vendor/bookings/useVendorPayoutAcceptResume.ts` — resume accept after Connect onboarding
-15. `frontend/lib/vendorBookingsApi.ts` — vendor booking HTTP
+11. `frontend/features/bookings/useParticipantBookingsScaffold.ts` — shared list/detail loading + `sortBookingListItemsRecentFirst`
+12. `frontend/features/bookings/bookingListOrder.ts` — `updated_at` sort (mirrors backend)
+13. `frontend/features/bookings/groupBookingsByEvent.ts` — `bookingEventGroupsForList` dedupe
+14. `frontend/features/bookings/BookingListPanel.tsx` — list + `CopyToClipboardButton` / `shortId`
+15. `frontend/features/bookings/BookingDetailPanel.tsx` — detail + ref copy + `BookingPricingBreakdown`
+16. `frontend/features/bookings/BookingDisputeSection.tsx` — dispute CTA (`presentation="header"`)
+17. `frontend/lib/shortId.ts` — compact booking ref display
+18. `frontend/features/vendor/payments/useVendorPayoutsReady.ts` — payout gate
+19. `frontend/features/vendor/payments/PayoutSetupRequiredModal.tsx` — blocked accept UX
+20. `frontend/features/vendor/bookings/useVendorPayoutAcceptResume.ts` — resume accept after Connect onboarding
+21. `frontend/lib/vendorBookingsApi.ts` — vendor booking HTTP
 
 ### Vendor quote from chat
 
-16. `frontend/features/chat/ChatThreadView.tsx` — "Send quote" button
-17. `frontend/features/vendor/quotes/VendorQuoteFormModal.tsx` — quote drawer form
+22. `frontend/features/chat/ChatThreadView.tsx` — "Send quote" button
+23. `frontend/features/vendor/quotes/VendorQuoteFormModal.tsx` — quote drawer form
 
 ### Backend
 
-18. `backend/app/features/bookings/http/vendor.py` — vendor routes
-19. `backend/app/contracts/booking.py` — quote body, status patch, adjustments
-20. `backend/app/features/bookings/create.py` — `create_vendor_quote_booking_request`
-21. `backend/app/features/bookings/status_vendor.py` — `update_booking_request_status_for_vendor`
-22. `backend/app/features/bookings/adjustments.py` — `put_vendor_booking_adjustments`
-23. `backend/app/features/bookings/pricing_confirmation.py` — `client_price_confirmation_required`
+24. `backend/app/features/bookings/http/vendor.py` — vendor routes
+25. `backend/app/contracts/booking.py` — quote body, status patch, adjustments
+26. `backend/app/features/bookings/create.py` — `create_vendor_quote_booking_request`
+27. `backend/app/features/bookings/status_vendor.py` — `update_booking_request_status_for_vendor`
+28. `backend/app/features/bookings/adjustments.py` — `put_vendor_booking_adjustments`
+29. `backend/app/features/bookings/list_order.py` — `sort_booking_rows_recent_first`
+30. `backend/app/features/bookings/pricing_confirmation.py` — `client_price_confirmation_required`
 
 ---
 
@@ -137,10 +161,78 @@ Composes:
 - `ConfirmDialog` for withdraw / cancel / complete
 - `ChatDrawer` for messaging
 - `MasterDetailLayout` with `BookingListPanel` + `BookingDetailPanel`
+- `BookingDisputeSection` in detail header (`presentation="header"`)
 
 ```22:23:frontend/features/vendor/bookings/VendorBookingsView.tsx
 export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProps) {
   const controller = useVendorBookingsController({ selectedBookingId });
+```
+
+**List sort** — `useParticipantBookingsScaffold` sorts by latest activity (`updated_at`, then `created_at`):
+
+```46:46:frontend/features/bookings/useParticipantBookingsScaffold.ts
+      setList(sortBookingListItemsRecentFirst(await fetchList(tab)));
+```
+
+```7:10:frontend/features/bookings/bookingListOrder.ts
+export function bookingListActivityTimestamp(
+  item: BookingListActivityFields | null | undefined,
+): string {
+  return item?.updated_at?.trim() || item?.created_at?.trim() || "";
+```
+
+Backend mirror — `queries.py` and list endpoints use `sort_booking_rows_recent_first`:
+
+```8:15:backend/app/features/bookings/list_order.py
+def sort_booking_rows_recent_first(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Sort booking rows by latest activity, then creation time, then id."""
+
+    def key(row: dict[str, Any]) -> tuple[str, str, str]:
+        activity = str(row.get("updated_at") or row.get("created_at") or "")
+        return (activity, str(row.get("created_at") or ""), str(row.get("id") or ""))
+
+    return sorted(rows, key=key, reverse=True)
+```
+
+**Event groups** — only when multiple bookings share an event (active tab):
+
+```143:146:frontend/features/vendor/bookings/useVendorBookingsController.ts
+  const eventGroups = useMemo(
+    () => bookingEventGroupsForList(rows, listItemsById, "client", tab === "active"),
+    [tab, rows, listItemsById],
+  );
+```
+
+```94:103:frontend/features/bookings/groupBookingsByEvent.ts
+export function bookingEventGroupsForList(
+  rows: BookingListRowViewModel[],
+  itemsById: Map<string, BookingEventGroupingItem>,
+  counterpartyNoun: BookingEventGroupCounterparty,
+  enabled: boolean,
+): BookingEventGroup[] | null {
+  if (!enabled || rows.length === 0) return null;
+  const groups = groupBookingsByEvent(rows, itemsById, counterpartyNoun);
+  return groups.some((group) => group.bookingCount > 1) ? groups : null;
+}
+```
+
+**Booking ref copy** — list rows and detail header:
+
+```92:96:frontend/features/bookings/BookingListPanel.tsx
+              <CopyToClipboardButton
+                text={row.id}
+                ariaLabel={`Copy booking reference ${shortId(row.id) ?? ""}`}
+                onCopied={copyBookingRef}
+              />
+```
+
+```117:122:frontend/features/bookings/BookingDetailPanel.tsx
+            <span className="inline-flex items-center gap-0.5 font-mono text-neutral-400">
+              <span title={booking.id}>Ref {shortId(booking.id)}</span>
+              <CopyToClipboardButton
+                text={booking.id}
+                ariaLabel="Copy booking reference"
+              />
 ```
 
 **File:** `useVendorBookingsController.ts` — scaffold + payouts:
@@ -222,6 +314,8 @@ export function toVendorBookingDetailViewModel(
 
 ## Step 3 — Payout gate before accept
 
+Payout readiness is checked in **two places**: the controller's `requestAccept` (header re-accept path) and **`VendorBookingResponseFlow`** (primary accept button).
+
 **File:** `useVendorPayoutsReady.ts`
 
 ```12:14:frontend/features/vendor/payments/useVendorPayoutsReady.ts
@@ -230,7 +324,28 @@ export function isVendorPayoutsReady(status: VendorPaymentsStatus | null | undef
 }
 ```
 
-**File:** `useVendorBookingsController.ts` — `requestAccept`:
+**File:** `VendorBookingResponseFlow.tsx` — accept button checks payouts before confirm dialog:
+
+```141:148:frontend/features/vendor/bookings/VendorBookingResponseFlow.tsx
+  const requestAcceptDecision = async () => {
+    if (actionBusy || adjustmentSaving || checkingDecision || payoutsLoading) return;
+    if (!payoutsReady) {
+      onPayoutSetupRequired();
+      return;
+    }
+    await requestDecision("accept");
+  };
+```
+
+Wired from `VendorBookingsView`:
+
+```121:123:frontend/features/vendor/bookings/VendorBookingsView.tsx
+                      payoutsLoading={controller.payoutsLoading}
+                      payoutsReady={controller.payoutsReady}
+                      onPayoutSetupRequired={() => controller.setPayoutModalOpen(true)}
+```
+
+**File:** `useVendorBookingsController.ts` — `requestAccept` (header re-accept path):
 
 ```105:113:frontend/features/vendor/bookings/useVendorBookingsController.ts
   const requestAccept = useCallback(() => {
@@ -267,7 +382,7 @@ Backend mirror — accept rejected without Connect:
 
 ## Step 4 — `VendorBookingResponseFlow` (client enquiry)
 
-Shown when `pending` + `initiator !== "vendor"`:
+Shown when `pending` + `initiator !== "vendor"`. Pricing is in `BookingPricingBreakdown` on the detail panel — the flow only renders action buttons (no duplicate "Their estimate" line).
 
 ```215:216:frontend/features/vendor/bookings/useVendorBookingsController.ts
   const showClientResponseFlow =
@@ -276,45 +391,49 @@ Shown when `pending` + `initiator !== "vendor"`:
 
 **Review step** — accept, suggest price, or decline:
 
-```137:171:frontend/features/vendor/bookings/VendorBookingResponseFlow.tsx
+```150:171:frontend/features/vendor/bookings/VendorBookingResponseFlow.tsx
       <div className="space-y-3">
-        <p className="text-sm text-neutral-600">
-          Their estimate:{" "}
-          <span className="font-semibold text-neutral-900">{friendlyTotal}</span>
-          <span className="text-neutral-500"> (incl. Eventtz fee)</span>
-        </p>
         <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-          <Button ... onClick={() => void requestDecision("accept")}>
+          <Button
+            variant="primary"
+            className="w-full sm:w-auto"
+            disabled={actionBusy || adjustmentSaving || !!checkingDecision || payoutsLoading}
+            loading={checkingDecision === "accept"}
+            onClick={() => void requestAcceptDecision()}
+          >
             Accept booking
           </Button>
-          <Button ... onClick={() => openAdjust([])}>
+          <Button
+            variant="secondary"
+            className="w-full sm:w-auto"
+            disabled={actionBusy || adjustmentSaving || !!checkingDecision}
+            onClick={() => openAdjust([])}
+          >
             Suggest a different price
           </Button>
         </div>
-        ...
-          <button ... onClick={() => void requestDecision("decline")}>
-            Can&apos;t take this one
-          </button>
 ```
 
 **Unread gate** — forces vendor to read chat before accept/decline:
 
-```63:84:frontend/features/vendor/bookings/VendorBookingResponseFlow.tsx
+```69:90:frontend/features/vendor/bookings/VendorBookingResponseFlow.tsx
   const requestDecision = async (kind: PendingDecision) => {
-    ...
+    if (actionBusy || adjustmentSaving || checkingDecision) return;
+    setCheckingDecision(kind);
+    try {
       const conversationId = detail.conversation_id?.trim();
       if (conversationId) {
-        const conv = await fetchConversation(conversationId);
-        if ((conv.unread_count ?? 0) > 0) {
-          setPendingDecision(kind);
-          setUnreadGateOpen(true);
-          return;
+        try {
+          const conv = await fetchConversation(conversationId);
+          if ((conv.unread_count ?? 0) > 0) {
+            setPendingDecision(kind);
+            setUnreadGateOpen(true);
+            return;
+          }
+        } catch {
+          // Non-fatal: if unread check fails, proceed to the normal confirm dialog.
         }
       } else if ((detail.notes ?? "").trim()) {
-        setPendingDecision(kind);
-        setUnreadGateOpen(true);
-        return;
-      }
 ```
 
 **Waiting for client** — after adjustments saved:
@@ -334,9 +453,51 @@ Shown when `pending` + `initiator !== "vendor"`:
 
 ## Step 5 — Price adjustments
 
-**File:** `VendorBookingResponseAdjustments.tsx` — cost/discount lines with live preview via `previewClientTotalLabel`.
+**File:** `VendorBookingResponseAdjustments.tsx` — cost/discount lines with live preview via `previewClientFeeBreakdown` (referral-aware) and delta copy:
 
-**File:** `vendorBookingResponseHelpers.ts` — draft model:
+```63:68:frontend/features/vendor/bookings/VendorBookingResponseAdjustments.tsx
+  const previewBreakdown = previewClientFeeBreakdown(pricing, adjustDrafts);
+  const previewDelta = previewTotalDeltaGbp(pricing, adjustDrafts);
+  const previewDeltaExplanation =
+    previewDelta != null
+      ? adjustmentPreviewDeltaExplanation(pricing, adjustDrafts, previewDelta)
+      : null;
+```
+
+**File:** `vendorBookingResponseHelpers.ts` — fee preview helpers:
+
+```48:60:frontend/features/vendor/bookings/vendorBookingResponseHelpers.ts
+export function previewClientFeeBreakdown(
+  pricing: BookingPricing | null | undefined,
+  drafts: AdjustmentDraftRow[],
+): ClientFeeBreakdown | null {
+  if (!pricing || pricing.has_pricing_tbc) return null;
+  const vendorPortion = vendorPortionFromDrafts(pricing, drafts);
+  if (vendorPortion == null) return null;
+  const referralDiscount = referralDiscountForBookingPreview(pricing, vendorPortion);
+  return computeClientFeeBreakdown({
+    vendorPortionGbp: vendorPortion,
+    feePercent: pricing.service_fee_percent,
+    referralFeeDiscountGbp: referralDiscount,
+  });
+}
+```
+
+```71:80:frontend/features/vendor/bookings/vendorBookingResponseHelpers.ts
+export function previewTotalDeltaGbp(
+  pricing: BookingPricing | null | undefined,
+  drafts: AdjustmentDraftRow[],
+): number | null {
+  const breakdown = previewClientFeeBreakdown(pricing, drafts);
+  const currentTotal = pricing?.client_total_gbp;
+  if (!breakdown || currentTotal == null || !Number.isFinite(currentTotal)) return null;
+  const delta = Math.round((breakdown.totalGbp - currentTotal) * 100) / 100;
+  if (delta === 0) return null;
+  return delta;
+}
+```
+
+Draft model — `applyDraftLine`:
 
 ```63:81:frontend/features/vendor/bookings/vendorBookingResponseHelpers.ts
 export function applyDraftLine(
@@ -539,6 +700,18 @@ def post_vendor_quote(
 
 ## Step 8 — Header/footer actions
 
+**Dispute CTA** — compact header slot (not inline in scroll body):
+
+```140:146:frontend/features/vendor/bookings/VendorBookingsView.tsx
+                  disputeSection: controller.detail ? (
+                    <BookingDisputeSection
+                      bookingId={controller.detail.booking_request_id}
+                      role="vendor"
+                      bookingStatus={controller.detail.booking_status}
+                      presentation="header"
+                    />
+```
+
 **Withdraw quote** — vendor-initiated pending:
 
 ```143:152:frontend/features/vendor/bookings/useVendorBookingsController.ts
@@ -645,7 +818,10 @@ Cancel copy varies by `payment_status` (`paid`, `pending`, unpaid).
 ## Key concepts from this slice
 
 - **`initiator`** — `client` vs `vendor` determines who accepts while `pending`.
-- **Payout gate** — `useVendorPayoutsReady` + backend `COMPLETE_PAYOUT_SETUP`.
+- **Payout gate** — `VendorBookingResponseFlow` + `useVendorPayoutsReady` + backend `COMPLETE_PAYOUT_SETUP`.
+- **List ordering** — `updated_at` first via `bookingListOrder.ts` / `list_order.py`.
+- **Event groups** — `bookingEventGroupsForList` shows headers only when an event has 2+ bookings.
+- **Booking ref** — `shortId` + `CopyToClipboardButton` on list and detail.
 - **Adjustments** — vendor edits `vendor_adjustments`; client confirms in Slice 3b before vendor accept.
 - **Vendor quote path** — `create_vendor_quote_booking_request`, not `create_booking_request`.
 - **`status_vendor.py`** — all vendor-driven `status` transitions (not `status.py`).

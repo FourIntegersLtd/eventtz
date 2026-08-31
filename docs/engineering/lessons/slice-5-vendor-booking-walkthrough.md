@@ -9,6 +9,20 @@ Trace **vendor accept on a client enquiry** and a **quote-from-chat** path. Read
 
 ---
 
+## What changed (2026-08-31)
+
+| Area | Before | Now |
+|------|--------|-----|
+| Accept payout gate | Controller `requestAccept` only | `VendorBookingResponseFlow.requestAcceptDecision` + `onPayoutSetupRequired` |
+| Response flow total | "Their estimate: £…" inline | Removed — see `BookingPricingBreakdown` on detail |
+| Adjustment preview | Total label only | `previewClientFeeBreakdown`, `previewTotalDeltaGbp`, `adjustmentPreviewDeltaExplanation` |
+| List order | — | `sortBookingListItemsRecentFirst` / `sort_booking_rows_recent_first` (`updated_at`) |
+| Booking ref | — | `shortId` + `CopyToClipboardButton` on list/detail |
+| Disputes | Inline section | `BookingDisputeSection` `presentation="header"` |
+| Event groups | Always shown | `bookingEventGroupsForList` — only when 2+ bookings per event |
+
+---
+
 ## 0. Mental model
 
 ```
@@ -78,40 +92,49 @@ Condition:
 
 `VendorBookingResponseFlow` mounted in `footerSection` slot:
 
-```114:125:frontend/features/vendor/bookings/VendorBookingsView.tsx
+```115:129:frontend/features/vendor/bookings/VendorBookingsView.tsx
                   footerSection: controller.showClientResponseFlow && controller.detail ? (
                     <VendorBookingResponseFlow
                       key={`${controller.detail.booking_request_id}-${controller.detail.vendor_adjustments.length}`}
                       detail={controller.detail}
                       actionBusy={controller.actionBusy}
                       adjustmentSaving={controller.adjustmentSaving}
+                      payoutsLoading={controller.payoutsLoading}
+                      payoutsReady={controller.payoutsReady}
+                      onPayoutSetupRequired={() => controller.setPayoutModalOpen(true)}
                       onAcceptAtListedPrice={() => controller.requestAccept()}
                       onDecline={() => void controller.applyBookingStatus("declined")}
                       onSendUpdatedPrice={(rows) => void controller.sendUpdatedPrice(rows)}
+                      onOpenChat={() => controller.setChatOpen(true)}
+                      onUseDraftInChat={(message) => controller.setChatPrefill(message)}
+                    />
+                  ) : undefined,
 ```
 
-Shows: "Their estimate: £450 (incl. Eventtz fee)".
+Pricing (line items, fee, referral discount) is in `BookingPricingBreakdown` on the detail panel — not duplicated in the response flow.
 
 ---
 
 ### Step 3 — Payout check on accept click
 
-Vendor clicks **Accept booking** → `requestDecision("accept")` → confirm dialog → `onAcceptAtListedPrice()` → `requestAccept()`.
+Vendor clicks **Accept booking** → `requestAcceptDecision()`:
 
-```105:113:frontend/features/vendor/bookings/useVendorBookingsController.ts
-  const requestAccept = () => {
-    if (payoutsLoading) return;
+```141:148:frontend/features/vendor/bookings/VendorBookingResponseFlow.tsx
+  const requestAcceptDecision = async () => {
+    if (actionBusy || adjustmentSaving || checkingDecision || payoutsLoading) return;
     if (!payoutsReady) {
-      setPayoutModalOpen(true);
+      onPayoutSetupRequired();
       return;
     }
-    void updateVendorBookingStatus("accepted");
+    await requestDecision("accept");
   };
 ```
 
-If `useVendorPayoutsReady` returns `charges_enabled && payouts_enabled` → proceed.
+If `payoutsLoading`, button is disabled. If `!payoutsReady`, `onPayoutSetupRequired()` opens `PayoutSetupRequiredModal` (no PATCH yet).
 
-Otherwise `PayoutSetupRequiredModal` → `connectPayouts('/vendor/bookings/br-enq-99')` → Stripe onboarding → `useVendorPayoutAcceptResume` retries accept.
+When ready: confirm dialog → `onAcceptAtListedPrice()` → `requestAccept()` → `updateVendorBookingStatus("accepted")`.
+
+Otherwise `connectPayouts('/vendor/bookings/br-enq-99')` → Stripe onboarding → `useVendorPayoutAcceptResume` retries accept.
 
 ---
 
@@ -184,6 +207,17 @@ Vendor clicks **Suggest a different price** → `VendorBookingResponseAdjustment
 Example: +£50 travel surcharge.
 
 Vendor enters amount `50`, reason `Travel to venue`.
+
+Preview helpers recompute client total (incl. referral fee discount when stored on booking):
+
+```63:68:frontend/features/vendor/bookings/VendorBookingResponseAdjustments.tsx
+  const previewBreakdown = previewClientFeeBreakdown(pricing, adjustDrafts);
+  const previewDelta = previewTotalDeltaGbp(pricing, adjustDrafts);
+  const previewDeltaExplanation =
+    previewDelta != null
+      ? adjustmentPreviewDeltaExplanation(pricing, adjustDrafts, previewDelta)
+      : null;
+```
 
 `saveVendorPriceAdjustments` →:
 
@@ -383,6 +417,22 @@ Vendor cannot `PATCH accepted` on own quote — `CLIENT_MUST_ACCEPT_QUOTE`.
 
 ---
 
+## List ordering and event groups
+
+On portal load, `useParticipantBookingsScaffold` sorts list items:
+
+```46:46:frontend/features/bookings/useParticipantBookingsScaffold.ts
+      setList(sortBookingListItemsRecentFirst(await fetchList(tab)));
+```
+
+Backend list queries use the same rule (`list_order.py` → `sort_booking_rows_recent_first`).
+
+Active-tab rows may render under event group headers only when 2+ bookings share an event (`bookingEventGroupsForList`).
+
+List rows show `shortId` + copy button; detail header shows `Ref {shortId}` + `CopyToClipboardButton`.
+
+---
+
 ## Withdraw vs cancel vs decline
 
 | Action | UI label | API | When |
@@ -410,9 +460,10 @@ Vendor opens /vendor/bookings/{id}
     useParticipantBookingsScaffold → fetchVendorBookingDetail
     useVendorPayoutsReady → GET /vendor/payments/status
   VendorBookingResponseFlow
-    Accept click → requestDecision → ConfirmDialog
+    Accept click → requestAcceptDecision
+      [if !payoutsReady] onPayoutSetupRequired → PayoutSetupRequiredModal
+      requestDecision → ConfirmDialog
     onAcceptAtListedPrice → requestAccept
-      [if !payoutsReady] PayoutSetupRequiredModal
       updateVendorBookingStatus("accepted")
         patchVendorBookingStatus
           PATCH /vendor/booking-requests/{id}/status
@@ -447,8 +498,10 @@ ChatThreadView Send quote
 | Symptom | Check |
 |---------|--------|
 | No response flow | `initiator` must be `client`, `status` `pending` |
-| Accept opens payout modal | `useVendorPayoutsReady` — finish Connect onboarding |
+| Accept opens payout modal | `VendorBookingResponseFlow.onPayoutSetupRequired` — finish Connect onboarding |
 | Accept 400 "confirm price" | Client has not accepted `vendor_adjustments` |
+| List order wrong | `bookingListOrder.ts` / `list_order.py` — expect `updated_at` desc |
+| Event group missing | `bookingEventGroupsForList` — need 2+ bookings on same event |
 | PUT adjustments 400 | Vendor quote row — adjustments only on client enquiries |
 | Quote 400 calendar | `create.py` `_enforce_vendor_calendar` |
 | Withdraw missing | `initiator === "vendor"` required |

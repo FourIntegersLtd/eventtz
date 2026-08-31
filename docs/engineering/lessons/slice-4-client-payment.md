@@ -10,6 +10,19 @@ A **signed-in client** with an **accepted + unpaid** booking pays via Stripe Che
 
 ---
 
+## What changed (2026-08-31)
+
+| Area | Before | Now |
+|------|--------|-----|
+| Checkout pricing persist | `total_label` only on row update | `pricing_snapshot_fields(pb)` from `booking_discount.py` — `total_label` + `referral_fee_discount_gbp` |
+| Referral through checkout | Not in Slice 4 lesson | Server `refresh_booking_pricing` → stored code/tier; Stripe session gets `referral_fee_discount_gbp` |
+| Detail / pay fee UI | Total label in banner | `BookingPricingBreakdown` → `ClientFeeBreakdownSummary` (vendor portion, fee, referral discount) |
+| Live fee math (previews) | — | `bookingServiceFee.ts`: `computeClientFeeBreakdown`, `referralDiscountForBookingPreview` |
+| Checkout POST failure | Error string in safety modal | `useClientBookingPay` sets `phase: "error"`; `ClientBookingPayView` shows `LottieFailurePanel` |
+| Receipt snapshots | Single service-fee line | `_build_receipt_lines` adds referral discount + "Eventtz fee due" rows when discount applied |
+
+---
+
 ## What client payment does
 
 ```typescript
@@ -23,7 +36,10 @@ window.location.href = checkoutUrl;
 | `ClientBookingDetailExtras` | "Payment due" banner + checkout return messages |
 | `useClientBookingPay` | Venue step → safety modal → redirect to Stripe |
 | `postBookingCheckout` | `POST .../checkout` → Stripe Checkout URL |
-| `create_checkout_session_for_booking` | Server recomputes pricing, creates session, sets `pending` |
+| `create_checkout_session_for_booking` | Server recomputes pricing (incl. referral), creates session, sets `pending` |
+| `pricing_snapshot_fields` | Persists `total_label` + `referral_fee_discount_gbp` on pricing refresh |
+| `BookingPricingBreakdown` | Detail pricing section — embeds `ClientFeeBreakdownSummary` |
+| `bookingServiceFee.ts` | `computeClientFeeBreakdown`, `referralDiscountForBookingPreview` (preview parity) |
 | `handle_checkout_session_completed` | Webhook — marks `paid`, receipt snapshots |
 | `postBookingCheckoutSync` | Return-url fallback when webhook is slow or missing (local dev) |
 | `ClientPaymentsView` | Payment history list at `/client/payments` |
@@ -96,22 +112,27 @@ Client on /client/bookings/{id} (accepted, unpaid)
 12. `frontend/lib/clientBookingsApi.ts` — `patchClientBookingVenue`, `fetchClientBookingDetail`
 13. `frontend/lib/validation/` — `payVenueSchema`
 14. `frontend/features/bookings/bookingConfirmCopy.ts` — `PAYMENT_FLOW_COPY`, `PAYMENT_SAFETY_COPY`
+15. `frontend/lib/bookingServiceFee.ts` — `computeClientFeeBreakdown`, `referralDiscountForBookingPreview`
+16. `frontend/features/bookings/BookingPricingBreakdown.tsx` — detail pricing + `ClientFeeBreakdownSummary`
+17. `frontend/features/bookings/ClientFeeBreakdownSummary.tsx` — vendor portion, fee, referral rows
+18. `frontend/components/ui/LottieFailurePanel.tsx` — pay-page error states
 
 ### Payment history
 
-15. `frontend/app/client/(portal)/payments/page.tsx` — `/client/payments`
-16. `frontend/features/client/payments/ClientPaymentsView.tsx` — paid bookings list + receipts
+19. `frontend/app/client/(portal)/payments/page.tsx` — `/client/payments`
+20. `frontend/features/client/payments/ClientPaymentsView.tsx` — paid bookings list + receipts
 
 ### Backend
 
-17. `backend/app/features/bookings/http/client.py` — checkout + sync routes
-18. `backend/app/contracts/payments.py` — `BookingCheckoutResponse`, sync body/response
-19. `backend/app/features/bookings/payment_checkout.py` — `create_checkout_session_for_booking`
-20. `backend/app/features/bookings/payment_finalize.py` — finalize, sync, webhook handler
-21. `backend/app/features/payments/http/webhooks.py` — `POST /webhooks/stripe`
-22. `backend/app/features/payments/stripe.py` — `create_checkout_session`, retrieve session
-23. `backend/app/features/bookings/receipts.py` — `persist_payment_receipt_snapshots`
-24. `backend/app/core/db.py` — `booking_requests`, `stripe_webhook_events`
+21. `backend/app/features/bookings/http/client.py` — checkout + sync routes
+22. `backend/app/contracts/payments.py` — `BookingCheckoutResponse`, sync body/response
+23. `backend/app/features/bookings/payment_checkout.py` — `create_checkout_session_for_booking`
+24. `backend/app/features/vendor_referrals/booking_discount.py` — `pricing_snapshot_fields`, referral breakdown
+25. `backend/app/features/bookings/payment_finalize.py` — finalize, sync, webhook handler
+26. `backend/app/features/payments/http/webhooks.py` — `POST /webhooks/stripe`
+27. `backend/app/features/payments/stripe.py` — `create_checkout_session`, retrieve session
+28. `backend/app/features/bookings/receipts.py` — `persist_payment_receipt_snapshots`, referral receipt lines
+29. `backend/app/core/db.py` — `booking_requests`, `stripe_webhook_events`
 
 ---
 
@@ -226,7 +247,7 @@ export function ClientBookingPayView({ bookingId }: ClientBookingPayViewProps) {
 | `venue` | Textarea if `bookingNeedsVenue(event_address)` |
 | `safety` | `PaymentSafetyModal` open |
 | `redirecting` | Loading while posting checkout |
-| `error` | Cannot pay (wrong status, not found) |
+| `error` | Cannot pay, load failed, or checkout POST failed — `LottieFailurePanel` |
 
 **Venue before pay** — enquire allowed empty address; checkout requires it:
 
@@ -287,9 +308,84 @@ export function PaymentSafetyModal({
       const checkoutUrl = await postBookingCheckout(bookingId);
       window.location.href = checkoutUrl;
     } catch (e: unknown) {
-      ...
+      track(MixpanelEvents.booking_checkout_failed, { booking_id: bookingId });
+      setError(getApiErrorDetail(e) ?? COULD_NOT_START_CHECKOUT);
+      setPhase("error");
+      setBusy(false);
     }
   };
+```
+
+**Checkout POST failure** — full-page `LottieFailurePanel` (not inline in the safety modal):
+
+```31:44:frontend/features/client/payments/ClientBookingPayView.tsx
+  if (phase === "error") {
+    return (
+      <div className="w-full max-w-3xl space-y-6">
+        <BackLink href={bookingHref} label="Back to booking" />
+        <LottieFailurePanel
+          title="Payment couldn't be started"
+          description={error ?? "Could not load this booking."}
+          action={
+            <Button variant="secondary" onClick={() => router.push(bookingHref)}>
+              Back to booking
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+```
+
+---
+
+## Step 2b — Fee breakdown on booking detail (before pay)
+
+**File:** `BookingDetailPanel.tsx` — pricing section uses `BookingPricingBreakdown`, which embeds `ClientFeeBreakdownSummary` (vendor portion, Eventtz fee, referral discount when applied):
+
+```231:238:frontend/features/bookings/BookingDetailPanel.tsx
+        <section>
+          <BookingPricingBreakdown
+            quoteTotalLabel={booking.totalLabel}
+            pricing={booking.pricing ?? undefined}
+            variant={booking.pricingVariant}
+            lineItems={booking.lineItems}
+            compareTotalLabel={booking.compareTotalLabel}
+          />
+```
+
+```215:224:frontend/features/bookings/BookingPricingBreakdown.tsx
+        <ClientFeeBreakdownSummary
+          breakdown={{
+            vendorPortionLabel: pricing.vendor_portion_label,
+            feeLabel: pricing.service_fee_label,
+            totalLabel: pricing.client_total_label,
+            feePercent: pricing.service_fee_percent,
+            feeBeforeDiscountLabel: pricing.service_fee_before_discount_label,
+            referralDiscountLabel: pricing.referral_fee_discount_label,
+            referralApplied: pricing.referral_fee_applied,
+          }}
+```
+
+**File:** `bookingServiceFee.ts` — mirrors backend rounding for live previews (enquire modal, vendor adjustment drafts); committed booking UI reads API `pricing.*`:
+
+```72:76:frontend/lib/bookingServiceFee.ts
+export function computeClientFeeBreakdown(input: {
+  vendorPortionGbp: number;
+  feePercent?: number;
+  referralFeeDiscountGbp?: number;
+}): ClientFeeBreakdown | null {
+```
+
+```33:40:frontend/lib/bookingServiceFee.ts
+export function referralDiscountForBookingPreview(
+  pricing: BookingReferralPricingFields | null | undefined,
+  vendorPortionGbp: number,
+): number {
+  if (!pricing) return 0;
+  if (!pricing.vendor_referral_code && !pricing.referral_fee_applied) return 0;
+  return referralDiscountForSpend(vendorPortionGbp);
+}
 ```
 
 ---
@@ -350,7 +446,7 @@ Guards and pricing refresh:
 
 Server recomputes line items before charging (prevents stale UI totals):
 
-```59:68:backend/app/features/bookings/payment_checkout.py
+```60:69:backend/app/features/bookings/payment_checkout.py
     refreshed = refresh_booking_pricing(row, vendor_payload)
     line_items = refreshed["line_items"]
     pb = refreshed["pricing_breakdown"]
@@ -358,9 +454,36 @@ Server recomputes line items before charging (prevents stale UI totals):
     db.table("booking_requests").update(
         {
             "line_items": line_items,
-            "total_label": refreshed["total_label"],
+            **pricing_snapshot_fields(pb),
         },
     ).eq("id", booking_id).eq("client_user_id", client_user_id).execute()
+```
+
+Referral discount flows into Stripe session metadata:
+
+```71:89:backend/app/features/bookings/payment_checkout.py
+    client_total = float(pb["client_total_gbp"])
+    vendor_amount = float(pb["vendor_portion_gbp"])
+    service_fee = float(pb["service_fee_gbp"])
+    referral_discount = float(pb.get("referral_fee_discount_gbp") or 0)
+    ...
+    session = stripe_service.create_checkout_session(
+        booking_id=booking_id,
+        client_total_gbp=client_total,
+        vendor_amount_gbp=vendor_amount,
+        service_fee_gbp=service_fee,
+        referral_fee_discount_gbp=referral_discount,
+```
+
+`pricing_snapshot_fields` (in `booking_discount.py`):
+
+```121:126:backend/app/features/vendor_referrals/booking_discount.py
+def pricing_snapshot_fields(pb: dict[str, Any]) -> dict[str, Any]:
+    """Columns persisted on booking_requests when pricing changes."""
+    return {
+        "total_label": persisted_booking_total_label(pb),
+        "referral_fee_discount_gbp": float(pb.get("referral_fee_discount_gbp") or 0) or None,
+    }
 ```
 
 Venue required server-side:
@@ -478,21 +601,31 @@ def handle_checkout_session_completed(event_id: str, session: dict[str, Any]) ->
     )
 ```
 
-**Receipt snapshots** — write-once JSON on the booking row:
+**Receipt snapshots** — write-once JSON on the booking row; line items include referral discount when applied:
 
-```488:522:backend/app/features/bookings/receipts.py
-def persist_payment_receipt_snapshots(booking_id: str) -> None:
-    """Write-once frozen receipt payloads at payment time."""
-    ...
-    if not isinstance(row.get("payment_receipt_snapshot"), dict):
-        ...
-        updates["payment_receipt_snapshot"] = build_client_payment_receipt(...)
-    if not isinstance(row.get("vendor_payment_record_snapshot"), dict):
-        ...
-        updates["vendor_payment_record_snapshot"] = build_vendor_payment_record(...)
-    if updates:
-        get_db().table("booking_requests").update(updates).eq("id", booking_id).execute()
+```160:178:backend/app/features/bookings/receipts.py
+                if referral_discount and float(referral_discount) > 0 and fee_before is not None:
+                    lines.append(
+                        {
+                            "label": fee_label,
+                            "amount_label": format_gbp(float(fee_before)),
+                        },
+                    )
+                    lines.append(
+                        {
+                            "label": "Referral discount",
+                            "amount_label": format_gbp(-float(referral_discount)),
+                        },
+                    )
+                    lines.append(
+                        {
+                            "label": "Eventtz fee due",
+                            "amount_label": format_gbp(fee_f),
+                        },
+                    )
 ```
+
+Receipts rebuild pricing via `build_pricing_breakdown_for_booking_row` (`booking_discount.py`) so frozen snapshots match checkout totals.
 
 Called from finalize after `paid`:
 
@@ -625,7 +758,7 @@ Route: `frontend/app/client/(portal)/payments/page.tsx` — linked from client s
 | Step | Client state | API | DB columns touched |
 |------|--------------|-----|-------------------|
 | Venue | `venueAddress` | `PATCH .../venue` `{ event_address }` | `event_address` |
-| Checkout start | — | `POST .../checkout` | `line_items`, `total_label`, `stripe_checkout_session_id`, `payment_status=pending` |
+| Checkout start | — | `POST .../checkout` | `line_items`, `total_label`, `referral_fee_discount_gbp`, `stripe_checkout_session_id`, `payment_status=pending` |
 | Stripe pay | Stripe UI | — | — |
 | Webhook/sync | `session_id` query | `POST .../checkout/sync` | `payment_status=paid`, `paid_at`, stripe ids, amounts |
 | Receipts | — | `GET .../receipt` | reads `payment_receipt_snapshot` |
@@ -662,6 +795,8 @@ Route: `frontend/app/client/(portal)/payments/page.tsx` — linked from client s
 | Pay now missing | `bookingPayHelpers.bookingCanBePaid` — need `accepted` + unpaid/pending |
 | "Add venue before pay" | `useClientBookingPay` venue phase / `payment_checkout.py` |
 | "Payout setup" on checkout | Vendor Connect not ready — `VENDOR_PAYOUTS_NOT_READY` |
+| Checkout POST → error page | `useClientBookingPay` `phase === "error"` — read `LottieFailurePanel` message |
+| Referral missing at pay | `booking_discount.py` — stored `vendor_referral_code` + tier on `refresh_booking_pricing` |
 | Stuck on "Confirming payment…" | Webhook not reaching app; check sync + `STRIPE_WEBHOOK_SECRET` |
 | Paid in Stripe, booking still pending | `payment_finalize.py` — amount mismatch, stale session id |
 | Duplicate webhook safe? | `stripe_webhook_events` + conditional `in_("payment_status", ...)` update |
@@ -689,7 +824,8 @@ Route: `frontend/app/client/(portal)/payments/page.tsx` — linked from client s
 - **Venue gate** — optional at enquire, required before Checkout.
 - **Webhook idempotency** — `stripe_webhook_events` + conditional DB updates.
 - **Sync fallback** — `postBookingCheckoutSync` on return URL and pending detail load.
-- **Receipt snapshots** — frozen at payment; PDF/HTML reads snapshot not live row.
+- **Receipt snapshots** — frozen at payment; referral discount lines when tier applied; PDF/HTML reads snapshot not live row.
+- **Referral through checkout** — `pricing_snapshot_fields` persists discount; Stripe session carries `referral_fee_discount_gbp`.
 
 ---
 

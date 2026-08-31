@@ -9,6 +9,18 @@ Trace **one Pay now click** from booking detail → Stripe → paid row + receip
 
 ---
 
+## What changed (2026-08-31)
+
+| Area | Before | Now |
+|------|--------|-----|
+| Checkout row update | `total_label` only | `pricing_snapshot_fields(pb)` — referral discount persisted |
+| Stripe session | Fee + total | Also passes `referral_fee_discount_gbp` from refreshed breakdown |
+| Detail fee UI | Not in walkthrough | `BookingPricingBreakdown` → `ClientFeeBreakdownSummary` on detail |
+| Checkout POST failure | Inline error | `phase: "error"` + `LottieFailurePanel` full-page state |
+| Receipt lines | Single fee row | Referral discount + "Eventtz fee due" when tier applied |
+
+---
+
 ## 0. Mental model
 
 ```
@@ -41,7 +53,7 @@ Trace **one Pay now click** from booking detail → Stripe → paid row + receip
 
 **Setup:** Booking `br-pay-001` is `accepted` / `unpaid`. Vendor accepted in Slice 5. Client `client@example.com` is signed in. Event address was left empty at enquire.
 
-**Goal:** Client pays £495 (example) via Stripe; lands back on detail with `paid` + receipt.
+**Goal:** Client pays £495 (example, possibly less referral discount on fee) via Stripe; lands back on detail with `paid` + receipt.
 
 ---
 
@@ -70,7 +82,7 @@ export function bookingCanBePaid(booking: {
 }
 ```
 
-Banner rendered in `ClientBookingDetailExtras` — **Pay now** calls `onPayNow` → `payNow()`.
+Banner rendered in `ClientBookingDetailExtras` — **Pay now** calls `onPayNow` → `payNow()`. Pricing breakdown (incl. referral discount) is in `BookingPricingBreakdown` on the detail panel — not repeated on the pay route.
 
 ---
 
@@ -137,11 +149,26 @@ Modal explains:
 
 Client clicks **Continue to payment** → `confirmSafetyAndPay()` → `proceedToCheckout()`.
 
-```63:65:frontend/features/client/payments/useClientBookingPay.ts
+```57:71:frontend/features/client/payments/useClientBookingPay.ts
+  const proceedToCheckout = async () => {
+    if (!bookingId) return;
+    setBusy(true);
+    setError(null);
+    setPhase("redirecting");
+    try {
       track(MixpanelEvents.booking_checkout_started, { booking_id: bookingId });
       const checkoutUrl = await postBookingCheckout(bookingId);
       window.location.href = checkoutUrl;
+    } catch (e: unknown) {
+      track(MixpanelEvents.booking_checkout_failed, { booking_id: bookingId });
+      setError(getApiErrorDetail(e) ?? COULD_NOT_START_CHECKOUT);
+      setPhase("error");
+      setBusy(false);
+    }
+  };
 ```
+
+If `postBookingCheckout` fails, `phase` becomes `"error"` and `ClientBookingPayView` renders `LottieFailurePanel` ("Payment couldn't be started") instead of staying on the safety modal.
 
 ---
 
@@ -187,20 +214,29 @@ Browser navigates away to Stripe.
    - `payment_status in ("unpaid", "pending")`
    - Vendor payout ready OR admin waiver
    - `event_address` non-empty
-3. **`refresh_booking_pricing`** — recompute `line_items` + breakdown from vendor profile + adjustments
-4. **Persist refreshed prices** on row before session
-5. **`stripe_service.create_checkout_session`** — metadata includes `booking_id`, amounts
+3. **`refresh_booking_pricing`** — recompute `line_items` + breakdown (honors stored `vendor_referral_code` via `booking_discount.py`)
+4. **Persist refreshed prices** — `pricing_snapshot_fields(pb)` (`total_label`, `referral_fee_discount_gbp`)
+5. **`stripe_service.create_checkout_session`** — metadata includes `booking_id`, amounts, `referral_fee_discount_gbp`
 6. **Update row:** `stripe_checkout_session_id`, `payment_status = "pending"`
 7. **`mark_payment_requested`** + analytics `customer_started_payment`
 8. Return `session["url"]`
 
-```93:98:backend/app/features/bookings/payment_checkout.py
+```64:69:backend/app/features/bookings/payment_checkout.py
     db.table("booking_requests").update(
         {
-            "stripe_checkout_session_id": session["id"],
-            "payment_status": "pending",
+            "line_items": line_items,
+            **pricing_snapshot_fields(pb),
         },
     ).eq("id", booking_id).eq("client_user_id", client_user_id).execute()
+```
+
+```84:89:backend/app/features/bookings/payment_checkout.py
+    session = stripe_service.create_checkout_session(
+        booking_id=booking_id,
+        client_total_gbp=client_total,
+        vendor_amount_gbp=vendor_amount,
+        service_fee_gbp=service_fee,
+        referral_fee_discount_gbp=referral_discount,
 ```
 
 ### DB state after checkout start
@@ -211,6 +247,7 @@ Browser navigates away to Stripe.
 | `payment_status` | `pending` |
 | `stripe_checkout_session_id` | `cs_test_...` |
 | `line_items` | refreshed JSON |
+| `referral_fee_discount_gbp` | e.g. `10` when tier applies |
 | `event_address` | venue string |
 
 ---
@@ -273,7 +310,7 @@ Second delivery of same `event_id` → insert fails → handler returns early.
 5. Extract `payment_intent_id`, `charge_id`, receipt URL
 6. Conditional update: `payment_status` → `paid` only if currently `pending` or `unpaid`
 7. Notifications client + vendor
-8. `persist_payment_receipt_snapshots(booking_id)`
+8. `persist_payment_receipt_snapshots(booking_id)` — receipt lines include referral discount when `referral_fee_discount_gbp > 0`
 9. `dispatch_payment_receipts_after_checkout`
 10. Analytics `customer_payment_completed`
 
@@ -286,7 +323,7 @@ Second delivery of same `event_id` → insert fails → handler returns early.
 | `stripe_payment_intent_id` | `pi_...` |
 | `stripe_charge_id` | `ch_...` |
 | `payment_amount_gbp` | e.g. `495.00` |
-| `payment_receipt_snapshot` | frozen JSON |
+| `payment_receipt_snapshot` | frozen JSON (incl. referral fee lines when applicable) |
 | `vendor_payment_record_snapshot` | frozen JSON |
 
 ---
@@ -416,8 +453,10 @@ Pay now click
         POST /checkout
           create_checkout_session_for_booking()
             refresh_booking_pricing
-            stripe.create_checkout_session
+            pricing_snapshot_fields(pb)
+            stripe.create_checkout_session (referral_fee_discount_gbp)
             update pending + session id
+      [on failure] phase=error → LottieFailurePanel
       window.location = checkout_url
 
 [Stripe payment]
@@ -449,6 +488,8 @@ Path B — return URL
 |---------|--------|
 | Checkout 400 "venue" | `event_address` empty on row |
 | Checkout 400 "payout" | Vendor Connect — Slice 5 payout gate |
+| Checkout POST error page | `useClientBookingPay` → `LottieFailurePanel` on `phase === "error"` |
+| Referral not on receipt | `receipts._build_receipt_lines` — check `referral_fee_discount_gbp` in breakdown |
 | Webhook 400 signature | `STRIPE_WEBHOOK_SECRET` vs Dashboard signing secret |
 | Webhook 200 but not paid | Handler exception logged; amount mismatch |
 | Sync "not finished" | Stripe session `payment_status` not `paid` yet — wait/retry |
