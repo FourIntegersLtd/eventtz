@@ -10,6 +10,20 @@ A **signed-in client** opens `/client/bookings/{id}` after sending an enquiry (S
 
 ---
 
+## What changed (2026-08-31)
+
+| Area | Before | Now |
+|------|--------|-----|
+| Read-path pricing | `build_pricing_breakdown` called directly in `queries.py` | `booking_discount.py` → `build_pricing_breakdown_for_booking_row` (honours stored referral code on row) |
+| `_attach_pricing_fields` | Priced from projected API dict | `source=row` — full DB row so referral discount is not skipped |
+| List sort | `created_at` only | `list_order.py` + `bookingListOrder.ts` — `updated_at` then `created_at` (recent activity first) |
+| List grouping | Flat rows only | `groupBookingsByEvent.ts` → `eventGroups` on `BookingListPanel` (multi-vendor per celebration) |
+| List row chrome | Status badge only | `CopyToClipboardButton` + `shortId` booking reference |
+| Price-update “was” label | `initial_client_total_label` only | `bookingPriceLabels.ts` → `resolveWasClientTotalLabel` (stored or computed pre-adjustment total) |
+| Detail fee footer | Inline fee rows in `BookingPricingBreakdown` | Reuses `ClientFeeBreakdownSummary` for client-facing fee breakdown |
+
+---
+
 ## What happens at a glance
 
 ```
@@ -17,10 +31,11 @@ Slice 3a redirect → /client/bookings/{id}
     → useClientBookingsController (orchestrator)
         → useParticipantBookingsScaffold → fetchClientBookingDetail(id)
             → GET /client/booking-requests/{id}
-            → get_booking_request_for_client() + build_pricing_breakdown()
+            → get_booking_request_for_client() + build_pricing_breakdown_for_booking_row()
         → useClientBookingActions — status patches, cancel, completion
         → useClientBookingPaymentReturn — payment-due + checkout return sync
     → BookingDetailPanel (shared UI) + ClientBookingDetailExtras (client banners)
+    → BookingListPanel (left pane) — eventGroups, shortId + copy ref
 
 Vendor adds adjustments (vendor portal, while pending)
     → PUT /vendor/booking-requests/{id}/adjustments
@@ -63,18 +78,24 @@ Plain English: you can be **accepted but unpaid** (vendor said yes, client still
 2. `frontend/app/client/(portal)/bookings/page.tsx` — `/client/bookings` list-only
 3. `frontend/app/client/(portal)/bookings/[bookingId]/page.tsx` — `/client/bookings/{id}` detail route
 4. `frontend/features/client/bookings/ClientBookingsView.tsx` — master–detail layout, confirm dialogs, chat drawer
-5. `frontend/features/client/bookings/useClientBookingsController.ts` — **orchestrator**: scaffold wiring, view model, header/footer actions, banner flags
+5. `frontend/features/client/bookings/useClientBookingsController.ts` — **orchestrator**: scaffold wiring, view model, header/footer actions, banner flags, `eventGroups`
 6. `frontend/features/client/bookings/useClientBookingActions.ts` — **mutations**: cancel, accept/decline quote, accept/decline price update, confirm completion
 7. `frontend/features/client/bookings/useClientBookingPaymentReturn.ts` — **payment return**: checkout sync, payment-due scroll, return banners
 8. `frontend/features/bookings/useParticipantBookingsScaffold.ts` — generic list/detail loading + realtime refresh
 9. `frontend/features/client/bookings/clientBookingViewModel.ts` — maps API → shared view model
-10. `frontend/features/bookings/BookingDetailPanel.tsx` — status badges, event info, pricing breakdown (shared with vendor)
-11. `frontend/features/client/bookings/ClientBookingDetailExtras.tsx` — client-only banners (price update, payment due, completion)
-12. `frontend/features/bookings/BookingPriceUpdateBanner.tsx` — accept/decline updated price UI
-13. `frontend/features/bookings/BookingPricingBreakdown.tsx` — line items + adjustments + service fee + referral discount
-14. `frontend/lib/clientBookingsApi.ts` — `fetchClientBookingDetail`, `patchClientBookingStatus`, `postCancelClientBooking`
-15. `frontend/lib/domain-types.ts` — `BookingStatus`, `VendorAdjustmentItem`, `BookingPricingBreakdown`
-16. `frontend/lib/bookingStatusStyles.ts` — badge labels for booking + payment status
+10. `frontend/features/bookings/BookingListPanel.tsx` — left-pane list; optional `eventGroups`; `CopyToClipboardButton` + `shortId` per row
+11. `frontend/features/bookings/bookingListOrder.ts` — `compareBookingsRecentFirst` (mirrors backend `sort_booking_rows_recent_first`)
+12. `frontend/features/bookings/groupBookingsByEvent.ts` — `groupBookingsByEvent`, `bookingEventGroupsForList`
+13. `frontend/features/bookings/BookingDetailPanel.tsx` — status badges, event info, pricing breakdown (shared with vendor); ref + copy
+14. `frontend/features/client/bookings/ClientBookingDetailExtras.tsx` — client-only banners (price update, payment due, completion)
+15. `frontend/features/bookings/BookingPriceUpdateBanner.tsx` — accept/decline updated price UI
+16. `frontend/features/bookings/bookingPriceLabels.ts` — `resolveWasClientTotalLabel`, `clientTotalBeforeVendorAdjustments`
+17. `frontend/features/bookings/BookingPricingBreakdown.tsx` — line items + adjustments; client footer via `ClientFeeBreakdownSummary`
+18. `frontend/features/bookings/ClientFeeBreakdownSummary.tsx` — vendor portion + fee + referral rows (enquire, banner, detail)
+19. `frontend/lib/shortId.ts` — compact booking id for list/detail chrome
+20. `frontend/lib/clientBookingsApi.ts` — `fetchClientBookingDetail`, `patchClientBookingStatus`, `postCancelClientBooking`
+21. `frontend/lib/domain-types.ts` — `BookingStatus`, `VendorAdjustmentItem`, `BookingPricingBreakdown`
+22. `frontend/lib/bookingStatusStyles.ts` — badge labels for booking + payment status
 
 ### Backend (HTTP → queries → pricing → status modules)
 
@@ -82,19 +103,21 @@ Plain English: you can be **accepted but unpaid** (vendor said yes, client still
 18. `backend/app/features/bookings/http/client.py` — `GET` detail, `PATCH` status, `POST` cancel
 19. `backend/app/features/auth/http/guards.py` — `require_client`
 20. `backend/app/contracts/booking.py` — `ClientBookingDetail`, `BookingPricingBreakdown`, `ClientBookingStatusBody`
-21. `backend/app/features/bookings/queries.py` — `get_booking_request_for_client`, `_attach_pricing_fields`
-22. `backend/app/features/bookings/pricing.py` — `build_pricing_breakdown`
-23. `backend/app/features/bookings/pricing_confirmation.py` — `client_price_confirmation_required`
-24. `backend/app/features/bookings/status_client.py` — `update_booking_request_status_for_client`, `cancel_booking_request_for_client`
-25. `backend/app/features/bookings/status_vendor.py` — vendor accept/decline/cancel (adjacent; vendor portal)
-26. `backend/app/features/bookings/status_shared.py` — cancel guards, refund helpers, checkout expiry
-27. `backend/app/features/bookings/status.py` — re-exports public status API (compat for tests/call sites)
-28. `backend/app/core/db.py` — reads/writes `booking_requests`
+21. `backend/app/features/bookings/queries.py` — `get_booking_request_for_client`, `_attach_pricing_fields(source=row)`
+22. `backend/app/features/vendor_referrals/booking_discount.py` — `build_pricing_breakdown_for_booking_row` (read-path pricing)
+23. `backend/app/features/bookings/pricing.py` — `build_pricing_breakdown` (low-level; prefer `booking_discount` for booking rows)
+24. `backend/app/features/bookings/list_order.py` — `sort_booking_rows_recent_first` (`updated_at` then `created_at`)
+25. `backend/app/features/bookings/pricing_confirmation.py` — `client_price_confirmation_required`
+26. `backend/app/features/bookings/status_client.py` — `update_booking_request_status_for_client`, `cancel_booking_request_for_client`
+27. `backend/app/features/bookings/status_vendor.py` — vendor accept/decline/cancel (adjacent; vendor portal)
+28. `backend/app/features/bookings/status_shared.py` — cancel guards, refund helpers, checkout expiry
+29. `backend/app/features/bookings/status.py` — re-exports public status API (compat for tests/call sites)
+30. `backend/app/core/db.py` — reads/writes `booking_requests`
 
 ### Vendor writes adjustments (client only reads)
 
-29. `backend/app/features/bookings/http/vendor.py` — `PUT /vendor/booking-requests/{id}/adjustments`
-30. `backend/app/features/bookings/adjustments.py` — `put_vendor_booking_adjustments`
+31. `backend/app/features/bookings/http/vendor.py` — `PUT /vendor/booking-requests/{id}/adjustments`
+32. `backend/app/features/bookings/adjustments.py` — `put_vendor_booking_adjustments`
 
 ### Adjacent (named, not Slice 3b core)
 
@@ -195,6 +218,17 @@ Child hooks receive `detail` and `bumpDetail` from the scaffold:
 
 `useParticipantBookingsScaffold` is reused by the **vendor** bookings portal too — same list/detail pattern, different API functions.
 
+**List grouping** — `eventGroups` buckets active bookings under the same celebration when multiple vendors are booked:
+
+```140:143:frontend/features/client/bookings/useClientBookingsController.ts
+  const eventGroups = useMemo(
+    () => bookingEventGroupsForList(rows, listItemsById, "vendor", tab === "active"),
+    [tab, rows, listItemsById],
+  );
+```
+
+`BookingListPanel` renders section headers when `eventGroups` is set, and each row shows a copyable `shortId` reference.
+
 ---
 
 ## Step 3 — API client fetches detail
@@ -242,14 +276,38 @@ def get_client_booking(
     return ClientBookingDetailResponse(booking=ClientBookingDetail(**row))
 ```
 
-**File:** `queries.py` — `_attach_pricing_fields` recomputes totals from snapshot `line_items` + `vendor_adjustments` every time detail is loaded. The DB stores the snapshot; the API always returns fresh math.
+**File:** `queries.py` — `_attach_pricing_fields` recomputes totals from the **DB row** (`source=row`) via `build_pricing_breakdown_for_booking_row`. Projected API dicts often omit `vendor_user_id`, which would skip the referral fee discount.
 
-```91:95:backend/app/features/bookings/queries.py
-def _attach_pricing_fields(row: dict[str, Any]) -> None:
-    """Add vendor_adjustments (normalised) and a pricing breakdown to the row."""
-    pb = build_pricing_breakdown_for_booking_row(row)
-    row["vendor_adjustments"] = pb["vendor_adjustments"]
-    row["pricing"] = pb
+```94:105:backend/app/features/bookings/queries.py
+def _attach_pricing_fields(
+    target: dict[str, Any],
+    source: dict[str, Any] | None = None,
+) -> None:
+    """Add vendor_adjustments (normalised) and a pricing breakdown.
+
+    Price from ``source`` (the DB row) when given. Projected API dicts often
+    omit ``vendor_user_id``, which would skip the referral fee discount.
+    """
+    pb = build_pricing_breakdown_for_booking_row(source if source is not None else target)
+    target["vendor_adjustments"] = pb["vendor_adjustments"]
+    target["pricing"] = pb
+```
+
+**File:** `booking_discount.py` — read-path pricing for existing bookings (do not call `build_pricing_breakdown` directly for client totals):
+
+```84:95:backend/app/features/vendor_referrals/booking_discount.py
+def build_pricing_breakdown_for_booking_row(row: dict[str, Any]) -> dict[str, Any]:
+    """Pricing breakdown with referral tier discount when a code is on the row."""
+    discount, tier_min = referral_discount_for_booking_row(row)
+    pb = build_pricing_breakdown(
+        line_items=_line_items_from_row(row),
+        vendor_adjustments=row.get("vendor_adjustments"),
+        service_fee_percent=resolve_booking_service_fee_percent(row),
+        referral_fee_discount_gbp=discount,
+        referral_tier_min_spend_gbp=tier_min,
+    )
+    pb["vendor_referral_code"] = row.get("vendor_referral_code")
+    return pb
 ```
 
 ### Contract shape — detail + pricing with service fee and referral discount
@@ -317,7 +375,29 @@ Status and payment badges sit at the top of every booking detail (client and ven
             ) : null}
 ```
 
-`BookingPricingBreakdown` shows snapshotted packages, any `vendor_adjustments` lines, the platform service fee, and — when a referral code was used — a green “Referral discount applied” strip with the fee discount label.
+`BookingPricingBreakdown` shows snapshotted packages, any `vendor_adjustments` lines, and — for clients — a `ClientFeeBreakdownSummary` footer (service fee, referral discount, total). Vendor view uses the same component with `feeDisplay="condensed"`.
+
+```215:233:frontend/features/bookings/BookingPricingBreakdown.tsx
+        <ClientFeeBreakdownSummary
+          breakdown={{
+            vendorPortionLabel: pricing.vendor_portion_label,
+            feeLabel: pricing.service_fee_label,
+            totalLabel: pricing.client_total_label,
+            feePercent: pricing.service_fee_percent,
+            feeBeforeDiscountLabel: pricing.service_fee_before_discount_label,
+            referralDiscountLabel: pricing.referral_fee_discount_label,
+            referralApplied: pricing.referral_fee_applied,
+          }}
+          feeDisplay={variant === "vendor" ? "condensed" : "full"}
+          showTotal={variant === "vendor"}
+          totalHeading="They pay"
+          footnote={
+            variant === "vendor" && pricing.vendor_referral_code
+              ? `Referral code ${pricing.vendor_referral_code}`
+              : null
+          }
+        />
+```
 
 ---
 
@@ -343,7 +423,35 @@ def put_vendor_booking_adjustments(
 
 Each adjustment: `{ tag/adjustment_category, label, amount_gbp }` — positive = extra cost, negative = discount.
 
-On first adjustment set, the backend snapshots `initial_client_total_label` so the UI can show a **“was”** price.
+On first adjustment set, the backend snapshots `initial_client_total_label` so the UI can show a **“was”** price. The frontend resolves it via `resolveWasClientTotalLabel` (stored label, or computed pre-adjustment total from line items only).
+
+**File:** `ClientBookingDetailExtras.tsx` — passes resolved “was” label to the banner:
+
+```56:59:frontend/features/client/bookings/ClientBookingDetailExtras.tsx
+      {showUpdatedPriceBanner ? (
+        <BookingPriceUpdateBanner
+          wasTotalLabel={resolveWasClientTotalLabel(detail)}
+          nowTotalLabel={detail.pricing?.client_total_label ?? detail.total_label}
+```
+
+**File:** `bookingPriceLabels.ts`:
+
+```32:45:frontend/features/bookings/bookingPriceLabels.ts
+export function resolveWasClientTotalLabel(detail: {
+  initial_client_total_label?: string | null;
+  vendor_adjustments?: unknown[];
+  pricing?: BookingPricing | null;
+  total_label?: string;
+}): string {
+  const stored = detail.initial_client_total_label?.trim();
+  if (stored) return stored;
+  if ((detail.vendor_adjustments?.length ?? 0) > 0) {
+    const computed = clientTotalBeforeVendorAdjustments(detail.pricing);
+    if (computed) return computed;
+  }
+  return detail.pricing?.client_total_label ?? detail.total_label ?? "";
+}
+```
 
 **Client does not POST adjustments.** They only read them on detail and respond via status patch.
 
@@ -492,7 +600,7 @@ Enquire (3a) → redirect /client/bookings/{id}
 useClientBookingsController (orchestrator)
   ├─ useParticipantBookingsScaffold → fetchClientBookingDetail
   │     → GET /api/v1/client/booking-requests/{id}
-  │     → get_booking_request_for_client + build_pricing_breakdown
+  │     → get_booking_request_for_client + build_pricing_breakdown_for_booking_row (source=row)
   ├─ useClientBookingActions → PATCH status / POST cancel
   │     → status_client.update_booking_request_status_for_client
   │     → status_client.cancel_booking_request_for_client
@@ -541,8 +649,11 @@ applyClientUpdatedPriceResponse → PATCH .../status accepted|declined
 | Accept/decline does nothing | `useClientBookingActions.ts` — guard clauses on `initiator` / `booking_status` |
 | “Only pending accept/decline” | `status_client.py` — booking already accepted/closed |
 | PATCH status 400 | `update_booking_request_status_for_client` — wrong initiator for action |
-| Totals look wrong | `pricing.py` `build_pricing_breakdown`; compare `line_items` vs `vendor_adjustments` |
-| Referral discount missing | `BookingPricingBreakdown` in `contracts/booking.py`; `vendor_referral_code` on row |
+| Totals look wrong | `booking_discount.py` `build_pricing_breakdown_for_booking_row`; compare `line_items` vs `vendor_adjustments` |
+| Referral discount missing | `_attach_pricing_fields(..., source=row)` — projected dict may omit `vendor_user_id` |
+| “Was” price wrong on banner | `bookingPriceLabels.ts` `resolveWasClientTotalLabel` |
+| List order feels stale | `list_order.py` / `bookingListOrder.ts` — sorts by `updated_at` |
+| Multi-vendor list not grouped | `groupBookingsByEvent.ts` + `eventGroups` on `BookingListPanel` |
 | List says “New price” but detail doesn’t | `has_price_update` in `queries.py` vs detail `vendor_adjustments` |
 | Payment banner but pay fails | Slice 4 — `/pay` route and checkout |
 | Return from Stripe stuck “confirming” | `useClientBookingPaymentReturn.ts` — checkout sync effect |
@@ -569,8 +680,10 @@ applyClientUpdatedPriceResponse → PATCH .../status accepted|declined
 - **Initiator** — who started the request; drives which pending actions apply.
 - **Vendor adjustment** — pre-accept surcharge/discount line; not a catalog package change.
 - **Price update** — pending client-initiated booking with non-empty `vendor_adjustments`.
-- **`initial_client_total_label`** — client total at enquiry time; “was” price in the banner.
-- **`BookingPricingBreakdown`** — server-computed totals including service fee and optional referral discount.
+- **`initial_client_total_label`** — client total at enquiry time; “was” price in the banner (via `resolveWasClientTotalLabel`).
+- **`BookingPricingBreakdown`** — server-computed totals; client footer reuses `ClientFeeBreakdownSummary`.
+- **`build_pricing_breakdown_for_booking_row`** — read-path pricing in `booking_discount.py` (referral-aware).
+- **Event list groups** — `groupBookingsByEvent` + `eventGroups` when one celebration has multiple vendor bookings.
 - **`client_price_confirmation_required`** — backend guard before vendor can accept an adjusted booking.
 - **Orchestrator pattern** — `useClientBookingsController` composes scaffold + actions + payment hooks.
 - **Master–detail scaffold** — `useParticipantBookingsScaffold` + shared panels.
@@ -579,7 +692,8 @@ applyClientUpdatedPriceResponse → PATCH .../status accepted|declined
 
 ## TL;DR
 
-- **Detail** = `GET /api/v1/client/booking-requests/{id}` → `ClientBookingDetail` with `BookingPricingBreakdown` (service fee + referral discount).
+- **Detail** = `GET /api/v1/client/booking-requests/{id}` → `ClientBookingDetail` with `BookingPricingBreakdown` (`build_pricing_breakdown_for_booking_row`, service fee + referral discount).
+- **List** = sorted by `updated_at` (recent activity first); active tab may group rows by celebration (`eventGroups`).
 - **Two lifecycles** — `booking_status` (agreement) and `payment_status` (money) on one row.
 - **Orchestrator** — `useClientBookingsController` wires scaffold, `useClientBookingActions`, `useClientBookingPaymentReturn`.
 - **Adjustments** — vendor writes via `PUT .../adjustments`; client reads and confirms via `PATCH .../status` (`status_client.py`).

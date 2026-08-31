@@ -8,6 +8,15 @@ Trace **one booking** from post-enquire redirect → detail load → vendor pric
 **Detail query:** `get_booking_request_for_client` in `queries.py`  
 **Status logic:** `update_booking_request_status_for_client` in `status_client.py` (shared helpers in `status_shared.py`)
 
+### What changed (2026-08-31)
+
+- Read-path pricing: `booking_discount.py` → `build_pricing_breakdown_for_booking_row` (not raw `build_pricing_breakdown` in queries).
+- `_attach_pricing_fields(target, source=row)` — prices from full DB row for referral discount.
+- List: `list_order.py` sorts by `updated_at`; frontend mirrors in `bookingListOrder.ts`.
+- List UI: `eventGroups` on `BookingListPanel`; `CopyToClipboardButton` + `shortId` per row.
+- Detail pricing footer: `BookingPricingBreakdown` uses `ClientFeeBreakdownSummary`.
+- Price banner “was” label: `resolveWasClientTotalLabel` in `bookingPriceLabels.ts`.
+
 ---
 
 ## 0. Mental model
@@ -131,9 +140,22 @@ export async function fetchClientBookingDetail(
 **File:** `queries.py`
 
 1. `SELECT * FROM booking_requests WHERE id = ? AND client_user_id = ?`
-2. `_attach_pricing_fields(row)` — builds `pricing` object from `line_items` + `vendor_adjustments`
+2. `_attach_pricing_fields(out, source=row)` — `build_pricing_breakdown_for_booking_row` from `booking_discount.py`
 3. `initial_client_total_label` — “was” price for future adjustments
 4. `apply_counterparty_contact_visibility` — phone hidden until paid + accepted
+
+List queries also call `sort_booking_rows_recent_first` (`updated_at` then `created_at`):
+
+```8:15:backend/app/features/bookings/list_order.py
+def sort_booking_rows_recent_first(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Sort booking rows by latest activity, then creation time, then id."""
+
+    def key(row: dict[str, Any]) -> tuple[str, str, str]:
+        activity = str(row.get("updated_at") or row.get("created_at") or "")
+        return (activity, str(row.get("created_at") or ""), str(row.get("id") or ""))
+
+    return sorted(rows, key=key, reverse=True)
+```
 
 **Example response shape (abbreviated):**
 
@@ -177,8 +199,9 @@ Maps API fields to `BookingDetailViewModel` (shared with vendor portal).
 
 - `StatusBadge` → “Pending”
 - No `PaymentStatusBadge` when `unpaid` (hidden by convention)
-- `BookingPricingBreakdown` → Gold package £200 + service fee → £210 total
+- `BookingPricingBreakdown` → Gold package £200 + `ClientFeeBreakdownSummary` (service fee) → £210 total
 - “Message vendor” opens chat drawer
+- List rows show `shortId` + copy button via `BookingListPanel`
 
 **File:** `ClientBookingDetailExtras.tsx`
 
@@ -196,6 +219,31 @@ Maps API fields to `BookingDetailViewModel` (shared with vendor portal).
 ```
 
 All false for a fresh enquiry → no price banner.
+
+**List grouping** — when the active tab has multiple bookings for the same celebration, the controller passes `eventGroups` to `BookingListPanel`:
+
+```140:143:frontend/features/client/bookings/useClientBookingsController.ts
+  const eventGroups = useMemo(
+    () => bookingEventGroupsForList(rows, listItemsById, "vendor", tab === "active"),
+    [tab, rows, listItemsById],
+  );
+```
+
+```147:165:frontend/features/bookings/BookingListPanel.tsx
+        ) : eventGroups && eventGroups.length > 0 ? (
+          <div className="divide-y divide-neutral-100">
+            {eventGroups.map((group) =>
+              group.bookingCount > 1 ? (
+                <section key={group.key}>
+                  <div className="border-b border-neutral-100 bg-neutral-50/90 px-5 py-3 sm:px-6">
+                    <p className="text-sm font-semibold text-neutral-900">{group.title}</p>
+                    ...
+                  </div>
+                  <ul className="divide-y divide-neutral-100">
+                    {group.rows.map((row) => renderRow(row, { compact: true }))}
+                  </ul>
+                </section>
+```
 
 ---
 
@@ -247,11 +295,17 @@ Realtime event `bookings:refresh` or navigation bump triggers `bumpDetail()` →
 
 | UI element | Source |
 |------------|--------|
-| Was price | `resolveWasClientTotalLabel(detail)` → `initial_client_total_label` or pre-adjustment total |
+| Was price | `resolveWasClientTotalLabel(detail)` → `initial_client_total_label` or `clientTotalBeforeVendorAdjustments` |
 | Now price | `detail.pricing.client_total_label` → e.g. “£262.50” |
 | Line items | `pricing.vendor_adjustments` → Travel surcharge £50 |
 | Fee breakdown | `ClientFeeBreakdownSummary` inside banner — vendor portion + service fee |
 | Accept / Decline | `onAccept` / `onDecline` → orchestrator passes `applyClientUpdatedPriceResponse` |
+
+```56:59:frontend/features/client/bookings/ClientBookingDetailExtras.tsx
+        <BookingPriceUpdateBanner
+          wasTotalLabel={resolveWasClientTotalLabel(detail)}
+          nowTotalLabel={detail.pricing?.client_total_label ?? detail.total_label}
+```
 
 List row subtext (left panel): “New price. Your response needed” via `has_price_update` flag from list API.
 
@@ -439,12 +493,16 @@ Uses shared helpers from **`status_shared.py`**:
 |------|------|
 | Route | `[bookingId]/page.tsx` |
 | Orchestrator | `useClientBookingsController.ts` |
+| List groups | `groupBookingsByEvent.ts`, `bookingListOrder.ts` |
+| List panel | `BookingListPanel.tsx` (`eventGroups`, `shortId`, `CopyToClipboardButton`) |
 | Mutations | `useClientBookingActions.ts` |
 | Payment return | `useClientBookingPaymentReturn.ts` |
+| Price labels | `bookingPriceLabels.ts` |
 | API types | `clientBookingsApi.ts`, `domain-types.ts` |
 | GET handler | `bookings/http/client.py` |
-| Detail query | `bookings/queries.py` |
-| Pricing math | `bookings/pricing.py` |
+| Detail query | `bookings/queries.py` (`_attach_pricing_fields`, `source=row`) |
+| Read-path pricing | `vendor_referrals/booking_discount.py` |
+| List sort | `bookings/list_order.py` |
 | Pricing contract | `contracts/booking.py` (`BookingPricingBreakdown`) |
 | Client status patch | `bookings/status_client.py` |
 | Shared cancel/refund | `bookings/status_shared.py` |
@@ -453,6 +511,7 @@ Uses shared helpers from **`status_shared.py`**:
 | Shared panel | `BookingDetailPanel.tsx` |
 | Client banners | `ClientBookingDetailExtras.tsx` |
 | Price banner | `BookingPriceUpdateBanner.tsx` |
+| Detail fee footer | `BookingPricingBreakdown.tsx` → `ClientFeeBreakdownSummary` |
 
 ---
 

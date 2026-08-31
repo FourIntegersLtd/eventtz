@@ -6,7 +6,14 @@ Trace **one enquire click** from button → `useVendorBookingSubmit.submit()` �
 
 **Endpoint:** `POST /api/v1/client/booking-requests`  
 **Submit hook:** `useVendorBookingSubmit` in `frontend/features/client/browse/useVendorBookingSubmit.ts`  
+**Payload builder:** `buildBookingRequestPayload` in `frontend/lib/bookingEnquireSubmit.ts`  
 **Orchestrator:** `create_booking_request` in `backend/app/features/bookings/create.py`
+
+### What changed (2026-08-31)
+
+- `buildBookingRequestPayload` centralises POST body assembly for single- and multi-vendor enquire.
+- `VendorBookingModal` delegates package selection to `usePerUnitPackageSelection`, event fields to `useEnquireEventFormState`, and submit to `useVendorBookingSubmit`.
+- `VendorBrowseDetailBody` uses the same `usePerUnitPackageSelection` hook as the modal.
 
 ---
 
@@ -19,7 +26,7 @@ Trace **one enquire click** from button → `useVendorBookingSubmit.submit()` �
 │  ?vref= → useVendorReferralPreview → ClientFeeBreakdownSummary         │
 └────────────────────────────┬─────────────────────────────────────────┘
                              │ useVendorBookingSubmit.submit()
-                             │ postBookingRequest({ ids, quantities, vendor_referral_code, ... })
+                             │ buildBookingRequestPayload → postBookingRequest({ ids, quantities, vendor_referral_code, ... })
 ┌────────────────────────────▼─────────────────────────────────────────┐
 │  HTTP — require_client, CreateBookingRequestBody validation          │
 │  client.py → create_booking_request()                                │
@@ -211,7 +218,41 @@ At £600 vendor portion, referral tier gives −£15 off the 5% Eventtz fee.
 
 **File:** `VendorBookingModal.tsx` — wires hooks:
 
-```227:239:frontend/features/client/browse/VendorBookingModal.tsx
+```78:108:frontend/features/client/browse/VendorBookingModal.tsx
+  const {
+    selectedIds,
+    quantities,
+    setPackageQuantity,
+    lineItems,
+  } = usePerUnitPackageSelection({
+    pricingOptions,
+    initialSelectedIds,
+    initialQuantities,
+  });
+  const {
+    eventName,
+    setEventName,
+    eventDate,
+    setEventDate,
+    eventEndDate,
+    setEventEndDate,
+    venueAddress,
+    setVenueAddress,
+    notes,
+    setNotes,
+    pendingPrefill,
+    bannerVisible,
+    dismissForNewEvent,
+    applyBannerPrefill,
+    selectedEventId,
+  } = useEnquireEventFormState({
+    searchPrefill,
+    initialPrefill,
+    linkedEventId,
+  });
+```
+
+```180:192:frontend/features/client/browse/VendorBookingModal.tsx
   const {
     validationError,
     setValidationError,
@@ -227,7 +268,7 @@ At £600 vendor portion, referral tier gives −£15 off the 5% Eventtz fee.
   });
 ```
 
-Per-unit lines show `QuantityStepper` in the modal (can adjust before submit).
+Per-unit lines show `QuantityStepper` in the modal (can adjust before submit via `setPackageQuantity` from `usePerUnitPackageSelection`).
 
 **Prefill sources:** browse URL dates, planner query params, linked celebration (`linkedEventId`), `?vref=` referral code, active-event banner.
 
@@ -237,7 +278,7 @@ Per-unit lines show `QuantityStepper` in the modal (can adjust before submit).
 
 **File:** `VendorBookingModal.tsx` — thin submit wrapper:
 
-```251:266:frontend/features/client/browse/VendorBookingModal.tsx
+```204:219:frontend/features/client/browse/VendorBookingModal.tsx
   const submit = () => {
     submitBooking({
       eventName,
@@ -256,9 +297,9 @@ Per-unit lines show `QuantityStepper` in the modal (can adjust before submit).
   };
 ```
 
-**File:** `useVendorBookingSubmit.ts` — validation + POST:
+**File:** `useVendorBookingSubmit.ts` — validation + `buildBookingRequestPayload` + POST:
 
-```44:80:frontend/features/client/browse/useVendorBookingSubmit.ts
+```45:77:frontend/features/client/browse/useVendorBookingSubmit.ts
   const submit = useCallback(
     (fields: VendorBookingSubmitFields) => {
       const parsed = parseForm(clientBookingRequestSchema, {
@@ -282,20 +323,16 @@ Per-unit lines show `QuantityStepper` in the modal (can adjust before submit).
       }
       setValidationError(null);
       setSubmitting(true);
-      void postBookingRequest({
-        vendor_user_id: vendorUserId,
-        event_name: parsed.data.eventName,
-        event_date: parsed.data.eventDate,
-        event_end_date: parsed.data.eventEndDate?.trim() || null,
-        event_postcode: null,
-        event_address: (parsed.data.venueAddress ?? "").trim() || null,
-        notes: (parsed.data.notes ?? "").trim() || null,
-        selected_option_ids: parsed.data.selectedOptionIds,
-        quantities: parsed.data.quantities,
-        client_search_context: clientSearchContext ?? undefined,
-        event_id: selectedEventId,
-        vendor_referral_code: fields.vendorReferralCode?.trim() || null,
-      })
+      void postBookingRequest(
+        buildBookingRequestPayload(parsed.data, {
+          vendorUserId,
+          selectedOptionIds: parsed.data.selectedOptionIds,
+          quantities: parsed.data.quantities,
+          clientSearchContext,
+          eventId: selectedEventId,
+          vendorReferralCode: fields.vendorReferralCode,
+        }),
+      )
 ```
 
 **Calendar soft block** runs inside the hook when `calendarConflict` is true (passed from modal).
@@ -557,36 +594,37 @@ Slice 3b starts at the redirect.
 
 **File:** `MultiVendorEnquireModal.tsx`
 
-Loop — one POST per vendor, with per-vendor quantities:
+Loop — one `buildBookingRequestPayload` → `postBookingRequest` per vendor:
 
-```169:195:frontend/features/marketplace/MultiVendorEnquireModal.tsx
-      for (let i = 0; i < optionIdsByVendor.length; i += 1) {
-        const { vendor, optionId } = optionIdsByVendor[i]!;
+```168:195:frontend/features/marketplace/MultiVendorEnquireModal.tsx
+      for (let index = 0; index < optionIdsByVendor.length; index += 1) {
+        const { vendor, optionId } = optionIdsByVendor[index]!;
+        const pricingOptions = pricingOptionsForVendor(vendor);
         try {
-          const created = await postBookingRequest({
-            vendor_user_id: vendor.user_id,
-            event_name: parsed.data.eventName,
-            event_date: parsed.data.eventDate,
-            event_end_date: parsed.data.eventEndDate?.trim() || null,
-            event_postcode: null,
-            event_address: (parsed.data.venueAddress ?? "").trim() || null,
-            notes: (parsed.data.notes ?? "").trim() || null,
-            selected_option_ids: [optionId!],
-            quantities: (() => {
-              const opt = pricingOptionsForVendor(vendor).find((o) => o.id === optionId);
-              if (opt?.pricingMode !== "per_unit") return undefined;
-              const qty =
-                quantityByVendorId[vendor.user_id] ?? defaultQuantityForOption(opt);
-              return { [optionId!]: qty };
-            })(),
-            client_search_context: {
-              ...clientSearchContext,
-              batchSize,
-              batchIndex: i,
-              source: resolvedSource,
-            },
-            event_id: linkedEventId,
-          });
+          const created = await postBookingRequest(
+            buildBookingRequestPayload(parsed.data, {
+              vendorUserId: vendor.user_id,
+              selectedOptionIds: [optionId!],
+              quantities: bookingQuantitiesPayload(
+                [optionId!],
+                pricingOptions,
+                {
+                  [optionId!]:
+                    quantityByVendorId[vendor.user_id] ??
+                    defaultQuantityForOption(
+                      pricingOptions.find((option) => option.id === optionId)!,
+                    ),
+                },
+              ),
+              clientSearchContext: {
+                ...clientSearchContext,
+                batchSize,
+                batchIndex: index,
+                source: resolvedSource,
+              },
+              eventId: linkedEventIdForBatch,
+            }),
+          );
 ```
 
 Note: multi-vendor flow does **not** send `vendor_referral_code` today (referral is single-vendor profile flow via `?vref=`).
@@ -617,6 +655,7 @@ Request booking click
     useVendorBookingSubmit.submit()
       parseForm(clientBookingRequestSchema)
       calendarConflict check (soft)
+      buildBookingRequestPayload()
       postBookingRequest()
         POST /api/v1/client/booking-requests
           post_booking_request()

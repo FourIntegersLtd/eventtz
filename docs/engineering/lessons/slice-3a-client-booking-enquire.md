@@ -22,26 +22,38 @@ A **signed-in client** picks packages on a vendor profile (or selects several ve
 | Backend create | IDs + event fields | `quantities`, `vendor_referral_code`, `service_fee_percent`; `resolve_referral_pricing_inputs` |
 | Multi-vendor | Sequential POSTs | Same, plus per-vendor quantities + `bookingConfirmCopy` toasts |
 
+### What changed (2026-08-31)
+
+| Area | Before | Now |
+|------|--------|-----|
+| POST payload assembly | Inline in `useVendorBookingSubmit` and `MultiVendorEnquireModal` | Shared `buildBookingRequestPayload` in `bookingEnquireSubmit.ts` |
+| Modal form state | Local `useState` in `VendorBookingModal` | `useEnquireEventFormState.ts` (event fields + celebration prefill) |
+| Package selection | Duplicated `setPackageQuantity` in modal + profile | `usePerUnitPackageSelection.ts` (profile sidebar + modal) |
+| `VendorBookingModal` | Owned selection + form + submit | Thin shell — delegates to the three hooks above + `useVendorBookingSubmit` |
+
 ---
 
 ## What the booking form does
 
 ```typescript
-void postBookingRequest({
-  vendor_user_id: vendorUserId,
-  event_name: parsed.data.eventName,
-  event_date: parsed.data.eventDate,
-  selected_option_ids: parsed.data.selectedOptionIds,
-  quantities: parsed.data.quantities,
-  vendor_referral_code: fields.vendorReferralCode?.trim() || null,
-  // …
-});
+void postBookingRequest(
+  buildBookingRequestPayload(parsed.data, {
+    vendorUserId,
+    selectedOptionIds: parsed.data.selectedOptionIds,
+    quantities: parsed.data.quantities,
+    vendorReferralCode: fields.vendorReferralCode,
+    // …
+  }),
+);
 ```
 
 | Piece | Role |
 |--------|------|
-| `VendorBookingModal` | React form — event name, dates, venue, notes; packages from profile; quantity steppers for per-unit rates; referral code field; fee breakdown |
-| `useVendorBookingSubmit` | Zod validation, calendar guard, `postBookingRequest`, success/error modal state, Mixpanel |
+| `VendorBookingModal` | Thin React shell — wires `usePerUnitPackageSelection`, `useEnquireEventFormState`, `useVendorBookingSubmit`; referral + fee UI |
+| `usePerUnitPackageSelection` | Selected package ids + per-unit quantities (profile sidebar and modal) |
+| `useEnquireEventFormState` | Event name, dates, venue, notes; browse/planner/celebration prefill |
+| `useVendorBookingSubmit` | Zod validation, calendar guard, `buildBookingRequestPayload` → `postBookingRequest`, success/error modal state, Mixpanel |
+| `buildBookingRequestPayload` | Maps validated form fields → `CreateBookingRequestPayload` (shared by single- and multi-vendor) |
 | `useVendorReferralPreview` | Live referral-code validation + discount preview against vendor portion |
 | `clientBookingRequestSchema` | Zod validation before submit (includes optional `quantities`) |
 | `postBookingRequest()` | HTTP `POST` to `/api/v1/client/booking-requests` with session cookie |
@@ -98,26 +110,29 @@ Client picks packages (+ quantities for per-unit) on profile
 2. `frontend/features/client/browse/ClientVendorBrowseDetailView.tsx` — orchestration, `?vref=` capture, quantities state
 3. `frontend/features/client/browse/useExploreVendor.ts` — loads vendor (public explore API, Slice 2)
 4. `frontend/features/client/browse/VendorBrowseDetailBody.tsx` — packages UI, quantity steppers, fee preview, “Request booking”
-5. `frontend/features/client/browse/vendorBrowseDetailModel.ts` — `buildBrowsePricingOptions`, `buildBookingLineItems`, `bookingQuantitiesPayload`
-6. `frontend/lib/packagePricing.ts` — `lineTotalGbp`, `parsePackagePricingMode`, per-unit helpers
-7. `frontend/components/ui/QuantityStepper.tsx` — +/- control on profile and modal
-8. `frontend/lib/vendorReferralAttribution.ts` — `captureVendorReferralFromSearchParams` (`?vref=`)
-9. `frontend/features/client/browse/useVendorReferralPreview.ts` — live referral preview API
-10. `frontend/lib/bookingServiceFee.ts` — `computeClientFeeBreakdown`, `BOOKING_SERVICE_FEE_PERCENT`
-11. `frontend/features/bookings/ClientFeeBreakdownSummary.tsx` — vendor portion + fee + referral rows
-12. `frontend/features/bookings/useLaunchingSoonBookingGuard.tsx` — optional feature-flag gate
-13. `frontend/features/bookings/eventEnquirePrefill.ts` — planner URL → prefill fields
-14. `frontend/features/bookings/useActiveEventPrefill.ts` — linked celebration event prefill
-15. `frontend/features/bookings/ActiveEventPrefillBanner.tsx` — “Use your event” banner in modal
-16. `frontend/lib/marketplaceSearchParams.ts` — browse filters → `clientSearchContext`
-17. `frontend/features/client/browse/VendorBookingModal.tsx` — form UI (thin; delegates submit)
-18. `frontend/features/client/browse/useVendorBookingSubmit.ts` — validate + POST + result modal
-19. `frontend/features/bookings/bookingConfirmCopy.ts` — `CLIENT_BOOKING_ERROR_COPY`, `CLIENT_BOOKING_TOAST_COPY`
-20. `frontend/lib/validation/bookings.ts` — `clientBookingRequestSchema` (Zod)
-21. `frontend/lib/clientBookingsApi.ts` — `postBookingRequest`
-22. `frontend/lib/bookingsLaunchingSoon.ts` — `BOOKINGS_LAUNCHING_SOON` flag
-23. `frontend/lib/mixpanelEvents.ts` — `enquiry_started`, `enquiry_created`, `enquiry_failed`
-24. `frontend/lib/axios.ts` — session cookies (`withCredentials`)
+5. `frontend/features/client/browse/usePerUnitPackageSelection.ts` — shared package id + quantity state (`syncPerUnitPackageSelection`)
+6. `frontend/features/client/browse/vendorBrowseDetailModel.ts` — `buildBrowsePricingOptions`, `buildBookingLineItems`, `bookingQuantitiesPayload`
+7. `frontend/lib/packagePricing.ts` — `lineTotalGbp`, `parsePackagePricingMode`, per-unit helpers
+8. `frontend/components/ui/QuantityStepper.tsx` — +/- control on profile and modal
+9. `frontend/lib/vendorReferralAttribution.ts` — `captureVendorReferralFromSearchParams` (`?vref=`)
+10. `frontend/features/client/browse/useVendorReferralPreview.ts` — live referral preview API
+11. `frontend/lib/bookingServiceFee.ts` — `computeClientFeeBreakdown`, `BOOKING_SERVICE_FEE_PERCENT`
+12. `frontend/features/bookings/ClientFeeBreakdownSummary.tsx` — vendor portion + fee + referral rows
+13. `frontend/features/bookings/useLaunchingSoonBookingGuard.tsx` — optional feature-flag gate
+14. `frontend/features/bookings/eventEnquirePrefill.ts` — planner URL → prefill fields
+15. `frontend/features/bookings/useEnquireEventFormState.ts` — event form fields + celebration prefill wiring
+16. `frontend/features/bookings/useActiveEventPrefill.ts` — linked celebration event prefill (used by form-state hook)
+17. `frontend/features/bookings/ActiveEventPrefillBanner.tsx` — “Use your event” banner in modal
+18. `frontend/lib/marketplaceSearchParams.ts` — browse filters → `clientSearchContext`
+19. `frontend/features/client/browse/VendorBookingModal.tsx` — thin modal shell (hooks + UI)
+20. `frontend/features/client/browse/useVendorBookingSubmit.ts` — validate + `buildBookingRequestPayload` + POST + result modal
+21. `frontend/lib/bookingEnquireSubmit.ts` — `buildBookingRequestPayload` (shared POST body builder)
+22. `frontend/features/bookings/bookingConfirmCopy.ts` — `CLIENT_BOOKING_ERROR_COPY`, `CLIENT_BOOKING_TOAST_COPY`
+23. `frontend/lib/validation/bookings.ts` — `clientBookingRequestSchema` (Zod)
+24. `frontend/lib/clientBookingsApi.ts` — `postBookingRequest`
+25. `frontend/lib/bookingsLaunchingSoon.ts` — `BOOKINGS_LAUNCHING_SOON` flag
+26. `frontend/lib/mixpanelEvents.ts` — `enquiry_started`, `enquiry_created`, `enquiry_failed`
+27. `frontend/lib/axios.ts` — session cookies (`withCredentials`)
 
 ### Backend (HTTP → business logic → DB)
 
@@ -145,11 +160,11 @@ Client picks packages (+ quantities for per-unit) on profile
 
 ## Complete route — multi-vendor enquire (browse grid)
 
-Same API from step 21 onward. Different UI entry:
+Same API from step 24 onward. Different UI entry:
 
 1. `frontend/app/client/(portal)/browse/page.tsx` — `/client/browse`
 2. `frontend/features/marketplace/MarketplaceExploreView.tsx` — multi-select + “Message N together”
-3. `frontend/features/marketplace/MultiVendorEnquireModal.tsx` — one brief, **N sequential** `postBookingRequest` calls, per-vendor quantities
+3. `frontend/features/marketplace/MultiVendorEnquireModal.tsx` — one brief, **N sequential** `buildBookingRequestPayload` → `postBookingRequest` calls, per-vendor quantities
 4. `frontend/features/bookings/MultiVendorPackagePicker.tsx` — pick one package per vendor (+ quantity steppers)
 5. `frontend/features/bookings/multiVendorPackageSelection.ts` — initial package picks and default quantities
 
@@ -245,50 +260,43 @@ def require_client(request: Request, response: Response) -> AuthUser:
 
 ## Step 2 — Package selection + per-unit quantities on the profile
 
-**File:** `VendorBrowseDetailBody.tsx` — client ticks packages; per-unit options get a `QuantityStepper`; selected IDs and quantities pass to the modal.
+**File:** `VendorBrowseDetailBody.tsx` — client ticks packages via `usePerUnitPackageSelection`; per-unit options get a `QuantityStepper`; selected IDs and quantities pass to the modal.
 
-```111:122:frontend/features/client/browse/VendorBrowseDetailBody.tsx
-  const [selectedPackageIds, setSelectedPackageIds] = useState<Set<string>>(
-    () => new Set(),
-  );
-  const [quantities, setQuantities] = useState<Record<string, number>>({});
-  const [detailOpenId, setDetailOpenId] = useState<string | null>(null);
-  const [bookingSelectError, setBookingSelectError] = useState(false);
-
-  const selectedLineItems = useMemo(
-    () =>
-      buildBookingLineItems(pricingOptions, [...selectedPackageIds], quantities),
-    [pricingOptions, selectedPackageIds, quantities],
-  );
+```110:119:frontend/features/client/browse/VendorBrowseDetailBody.tsx
+  const {
+    selectedIds: selectedPackageIds,
+    quantities,
+    togglePackage,
+    setPackageQuantity,
+    lineItems: selectedLineItems,
+  } = usePerUnitPackageSelection({
+    pricingOptions,
+    onSelectionChange: () => setBookingSelectError(false),
+  });
 ```
 
-```150:162:frontend/features/client/browse/VendorBrowseDetailBody.tsx
-  const setPackageQuantity = (id: string, qty: number) => {
-    const opt = pricingOptions.find((o) => o.id === id);
-    setQuantities((prev) => ({ ...prev, [id]: qty }));
-    setSelectedPackageIds((prev) => {
-      const next = new Set(prev);
-      if (opt?.pricingMode === "per_unit") {
-        if (qty >= opt.minQuantity) next.add(id);
-        else next.delete(id);
-      }
-      return next;
-    });
-    setBookingSelectError(false);
-  };
+**File:** `usePerUnitPackageSelection.ts` — keeps ids and quantities in sync for per-unit rates:
+
+```22:37:frontend/features/client/browse/usePerUnitPackageSelection.ts
+export function syncPerUnitPackageSelection(
+  pricingOptions: BrowsePricingOption[],
+  selectedIds: Set<string>,
+  quantities: Record<string, number>,
+  id: string,
+  qty: number,
+): PackageSelectionState {
+  const option = pricingOptions.find((entry) => entry.id === id);
+  const nextQuantities = { ...quantities, [id]: qty };
+  const nextSelectedIds = new Set(selectedIds);
+  if (option?.pricingMode === "per_unit") {
+    if (qty >= option.minQuantity) nextSelectedIds.add(id);
+    else nextSelectedIds.delete(id);
+  }
+  return { selectedIds: nextSelectedIds, quantities: nextQuantities };
+}
 ```
 
-“Request booking” passes ids **and** quantities:
-
-```271:277:frontend/features/client/browse/VendorBrowseDetailBody.tsx
-              onClick={() => {
-                if (selectedPackageIds.size === 0) {
-                  setBookingSelectError(true);
-                  return;
-                }
-                onRequestBooking([...selectedPackageIds], quantities);
-              }}
-```
+“Request booking” passes ids **and** quantities from the hook’s `selectedPackageIds` and `quantities`.
 
 **File:** `vendorBrowseDetailModel.ts` — UI estimate with per-unit line totals:
 
@@ -396,7 +404,7 @@ export const REFERRAL_FEE_TIERS = [
 
 **File:** `VendorBookingModal.tsx` — same breakdown in the modal footer:
 
-```241:247:frontend/features/client/browse/VendorBookingModal.tsx
+```194:200:frontend/features/client/browse/VendorBookingModal.tsx
   const clientFeeBreakdown = useMemo(() => {
     if (estimate.hasTbc) return null;
     return computeClientFeeBreakdown({
@@ -406,8 +414,7 @@ export const REFERRAL_FEE_TIERS = [
   }, [estimate.sumNumeric, estimate.hasTbc, referralDiscountGbp]);
 ```
 
-```631:636:frontend/features/client/browse/VendorBookingModal.tsx
-              {clientFeeBreakdown ? (
+```584:589:frontend/features/client/browse/VendorBookingModal.tsx
                 <ClientFeeBreakdownSummary
                   breakdown={clientFeeBreakdown}
                   footnote="The vendor may adjust the price before you pay."
@@ -462,30 +469,54 @@ export const REFERRAL_FEE_TIERS = [
 
 ---
 
-## Step 6 — `VendorBookingModal`: form + delegated submit
+## Step 6 — `VendorBookingModal`: thin shell + delegated submit
 
-The modal owns form state and UI. Submit logic lives in `useVendorBookingSubmit`.
+The modal wires three hooks — package selection, event form state, and submit — then renders UI.
 
-**Per-unit quantity in modal** — `QuantityStepper` can adjust counts; `setPackageQuantity` keeps `selectedIds` in sync:
+**Package selection** — `usePerUnitPackageSelection` (same hook as the profile sidebar):
 
-```112:123:frontend/features/client/browse/VendorBookingModal.tsx
-  const setPackageQuantity = (id: string, qty: number) => {
-    const opt = pricingOptions.find((o) => o.id === id);
-    setQuantities((prev) => ({ ...prev, [id]: qty }));
-    if (opt?.pricingMode === "per_unit") {
-      setSelectedIds((prev) => {
-        const next = new Set(prev);
-        if (qty >= opt.minQuantity) next.add(id);
-        else next.delete(id);
-        return next;
-      });
-    }
-  };
+```78:87:frontend/features/client/browse/VendorBookingModal.tsx
+  const {
+    selectedIds,
+    quantities,
+    setPackageQuantity,
+    lineItems,
+  } = usePerUnitPackageSelection({
+    pricingOptions,
+    initialSelectedIds,
+    initialQuantities,
+  });
+```
+
+**Event form state** — `useEnquireEventFormState` (dates, venue, notes, celebration prefill):
+
+```88:108:frontend/features/client/browse/VendorBookingModal.tsx
+  const {
+    eventName,
+    setEventName,
+    eventDate,
+    setEventDate,
+    eventEndDate,
+    setEventEndDate,
+    venueAddress,
+    setVenueAddress,
+    notes,
+    setNotes,
+    pendingPrefill,
+    bannerVisible,
+    dismissForNewEvent,
+    applyBannerPrefill,
+    selectedEventId,
+  } = useEnquireEventFormState({
+    searchPrefill,
+    initialPrefill,
+    linkedEventId,
+  });
 ```
 
 **Calendar soft warning** (client-side, before POST):
 
-```170:176:frontend/features/client/browse/VendorBookingModal.tsx
+```128:134:frontend/features/client/browse/VendorBookingModal.tsx
   const calendarConflict = useMemo(() => {
     if (!vendorPayload || !eventDate.trim()) return false;
     const end = eventEndDate.trim() || null;
@@ -497,7 +528,7 @@ The modal owns form state and UI. Submit logic lives in `useVendorBookingSubmit`
 
 **Submit delegates to hook:**
 
-```251:266:frontend/features/client/browse/VendorBookingModal.tsx
+```204:219:frontend/features/client/browse/VendorBookingModal.tsx
   const submit = () => {
     submitBooking({
       eventName,
@@ -518,11 +549,11 @@ The modal owns form state and UI. Submit logic lives in `useVendorBookingSubmit`
 
 ---
 
-## Step 7 — `useVendorBookingSubmit`: validation → POST
+## Step 7 — `useVendorBookingSubmit`: validation → payload → POST
 
 **File:** `useVendorBookingSubmit.ts`
 
-```44:80:frontend/features/client/browse/useVendorBookingSubmit.ts
+```45:77:frontend/features/client/browse/useVendorBookingSubmit.ts
   const submit = useCallback(
     (fields: VendorBookingSubmitFields) => {
       const parsed = parseForm(clientBookingRequestSchema, {
@@ -546,20 +577,47 @@ The modal owns form state and UI. Submit logic lives in `useVendorBookingSubmit`
       }
       setValidationError(null);
       setSubmitting(true);
-      void postBookingRequest({
-        vendor_user_id: vendorUserId,
-        event_name: parsed.data.eventName,
-        event_date: parsed.data.eventDate,
-        event_end_date: parsed.data.eventEndDate?.trim() || null,
-        event_postcode: null,
-        event_address: (parsed.data.venueAddress ?? "").trim() || null,
-        notes: (parsed.data.notes ?? "").trim() || null,
-        selected_option_ids: parsed.data.selectedOptionIds,
-        quantities: parsed.data.quantities,
-        client_search_context: clientSearchContext ?? undefined,
-        event_id: selectedEventId,
-        vendor_referral_code: fields.vendorReferralCode?.trim() || null,
-      })
+      void postBookingRequest(
+        buildBookingRequestPayload(parsed.data, {
+          vendorUserId,
+          selectedOptionIds: parsed.data.selectedOptionIds,
+          quantities: parsed.data.quantities,
+          clientSearchContext,
+          eventId: selectedEventId,
+          vendorReferralCode: fields.vendorReferralCode,
+        }),
+      )
+```
+
+**File:** `bookingEnquireSubmit.ts` — shared payload builder (also used by `MultiVendorEnquireModal`):
+
+```4:28:frontend/lib/bookingEnquireSubmit.ts
+export function buildBookingRequestPayload(
+  parsed: ClientBookingRequestInput,
+  options: {
+    vendorUserId: string;
+    selectedOptionIds: string[];
+    quantities?: Record<string, number>;
+    clientSearchContext?: ClientSearchContext | null;
+    eventId?: string | null;
+    vendorReferralCode?: string | null;
+  },
+): CreateBookingRequestPayload {
+  return {
+    vendor_user_id: options.vendorUserId,
+    event_name: parsed.eventName,
+    event_date: parsed.eventDate,
+    event_end_date: parsed.eventEndDate?.trim() || null,
+    event_postcode: null,
+    event_address: (parsed.venueAddress ?? "").trim() || null,
+    notes: (parsed.notes ?? "").trim() || null,
+    selected_option_ids: options.selectedOptionIds,
+    quantities: options.quantities,
+    client_search_context: options.clientSearchContext ?? undefined,
+    event_id: options.eventId ?? null,
+    vendor_referral_code: options.vendorReferralCode?.trim() || null,
+  };
+}
 ```
 
 **Error fallback** uses shared copy:
@@ -887,7 +945,7 @@ Clicks "Send booking request"
 useVendorBookingSubmit.submit()
   → parseForm(clientBookingRequestSchema)
   → calendarConflict check (soft block)
-  → postBookingRequest({ selected_option_ids, quantities, vendor_referral_code, ... })
+  → buildBookingRequestPayload(...) → postBookingRequest(...)
   → POST /api/v1/client/booking-requests (session cookie)
   ↓
 post_booking_request() → require_client() → CreateBookingRequestBody
@@ -927,36 +985,37 @@ onSuccess(bookingId) → toast + router.push(/client/bookings/{id})
 
 ## Multi-vendor enquire (browse grid)
 
-**File:** `MultiVendorEnquireModal.tsx` — same form fields, sequential POST per vendor, per-vendor quantities:
+**File:** `MultiVendorEnquireModal.tsx` — same form fields, sequential `buildBookingRequestPayload` → `postBookingRequest` per vendor:
 
-```169:195:frontend/features/marketplace/MultiVendorEnquireModal.tsx
-      for (let i = 0; i < optionIdsByVendor.length; i += 1) {
-        const { vendor, optionId } = optionIdsByVendor[i]!;
+```168:195:frontend/features/marketplace/MultiVendorEnquireModal.tsx
+      for (let index = 0; index < optionIdsByVendor.length; index += 1) {
+        const { vendor, optionId } = optionIdsByVendor[index]!;
+        const pricingOptions = pricingOptionsForVendor(vendor);
         try {
-          const created = await postBookingRequest({
-            vendor_user_id: vendor.user_id,
-            event_name: parsed.data.eventName,
-            event_date: parsed.data.eventDate,
-            event_end_date: parsed.data.eventEndDate?.trim() || null,
-            event_postcode: null,
-            event_address: (parsed.data.venueAddress ?? "").trim() || null,
-            notes: (parsed.data.notes ?? "").trim() || null,
-            selected_option_ids: [optionId!],
-            quantities: (() => {
-              const opt = pricingOptionsForVendor(vendor).find((o) => o.id === optionId);
-              if (opt?.pricingMode !== "per_unit") return undefined;
-              const qty =
-                quantityByVendorId[vendor.user_id] ?? defaultQuantityForOption(opt);
-              return { [optionId!]: qty };
-            })(),
-            client_search_context: {
-              ...clientSearchContext,
-              batchSize,
-              batchIndex: i,
-              source: resolvedSource,
-            },
-            event_id: linkedEventId,
-          });
+          const created = await postBookingRequest(
+            buildBookingRequestPayload(parsed.data, {
+              vendorUserId: vendor.user_id,
+              selectedOptionIds: [optionId!],
+              quantities: bookingQuantitiesPayload(
+                [optionId!],
+                pricingOptions,
+                {
+                  [optionId!]:
+                    quantityByVendorId[vendor.user_id] ??
+                    defaultQuantityForOption(
+                      pricingOptions.find((option) => option.id === optionId)!,
+                    ),
+                },
+              ),
+              clientSearchContext: {
+                ...clientSearchContext,
+                batchSize,
+                batchIndex: index,
+                source: resolvedSource,
+              },
+              eventId: linkedEventIdForBatch,
+            }),
+          );
 ```
 
 Partial-failure handling uses `CLIENT_BOOKING_ERROR_COPY` and `CLIENT_BOOKING_TOAST_COPY`:
@@ -1048,6 +1107,8 @@ Table definition: `backend/sql/010_booking_requests.sql` (+ `083_vendor_client_r
 | Server-side `resolve_line_items` snapshot | **Leave it alone** — correct commerce modeling |
 | IDs + quantities payload (no prices) | **Leave it alone** — prevents price tampering |
 | `useVendorBookingSubmit` extraction | **Leave it alone** — reusable for future enquire UIs |
+| `buildBookingRequestPayload` shared helper | **Leave it alone** — single source of truth for POST bodies |
+| `usePerUnitPackageSelection` + `useEnquireEventFormState` | **Leave it alone** — keeps modal thin and profile/modal in sync |
 | Multi-vendor = N POSTs | **Improve later** — could be one batch endpoint |
 | Calendar warning in modal vs hard reject on server | **Leave it alone** — good UX + safety |
 
@@ -1071,7 +1132,7 @@ Table definition: `backend/sql/010_booking_requests.sql` (+ `083_vendor_client_r
 
 ## TL;DR
 
-- **Enquire** = `POST /api/v1/client/booking-requests` via `useVendorBookingSubmit` from `VendorBookingModal` or `MultiVendorEnquireModal`.
+- **Enquire** = `POST /api/v1/client/booking-requests` via `buildBookingRequestPayload` + `useVendorBookingSubmit` from `VendorBookingModal` or `MultiVendorEnquireModal`.
 - **Only clients** with a valid session; guests must sign in.
 - **Form** collects event details; packages + per-unit quantities from profile (adjustable in modal).
 - **Browser** sends `selected_option_ids`, optional `quantities`, optional `vendor_referral_code`, event fields — never prices.
