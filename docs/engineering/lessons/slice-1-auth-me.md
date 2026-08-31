@@ -3,10 +3,14 @@
 ### User story
 A signed-in user calls `GET /api/v1/auth/me` to retrieve their own profile data — this tells the frontend "who am I right now?" and checks if the session cookie is still valid.
 
-### What changed since last lesson (Aug 2026 baseline)
+### What changed since last lesson (2026-08-31)
 
+- **`GET /me` uses `require_user()`** — the route no longer calls `get_current_user_or_raise` + `build_app_user` inline; `require_user` returns a merged `AuthUser` (profile, tombstone, suspension, Sentry).
+- **`validate_session_access_token()`** — shared JWT/Supabase check in `session.py`; both strict guards and optional-session callers use it.
+- **`get_optional_session_user()`** — in `guards.py`; explore routes use this (invalid cookie → anonymous, no 401). Contrast with `/me`, which must 401 when unsigned in.
+- **`AuthProvider` interceptors** — `installAuthInterceptors` on mount; 401 → refresh → retry. `signIn` calls `getMe()` after `apiSignIn` and throws `SESSION_VERIFY_FAILED` if verify fails.
 - **Sentry user context** — `AuthProvider` calls `identifySentryUser` / `resetSentryUser` alongside Mixpanel when `user` changes.
-- **Auth service unavailable → 503** — Supabase timeouts in `get_current_user_or_raise` return **503** (`AUTH_SERVICE_UNAVAILABLE`), not a false “session expired” 401.
+- **Auth service unavailable → 503** — Supabase timeouts in `validate_session_access_token` (via `get_current_user_or_raise`) return **503** (`AUTH_SERVICE_UNAVAILABLE`), not a false “session expired” 401.
 - **Deleted-account tombstones** — `public.users.deleted_at` marks closed accounts; `require_user` clears cookies and returns 401 `ACCOUNT_DELETED`; explore/jobs use `deleted_user_ids()` to hide tombstones.
 - **Guards bind Sentry** — `require_user` calls `bind_sentry_user` on the backend for error context.
 
@@ -47,7 +51,17 @@ Browser/app has loaded. `AuthProvider` needs to check: "Am I logged in?"
 
 **File:** `frontend/components/auth/AuthProvider.tsx`
 
-```59:70:frontend/components/auth/AuthProvider.tsx
+```46:71:frontend/components/auth/AuthProvider.tsx
+  useEffect(() => {
+    const interceptorId = installAuthInterceptors(api, {
+      onUserUpdate: setUser,
+    });
+
+    return () => {
+      api.interceptors.response.eject(interceptorId);
+    };
+  }, []);
+
   const refreshUser = async () => {
     try {
       const nextUser = await getMe();
@@ -62,11 +76,13 @@ Browser/app has loaded. `AuthProvider` needs to check: "Am I logged in?"
   }, []);
 ```
 
-When the component mounts, `useEffect` runs `refreshUser()`, which calls `getMe()`. If it succeeds, user is set. If it fails (no valid cookie), `user` is `null`.
+On mount, `installAuthInterceptors` (`frontend/lib/auth-interceptors.ts`) wires a response interceptor: on **401** (except sign-in/up/out), it calls `refreshSession()` → `getMe()` → `onUserUpdate`, then retries the original request. Failed refresh clears user state.
+
+When the component mounts, the interceptor effect runs first, then `refreshUser()` via a second `useEffect`. If `getMe()` succeeds, user is set. If it fails (no valid cookie), `user` is `null`.
 
 **File:** `frontend/lib/auth-api.ts`
 
-```66:69:frontend/lib/auth-api.ts
+```67:70:frontend/lib/auth-api.ts
 export async function getMe(): Promise<AuthUser> {
   const { data } = await api.get<ApiEntityResponse<AuthUser>>("/api/v1/auth/me");
   return data.user;
@@ -83,21 +99,17 @@ Backend has a route handler for `GET /me`. It's part of the auth router.
 
 **File:** `backend/app/features/auth/http/routes.py`
 
-```229:236:backend/app/features/auth/http/routes.py
+```230:236:backend/app/features/auth/http/routes.py
 @router.get("/me", response_model=MeResponse)
 async def me(
     request: Request,
     response: Response,
 ):
     """Return the signed-in user from the cookie access token."""
-    user = get_current_user_or_raise(request, response)
-    return MeResponse(user=build_app_user(user))
+    return MeResponse(user=require_user(request, response))
 ```
 
-The route is registered on `@router.get("/me")` (the router prefix is `/auth`, so full path is `/api/v1/auth/me`). It:
-1. Calls `get_current_user_or_raise(request, response)` to validate the session
-2. Builds an `AppUser` object from that session data
-3. Returns it as `MeResponse`
+The route is registered on `@router.get("/me")` (the router prefix is `/auth`, so full path is `/api/v1/auth/me`). It calls **`require_user`**, which validates the cookie, merges `public.users` profile data, checks tombstones/suspension, binds Sentry, and returns an `AuthUser` — or raises 401/403.
 
 ---
 
@@ -105,46 +117,70 @@ The route is registered on `@router.get("/me")` (the router prefix is `/auth`, s
 
 Backend needs to check: "Is this request from someone with a valid session?"
 
-**File:** `backend/app/features/auth/session.py`
+**Shared primitive** — `validate_session_access_token()` in `backend/app/features/auth/session.py`:
 
-```70:93:backend/app/features/auth/session.py
+```75:108:backend/app/features/auth/session.py
+def validate_session_access_token(
+    access_token: str,
+    response: Response,
+    *,
+    unavailable_raises: bool,
+) -> tuple[dict[str, Any] | None, str | None]:
+    """Validate a JWT access token and return ``(user, failure_detail)``.
+
+    ``failure_detail`` is set when ``user`` is None after a rejected token (malformed JWT
+    or failed Supabase lookup). Optional-session callers ignore the detail and treat
+    rejection as anonymous.
+
+    When ``unavailable_raises`` is True (protected routes), Supabase outages raise 503.
+    """
+    if not _looks_like_jwt(access_token):
+        clear_session_cookies(response)
+        return None, auth_messages.SESSION_EXPIRED
+
+    service = SupabaseAuthService(get_supabase_auth_client())
+    result = service.get_user_from_access_token(access_token)
+    if result.get("success"):
+        return result["user"], None
+    if result.get("unavailable"):
+        if unavailable_raises:
+            raise HTTPException(
+                status_code=503,
+                detail=result.get("error", auth_messages.AUTH_SERVICE_UNAVAILABLE),
+            )
+        return None, None
+    clear_session_cookies(response)
+    error_detail = result.get("error")
+    if isinstance(error_detail, str) and error_detail.strip():
+        return None, error_detail
+    return None, auth_messages.SIGN_IN_REQUIRED
+```
+
+**Strict path** — `get_current_user_or_raise` reads the cookie, calls `validate_session_access_token(..., unavailable_raises=True)`, and raises 401 when no user:
+
+```111:127:backend/app/features/auth/session.py
 def get_current_user_or_raise(request: Request, response: Response) -> dict[str, Any]:
     """Validate session cookie and return the Supabase auth user (before merging public.users)."""
     access_token = request.cookies.get(ACCESS_COOKIE_NAME)
     if not access_token:
         raise HTTPException(status_code=401, detail=auth_messages.SIGN_IN_REQUIRED)
 
-    if not _looks_like_jwt(access_token):
-        clear_session_cookies(response)
-        raise HTTPException(
-            status_code=401,
-            detail=auth_messages.SESSION_EXPIRED,
-        )
-
-    service = SupabaseAuthService(get_supabase_auth_client())
-    result = service.get_user_from_access_token(access_token)
-    if result.get("success"):
-        return result["user"]
-    if result.get("unavailable"):
-        raise HTTPException(
-            status_code=503,
-            detail=result.get("error", auth_messages.AUTH_SERVICE_UNAVAILABLE),
-        )
-    clear_session_cookies(response)
-    raise HTTPException(status_code=401, detail=result.get("error", auth_messages.SIGN_IN_REQUIRED))
+    user, failure_detail = validate_session_access_token(
+        access_token,
+        response,
+        unavailable_raises=True,
+    )
+    if user is not None:
+        return user
+    raise HTTPException(
+        status_code=401,
+        detail=failure_detail or auth_messages.SIGN_IN_REQUIRED,
+    )
 ```
 
-Breakdown:
-1. **Line 72:** Extract the access token from cookies (named `eventtz_access_token`)
-2. **Line 73-74:** If no token → raise 401 (not signed in)
-3. **Line 76-80:** If token doesn't look like a JWT (format: `xxx.yyy.zzz`) → clear cookies and raise 401 (session corrupted)
-4. **Line 83-86:** Ask Supabase "is this token valid?" — if yes, return the Supabase user object
-5. **Line 87-91:** If Supabase is **temporarily unavailable** (timeout) → raise **503** — do **not** clear cookies or treat as expired session
-6. **Line 92-93:** Otherwise invalid token → clear cookies, raise 401
+**`/me` and protected routes** use `require_user`, which merges profile data and enforces tombstones/suspension:
 
-Protected routes use `require_user` (not raw `get_current_user_or_raise`), which also checks deleted tombstones:
-
-```23:41:backend/app/features/auth/http/guards.py
+```28:46:backend/app/features/auth/http/guards.py
 def require_user(request: Request, response: Response) -> AuthUser:
     """Return session user with public.users role and email."""
     auth_user = get_current_user_or_raise(request, response)
@@ -165,6 +201,44 @@ def require_user(request: Request, response: Response) -> AuthUser:
     bind_sentry_user(user_id=user.id, user_type=user.user_type)
     return user
 ```
+
+**Optional session (explore)** — public browse still reads cookies when present, but never 401s guests. `get_optional_session_user` uses the same validator with `unavailable_raises=False`:
+
+```113:140:backend/app/features/auth/http/guards.py
+def get_optional_session_user(request: Request, response: Response) -> AuthUser | None:
+    """Return the signed-in user when a valid session cookie is present, else None.
+
+    Public browse routes use this to scope QA test vendors without requiring sign-in.
+    Invalid or expired sessions are treated as anonymous (cookies cleared, no 401).
+    """
+    access_token = request.cookies.get(ACCESS_COOKIE_NAME)
+    if not access_token:
+        return None
+
+    auth_user, _failure_detail = validate_session_access_token(
+        access_token,
+        response,
+        unavailable_raises=False,
+    )
+    if auth_user is None:
+        return None
+
+    user = build_app_user(auth_user)
+    try:
+        db_profile = fetch_user_profile(user.id)
+    except Exception:
+        logger.warning("get_optional_session_user: profile lookup failed user_id=%s", user.id)
+        db_profile = None
+    if profile_is_deleted(db_profile):
+        clear_session_cookies(response)
+        return None
+    return user
+```
+
+| Caller | Missing cookie | Invalid token | Supabase down |
+|--------|----------------|---------------|---------------|
+| `require_user` / `/me` | 401 | 401 (+ clear cookies) | 503 |
+| `get_optional_session_user` (explore) | `None` (guest) | `None` (guest) | `None` (guest) |
 
 **Deleted accounts** — `profile_is_deleted` in `accounts.py` checks `public.users.deleted_at`. Closed accounts keep a tombstone row (GDPR); they cannot sign in again and are excluded from marketplace listings via `deleted_user_ids()`.
 
@@ -242,7 +316,7 @@ Backend returned the user. Frontend now updates React state.
 
 **File:** `frontend/components/auth/AuthProvider.tsx`
 
-```59:66:frontend/components/auth/AuthProvider.tsx
+```60:67:frontend/components/auth/AuthProvider.tsx
   const refreshUser = async () => {
     try {
       const nextUser = await getMe();
@@ -257,9 +331,28 @@ Backend returned the user. Frontend now updates React state.
 - **Failure (401 error):** `setUser(null)` → app treats user as logged out
 - **503 from auth:** axios interceptor may surface “service unavailable”; cookies are **not** cleared server-side
 
+**Sign-in** verifies the session immediately after `apiSignIn` — if `/me` fails, the user sees `SESSION_VERIFY_FAILED`:
+
+```93:103:frontend/components/auth/AuthProvider.tsx
+      signIn: async (email, password) => {
+        await apiSignIn(email, password);
+        try {
+          const nextUser = await getMe();
+          setUser(nextUser);
+          track(MixpanelEvents.user_signed_in);
+          return nextUser;
+        } catch {
+          setUser(null);
+          throw new Error(SESSION_VERIFY_FAILED);
+        }
+      },
+```
+
+`SESSION_VERIFY_FAILED` is defined in `frontend/lib/auth-messages.ts` — copy for when cookies were set but profile verify failed.
+
 **Sentry + Mixpanel identity** — when `user` changes, analytics and error monitoring attach the user id:
 
-```72:83:frontend/components/auth/AuthProvider.tsx
+```73:84:frontend/components/auth/AuthProvider.tsx
   useEffect(() => {
     if (!user?.id) {
       resetSentryUser();
@@ -278,7 +371,7 @@ Backend returned the user. Frontend now updates React state.
 
 **Sign-out** clears both Mixpanel and Sentry:
 
-```110:119:frontend/components/auth/AuthProvider.tsx
+```118:128:frontend/components/auth/AuthProvider.tsx
       signOut: async () => {
         try {
           track(MixpanelEvents.user_signed_out);
@@ -307,9 +400,9 @@ useEffect runs refreshUser()
   ↓
 getMe() → GET /api/v1/auth/me
   ↓
-Backend extracts access_token from cookies
-  → Validates token format (is it a JWT?)
-  → Asks Supabase "is this valid?"
+Backend: require_user()
+  → get_current_user_or_raise → validate_session_access_token
+  → build_app_user + tombstone/suspension checks
   ↓
 If valid:
   Backend returns AuthUser (id, email, user_type, etc.)
@@ -345,8 +438,10 @@ Next render: pages redirect to login
 | Symptom | First file to open |
 |---------|-------------------|
 | User sees "Not signed in" after logging in | `frontend/components/auth/AuthProvider.tsx` (check if `refreshUser` is being called) |
-| `/me` returns 401 but user has a valid cookie | `backend/app/features/auth/session.py` (check Supabase auth validation) |
-| `/me` returns 503 | `session.py` — Supabase timeout; not an expired session |
+| `/me` returns 401 but user has a valid cookie | `session.py` → `validate_session_access_token` (check Supabase auth validation) |
+| `/me` returns 503 | `session.py` — Supabase timeout via `unavailable_raises=True`; not an expired session |
+| Sign-in succeeds but UI shows verify error | `AuthProvider.tsx` `signIn` — `SESSION_VERIFY_FAILED` after failed post-sign-in `getMe()` |
+| 401 loops on API calls | `auth-interceptors.ts` — refresh + retry; check refresh token cookie |
 | Deleted user can still hit protected routes | `guards.py` — `profile_is_deleted` should clear cookies |
 | User sees their data but then suddenly logs out | `backend/app/features/auth/session.py` (cookies may be getting cleared) |
 | Frontend receives user data but it's not stored in state | `frontend/components/auth/AuthProvider.tsx` (check `setUser` is being called) |
@@ -365,7 +460,10 @@ Next render: pages redirect to login
 ## TL;DR
 
 - **`GET /me`** = Backend endpoint that validates your session cookie and returns your user data.
-- **`get_current_user_or_raise()`** = Checks if the access token cookie is valid; returns user or raises 401.
+- **`require_user()`** = Guard used by `/me`: validates cookie, merges profile, checks tombstones/suspension.
+- **`validate_session_access_token()`** = Shared JWT + Supabase check; strict vs optional callers differ on 503/401.
+- **`get_optional_session_user()`** = Explore-only: valid cookie → user; else anonymous (no 401).
+- **`installAuthInterceptors()`** = Frontend 401 → refresh session → retry; updates React user via `onUserUpdate`.
 - **`refreshUser()`** = Frontend function that calls `getMe()` and stores result in React state.
 - **Session cookie** = Set by backend after sign-in; sent automatically on every request; cleared if invalid.
 - **Result** = App loads → frontend checks "who am I?" → backend validates session → frontend stores user in React → pages can now show personalized content.

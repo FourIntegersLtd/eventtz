@@ -8,20 +8,23 @@ Anyone (guest or signed-in client) opens `/client/browse` to search approved ven
 
 ---
 
-## What changed since last lesson
+## What changed since last lesson (2026-08-31)
 
 | Area | Before | Now |
 |------|--------|-----|
+| URL → API mapping | Inline object in `useMarketplaceExplore` | **`marketplaceStateToExploreQuery`**, **`marketplaceSearchPrefillFromState`**, **`clientSearchContextFromBrowse`** in `marketplaceSearchParams.ts` |
+| Planner handoff | — | URL params **`fromPlanner`**, **`eventName`**, **`venue`**, **`planNotes`**, **`event_id`**, **`vendor_ids`**; auto-select vendors from planner |
+| Explore auth | No session on public routes | **`get_optional_session_user`** + **`qa_visibility.py`** (`ExploreViewer`, QA test vendors visible only to designated clients) |
+| Date filters | Reserved / ignored | **`apply_date_availability`** in `search.py` (blocked dates + weekdays); **`vendorAvailability.ts`** mirrors rules client-side |
+| Review/metric merge | Inline in explore handlers | **`_merge_explore_vendor_rows`** in `explore.py` (shared list + detail) |
 | Browse list UI | `MarketplaceExploreView` owned fetch + state | **Thin view** — composes UI; logic in `useMarketplaceExplore.ts` |
 | Geolocation | Manual city entry only | **`useBrowseGeolocation.ts`** — browser GPS → reverse geocode → sets `location` + `proximity` sort |
 | Filters | Inline in explore view | **`MarketplaceFiltersBar.tsx`** + **`MarketplaceCategoryFilterFields.tsx`** (drawer) |
-| Hero search | Monolithic | **`HeroMarketplaceSearch.tsx`** refactored; shares category/date field components |
-| Date picker | Mixed into hero | **`MarketplaceDateFilterFields.tsx`** (hero dropdown + reusable) |
-| Backend pool | Approved vendors only | **`deleted_user_ids`** excludes GDPR-tombstoned accounts from explore |
+| Backend pool | Approved vendors only | **`deleted_user_ids`** excludes GDPR-tombstoned accounts; **`filter_explore_rows`** hides QA vendors from public |
 | Backend ranking | Text/location match | **`search.py`** — location bonus in `_relevance_score`; `sort=proximity` supported |
 | Unchanged gates | — | **`visibility.py`**, **`moderation.py`**, **`search_ai.py`** still own listing + AI parse |
 
-Plain English: browse is still public read, but the frontend is split into focused hooks/components, and the backend hides deleted users while ranking location-aware results.
+Plain English: browse is still public read, but URL helpers centralize state mapping, signed-in QA clients can see test vendors, date chips affect ranking, and planner handoff survives on the URL.
 
 ---
 
@@ -49,17 +52,18 @@ Booking (“Request booking”) is Slice 3a; this slice covers discovery and rea
 6. `frontend/features/marketplace/MarketplaceFiltersBar.tsx` — Filters drawer + Sort menu
 7. `frontend/features/marketplace/MarketplaceCategoryFilterFields.tsx` — category checkboxes
 8. `frontend/features/marketplace/MarketplaceDateFilterFields.tsx` — date chips (hero)
-9. `frontend/lib/marketplaceSearchParams.ts` — URL query ↔ `MarketplaceSearchState`
+9. `frontend/lib/marketplaceSearchParams.ts` — URL query ↔ `MarketplaceSearchState`; `marketplaceStateToExploreQuery`, planner prefill helpers
 10. `frontend/lib/clientExploreApi.ts` — `fetchExploreVendorsSearch`
 11. `frontend/lib/axios.ts` — shared HTTP client (`withCredentials`; route is still public)
 12. `backend/app/http/router.py` — mounts explore router
-13. `backend/app/features/vendors/http/explore.py` — `GET /explore/search`
+13. `backend/app/features/vendors/http/explore.py` — `GET /explore/search`; `get_optional_session_user` → `ExploreViewer`; `_merge_explore_vendor_rows`
 14. `backend/app/contracts/vendor.py` — `ExploreVendorSearchResponse`, `ExploreVendorSearchRow`
-15. `backend/app/features/vendors/search.py` — `search_approved_vendors` (ranking, proximity sort)
+15. `backend/app/features/vendors/search.py` — `search_approved_vendors` (ranking, proximity sort, `apply_date_availability`)
 16. `backend/app/features/vendors/search_ai.py` — `parse_marketplace_query` (when `q` non-empty)
-17. `backend/app/features/vendors/moderation.py` — `list_approved_vendors_for_explore` + `deleted_user_ids`
-18. `backend/app/features/vendors/visibility.py` — `apply_public_listing_filters`
-19. `backend/app/core/db.py` — `get_db()` → Supabase `vendors` + `users`
+17. `backend/app/features/vendors/qa_visibility.py` — QA test vendor scoping via `ExploreViewer`
+18. `backend/app/features/vendors/moderation.py` — `list_approved_vendors_for_explore` + `deleted_user_ids` + `filter_explore_rows`
+19. `backend/app/features/vendors/visibility.py` — `apply_public_listing_filters`
+20. `backend/app/core/db.py` — `get_db()` → Supabase `vendors` + `users`
 
 ### Vendor detail (`GET /vendors/explore/vendor/{id}`)
 
@@ -158,34 +162,29 @@ function ClientBrowsePageContent() {
   });
 ```
 
-**File:** `useMarketplaceExplore.ts` — reads URL, fetches on param change:
+**File:** `useMarketplaceExplore.ts` — reads URL, fetches on param change via `marketplaceStateToExploreQuery`:
 
-```35:36:frontend/features/marketplace/useMarketplaceExplore.ts
+```37:38:frontend/features/marketplace/useMarketplaceExplore.ts
   const state = useMemo(() => marketplaceStateFromSearchParams(sp), [sp]);
   const fetchKey = sp.toString();
 ```
 
-```96:111:frontend/features/marketplace/useMarketplaceExplore.ts
+```99:106:frontend/features/marketplace/useMarketplaceExplore.ts
         const page = state.page;
-        const result = await fetchExploreVendorsSearch({
-          query: state.query || undefined,
-          types: state.types.length ? state.types : undefined,
-          location: state.location || undefined,
-          country: state.country,
-          dates: state.dates,
-          flexible: state.dateFlexible,
-          budgetMin: state.budgetMin,
-          budgetMax: state.budgetMax,
-          sort: state.sort,
-          vendorIds: savedOnly ? favoriteVendorIds : searchVendorIds,
-          limit: MARKETPLACE_PAGE_SIZE,
-          offset: (page - 1) * MARKETPLACE_PAGE_SIZE,
-        });
+        const result = await fetchExploreVendorsSearch(
+          marketplaceStateToExploreQuery(state, {
+            vendorIds: savedOnly ? favoriteVendorIds : searchVendorIds,
+            limit: MARKETPLACE_PAGE_SIZE,
+            offset: (page - 1) * MARKETPLACE_PAGE_SIZE,
+          }),
+        );
 ```
+
+Planner handoff: when `fromPlanner` + `vendor_ids` are on the URL, a follow-up effect auto-selects matching vendors for multi-enquire.
 
 Filter commits update the URL (and reset page to 1 via `buildMarketplaceSearchUrl`):
 
-```243:251:frontend/features/marketplace/useMarketplaceExplore.ts
+```222:230:frontend/features/marketplace/useMarketplaceExplore.ts
   const commitFilters = useCallback(
     (next: MarketplaceSearchState) => {
       track(MixpanelEvents.marketplace_filters_applied, {
@@ -200,7 +199,7 @@ Filter commits update the URL (and reset page to 1 via `buildMarketplaceSearchUr
 
 Plan mode activates when the API returns sections:
 
-```177:177:frontend/features/marketplace/useMarketplaceExplore.ts
+```172:172:frontend/features/marketplace/useMarketplaceExplore.ts
   const isPlanMode = searchMode === "plan" && sections.length > 0 && !savedOnly;
 ```
 
@@ -276,7 +275,7 @@ Plain English: **Guests and vendors** see browse without the client sidebar. **C
 
 On the browse page, `MarketplaceExploreView` mounts hero with `showTypesField={false}` (categories live in the Filters drawer) and `showDatesField`:
 
-```137:155:frontend/features/marketplace/MarketplaceExploreView.tsx
+```137:156:frontend/features/marketplace/MarketplaceExploreView.tsx
       <HeroMarketplaceSearch
         key={fetchKey}
         variant="default"
@@ -371,14 +370,36 @@ Flow: browser GPS → Photon reverse geocode (`photonLocationAutocomplete.ts`) �
 
 ## Step 6 — Search state lives in the URL
 
-Filters (query, types, location, dates, budget, sort, page) are encoded in query params so refresh and “back” work.
+Filters (query, types, location, dates, budget, sort, page, planner handoff) are encoded in query params so refresh and “back” work.
 
 **File:** `frontend/lib/marketplaceSearchParams.ts`
 
 - `marketplaceStateFromSearchParams(searchParams)` — read URL → `MarketplaceSearchState`
 - `buildMarketplaceSearchUrl(path, state)` — write state → URL
 - `buildClientBrowseVendorUrl(vendorUserId, state)` — detail link keeps filters
+- `marketplaceStateToExploreQuery(state, options)` — URL state → `fetchExploreVendorsSearch` args
+- `marketplaceSearchPrefillFromState(state)` — browse date chips → booking modal prefill
+- `clientSearchContextFromBrowse(state)` — analytics context; adds `source: "planner"` when `fromPlanner` is set
 - `MARKETPLACE_PAGE_SIZE = 6`
+
+**Planner URL params** (survive filter commits):
+
+| URL param | `MarketplaceSearchState` field |
+|-----------|-------------------------------|
+| `fromPlanner` | `fromPlannerPlanId` |
+| `eventName` | `eventName` |
+| `venue` | `venue` |
+| `planNotes` | `planNotes` |
+| `event_id` | `linkedEventId` |
+| `vendor_ids` | `vendorIds` |
+
+```116:120:frontend/lib/marketplaceSearchParams.ts
+    fromPlannerPlanId: sp.get("fromPlanner")?.trim() || null,
+    eventName: sp.get("eventName")?.trim() ?? "",
+    venue: sp.get("venue")?.trim() ?? "",
+    planNotes: sp.get("planNotes")?.trim() ?? "",
+    linkedEventId: sp.get("event_id")?.trim() || null,
+```
 
 When `search_mode === "plan"`, the API also returns `plan` + `sections` (AI-style multi-need breakdown). Simple text search uses `search_mode === "simple"`.
 
@@ -430,13 +451,24 @@ Note the **90s in-tab cache** on search results — going back from detail avoid
 
 ---
 
-## Step 8 — Backend HTTP: no auth guards
+## Step 8 — Backend HTTP: optional session + public read
 
 **File:** `backend/app/features/vendors/http/explore.py`
 
-```96:130:backend/app/features/vendors/http/explore.py
+Explore routes are public, but read the session cookie when present so QA test vendors can be scoped to designated clients.
+
+```40:43:backend/app/features/vendors/http/explore.py
+def _merge_explore_vendor_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Attach public review stats and marketplace metrics (list + detail share this)."""
+    rows = merge_review_stats_into_vendor_rows(rows)
+    return merge_public_metrics_into_vendor_rows(rows)
+```
+
+```116:154:backend/app/features/vendors/http/explore.py
 @router.get("/explore/search", response_model=ExploreVendorSearchResponse)
 def get_explore_vendors_search(
+    request: Request,
+    response: Response,
     types: str | None = Query(None, description="Comma-separated service keys (e.g. photography,catering)."),
     location: str | None = Query(None, description="Substring match against city, name, services."),
     q: str | None = Query(None, description="Free-text search (vendor name, city, services)."),
@@ -456,6 +488,7 @@ def get_explore_vendors_search(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
 ) -> ExploreVendorSearchResponse:
+    viewer = explore_viewer_from_auth(get_optional_session_user(request, response))
     result = search_approved_vendors(
         types=types,
         location=location,
@@ -469,8 +502,15 @@ def get_explore_vendors_search(
         country=country,
         limit=limit,
         offset=offset,
+        viewer=viewer,
     )
 ```
+
+| Piece | Role |
+|--------|------|
+| `get_optional_session_user` | Valid cookie → `AuthUser`; else `None` (guest). No 401 on explore. |
+| `explore_viewer_from_auth` | Maps auth user → `ExploreViewer` for QA visibility |
+| `_merge_explore_vendor_rows` | Shared review stats + public metrics merge for list and detail |
 
 Router prefix is `/vendors`, registered in `backend/app/http/router.py` under `/api/v1`. No `require_user` — marketplace is public read.
 
@@ -523,7 +563,7 @@ def parse_marketplace_query(
 
 ---
 
-## Step 10 — Who appears in explore? (visibility + deleted users)
+## Step 10 — Who appears in explore? (visibility + QA + deleted users)
 
 **File:** `backend/app/features/vendors/visibility.py`
 
@@ -539,25 +579,47 @@ def apply_public_listing_filters(query: Any) -> Any:
 
 Plain English: a vendor must be **admin-approved**. Then either Stripe Connect is ready, **or** admin set `listing_override = visible`. `listing_override = hidden` removes them from browse even if approved.
 
-**File:** `backend/app/features/vendors/moderation.py` — after SQL fetch, tombstoned users are dropped:
+**QA test vendors** — `qa_visibility.py` hides vendors in `qa_scoped_vendor_ids` from public explore unless the signed-in client email is in `qa_client_vendor_visibility_map`:
 
-```608:633:backend/app/features/vendors/moderation.py
+```19:23:backend/app/features/vendors/qa_visibility.py
+@dataclass(frozen=True, slots=True)
+class ExploreViewer:
+    user_id: str
+    email: str | None
+    user_type: str
+```
+
+```75:86:backend/app/features/vendors/qa_visibility.py
+def filter_explore_rows(
+    rows: list[dict[str, Any]],
+    viewer: ExploreViewer | None,
+) -> list[dict[str, Any]]:
+    """Drop QA-scoped vendors unless the viewer is the designated test client."""
+    out: list[dict[str, Any]] = []
+    for row in rows:
+        uid = str(row.get("user_id") or "")
+        if is_qa_scoped_vendor(uid) and not viewer_may_see_qa_vendor(viewer, uid):
+            continue
+        out.append(row)
+    return out
+```
+
+**File:** `backend/app/features/vendors/moderation.py` — after SQL fetch, tombstoned users are dropped, then QA filter runs:
+
+```618:654:backend/app/features/vendors/moderation.py
     data = getattr(res, "data", None) or []
     user_ids = [str(row.get("user_id")) for row in data if isinstance(row, dict) and row.get("user_id")]
     gone = deleted_user_ids(user_ids)
-    emails_by_id: dict[str, str | None] = {}
-    if user_ids:
-        try:
-            ures = get_db().table("users").select("id,email").in_("id", user_ids).execute()
-            ...
-    out: list[dict[str, Any]] = []
+    ...
     for row in data:
-        if not isinstance(row, dict):
-            continue
+        ...
         uid = str(row.get("user_id") or "")
         if uid in gone:
             continue
         out.append(
+            ...
+        )
+    rows = filter_explore_rows(out, viewer)
 ```
 
 Detail lookup also checks `is_deleted_user_id` before returning a row.
@@ -570,7 +632,7 @@ Detail lookup also checks `is_deleted_user_id` before returning a row.
 
 **In-memory location scoring** — `_location_bonus` and `primary_loc_hit` boost vendors whose `baseCity` matches the filter:
 
-```191:201:backend/app/features/vendors/search.py
+```192:202:backend/app/features/vendors/search.py
 def _location_bonus(location: str, base_city: str, related_locations: list[str]) -> float:
     loc = location.strip().lower()
     city = base_city.strip().lower()
@@ -586,7 +648,7 @@ def _location_bonus(location: str, base_city: str, related_locations: list[str])
 
 **Sort options** include `proximity` (used after geolocation sets a city):
 
-```462:477:backend/app/features/vendors/search.py
+```463:478:backend/app/features/vendors/search.py
     def sort_key_fn(r: dict[str, Any]) -> tuple[Any, ...]:
         tier = _TIER_RANK.get(str(r.get("match_tier") or "exact"), 0)
         mp = r.get("_min_price")
@@ -609,16 +671,38 @@ Plain English: location matching happens during tiering and relevance scoring; `
 
 ---
 
+## Step 11b — Date availability (`apply_date_availability`)
+
+When URL `dates` are set and `flexible` is false, `search_approved_vendors` sets `apply_date_availability = True`:
+
+```739:739:backend/app/features/vendors/search.py
+    apply_date_availability = bool(date_parts) and not flexible
+```
+
+`_rank_candidates` calls `_vendor_available_for_event_dates` per vendor (blocked dates + available weekdays from onboarding payload). Vendors blocked on selected dates drop to **related** tier (`date_softened`), not hidden entirely:
+
+```323:327:backend/app/features/vendors/search.py
+        available = (
+            _vendor_available_for_event_dates(payload, date_parts)
+            if apply_date_availability
+            else True
+        )
+```
+
+**Frontend mirror** — `frontend/lib/vendorAvailability.ts` exposes the same rules for instant booking-modal feedback (`vendorPayloadAllowsEventDates`, `vendorUserIdsWithCalendarConflict`). Server still enforces on submit.
+
+---
+
 ## Step 12 — Vendor detail page (read-only body)
 
 **File:** `ClientVendorBrowseDetailView.tsx`
 
-```44:45:frontend/features/client/browse/ClientVendorBrowseDetailView.tsx
+```45:46:frontend/features/client/browse/ClientVendorBrowseDetailView.tsx
   const { user, loading: authLoading } = useAuth();
   const { vendor, loading, error, notFound } = useExploreVendor(userId);
 ```
 
-```67:71:frontend/features/client/browse/ClientVendorBrowseDetailView.tsx
+```69:72:frontend/features/client/browse/ClientVendorBrowseDetailView.tsx
   const browseListHref = useMemo(
     () => buildMarketplaceSearchUrl("/client/browse", marketplaceSearch),
     [marketplaceSearch],
@@ -647,9 +731,11 @@ marketplaceSearchParams ↔ HeroMarketplaceSearch + MarketplaceFiltersBar
   ↓
 fetchExploreVendorsSearch → GET /api/v1/vendors/explore/search
   ↓
-explore.py → search_approved_vendors
-    → (search_ai if q) → moderation + visibility + deleted_user_ids
-    → _rank_candidates OR _search_plan_sections
+explore.py → get_optional_session_user → ExploreViewer
+    → search_approved_vendors
+    → (search_ai if q) → moderation + visibility + deleted_user_ids + filter_explore_rows
+    → _rank_candidates (apply_date_availability when dates set) OR _search_plan_sections
+    → _merge_explore_vendor_rows
   ↓
 JSON ExploreVendorSearchRow[] → MarketplaceVendorCard grid
 
@@ -669,7 +755,10 @@ VendorBrowseDetailBody (read-only profile)
 ## Key concepts from this slice
 
 - **Public listing gate** — approved + (Stripe ready OR admin `visible` override) and not `hidden`.
+- **QA visibility** — `qa_visibility.py` + optional session cookie scopes test vendors to designated clients.
 - **Deleted user exclusion** — `deleted_user_ids` removes GDPR tombstones from explore results.
+- **URL helpers** — `marketplaceStateToExploreQuery`, planner params, `clientSearchContextFromBrowse`.
+- **Date availability** — `apply_date_availability` in ranking; `vendorAvailability.ts` on the client.
 - **Thin view + hook** — `MarketplaceExploreView` renders; `useMarketplaceExplore` owns fetch/state.
 - **Geolocation handoff** — GPS → reverse geocode → URL `location` + optional `proximity` sort.
 - **Filter components** — `MarketplaceFiltersBar`, `MarketplaceCategoryFilterFields`, `MarketplaceDateFilterFields`.
@@ -687,6 +776,9 @@ VendorBrowseDetailBody (read-only profile)
 |---------|-------------------|
 | Vendor missing from browse but “approved” in admin | `backend/app/features/vendors/visibility.py` (Stripe / `listing_override`) |
 | Approved vendor still listed after account deletion | `moderation.py` → `deleted_user_ids` / `is_deleted_user_id` |
+| QA vendor visible to public | `qa_visibility.py` → `filter_explore_rows` + `get_optional_session_user` |
+| Date filter has no effect | `search.py` → `apply_date_availability`; check `flexible` param |
+| Planner vendors not auto-selected | `useMarketplaceExplore.ts` — `fromPlanner` + `vendor_ids` effect |
 | Empty search results | `backend/app/features/vendors/search.py` then `search_ai.py` if `q` set |
 | Plan mode never appears | `search_ai.py` — OpenAI must succeed; check logs for LLM parse failures |
 | Proximity sort does nothing useful | `useBrowseGeolocation.ts` (permission/denied) + `search.py` (`location_filter`, `sort=proximity`) |
@@ -701,11 +793,13 @@ VendorBrowseDetailBody (read-only profile)
 
 ## TL;DR
 
-- **`/client/browse`** = `MarketplaceExploreView` + `useMarketplaceExplore` → `GET /vendors/explore/search`.
+- **`/client/browse`** = `MarketplaceExploreView` + `useMarketplaceExplore` → `marketplaceStateToExploreQuery` → `GET /vendors/explore/search`.
 - **`/client/browse/[userId]`** = one vendor → `GET /vendors/explore/vendor/{id}`.
 - **No login required** to browse; **clients** get portal sidebar via `ClientBrowsePortalLayout`.
+- **Optional session** — cookie present → `ExploreViewer` for QA vendor scoping; absent → guest.
 - **Filters** — hero search + `MarketplaceFiltersBar`; geolocation via `useBrowseGeolocation`.
-- **Visibility** in `visibility.py` + **deleted users** in `moderation.py` decide who is listable.
+- **Planner handoff** — `fromPlanner`, `eventName`, `venue`, `planNotes`, `event_id`, `vendor_ids` on URL.
+- **Visibility** in `visibility.py` + **QA** in `qa_visibility.py` + **deleted users** in `moderation.py`.
 - **Booking** buttons exist on detail but the enquire flow is **Slice 3a**.
 
 Next slice: **Client booking — enquire** (`VendorBookingModal` → `POST` booking create).

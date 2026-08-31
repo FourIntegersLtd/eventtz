@@ -9,6 +9,17 @@ Read this when the route list is not enough. It traces **one HTTP request** from
 
 ---
 
+## What changed since last lesson (2026-08-31)
+
+- **`marketplaceStateToExploreQuery`** — hook no longer builds the API query inline; `marketplaceSearchParams.ts` maps URL state → `ExploreSearchQuery`.
+- **`marketplaceSearchPrefillFromState` / `clientSearchContextFromBrowse`** — booking modal prefill and analytics context (planner `source` when `fromPlanner` is set).
+- **Planner URL params** — `fromPlanner`, `eventName`, `venue`, `planNotes`, `event_id`, `vendor_ids` survive filter commits; auto-select for multi-enquire.
+- **`get_optional_session_user` + `qa_visibility.py`** — explore reads optional session; `ExploreViewer` scopes QA test vendors to designated clients.
+- **`apply_date_availability`** — date chips (when not flexible) affect ranking tiers in `search.py`; `vendorAvailability.ts` mirrors rules client-side.
+- **`_merge_explore_vendor_rows`** — shared review/metrics merge in `explore.py` for list + detail.
+
+---
+
 ## 0. Mental model (three layers)
 
 ```
@@ -16,18 +27,21 @@ Read this when the route list is not enough. It traces **one HTTP request** from
 │  LAYER 1 — URL state (frontend)                             │
 │  /client/browse?q=…&types=…&sort=proximity&page=1         │
 │  marketplaceSearchParams.ts ↔ useMarketplaceExplore         │
+│  marketplaceStateToExploreQuery · planner URL params        │
 │  MarketplaceExploreView (thin) + HeroMarketplaceSearch      │
 │  + MarketplaceFiltersBar + useBrowseGeolocation             │
 └───────────────────────────┬─────────────────────────────────┘
                             │ fetchExploreVendorsSearch()
 ┌───────────────────────────▼─────────────────────────────────┐
 │  LAYER 2 — HTTP + orchestration (backend)                   │
-│  explore.py → search_approved_vendors                         │
+│  explore.py → get_optional_session_user → ExploreViewer     │
+│    → search_approved_vendors                                │
 │    → (optional) search_ai.parse_marketplace_query           │
 │    → moderation.list_approved_vendors_for_explore (SQL pool)│
 │      → visibility.apply_public_listing_filters              │
-│      → deleted_user_ids exclusion                           │
-│    → _rank_candidates OR _search_plan_sections              │
+│      → deleted_user_ids + filter_explore_rows (QA)          │
+│    → _rank_candidates (apply_date_availability) OR plan     │
+│    → _merge_explore_vendor_rows                             │
 └───────────────────────────┬─────────────────────────────────┘
                             │ JSON ExploreVendorSearchResponse
 ┌───────────────────────────▼─────────────────────────────────┐
@@ -61,7 +75,7 @@ Renders `MarketplaceExploreView`. No fetch here — the hook does the work.
 
 **File:** `frontend/features/marketplace/useMarketplaceExplore.ts`
 
-```35:36:frontend/features/marketplace/useMarketplaceExplore.ts
+```37:38:frontend/features/marketplace/useMarketplaceExplore.ts
   const state = useMemo(() => marketplaceStateFromSearchParams(sp), [sp]);
   const fetchKey = sp.toString();
 ```
@@ -80,8 +94,14 @@ Example URL `/client/browse?q=photographers+in+Leeds&country=GB&page=1`:
 | `sort` | `state.sort` = `"relevance"` (or `proximity` after geolocation) |
 | `country` | `state.country` = `"GB"` |
 | `page` | `state.page` = `1` |
+| `fromPlanner` | `state.fromPlannerPlanId` |
+| `eventName` / `venue` / `planNotes` | planner event prefill fields |
+| `event_id` | `state.linkedEventId` |
+| `vendor_ids` | `state.vendorIds` |
 
 `MARKETPLACE_PAGE_SIZE = 6` — each page asks the API for 6 vendors.
+
+**API mapping** — `marketplaceStateToExploreQuery(state, { vendorIds, limit, offset })` converts URL state to `fetchExploreVendorsSearch` args (used in the hook fetch effect).
 
 ---
 
@@ -91,7 +111,7 @@ Example URL `/client/browse?q=photographers+in+Leeds&country=GB&page=1`:
 
 When `fetchKey` (full query string) or dependencies change:
 
-```80:135:frontend/features/marketplace/useMarketplaceExplore.ts
+```82:130:frontend/features/marketplace/useMarketplaceExplore.ts
   useEffect(() => {
     if (savedOnly && !bookmarksReady) return;
     if (savedOnly && bookmarksReady && savedIds.size === 0) {
@@ -110,20 +130,13 @@ When `fetchKey` (full query string) or dependencies change:
       setError(null);
       try {
         const page = state.page;
-        const result = await fetchExploreVendorsSearch({
-          query: state.query || undefined,
-          types: state.types.length ? state.types : undefined,
-          location: state.location || undefined,
-          country: state.country,
-          dates: state.dates,
-          flexible: state.dateFlexible,
-          budgetMin: state.budgetMin,
-          budgetMax: state.budgetMax,
-          sort: state.sort,
-          vendorIds: savedOnly ? favoriteVendorIds : searchVendorIds,
-          limit: MARKETPLACE_PAGE_SIZE,
-          offset: (page - 1) * MARKETPLACE_PAGE_SIZE,
-        });
+        const result = await fetchExploreVendorsSearch(
+          marketplaceStateToExploreQuery(state, {
+            vendorIds: savedOnly ? favoriteVendorIds : searchVendorIds,
+            limit: MARKETPLACE_PAGE_SIZE,
+            offset: (page - 1) * MARKETPLACE_PAGE_SIZE,
+          }),
+        );
         if (!cancelled) {
           setVendors(result.vendors);
           setTotalCount(result.totalCount);
@@ -160,7 +173,7 @@ On success, the hook stores:
 
 **Plan mode in the UI** only activates when:
 
-```177:177:frontend/features/marketplace/useMarketplaceExplore.ts
+```172:172:frontend/features/marketplace/useMarketplaceExplore.ts
   const isPlanMode = searchMode === "plan" && sections.length > 0 && !savedOnly;
 ```
 
@@ -253,9 +266,11 @@ GET /api/v1/vendors/explore/search?country=GB&limit=6&offset=0
 
 Router prefix `/vendors` + app prefix `/api/v1` → full path `/api/v1/vendors/explore/search`.
 
-```96:130:backend/app/features/vendors/http/explore.py
+```116:154:backend/app/features/vendors/http/explore.py
 @router.get("/explore/search", response_model=ExploreVendorSearchResponse)
 def get_explore_vendors_search(
+    request: Request,
+    response: Response,
     types: str | None = Query(None, ...),
     location: str | None = Query(None, ...),
     q: str | None = Query(None, ...),
@@ -267,6 +282,7 @@ def get_explore_vendors_search(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
 ) -> ExploreVendorSearchResponse:
+    viewer = explore_viewer_from_auth(get_optional_session_user(request, response))
     result = search_approved_vendors(
         types=types,
         location=location,
@@ -277,27 +293,29 @@ def get_explore_vendors_search(
         country=country,
         limit=limit,
         offset=offset,
+        viewer=viewer,
     )
 ```
 
-This handler does **not** query the database itself. It only:
+This handler does **not** query the database itself. It:
 
-1. Calls `search_approved_vendors`
-2. Maps internal `MarketplaceSearchResult` → `ExploreVendorSearchResponse` (Pydantic → JSON)
+1. Optionally resolves `ExploreViewer` from the session cookie (`get_optional_session_user`)
+2. Calls `search_approved_vendors`
+3. Maps internal `MarketplaceSearchResult` → `ExploreVendorSearchResponse` (Pydantic → JSON)
 
-No auth guard — public read.
+No auth guard — public read. Invalid cookies are treated as guest (no 401).
 
 ---
 
 ## 5. `search_approved_vendors` — the conductor
 
-**File:** `backend/app/features/vendors/search.py` (function starts at line 667)
+**File:** `backend/app/features/vendors/search.py` (function starts at line 668)
 
 Read this function top to bottom. Everything else is called from here.
 
 ### Step 5a — Parse URL params locally
 
-```687:690:backend/app/features/vendors/search.py
+```689:692:backend/app/features/vendors/search.py
     chip_types = _parse_types_param(types)
     date_parts = _parse_dates_param(dates)
     limit = max(1, min(limit, 200))
@@ -308,7 +326,7 @@ Read this function top to bottom. Everything else is called from here.
 
 ### Step 5b — Maybe call the LLM parser
 
-```692:694:backend/app/features/vendors/search.py
+```694:696:backend/app/features/vendors/search.py
     raw_q = (q or "").strip()
     market_country = normalize_country_code(country)
     parsed = parse_marketplace_query(raw_q, country_code=market_country) if raw_q else None
@@ -321,7 +339,7 @@ Read this function top to bottom. Everything else is called from here.
 
 ### Step 5c — Decide SQL city filter
 
-```696:698:backend/app/features/vendors/search.py
+```698:700:backend/app/features/vendors/search.py
     city_query = (location or "").strip() or None
     if not city_query and parsed and parsed.location:
         city_query = parsed.location
@@ -329,22 +347,12 @@ Read this function top to bottom. Everything else is called from here.
 
 SQL city filter comes from URL `location` **or** LLM `parsed.location`.
 
-### Step 5d — Plan mode flag
+### Step 5d — Plan mode flag + load vendor pool
 
-```702:702:backend/app/features/vendors/search.py
+Plan mode requires LLM `mode == "plan"` and non-empty `needs`. If OpenAI is down, `_token_only_parse` returns `mode=simple` → **never plan mode**.
+
+```704:713:backend/app/features/vendors/search.py
     plan_mode = bool(parsed and parsed.mode == "plan" and parsed.needs)
-```
-
-Plan mode requires:
-
-- LLM returned `mode == "plan"`
-- LLM returned a non-empty `needs` list
-
-If OpenAI is down, `_token_only_parse` returns `mode=simple` and empty `needs` → **never plan mode**.
-
-### Step 5e — Load vendor pool from database
-
-```703:710:backend/app/features/vendors/search.py
     rows = list_approved_vendors_for_explore(
         vendor_user_ids=vendor_user_ids,
         budget_min=budget_min,
@@ -352,14 +360,15 @@ If OpenAI is down, `_token_only_parse` returns `mode=simple` and empty `needs` �
         service_types=chip_types or None,
         city_query=city_query,
         country_code=market_country,
+        viewer=viewer,
     )
 ```
 
 **Critical:** `service_types` here is **only** `chip_types` (URL filter chips). LLM-parsed types are **not** passed to SQL. That lets plan mode return bakers + caterers in one response even when URL has no type chips.
 
-### Step 5f — Build ranking inputs from URL + parse
+### Step 5e — Build ranking inputs from URL + parse
 
-```712:727:backend/app/features/vendors/search.py
+```715:730:backend/app/features/vendors/search.py
     primary_types = list(chip_types)
     if not primary_types and parsed and parsed.types and not plan_mode:
         primary_types = list(parsed.types)
@@ -384,17 +393,21 @@ If OpenAI is down, `_token_only_parse` returns `mode=simple` and empty `needs` �
 | `keywords` | LLM keywords; else split `raw_q` on spaces |
 | `location_filter` | URL `location`; else LLM `parsed.location` |
 
-### Step 5g — Validate sort (includes proximity)
+### Step 5f — Validate sort + date availability
 
-```732:734:backend/app/features/vendors/search.py
+```735:739:backend/app/features/vendors/search.py
     sort_key = sort.strip().lower() if sort else "relevance"
     if sort_key not in ("relevance", "price_asc", "price_desc", "proximity", "rating"):
         sort_key = "relevance"
+
+    apply_date_availability = bool(date_parts) and not flexible
 ```
 
-### Step 5h — Fork: plan vs simple
+When `dates` are set and not `flexible`, `_rank_candidates` uses `_vendor_available_for_event_dates` — vendors blocked on those dates move to **related** tier instead of **exact**. Frontend `vendorAvailability.ts` mirrors the same blocked-date/weekday rules for booking UI.
 
-```738:793:backend/app/features/vendors/search.py
+### Step 5g — Fork: plan vs simple
+
+```741:785:backend/app/features/vendors/search.py
     if plan_mode and parsed:
         # Optional chip filter: only keep needs matching selected types.
         needs = list(parsed.needs)
@@ -405,10 +418,16 @@ If OpenAI is down, `_token_only_parse` returns `mode=simple` and empty `needs` �
             needs=needs,
             location_filter=location_filter,
             related_locations=related_locations,
-            # ...
+            parsed_event_types=parsed_event_types,
+            date_parts=date_parts,
+            apply_date_availability=apply_date_availability,
+            budget_min=budget_min,
+            budget_max=budget_max,
             sort_key=sort_key,
-            # ...
+            intent_summary=intent_summary,
+            plan_title=parsed.plan_title,
         )
+        ...
         return result
 
     result = _rank_candidates(
@@ -419,8 +438,13 @@ If OpenAI is down, `_token_only_parse` returns `mode=simple` and empty `needs` �
         related_keywords=related_keywords,
         location_filter=location_filter,
         related_locations=related_locations,
-        # ...
+        parsed_event_types=parsed_event_types,
+        date_parts=date_parts,
+        apply_date_availability=apply_date_availability,
+        budget_min=budget_min,
+        budget_max=budget_max,
         sort_key=sort_key,
+        intent_summary=intent_summary,
         limit=limit,
         offset=offset,
     )
@@ -435,29 +459,36 @@ If OpenAI is down, `_token_only_parse` returns `mode=simple` and empty `needs` �
 
 **File:** `backend/app/features/vendors/moderation.py` — `list_approved_vendors_for_explore`
 
-```586:589:backend/app/features/vendors/moderation.py
+```596:598:backend/app/features/vendors/moderation.py
         city = (city_query or "").strip().lower()
         if city:
             query = query.ilike("base_city_normalized", f"%{city}%")
         res = query.execute()
 ```
 
-Earlier in the same function: `apply_public_listing_filters`, country, budget, `services_offered` overlaps.
+Earlier in the same function: `apply_public_listing_filters`, country, budget, `services_offered` overlaps, then `filter_explore_rows(out, viewer)` for QA scoping.
 
-**File:** `backend/app/features/vendors/visibility.py` — `apply_public_listing_filters`
+**File:** `backend/app/features/vendors/qa_visibility.py` — QA test vendors hidden from guests:
 
-```43:49:backend/app/features/vendors/visibility.py
-def apply_public_listing_filters(query: Any) -> Any:
-    return (
-        query.eq("approval_status", "approved")
-        .neq("listing_override", "hidden")
-        .or_(f"listing_override.eq.visible,and({_STRIPE_READY_FILTER})")
-    )
+```75:86:backend/app/features/vendors/qa_visibility.py
+def filter_explore_rows(
+    rows: list[dict[str, Any]],
+    viewer: ExploreViewer | None,
+) -> list[dict[str, Any]]:
+    """Drop QA-scoped vendors unless the viewer is the designated test client."""
+    out: list[dict[str, Any]] = []
+    for row in rows:
+        uid = str(row.get("user_id") or "")
+        if is_qa_scoped_vendor(uid) and not viewer_may_see_qa_vendor(viewer, uid):
+            continue
+        out.append(row)
+    return out
 ```
 
 **Deleted users excluded** after SQL returns rows:
 
-```609:633:backend/app/features/vendors/moderation.py
+```618:643:backend/app/features/vendors/moderation.py
+    data = getattr(res, "data", None) or []
     user_ids = [str(row.get("user_id")) for row in data if isinstance(row, dict) and row.get("user_id")]
     gone = deleted_user_ids(user_ids)
     ...
@@ -469,7 +500,7 @@ def apply_public_listing_filters(query: Any) -> Any:
         out.append(
 ```
 
-Plain English: approved, not hidden, Stripe ready **or** admin `visible`, not GDPR-deleted.
+Plain English: approved, not hidden, Stripe ready **or** admin `visible`, not GDPR-deleted, QA-filtered for current viewer.
 
 **Output:** `rows` = list of dicts with `user_id`, `email`, `payload` (profile JSON), `updated_at`. Ranking never hits SQL again — it scores this in-memory list.
 
@@ -557,7 +588,7 @@ MarketplaceQueryParseResult(
 
 ## 8. Simple mode — `_rank_candidates`
 
-**File:** `backend/app/features/vendors/search.py` — starts at line 276
+**File:** `backend/app/features/vendors/search.py` — starts at line 277
 
 For **each vendor row** in the pool:
 
@@ -565,9 +596,19 @@ For **each vendor row** in the pool:
 
 `_passes_budget(payload, budget_min, budget_max)` — skip vendor if packages don't fit budget.
 
-### 8b — Location match in memory
+### 8b — Date availability (when `apply_date_availability`)
 
-```349:357:backend/app/features/vendors/search.py
+```323:327:backend/app/features/vendors/search.py
+        available = (
+            _vendor_available_for_event_dates(payload, date_parts)
+            if apply_date_availability
+            else True
+        )
+```
+
+### 8c — Location match in memory
+
+```350:358:backend/app/features/vendors/search.py
         loc_l = location_filter.strip().lower()
         city_l = base_city.strip().lower()
         primary_loc_hit = bool(loc_l and city_l and (loc_l in city_l or city_l in loc_l))
@@ -581,7 +622,7 @@ For **each vendor row** in the pool:
 
 `_relevance_score` adds `_location_bonus` when cities overlap.
 
-### 8c — Classify match tier
+### 8d — Classify match tier
 
 | Tier | Meaning (simplified) |
 |------|----------------------|
@@ -591,14 +632,14 @@ For **each vendor row** in the pool:
 
 When **no filters** (bare browse): `primary_types` and `keywords` are empty → most vendors pass as `exact`.
 
-### 8d — Score and sort
+### 8e — Score and sort
 
 Computes `_score` from type hits, keyword hits, location, event types. Sort order:
 
 1. Tier (`exact` before `related` before `fallback`)
 2. Then by `sort` param: relevance score, price, **proximity** (`-updated_at` tie-break within tier), rating
 
-```471:477:backend/app/features/vendors/search.py
+```472:478:backend/app/features/vendors/search.py
         if sort_key == "proximity":
             return (tier, -ts)
         if sort_key == "rating":
@@ -608,18 +649,18 @@ Computes `_score` from type hits, keyword hits, location, event types. Sort orde
         return (tier, -sc, -ts)
 ```
 
-### 8e — Paginate
+### 8f — Paginate
 
-```498:499:backend/app/features/vendors/search.py
+```499:500:backend/app/features/vendors/search.py
     total_count = len(enriched)
     page = enriched[offset : offset + limit]
 ```
 
 Returns `MarketplaceSearchResult(vendors=page, total_count=total_count, ...)`.
 
-### 8f — Merge reviews + metrics
+### 8g — Merge reviews + metrics
 
-Before return, each row gets `review_average`, `review_count`, `completed_bookings`, etc. from:
+Before return, explore handlers call `_merge_explore_vendor_rows` (review stats + public metrics). Inside `_rank_candidates`, rows are enriched via:
 
 - `merge_review_stats_into_vendor_rows`
 - `merge_public_metrics_into_vendor_rows`
@@ -628,7 +669,7 @@ Before return, each row gets `review_average`, `review_count`, `completed_bookin
 
 ## 9. Plan mode — `_search_plan_sections`
 
-**File:** `backend/app/features/vendors/search.py` — starts at line 515
+**File:** `backend/app/features/vendors/search.py` — starts at line 516
 
 For each `need` in the LLM checklist (e.g. cake → `baking`, food → `catering`):
 
@@ -677,7 +718,7 @@ Frontend plan UI reads `sections`, not the flat `vendors` list for layout.
 
 **match_tier** on each card drives “Also consider” divider:
 
-```282:296:frontend/features/marketplace/useMarketplaceExplore.ts
+```261:275:frontend/features/marketplace/useMarketplaceExplore.ts
   const exactCards = useMemo(
     () =>
       visibleCards.filter(
@@ -760,9 +801,11 @@ User opens /client/browse?...
   MarketplaceExploreView
     useMarketplaceExplore()
       marketplaceStateFromSearchParams()
+      marketplaceStateToExploreQuery()
       fetchExploreVendorsSearch()
         GET /api/v1/vendors/explore/search
           explore.get_explore_vendors_search()
+            get_optional_session_user() → ExploreViewer
             search_approved_vendors()
               [if q] parse_marketplace_query()
                 _parse_with_llm() OR cache hit
@@ -772,13 +815,11 @@ User opens /client/browse?...
                 apply_public_listing_filters()
                 get_db().table("vendors")...
                 deleted_user_ids() → filter rows
+                filter_explore_rows() → QA visibility
               [if plan_mode] _search_plan_sections()
-                _rank_candidates() × N needs
-                  merge_review_stats_into_vendor_rows()
-                  merge_public_metrics_into_vendor_rows()
-              [else] _rank_candidates()
-                merge_review_stats_into_vendor_rows()
-                merge_public_metrics_into_vendor_rows()
+                _rank_candidates() × N needs (apply_date_availability)
+              [else] _rank_candidates() (apply_date_availability)
+            _merge_explore_vendor_rows()
       setVendors / setSections / setSearchMode
   MarketplaceExploreView renders MarketplaceVendorCard grid
 ```
@@ -801,14 +842,16 @@ MarketplaceFiltersBar "Use current location"
 
 | Symptom | Open first |
 |---------|------------|
-| Wrong URL params | `marketplaceSearchParams.ts`, `clientExploreApi.ts` |
+| Wrong URL params | `marketplaceSearchParams.ts` (`marketplaceStateToExploreQuery`), `clientExploreApi.ts` |
 | Fetch not firing | `useMarketplaceExplore.ts` (`fetchKey`, `useEffect`) |
 | Geolocation / proximity | `useBrowseGeolocation.ts`, `MarketplaceFiltersBar.tsx` |
 | Parser wrong / no plan | `search_ai.py`, OpenAI logs |
-| Vendor missing entirely | `visibility.py`, `moderation.py`, `deleted_user_ids` |
+| Vendor missing entirely | `visibility.py`, `moderation.py`, `qa_visibility.py`, `deleted_user_ids` |
+| Date filter ignored | `search.py` → `apply_date_availability`; `vendorAvailability.ts` |
 | Wrong order / tiers | `search.py` → `_rank_candidates` |
 | Plan sections empty | `search.py` → `_search_plan_sections`, LLM `needs` |
 | UI shows wrong mode | `useMarketplaceExplore.ts` (`isPlanMode`) |
+| Planner handoff lost | `marketplaceSearchParams.ts` — `fromPlanner`, `vendor_ids`, etc. |
 
 ---
 
