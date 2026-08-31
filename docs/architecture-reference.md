@@ -25,7 +25,10 @@ Per [Cursor’s rules docs](https://cursor.com/docs/context/rules), **Agent** pi
 ```
 eventtz/
 ├── AGENTS.md         # Short agent entrypoint - points here
-├── cursor.md         # This file - architecture & patterns (keep in sync with the repo)
+├── cursor.md         # Short architecture index
+├── docs/
+│   ├── architecture-reference.md  # This file
+│   └── token-usage-guide.md
 ├── .github/workflows/ci.yml  # PR + main: frontend tsc/vitest, backend pytest, ci-gate
 ├── backend/          # Python (Poetry), FastAPI, Supabase (Postgres + Auth + Storage)
 │   ├── app/
