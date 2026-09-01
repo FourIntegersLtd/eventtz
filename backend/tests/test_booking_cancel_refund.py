@@ -66,6 +66,8 @@ def test_unpaid_client_cancel_skips_refund(
     assert update_payload["status"] == "cancelled"
     assert update_payload["cancelled_by"] == "client"
     assert update_payload["cancelled_at"]
+    assert update_payload["failure_reason"] == "CUSTOMER_CANCELLED"
+    assert update_payload["failure_noted_at"]
 
 
 @patch("app.features.bookings.payments.refund_booking_on_cancel")
