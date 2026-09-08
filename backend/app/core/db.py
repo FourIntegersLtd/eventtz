@@ -115,9 +115,28 @@ def apply_recent_first_order(
     return q
 
 
+_UPSTREAM_UNAVAILABLE_HTTP_CODES = frozenset({"502", "503", "504"})
+
+
 def is_upstream_unavailable(exc: BaseException) -> bool:
-    """True when PostgREST/Supabase did not answer (timeout / network)."""
-    return isinstance(exc, (httpx.TimeoutException, httpx.NetworkError))
+    """True when PostgREST/Supabase did not answer (timeout / network / gateway).
+
+    httpx raises TimeoutException/NetworkError when the client gives up. A proxy
+    504 instead returns ``{"message": "Gateway Timeout"}``, which postgrest
+    cannot parse as APIErrorFromJSON and surfaces as
+    ``APIError: JSON could not be generated`` (EVENTTZ-BACKEND-Z).
+    """
+    if isinstance(exc, (httpx.TimeoutException, httpx.NetworkError)):
+        return True
+    if not isinstance(exc, APIError):
+        return False
+    if str(getattr(exc, "code", "") or "") in _UPSTREAM_UNAVAILABLE_HTTP_CODES:
+        return True
+    text = " ".join(
+        str(part or "")
+        for part in (getattr(exc, "message", None), getattr(exc, "details", None), exc)
+    ).lower()
+    return "json could not be generated" in text or "gateway timeout" in text
 
 
 def is_missing_approval_status_column(err: Exception) -> bool:
