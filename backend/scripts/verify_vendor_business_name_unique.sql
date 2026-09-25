@@ -1,5 +1,5 @@
 -- Verify vendor business name uniqueness after 032_vendor_business_name_unique.sql
--- Run in Supabase SQL Editor (or: psql $DATABASE_URL -f backend/sql/032_verify_vendor_business_name_unique.sql)
+-- Run in Supabase SQL Editor (or: psql $DATABASE_URL -f backend/scripts/verify_vendor_business_name_unique.sql)
 
 -- 1) Unique index exists
 SELECT
