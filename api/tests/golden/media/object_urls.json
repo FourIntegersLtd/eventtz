@@ -1,0 +1,76 @@
+{
+  "parsed_urls": [
+    {
+      "is_ours": true,
+      "key": "users/abc/images/0123.png",
+      "url": "https://eventtz.s3.eu-west-2.amazonaws.com/users/abc/images/0123.png"
+    },
+    {
+      "is_ours": true,
+      "key": "users/abc/files/with space.pdf",
+      "url": "  https://eventtz.s3.eu-west-2.amazonaws.com/users/abc/files/with%20space.pdf  "
+    },
+    {
+      "is_ours": true,
+      "key": "users/abc/x.png",
+      "url": "https://EVENTTZ.S3.EU-WEST-2.AMAZONAWS.COM/users/abc/x.png"
+    },
+    {
+      "is_ours": true,
+      "key": "users/abc/x.png",
+      "url": "http://eventtz.s3.eu-west-2.amazonaws.com/users/abc/x.png"
+    },
+    {
+      "is_ours": true,
+      "key": null,
+      "url": "https://eventtz.s3.eu-west-2.amazonaws.com/"
+    },
+    {
+      "is_ours": true,
+      "key": null,
+      "url": "https://eventtz.s3.eu-west-2.amazonaws.com"
+    },
+    {
+      "is_ours": false,
+      "key": null,
+      "url": "https://other-bucket.s3.eu-west-2.amazonaws.com/users/abc/x.png"
+    },
+    {
+      "is_ours": false,
+      "key": null,
+      "url": "https://example.com/users/abc/x.png"
+    },
+    {
+      "is_ours": false,
+      "key": null,
+      "url": "not a url"
+    },
+    {
+      "is_ours": false,
+      "key": null,
+      "url": ""
+    }
+  ],
+  "public_urls": [
+    {
+      "key": "users/abc/images/0123.png",
+      "url": "https://eventtz.s3.eu-west-2.amazonaws.com/users/abc/images/0123.png"
+    },
+    {
+      "key": "/users/abc/images/leading-slash.png",
+      "url": "https://eventtz.s3.eu-west-2.amazonaws.com/users/abc/images/leading-slash.png"
+    },
+    {
+      "key": "users/abc/files/with space.pdf",
+      "url": "https://eventtz.s3.eu-west-2.amazonaws.com/users/abc/files/with%20space.pdf"
+    },
+    {
+      "key": "users/abc/files/ünïcödé.pdf",
+      "url": "https://eventtz.s3.eu-west-2.amazonaws.com/users/abc/files/%C3%BCn%C3%AFc%C3%B6d%C3%A9.pdf"
+    },
+    {
+      "key": "users/abc/files/hash#and?query.pdf",
+      "url": "https://eventtz.s3.eu-west-2.amazonaws.com/users/abc/files/hash%23and%3Fquery.pdf"
+    }
+  ]
+}

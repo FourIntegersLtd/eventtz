@@ -1,0 +1,116 @@
+[
+  {
+    "content_type": "image/png",
+    "filename": "photo.png",
+    "guessed_image_type": "image/png",
+    "image_allowed": true
+  },
+  {
+    "content_type": "image/jpeg",
+    "filename": "photo",
+    "guessed_image_type": "image/jpeg",
+    "image_allowed": true
+  },
+  {
+    "content_type": "",
+    "filename": "photo.png",
+    "guessed_image_type": "image/png",
+    "image_allowed": true
+  },
+  {
+    "content_type": "",
+    "filename": "photo.JPG",
+    "guessed_image_type": "image/jpeg",
+    "image_allowed": true
+  },
+  {
+    "content_type": "",
+    "filename": "photo.jpeg",
+    "guessed_image_type": "image/jpeg",
+    "image_allowed": true
+  },
+  {
+    "content_type": "",
+    "filename": "photo.webp",
+    "guessed_image_type": "image/webp",
+    "image_allowed": true
+  },
+  {
+    "content_type": "",
+    "filename": "photo.gif",
+    "guessed_image_type": "image/gif",
+    "image_allowed": true
+  },
+  {
+    "content_type": "",
+    "filename": "photo.heic",
+    "guessed_image_type": "image/heic",
+    "image_allowed": true
+  },
+  {
+    "content_type": "",
+    "filename": "photo.HEIF",
+    "guessed_image_type": "image/heif",
+    "image_allowed": true
+  },
+  {
+    "content_type": "",
+    "filename": "photo.avif",
+    "guessed_image_type": "image/avif",
+    "image_allowed": true
+  },
+  {
+    "content_type": "",
+    "filename": "photo.bmp",
+    "guessed_image_type": "image/jpeg",
+    "image_allowed": false
+  },
+  {
+    "content_type": "",
+    "filename": "photo",
+    "guessed_image_type": "image/jpeg",
+    "image_allowed": false
+  },
+  {
+    "content_type": "",
+    "filename": "",
+    "guessed_image_type": "image/jpeg",
+    "image_allowed": false
+  },
+  {
+    "content_type": "",
+    "filename": "  photo.png  ",
+    "guessed_image_type": "image/png",
+    "image_allowed": true
+  },
+  {
+    "content_type": "application/octet-stream",
+    "filename": "photo.png",
+    "guessed_image_type": "image/png",
+    "image_allowed": true
+  },
+  {
+    "content_type": "application/octet-stream",
+    "filename": "photo.pdf",
+    "guessed_image_type": "image/jpeg",
+    "image_allowed": false
+  },
+  {
+    "content_type": "application/pdf",
+    "filename": "photo.png",
+    "guessed_image_type": "image/png",
+    "image_allowed": false
+  },
+  {
+    "content_type": "text/plain",
+    "filename": "notes.txt",
+    "guessed_image_type": "image/jpeg",
+    "image_allowed": false
+  },
+  {
+    "content_type": "video/mp4",
+    "filename": "clip.mp4",
+    "guessed_image_type": "image/jpeg",
+    "image_allowed": false
+  }
+]
