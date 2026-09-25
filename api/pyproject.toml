@@ -1,0 +1,68 @@
+[project]
+name = "eventtz-api"
+version = "0.1.0"
+description = "Eventtz API (rebuild; replaces backend/ at cutover)"
+authors = [{ name = "Eventtz Ltd", email = "hello@eventtz.com" }]
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "fastapi (>=0.135.2,<0.136.0)",
+    "uvicorn (>=0.42.0,<0.43.0)",
+    "pydantic-settings (>=2.0.0,<3.0.0)",
+    "supabase (>=2.28.3,<3.0.0)",
+    "httpx (>=0.28.0,<0.29.0)",
+    "python-multipart (>=0.0.20,<0.0.21)",
+    "sentry-sdk (>=2.32.0,<3.0.0)",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest (>=8.0.0,<9.0.0)",
+    "pytest-asyncio (>=0.24.0,<1.0.0)",
+    "ruff (>=0.6.0,<1.0.0)",
+    "mypy (>=1.11.0,<2.0.0)",
+    "import-linter (>=2.0,<3.0)",
+]
+
+[tool.poetry]
+packages = [{ include = "app" }]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "-p no:cacheprovider"
+
+[tool.ruff]
+line-length = 110
+target-version = "py313"
+src = ["."]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N", "S", "T20", "SIM"]
+ignore = ["S101", "N818"]  # assert is fine in tests; error classes read at the raise site
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106"]  # literal test secrets
+"../acceptance/**" = ["S105", "S106"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+plugins = ["pydantic.mypy"]
+ignore_missing_imports = true
+
+# ---------------------------------------------------------------------------
+# Architecture: `core` is the shared kernel and never knows about a feature.
+# ---------------------------------------------------------------------------
+[tool.importlinter]
+root_package = "app"
+
+[[tool.importlinter.contracts]]
+name = "core never imports features or adapters"
+type = "forbidden"
+source_modules = ["app.core"]
+forbidden_modules = ["app.features", "app.adapters"]
