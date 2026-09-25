@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.guards._scan import APP_ROOT, TESTS_ROOT, parse, python_files, rel
+from tests.guards._scan import ACCEPTANCE_ROOT, APP_ROOT, TESTS_ROOT, parse, python_files, rel
 
 Definition = ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef
 
@@ -38,7 +38,7 @@ def test_app_code_is_documented(path: Path) -> None:
     assert not missing, f"{rel(path)} has no docstring for {missing}"
 
 
-@pytest.mark.parametrize("path", python_files(TESTS_ROOT), ids=rel)
+@pytest.mark.parametrize("path", python_files(TESTS_ROOT) + python_files(ACCEPTANCE_ROOT), ids=rel)
 def test_test_code_is_documented(path: Path) -> None:
     missing = undocumented(path, exempt_test_functions=True)
     assert not missing, f"{rel(path)} has no docstring for {missing}"

@@ -11,11 +11,21 @@ FEATURES_ROOT = APP_ROOT / "features"
 CORE_ROOT = APP_ROOT / "core"
 TESTS_ROOT = PROJECT_ROOT / "tests"
 SQL_ROOT = PROJECT_ROOT.parent / "backend" / "sql"
+# The repo-root freeze suite; held to the same naming and documentation rules as tests/.
+ACCEPTANCE_ROOT = PROJECT_ROOT.parent / "acceptance"
 
 
 def python_files(root: Path = APP_ROOT) -> list[Path]:
-    """Every `.py` file under `root`, sorted so parametrized test ids are stable."""
-    return sorted(path for path in root.rglob("*.py") if "__pycache__" not in path.parts)
+    """Every `.py` file under `root`, sorted so parametrized test ids are stable.
+
+    Skips caches and hidden folders (`.venv`, and `acceptance/.run/`, which holds a
+    throwaway copy of the baseline backend).
+    """
+    return sorted(
+        path
+        for path in root.rglob("*.py")
+        if not any(part == "__pycache__" or part.startswith(".") for part in path.relative_to(root).parts)
+    )
 
 
 def rel(path: Path) -> str:

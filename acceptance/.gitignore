@@ -1,0 +1,5 @@
+# Throwaway copy of the baseline backend the harness runs (never edited, never committed).
+.run/
+# Local Supabase URL and keys written by scripts/local_env.sh.
+.env.local
+__pycache__/

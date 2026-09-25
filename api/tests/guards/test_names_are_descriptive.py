@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.guards._scan import APP_ROOT, TESTS_ROOT, parse, python_files, rel
+from tests.guards._scan import ACCEPTANCE_ROOT, APP_ROOT, TESTS_ROOT, parse, python_files, rel
 
 ALLOWED_SHORT_NAMES = {"_"}
 
@@ -42,7 +42,9 @@ def violations(path: Path) -> list[str]:
     ]
 
 
-@pytest.mark.parametrize("path", python_files(APP_ROOT) + python_files(TESTS_ROOT), ids=rel)
+@pytest.mark.parametrize(
+    "path", python_files(APP_ROOT) + python_files(TESTS_ROOT) + python_files(ACCEPTANCE_ROOT), ids=rel
+)
 def test_no_single_letter_names(path: Path) -> None:
     offending = violations(path)
     assert not offending, f"{rel(path)} uses single-letter names {offending}; name what the value is."
