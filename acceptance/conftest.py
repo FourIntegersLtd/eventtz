@@ -66,10 +66,33 @@ def new_browser() -> httpx.Client:
     return httpx.Client(base_url=BASE_URL, headers={"X-Forwarded-For": fake_ip}, timeout=30)
 
 
+# The session cookies both servers read (same names in the baseline and api/).
+ACCESS_COOKIE = "eventtz_access_token"
+REFRESH_COOKIE = "eventtz_refresh_token"
+
+
+def _sign_in_with_supabase(browser: httpx.Client, account: SeededAccount) -> None:
+    """Get a session straight from local Supabase Auth and store it as the session cookies.
+
+    Only for a target that does not serve `/auth/signin` yet (api/ until the
+    identity slice is rebuilt). The route itself is frozen by `test_identity_session.py`.
+    """
+    env = _local_env()
+    auth_only = create_client(env["SUPABASE_URL"], env["SUPABASE_SERVICE_ROLE_KEY"])
+    session = auth_only.auth.sign_in_with_password({"email": account.email, "password": account.password}).session
+    assert session is not None, f"local Supabase refused {account.email}"
+    host = httpx.URL(BASE_URL).host
+    browser.cookies.set(ACCESS_COOKIE, session.access_token, domain=host)
+    browser.cookies.set(REFRESH_COOKIE, session.refresh_token, domain=host)
+
+
 def sign_in(account: SeededAccount) -> httpx.Client:
     """A browser signed in as `account` (session cookies set by `/auth/signin`)."""
     browser = new_browser()
     response = browser.post(f"{API}/auth/signin", json={"email": account.email, "password": account.password})
+    if response.status_code == 404 and TARGET == "api":
+        _sign_in_with_supabase(browser, account)
+        return browser
     assert response.status_code == 200, (
         f"sign-in as {account.email} failed: {response.status_code} {response.text}"
     )

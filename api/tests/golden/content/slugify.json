@@ -1,0 +1,58 @@
+[
+  {
+    "input": "",
+    "output": "post"
+  },
+  {
+    "input": "   ",
+    "output": "post"
+  },
+  {
+    "input": "Hello World",
+    "output": "hello-world"
+  },
+  {
+    "input": "  Leading and trailing  ",
+    "output": "leading-and-trailing"
+  },
+  {
+    "input": "Already-a-slug",
+    "output": "already-a-slug"
+  },
+  {
+    "input": "UPPER case",
+    "output": "upper-case"
+  },
+  {
+    "input": "Wedding DJs: 10 tips & tricks!",
+    "output": "wedding-djs-10-tips-tricks"
+  },
+  {
+    "input": "multiple   spaces --- and dashes",
+    "output": "multiple-spaces-and-dashes"
+  },
+  {
+    "input": "!!!",
+    "output": "post"
+  },
+  {
+    "input": "café crème",
+    "output": "caf-cr-me"
+  },
+  {
+    "input": "2026 events",
+    "output": "2026-events"
+  },
+  {
+    "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "output": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  {
+    "input": "-edge-dashes-",
+    "output": "edge-dashes"
+  },
+  {
+    "input": "under_score and.dot",
+    "output": "under-score-and-dot"
+  }
+]

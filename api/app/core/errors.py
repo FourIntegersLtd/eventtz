@@ -139,3 +139,10 @@ def register_error_handlers(app: FastAPI) -> None:
         """Turn a raised `AppError` into its JSON response."""
         body = ErrorResponse(detail=exc.message, code=exc.code)
         return JSONResponse(status_code=exc.status, content=body.model_dump())
+
+    @app.exception_handler(Exception)
+    async def render_unexpected_error(_request: Request, exc: Exception) -> JSONResponse:
+        """Anything else is a bug or an outage: a 500 in the same shape (the server still logs it)."""
+        unexpected = AppError()
+        body = ErrorResponse(detail=unexpected.message, code=unexpected.code)
+        return JSONResponse(status_code=unexpected.status, content=body.model_dump())

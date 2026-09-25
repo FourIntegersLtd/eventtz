@@ -28,4 +28,4 @@ def test_core_never_imports_a_feature(path: Path) -> None:
 def test_the_guard_would_catch_core_importing_a_feature(tmp_path: Path) -> None:
     planted = tmp_path / "kernel_module.py"
     planted.write_text("from app.features.content.service import list_posts\n", encoding="utf-8")
-    assert violations(planted) == ["app.features.content.service", "app.features.content.service.list_posts"]
+    assert violations(planted) == ["app.features.content.service.list_posts"]

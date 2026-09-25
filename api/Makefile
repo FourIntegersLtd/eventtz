@@ -33,7 +33,7 @@ test:
 ci: lint typecheck arch test
 
 openapi:
-	$(RUN) python -c "from app.core.openapi import write; write()"
+	$(RUN) python -c "from app.openapi import write; write()"
 
 # Black-box freeze suite (repo-root acceptance/) against this API on :8001.
 acceptance:

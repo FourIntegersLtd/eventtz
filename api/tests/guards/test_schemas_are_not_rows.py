@@ -34,4 +34,4 @@ def test_schemas_do_not_expose_rows(path: Path) -> None:
 def test_the_guard_would_catch_a_row_in_a_schema(tmp_path: Path) -> None:
     planted = tmp_path / "schemas.py"
     planted.write_text("from app.features.content.models import PostRow\n", encoding="utf-8")
-    assert violations(planted) == ["app.features.content.models", "app.features.content.models.PostRow"]
+    assert violations(planted) == ["app.features.content.models.PostRow"]

@@ -13,6 +13,8 @@ dependencies = [
     "httpx (>=0.28.0,<0.29.0)",
     "python-multipart (>=0.0.20,<0.0.21)",
     "sentry-sdk (>=2.32.0,<3.0.0)",
+    "openai (>=2.29.0,<3.0.0)",
+    "jinja2 (>=3.1.0,<4.0.0)",
 ]
 
 [project.optional-dependencies]

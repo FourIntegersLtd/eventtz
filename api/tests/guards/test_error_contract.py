@@ -46,7 +46,9 @@ def api_routes() -> list[APIRoute]:
 @pytest.mark.parametrize("route", api_routes(), ids=lambda route: f"{sorted(route.methods)} {route.path}")
 def test_every_route_declares_its_response_and_errors(route: APIRoute) -> None:
     # Routes that return no JSON body (204, streams, redirects) have nothing to model.
-    no_body = route.status_code == 204 or route.response_class.__name__ in {
+    # A route without its own `response_class` holds FastAPI's default wrapped in a placeholder.
+    response_class = getattr(route.response_class, "value", route.response_class)
+    no_body = route.status_code == 204 or response_class.__name__ in {
         "Response",
         "StreamingResponse",
         "RedirectResponse",

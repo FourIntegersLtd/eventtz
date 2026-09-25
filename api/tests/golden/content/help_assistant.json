@@ -1,0 +1,532 @@
+[
+  {
+    "name": "client_refund_question_escalates_with_unknown_reason",
+    "audience": "client",
+    "question": "  How do refunds work after I cancel?  ",
+    "history": [
+      {
+        "role": "user",
+        "content": "first question, will be dropped (older than 8 turns)"
+      },
+      {
+        "role": "assistant",
+        "content": "first answer, also dropped"
+      },
+      {
+        "role": "user",
+        "content": "  padded question  "
+      },
+      {
+        "role": "assistant",
+        "content": "an answer"
+      },
+      {
+        "role": "system",
+        "content": "a system turn is sent as a user turn"
+      },
+      {
+        "role": "user",
+        "content": "   "
+      },
+      {
+        "role": "assistant",
+        "content": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      {
+        "role": "user",
+        "content": "follow up"
+      },
+      {
+        "role": "assistant",
+        "content": "another answer"
+      },
+      {
+        "role": "user",
+        "content": "last history turn"
+      }
+    ],
+    "pool": [
+      {
+        "slug": "refunds-explained",
+        "title": "How refunds work",
+        "summary": "When money comes back to you.",
+        "body_md": "Refunds go back to the card you paid with. Refunds go back to the card you paid with. Refunds go back to the card you paid with. ",
+        "audience": "client",
+        "related_slugs": [
+          "cancel-a-booking"
+        ]
+      },
+      {
+        "slug": "cancel-a-booking",
+        "title": "Cancel a booking",
+        "summary": "Cancelling before and after payment.",
+        "body_md": "You can cancel from the booking page. Refunds depend on timing.",
+        "audience": "client",
+        "related_slugs": []
+      },
+      {
+        "slug": "service-fees",
+        "title": "Service fees",
+        "summary": "What the Eventtz fee pays for.",
+        "body_md": "Our fee covers secure payments and support.",
+        "audience": "both",
+        "related_slugs": [
+          "refunds-explained"
+        ]
+      },
+      {
+        "slug": "long-article",
+        "title": "A very long article",
+        "summary": "Tests the prompt body cut-off.",
+        "body_md": "word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word ",
+        "audience": "client",
+        "related_slugs": []
+      },
+      {
+        "slug": "account-settings",
+        "title": "Account settings",
+        "summary": "Change your password and name.",
+        "body_md": "Open Settings from the menu.",
+        "audience": "client",
+        "related_slugs": []
+      },
+      {
+        "slug": "chat-with-vendors",
+        "title": "Chat with vendors",
+        "summary": "Messaging before you book.",
+        "body_md": "Send a message from the vendor profile.",
+        "audience": "client",
+        "related_slugs": []
+      },
+      {
+        "slug": "empty-article",
+        "title": "",
+        "summary": "",
+        "body_md": "",
+        "audience": "client",
+        "related_slugs": []
+      }
+    ],
+    "reply": {
+      "answer_markdown": "  Refunds go back to your card.  ",
+      "related_article_slugs": [
+        "refunds-explained",
+        "not-in-pool",
+        "cancel-a-booking"
+      ],
+      "escalate_to_human": true,
+      "escalate_reason": "billing"
+    },
+    "pool_audience": "client",
+    "model": "gpt-4o-mini",
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are the Eventtz Help assistant for a UK African-events marketplace.\nAnswer ONLY using the provided help articles. Use plain English and everyday words.\nAvoid jargon (no escrow, Stripe Connect, API, KPI, GMV, checkout session, and similar terms).\nBe concise, friendly, and practical. Use markdown (short paragraphs, bullets).\nDo not invent refund, payment, or dispute policies.\nIf the user asks about money movement, refunds, disputes, account suspension, or something\nnot covered by the articles, set escalate_to_human=true and explain they should use Contact\nor Disputes in the portal. related_article_slugs must be slugs from the provided articles only.\nescalate_reason should be one of: payments, dispute, account, unknown, or null when not escalating.\n"
+      },
+      {
+        "role": "system",
+        "content": "Audience portal: client\n\nHelp articles:\n### slug: refunds-explained\ntitle: How refunds work\nsummary: When money comes back to you.\nRefunds go back to the card you paid with. Refunds go back to the card you paid with. Refunds go back to the card you paid with. \n\n### slug: cancel-a-booking\ntitle: Cancel a booking\nsummary: Cancelling before and after payment.\nYou can cancel from the booking page. Refunds depend on timing.\n\n### slug: service-fees\ntitle: Service fees\nsummary: What the Eventtz fee pays for.\nOur fee covers secure payments and support.\n"
+      },
+      {
+        "role": "user",
+        "content": "padded question"
+      },
+      {
+        "role": "assistant",
+        "content": "an answer"
+      },
+      {
+        "role": "user",
+        "content": "a system turn is sent as a user turn"
+      },
+      {
+        "role": "assistant",
+        "content": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      {
+        "role": "user",
+        "content": "follow up"
+      },
+      {
+        "role": "assistant",
+        "content": "another answer"
+      },
+      {
+        "role": "user",
+        "content": "last history turn"
+      },
+      {
+        "role": "user",
+        "content": "How do refunds work after I cancel?"
+      }
+    ],
+    "response": {
+      "answer_markdown": "Refunds go back to your card.",
+      "related_article_slugs": [
+        "refunds-explained",
+        "cancel-a-booking"
+      ],
+      "escalate_to_human": true,
+      "escalate_reason": "unknown"
+    }
+  },
+  {
+    "name": "admin_question_without_tokens_uses_first_articles",
+    "audience": "admin",
+    "question": "? !",
+    "history": [],
+    "pool": [
+      {
+        "slug": "refunds-explained",
+        "title": "How refunds work",
+        "summary": "When money comes back to you.",
+        "body_md": "Refunds go back to the card you paid with. Refunds go back to the card you paid with. Refunds go back to the card you paid with. ",
+        "audience": "client",
+        "related_slugs": [
+          "cancel-a-booking"
+        ]
+      },
+      {
+        "slug": "cancel-a-booking",
+        "title": "Cancel a booking",
+        "summary": "Cancelling before and after payment.",
+        "body_md": "You can cancel from the booking page. Refunds depend on timing.",
+        "audience": "client",
+        "related_slugs": []
+      },
+      {
+        "slug": "service-fees",
+        "title": "Service fees",
+        "summary": "What the Eventtz fee pays for.",
+        "body_md": "Our fee covers secure payments and support.",
+        "audience": "both",
+        "related_slugs": [
+          "refunds-explained"
+        ]
+      },
+      {
+        "slug": "long-article",
+        "title": "A very long article",
+        "summary": "Tests the prompt body cut-off.",
+        "body_md": "word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word ",
+        "audience": "client",
+        "related_slugs": []
+      },
+      {
+        "slug": "account-settings",
+        "title": "Account settings",
+        "summary": "Change your password and name.",
+        "body_md": "Open Settings from the menu.",
+        "audience": "client",
+        "related_slugs": []
+      },
+      {
+        "slug": "chat-with-vendors",
+        "title": "Chat with vendors",
+        "summary": "Messaging before you book.",
+        "body_md": "Send a message from the vendor profile.",
+        "audience": "client",
+        "related_slugs": []
+      },
+      {
+        "slug": "empty-article",
+        "title": "",
+        "summary": "",
+        "body_md": "",
+        "audience": "client",
+        "related_slugs": []
+      }
+    ],
+    "reply": {
+      "answer_markdown": "   ",
+      "related_article_slugs": [],
+      "escalate_to_human": false,
+      "escalate_reason": "payments"
+    },
+    "pool_audience": "admin",
+    "model": "gpt-4o-mini",
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are the Eventtz admin console Help assistant.\nAnswer ONLY using the provided admin help articles. Use plain English.\nCall out Support admin vs Super admin gates clearly in everyday words.\nAvoid jargon. Do not invent permissions or money workflows. If something is not covered,\nset escalate_to_human=true and tell them to ask a super admin or check the Activity log.\nrelated_article_slugs must be slugs from the provided articles only.\nescalate_reason: payments, dispute, account, unknown, or null.\n"
+      },
+      {
+        "role": "system",
+        "content": "Audience portal: admin\n\nHelp articles:\n### slug: refunds-explained\ntitle: How refunds work\nsummary: When money comes back to you.\nRefunds go back to the card you paid with. Refunds go back to the card you paid with. Refunds go back to the card you paid with. \n\n### slug: cancel-a-booking\ntitle: Cancel a booking\nsummary: Cancelling before and after payment.\nYou can cancel from the booking page. Refunds depend on timing.\n\n### slug: service-fees\ntitle: Service fees\nsummary: What the Eventtz fee pays for.\nOur fee covers secure payments and support.\n\n### slug: long-article\ntitle: A very long article\nsummary: Tests the prompt body cut-off.\nword word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word …\n\n### slug: account-settings\ntitle: Account settings\nsummary: Change your password and name.\nOpen Settings from the menu.\n\n### slug: chat-with-vendors\ntitle: Chat with vendors\nsummary: Messaging before you book.\nSend a message from the vendor profile.\n"
+      },
+      {
+        "role": "user",
+        "content": "? !"
+      }
+    ],
+    "response": {
+      "answer_markdown": "Sorry, I could not form an answer.",
+      "related_article_slugs": [],
+      "escalate_to_human": false,
+      "escalate_reason": null
+    }
+  },
+  {
+    "name": "no_keyword_match_falls_back_to_four_articles",
+    "audience": "vendor",
+    "question": "zebra quantum",
+    "history": [
+      {
+        "role": "assistant",
+        "content": "hello"
+      }
+    ],
+    "pool": [
+      {
+        "slug": "refunds-explained",
+        "title": "How refunds work",
+        "summary": "When money comes back to you.",
+        "body_md": "Refunds go back to the card you paid with. Refunds go back to the card you paid with. Refunds go back to the card you paid with. ",
+        "audience": "client",
+        "related_slugs": [
+          "cancel-a-booking"
+        ]
+      },
+      {
+        "slug": "cancel-a-booking",
+        "title": "Cancel a booking",
+        "summary": "Cancelling before and after payment.",
+        "body_md": "You can cancel from the booking page. Refunds depend on timing.",
+        "audience": "client",
+        "related_slugs": []
+      },
+      {
+        "slug": "service-fees",
+        "title": "Service fees",
+        "summary": "What the Eventtz fee pays for.",
+        "body_md": "Our fee covers secure payments and support.",
+        "audience": "both",
+        "related_slugs": [
+          "refunds-explained"
+        ]
+      },
+      {
+        "slug": "long-article",
+        "title": "A very long article",
+        "summary": "Tests the prompt body cut-off.",
+        "body_md": "word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word ",
+        "audience": "client",
+        "related_slugs": []
+      },
+      {
+        "slug": "account-settings",
+        "title": "Account settings",
+        "summary": "Change your password and name.",
+        "body_md": "Open Settings from the menu.",
+        "audience": "client",
+        "related_slugs": []
+      },
+      {
+        "slug": "chat-with-vendors",
+        "title": "Chat with vendors",
+        "summary": "Messaging before you book.",
+        "body_md": "Send a message from the vendor profile.",
+        "audience": "client",
+        "related_slugs": []
+      },
+      {
+        "slug": "empty-article",
+        "title": "",
+        "summary": "",
+        "body_md": "",
+        "audience": "client",
+        "related_slugs": []
+      }
+    ],
+    "reply": {
+      "answer_markdown": "I am not sure.",
+      "related_article_slugs": [
+        "service-fees",
+        "service-fees",
+        "service-fees",
+        "service-fees",
+        "service-fees",
+        "service-fees",
+        "service-fees",
+        "service-fees"
+      ],
+      "escalate_to_human": true,
+      "escalate_reason": null
+    },
+    "pool_audience": "vendor",
+    "model": "gpt-4o-mini",
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are the Eventtz Help assistant for a UK African-events marketplace.\nAnswer ONLY using the provided help articles. Use plain English and everyday words.\nAvoid jargon (no escrow, Stripe Connect, API, KPI, GMV, checkout session, and similar terms).\nBe concise, friendly, and practical. Use markdown (short paragraphs, bullets).\nDo not invent refund, payment, or dispute policies.\nIf the user asks about money movement, refunds, disputes, account suspension, or something\nnot covered by the articles, set escalate_to_human=true and explain they should use Contact\nor Disputes in the portal. related_article_slugs must be slugs from the provided articles only.\nescalate_reason should be one of: payments, dispute, account, unknown, or null when not escalating.\n"
+      },
+      {
+        "role": "system",
+        "content": "Audience portal: vendor\n\nHelp articles:\n### slug: refunds-explained\ntitle: How refunds work\nsummary: When money comes back to you.\nRefunds go back to the card you paid with. Refunds go back to the card you paid with. Refunds go back to the card you paid with. \n\n### slug: cancel-a-booking\ntitle: Cancel a booking\nsummary: Cancelling before and after payment.\nYou can cancel from the booking page. Refunds depend on timing.\n\n### slug: service-fees\ntitle: Service fees\nsummary: What the Eventtz fee pays for.\nOur fee covers secure payments and support.\n\n### slug: long-article\ntitle: A very long article\nsummary: Tests the prompt body cut-off.\nword word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word …\n"
+      },
+      {
+        "role": "assistant",
+        "content": "hello"
+      },
+      {
+        "role": "user",
+        "content": "zebra quantum"
+      }
+    ],
+    "response": {
+      "answer_markdown": "I am not sure.",
+      "related_article_slugs": [
+        "service-fees",
+        "service-fees",
+        "service-fees",
+        "service-fees",
+        "service-fees",
+        "service-fees"
+      ],
+      "escalate_to_human": true,
+      "escalate_reason": null
+    }
+  },
+  {
+    "name": "long_article_is_cut_and_title_hits_rank_first",
+    "audience": "client",
+    "question": "very long article word fees",
+    "history": [],
+    "pool": [
+      {
+        "slug": "refunds-explained",
+        "title": "How refunds work",
+        "summary": "When money comes back to you.",
+        "body_md": "Refunds go back to the card you paid with. Refunds go back to the card you paid with. Refunds go back to the card you paid with. ",
+        "audience": "client",
+        "related_slugs": [
+          "cancel-a-booking"
+        ]
+      },
+      {
+        "slug": "cancel-a-booking",
+        "title": "Cancel a booking",
+        "summary": "Cancelling before and after payment.",
+        "body_md": "You can cancel from the booking page. Refunds depend on timing.",
+        "audience": "client",
+        "related_slugs": []
+      },
+      {
+        "slug": "service-fees",
+        "title": "Service fees",
+        "summary": "What the Eventtz fee pays for.",
+        "body_md": "Our fee covers secure payments and support.",
+        "audience": "both",
+        "related_slugs": [
+          "refunds-explained"
+        ]
+      },
+      {
+        "slug": "long-article",
+        "title": "A very long article",
+        "summary": "Tests the prompt body cut-off.",
+        "body_md": "word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word ",
+        "audience": "client",
+        "related_slugs": []
+      },
+      {
+        "slug": "account-settings",
+        "title": "Account settings",
+        "summary": "Change your password and name.",
+        "body_md": "Open Settings from the menu.",
+        "audience": "client",
+        "related_slugs": []
+      },
+      {
+        "slug": "chat-with-vendors",
+        "title": "Chat with vendors",
+        "summary": "Messaging before you book.",
+        "body_md": "Send a message from the vendor profile.",
+        "audience": "client",
+        "related_slugs": []
+      },
+      {
+        "slug": "empty-article",
+        "title": "",
+        "summary": "",
+        "body_md": "",
+        "audience": "client",
+        "related_slugs": []
+      }
+    ],
+    "reply": {
+      "answer_markdown": "Here you go.",
+      "related_article_slugs": [
+        "long-article",
+        "service-fees",
+        "account-settings"
+      ],
+      "escalate_to_human": true,
+      "escalate_reason": "dispute"
+    },
+    "pool_audience": "client",
+    "model": "gpt-4o-mini",
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are the Eventtz Help assistant for a UK African-events marketplace.\nAnswer ONLY using the provided help articles. Use plain English and everyday words.\nAvoid jargon (no escrow, Stripe Connect, API, KPI, GMV, checkout session, and similar terms).\nBe concise, friendly, and practical. Use markdown (short paragraphs, bullets).\nDo not invent refund, payment, or dispute policies.\nIf the user asks about money movement, refunds, disputes, account suspension, or something\nnot covered by the articles, set escalate_to_human=true and explain they should use Contact\nor Disputes in the portal. related_article_slugs must be slugs from the provided articles only.\nescalate_reason should be one of: payments, dispute, account, unknown, or null when not escalating.\n"
+      },
+      {
+        "role": "system",
+        "content": "Audience portal: client\n\nHelp articles:\n### slug: long-article\ntitle: A very long article\nsummary: Tests the prompt body cut-off.\nword word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word …\n\n### slug: service-fees\ntitle: Service fees\nsummary: What the Eventtz fee pays for.\nOur fee covers secure payments and support.\n"
+      },
+      {
+        "role": "user",
+        "content": "very long article word fees"
+      }
+    ],
+    "response": {
+      "answer_markdown": "Here you go.",
+      "related_article_slugs": [
+        "long-article",
+        "service-fees",
+        "account-settings"
+      ],
+      "escalate_to_human": true,
+      "escalate_reason": "dispute"
+    }
+  },
+  {
+    "name": "empty_pool_sends_no_articles",
+    "audience": "client",
+    "question": "anything",
+    "history": [],
+    "pool": [],
+    "reply": {
+      "answer_markdown": "Nothing to go on.",
+      "related_article_slugs": [
+        "refunds-explained"
+      ],
+      "escalate_to_human": false,
+      "escalate_reason": null
+    },
+    "pool_audience": "client",
+    "model": "gpt-4o-mini",
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are the Eventtz Help assistant for a UK African-events marketplace.\nAnswer ONLY using the provided help articles. Use plain English and everyday words.\nAvoid jargon (no escrow, Stripe Connect, API, KPI, GMV, checkout session, and similar terms).\nBe concise, friendly, and practical. Use markdown (short paragraphs, bullets).\nDo not invent refund, payment, or dispute policies.\nIf the user asks about money movement, refunds, disputes, account suspension, or something\nnot covered by the articles, set escalate_to_human=true and explain they should use Contact\nor Disputes in the portal. related_article_slugs must be slugs from the provided articles only.\nescalate_reason should be one of: payments, dispute, account, unknown, or null when not escalating.\n"
+      },
+      {
+        "role": "system",
+        "content": "Audience portal: client\n\nHelp articles:\n(no articles)"
+      },
+      {
+        "role": "user",
+        "content": "anything"
+      }
+    ],
+    "response": {
+      "answer_markdown": "Nothing to go on.",
+      "related_article_slugs": [],
+      "escalate_to_human": false,
+      "escalate_reason": null
+    }
+  }
+]

@@ -11,7 +11,7 @@ from app.core.settings import API_ROOT
 
 def write(path: Path = API_ROOT / "openapi.json") -> None:
     """Build the app and write its OpenAPI schema as stable, sorted JSON so diffs stay readable."""
-    from app.main import create_app  # the app module imports every slice; load it only here
+    from app.main import create_app  # imports every slice, so load it only when writing
 
     document = create_app().openapi()
     path.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n", encoding="utf-8")

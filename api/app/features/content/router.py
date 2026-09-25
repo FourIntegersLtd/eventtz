@@ -1,0 +1,195 @@
+"""Public blog, Help Center and client/vendor contact routes: parse, call one service, return a schema."""
+
+from __future__ import annotations
+
+from fastapi import APIRouter, Query
+
+from app.core.auth import AUTH_ERRORS, ROLE_ERRORS, CurrentClient, CurrentUser, CurrentVendor
+from app.core.errors import AppError, error_responses
+from app.core.ports import (
+    LanguageModelDependency,
+    LanguageModelEmptyReply,
+    LanguageModelFailed,
+    LanguageModelRefused,
+    LanguageModelUnavailable,
+    MailerDependency,
+    WebhooksDependency,
+)
+from app.features.content import service_blog, service_contact, service_help
+from app.features.content.errors import (
+    ArticleNotFound,
+    AssistantUnavailable,
+    AudienceMismatch,
+    BookingNotFound,
+    BookingNotOnAccount,
+    InvalidBookingReference,
+    MessageTooShort,
+    PostNotFound,
+    QuestionRequired,
+)
+from app.features.content.schemas import (
+    BlogPostPublicDetailResponse,
+    BlogPostsListResponse,
+    ContactSubmitBody,
+    ContactSubmitResponse,
+    HelpArticleResponse,
+    HelpArticlesResponse,
+    HelpAskRequest,
+    HelpAskResponse,
+    HelpCategoriesResponse,
+)
+
+router = APIRouter()
+
+# Errors every Help Center route can return: not signed in, or another portal's audience.
+_HELP_ERRORS = (*AUTH_ERRORS, AudienceMismatch)
+# Errors both contact forms can return besides auth.
+_CONTACT_ERRORS = (
+    *ROLE_ERRORS,
+    MessageTooShort,
+    InvalidBookingReference,
+    BookingNotFound,
+    BookingNotOnAccount,
+)
+
+
+# --- public blog ------------------------------------------------------------------------------------
+
+
+@router.get(
+    "/blog/posts", tags=["blog"], response_model=BlogPostsListResponse, responses=error_responses(AppError)
+)
+def list_blog_posts(limit: int = Query(50, ge=1, le=100)) -> BlogPostsListResponse:
+    """The public blog index, newest first."""
+    return BlogPostsListResponse(posts=service_blog.list_published_posts(limit))
+
+
+@router.get(
+    "/blog/posts/{slug}",
+    tags=["blog"],
+    response_model=BlogPostPublicDetailResponse,
+    responses=error_responses(PostNotFound),
+)
+def get_blog_post(slug: str) -> BlogPostPublicDetailResponse:
+    """One published post by slug."""
+    return BlogPostPublicDetailResponse(post=service_blog.get_published_post(slug))
+
+
+# --- help center -------------------------------------------------------------------------------------
+
+
+@router.get(
+    "/help/categories",
+    tags=["help"],
+    response_model=HelpCategoriesResponse,
+    responses=error_responses(*_HELP_ERRORS),
+)
+def list_help_categories(
+    principal: CurrentUser, audience: str | None = Query(None)
+) -> HelpCategoriesResponse:
+    """The Help Center categories for the caller's portal."""
+    return HelpCategoriesResponse(categories=service_help.list_categories(principal, audience))
+
+
+@router.get(
+    "/help/articles",
+    tags=["help"],
+    response_model=HelpArticlesResponse,
+    responses=error_responses(*_HELP_ERRORS),
+)
+def list_help_articles(
+    principal: CurrentUser,
+    audience: str | None = Query(None),
+    category: str | None = Query(None, description="Category slug"),
+) -> HelpArticlesResponse:
+    """The Help Center articles for the caller's portal, optionally one category's."""
+    return HelpArticlesResponse(articles=service_help.list_articles(principal, audience, category))
+
+
+@router.get(
+    "/help/articles/{slug}",
+    tags=["help"],
+    response_model=HelpArticleResponse,
+    responses=error_responses(*_HELP_ERRORS, ArticleNotFound),
+)
+def get_help_article(
+    principal: CurrentUser, slug: str, audience: str | None = Query(None)
+) -> HelpArticleResponse:
+    """One Help Center article."""
+    return HelpArticleResponse(article=service_help.get_article(principal, audience, slug))
+
+
+@router.post(
+    "/help/ask",
+    tags=["help"],
+    response_model=HelpAskResponse,
+    responses=error_responses(
+        *_HELP_ERRORS,
+        QuestionRequired,
+        AssistantUnavailable,
+        LanguageModelUnavailable,
+        LanguageModelFailed,
+        LanguageModelEmptyReply,
+        LanguageModelRefused,
+    ),
+)
+def ask_help_assistant(
+    principal: CurrentUser, body: HelpAskRequest, language_model: LanguageModelDependency
+) -> HelpAskResponse:
+    """Ask the AI help assistant a question, answered from the caller's portal's articles."""
+    return service_help.ask_assistant(principal, body, language_model)
+
+
+# --- contact ---------------------------------------------------------------------------------------------
+
+
+@router.post(
+    "/client/contact",
+    tags=["client"],
+    response_model=ContactSubmitResponse,
+    responses=error_responses(*_CONTACT_ERRORS),
+)
+def submit_client_contact(
+    principal: CurrentClient,
+    body: ContactSubmitBody,
+    language_model: LanguageModelDependency,
+    mailer: MailerDependency,
+    webhooks: WebhooksDependency,
+) -> ContactSubmitResponse:
+    """A client's message to the Eventtz team."""
+    service_contact.submit_portal_message(
+        principal,
+        portal="client",
+        message=body.message,
+        raw_booking_id=body.booking_id,
+        language_model=language_model,
+        mailer=mailer,
+        webhooks=webhooks,
+    )
+    return ContactSubmitResponse()
+
+
+@router.post(
+    "/vendor/contact",
+    tags=["vendor"],
+    response_model=ContactSubmitResponse,
+    responses=error_responses(*_CONTACT_ERRORS),
+)
+def submit_vendor_contact(
+    principal: CurrentVendor,
+    body: ContactSubmitBody,
+    language_model: LanguageModelDependency,
+    mailer: MailerDependency,
+    webhooks: WebhooksDependency,
+) -> ContactSubmitResponse:
+    """A vendor's message to the Eventtz team."""
+    service_contact.submit_portal_message(
+        principal,
+        portal="vendor",
+        message=body.message,
+        raw_booking_id=body.booking_id,
+        language_model=language_model,
+        mailer=mailer,
+        webhooks=webhooks,
+    )
+    return ContactSubmitResponse()

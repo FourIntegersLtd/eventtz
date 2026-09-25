@@ -1,0 +1,163 @@
+{% extends "partials/transactional/layout.html" %}
+{% block header_extra %}
+{% if chip_label %}
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 16px 0 0">
+  <tr>
+    <td>
+      {% if chip_tone == "amber" %}
+      <span
+        style="
+          display: inline-block;
+          padding: 4px 10px;
+          border-radius: 980px;
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 0.06em;
+          color: #9a6700;
+          background-color: #fff8e6;
+        "
+        >{{ chip_label }}</span
+      >
+      {% elif chip_tone == "red" %}
+      <span
+        style="
+          display: inline-block;
+          padding: 4px 10px;
+          border-radius: 980px;
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 0.06em;
+          color: #c41e1e;
+          background-color: #fff0f0;
+        "
+        >{{ chip_label }}</span
+      >
+      {% else %}
+      <span
+        style="
+          display: inline-block;
+          padding: 4px 10px;
+          border-radius: 980px;
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 0.06em;
+          color: #6e6e73;
+          background-color: #f5f5f7;
+        "
+        >{{ chip_label }}</span
+      >
+      {% endif %}
+    </td>
+  </tr>
+</table>
+{% endif %}
+{% endblock %}
+{% block content %}
+<h1 style="margin: 0 0 12px; color: #1d1d1f; font-size: 26px; line-height: 1.25; font-weight: 600">
+  {{ headline }}
+</h1>
+{% if intro %}
+<p style="margin: 0 0 20px; color: #6e6e73; font-size: 16px; line-height: 1.55">{{ intro }}</p>
+{% endif %}
+{% if fields %}
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 0 0 4px">
+  {% for label, value in fields %}
+  <tr>
+    <td style="padding: 16px 0; border-top: 1px solid #e5e5ea">
+      <p
+        style="
+          margin: 0 0 4px;
+          font-size: 11px;
+          line-height: 1.4;
+          letter-spacing: 0.04em;
+          color: #6e6e73;
+          text-transform: uppercase;
+        "
+      >
+        {{ label }}
+      </p>
+      <p
+        style="
+          margin: 0;
+          color: #1d1d1f;
+          font-size: 15px;
+          line-height: 1.5;
+          white-space: pre-wrap;
+        "
+      >
+        {{ value }}
+      </p>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+{% if body_html %}
+<div
+  style="
+    margin: 20px 0 0;
+    padding: 16px 18px;
+    background-color: #f5f5f7;
+    border-radius: 12px;
+    color: #1d1d1f;
+    font-size: 15px;
+    line-height: 1.6;
+  "
+>
+  {{ body_html | safe }}
+</div>
+{% elif body_plain %}
+<div
+  style="
+    margin: 20px 0 0;
+    padding: 16px 18px;
+    background-color: #f5f5f7;
+    border-radius: 12px;
+    color: #1d1d1f;
+    font-size: 15px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+  "
+>
+  {{ body_plain }}
+</div>
+{% elif body %}
+<div
+  style="
+    margin: 20px 0 0;
+    padding: 16px 18px;
+    background-color: #f5f5f7;
+    border-radius: 12px;
+    color: #1d1d1f;
+    font-size: 15px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+  "
+>
+  {{ body }}
+</div>
+{% endif %}
+{% if action_url and action_label %}
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 28px 0 0">
+  <tr>
+    <td align="center" style="text-align: center">
+      <a
+        href="{{ action_url }}"
+        style="
+          display: inline-block;
+          background: #3e1964;
+          color: #ffffff;
+          text-decoration: none;
+          padding: 14px 28px;
+          border-radius: 980px;
+          font-size: 15px;
+          font-weight: 600;
+        "
+        >{{ action_label }}</a
+      >
+    </td>
+  </tr>
+</table>
+{% endif %}
+{% endblock %}
+{% block footer %}{% include "partials/email/ops_footer.html" %}{% endblock %}

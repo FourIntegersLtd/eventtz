@@ -67,7 +67,8 @@ def imported_modules(path: Path) -> set[str]:
         if isinstance(node, ast.Import):
             modules.update(alias.name for alias in node.names)
         elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
-            modules.add(node.module)
+            # Only the full `x.y` name: `from app.features.staff import service` is the staff
+            # *service*, and must not also count as importing the bare `app.features.staff`.
             modules.update(f"{node.module}.{alias.name}" for alias in node.names)
     return modules
 

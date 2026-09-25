@@ -41,4 +41,4 @@ def test_domain_has_no_io(path: Path) -> None:
 def test_the_guard_would_catch_io_in_a_domain(tmp_path: Path) -> None:
     planted = tmp_path / "domain.py"
     planted.write_text("import httpx\nfrom app.core.db import service_client\n", encoding="utf-8")
-    assert violations(planted) == ["app.core.db", "app.core.db.service_client", "httpx"]
+    assert violations(planted) == ["app.core.db.service_client", "httpx"]

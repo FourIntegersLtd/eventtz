@@ -1,0 +1,190 @@
+[
+  {
+    "input": null,
+    "output": ""
+  },
+  {
+    "input": "",
+    "output": ""
+  },
+  {
+    "input": "   ",
+    "output": ""
+  },
+  {
+    "input": "plain text",
+    "output": "plain text"
+  },
+  {
+    "input": "  <p>trimmed</p>  ",
+    "output": "<p>trimmed</p>"
+  },
+  {
+    "input": "<p>Hello <b>bold</b> <strong>strong</strong> <em>em</em> <i>i</i> <u>u</u> <s>s</s></p>",
+    "output": "<p>Hello <b>bold</b> <strong>strong</strong> <em>em</em> <i>i</i> <u>u</u> <s>s</s></p>"
+  },
+  {
+    "input": "<h1>One</h1><h2>Two</h2><h3>Three</h3><h4>Four</h4><h5>Five</h5><h6>Six</h6>",
+    "output": "<h1>One</h1><h2>Two</h2><h3>Three</h3><h4>Four</h4>FiveSix"
+  },
+  {
+    "input": "<ul><li>a</li><li>b</li></ul><ol><li>c</li></ol>",
+    "output": "<ul><li>a</li><li>b</li></ul><ol><li>c</li></ol>"
+  },
+  {
+    "input": "<blockquote>quoted<br>line<br/>break</blockquote>",
+    "output": "<blockquote>quoted<br />line<br />break</blockquote>"
+  },
+  {
+    "input": "<P CLASS='x' STYLE='color:red'>Upper-case tags and attributes</P>",
+    "output": "<p>Upper-case tags and attributes</p>"
+  },
+  {
+    "input": "<p onclick=\"steal()\" style=\"x\" id=\"y\">handlers and styles dropped</p>",
+    "output": "<p>handlers and styles dropped</p>"
+  },
+  {
+    "input": "<script>alert('x')</script>after",
+    "output": "alert('x')after"
+  },
+  {
+    "input": "<style>p{color:red}</style>after",
+    "output": "p{color:red}after"
+  },
+  {
+    "input": "<iframe src='https://evil.example'></iframe>after",
+    "output": "after"
+  },
+  {
+    "input": "<div><section>unknown wrappers</section></div>",
+    "output": "unknown wrappers"
+  },
+  {
+    "input": "<a href=\"https://example.com\" title=\"T\">safe link</a>",
+    "output": "<a href=\"https://example.com\" rel=\"noopener noreferrer\" title=\"T\">safe link</a>"
+  },
+  {
+    "input": "<a href=\"http://example.com\" rel=\"nofollow\">http link</a>",
+    "output": "<a href=\"http://example.com\" rel=\"noopener noreferrer\" rel=\"nofollow\">http link</a>"
+  },
+  {
+    "input": "<a href=\"/vendors\">relative link</a>",
+    "output": "<a href=\"/vendors\" rel=\"noopener noreferrer\">relative link</a>"
+  },
+  {
+    "input": "<a href=\"mailto:hello@example.com\">mail</a>",
+    "output": "<a href=\"mailto:hello@example.com\" rel=\"noopener noreferrer\">mail</a>"
+  },
+  {
+    "input": "<a href=\"javascript:alert(1)\">js link</a>",
+    "output": "<a>js link</a>"
+  },
+  {
+    "input": "<a href=\"JaVaScRiPt:alert(1)\">mixed-case js</a>",
+    "output": "<a>mixed-case js</a>"
+  },
+  {
+    "input": "<a href=\"data:text/html,hi\">data link</a>",
+    "output": "<a>data link</a>"
+  },
+  {
+    "input": "<a href=\"  https://spaced.example  \">spaced href</a>",
+    "output": "<a href=\"https://spaced.example\" rel=\"noopener noreferrer\">spaced href</a>"
+  },
+  {
+    "input": "<a href=\"\">empty href</a>",
+    "output": "<a>empty href</a>"
+  },
+  {
+    "input": "<a href=\"https://example.com\" target=\"_blank\">new tab</a>",
+    "output": "<a href=\"https://example.com\" rel=\"noopener noreferrer\" target=\"_blank\">new tab</a>"
+  },
+  {
+    "input": "<a href=\"https://example.com\" target=\"_self\">same tab</a>",
+    "output": "<a href=\"https://example.com\" rel=\"noopener noreferrer\">same tab</a>"
+  },
+  {
+    "input": "<a href=\"https://example.com\" target=\"_BLANK\">upper target</a>",
+    "output": "<a href=\"https://example.com\" rel=\"noopener noreferrer\" target=\"_blank\">upper target</a>"
+  },
+  {
+    "input": "<a href=\"https://example.com?a=1&b=2\">ampersand</a>",
+    "output": "<a href=\"https://example.com?a=1&amp;b=2\" rel=\"noopener noreferrer\">ampersand</a>"
+  },
+  {
+    "input": "<a href=\"https://example.com/\"quote\">quote in href</a>",
+    "output": "<a href=\"https://example.com/\" rel=\"noopener noreferrer\">quote in href</a>"
+  },
+  {
+    "input": "<img src=\"https://cdn.example.com/a.jpg\" alt=\"A\" title=\"T\" loading=\"lazy\">",
+    "output": "<img src=\"https://cdn.example.com/a.jpg\" alt=\"A\" title=\"T\" loading=\"lazy\" />"
+  },
+  {
+    "input": "<img src=\"/local.png\" alt=\"local\" loading=\"eager\">",
+    "output": "<img src=\"/local.png\" alt=\"local\" loading=\"eager\" />"
+  },
+  {
+    "input": "<img src=\"javascript:alert(1)\" alt=\"bad\">",
+    "output": ""
+  },
+  {
+    "input": "<img alt=\"no src\">",
+    "output": ""
+  },
+  {
+    "input": "<img src=\"data:image/png;base64,AAAA\">",
+    "output": ""
+  },
+  {
+    "input": "<figure class=\"blog-figure\"><img src=\"https://x.example/i.png\"><figcaption>cap</figcaption></figure>",
+    "output": "<figure class=\"blog-figure\"><img src=\"https://x.example/i.png\" /><figcaption>cap</figcaption></figure>"
+  },
+  {
+    "input": "<figure class=\"other\"><figcaption>other class</figcaption></figure>",
+    "output": "<figure><figcaption>other class</figcaption></figure>"
+  },
+  {
+    "input": "<span data-x=\"1\">span attrs dropped</span>",
+    "output": "<span>span attrs dropped</span>"
+  },
+  {
+    "input": "<p>unclosed <b>bold <i>italic</p>after",
+    "output": "<p>unclosed <b>bold <i>italic</i></b></p>after"
+  },
+  {
+    "input": "<p>stray close</b></p>",
+    "output": "<p>stray close</p>"
+  },
+  {
+    "input": "</p>close without open",
+    "output": "close without open"
+  },
+  {
+    "input": "<p>nested <b>b <i>i</b> tail</i></p>",
+    "output": "<p>nested <b>b <i>i</i></b> tail</p>"
+  },
+  {
+    "input": "Tom &amp; Jerry &lt;3 &gt; &quot;quotes&quot; &#169; &copy;",
+    "output": "Tom &amp; Jerry &lt;3 &gt; \"quotes\" © ©"
+  },
+  {
+    "input": "raw < and > and & in text",
+    "output": "raw &lt; and &gt; and &amp; in text"
+  },
+  {
+    "input": "<!-- a comment --><p>after comment</p>",
+    "output": "<p>after comment</p>"
+  },
+  {
+    "input": "<p>emoji 🎉 and accents café</p>",
+    "output": "<p>emoji 🎉 and accents café</p>"
+  },
+  {
+    "input": "<br><br/><br />",
+    "output": "<br /><br /><br />"
+  },
+  {
+    "input": "<p>line one\nline two</p>",
+    "output": "<p>line one\nline two</p>"
+  }
+]

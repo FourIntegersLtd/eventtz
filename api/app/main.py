@@ -9,10 +9,16 @@ from __future__ import annotations
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.adapters.http_webhooks import BackgroundWebhooks
+from app.adapters.openai_language_model import OpenAILanguageModel
+from app.adapters.resend_mailer import ResendMailer
 from app.core.errors import register_error_handlers
 from app.core.logging import setup_logging
 from app.core.observability import init_sentry
+from app.core.ports import language_model_port, mailer_port, webhooks_port
 from app.core.settings import LOCAL_ORIGIN_REGEX, get_settings
+from app.features.content import router as content_router
+from app.features.content import router_admin as content_admin_router
 
 # Every product route lives under this prefix; the web app and the baseline use the same one.
 API_PREFIX = "/api/v1"
@@ -20,7 +26,14 @@ API_PREFIX = "/api/v1"
 
 def _routers() -> list[APIRouter]:
     """Every slice router, in mount order. Add a slice's router here when it is rebuilt."""
-    return []
+    return [content_router.router, content_admin_router.router]
+
+
+def _plug_in_adapters(app: FastAPI) -> None:
+    """Give the ports in `app.core.ports` their real implementations (tests override these with fakes)."""
+    app.dependency_overrides[language_model_port] = OpenAILanguageModel
+    app.dependency_overrides[mailer_port] = ResendMailer
+    app.dependency_overrides[webhooks_port] = BackgroundWebhooks
 
 
 def create_app() -> FastAPI:
@@ -28,6 +41,7 @@ def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(title="Eventtz API", version="1.0.0")
     register_error_handlers(app)
+    _plug_in_adapters(app)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins_list,

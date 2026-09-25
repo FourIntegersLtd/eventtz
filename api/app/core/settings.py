@@ -44,6 +44,21 @@ class Settings(BaseSettings):
     # Comma-separated emails treated as super admins when `users.admin_role` is not set.
     super_admin_emails: str = ""
 
+    # OpenAI key for the help assistant and contact classifier. Empty switches AI features off.
+    openai_api_key: str = ""
+    # Resend key for outgoing email. Empty logs and skips every send.
+    resend_api_key: str = ""
+    # Comma-separated staff inboxes for ops alerts (contact form, disputes, stuck payouts).
+    admin_alert_emails: str = "hello@eventtz.com"
+    # Cursor automation endpoint that triages bug/booking/payment contact messages. Empty = off.
+    cursor_automation_webhook_url: str = ""
+    cursor_automation_webhook_secret: str = ""
+
+    @property
+    def admin_alert_emails_list(self) -> list[str]:
+        """`admin_alert_emails` split and trimmed, in the order configured."""
+        return [email.strip() for email in self.admin_alert_emails.split(",") if email.strip()]
+
     @property
     def super_admin_emails_list(self) -> list[str]:
         """`super_admin_emails` split, trimmed and lower-cased, ready for membership checks."""
