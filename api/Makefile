@@ -2,7 +2,7 @@
 # activated pyenv venv from hijacking poetry.
 RUN := env -u VIRTUAL_ENV poetry run
 
-.PHONY: install dev lint format typecheck arch guards test ci openapi acceptance
+.PHONY: install dev lint format typecheck arch guards test ci openapi acceptance parity
 
 install:
 	env -u VIRTUAL_ENV POETRY_VIRTUALENVS_IN_PROJECT=true poetry install --extras dev --no-root
@@ -38,3 +38,7 @@ openapi:
 # Black-box freeze suite (repo-root acceptance/) against this API on :8001.
 acceptance:
 	cd ../acceptance && TARGET=api $(MAKE) test
+
+# Baseline routes api/ does not serve yet (compares against openapi.baseline.json).
+parity:
+	$(RUN) python -m tests.guards.test_routes_match_baseline
