@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import httpx
 import pytest
+from postgrest.exceptions import APIError
 
 from app.jobs import run_booking_maintenance
 
@@ -58,6 +59,40 @@ def test_main_continues_when_reminder_query_times_out(
     assert "reminders=0" in caplog.text
     assert "payouts_released=2" in caplog.text
     assert "event_tomorrow=1" in caplog.text
+
+
+@patch("app.jobs.run_booking_maintenance.process_lifecycle_reminders", return_value={"event_tomorrow": 1, "pay_to_confirm": 0, "payouts_setup": 0})
+@patch("app.jobs.run_booking_maintenance.process_enquiry_response_maintenance", return_value={"vendor_reminders": 0, "client_nudges": 0})
+@patch("app.jobs.run_booking_maintenance.mark_stale_enquiries_no_response", return_value=0)
+@patch("app.jobs.run_booking_maintenance.process_due_payout_auto_releases", return_value=2)
+@patch(
+    "app.jobs.run_booking_maintenance.send_completion_reminders",
+    side_effect=APIError(
+        {
+            "message": "JSON could not be generated",
+            "code": 504,
+            "hint": "Refer to full message for details",
+            "details": "{'message': 'Gateway Timeout'}",
+        }
+    ),
+)
+@patch("app.jobs.run_booking_maintenance.get_settings")
+def test_main_continues_when_reminder_query_gets_gateway_timeout(
+    mock_settings, mock_reminders, mock_payouts, mock_stale, mock_enquiry, mock_lifecycle, caplog,
+):
+    mock_settings.return_value.enquiry_response_sla_hours = 48
+
+    with caplog.at_level("INFO"):
+        assert run_booking_maintenance.main() == 0
+
+    mock_reminders.assert_called_once_with()
+    mock_payouts.assert_called_once_with()
+    mock_stale.assert_called_once()
+    mock_enquiry.assert_called_once_with()
+    mock_lifecycle.assert_called_once_with()
+    assert "booking maintenance step unavailable name=completion_reminders" in caplog.text
+    assert "reminders=0" in caplog.text
+    assert "payouts_released=2" in caplog.text
 
 
 @patch("app.jobs.run_booking_maintenance.process_due_payout_auto_releases")
