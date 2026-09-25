@@ -1,4 +1,4 @@
-"""Write the OpenAPI document (`make openapi`) for the web app's generated types (ADR 0007)."""
+"""Write the OpenAPI document (`make openapi`) that the web app generates its API types from (ADR 0007)."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from app.core.settings import API_ROOT
 
 
 def write(path: Path = API_ROOT / "openapi.json") -> None:
+    """Build the app and write its OpenAPI schema as stable, sorted JSON so diffs stay readable."""
     from app.main import create_app  # the app module imports every slice; load it only here
 
     document = create_app().openapi()

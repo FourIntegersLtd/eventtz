@@ -9,20 +9,25 @@ from app.core.errors import AppError, NotFound, register_error_handlers
 
 
 class ThingMissing(NotFound):
+    """A sample slice error, as a slice would declare it in its errors.py."""
+
     code = "thing_missing"
     default_message = "Thing not found."
 
 
 def make_client() -> TestClient:
+    """A tiny app with the error handlers and two routes that raise `ThingMissing`."""
     app = FastAPI()
     register_error_handlers(app)
 
     @app.get("/boom")
     def boom() -> None:
+        """Raise with the default message."""
         raise ThingMissing
 
     @app.get("/custom")
     def custom() -> None:
+        """Raise with a custom message."""
         raise ThingMissing("That thing is gone.")
 
     return TestClient(app)

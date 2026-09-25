@@ -14,10 +14,12 @@ SQL_ROOT = PROJECT_ROOT.parent / "backend" / "sql"
 
 
 def python_files(root: Path = APP_ROOT) -> list[Path]:
-    return sorted(p for p in root.rglob("*.py") if "__pycache__" not in p.parts)
+    """Every `.py` file under `root`, sorted so parametrized test ids are stable."""
+    return sorted(path for path in root.rglob("*.py") if "__pycache__" not in path.parts)
 
 
 def rel(path: Path) -> str:
+    """`path` relative to `api/` for readable failure messages (just the name for temp files)."""
     try:
         return str(path.relative_to(PROJECT_ROOT))
     except ValueError:
@@ -25,16 +27,18 @@ def rel(path: Path) -> str:
 
 
 def slice_dirs() -> list[Path]:
+    """Every slice folder under `app/features/` (skips private and cache folders)."""
     if not FEATURES_ROOT.exists():
         return []
     return sorted(
-        p
-        for p in FEATURES_ROOT.iterdir()
-        if p.is_dir() and not p.name.startswith(("_", ".")) and p.name != "__pycache__"
+        folder
+        for folder in FEATURES_ROOT.iterdir()
+        if folder.is_dir() and not folder.name.startswith(("_", ".")) and folder.name != "__pycache__"
     )
 
 
 def slice_of(path: Path) -> str | None:
+    """The slice a file belongs to (`content` for `app/features/content/service.py`), or `None`."""
     try:
         return path.relative_to(FEATURES_ROOT).parts[0]
     except ValueError:
@@ -42,6 +46,7 @@ def slice_of(path: Path) -> str | None:
 
 
 def parse(path: Path) -> ast.Module:
+    """The file's syntax tree."""
     return ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
 
 
@@ -58,7 +63,7 @@ def imported_modules(path: Path) -> set[str]:
 
 
 def attribute_calls(path: Path) -> set[str]:
-    """Names of every `x.<name>(...)` call in a file."""
+    """Method names of every `something.<name>(...)` call in a file."""
     return {
         node.func.attr
         for node in ast.walk(parse(path))

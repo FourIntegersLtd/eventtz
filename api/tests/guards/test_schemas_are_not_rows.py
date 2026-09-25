@@ -10,14 +10,18 @@ from tests.guards._scan import FEATURES_ROOT, imported_modules, rel
 
 
 def schema_files() -> list[Path]:
-    return sorted(p for p in FEATURES_ROOT.rglob("schemas*.py") if "__pycache__" not in p.parts)
+    """Every `schemas*.py` in every slice."""
+    return sorted(path for path in FEATURES_ROOT.rglob("schemas*.py") if "__pycache__" not in path.parts)
 
 
 def violations(path: Path) -> list[str]:
+    """Row-model or repository modules the schema file imports."""
     return sorted(
-        m
-        for m in imported_modules(path)
-        if m.split(".")[-1].startswith(("models", "repository")) or ".models." in m or ".repository." in m
+        module
+        for module in imported_modules(path)
+        if module.split(".")[-1].startswith(("models", "repository"))
+        or ".models." in module
+        or ".repository." in module
     )
 
 
@@ -28,6 +32,6 @@ def test_schemas_do_not_expose_rows(path: Path) -> None:
 
 
 def test_the_guard_would_catch_a_row_in_a_schema(tmp_path: Path) -> None:
-    f = tmp_path / "schemas.py"
-    f.write_text("from app.features.content.models import PostRow\n", encoding="utf-8")
-    assert violations(f) == ["app.features.content.models", "app.features.content.models.PostRow"]
+    planted = tmp_path / "schemas.py"
+    planted.write_text("from app.features.content.models import PostRow\n", encoding="utf-8")
+    assert violations(planted) == ["app.features.content.models", "app.features.content.models.PostRow"]

@@ -66,6 +66,7 @@ Traps in this machine's shell:
 - Raise `AppError` subclasses with a stable `code`; the frontend branches on `code`, never on message text.
 - Keep money as integer pence inside `domain.py`; format only at the edge.
 - New setting → `api/app/core/settings.py` + `api/.env.example`. Schema change → next `backend/sql/NNN_*.sql`.
+- Name things for what they hold or do. No single-letter names, even in loops: `for booking in bookings`. Give every module, class and function a docstring, and comment any *why* that isn't obvious. New engineers onboard by reading the code (guarded in `api/tests/guards/`).
 - Fix the lint and type errors you introduce.
 
 ### Ask first

@@ -11,6 +11,7 @@ from tests.guards._scan import TESTS_ROOT, parse, python_files, rel
 
 
 def violations(path: Path) -> list[str]:
+    """Targets of `patch("app.…")` / `setattr("app.…")` calls in the file."""
     bad: list[str] = []
     for node in ast.walk(parse(path)):
         if not isinstance(node, ast.Call):
@@ -27,13 +28,17 @@ def violations(path: Path) -> list[str]:
     return bad
 
 
-@pytest.mark.parametrize("path", [p for p in python_files(TESTS_ROOT) if "guards" not in p.parts], ids=rel)
+@pytest.mark.parametrize(
+    "path", [path for path in python_files(TESTS_ROOT) if "guards" not in path.parts], ids=rel
+)
 def test_no_patching_app_modules(path: Path) -> None:
     bad = violations(path)
     assert not bad, f"{rel(path)} patches {bad}; add a port and inject a fake instead."
 
 
 def test_the_guard_would_catch_a_patch(tmp_path: Path) -> None:
-    f = tmp_path / "test_x.py"
-    f.write_text("from unittest.mock import patch\npatch('app.core.db.service_client')\n", encoding="utf-8")
-    assert violations(f) == ["app.core.db.service_client"]
+    planted = tmp_path / "test_planted.py"
+    planted.write_text(
+        "from unittest.mock import patch\npatch('app.core.db.service_client')\n", encoding="utf-8"
+    )
+    assert violations(planted) == ["app.core.db.service_client"]

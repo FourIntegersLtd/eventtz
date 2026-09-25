@@ -18,63 +18,84 @@ from pydantic import BaseModel
 
 
 class ErrorResponse(BaseModel):
+    """The JSON body of every error response, and its OpenAPI schema."""
+
     detail: str
     code: str
 
 
 class AppError(Exception):
+    """Base for every error a service raises. Subclasses set `status`, `code` and `default_message`."""
+
     status: int = 500
     code: str = "internal_error"
     default_message: str = "Something went wrong"
 
     def __init__(self, message: str | None = None) -> None:
+        """Use `message` as the user-facing `detail`, or the class's `default_message`."""
         self.message = message or self.default_message
         super().__init__(self.message)
 
 
 class InvalidInput(AppError):
+    """400: the request breaks a business rule (shape errors are FastAPI's 422)."""
+
     status = 400
     code = "invalid_input"
     default_message = "The request was not valid"
 
 
 class Unauthenticated(AppError):
+    """401: no valid session."""
+
     status = 401
     code = "unauthenticated"
     default_message = "Please sign in to continue."
 
 
 class Forbidden(AppError):
+    """403: signed in, but not allowed to do this."""
+
     status = 403
     code = "forbidden"
     default_message = "You do not have access to this resource"
 
 
 class NotFound(AppError):
+    """404: the thing does not exist, or the caller may not know it exists."""
+
     status = 404
     code = "not_found"
     default_message = "Not found"
 
 
 class Conflict(AppError):
+    """409: the change clashes with the current state (duplicate, wrong status)."""
+
     status = 409
     code = "conflict"
     default_message = "This clashes with something already saved"
 
 
 class PayloadTooLarge(AppError):
+    """413: an upload over the size limit."""
+
     status = 413
     code = "payload_too_large"
     default_message = "The upload is too large"
 
 
 class RateLimited(AppError):
+    """429: too many attempts in the window."""
+
     status = 429
     code = "rate_limited"
     default_message = "Too many requests. Try again later."
 
 
 class Unavailable(AppError):
+    """503: a service we depend on (Supabase, Stripe…) did not answer."""
+
     status = 503
     code = "unavailable"
     default_message = "A service we depend on is unavailable. Please try again."
@@ -84,29 +105,37 @@ def error_codes() -> list[str]:
     """Every `code` an `AppError` can carry, walked from the class tree."""
     found = {AppError.code}
 
-    def walk(cls: type[AppError]) -> None:
-        for sub in cls.__subclasses__():
-            found.add(sub.code)
-            walk(sub)
+    def collect_codes(error_class: type[AppError]) -> None:
+        """Add the code of every subclass below `error_class`, recursively."""
+        for subclass in error_class.__subclasses__():
+            found.add(subclass.code)
+            collect_codes(subclass)
 
-    walk(AppError)
+    collect_codes(AppError)
     return sorted(found)
 
 
 def error_responses(*errors: type[AppError]) -> dict[int | str, dict[str, Any]]:
     """The `responses=` mapping that documents a route's errors in OpenAPI."""
     responses: dict[int | str, dict[str, Any]] = {}
-    for err in errors:
-        entry = responses.setdefault(err.status, {"model": ErrorResponse, "description": ""})
+    for error_class in errors:
+        # Several errors can share a status; list all their codes under it.
+        entry = responses.setdefault(error_class.status, {"model": ErrorResponse, "description": ""})
         codes: list[str] = entry.setdefault("x-codes", [])
-        if err.code not in codes:
-            codes.append(err.code)
+        if error_class.code not in codes:
+            codes.append(error_class.code)
         entry["description"] = ", ".join(codes)
     return responses
 
 
 def register_error_handlers(app: FastAPI) -> None:
+    """Render every `AppError` as `{"detail", "code"}` with the error's status.
+
+    FastAPI's own 422 validation response is left unchanged, for parity with the baseline.
+    """
+
     @app.exception_handler(AppError)
-    async def app_error(_request: Request, exc: AppError) -> JSONResponse:
+    async def render_app_error(_request: Request, exc: AppError) -> JSONResponse:
+        """Turn a raised `AppError` into its JSON response."""
         body = ErrorResponse(detail=exc.message, code=exc.code)
         return JSONResponse(status_code=exc.status, content=body.model_dump())

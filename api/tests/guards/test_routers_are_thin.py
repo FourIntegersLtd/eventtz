@@ -13,17 +13,20 @@ from tests.guards._scan import imported_modules, rel, slice_dirs
 
 
 def router_files() -> list[Path]:
-    return sorted(p for d in slice_dirs() for p in d.glob("router*.py"))
+    """Every `router*.py` (router, router_admin, router_vendor…) in every slice."""
+    return sorted(path for slice_dir in slice_dirs() for path in slice_dir.glob("router*.py"))
 
 
 def _allowed_sibling(name: str) -> bool:
+    """True for the modules of its own slice a router may import."""
     return name in {"schemas", "errors"} or name.startswith("service")
 
 
 def violations(path: Path, slice_name: str) -> list[str]:
+    """Modules the router imports that it should reach only through its service."""
     bad: set[str] = set()
     for module in imported_modules(path):
-        parts = module.split(".")
+        parts = module.split(".")  # e.g. ["app", "features", "content", "service", ...]
         if module.startswith("app.adapters"):
             bad.add(module)
         if not module.startswith("app.features.") or len(parts) < 4:

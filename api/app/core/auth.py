@@ -23,14 +23,17 @@ from app.core.settings import get_settings
 
 log = get_logger(__name__)
 
+# Session cookies, same names and lifetimes as the baseline so existing sessions keep working.
 ACCESS_COOKIE = "eventtz_access_token"
 REFRESH_COOKIE = "eventtz_refresh_token"
 ACCESS_MAX_AGE = 60 * 60
 REFRESH_MAX_AGE = 60 * 60 * 24 * 14
 
+# The three account types. Staff are `admin`; `admin_role` says whether they are super admins.
 UserType = Literal["client", "vendor", "admin"]
 _USER_TYPES: frozenset[str] = frozenset({"client", "vendor", "admin"})
 
+# User-facing refusal copy (verbatim from `backend/app/features/auth/messages.py`).
 SIGN_IN_REQUIRED = "Please sign in to continue."
 SESSION_EXPIRED = "Session expired. Please sign in again."
 AUTH_SERVICE_UNAVAILABLE = "Authentication is temporarily unavailable. Please try again."
@@ -54,36 +57,53 @@ CLIENT_PORTAL_FORBIDDEN = (
 
 
 class SessionExpired(Unauthenticated):
+    """The cookie is malformed or the session was revoked; the web app sends the user to sign in."""
+
     code = "session_expired"
     default_message = SESSION_EXPIRED
 
 
 class AccountDeleted(Unauthenticated):
+    """The account was closed (`users.deleted_at` set); closed accounts are tombstones."""
+
     code = "account_deleted"
     default_message = ACCOUNT_DELETED
 
 
 class AccountSuspended(Forbidden):
+    """Staff suspended this account; it can sign in but cannot use the product."""
+
     code = "account_suspended"
     default_message = ACCOUNT_SUSPENDED_CONTACT
 
 
 class WrongPortal(Forbidden):
+    """Signed in, but as the wrong account type for this route (e.g. a vendor on a client route)."""
+
     code = "wrong_portal"
 
 
 class SuperAdminOnly(Forbidden):
+    """A staff action that only super admins may take."""
+
     code = "super_admin_only"
     default_message = SUPER_ADMIN_ONLY
 
 
 class AuthUnavailable(Unavailable):
+    """Supabase Auth did not answer, so we cannot tell who is calling."""
+
     code = "auth_unavailable"
     default_message = AUTH_SERVICE_UNAVAILABLE
 
 
 @dataclass(frozen=True)
 class Principal:
+    """The signed-in caller, as every service sees them.
+
+    Built from the Supabase Auth user plus the `public.users` row by `principal_from`.
+    """
+
     id: str
     email: str | None
     user_type: UserType
@@ -94,15 +114,16 @@ class Principal:
 
     @property
     def is_super_admin(self) -> bool:
+        """True for staff whose role is `super_admin`."""
         return self.user_type == "admin" and self.admin_role == "super_admin"
 
 
 def _metadata_user_type(auth_user: dict[str, Any]) -> str | None:
     """`app_metadata` (staff-set) wins over `user_metadata` (set at signup)."""
     for key in ("app_metadata", "user_metadata"):
-        meta = auth_user.get(key)
-        if isinstance(meta, dict) and meta.get("user_type") in _USER_TYPES:
-            return str(meta["user_type"])
+        metadata = auth_user.get(key)
+        if isinstance(metadata, dict) and metadata.get("user_type") in _USER_TYPES:
+            return str(metadata["user_type"])
     return None
 
 
@@ -148,17 +169,20 @@ def cookie_options() -> dict[str, Any]:
 
 
 def set_session_cookies(response: Response, access_token: str, refresh_token: str) -> None:
+    """Store a new Supabase session on the response as the two httpOnly cookies."""
     response.set_cookie(ACCESS_COOKIE, access_token, max_age=ACCESS_MAX_AGE, **cookie_options())
     response.set_cookie(REFRESH_COOKIE, refresh_token, max_age=REFRESH_MAX_AGE, **cookie_options())
 
 
 def clear_session_cookies(response: Response) -> None:
-    opts = cookie_options()
-    for name in (ACCESS_COOKIE, REFRESH_COOKIE):
-        response.delete_cookie(name, path="/", secure=opts["secure"], samesite=opts["samesite"])
+    """Delete both session cookies; attributes must match the ones they were set with."""
+    options = cookie_options()
+    for cookie_name in (ACCESS_COOKIE, REFRESH_COOKIE):
+        response.delete_cookie(cookie_name, path="/", secure=options["secure"], samesite=options["samesite"])
 
 
 def _looks_like_jwt(token: str) -> bool:
+    """Cheap shape check (three dot-separated parts) before spending a network call on the token."""
     return token.count(".") == 2 and " " not in token
 
 
@@ -186,6 +210,7 @@ def _auth_user(access_token: str) -> dict[str, Any] | None:
 
 
 def _profile(user_id: str) -> dict[str, Any] | None:
+    """The caller's `public.users` row (type, role, status flags), or `None` if missing or unreadable."""
     try:
         return db.first(
             db.service_client()
@@ -201,6 +226,12 @@ def _profile(user_id: str) -> dict[str, Any] | None:
 
 
 def _session_principal(request: Request, response: Response, *, strict: bool) -> Principal | None:
+    """Resolve the access cookie to a `Principal`.
+
+    `strict=True` raises the matching `AppError` for every failure (for routes that
+    need a user); `strict=False` returns `None` instead (for routes that work
+    anonymously). A bad or dead session also clears the cookies either way.
+    """
     token = request.cookies.get(ACCESS_COOKIE)
     if not token:
         if strict:
@@ -232,6 +263,7 @@ def _session_principal(request: Request, response: Response, *, strict: bool) ->
 
 
 def resolve_principal(request: Request, response: Response) -> Principal:
+    """The signed-in caller, or an `Unauthenticated`/`AuthUnavailable` error. Tests override this."""
     principal = _session_principal(request, response, strict=True)
     assert principal is not None  # strict mode raises instead of returning None
     return principal
@@ -243,12 +275,14 @@ def optional_principal(request: Request, response: Response) -> Principal | None
 
 
 def require_user(principal: Annotated[Principal, Depends(resolve_principal)]) -> Principal:
+    """Any signed-in account; suspended clients and vendors are refused."""
     if principal.account_suspended and principal.user_type in ("client", "vendor"):
         raise AccountSuspended()
     return principal
 
 
 def _require_type(principal: Principal, user_type: UserType, message: str) -> Principal:
+    """Refuse with `WrongPortal(message)` unless the caller is of `user_type`."""
     if principal.user_type != user_type:
         log.warning(
             "auth: denied user_id=%s expected=%s actual=%s", principal.id, user_type, principal.user_type
@@ -258,14 +292,17 @@ def _require_type(principal: Principal, user_type: UserType, message: str) -> Pr
 
 
 def require_client(principal: Annotated[Principal, Depends(require_user)]) -> Principal:
+    """A signed-in client account."""
     return _require_type(principal, "client", CLIENT_PORTAL_FORBIDDEN)
 
 
 def require_vendor(principal: Annotated[Principal, Depends(require_user)]) -> Principal:
+    """A signed-in vendor account."""
     return _require_type(principal, "vendor", VENDOR_PORTAL_FORBIDDEN)
 
 
 def require_staff(principal: Annotated[Principal, Depends(require_user)]) -> Principal:
+    """A signed-in, unsuspended staff (admin) account."""
     _require_type(principal, "admin", ADMIN_PORTAL_FORBIDDEN)
     if principal.account_suspended:
         raise AccountSuspended(ADMIN_ACCOUNT_SUSPENDED)
@@ -273,11 +310,13 @@ def require_staff(principal: Annotated[Principal, Depends(require_user)]) -> Pri
 
 
 def require_super_admin(principal: Annotated[Principal, Depends(require_staff)]) -> Principal:
+    """A staff account with the `super_admin` role."""
     if not principal.is_super_admin:
         raise SuperAdminOnly()
     return principal
 
 
+# What routers declare as a parameter type, e.g. `def list_mine(vendor: CurrentVendor)`.
 CurrentUser = Annotated[Principal, Depends(require_user)]
 CurrentClient = Annotated[Principal, Depends(require_client)]
 CurrentVendor = Annotated[Principal, Depends(require_vendor)]

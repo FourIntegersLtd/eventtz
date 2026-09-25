@@ -6,6 +6,16 @@ This is the whole method. It is the one OSCE Guide used: freeze what exists, the
 
 **No behaviour change without a test in the same commit.** A slice's freeze tests are committed, and passing against the baseline `backend/`, **before** any code for that slice lands in `api/`. The baseline is never edited to make a test pass.
 
+## Names and comments
+
+Code is written to be read by the next engineer to join, so:
+
+- **Every name says what it holds or does.** That means no single-letter names: not `i`, `x`, `p` or `f`, and not in loops or comprehensions either (`for booking in bookings`, not `for b in bookings`). The only exception is `_`, for a value you ignore.
+- **Every module, class and function has a docstring**, private helpers and nested route handlers included. The docstring says what the code is for and anything that isn't obvious. Test functions are the one exception, because their names already read as sentences. Test helpers and fixtures still need docstrings.
+- **Add an inline comment wherever the *why* isn't obvious**: a baseline quirk kept for parity, a workaround, or a number with a reason behind it.
+
+`test_names_are_descriptive` and `test_code_is_documented` enforce this across `app/` and `tests/`.
+
 ## 0. Freeze the baseline (`../acceptance/`)
 
 Turn every route the slice owns into black-box HTTP tests in `acceptance/test_<slice>.py`. Each test covers:
@@ -46,6 +56,8 @@ The platform guards already cover:
 - no `patch("app.…")` in tests
 - README headings
 - migration numbering
+- descriptive names (no single-letter identifiers)
+- docstrings on every module, class and function
 
 Add a slice-specific guard only when the slice has a rule of its own. Every guard has a meta-test that plants a violation.
 

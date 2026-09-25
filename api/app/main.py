@@ -1,4 +1,8 @@
-"""The FastAPI app. The only place `include_router` is called."""
+"""The FastAPI app. The only place `include_router` is called.
+
+`uvicorn app.main:app` imports this module: it sets up logging and Sentry, then
+builds the app. Tests call `create_app()` directly to get a fresh instance.
+"""
 
 from __future__ import annotations
 
@@ -10,14 +14,17 @@ from app.core.logging import setup_logging
 from app.core.observability import init_sentry
 from app.core.settings import LOCAL_ORIGIN_REGEX, get_settings
 
+# Every product route lives under this prefix; the web app and the baseline use the same one.
 API_PREFIX = "/api/v1"
 
 
 def _routers() -> list[APIRouter]:
+    """Every slice router, in mount order. Add a slice's router here when it is rebuilt."""
     return []
 
 
 def create_app() -> FastAPI:
+    """Build the app: error rendering, CORS for the web app, slice routers and `/health`."""
     settings = get_settings()
     app = FastAPI(title="Eventtz API", version="1.0.0")
     register_error_handlers(app)
