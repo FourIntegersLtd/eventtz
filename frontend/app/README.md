@@ -1,6 +1,6 @@
 # `frontend/app/` — Next.js App Router map
 
-This folder defines **URLs and page shells only**. Product UI, state, and API calls live in [`features/`](../features/) and [`lib/`](../lib/). See [`cursor.md`](../../cursor.md) for full repo conventions.
+This folder defines **URLs and page shells only**. Product UI, state, and API calls live in [`features/`](../features/) and [`lib/`](../lib/). See [`AGENTS.md`](../../AGENTS.md) for repo conventions.
 
 ## Route groups (parentheses folders)
 

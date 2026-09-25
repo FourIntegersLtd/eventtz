@@ -2,7 +2,7 @@
 
 Next.js App Router UI for [Eventtz](https://eventtz.com): a UK marketplace connecting clients with African event vendors. Clients browse, enquire, book, and pay; vendors manage profiles, bookings, quotes, and Stripe payouts; admins operate the console (vendors, disputes, support, blog, email testing).
 
-This package talks to the FastAPI backend under **`/api/v1`**. Full-stack architecture and conventions live in the repo root **[`cursor.md`](../cursor.md)** and **[`AGENTS.md`](../AGENTS.md)**.
+This package talks to the FastAPI backend under **`/api/v1`**. Full-stack architecture and conventions live in **[`AGENTS.md`](../AGENTS.md)**.
 
 ---
 
@@ -229,6 +229,6 @@ Set `BACKEND_URL` to your production API origin for rewrites. Host the frontend 
 
 | Doc | Contents |
 |-----|----------|
-| [`cursor.md`](../cursor.md) | Canonical architecture (backend + frontend) |
+| [`UI-CONVENTIONS.md`](UI-CONVENTIONS.md) | Feedback, mobile, motion and Lottie rules |
 | [`backend/README.md`](../backend/README.md) | API setup, env, migrations, deploy |
 | [`AGENTS.md`](../AGENTS.md) | Cursor agent entrypoint |

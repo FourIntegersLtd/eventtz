@@ -143,7 +143,7 @@ export function getVendorListingOverrideMeta(raw: string | undefined): VendorLis
 
 // ---------------------------------------------------------------------------
 // Booking domain - shared between client and vendor portals so status colors,
-// labels, and cross-role shapes are defined exactly once. See cursor.md /
+// labels, and cross-role shapes are defined exactly once. See docs/domain-rules.md /
 // the "Signed-in UX overhaul" plan for why this file, not each *BookingsApi,
 // owns this vocabulary.
 // ---------------------------------------------------------------------------

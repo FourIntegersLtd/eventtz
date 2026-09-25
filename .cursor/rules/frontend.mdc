@@ -1,42 +1,10 @@
 ---
-description: Next.js frontend conventions for Eventtz
-globs: frontend/**
+description: Next.js frontend conventions for Eventtz (pointer)
+globs: web/**
 alwaysApply: false
 ---
 
-# Frontend rules
-
-## Stack
-
-Next.js App Router, TypeScript, Tailwind, Axios via **`lib/axios.ts`** (`withCredentials: true`).
-
-## Layering (do not invert)
-
-| Layer | Path | Role |
-|-------|------|------|
-| Routes | `app/**/page.tsx` | Thin shells — auth, layout, compose one feature view |
-| Features | `features/<domain>/**` | Screens, hooks, local types |
-| Shared UI | `components/ui/**` | Primitives — reuse before duplicating |
-| API | `lib/*Api.ts` | All backend HTTP calls |
-
-- **No raw HTTP in `app/`** for app APIs.
-- **`lib/` must not import `features/`.**
-- **Tailwind** for all styling; brand tokens in **`globals.css`**.
-
-## Thin pages
-
-Route files: auth/shell + one feature view. Extract to **`features/<domain>/*View.tsx`** + hook when a page grows past ~50 lines of state/effects.
-
-## Mutations
-
-Use **`useToast()`** + **`lib/mutationFeedback.ts`** for save/send/approve feedback. Chat send is implicitly OK (no toast).
-
-## Conventions
-
-- API paths only in **`lib/*Api.ts`** — match `/api/v1/...`.
-- Forms: Zod via **`lib/validation/`**.
-- Buttons: **`components/ui/Button.tsx`**; loading: **`LoadingState`** / **`LoadingSpinner`**.
-- Back nav: **`BackLink.tsx`**.
-- **Sentry:** `NEXT_PUBLIC_SENTRY_DSN` empty = no-op. Shared options in `lib/sentryConfig.ts` (`getSentrySharedInitOptions`); the three Next entrypoints only call `Sentry.init` with those options (Replay stays client-only). Do not drop `next.config.ts` rewrites when wrapping `withSentryConfig`.
-
-Details: **`docs/cursor/architecture-reference.md`** (Frontend section).
+Tiers import downwards only: `app → surfaces → domains → capabilities → foundation`
+(enforced by `eslint-plugin-boundaries`). API types come from the generated
+`foundation/api/schema.d.ts` (`npm run api:types`). UI rules: **`frontend/UI-CONVENTIONS.md`**.
+Run `npm run ci` before calling work done.

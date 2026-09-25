@@ -51,4 +51,4 @@ Both build on shared surfaces in [`ui/sectionBlockTokens.ts`](ui/sectionBlockTok
 3. **Portal or admin chrome** → `portal-shell/` or `admin-shell/`
 4. **Single-feature widget** → `features/<domain>/`, not here
 
-See [`cursor.md`](../../cursor.md) for full frontend layering.
+See [`AGENTS.md`](../../AGENTS.md) and [`UI-CONVENTIONS.md`](../UI-CONVENTIONS.md).

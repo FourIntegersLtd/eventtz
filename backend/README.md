@@ -1,6 +1,6 @@
 # Eventtz backend
 
-FastAPI API for Eventtz (Supabase Postgres, server-side service role). Layering and conventions are documented in the repo root **[`cursor.md`](../cursor.md)** (services vs endpoints, logging, auth).
+FastAPI API for Eventtz (Supabase Postgres, server-side service role). Layering and conventions are documented in the repo root **[`AGENTS.md`](../AGENTS.md)** and [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Prerequisites
 
@@ -52,7 +52,7 @@ See **`.env.example`** for optional log file tuning (`LOG_DIR`, `LOG_MAX_BYTES`,
 
 ### Routers under `/api/v1`
 
-Registered in [`app/http/router.py`](app/http/router.py). Each maps to a folder under `app/features/`. See `cursor.md` for the bug-tracing guide and full feature table.
+Registered in [`app/http/router.py`](app/http/router.py). Each maps to a folder under `app/features/`. Each slice documents itself in its `README.md`.
 
 ## Database (Supabase Postgres)
 
@@ -102,7 +102,7 @@ cd backend && poetry install --extras dev && poetry run pytest -q
 
 ## Payments (Stripe Connect)
 
-Vendor Connect Express + client Checkout, held funds, and payouts live in `app/features/payments/stripe.py` (thin Stripe SDK wrapper) and `app/features/bookings/payments.py` (checkout sessions, webhook finalize, mutual-completion payout, admin refund/release). Connect is **not** part of vendor profile onboarding - it runs at Accept / Payments. See the **Payments (Stripe Connect)** section in [`cursor.md`](../cursor.md) for the full design (held-funds model, `payment_status` vs `status`, idempotency).
+Vendor Connect Express + client Checkout, held funds, and payouts live in `app/features/payments/stripe.py` (thin Stripe SDK wrapper) and `app/features/bookings/payments.py` (checkout sessions, webhook finalize, mutual-completion payout, admin refund/release). Connect is **not** part of vendor profile onboarding - it runs at Accept / Payments. See the **Payments (Stripe Connect)** section in [`docs/domain-rules.md`](../docs/domain-rules.md) for the full design (held-funds model, `payment_status` vs `status`, idempotency).
 
 **Setup:**
 

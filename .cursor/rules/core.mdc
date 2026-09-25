@@ -1,34 +1,8 @@
 ---
-description: Eventtz core architecture and maintainability rules
+description: Eventtz core rules (pointer)
 alwaysApply: true
 ---
 
-# Eventtz — core rules
-
-## Layout
-
-```
-eventtz/
-├── backend/     # FastAPI, Supabase — features/<name>/http/ + logic
-├── frontend/    # Next.js App Router — features/<domain>/ + lib/*Api.ts
-└── docs/cursor/ # Full architecture reference (not auto-loaded)
-```
-
-## Maintainability (both stacks)
-
-- **One direction of dependencies:** feature `http/` → logic + `core/`; logic must **not** import `http/`. Frontend: API calls only via **`lib/*`**, not raw `fetch` in route files.
-- **Feature-first:** group by product area (`bookings/`, `chat/`, `auth/`).
-- **Reuse contracts:** `app/contracts/` (backend), `lib/api-types.ts` / `lib/domain-types.ts` (frontend).
-- **Single router registration:** new FastAPI routers only in **`app/http/router.py`**.
-- **New env/migrations:** `config.py` + `backend/.env.example`; DB changes → next `backend/sql/NNN_*.sql`.
-- **Small files:** split modules past ~300–400 lines without a clear single purpose.
-
-## Scope
-
-Change only what the task requires. Prefer reuse over copy-paste.
-
-## Deep reference
-
-Full route tables, feature inventory, and conventions: **`docs/cursor/architecture-reference.md`** (or `@cursor.md` in chat when doing architecture work).
-
-Token/cost tips: **`docs/cursor/token-usage-guide.md`**.
+Read **`AGENTS.md`** at the repo root: repo map, commands, Always / Ask first / Never,
+traps and engineering principles. Architecture decisions live in **`docs/adr/`**;
+business invariants in **`docs/domain-rules.md`** and each slice's `README.md`.

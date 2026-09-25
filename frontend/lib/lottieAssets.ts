@@ -3,7 +3,7 @@
  * Swap files freely - keep keys stable; prefer new filenames when replacing
  * artwork so browsers don't keep serving a cached wrong JSON.
  *
- * Which component to use? See **Motion & Lottie** decision guide in `cursor.md`.
+ * Which component to use? See **Motion & Lottie** decision guide in `frontend/UI-CONVENTIONS.md`.
  * Comments describe the **actual** artwork (verify when replacing files).
  */
 export const LOTTIE_ASSETS = {
