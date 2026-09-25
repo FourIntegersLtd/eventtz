@@ -54,6 +54,14 @@ class Settings(BaseSettings):
     cursor_automation_webhook_url: str = ""
     cursor_automation_webhook_secret: str = ""
 
+    # S3 bucket for user uploads (photos, videos, certificates). Empty keys switch uploads off (503).
+    aws_access_key: str = ""
+    aws_secret_access_key: str = ""
+    aws_s3_bucket_name: str = "eventtz"
+    aws_region: str = "eu-west-2"
+    # Largest general upload (`POST /media/files`) in bytes. Images have no app-level cap.
+    media_max_file_upload_bytes: int = 50_000_000
+
     @property
     def admin_alert_emails_list(self) -> list[str]:
         """`admin_alert_emails` split and trimmed, in the order configured."""

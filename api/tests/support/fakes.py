@@ -12,7 +12,7 @@ from typing import Any
 from pydantic import BaseModel
 
 from app.core.errors import AppError
-from app.core.ports import ChatMessage, OutgoingEmail, ReplyModel, WebhookCall
+from app.core.ports import ChatMessage, OutgoingEmail, ReplyModel, StoredFile, WebhookCall
 
 
 @dataclass
@@ -69,3 +69,32 @@ class FakeWebhooks:
     def post_in_background(self, call: WebhookCall) -> None:
         """Record the call."""
         self.posted.append(call)
+
+
+@dataclass
+class SavedObject:
+    """One object a `FakeStorage` was asked to save."""
+
+    key: str
+    body: bytes
+    content_type: str
+
+
+@dataclass
+class FakeStorage:
+    """Keeps uploads in memory. `configured=False` simulates missing keys; `error` makes saves fail."""
+
+    configured: bool = True
+    error: Exception | None = None
+    saved: list[SavedObject] = field(default_factory=list)
+
+    def is_configured(self) -> bool:
+        """Whether storage is "switched on"."""
+        return self.configured
+
+    def save(self, *, key: str, body: bytes, content_type: str) -> StoredFile:
+        """Record the object (or raise `error`) and return a predictable public URL."""
+        if self.error is not None:
+            raise self.error
+        self.saved.append(SavedObject(key=key, body=body, content_type=content_type))
+        return StoredFile(bucket="fake-bucket", key=key, public_url=f"https://files.example/{key}")

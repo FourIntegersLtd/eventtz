@@ -119,6 +119,30 @@ class Webhooks(Protocol):
         ...
 
 
+# --- file storage -------------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class StoredFile:
+    """Where an uploaded file ended up."""
+
+    bucket: str
+    key: str
+    public_url: str
+
+
+class Storage(Protocol):
+    """Public file storage for user uploads (an S3 bucket in production)."""
+
+    def is_configured(self) -> bool:
+        """False when storage is switched off (no credentials), so uploads should fail fast."""
+        ...
+
+    def save(self, *, key: str, body: bytes, content_type: str) -> StoredFile:
+        """Store `body` under `key` as a public object. Raises on any storage failure."""
+        ...
+
+
 # --- dependencies the routers declare ----------------------------------------------------------
 
 
@@ -137,7 +161,13 @@ def webhooks_port() -> Webhooks:
     raise NotImplementedError("webhooks_port is wired in app.main.create_app")
 
 
+def storage_port() -> Storage:
+    """Replaced by `create_app()` with the S3 adapter (and by tests with a fake)."""
+    raise NotImplementedError("storage_port is wired in app.main.create_app")
+
+
 # What routers declare as a parameter type, e.g. `def ask(language_model: LanguageModelDependency)`.
 LanguageModelDependency = Annotated[LanguageModel, Depends(language_model_port)]
 MailerDependency = Annotated[Mailer, Depends(mailer_port)]
 WebhooksDependency = Annotated[Webhooks, Depends(webhooks_port)]
+StorageDependency = Annotated[Storage, Depends(storage_port)]

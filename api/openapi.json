@@ -593,6 +593,34 @@
         "title": "BlogPostsListResponse",
         "type": "object"
       },
+      "Body_upload_file_api_v1_media_files_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_file_api_v1_media_files_post",
+        "type": "object"
+      },
+      "Body_upload_image_api_v1_media_images_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_image_api_v1_media_images_post",
+        "type": "object"
+      },
       "ContactSubmitBody": {
         "description": "A client or vendor contact message, optionally about one of their bookings.",
         "properties": {
@@ -1015,6 +1043,30 @@
           "title"
         ],
         "title": "HelpRelatedArticle",
+        "type": "object"
+      },
+      "ImageUploadResponse": {
+        "description": "Where an upload was stored. Both upload routes return this (the name predates `/files`).",
+        "properties": {
+          "bucket": {
+            "title": "Bucket",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "public_url": {
+            "title": "Public Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "bucket",
+          "path",
+          "public_url"
+        ],
+        "title": "ImageUploadResponse",
         "type": "object"
       },
       "ValidationError": {
@@ -2400,6 +2452,185 @@
         "summary": "List Help Categories",
         "tags": [
           "help"
+        ]
+      }
+    },
+    "/api/v1/media/files": {
+      "post": {
+        "description": "Upload an image, portfolio video or certificate PDF (up to the configured size limit).",
+        "operationId": "upload_file_api_v1_media_files_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_file_api_v1_media_files_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageUploadResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "media_file_type_unsupported, media_file_empty",
+            "x-codes": [
+              "media_file_type_unsupported",
+              "media_file_empty"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "media_file_too_large",
+            "x-codes": [
+              "media_file_too_large"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "auth_unavailable, media_upload_failed",
+            "x-codes": [
+              "auth_unavailable",
+              "media_upload_failed"
+            ]
+          }
+        },
+        "summary": "Upload File",
+        "tags": [
+          "media"
+        ]
+      }
+    },
+    "/api/v1/media/images": {
+      "post": {
+        "description": "Upload a photo (any size) for use anywhere in the app.",
+        "operationId": "upload_image_api_v1_media_images_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_image_api_v1_media_images_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageUploadResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "media_image_only, media_file_empty",
+            "x-codes": [
+              "media_image_only",
+              "media_file_empty"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "auth_unavailable, media_upload_failed",
+            "x-codes": [
+              "auth_unavailable",
+              "media_upload_failed"
+            ]
+          }
+        },
+        "summary": "Upload Image",
+        "tags": [
+          "media"
         ]
       }
     },
