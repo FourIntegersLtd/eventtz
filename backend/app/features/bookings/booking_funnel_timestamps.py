@@ -174,19 +174,13 @@ def mark_refunded(booking_id: str) -> None:
         logger.exception("funnel: refunded_at failed booking=%s", booking_id)
 
 
-def mark_customer_cancelled_failure(booking_id: str) -> None:
-    if not booking_id:
-        return
-    try:
-        now = _now_iso()
-        get_db().table("booking_requests").update(
-            {
-                "failure_reason": FAILURE_CUSTOMER_CANCELLED,
-                "failure_noted_at": now,
-            },
-        ).eq("id", booking_id).is_("failure_reason", "null").execute()
-    except Exception:
-        logger.exception("funnel: customer cancel failure failed booking=%s", booking_id)
+def client_cancel_funnel_fields() -> dict[str, str]:
+    """Funnel analytics fields for a successful client-initiated cancellation."""
+    now = _now_iso()
+    return {
+        "failure_reason": FAILURE_CUSTOMER_CANCELLED,
+        "failure_noted_at": now,
+    }
 
 
 def mark_stale_enquiries_no_response(*, sla_hours: int) -> int:
