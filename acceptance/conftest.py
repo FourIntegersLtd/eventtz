@@ -62,10 +62,6 @@ NOT_YET_ON_API = {
         "waits for payments merge — ws18 wires the money branch"
     ),
     "test_planner.py::*": "the planner slice follows disputes",
-    "test_ai_onboarding.py::test_copilot_*": "the copilot slice follows the planner",
-    "test_ai_onboarding.py::test_generate_bio_*": "vendor AI helpers arrive with the copilot slice",
-    "test_ai_onboarding.py::test_review_packages_*": "vendor AI helpers arrive with the copilot slice",
-    "test_ai_onboarding.py::test_analyze_portfolio_*": "vendor AI helpers arrive with the copilot slice",
 }
 LOCAL_HOSTS = ("http://127.0.0.1", "http://localhost", "postgresql://postgres:postgres@127.0.0.1:")
 
