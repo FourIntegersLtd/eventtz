@@ -247,6 +247,719 @@
         "title": "AdminConversationMessagesResponse",
         "type": "object"
       },
+      "AdminDashboardMetrics": {
+        "description": "The admin dashboard's charts over a rolling window of days.",
+        "properties": {
+          "bookings_created": {
+            "items": {
+              "$ref": "#/components/schemas/AdminDashboardTimeBucket"
+            },
+            "title": "Bookings Created",
+            "type": "array"
+          },
+          "bookings_paid": {
+            "items": {
+              "$ref": "#/components/schemas/AdminDashboardTimeBucket"
+            },
+            "title": "Bookings Paid",
+            "type": "array"
+          },
+          "open_disputes_count": {
+            "default": 0,
+            "title": "Open Disputes Count",
+            "type": "integer"
+          },
+          "period_days": {
+            "title": "Period Days",
+            "type": "integer"
+          },
+          "signups": {
+            "items": {
+              "$ref": "#/components/schemas/AdminDashboardSignupBucket"
+            },
+            "title": "Signups",
+            "type": "array"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "period_days"
+        ],
+        "title": "AdminDashboardMetrics",
+        "type": "object"
+      },
+      "AdminDashboardSignupBucket": {
+        "description": "One day's new client and vendor accounts.",
+        "properties": {
+          "clients": {
+            "default": 0,
+            "title": "Clients",
+            "type": "integer"
+          },
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "vendors": {
+            "default": 0,
+            "title": "Vendors",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "date"
+        ],
+        "title": "AdminDashboardSignupBucket",
+        "type": "object"
+      },
+      "AdminDashboardSummary": {
+        "description": "Headline counts across users, vendors, bookings, conversations and reviews.",
+        "properties": {
+          "bookings_accepted": {
+            "title": "Bookings Accepted",
+            "type": "integer"
+          },
+          "bookings_cancelled": {
+            "title": "Bookings Cancelled",
+            "type": "integer"
+          },
+          "bookings_completed": {
+            "title": "Bookings Completed",
+            "type": "integer"
+          },
+          "bookings_declined": {
+            "title": "Bookings Declined",
+            "type": "integer"
+          },
+          "bookings_needing_support": {
+            "title": "Bookings Needing Support",
+            "type": "integer"
+          },
+          "bookings_paid_count": {
+            "title": "Bookings Paid Count",
+            "type": "integer"
+          },
+          "bookings_pending": {
+            "title": "Bookings Pending",
+            "type": "integer"
+          },
+          "conversations_count": {
+            "title": "Conversations Count",
+            "type": "integer"
+          },
+          "reviews_count": {
+            "title": "Reviews Count",
+            "type": "integer"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "users_admin": {
+            "title": "Users Admin",
+            "type": "integer"
+          },
+          "users_client": {
+            "title": "Users Client",
+            "type": "integer"
+          },
+          "users_vendor": {
+            "title": "Users Vendor",
+            "type": "integer"
+          },
+          "vendors_approved": {
+            "title": "Vendors Approved",
+            "type": "integer"
+          },
+          "vendors_banned": {
+            "title": "Vendors Banned",
+            "type": "integer"
+          },
+          "vendors_pending": {
+            "title": "Vendors Pending",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "users_client",
+          "users_vendor",
+          "users_admin",
+          "vendors_pending",
+          "vendors_approved",
+          "vendors_banned",
+          "bookings_pending",
+          "bookings_accepted",
+          "bookings_completed",
+          "bookings_declined",
+          "bookings_cancelled",
+          "bookings_paid_count",
+          "bookings_needing_support",
+          "conversations_count",
+          "reviews_count"
+        ],
+        "title": "AdminDashboardSummary",
+        "type": "object"
+      },
+      "AdminDashboardTimeBucket": {
+        "description": "One day's count and takings, for the bookings-created and bookings-paid charts.",
+        "properties": {
+          "count": {
+            "default": 0,
+            "title": "Count",
+            "type": "integer"
+          },
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "gmv_gbp": {
+            "default": 0.0,
+            "title": "Gmv Gbp",
+            "type": "number"
+          }
+        },
+        "required": [
+          "date"
+        ],
+        "title": "AdminDashboardTimeBucket",
+        "type": "object"
+      },
+      "AdminDirectorySearchResponse": {
+        "description": "Every account matching a directory search, capped at `limit`.",
+        "properties": {
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "users": {
+            "items": {
+              "$ref": "#/components/schemas/AdminDirectoryUserRow"
+            },
+            "title": "Users",
+            "type": "array"
+          }
+        },
+        "required": [
+          "users"
+        ],
+        "title": "AdminDirectorySearchResponse",
+        "type": "object"
+      },
+      "AdminDirectoryUserRow": {
+        "description": "One matched account: a client or vendor, with the label the console should show.",
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "kind": {
+            "enum": [
+              "client",
+              "vendor"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "label",
+          "kind"
+        ],
+        "title": "AdminDirectoryUserRow",
+        "type": "object"
+      },
+      "AdminDisputeCase": {
+        "description": "A dispute as staff see it: every internal field, plus who everyone involved is.",
+        "properties": {
+          "assigned_admin_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned Admin Email"
+          },
+          "assigned_admin_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned Admin Id"
+          },
+          "booking_request_id": {
+            "title": "Booking Request Id",
+            "type": "string"
+          },
+          "booking_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booking Status"
+          },
+          "client_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Email"
+          },
+          "client_resolution_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Resolution Note"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "event_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Date"
+          },
+          "event_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Name"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "internal_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Internal Notes"
+          },
+          "opened_by_display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opened By Display Name"
+          },
+          "opened_by_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opened By Email"
+          },
+          "opened_by_role": {
+            "anyOf": [
+              {
+                "enum": [
+                  "client",
+                  "vendor"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opened By Role"
+          },
+          "opened_by_user_id": {
+            "title": "Opened By User Id",
+            "type": "string"
+          },
+          "refund_amount_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refund Amount Gbp"
+          },
+          "resolution_action": {
+            "anyOf": [
+              {
+                "enum": [
+                  "release_to_vendor",
+                  "refund_client",
+                  "partial_refund"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolution Action"
+          },
+          "resolution_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolution Note"
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At"
+          },
+          "status": {
+            "enum": [
+              "open",
+              "under_review",
+              "resolved",
+              "closed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "vendor_display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor Display Name"
+          },
+          "vendor_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor Email"
+          },
+          "vendor_resolution_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor Resolution Note"
+          }
+        },
+        "required": [
+          "id",
+          "booking_request_id",
+          "opened_by_user_id",
+          "status",
+          "summary"
+        ],
+        "title": "AdminDisputeCase",
+        "type": "object"
+      },
+      "AdminDisputePatchBody": {
+        "description": "What staff may change on a dispute. Only the fields actually set are applied.",
+        "properties": {
+          "assigned_admin_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned Admin Id"
+          },
+          "client_resolution_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Resolution Note"
+          },
+          "internal_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Internal Notes"
+          },
+          "refund_amount_gbp": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refund Amount Gbp"
+          },
+          "resolution_action": {
+            "anyOf": [
+              {
+                "enum": [
+                  "release_to_vendor",
+                  "refund_client",
+                  "partial_refund"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolution Action"
+          },
+          "resolution_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolution Note"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "open",
+                  "under_review",
+                  "resolved",
+                  "closed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "vendor_resolution_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor Resolution Note"
+          }
+        },
+        "title": "AdminDisputePatchBody",
+        "type": "object"
+      },
+      "AdminDisputesListResponse": {
+        "description": "Every dispute matching the admin list's status filter.",
+        "properties": {
+          "disputes": {
+            "items": {
+              "$ref": "#/components/schemas/AdminDisputeCase"
+            },
+            "title": "Disputes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "disputes"
+        ],
+        "title": "AdminDisputesListResponse",
+        "type": "object"
+      },
+      "AdminMarketplaceAnalyticsResponse": {
+        "description": "The marketplace funnel: enquiries through acceptance, payment and completion.",
+        "properties": {
+          "by_category": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "By Category",
+            "type": "array"
+          },
+          "by_location": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "By Location",
+            "type": "array"
+          },
+          "failure_reasons": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Failure Reasons",
+            "type": "array"
+          },
+          "from_date": {
+            "title": "From Date",
+            "type": "string"
+          },
+          "overview": {
+            "additionalProperties": true,
+            "title": "Overview",
+            "type": "object"
+          },
+          "recruitment_hints": {
+            "additionalProperties": true,
+            "title": "Recruitment Hints",
+            "type": "object"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "to_date": {
+            "title": "To Date",
+            "type": "string"
+          },
+          "top_vendors": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Top Vendors",
+            "type": "array"
+          }
+        },
+        "required": [
+          "from_date",
+          "to_date"
+        ],
+        "title": "AdminMarketplaceAnalyticsResponse",
+        "type": "object"
+      },
       "AdminMessageSendBody": {
         "description": "A staff message to named users and/or a whole audience (audiences are super admin only).",
         "properties": {
@@ -351,6 +1064,174 @@
           "conversation_ids"
         ],
         "title": "AdminMessageSendResponse",
+        "type": "object"
+      },
+      "AdminReviewDetailResponse": {
+        "description": "Response for `GET /admin/reviews/{review_id}`.",
+        "properties": {
+          "review": {
+            "$ref": "#/components/schemas/AdminReviewRow"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "review"
+        ],
+        "title": "AdminReviewDetailResponse",
+        "type": "object"
+      },
+      "AdminReviewRow": {
+        "description": "One review row for staff, hidden ones included, with moderation and booking context.",
+        "properties": {
+          "body": {
+            "default": "",
+            "title": "Body",
+            "type": "string"
+          },
+          "booking_event_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booking Event Date"
+          },
+          "booking_event_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booking Event Name"
+          },
+          "booking_request_id": {
+            "title": "Booking Request Id",
+            "type": "string"
+          },
+          "booking_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booking Status"
+          },
+          "client_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Email"
+          },
+          "client_user_id": {
+            "title": "Client User Id",
+            "type": "string"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "hidden_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hidden At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "rating": {
+            "default": 0,
+            "title": "Rating",
+            "type": "integer"
+          },
+          "vendor_display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor Display Name"
+          },
+          "vendor_user_id": {
+            "title": "Vendor User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "booking_request_id",
+          "vendor_user_id",
+          "client_user_id"
+        ],
+        "title": "AdminReviewRow",
+        "type": "object"
+      },
+      "AdminReviewsListResponse": {
+        "description": "Response for `GET /admin/reviews`.",
+        "properties": {
+          "limit": {
+            "default": 100,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "reviews": {
+            "items": {
+              "$ref": "#/components/schemas/AdminReviewRow"
+            },
+            "title": "Reviews",
+            "type": "array"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "title": "AdminReviewsListResponse",
         "type": "object"
       },
       "AdminSupportConversationDetailResponse": {
@@ -646,6 +1527,71 @@
           "approval_status"
         ],
         "title": "AdminVendorApprovalResponse",
+        "type": "object"
+      },
+      "AdminVendorInsightsResponse": {
+        "description": "One vendor's booking history and review standing, for the admin console's vendor page.",
+        "properties": {
+          "bookings_by_month": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Bookings By Month",
+            "type": "array"
+          },
+          "bookings_by_status": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Bookings By Status",
+            "type": "object"
+          },
+          "bookings_total": {
+            "default": 0,
+            "title": "Bookings Total",
+            "type": "integer"
+          },
+          "explore_path": {
+            "default": "",
+            "title": "Explore Path",
+            "type": "string"
+          },
+          "open_disputes_on_bookings": {
+            "default": 0,
+            "title": "Open Disputes On Bookings",
+            "type": "integer"
+          },
+          "review_average": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Average"
+          },
+          "review_count": {
+            "default": 0,
+            "title": "Review Count",
+            "type": "integer"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "AdminVendorInsightsResponse",
         "type": "object"
       },
       "AdminVendorListingMediaBody": {
@@ -1075,6 +2021,56 @@
           }
         },
         "title": "AdminVendorsListResponse",
+        "type": "object"
+      },
+      "AnalyzePortfolioImageResponse": {
+        "description": "The AI's quick QA of one portfolio photo upload.",
+        "properties": {
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "score": {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Score",
+            "type": "integer"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ok",
+          "score",
+          "summary"
+        ],
+        "title": "AnalyzePortfolioImageResponse",
+        "type": "object"
+      },
+      "ArchivePlanResponse": {
+        "description": "`POST /client/planner/plans/{plan_id}/archive`.",
+        "properties": {
+          "plan_id": {
+            "title": "Plan Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "plan_id",
+          "status"
+        ],
+        "title": "ArchivePlanResponse",
         "type": "object"
       },
       "AuthSession": {
@@ -1772,6 +2768,20 @@
         "title": "BlogPostsListResponse",
         "type": "object"
       },
+      "Body_analyze_portfolio_image_api_v1_vendor_onboarding_ai_analyze_portfolio_image_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_analyze_portfolio_image_api_v1_vendor_onboarding_ai_analyze_portfolio_image_post",
+        "type": "object"
+      },
       "Body_upload_file_api_v1_media_files_post": {
         "properties": {
           "file": {
@@ -2106,6 +3116,315 @@
           "booking_request_id"
         ],
         "title": "BookingRequestCreated",
+        "type": "object"
+      },
+      "BudgetBreakdown": {
+        "description": "The full plan budget: one line per costed need, the total, and what is left.",
+        "properties": {
+          "assumptions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Assumptions",
+            "type": "array"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/BudgetLine"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "over_budget": {
+            "title": "Over Budget",
+            "type": "boolean"
+          },
+          "remaining_budget_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remaining Budget Gbp"
+          },
+          "total_estimated_gbp": {
+            "title": "Total Estimated Gbp",
+            "type": "number"
+          },
+          "user_budget_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Budget Gbp"
+          }
+        },
+        "required": [
+          "lines",
+          "total_estimated_gbp",
+          "remaining_budget_gbp",
+          "user_budget_gbp",
+          "over_budget",
+          "assumptions"
+        ],
+        "title": "BudgetBreakdown",
+        "type": "object"
+      },
+      "BudgetLine": {
+        "description": "One need's contribution to the plan's budget.",
+        "properties": {
+          "allocated_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allocated Gbp"
+          },
+          "amount_gbp": {
+            "title": "Amount Gbp",
+            "type": "number"
+          },
+          "assumption": {
+            "title": "Assumption",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "need_id": {
+            "title": "Need Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "need_id",
+          "label",
+          "amount_gbp",
+          "allocated_gbp",
+          "assumption"
+        ],
+        "title": "BudgetLine",
+        "type": "object"
+      },
+      "CelebrationBrief": {
+        "description": "What the planner understood (or guessed) about the celebration, in full.",
+        "properties": {
+          "budget_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget Gbp"
+          },
+          "cuisine_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cuisine Notes"
+          },
+          "currency_assumed_gbp": {
+            "default": false,
+            "title": "Currency Assumed Gbp",
+            "type": "boolean"
+          },
+          "event_kind": {
+            "default": "standard",
+            "title": "Event Kind",
+            "type": "string"
+          },
+          "event_type": {
+            "title": "Event Type",
+            "type": "string"
+          },
+          "excluded_needs": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Excluded Needs",
+            "type": "array"
+          },
+          "guest_count": {
+            "title": "Guest Count",
+            "type": "integer"
+          },
+          "indoor_outdoor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Indoor Outdoor"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "music_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Music Notes"
+          },
+          "preferred_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preferred Date"
+          },
+          "preferred_date_invalid": {
+            "default": false,
+            "title": "Preferred Date Invalid",
+            "type": "boolean"
+          },
+          "raw_prompt": {
+            "title": "Raw Prompt",
+            "type": "string"
+          },
+          "related_locations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Related Locations",
+            "type": "array"
+          },
+          "special_requirements": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Special Requirements"
+          },
+          "unsupported_categories_mentioned": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unsupported Categories Mentioned",
+            "type": "array"
+          }
+        },
+        "required": [
+          "event_type",
+          "guest_count",
+          "raw_prompt"
+        ],
+        "title": "CelebrationBrief",
+        "type": "object"
+      },
+      "CelebrationSummary": {
+        "description": "The plan's headline facts, for the top of the detail view.",
+        "properties": {
+          "budget_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget Gbp"
+          },
+          "event_type": {
+            "title": "Event Type",
+            "type": "string"
+          },
+          "guest_count": {
+            "title": "Guest Count",
+            "type": "integer"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "preferred_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preferred Date"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "event_type",
+          "location",
+          "guest_count",
+          "budget_gbp",
+          "preferred_date",
+          "summary"
+        ],
+        "title": "CelebrationSummary",
         "type": "object"
       },
       "ChangePasswordRequest": {
@@ -2707,6 +4026,206 @@
         "title": "ClientBookingsListResponse",
         "type": "object"
       },
+      "ClientEventDetail": {
+        "description": "The full detail shown for one client event.",
+        "properties": {
+          "active_booking_count": {
+            "title": "Active Booking Count",
+            "type": "integer"
+          },
+          "booking_count": {
+            "title": "Booking Count",
+            "type": "integer"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "event_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Address"
+          },
+          "event_date": {
+            "title": "Event Date",
+            "type": "string"
+          },
+          "event_end_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event End Date"
+          },
+          "event_postcode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Postcode"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "event_date",
+          "event_end_date",
+          "event_address",
+          "event_postcode",
+          "status",
+          "booking_count",
+          "active_booking_count",
+          "created_at"
+        ],
+        "title": "ClientEventDetail",
+        "type": "object"
+      },
+      "ClientEventDetailResponse": {
+        "description": "`GET /client/events/{event_id}`.",
+        "properties": {
+          "event": {
+            "$ref": "#/components/schemas/ClientEventDetail"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "event"
+        ],
+        "title": "ClientEventDetailResponse",
+        "type": "object"
+      },
+      "ClientEventListResponse": {
+        "description": "`GET /client/events`.",
+        "properties": {
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/ClientEventSummary"
+            },
+            "title": "Events",
+            "type": "array"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "events"
+        ],
+        "title": "ClientEventListResponse",
+        "type": "object"
+      },
+      "ClientEventSummary": {
+        "description": "One row in the client's events list.",
+        "properties": {
+          "active_booking_count": {
+            "title": "Active Booking Count",
+            "type": "integer"
+          },
+          "booking_count": {
+            "title": "Booking Count",
+            "type": "integer"
+          },
+          "event_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Address"
+          },
+          "event_date": {
+            "title": "Event Date",
+            "type": "string"
+          },
+          "event_end_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event End Date"
+          },
+          "event_postcode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Postcode"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "event_date",
+          "event_end_date",
+          "event_address",
+          "event_postcode",
+          "status",
+          "booking_count",
+          "active_booking_count",
+          "updated_at"
+        ],
+        "title": "ClientEventSummary",
+        "type": "object"
+      },
       "ClientFavoriteResponse": {
         "description": "Whether saving or unsaving a vendor worked.",
         "properties": {
@@ -2843,6 +4362,97 @@
         "title": "ClientOnboardingState",
         "type": "object"
       },
+      "ClientOwnerReviewItem": {
+        "description": "One review from the client's own reviews list, with vendor and event context.",
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "booking_request_id": {
+            "title": "Booking Request Id",
+            "type": "string"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "event_date": {
+            "default": "",
+            "title": "Event Date",
+            "type": "string"
+          },
+          "event_name": {
+            "default": "Event",
+            "title": "Event Name",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "image_urls": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Image Urls",
+            "type": "array"
+          },
+          "rating": {
+            "title": "Rating",
+            "type": "integer"
+          },
+          "vendor_display_name": {
+            "default": "Vendor",
+            "title": "Vendor Display Name",
+            "type": "string"
+          },
+          "vendor_user_id": {
+            "title": "Vendor User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "rating",
+          "body",
+          "booking_request_id",
+          "vendor_user_id"
+        ],
+        "title": "ClientOwnerReviewItem",
+        "type": "object"
+      },
+      "ClientOwnerReviewsResponse": {
+        "description": "Response for `GET /client/reviews`.",
+        "properties": {
+          "review_count": {
+            "default": 0,
+            "title": "Review Count",
+            "type": "integer"
+          },
+          "reviews": {
+            "items": {
+              "$ref": "#/components/schemas/ClientOwnerReviewItem"
+            },
+            "title": "Reviews",
+            "type": "array"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "title": "ClientOwnerReviewsResponse",
+        "type": "object"
+      },
       "ClientReviewSummary": {
         "description": "The review the client left on this booking, shown back to them.",
         "properties": {
@@ -2883,6 +4493,27 @@
           "rating"
         ],
         "title": "ClientReviewSummary",
+        "type": "object"
+      },
+      "Confidence": {
+        "description": "How sure the planner is in its picks, and why.",
+        "properties": {
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "score": {
+            "title": "Score",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "score"
+        ],
+        "title": "Confidence",
         "type": "object"
       },
       "ConfirmCompletionResponse": {
@@ -3215,6 +4846,229 @@
         "title": "ConversationsListResponse",
         "type": "object"
       },
+      "CopilotAction": {
+        "description": "One thing the co-pilot suggests the vendor do next.",
+        "properties": {
+          "action_data": {
+            "additionalProperties": true,
+            "title": "Action Data",
+            "type": "object"
+          },
+          "action_type": {
+            "enum": [
+              "edit_profile",
+              "open_booking",
+              "open_payments",
+              "open_analytics",
+              "open_messages",
+              "apply_package_patch"
+            ],
+            "title": "Action Type",
+            "type": "string"
+          },
+          "href": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Href"
+          },
+          "rationale": {
+            "title": "Rationale",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action_type",
+          "title",
+          "rationale"
+        ],
+        "title": "CopilotAction",
+        "type": "object"
+      },
+      "CopilotAskMessage": {
+        "description": "One earlier turn of the vendor's chat with the co-pilot, as the web app sends it.",
+        "properties": {
+          "content": {
+            "title": "Content",
+            "type": "string"
+          },
+          "role": {
+            "description": "user or assistant",
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "CopilotAskMessage",
+        "type": "object"
+      },
+      "CopilotAskRequest": {
+        "description": "A question for the co-pilot, with optional chat history and a booking to focus on.",
+        "properties": {
+          "booking_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booking Id"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/CopilotAskMessage"
+            },
+            "maxItems": 12,
+            "title": "History",
+            "type": "array"
+          },
+          "question": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Question",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "title": "CopilotAskRequest",
+        "type": "object"
+      },
+      "CopilotAskResponse": {
+        "description": "The co-pilot's answer, plus anything it suggests doing about it.",
+        "properties": {
+          "answer_markdown": {
+            "title": "Answer Markdown",
+            "type": "string"
+          },
+          "escalate_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Escalate Reason"
+          },
+          "escalate_to_human": {
+            "default": false,
+            "title": "Escalate To Human",
+            "type": "boolean"
+          },
+          "suggested_actions": {
+            "items": {
+              "$ref": "#/components/schemas/CopilotAction"
+            },
+            "title": "Suggested Actions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "answer_markdown"
+        ],
+        "title": "CopilotAskResponse",
+        "type": "object"
+      },
+      "CopilotDraftReplyBody": {
+        "description": "Which booking to draft a reply for, and what kind of reply.",
+        "properties": {
+          "booking_id": {
+            "minLength": 1,
+            "title": "Booking Id",
+            "type": "string"
+          },
+          "intent": {
+            "default": "accept",
+            "enum": [
+              "accept",
+              "decline",
+              "clarify"
+            ],
+            "title": "Intent",
+            "type": "string"
+          }
+        },
+        "required": [
+          "booking_id"
+        ],
+        "title": "CopilotDraftReplyBody",
+        "type": "object"
+      },
+      "CopilotDraftReplyResponse": {
+        "description": "A drafted reply to an enquiry, with tips on what to check before sending it.",
+        "properties": {
+          "draft_message": {
+            "title": "Draft Message",
+            "type": "string"
+          },
+          "tips": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tips",
+            "type": "array"
+          }
+        },
+        "required": [
+          "draft_message"
+        ],
+        "title": "CopilotDraftReplyResponse",
+        "type": "object"
+      },
+      "CopilotReviewPackagesBody": {
+        "description": "The vendor's current profile, sent for the post-launch package coach to review.",
+        "properties": {
+          "payload": {
+            "additionalProperties": true,
+            "title": "Payload",
+            "type": "object"
+          }
+        },
+        "title": "CopilotReviewPackagesBody",
+        "type": "object"
+      },
+      "CopilotReviewPackagesResponse": {
+        "description": "The post-launch package coach's review of the vendor's live packages.",
+        "properties": {
+          "overall_ok": {
+            "default": true,
+            "title": "Overall Ok",
+            "type": "boolean"
+          },
+          "package_feedback": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Package Feedback",
+            "type": "array"
+          },
+          "summary": {
+            "default": "",
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "title": "CopilotReviewPackagesResponse",
+        "type": "object"
+      },
       "CreateBookingRequestBody": {
         "additionalProperties": false,
         "description": "A client's booking request for some of a vendor's packages.",
@@ -3351,6 +5205,49 @@
         "title": "CreateBookingRequestBody",
         "type": "object"
       },
+      "CreateDisputeBody": {
+        "description": "Open a dispute on a booking.",
+        "properties": {
+          "summary": {
+            "maxLength": 4000,
+            "minLength": 10,
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "summary"
+        ],
+        "title": "CreateDisputeBody",
+        "type": "object"
+      },
+      "CreateDisputeResponse": {
+        "description": "The dispute just opened.",
+        "properties": {
+          "dispute": {
+            "$ref": "#/components/schemas/DisputePublic"
+          }
+        },
+        "required": [
+          "dispute"
+        ],
+        "title": "CreateDisputeResponse",
+        "type": "object"
+      },
+      "CreatePlanRequest": {
+        "description": "The client's free-text celebration description.",
+        "properties": {
+          "prompt": {
+            "title": "Prompt",
+            "type": "string"
+          }
+        },
+        "required": [
+          "prompt"
+        ],
+        "title": "CreatePlanRequest",
+        "type": "object"
+      },
       "CreateReferralPartnerRequest": {
         "description": "A new partner. Leave `slug` blank to make one from the display name.",
         "properties": {
@@ -3473,6 +5370,298 @@
           "line_items"
         ],
         "title": "CreateVendorQuoteBody",
+        "type": "object"
+      },
+      "DisputeDetailResponse": {
+        "description": "One dispute, for the participant fetching it.",
+        "properties": {
+          "dispute": {
+            "$ref": "#/components/schemas/DisputePublic"
+          }
+        },
+        "required": [
+          "dispute"
+        ],
+        "title": "DisputeDetailResponse",
+        "type": "object"
+      },
+      "DisputePublic": {
+        "description": "A dispute as a client or vendor sees it.",
+        "properties": {
+          "booking_lifecycle_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booking Lifecycle Status"
+          },
+          "booking_request_id": {
+            "title": "Booking Request Id",
+            "type": "string"
+          },
+          "client_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Label"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "counterparty_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Counterparty Label"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "event_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Date"
+          },
+          "event_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Name"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "opened_by_display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opened By Display Name"
+          },
+          "opened_by_role": {
+            "anyOf": [
+              {
+                "enum": [
+                  "client",
+                  "vendor"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opened By Role"
+          },
+          "opened_by_user_id": {
+            "title": "Opened By User Id",
+            "type": "string"
+          },
+          "opened_by_you": {
+            "default": false,
+            "title": "Opened By You",
+            "type": "boolean"
+          },
+          "payment_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Status"
+          },
+          "resolution_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolution Note"
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At"
+          },
+          "status": {
+            "enum": [
+              "open",
+              "under_review",
+              "resolved",
+              "closed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "vendor_display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor Display Name"
+          }
+        },
+        "required": [
+          "id",
+          "booking_request_id",
+          "opened_by_user_id",
+          "status",
+          "summary"
+        ],
+        "title": "DisputePublic",
+        "type": "object"
+      },
+      "DisputesListResponse": {
+        "description": "A participant's disputes, most recently opened first.",
+        "properties": {
+          "disputes": {
+            "items": {
+              "$ref": "#/components/schemas/DisputePublic"
+            },
+            "title": "Disputes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "disputes"
+        ],
+        "title": "DisputesListResponse",
+        "type": "object"
+      },
+      "EnsureEventResponse": {
+        "description": "`POST /client/planner/plans/{plan_id}/ensure-event`.",
+        "properties": {
+          "event_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Address"
+          },
+          "event_date": {
+            "format": "date",
+            "title": "Event Date",
+            "type": "string"
+          },
+          "event_id": {
+            "title": "Event Id",
+            "type": "string"
+          },
+          "event_postcode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Postcode"
+          },
+          "plan_id": {
+            "title": "Plan Id",
+            "type": "string"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "plan_id",
+          "event_id",
+          "title",
+          "event_date",
+          "event_address",
+          "event_postcode"
+        ],
+        "title": "EnsureEventResponse",
         "type": "object"
       },
       "ErrorResponse": {
@@ -4034,6 +6223,113 @@
         "title": "ForgotPasswordResponse",
         "type": "object"
       },
+      "GenerateVendorBioBody": {
+        "description": "Profile details sent to the AI; private fields are stripped before the model sees them.",
+        "properties": {
+          "profile_form_data": {
+            "additionalProperties": true,
+            "title": "Profile Form Data",
+            "type": "object"
+          }
+        },
+        "title": "GenerateVendorBioBody",
+        "type": "object"
+      },
+      "GenerateVendorBioResponse": {
+        "description": "The AI-written public bio.",
+        "properties": {
+          "bio": {
+            "title": "Bio",
+            "type": "string"
+          }
+        },
+        "required": [
+          "bio"
+        ],
+        "title": "GenerateVendorBioResponse",
+        "type": "object"
+      },
+      "GrowthScoreLever": {
+        "description": "One of the five levers behind the Growth Score, with its own sub-score and tip.",
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "max_score": {
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Max Score",
+            "type": "integer"
+          },
+          "metric_key": {
+            "title": "Metric Key",
+            "type": "string"
+          },
+          "score": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Score",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "good",
+              "ok",
+              "needs_work"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "tip": {
+            "title": "Tip",
+            "type": "string"
+          }
+        },
+        "required": [
+          "metric_key",
+          "label",
+          "score",
+          "max_score",
+          "status",
+          "tip"
+        ],
+        "title": "GrowthScoreLever",
+        "type": "object"
+      },
+      "GrowthScoreResponse": {
+        "description": "The vendor's deterministic Growth Score, broken down by lever.",
+        "properties": {
+          "levers": {
+            "items": {
+              "$ref": "#/components/schemas/GrowthScoreLever"
+            },
+            "title": "Levers",
+            "type": "array"
+          },
+          "listing_visible": {
+            "default": false,
+            "title": "Listing Visible",
+            "type": "boolean"
+          },
+          "payouts_verified": {
+            "default": false,
+            "title": "Payouts Verified",
+            "type": "boolean"
+          },
+          "score": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Score",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "score"
+        ],
+        "title": "GrowthScoreResponse",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -4436,6 +6732,36 @@
         "title": "MarkReadResponse",
         "type": "object"
       },
+      "MarketDemandInsight": {
+        "description": "A short observation about demand for the vendor's services in their area.",
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "headline": {
+            "title": "Headline",
+            "type": "string"
+          },
+          "service_category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Category"
+          }
+        },
+        "required": [
+          "headline",
+          "detail"
+        ],
+        "title": "MarketDemandInsight",
+        "type": "object"
+      },
       "MeResponse": {
         "description": "`GET /auth/me`.",
         "properties": {
@@ -4695,6 +7021,454 @@
           "success"
         ],
         "title": "NotificationMarkReadResponse",
+        "type": "object"
+      },
+      "PackageCoachPackageFeedback": {
+        "description": "The AI's feedback on one package, with suggested rewrites where it has better copy.",
+        "properties": {
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "package_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Package Id"
+          },
+          "package_title": {
+            "title": "Package Title",
+            "type": "string"
+          },
+          "suggested_details": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested Details"
+          },
+          "suggested_duration": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested Duration"
+          },
+          "suggested_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested Title"
+          }
+        },
+        "required": [
+          "package_title"
+        ],
+        "title": "PackageCoachPackageFeedback",
+        "type": "object"
+      },
+      "PackageCoachTip": {
+        "description": "One suggestion or warning about a package, in the legacy flat shape some screens still read.",
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "package_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Package Id"
+          },
+          "package_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Package Title"
+          },
+          "severity": {
+            "description": "tip or suggestion",
+            "title": "Severity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "severity",
+          "code",
+          "message"
+        ],
+        "title": "PackageCoachTip",
+        "type": "object"
+      },
+      "PlanDetailResponse": {
+        "description": "`GET /client/planner/plans/{plan_id}`.",
+        "properties": {
+          "brief": {
+            "$ref": "#/components/schemas/CelebrationBrief"
+          },
+          "budget": {
+            "$ref": "#/components/schemas/BudgetBreakdown"
+          },
+          "celebration": {
+            "$ref": "#/components/schemas/CelebrationSummary"
+          },
+          "client_event_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Event Id"
+          },
+          "confidence": {
+            "$ref": "#/components/schemas/Confidence"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "plan_id": {
+            "title": "Plan Id",
+            "type": "string"
+          },
+          "recommendations": {
+            "items": {
+              "$ref": "#/components/schemas/PlanRecommendation"
+            },
+            "title": "Recommendations",
+            "type": "array"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "plan_id",
+          "status",
+          "client_event_id",
+          "celebration",
+          "brief",
+          "confidence",
+          "budget",
+          "recommendations",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PlanDetailResponse",
+        "type": "object"
+      },
+      "PlanListItem": {
+        "description": "One row in the client's plan list.",
+        "properties": {
+          "confidence_score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence Score"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "event_type": {
+            "title": "Event Type",
+            "type": "string"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "plan_id": {
+            "title": "Plan Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "plan_id",
+          "title",
+          "event_type",
+          "location",
+          "confidence_score",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PlanListItem",
+        "type": "object"
+      },
+      "PlanListResponse": {
+        "description": "`GET /client/planner/plans`.",
+        "properties": {
+          "plans": {
+            "items": {
+              "$ref": "#/components/schemas/PlanListItem"
+            },
+            "title": "Plans",
+            "type": "array"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "plans"
+        ],
+        "title": "PlanListResponse",
+        "type": "object"
+      },
+      "PlanRecommendation": {
+        "description": "One need on the plan: the primary vendor picked for it, and the alternatives kept in reserve.",
+        "properties": {
+          "alternatives": {
+            "items": {
+              "$ref": "#/components/schemas/PlannerVendorCard"
+            },
+            "title": "Alternatives",
+            "type": "array"
+          },
+          "empty_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Empty Reason"
+          },
+          "estimated_cost_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Cost Gbp"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "need_id": {
+            "title": "Need Id",
+            "type": "string"
+          },
+          "optional": {
+            "title": "Optional",
+            "type": "boolean"
+          },
+          "primary": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlannerVendorCard"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "service_key": {
+            "title": "Service Key",
+            "type": "string"
+          },
+          "why_selected": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Why Selected"
+          }
+        },
+        "required": [
+          "need_id",
+          "label",
+          "service_key",
+          "optional",
+          "primary",
+          "estimated_cost_gbp",
+          "why_selected"
+        ],
+        "title": "PlanRecommendation",
+        "type": "object"
+      },
+      "PlannerVendorCard": {
+        "description": "A vendor as the planner shows it: enough to decide, never a full profile.",
+        "properties": {
+          "business_name": {
+            "title": "Business Name",
+            "type": "string"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "min_list_price_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min List Price Gbp"
+          },
+          "price_on_request": {
+            "default": false,
+            "title": "Price On Request",
+            "type": "boolean"
+          },
+          "unavailable": {
+            "default": false,
+            "title": "Unavailable",
+            "type": "boolean"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "business_name"
+        ],
+        "title": "PlannerVendorCard",
+        "type": "object"
+      },
+      "PostBookingReviewBody": {
+        "description": "A client's rating and comment on a completed booking.",
+        "properties": {
+          "body": {
+            "maxLength": 4000,
+            "minLength": 10,
+            "title": "Body",
+            "type": "string"
+          },
+          "image_urls": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Image Urls",
+            "type": "array"
+          },
+          "rating": {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Rating",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "rating",
+          "body"
+        ],
+        "title": "PostBookingReviewBody",
+        "type": "object"
+      },
+      "PostBookingReviewResponse": {
+        "description": "Response for `POST /client/booking-requests/{id}/review`.",
+        "properties": {
+          "review": {
+            "$ref": "#/components/schemas/SubmittedReview"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "review"
+        ],
+        "title": "PostBookingReviewResponse",
         "type": "object"
       },
       "PublicReviewItem": {
@@ -5132,6 +7906,47 @@
         "title": "RefreshSessionResponse",
         "type": "object"
       },
+      "ReplaceItemRequest": {
+        "description": "An (optional, currently unused) hint for which alternative to try next.",
+        "properties": {
+          "vendor_user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor User Id"
+          }
+        },
+        "title": "ReplaceItemRequest",
+        "type": "object"
+      },
+      "ReplaceItemResponse": {
+        "description": "`POST /client/planner/plans/{plan_id}/items/{need_id}/replace`.",
+        "properties": {
+          "plan_id": {
+            "title": "Plan Id",
+            "type": "string"
+          },
+          "recommendation": {
+            "$ref": "#/components/schemas/PlanRecommendation"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "plan_id",
+          "recommendation"
+        ],
+        "title": "ReplaceItemResponse",
+        "type": "object"
+      },
       "ResendVerificationRequest": {
         "description": "The address to send a new verification link to.",
         "properties": {
@@ -5207,6 +8022,75 @@
           "session"
         ],
         "title": "ResetPasswordResponse",
+        "type": "object"
+      },
+      "ReviewVendorPackagesBody": {
+        "description": "Profile details (including packages) sent to the AI package coach.",
+        "properties": {
+          "profile_form_data": {
+            "additionalProperties": true,
+            "title": "Profile Form Data",
+            "type": "object"
+          }
+        },
+        "title": "ReviewVendorPackagesBody",
+        "type": "object"
+      },
+      "ReviewVendorPackagesResponse": {
+        "description": "The AI package coach's review: a summary, per-package feedback, and the legacy flat tips.",
+        "properties": {
+          "overall_ok": {
+            "default": true,
+            "title": "Overall Ok",
+            "type": "boolean"
+          },
+          "package_feedback": {
+            "items": {
+              "$ref": "#/components/schemas/PackageCoachPackageFeedback"
+            },
+            "title": "Package Feedback",
+            "type": "array"
+          },
+          "summary": {
+            "default": "",
+            "title": "Summary",
+            "type": "string"
+          },
+          "tips": {
+            "items": {
+              "$ref": "#/components/schemas/PackageCoachTip"
+            },
+            "title": "Tips",
+            "type": "array"
+          }
+        },
+        "title": "ReviewVendorPackagesResponse",
+        "type": "object"
+      },
+      "ReviewVisibilityBody": {
+        "description": "An admin's decision to hide or unhide a review.",
+        "properties": {
+          "hidden": {
+            "title": "Hidden",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "hidden"
+        ],
+        "title": "ReviewVisibilityBody",
+        "type": "object"
+      },
+      "ReviewVisibilityResponse": {
+        "description": "Response for `PATCH /admin/reviews/{review_id}/visibility`. Always success, even for a\nreview id that does not exist (see `errors.py` for why).",
+        "properties": {
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "title": "ReviewVisibilityResponse",
         "type": "object"
       },
       "SignInRequest": {
@@ -5360,6 +8244,67 @@
           "user"
         ],
         "title": "SignupResponse",
+        "type": "object"
+      },
+      "StreamTicketResponse": {
+        "description": "A short-lived ticket the caller's browser opens `GET /realtime/stream` with.",
+        "properties": {
+          "expires_in_seconds": {
+            "title": "Expires In Seconds",
+            "type": "integer"
+          },
+          "ticket": {
+            "title": "Ticket",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ticket",
+          "expires_in_seconds"
+        ],
+        "title": "StreamTicketResponse",
+        "type": "object"
+      },
+      "SubmittedReview": {
+        "description": "The just-created review, as returned to the client who submitted it.",
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "image_urls": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Image Urls",
+            "type": "array"
+          },
+          "rating": {
+            "title": "Rating",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "rating",
+          "body"
+        ],
+        "title": "SubmittedReview",
         "type": "object"
       },
       "UpdateBookingVenueBody": {
@@ -6225,6 +9170,164 @@
           "tiers"
         ],
         "title": "VendorClientReferralResponse",
+        "type": "object"
+      },
+      "VendorCopilotBriefResponse": {
+        "description": "The vendor's daily brief: a greeting, plain-English narration and suggested actions.",
+        "properties": {
+          "context_fingerprint": {
+            "title": "Context Fingerprint",
+            "type": "string"
+          },
+          "demand_insights": {
+            "items": {
+              "$ref": "#/components/schemas/MarketDemandInsight"
+            },
+            "title": "Demand Insights",
+            "type": "array"
+          },
+          "generated_at": {
+            "format": "date-time",
+            "title": "Generated At",
+            "type": "string"
+          },
+          "greeting": {
+            "title": "Greeting",
+            "type": "string"
+          },
+          "growth_score": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Growth Score",
+            "type": "integer"
+          },
+          "narration_cached": {
+            "default": false,
+            "title": "Narration Cached",
+            "type": "boolean"
+          },
+          "suggested_actions": {
+            "items": {
+              "$ref": "#/components/schemas/CopilotAction"
+            },
+            "title": "Suggested Actions",
+            "type": "array"
+          },
+          "summary_markdown": {
+            "title": "Summary Markdown",
+            "type": "string"
+          }
+        },
+        "required": [
+          "greeting",
+          "summary_markdown",
+          "growth_score",
+          "generated_at",
+          "context_fingerprint"
+        ],
+        "title": "VendorCopilotBriefResponse",
+        "type": "object"
+      },
+      "VendorOwnerReviewItem": {
+        "description": "One review from the vendor's own reviews list: only ever the visible ones.",
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "booking_request_id": {
+            "title": "Booking Request Id",
+            "type": "string"
+          },
+          "booking_total_label": {
+            "default": "",
+            "title": "Booking Total Label",
+            "type": "string"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "event_date": {
+            "default": "",
+            "title": "Event Date",
+            "type": "string"
+          },
+          "event_name": {
+            "default": "Event",
+            "title": "Event Name",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "image_urls": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Image Urls",
+            "type": "array"
+          },
+          "rating": {
+            "title": "Rating",
+            "type": "integer"
+          },
+          "reviewer_display": {
+            "title": "Reviewer Display",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "rating",
+          "body",
+          "reviewer_display",
+          "booking_request_id"
+        ],
+        "title": "VendorOwnerReviewItem",
+        "type": "object"
+      },
+      "VendorOwnerReviewsResponse": {
+        "description": "Response for `GET /vendor/reviews`.",
+        "properties": {
+          "average_rating": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Rating"
+          },
+          "review_count": {
+            "default": 0,
+            "title": "Review Count",
+            "type": "integer"
+          },
+          "reviews": {
+            "items": {
+              "$ref": "#/components/schemas/VendorOwnerReviewItem"
+            },
+            "title": "Reviews",
+            "type": "array"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "title": "VendorOwnerReviewsResponse",
         "type": "object"
       },
       "VendorProfilePutBody": {
@@ -7482,6 +10585,569 @@
         ]
       }
     },
+    "/api/v1/admin/dashboard-metrics": {
+      "get": {
+        "description": "Bookings-created, bookings-paid and signup charts over a rolling window of days.",
+        "operationId": "get_dashboard_metrics_api_v1_admin_dashboard_metrics_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "maximum": 90,
+              "minimum": 7,
+              "title": "Days",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminDashboardMetrics"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Dashboard Metrics",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/dashboard-summary": {
+      "get": {
+        "description": "Headline counts across users, vendors, bookings, conversations and reviews.",
+        "operationId": "get_dashboard_summary_api_v1_admin_dashboard_summary_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminDashboardSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Dashboard Summary",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/directory/search": {
+      "get": {
+        "description": "Accounts matching `q`: a client's email, or a vendor's email or business name.",
+        "operationId": "search_directory_api_v1_admin_directory_search_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma-separated: client, vendor, or both.",
+            "in": "query",
+            "name": "kinds",
+            "required": false,
+            "schema": {
+              "default": "client,vendor",
+              "description": "Comma-separated: client, vendor, or both.",
+              "title": "Kinds",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminDirectorySearchResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Search Directory",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/disputes": {
+      "get": {
+        "description": "Every dispute in the requested status bucket (\"open\" also surfaces under_review).",
+        "operationId": "list_admin_disputes_api_v1_admin_disputes_get",
+        "parameters": [
+          {
+            "description": "all, open, under_review, resolved, or closed",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "description": "all, open, under_review, resolved, or closed",
+              "title": "Status",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminDisputesListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "dispute_status_filter_invalid",
+            "x-codes": [
+              "dispute_status_filter_invalid"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Admin Disputes",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/disputes/{dispute_id}": {
+      "patch": {
+        "description": "Triage or resolve a dispute; only a super admin may set a financial `resolution_action`.\n\nNo `PaymentGatewayDependency` here yet: `core.ports.payment_gateway_port` is not wired\nin `app.main.create_app` until the payments slice (ws1) lands. The money branch below\nis a placeholder that never reaches Stripe, so it needs no gateway to raise.",
+        "operationId": "patch_admin_dispute_api_v1_admin_disputes__dispute_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "dispute_id",
+            "required": true,
+            "schema": {
+              "title": "Dispute Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminDisputePatchBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminDisputeCase"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_dispute_id, no_fields_to_update, dispute_not_found_for_resolution, refund_amount_required_partial, only_paid_partial_refund, no_recorded_payment_amount, partial_refund_out_of_range, dispute_assignee_must_be_admin, dispute_assignee_admin_suspended",
+            "x-codes": [
+              "invalid_dispute_id",
+              "no_fields_to_update",
+              "dispute_not_found_for_resolution",
+              "refund_amount_required_partial",
+              "only_paid_partial_refund",
+              "no_recorded_payment_amount",
+              "partial_refund_out_of_range",
+              "dispute_assignee_must_be_admin",
+              "dispute_assignee_admin_suspended"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden, dispute_financial_resolution_super_admin_only, dispute_refund_amount_super_admin_only",
+            "x-codes": [
+              "forbidden",
+              "dispute_financial_resolution_super_admin_only",
+              "dispute_refund_amount_super_admin_only"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "dispute_not_found_plain",
+            "x-codes": [
+              "dispute_not_found_plain"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "dispute_money_action_not_rebuilt",
+            "x-codes": [
+              "dispute_money_action_not_rebuilt"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Patch Admin Dispute",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/marketplace-analytics": {
+      "get": {
+        "description": "The marketplace funnel over client-initiated enquiries in a date range (default: last 30 days).",
+        "operationId": "get_marketplace_analytics_api_v1_admin_marketplace_analytics_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from_date",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From Date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to_date",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminMarketplaceAnalyticsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_date_filter",
+            "x-codes": [
+              "invalid_date_filter"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Marketplace Analytics",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/v1/admin/messages/conversations": {
       "get": {
         "description": "The newest support threads.",
@@ -8642,6 +12308,281 @@
         ]
       }
     },
+    "/api/v1/admin/reviews": {
+      "get": {
+        "description": "Every review, hidden ones included, optionally narrowed to one vendor.",
+        "operationId": "list_reviews_api_v1_admin_reviews_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "vendor_user_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Vendor User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminReviewsListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Reviews",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/reviews/{review_id}": {
+      "get": {
+        "description": "One review with its booking's event context, for the moderation screen.",
+        "operationId": "get_review_api_v1_admin_reviews__review_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "review_id",
+            "required": true,
+            "schema": {
+              "title": "Review Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminReviewDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "review_not_found",
+            "x-codes": [
+              "review_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Review",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/reviews/{review_id}/visibility": {
+      "patch": {
+        "description": "Hide or unhide a review, logging the change to the admin audit log.",
+        "operationId": "set_review_visibility_api_v1_admin_reviews__review_id__visibility_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "review_id",
+            "required": true,
+            "schema": {
+              "title": "Review Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewVisibilityBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewVisibilityResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Set Review Visibility",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/v1/admin/vendors": {
       "get": {
         "description": "Vendors, most recently updated first, searched and filtered.",
@@ -9019,6 +12960,80 @@
           }
         ],
         "summary": "Set Approval",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/vendors/{user_id}/insights": {
+      "get": {
+        "description": "One vendor's booking history and review standing. Never 404s: an unknown id reads as all-zero.",
+        "operationId": "get_vendor_insights_api_v1_admin_vendors__user_id__insights_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminVendorInsightsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Vendor Insights",
         "tags": [
           "admin"
         ]
@@ -11185,6 +15200,316 @@
         ]
       }
     },
+    "/api/v1/client/booking-requests/{booking_id}/disputes": {
+      "get": {
+        "description": "Disputes on this booking; an empty list if the client isn't a party to it.",
+        "operationId": "list_client_booking_disputes_api_v1_client_booking_requests__booking_id__disputes_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisputesListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id",
+            "x-codes": [
+              "invalid_booking_id"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Client Booking Disputes",
+        "tags": [
+          "client"
+        ]
+      },
+      "post": {
+        "description": "Open a dispute on one of the client's own bookings.",
+        "operationId": "post_client_dispute_api_v1_client_booking_requests__booking_id__disputes_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDisputeBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateDisputeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id, dispute_invalid_status",
+            "x-codes": [
+              "invalid_booking_id",
+              "dispute_invalid_status"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden, cannot_open_dispute",
+            "x-codes": [
+              "forbidden",
+              "cannot_open_dispute"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "dispute_booking_not_found",
+            "x-codes": [
+              "dispute_booking_not_found"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "dispute_already_open",
+            "x-codes": [
+              "dispute_already_open"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Client Dispute",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/booking-requests/{booking_id}/review": {
+      "post": {
+        "description": "Leave a rating and comment on a booking of the caller's own that has completed.",
+        "operationId": "submit_review_api_v1_client_booking_requests__booking_id__review_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PostBookingReviewBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostBookingReviewResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "review_booking_not_found, review_only_after_complete, review_already_submitted, review_too_short",
+            "x-codes": [
+              "review_booking_not_found",
+              "review_only_after_complete",
+              "review_already_submitted",
+              "review_too_short"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Submit Review",
+        "tags": [
+          "client"
+        ]
+      }
+    },
     "/api/v1/client/booking-requests/{booking_id}/status": {
       "patch": {
         "description": "Accept or decline a vendor's quote or updated price (declining a new price keeps the old one).",
@@ -11493,6 +15818,349 @@
           }
         ],
         "summary": "Submit Client Contact",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/disputes": {
+      "get": {
+        "description": "Every dispute on a booking the client is party to, most recently opened first.",
+        "operationId": "list_client_disputes_api_v1_client_disputes_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisputesListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Client Disputes",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/disputes/{dispute_id}": {
+      "get": {
+        "description": "One dispute, if the client is a party to its booking.",
+        "operationId": "get_client_dispute_api_v1_client_disputes__dispute_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "dispute_id",
+            "required": true,
+            "schema": {
+              "title": "Dispute Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisputeDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_dispute_id",
+            "x-codes": [
+              "invalid_dispute_id"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "dispute_not_found",
+            "x-codes": [
+              "dispute_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Client Dispute",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/events": {
+      "get": {
+        "description": "The client's own events, scoped by status (active, archived or all).",
+        "operationId": "list_client_events_api_v1_client_events_get",
+        "parameters": [
+          {
+            "description": "Filter bucket: active, archived, or all",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": "active",
+              "description": "Filter bucket: active, archived, or all",
+              "title": "Status",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientEventListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_status_filter",
+            "x-codes": [
+              "invalid_status_filter"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Client Events",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/events/{event_id}": {
+      "get": {
+        "description": "One of the client's own events, in full.",
+        "operationId": "get_client_event_api_v1_client_events__event_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "title": "Event Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientEventDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_event_id",
+            "x-codes": [
+              "invalid_event_id"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "event_not_found",
+            "x-codes": [
+              "event_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Client Event",
         "tags": [
           "client"
         ]
@@ -12383,6 +17051,593 @@
         ]
       }
     },
+    "/api/v1/client/planner/plans": {
+      "get": {
+        "description": "The client's own active plans, most recently updated first.",
+        "operationId": "list_plans_api_v1_client_planner_plans_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Plans",
+        "tags": [
+          "client"
+        ]
+      },
+      "post": {
+        "description": "Turn a free-text celebration prompt into a vendor-backed plan.",
+        "operationId": "create_plan_api_v1_client_planner_plans_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePlanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "describe_celebration, invalid_prompt, simple_intent",
+            "x-codes": [
+              "describe_celebration",
+              "invalid_prompt",
+              "simple_intent"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Plan",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/planner/plans/{plan_id}": {
+      "get": {
+        "description": "One plan in full: its brief, budget and vendor recommendations.",
+        "operationId": "get_plan_api_v1_client_planner_plans__plan_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "title": "Plan Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "plan_not_found",
+            "x-codes": [
+              "plan_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Plan",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/planner/plans/{plan_id}/archive": {
+      "post": {
+        "description": "Archive a plan: it stops appearing in the list but its detail stays readable.",
+        "operationId": "archive_plan_api_v1_client_planner_plans__plan_id__archive_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "title": "Plan Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArchivePlanResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "plan_not_found",
+            "x-codes": [
+              "plan_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Archive Plan",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/planner/plans/{plan_id}/ensure-event": {
+      "post": {
+        "description": "Turn a plan into a real client event, reusing one already linked instead of duplicating it.",
+        "operationId": "ensure_plan_event_api_v1_client_planner_plans__plan_id__ensure_event_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "title": "Plan Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnsureEventResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "plan_archived",
+            "x-codes": [
+              "plan_archived"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "plan_not_found",
+            "x-codes": [
+              "plan_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Ensure Plan Event",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/planner/plans/{plan_id}/items/{need_id}/replace": {
+      "post": {
+        "description": "Swap a need's primary vendor for the next-best untried candidate.",
+        "operationId": "replace_plan_item_api_v1_client_planner_plans__plan_id__items__need_id__replace_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "title": "Plan Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "need_id",
+            "required": true,
+            "schema": {
+              "title": "Need Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceItemRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReplaceItemResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "plan_archived, no_more_alternatives",
+            "x-codes": [
+              "plan_archived",
+              "no_more_alternatives"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "plan_not_found, plan_item_not_found",
+            "x-codes": [
+              "plan_not_found",
+              "plan_item_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Replace Plan Item",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/reviews": {
+      "get": {
+        "description": "Every review the caller has submitted.",
+        "operationId": "list_own_reviews_api_v1_client_reviews_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientOwnerReviewsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Own Reviews",
+        "tags": [
+          "client"
+        ]
+      }
+    },
     "/api/v1/help/articles": {
       "get": {
         "description": "The Help Center articles for the caller's portal, optionally one category's.",
@@ -12953,6 +18208,115 @@
         "summary": "Upload Image",
         "tags": [
           "media"
+        ]
+      }
+    },
+    "/api/v1/realtime/stream": {
+      "get": {
+        "description": "Server-sent events for the user `ticket` names: `connected`, then business events.\n\nAuthenticates through the `ticket` query parameter rather than a Bearer\nheader, because `EventSource` cannot set one (ADR 0005). No response model:\na stream has no single JSON body, only the frames `core.sse.event_stream` yields.",
+        "operationId": "stream_api_v1_realtime_stream_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "ticket",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ticket"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_stream_ticket",
+            "x-codes": [
+              "invalid_stream_ticket"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Stream",
+        "tags": [
+          "realtime"
+        ]
+      }
+    },
+    "/api/v1/realtime/stream-ticket": {
+      "post": {
+        "description": "Mint a short-lived ticket the caller's browser can open the stream with.",
+        "operationId": "issue_stream_ticket_route_api_v1_realtime_stream_ticket_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StreamTicketResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Issue Stream Ticket Route",
+        "tags": [
+          "realtime"
         ]
       }
     },
@@ -13789,6 +19153,216 @@
         ]
       }
     },
+    "/api/v1/vendor/booking-requests/{booking_id}/disputes": {
+      "get": {
+        "description": "Disputes on this booking; an empty list if the vendor isn't a party to it.",
+        "operationId": "list_vendor_booking_disputes_api_v1_vendor_booking_requests__booking_id__disputes_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisputesListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id",
+            "x-codes": [
+              "invalid_booking_id"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Vendor Booking Disputes",
+        "tags": [
+          "vendor"
+        ]
+      },
+      "post": {
+        "description": "Open a dispute on one of the vendor's own bookings.",
+        "operationId": "post_vendor_dispute_api_v1_vendor_booking_requests__booking_id__disputes_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDisputeBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateDisputeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id, dispute_invalid_status",
+            "x-codes": [
+              "invalid_booking_id",
+              "dispute_invalid_status"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden, cannot_open_dispute",
+            "x-codes": [
+              "forbidden",
+              "cannot_open_dispute"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "dispute_booking_not_found",
+            "x-codes": [
+              "dispute_booking_not_found"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "dispute_already_open",
+            "x-codes": [
+              "dispute_already_open"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Vendor Dispute",
+        "tags": [
+          "vendor"
+        ]
+      }
+    },
     "/api/v1/vendor/booking-requests/{booking_id}/status": {
       "patch": {
         "description": "Accept, decline or cancel a booking (withdrawing a quote is a cancel).",
@@ -14007,6 +19581,569 @@
           }
         ],
         "summary": "Submit Vendor Contact",
+        "tags": [
+          "vendor"
+        ]
+      }
+    },
+    "/api/v1/vendor/copilot/ask": {
+      "post": {
+        "description": "Ask the co-pilot a question, grounded in the vendor's own facts.",
+        "operationId": "post_ask_copilot_api_v1_vendor_copilot_ask_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CopilotAskRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CopilotAskResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "copilot_question_required, ai_refused",
+            "x-codes": [
+              "copilot_question_required",
+              "ai_refused"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "ai_unavailable, ai_failed, ai_empty_reply",
+            "x-codes": [
+              "ai_unavailable",
+              "ai_failed",
+              "ai_empty_reply"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Ask Copilot",
+        "tags": [
+          "vendor-copilot"
+        ]
+      }
+    },
+    "/api/v1/vendor/copilot/brief": {
+      "get": {
+        "description": "The vendor's daily brief: a Growth Score, suggested actions and a plain-English summary.\n\nNever raises on a language-model failure: `service_brief` catches it and falls back to\na fixed summary instead.",
+        "operationId": "get_daily_brief_api_v1_vendor_copilot_brief_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorCopilotBriefResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Daily Brief",
+        "tags": [
+          "vendor-copilot"
+        ]
+      }
+    },
+    "/api/v1/vendor/copilot/draft-reply": {
+      "post": {
+        "description": "Draft a reply to one of the vendor's enquiries, or a fixed placeholder if not found.",
+        "operationId": "post_draft_reply_api_v1_vendor_copilot_draft_reply_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CopilotDraftReplyBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CopilotDraftReplyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "ai_refused",
+            "x-codes": [
+              "ai_refused"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "ai_unavailable, ai_failed, ai_empty_reply",
+            "x-codes": [
+              "ai_unavailable",
+              "ai_failed",
+              "ai_empty_reply"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Draft Reply",
+        "tags": [
+          "vendor-copilot"
+        ]
+      }
+    },
+    "/api/v1/vendor/copilot/review-packages": {
+      "post": {
+        "description": "Coach the vendor on their live packages, post-launch conversion focus.",
+        "operationId": "post_review_listing_packages_api_v1_vendor_copilot_review_packages_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CopilotReviewPackagesBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CopilotReviewPackagesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "ai_refused",
+            "x-codes": [
+              "ai_refused"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "ai_unavailable, ai_failed, ai_empty_reply",
+            "x-codes": [
+              "ai_unavailable",
+              "ai_failed",
+              "ai_empty_reply"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Review Listing Packages",
+        "tags": [
+          "vendor-copilot"
+        ]
+      }
+    },
+    "/api/v1/vendor/copilot/score": {
+      "get": {
+        "description": "The vendor's deterministic Growth Score: no language model involved.",
+        "operationId": "get_growth_score_api_v1_vendor_copilot_score_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GrowthScoreResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Growth Score",
+        "tags": [
+          "vendor-copilot"
+        ]
+      }
+    },
+    "/api/v1/vendor/disputes": {
+      "get": {
+        "description": "Every dispute on a booking the vendor is party to, most recently opened first.",
+        "operationId": "list_vendor_disputes_api_v1_vendor_disputes_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisputesListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Vendor Disputes",
+        "tags": [
+          "vendor"
+        ]
+      }
+    },
+    "/api/v1/vendor/disputes/{dispute_id}": {
+      "get": {
+        "description": "One dispute, if the vendor is a party to its booking.",
+        "operationId": "get_vendor_dispute_api_v1_vendor_disputes__dispute_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "dispute_id",
+            "required": true,
+            "schema": {
+              "title": "Dispute Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisputeDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_dispute_id",
+            "x-codes": [
+              "invalid_dispute_id"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "dispute_not_found",
+            "x-codes": [
+              "dispute_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Vendor Dispute",
         "tags": [
           "vendor"
         ]
@@ -14242,6 +20379,311 @@
         "summary": "Get Vendor Notifications Feed",
         "tags": [
           "vendor"
+        ]
+      }
+    },
+    "/api/v1/vendor/onboarding/ai/analyze-portfolio-image": {
+      "post": {
+        "description": "QA one portfolio photo before the vendor adds it to their listing.",
+        "operationId": "analyze_portfolio_image_api_v1_vendor_onboarding_ai_analyze_portfolio_image_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_analyze_portfolio_image_api_v1_vendor_onboarding_ai_analyze_portfolio_image_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyzePortfolioImageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "vendor_onboarding_ai_image_required, vendor_onboarding_ai_image_content_type_invalid, ai_refused",
+            "x-codes": [
+              "vendor_onboarding_ai_image_required",
+              "vendor_onboarding_ai_image_content_type_invalid",
+              "ai_refused"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "ai_unavailable, ai_failed, ai_empty_reply",
+            "x-codes": [
+              "ai_unavailable",
+              "ai_failed",
+              "ai_empty_reply"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Analyze Portfolio Image",
+        "tags": [
+          "vendor-onboarding-ai"
+        ]
+      }
+    },
+    "/api/v1/vendor/onboarding/ai/generate-bio": {
+      "post": {
+        "description": "Write a public bio from the vendor's onboarding form so far.",
+        "operationId": "generate_bio_api_v1_vendor_onboarding_ai_generate_bio_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateVendorBioBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateVendorBioResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "ai_refused",
+            "x-codes": [
+              "ai_refused"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "ai_unavailable, ai_failed, ai_empty_reply",
+            "x-codes": [
+              "ai_unavailable",
+              "ai_failed",
+              "ai_empty_reply"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Generate Bio",
+        "tags": [
+          "vendor-onboarding-ai"
+        ]
+      }
+    },
+    "/api/v1/vendor/onboarding/ai/review-packages": {
+      "post": {
+        "description": "Coach the vendor on their draft packages before they submit their profile.",
+        "operationId": "review_packages_api_v1_vendor_onboarding_ai_review_packages_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewVendorPackagesBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewVendorPackagesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "ai_refused",
+            "x-codes": [
+              "ai_refused"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "ai_unavailable, ai_failed, ai_empty_reply",
+            "x-codes": [
+              "ai_unavailable",
+              "ai_failed",
+              "ai_empty_reply"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Review Packages",
+        "tags": [
+          "vendor-onboarding-ai"
         ]
       }
     },
@@ -14663,6 +21105,59 @@
         "summary": "Choose Referral Code",
         "tags": [
           "vendor-referrals"
+        ]
+      }
+    },
+    "/api/v1/vendor/reviews": {
+      "get": {
+        "description": "The caller's visible reviews, matching what shows on their public profile.",
+        "operationId": "list_own_reviews_api_v1_vendor_reviews_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorOwnerReviewsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Own Reviews",
+        "tags": [
+          "vendor"
         ]
       }
     },
