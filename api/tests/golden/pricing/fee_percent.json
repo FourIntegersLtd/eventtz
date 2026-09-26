@@ -1,0 +1,62 @@
+[
+  {
+    "percent": 5.0,
+    "row": {}
+  },
+  {
+    "percent": 5.0,
+    "row": {
+      "service_fee_percent": null
+    }
+  },
+  {
+    "percent": 7.5,
+    "row": {
+      "service_fee_percent": 7.5
+    }
+  },
+  {
+    "percent": 3.0,
+    "row": {
+      "service_fee_percent": "3"
+    }
+  },
+  {
+    "percent": 0.0,
+    "row": {
+      "service_fee_percent": 0
+    }
+  },
+  {
+    "percent": 100.0,
+    "row": {
+      "service_fee_percent": 100
+    }
+  },
+  {
+    "percent": 5.0,
+    "row": {
+      "service_fee_percent": 101
+    }
+  },
+  {
+    "percent": 5.0,
+    "row": {
+      "service_fee_percent": -1
+    }
+  },
+  {
+    "percent": 5.0,
+    "row": {
+      "service_fee_percent": "abc"
+    }
+  },
+  {
+    "percent": 5.0,
+    "row": "not a row"
+  },
+  {
+    "percent": 5.0,
+    "row": null
+  }
+]

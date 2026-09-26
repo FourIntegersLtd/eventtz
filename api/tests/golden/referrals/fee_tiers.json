@@ -1,0 +1,47 @@
+[
+  {
+    "discount": 0.0,
+    "spend": -5.0,
+    "tier_min_spend": null
+  },
+  {
+    "discount": 0.0,
+    "spend": 0.0,
+    "tier_min_spend": null
+  },
+  {
+    "discount": 0.0,
+    "spend": 0.01,
+    "tier_min_spend": null
+  },
+  {
+    "discount": 0.0,
+    "spend": 399.99,
+    "tier_min_spend": null
+  },
+  {
+    "discount": 10.0,
+    "spend": 400.0,
+    "tier_min_spend": 400.0
+  },
+  {
+    "discount": 10.0,
+    "spend": 400.01,
+    "tier_min_spend": 400.0
+  },
+  {
+    "discount": 10.0,
+    "spend": 599.99,
+    "tier_min_spend": 400.0
+  },
+  {
+    "discount": 15.0,
+    "spend": 600.0,
+    "tier_min_spend": 600.0
+  },
+  {
+    "discount": 15.0,
+    "spend": 10000.0,
+    "tier_min_spend": 600.0
+  }
+]

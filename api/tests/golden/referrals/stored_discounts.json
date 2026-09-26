@@ -1,0 +1,99 @@
+[
+  {
+    "discount": 10.0,
+    "row": {
+      "vendor_referral_code": "111111",
+      "vendor_user_id": "vendor-a"
+    },
+    "spend": 500.0,
+    "tier_min_spend": 400.0
+  },
+  {
+    "discount": 15.0,
+    "row": {
+      "vendor_referral_code": "111111",
+      "vendor_user_id": "vendor-a"
+    },
+    "spend": 650.0,
+    "tier_min_spend": 600.0
+  },
+  {
+    "discount": 0.0,
+    "row": {
+      "vendor_referral_code": "111111",
+      "vendor_user_id": "vendor-a"
+    },
+    "spend": 399.0,
+    "tier_min_spend": null
+  },
+  {
+    "discount": 10.0,
+    "row": {
+      "vendor_referral_code": " 11-11-11 ",
+      "vendor_user_id": "vendor-a"
+    },
+    "spend": 500.0,
+    "tier_min_spend": 400.0
+  },
+  {
+    "discount": 0.0,
+    "row": {
+      "vendor_referral_code": "222222",
+      "vendor_user_id": "vendor-a"
+    },
+    "spend": 700.0,
+    "tier_min_spend": null
+  },
+  {
+    "discount": 15.0,
+    "row": {
+      "vendor_referral_code": "333333",
+      "vendor_user_id": "vendor-a"
+    },
+    "spend": 700.0,
+    "tier_min_spend": 600.0
+  },
+  {
+    "discount": 15.0,
+    "row": {
+      "vendor_referral_code": "222222",
+      "vendor_user_id": ""
+    },
+    "spend": 700.0,
+    "tier_min_spend": 600.0
+  },
+  {
+    "discount": 10.0,
+    "row": {
+      "vendor_referral_code": "222222"
+    },
+    "spend": 450.0,
+    "tier_min_spend": 400.0
+  },
+  {
+    "discount": 0.0,
+    "row": {
+      "vendor_referral_code": null,
+      "vendor_user_id": "vendor-a"
+    },
+    "spend": 700.0,
+    "tier_min_spend": null
+  },
+  {
+    "discount": 0.0,
+    "row": {
+      "vendor_referral_code": "abc",
+      "vendor_user_id": "vendor-a"
+    },
+    "spend": 700.0,
+    "tier_min_spend": null
+  },
+  {
+    "discount": 0.0,
+    "row": {
+      "vendor_user_id": "vendor-a"
+    },
+    "spend": 700.0,
+    "tier_min_spend": null
+  }
+]

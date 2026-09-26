@@ -1,0 +1,82 @@
+[
+  {
+    "normalised": "creator-name",
+    "raw": "Creator Name",
+    "valid": true
+  },
+  {
+    "normalised": "spaces-and-dashes",
+    "raw": "  Spaces  and--dashes  ",
+    "valid": true
+  },
+  {
+    "normalised": "cafe-deja-vu",
+    "raw": "Café Déjà Vu",
+    "valid": true
+  },
+  {
+    "normalised": "under_score",
+    "raw": "under_score",
+    "valid": false
+  },
+  {
+    "normalised": "mixed-case-123",
+    "raw": "Mixed CASE 123",
+    "valid": true
+  },
+  {
+    "normalised": "a-b",
+    "raw": "a  -  b",
+    "valid": true
+  },
+  {
+    "normalised": "lead-trail",
+    "raw": "-lead-trail-",
+    "valid": true
+  },
+  {
+    "normalised": "emoji-party",
+    "raw": "émoji 🎉 party",
+    "valid": true
+  },
+  {
+    "normalised": "tab-name-newline",
+    "raw": "tab\tname\nnewline",
+    "valid": true
+  },
+  {
+    "normalised": "a",
+    "raw": "ÆØÅ",
+    "valid": true
+  },
+  {
+    "normalised": "creator",
+    "raw": "日本語",
+    "valid": true
+  },
+  {
+    "normalised": "creator",
+    "raw": "!!!",
+    "valid": true
+  },
+  {
+    "normalised": "creator",
+    "raw": "",
+    "valid": true
+  },
+  {
+    "normalised": "already-a-slug",
+    "raw": "already-a-slug",
+    "valid": true
+  },
+  {
+    "normalised": "dotsandcommas",
+    "raw": "dots.and,commas",
+    "valid": true
+  },
+  {
+    "normalised": "obrien-sons",
+    "raw": "O'Brien & Sons",
+    "valid": true
+  }
+]

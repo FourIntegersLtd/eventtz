@@ -1,0 +1,54 @@
+[
+  {
+    "email": "jane.doe_92@example.com",
+    "friendly_name": "Jane Doe"
+  },
+  {
+    "email": "JOHN@example.com",
+    "friendly_name": "John"
+  },
+  {
+    "email": "mary-ann.o_neil@example.com",
+    "friendly_name": "Mary Ann O Neil"
+  },
+  {
+    "email": "  spaced.name@example.com",
+    "friendly_name": "Spaced Name"
+  },
+  {
+    "email": "a..b@example.com",
+    "friendly_name": "A B"
+  },
+  {
+    "email": "émile.zola@example.com",
+    "friendly_name": "Émile Zola"
+  },
+  {
+    "email": "x7@example.com",
+    "friendly_name": "X7"
+  },
+  {
+    "email": "123@example.com",
+    "friendly_name": null
+  },
+  {
+    "email": "12.34@example.com",
+    "friendly_name": null
+  },
+  {
+    "email": "@example.com",
+    "friendly_name": null
+  },
+  {
+    "email": "no-at-sign",
+    "friendly_name": null
+  },
+  {
+    "email": "",
+    "friendly_name": null
+  },
+  {
+    "email": null,
+    "friendly_name": null
+  }
+]

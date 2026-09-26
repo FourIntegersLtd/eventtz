@@ -1,0 +1,1044 @@
+[
+  {
+    "breakdown": {
+      "adjustments_total_gbp": 0,
+      "client_total_gbp": 525.0,
+      "client_total_label": "GBP 525",
+      "has_pricing_tbc": false,
+      "line_items_subtotal_gbp": 500.0,
+      "line_items_subtotal_label": "GBP 500",
+      "referral_fee_applied": false,
+      "referral_fee_discount_gbp": 0.0,
+      "referral_fee_discount_label": null,
+      "referral_tier_min_spend_gbp": null,
+      "service_fee_before_discount_gbp": 25.0,
+      "service_fee_before_discount_label": "GBP 25",
+      "service_fee_gbp": 25.0,
+      "service_fee_label": "GBP 25",
+      "service_fee_percent": 5.0,
+      "vendor_adjustments": [],
+      "vendor_portion_gbp": 500.0,
+      "vendor_portion_label": "GBP 500"
+    },
+    "case": {
+      "line_items": [
+        {
+          "unit_price_gbp": 500
+        }
+      ],
+      "name": "plain",
+      "vendor_adjustments": []
+    },
+    "persisted_total_label": "GBP 525"
+  },
+  {
+    "breakdown": {
+      "adjustments_total_gbp": 0,
+      "client_total_gbp": 515.0,
+      "client_total_label": "GBP 515",
+      "has_pricing_tbc": false,
+      "line_items_subtotal_gbp": 500.0,
+      "line_items_subtotal_label": "GBP 500",
+      "referral_fee_applied": true,
+      "referral_fee_discount_gbp": 10.0,
+      "referral_fee_discount_label": "GBP -10",
+      "referral_tier_min_spend_gbp": 400.0,
+      "service_fee_before_discount_gbp": 25.0,
+      "service_fee_before_discount_label": "GBP 25",
+      "service_fee_gbp": 15.0,
+      "service_fee_label": "GBP 15",
+      "service_fee_percent": 5.0,
+      "vendor_adjustments": [],
+      "vendor_portion_gbp": 500.0,
+      "vendor_portion_label": "GBP 500"
+    },
+    "case": {
+      "line_items": [
+        {
+          "unit_price_gbp": 500
+        }
+      ],
+      "name": "first tier",
+      "referral_fee_discount_gbp": 10.0,
+      "referral_tier_min_spend_gbp": 400.0,
+      "vendor_adjustments": []
+    },
+    "persisted_total_label": "GBP 515"
+  },
+  {
+    "breakdown": {
+      "adjustments_total_gbp": 0,
+      "client_total_gbp": 720.0,
+      "client_total_label": "GBP 720",
+      "has_pricing_tbc": false,
+      "line_items_subtotal_gbp": 700.0,
+      "line_items_subtotal_label": "GBP 700",
+      "referral_fee_applied": true,
+      "referral_fee_discount_gbp": 15.0,
+      "referral_fee_discount_label": "GBP -15",
+      "referral_tier_min_spend_gbp": 600.0,
+      "service_fee_before_discount_gbp": 35.0,
+      "service_fee_before_discount_label": "GBP 35",
+      "service_fee_gbp": 20.0,
+      "service_fee_label": "GBP 20",
+      "service_fee_percent": 5.0,
+      "vendor_adjustments": [],
+      "vendor_portion_gbp": 700.0,
+      "vendor_portion_label": "GBP 700"
+    },
+    "case": {
+      "line_items": [
+        {
+          "unit_price_gbp": 700
+        }
+      ],
+      "name": "second tier",
+      "referral_fee_discount_gbp": 15.0,
+      "referral_tier_min_spend_gbp": 600.0,
+      "vendor_adjustments": []
+    },
+    "persisted_total_label": "GBP 720"
+  },
+  {
+    "breakdown": {
+      "adjustments_total_gbp": 0,
+      "client_total_gbp": 100.0,
+      "client_total_label": "GBP 100",
+      "has_pricing_tbc": false,
+      "line_items_subtotal_gbp": 100.0,
+      "line_items_subtotal_label": "GBP 100",
+      "referral_fee_applied": true,
+      "referral_fee_discount_gbp": 5.0,
+      "referral_fee_discount_label": "GBP -5",
+      "referral_tier_min_spend_gbp": null,
+      "service_fee_before_discount_gbp": 5.0,
+      "service_fee_before_discount_label": "GBP 5",
+      "service_fee_gbp": 0.0,
+      "service_fee_label": "GBP 0",
+      "service_fee_percent": 5.0,
+      "vendor_adjustments": [],
+      "vendor_portion_gbp": 100.0,
+      "vendor_portion_label": "GBP 100"
+    },
+    "case": {
+      "line_items": [
+        {
+          "unit_price_gbp": 100
+        }
+      ],
+      "name": "discount capped at the fee",
+      "referral_fee_discount_gbp": 15.0,
+      "vendor_adjustments": []
+    },
+    "persisted_total_label": "GBP 100"
+  },
+  {
+    "breakdown": {
+      "adjustments_total_gbp": 0,
+      "client_total_gbp": 105.0,
+      "client_total_label": "GBP 105",
+      "has_pricing_tbc": false,
+      "line_items_subtotal_gbp": 100.0,
+      "line_items_subtotal_label": "GBP 100",
+      "referral_fee_applied": false,
+      "referral_fee_discount_gbp": 0.0,
+      "referral_fee_discount_label": null,
+      "referral_tier_min_spend_gbp": null,
+      "service_fee_before_discount_gbp": 5.0,
+      "service_fee_before_discount_label": "GBP 5",
+      "service_fee_gbp": 5.0,
+      "service_fee_label": "GBP 5",
+      "service_fee_percent": 5.0,
+      "vendor_adjustments": [],
+      "vendor_portion_gbp": 100.0,
+      "vendor_portion_label": "GBP 100"
+    },
+    "case": {
+      "line_items": [
+        {
+          "unit_price_gbp": 100
+        }
+      ],
+      "name": "negative discount ignored",
+      "referral_fee_discount_gbp": -3.0,
+      "vendor_adjustments": []
+    },
+    "persisted_total_label": "GBP 105"
+  },
+  {
+    "breakdown": {
+      "adjustments_total_gbp": 0,
+      "client_total_gbp": 525.0,
+      "client_total_label": "GBP 525",
+      "has_pricing_tbc": true,
+      "line_items_subtotal_gbp": 500.0,
+      "line_items_subtotal_label": "GBP 500",
+      "referral_fee_applied": false,
+      "referral_fee_discount_gbp": 0.0,
+      "referral_fee_discount_label": null,
+      "referral_tier_min_spend_gbp": null,
+      "service_fee_before_discount_gbp": 25.0,
+      "service_fee_before_discount_label": "GBP 25",
+      "service_fee_gbp": 25.0,
+      "service_fee_label": "GBP 25",
+      "service_fee_percent": 5.0,
+      "vendor_adjustments": [],
+      "vendor_portion_gbp": 500.0,
+      "vendor_portion_label": "GBP 500"
+    },
+    "case": {
+      "line_items": [
+        {
+          "unit_price_gbp": null
+        },
+        {
+          "unit_price_gbp": 500
+        }
+      ],
+      "name": "tbc and priced",
+      "vendor_adjustments": []
+    },
+    "persisted_total_label": "GBP 525 + TBC"
+  },
+  {
+    "breakdown": {
+      "adjustments_total_gbp": 0,
+      "client_total_gbp": 0.0,
+      "client_total_label": "GBP 0",
+      "has_pricing_tbc": true,
+      "line_items_subtotal_gbp": 0.0,
+      "line_items_subtotal_label": "GBP 0",
+      "referral_fee_applied": false,
+      "referral_fee_discount_gbp": 0.0,
+      "referral_fee_discount_label": null,
+      "referral_tier_min_spend_gbp": null,
+      "service_fee_before_discount_gbp": 0.0,
+      "service_fee_before_discount_label": "GBP 0",
+      "service_fee_gbp": 0.0,
+      "service_fee_label": "GBP 0",
+      "service_fee_percent": 5.0,
+      "vendor_adjustments": [],
+      "vendor_portion_gbp": 0.0,
+      "vendor_portion_label": "GBP 0"
+    },
+    "case": {
+      "line_items": [
+        {
+          "unit_price_gbp": null
+        }
+      ],
+      "name": "tbc only",
+      "vendor_adjustments": []
+    },
+    "persisted_total_label": "TBC"
+  },
+  {
+    "breakdown": {
+      "adjustments_total_gbp": 0,
+      "client_total_gbp": 0.0,
+      "client_total_label": "GBP 0",
+      "has_pricing_tbc": true,
+      "line_items_subtotal_gbp": 0.0,
+      "line_items_subtotal_label": "GBP 0",
+      "referral_fee_applied": false,
+      "referral_fee_discount_gbp": 0.0,
+      "referral_fee_discount_label": null,
+      "referral_tier_min_spend_gbp": null,
+      "service_fee_before_discount_gbp": 0.0,
+      "service_fee_before_discount_label": "GBP 0",
+      "service_fee_gbp": 0.0,
+      "service_fee_label": "GBP 0",
+      "service_fee_percent": 5.0,
+      "vendor_adjustments": [],
+      "vendor_portion_gbp": 0.0,
+      "vendor_portion_label": "GBP 0"
+    },
+    "case": {
+      "line_items": [
+        {
+          "unit_price_gbp": "abc"
+        }
+      ],
+      "name": "unparseable price",
+      "vendor_adjustments": []
+    },
+    "persisted_total_label": "TBC"
+  },
+  {
+    "breakdown": {
+      "adjustments_total_gbp": 0,
+      "client_total_gbp": 13.12,
+      "client_total_label": "GBP 13.12",
+      "has_pricing_tbc": false,
+      "line_items_subtotal_gbp": 12.5,
+      "line_items_subtotal_label": "GBP 12.50",
+      "referral_fee_applied": false,
+      "referral_fee_discount_gbp": 0.0,
+      "referral_fee_discount_label": null,
+      "referral_tier_min_spend_gbp": null,
+      "service_fee_before_discount_gbp": 0.62,
+      "service_fee_before_discount_label": "GBP 0.62",
+      "service_fee_gbp": 0.62,
+      "service_fee_label": "GBP 0.62",
+      "service_fee_percent": 5.0,
+      "vendor_adjustments": [],
+      "vendor_portion_gbp": 12.5,
+      "vendor_portion_label": "GBP 12.50"
+    },
+    "case": {
+      "line_items": [
+        {
+          "unit_price_gbp": "12.50"
+        }
+      ],
+      "name": "string price",
+      "vendor_adjustments": []
+    },
+    "persisted_total_label": "GBP 13.12"
+  },
+  {
+    "breakdown": {
+      "adjustments_total_gbp": 0,
+      "client_total_gbp": 0.0,
+      "client_total_label": "GBP 0",
+      "has_pricing_tbc": false,
+      "line_items_subtotal_gbp": 0.0,
+      "line_items_subtotal_label": "GBP 0",
+      "referral_fee_applied": false,
+      "referral_fee_discount_gbp": 0.0,
+      "referral_fee_discount_label": null,
+      "referral_tier_min_spend_gbp": null,
+      "service_fee_before_discount_gbp": 0.0,
+      "service_fee_before_discount_label": "GBP 0",
+      "service_fee_gbp": 0.0,
+      "service_fee_label": "GBP 0",
+      "service_fee_percent": 5.0,
+      "vendor_adjustments": [],
+      "vendor_portion_gbp": 0.0,
+      "vendor_portion_label": "GBP 0"
+    },
+    "case": {
+      "line_items": [],
+      "name": "no line items",
+      "vendor_adjustments": []
+    },
+    "persisted_total_label": "GBP 0"
+  },
+  {
+    "breakdown": {
+      "adjustments_total_gbp": 0,
+      "client_total_gbp": 0.0,
+      "client_total_label": "GBP 0",
+      "has_pricing_tbc": false,
+      "line_items_subtotal_gbp": 0.0,
+      "line_items_subtotal_label": "GBP 0",
+      "referral_fee_applied": false,
+      "referral_fee_discount_gbp": 0.0,
+      "referral_fee_discount_label": null,
+      "referral_tier_min_spend_gbp": null,
+      "service_fee_before_discount_gbp": 0.0,
+      "service_fee_before_discount_label": "GBP 0",
+      "service_fee_gbp": 0.0,
+      "service_fee_label": "GBP 0",
+      "service_fee_percent": 5.0,
+      "vendor_adjustments": [],
+      "vendor_portion_gbp": 0.0,
+      "vendor_portion_label": "GBP 0"
+    },
+    "case": {
+      "line_items": "oops",
+      "name": "line items not a list",
+      "vendor_adjustments": null
+    },
+    "persisted_total_label": "GBP 0"
+  },
+  {
+    "breakdown": {
+      "adjustments_total_gbp": 0,
+      "client_total_gbp": 21.0,
+      "client_total_label": "GBP 21",
+      "has_pricing_tbc": false,
+      "line_items_subtotal_gbp": 20.0,
+      "line_items_subtotal_label": "GBP 20",
+      "referral_fee_applied": false,
+      "referral_fee_discount_gbp": 0.0,
+      "referral_fee_discount_label": null,
+      "referral_tier_min_spend_gbp": null,
+      "service_fee_before_discount_gbp": 1.0,
+      "service_fee_before_discount_label": "GBP 1",
+      "service_fee_gbp": 1.0,
+      "service_fee_label": "GBP 1",
+      "service_fee_percent": 5.0,
+      "vendor_adjustments": [],
+      "vendor_portion_gbp": 20.0,
+      "vendor_portion_label": "GBP 20"
+    },
+    "case": {
+      "line_items": [
+        "x",
+        5,
+        {
+          "unit_price_gbp": 20
+        }
+      ],
+      "name": "non-dict line items",
+      "vendor_adjustments": "oops"
+    },
+    "persisted_total_label": "GBP 21"
+  },
+  {
+    "breakdown": {
+      "adjustments_total_gbp": 0,
+      "client_total_gbp": 56.0,
+      "client_total_label": "GBP 56",
+      "has_pricing_tbc": false,
+      "line_items_subtotal_gbp": 53.33,
+      "line_items_subtotal_label": "GBP 53.33",
+      "referral_fee_applied": false,
+      "referral_fee_discount_gbp": 0.0,
+      "referral_fee_discount_label": null,
+      "referral_tier_min_spend_gbp": null,
+      "service_fee_before_discount_gbp": 2.67,
+      "service_fee_before_discount_label": "GBP 2.67",
+      "service_fee_gbp": 2.67,
+      "service_fee_label": "GBP 2.67",
+      "service_fee_percent": 5.0,
+      "vendor_adjustments": [],
+      "vendor_portion_gbp": 53.33,
+      "vendor_portion_label": "GBP 53.33"
+    },
+    "case": {
+      "line_items": [
+        {
+          "unit_price_gbp": 19.99
+        },
+        {
+          "unit_price_gbp": 0.01
+        },
+        {
+          "unit_price_gbp": 33.333
+        }
+      ],
+      "name": "pennies",
+      "vendor_adjustments": []
+    },
+    "persisted_total_label": "GBP 56"
+  },
+  {
+    "breakdown": {
+      "adjustments_total_gbp": 150.0,
+      "client_total_gbp": 472.5,
+      "client_total_label": "GBP 472.50",
+      "has_pricing_tbc": false,
+      "line_items_subtotal_gbp": 300.0,
+      "line_items_subtotal_label": "GBP 300",
+      "referral_fee_applied": false,
+      "referral_fee_discount_gbp": 0.0,
+      "referral_fee_discount_label": null,
+      "referral_tier_min_spend_gbp": null,
+      "service_fee_before_discount_gbp": 22.5,
+      "service_fee_before_discount_label": "GBP 22.50",
+      "service_fee_gbp": 22.5,
+      "service_fee_label": "GBP 22.50",
+      "service_fee_percent": 5.0,
+      "vendor_adjustments": [
+        {
+          "amount_gbp": 150.0,
+          "id": "adjustment-0001",
+          "label": "Travel",
+          "tag": "travel"
+        }
+      ],
+      "vendor_portion_gbp": 450.0,
+      "vendor_portion_label": "GBP 450"
+    },
+    "case": {
+      "line_items": [
+        {
+          "unit_price_gbp": 300
+        }
+      ],
+      "name": "travel adjustment",
+      "vendor_adjustments": [
+        {
+          "amount_gbp": 150,
+          "id": "adjustment-0001",
+          "label": "Travel",
+          "tag": "travel"
+        }
+      ]
+    },
+    "persisted_total_label": "GBP 472.50"
+  },
+  {
+    "breakdown": {
+      "adjustments_total_gbp": -200.0,
+      "client_total_gbp": -100.0,
+      "client_total_label": "GBP -100",
+      "has_pricing_tbc": false,
+      "line_items_subtotal_gbp": 100.0,
+      "line_items_subtotal_label": "GBP 100",
+      "referral_fee_applied": false,
+      "referral_fee_discount_gbp": 0.0,
+      "referral_fee_discount_label": null,
+      "referral_tier_min_spend_gbp": null,
+      "service_fee_before_discount_gbp": 0.0,
+      "service_fee_before_discount_label": "GBP 0",
+      "service_fee_gbp": 0.0,
+      "service_fee_label": "GBP 0",
+      "service_fee_percent": 5.0,
+      "vendor_adjustments": [
+        {
+          "amount_gbp": -200.0,
+          "id": "discount-0001",
+          "label": "Goodwill",
+          "tag": "discount"
+        }
+      ],
+      "vendor_portion_gbp": -100.0,
+      "vendor_portion_label": "GBP -100"
+    },
+    "case": {
+      "line_items": [
+        {
+          "unit_price_gbp": 100
+        }
+      ],
+      "name": "discount below zero",
+      "vendor_adjustments": [
+        {
+          "amount_gbp": -200,
+          "id": "discount-0001",
+          "label": "Goodwill",
+          "tag": "discount"
+        }
+      ]
+    },
+    "persisted_total_label": "GBP -100"
+  },
+  {
+    "breakdown": {
+      "adjustments_total_gbp": -50.0,
+      "client_total_gbp": -50.0,
+      "client_total_label": "GBP -50",
+      "has_pricing_tbc": true,
+      "line_items_subtotal_gbp": 0.0,
+      "line_items_subtotal_label": "GBP 0",
+      "referral_fee_applied": false,
+      "referral_fee_discount_gbp": 0.0,
+      "referral_fee_discount_label": null,
+      "referral_tier_min_spend_gbp": null,
+      "service_fee_before_discount_gbp": 0.0,
+      "service_fee_before_discount_label": "GBP 0",
+      "service_fee_gbp": 0.0,
+      "service_fee_label": "GBP 0",
+      "service_fee_percent": 5.0,
+      "vendor_adjustments": [
+        {
+          "amount_gbp": -50.0,
+          "id": "discount-0002",
+          "label": "Additional cost",
+          "tag": "other"
+        }
+      ],
+      "vendor_portion_gbp": -50.0,
+      "vendor_portion_label": "GBP -50"
+    },
+    "case": {
+      "line_items": [
+        {
+          "unit_price_gbp": null
+        }
+      ],
+      "name": "tbc with a discount below zero",
+      "vendor_adjustments": [
+        {
+          "amount_gbp": -50,
+          "id": "discount-0002"
+        }
+      ]
+    },
+    "persisted_total_label": "GBP -50 + TBC"
+  },
+  {
+    "breakdown": {
+      "adjustments_total_gbp": 20.01,
+      "client_total_gbp": 126.01,
+      "client_total_label": "GBP 126.01",
+      "has_pricing_tbc": false,
+      "line_items_subtotal_gbp": 100.0,
+      "line_items_subtotal_label": "GBP 100",
+      "referral_fee_applied": false,
+      "referral_fee_discount_gbp": 0.0,
+      "referral_fee_discount_label": null,
+      "referral_tier_min_spend_gbp": null,
+      "service_fee_before_discount_gbp": 6.0,
+      "service_fee_before_discount_label": "GBP 6",
+      "service_fee_gbp": 6.0,
+      "service_fee_label": "GBP 6",
+      "service_fee_percent": 5.0,
+      "vendor_adjustments": [
+        {
+          "amount_gbp": 10.01,
+          "id": "rounded-amt-01",
+          "label": "Additional cost",
+          "tag": "other"
+        },
+        {
+          "amount_gbp": 7.0,
+          "id": "defaults-0001",
+          "label": "Additional cost",
+          "tag": "other"
+        },
+        {
+          "amount_gbp": 1.0,
+          "id": "long-text-001",
+          "label": "LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL",
+          "tag": "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
+        },
+        {
+          "amount_gbp": 2.0,
+          "id": "blank-text-01",
+          "label": "Additional cost",
+          "tag": "other"
+        }
+      ],
+      "vendor_portion_gbp": 120.01,
+      "vendor_portion_label": "GBP 120.01"
+    },
+    "case": {
+      "line_items": [
+        {
+          "unit_price_gbp": 100
+        }
+      ],
+      "name": "adjustment clean-up",
+      "vendor_adjustments": [
+        {
+          "amount_gbp": 0,
+          "id": "zero-amount-01"
+        },
+        {
+          "amount_gbp": "lots",
+          "id": "bad-amount-01"
+        },
+        {
+          "amount_gbp": 1000000000.0,
+          "id": "huge-amount-01"
+        },
+        {
+          "amount_gbp": -1000000000.0,
+          "id": "tiny-amount-01"
+        },
+        {
+          "amount_gbp": 10.005,
+          "id": "rounded-amt-01"
+        },
+        {
+          "amount_gbp": "7",
+          "id": "defaults-0001"
+        },
+        {
+          "amount_gbp": 1,
+          "id": "long-text-001",
+          "label": "LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL",
+          "tag": "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
+        },
+        {
+          "amount_gbp": 2,
+          "id": "blank-text-01",
+          "label": "   ",
+          "tag": "   "
+        },
+        "not a dict"
+      ]
+    },
+    "persisted_total_label": "GBP 126.01"
+  },
+  {
+    "breakdown": {
+      "adjustments_total_gbp": 20.0,
+      "client_total_gbp": 31.5,
+      "client_total_label": "GBP 31.50",
+      "has_pricing_tbc": false,
+      "line_items_subtotal_gbp": 10.0,
+      "line_items_subtotal_label": "GBP 10",
+      "referral_fee_applied": false,
+      "referral_fee_discount_gbp": 0.0,
+      "referral_fee_discount_label": null,
+      "referral_tier_min_spend_gbp": null,
+      "service_fee_before_discount_gbp": 1.5,
+      "service_fee_before_discount_label": "GBP 1.50",
+      "service_fee_gbp": 1.5,
+      "service_fee_label": "GBP 1.50",
+      "service_fee_percent": 5.0,
+      "vendor_adjustments": [
+        {
+          "amount_gbp": 1.0,
+          "id": "adjustment-0000",
+          "label": "Additional cost",
+          "tag": "other"
+        },
+        {
+          "amount_gbp": 1.0,
+          "id": "adjustment-0001",
+          "label": "Additional cost",
+          "tag": "other"
+        },
+        {
+          "amount_gbp": 1.0,
+          "id": "adjustment-0002",
+          "label": "Additional cost",
+          "tag": "other"
+        },
+        {
+          "amount_gbp": 1.0,
+          "id": "adjustment-0003",
+          "label": "Additional cost",
+          "tag": "other"
+        },
+        {
+          "amount_gbp": 1.0,
+          "id": "adjustment-0004",
+          "label": "Additional cost",
+          "tag": "other"
+        },
+        {
+          "amount_gbp": 1.0,
+          "id": "adjustment-0005",
+          "label": "Additional cost",
+          "tag": "other"
+        },
+        {
+          "amount_gbp": 1.0,
+          "id": "adjustment-0006",
+          "label": "Additional cost",
+          "tag": "other"
+        },
+        {
+          "amount_gbp": 1.0,
+          "id": "adjustment-0007",
+          "label": "Additional cost",
+          "tag": "other"
+        },
+        {
+          "amount_gbp": 1.0,
+          "id": "adjustment-0008",
+          "label": "Additional cost",
+          "tag": "other"
+        },
+        {
+          "amount_gbp": 1.0,
+          "id": "adjustment-0009",
+          "label": "Additional cost",
+          "tag": "other"
+        },
+        {
+          "amount_gbp": 1.0,
+          "id": "adjustment-0010",
+          "label": "Additional cost",
+          "tag": "other"
+        },
+        {
+          "amount_gbp": 1.0,
+          "id": "adjustment-0011",
+          "label": "Additional cost",
+          "tag": "other"
+        },
+        {
+          "amount_gbp": 1.0,
+          "id": "adjustment-0012",
+          "label": "Additional cost",
+          "tag": "other"
+        },
+        {
+          "amount_gbp": 1.0,
+          "id": "adjustment-0013",
+          "label": "Additional cost",
+          "tag": "other"
+        },
+        {
+          "amount_gbp": 1.0,
+          "id": "adjustment-0014",
+          "label": "Additional cost",
+          "tag": "other"
+        },
+        {
+          "amount_gbp": 1.0,
+          "id": "adjustment-0015",
+          "label": "Additional cost",
+          "tag": "other"
+        },
+        {
+          "amount_gbp": 1.0,
+          "id": "adjustment-0016",
+          "label": "Additional cost",
+          "tag": "other"
+        },
+        {
+          "amount_gbp": 1.0,
+          "id": "adjustment-0017",
+          "label": "Additional cost",
+          "tag": "other"
+        },
+        {
+          "amount_gbp": 1.0,
+          "id": "adjustment-0018",
+          "label": "Additional cost",
+          "tag": "other"
+        },
+        {
+          "amount_gbp": 1.0,
+          "id": "adjustment-0019",
+          "label": "Additional cost",
+          "tag": "other"
+        }
+      ],
+      "vendor_portion_gbp": 30.0,
+      "vendor_portion_label": "GBP 30"
+    },
+    "case": {
+      "line_items": [
+        {
+          "unit_price_gbp": 10
+        }
+      ],
+      "name": "adjustments cut at twenty",
+      "vendor_adjustments": [
+        {
+          "amount_gbp": 1,
+          "id": "adjustment-0000"
+        },
+        {
+          "amount_gbp": 1,
+          "id": "adjustment-0001"
+        },
+        {
+          "amount_gbp": 1,
+          "id": "adjustment-0002"
+        },
+        {
+          "amount_gbp": 1,
+          "id": "adjustment-0003"
+        },
+        {
+          "amount_gbp": 1,
+          "id": "adjustment-0004"
+        },
+        {
+          "amount_gbp": 1,
+          "id": "adjustment-0005"
+        },
+        {
+          "amount_gbp": 1,
+          "id": "adjustment-0006"
+        },
+        {
+          "amount_gbp": 1,
+          "id": "adjustment-0007"
+        },
+        {
+          "amount_gbp": 1,
+          "id": "adjustment-0008"
+        },
+        {
+          "amount_gbp": 1,
+          "id": "adjustment-0009"
+        },
+        {
+          "amount_gbp": 1,
+          "id": "adjustment-0010"
+        },
+        {
+          "amount_gbp": 1,
+          "id": "adjustment-0011"
+        },
+        {
+          "amount_gbp": 1,
+          "id": "adjustment-0012"
+        },
+        {
+          "amount_gbp": 1,
+          "id": "adjustment-0013"
+        },
+        {
+          "amount_gbp": 1,
+          "id": "adjustment-0014"
+        },
+        {
+          "amount_gbp": 1,
+          "id": "adjustment-0015"
+        },
+        {
+          "amount_gbp": 1,
+          "id": "adjustment-0016"
+        },
+        {
+          "amount_gbp": 1,
+          "id": "adjustment-0017"
+        },
+        {
+          "amount_gbp": 1,
+          "id": "adjustment-0018"
+        },
+        {
+          "amount_gbp": 1,
+          "id": "adjustment-0019"
+        },
+        {
+          "amount_gbp": 1,
+          "id": "adjustment-0020"
+        },
+        {
+          "amount_gbp": 1,
+          "id": "adjustment-0021"
+        },
+        {
+          "amount_gbp": 1,
+          "id": "adjustment-0022"
+        },
+        {
+          "amount_gbp": 1,
+          "id": "adjustment-0023"
+        },
+        {
+          "amount_gbp": 1,
+          "id": "adjustment-0024"
+        }
+      ]
+    },
+    "persisted_total_label": "GBP 31.50"
+  },
+  {
+    "breakdown": {
+      "adjustments_total_gbp": 0,
+      "client_total_gbp": 160.0,
+      "client_total_label": "GBP 160",
+      "has_pricing_tbc": false,
+      "line_items_subtotal_gbp": 80.0,
+      "line_items_subtotal_label": "GBP 80",
+      "referral_fee_applied": false,
+      "referral_fee_discount_gbp": 0.0,
+      "referral_fee_discount_label": null,
+      "referral_tier_min_spend_gbp": null,
+      "service_fee_before_discount_gbp": 80.0,
+      "service_fee_before_discount_label": "GBP 80",
+      "service_fee_gbp": 80.0,
+      "service_fee_label": "GBP 80",
+      "service_fee_percent": 100.0,
+      "vendor_adjustments": [],
+      "vendor_portion_gbp": 80.0,
+      "vendor_portion_label": "GBP 80"
+    },
+    "case": {
+      "line_items": [
+        {
+          "unit_price_gbp": 80
+        }
+      ],
+      "name": "fee percent above 100",
+      "service_fee_percent": 150,
+      "vendor_adjustments": []
+    },
+    "persisted_total_label": "GBP 160"
+  },
+  {
+    "breakdown": {
+      "adjustments_total_gbp": 0,
+      "client_total_gbp": 80.0,
+      "client_total_label": "GBP 80",
+      "has_pricing_tbc": false,
+      "line_items_subtotal_gbp": 80.0,
+      "line_items_subtotal_label": "GBP 80",
+      "referral_fee_applied": false,
+      "referral_fee_discount_gbp": 0.0,
+      "referral_fee_discount_label": null,
+      "referral_tier_min_spend_gbp": null,
+      "service_fee_before_discount_gbp": 0.0,
+      "service_fee_before_discount_label": "GBP 0",
+      "service_fee_gbp": 0.0,
+      "service_fee_label": "GBP 0",
+      "service_fee_percent": 0.0,
+      "vendor_adjustments": [],
+      "vendor_portion_gbp": 80.0,
+      "vendor_portion_label": "GBP 80"
+    },
+    "case": {
+      "line_items": [
+        {
+          "unit_price_gbp": 80
+        }
+      ],
+      "name": "fee percent below 0",
+      "service_fee_percent": -5,
+      "vendor_adjustments": []
+    },
+    "persisted_total_label": "GBP 80"
+  },
+  {
+    "breakdown": {
+      "adjustments_total_gbp": 0,
+      "client_total_gbp": 80.0,
+      "client_total_label": "GBP 80",
+      "has_pricing_tbc": false,
+      "line_items_subtotal_gbp": 80.0,
+      "line_items_subtotal_label": "GBP 80",
+      "referral_fee_applied": false,
+      "referral_fee_discount_gbp": 0.0,
+      "referral_fee_discount_label": null,
+      "referral_tier_min_spend_gbp": null,
+      "service_fee_before_discount_gbp": 0.0,
+      "service_fee_before_discount_label": "GBP 0",
+      "service_fee_gbp": 0.0,
+      "service_fee_label": "GBP 0",
+      "service_fee_percent": 0.0,
+      "vendor_adjustments": [],
+      "vendor_portion_gbp": 80.0,
+      "vendor_portion_label": "GBP 80"
+    },
+    "case": {
+      "line_items": [
+        {
+          "unit_price_gbp": 80
+        }
+      ],
+      "name": "fee percent zero",
+      "service_fee_percent": 0,
+      "vendor_adjustments": []
+    },
+    "persisted_total_label": "GBP 80"
+  },
+  {
+    "breakdown": {
+      "adjustments_total_gbp": 0,
+      "client_total_gbp": 358.33,
+      "client_total_label": "GBP 358.33",
+      "has_pricing_tbc": false,
+      "line_items_subtotal_gbp": 333.33,
+      "line_items_subtotal_label": "GBP 333.33",
+      "referral_fee_applied": false,
+      "referral_fee_discount_gbp": 0.0,
+      "referral_fee_discount_label": null,
+      "referral_tier_min_spend_gbp": null,
+      "service_fee_before_discount_gbp": 25.0,
+      "service_fee_before_discount_label": "GBP 25",
+      "service_fee_gbp": 25.0,
+      "service_fee_label": "GBP 25",
+      "service_fee_percent": 7.5,
+      "vendor_adjustments": [],
+      "vendor_portion_gbp": 333.33,
+      "vendor_portion_label": "GBP 333.33"
+    },
+    "case": {
+      "line_items": [
+        {
+          "unit_price_gbp": 333.33
+        }
+      ],
+      "name": "fee percent custom",
+      "service_fee_percent": 7.5,
+      "vendor_adjustments": []
+    },
+    "persisted_total_label": "GBP 358.33"
+  }
+]

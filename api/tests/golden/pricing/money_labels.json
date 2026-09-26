@@ -1,0 +1,50 @@
+[
+  {
+    "amount": "0.0",
+    "label": "GBP 0"
+  },
+  {
+    "amount": "1.0",
+    "label": "GBP 1"
+  },
+  {
+    "amount": "1.5",
+    "label": "GBP 1.50"
+  },
+  {
+    "amount": "1.005",
+    "label": "GBP 1"
+  },
+  {
+    "amount": "2.675",
+    "label": "GBP 2.67"
+  },
+  {
+    "amount": "10.999",
+    "label": "GBP 11"
+  },
+  {
+    "amount": "-15.0",
+    "label": "GBP -15"
+  },
+  {
+    "amount": "-0.5",
+    "label": "GBP -0.50"
+  },
+  {
+    "amount": "0.004",
+    "label": "GBP 0"
+  },
+  {
+    "amount": "-0.004",
+    "label": "GBP 0"
+  },
+  {
+    "amount": "1234567.891",
+    "label": "GBP 1234567.89"
+  },
+  {
+    "amount": "nan",
+    "label": "GBP 0.00"
+  }
+]

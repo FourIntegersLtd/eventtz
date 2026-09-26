@@ -1,0 +1,54 @@
+[
+  {
+    "normalised": "123",
+    "raw": "123"
+  },
+  {
+    "normalised": "1234",
+    "raw": " 12-34 "
+  },
+  {
+    "normalised": "123456",
+    "raw": "12 34 56"
+  },
+  {
+    "normalised": "000000",
+    "raw": "000000"
+  },
+  {
+    "normalised": "0",
+    "raw": "0"
+  },
+  {
+    "normalised": "123456",
+    "raw": "123456"
+  },
+  {
+    "normalised": null,
+    "raw": "1234567"
+  },
+  {
+    "normalised": null,
+    "raw": "abc"
+  },
+  {
+    "normalised": "123",
+    "raw": "a1b2c3"
+  },
+  {
+    "normalised": null,
+    "raw": "--"
+  },
+  {
+    "normalised": null,
+    "raw": ""
+  },
+  {
+    "normalised": null,
+    "raw": null
+  },
+  {
+    "normalised": "１２３",
+    "raw": "１２３"
+  }
+]

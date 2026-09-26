@@ -1,0 +1,52 @@
+[
+  {
+    "row": {
+      "line_items": [
+        {
+          "unit_price_gbp": 300
+        }
+      ],
+      "vendor_adjustments": [
+        {
+          "amount_gbp": 150,
+          "id": "adjustment-0001"
+        }
+      ]
+    },
+    "with_adjustments": 450.0,
+    "without_adjustments": 300.0
+  },
+  {
+    "row": {
+      "line_items": [
+        {
+          "unit_price_gbp": null
+        },
+        {
+          "unit_price_gbp": 10.555
+        }
+      ],
+      "vendor_adjustments": null
+    },
+    "with_adjustments": 10.55,
+    "without_adjustments": 10.55
+  },
+  {
+    "row": {
+      "line_items": "oops",
+      "vendor_adjustments": [
+        {
+          "amount_gbp": -20,
+          "id": "adjustment-0002"
+        }
+      ]
+    },
+    "with_adjustments": -20.0,
+    "without_adjustments": 0.0
+  },
+  {
+    "row": {},
+    "with_adjustments": 0.0,
+    "without_adjustments": 0.0
+  }
+]
