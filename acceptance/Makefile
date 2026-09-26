@@ -3,13 +3,17 @@
 TARGET ?= baseline
 PYTHON := ../api/.venv/bin/python
 
-.PHONY: env serve test lint capture
+.PHONY: env serve test lint capture reset-data
 
 env:
 	scripts/local_env.sh
 
 serve:
 	scripts/serve.sh $(TARGET)
+
+# Clear the seeded @example.com accounts from local Supabase (they pile up run after run).
+reset-data:
+	scripts/reset_data.sh
 
 test:
 	TARGET=$(TARGET) $(PYTHON) -m pytest -q $(ARGS)
