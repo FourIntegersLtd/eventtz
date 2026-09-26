@@ -71,8 +71,6 @@ class Timestamps:
 UNMAPPED_BASELINE_TABLES = frozenset(
     {
         "booking_reviews",
-        "celebration_plan_items",
-        "celebration_plans",
         "dispute_cases",
         "job_runs",
         "stripe_webhook_events",
