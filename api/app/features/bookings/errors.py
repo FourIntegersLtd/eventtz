@@ -413,6 +413,120 @@ class PayoutReleaseNotRebuilt(Unavailable):
     default_message = "We could not release the payout right now. Please try again later."
 
 
+# --- checkout (the client pays) ---------------------------------------------------------------------
+#
+# The baseline answered every checkout refusal with a 400, including "not found", so these keep it.
+
+
+class CheckoutBookingNotFound(InvalidInput):
+    """Checkout or its sync named a booking the client does not have (a 400, as the baseline answered)."""
+
+    code = "checkout_booking_not_found"
+    default_message = "Booking not found."
+
+
+class OnlyAcceptedCanBePaid(InvalidInput):
+    """Checkout opens only once the vendor has accepted."""
+
+    code = "checkout_only_accepted"
+    default_message = "Only accepted bookings can be paid."
+
+
+class CheckoutAlreadyPaid(InvalidInput):
+    """The booking's money is already settled, so there is nothing to check out."""
+
+    code = "checkout_already_paid"
+    default_message = "This booking has already been paid."
+
+
+class VendorPayoutsNotReady(InvalidInput):
+    """The vendor cannot take card payments yet and staff have not waived the payout gate."""
+
+    code = "checkout_vendor_payouts_not_ready"
+    default_message = "This vendor hasn't finished setting up payouts yet. Try again once they have."
+
+
+class CheckoutVendorUnavailable(InvalidInput):
+    """The vendor is no longer bookable (unlisted, banned or closed), so their prices cannot be read."""
+
+    code = "checkout_vendor_unavailable"
+    default_message = "This vendor is not available for booking right now."
+
+
+class CheckoutMissingEventDate(InvalidInput):
+    """The stored event date cannot be read, so date-based discounts cannot be priced."""
+
+    code = "checkout_missing_event_date"
+    default_message = "Booking is missing a valid event date."
+
+
+class CheckoutPricesToConfirm(InvalidInput):
+    """A line is still "price to be confirmed", so there is no total to charge."""
+
+    code = "checkout_prices_to_confirm"
+    default_message = "This booking still has prices to be confirmed before you can pay."
+
+
+class NothingToPay(InvalidInput):
+    """The re-priced total is zero."""
+
+    code = "checkout_nothing_to_pay"
+    default_message = "Nothing to pay for this booking."
+
+
+class EventAddressRequiredToPay(InvalidInput):
+    """The vendor needs the event address, so it is asked for before the client pays."""
+
+    code = "checkout_event_address_required"
+    default_message = "Add your event address on the booking before paying. Your vendor needs it to prepare."
+
+
+class BookingNoLongerPayable(InvalidInput):
+    """A payment sync for a booking that is no longer accepted."""
+
+    code = "checkout_no_longer_payable"
+    default_message = "This booking can no longer be paid."
+
+
+class NoCheckoutSession(InvalidInput):
+    """A payment sync with no session id given and none stored."""
+
+    code = "checkout_no_session"
+    default_message = "No checkout session found for this booking."
+
+
+class PaymentLinkExpired(InvalidInput):
+    """Stripe no longer knows the session (it expired, or Stripe accounts changed); it was cleared."""
+
+    code = "checkout_payment_link_expired"
+    # The stale session is cleared so the next "Pay now" starts fresh; that write must stick.
+    persist_effects = True
+    default_message = "That payment link has expired. Tap Pay now to start a fresh checkout."
+
+
+class CheckoutSessionMismatch(InvalidInput):
+    """The session Stripe returned belongs to another booking."""
+
+    code = "checkout_session_mismatch"
+    default_message = "This checkout session does not match this booking."
+
+
+class CheckoutSessionAccountMismatch(InvalidInput):
+    """The session Stripe returned was opened by another client."""
+
+    code = "checkout_session_account_mismatch"
+    default_message = "This checkout session does not match your account."
+
+
+class PaymentNotFinished(InvalidInput):
+    """Stripe has not marked the session paid yet (or finalising did not mark the booking paid)."""
+
+    code = "checkout_payment_not_finished"
+    # Finalising may have refunded a stale payment; that write must stick.
+    persist_effects = True
+    default_message = "Payment has not finished processing yet. Wait a moment and refresh."
+
+
 # --- admin console (staff/super admin) ----------------------------------------------------------------
 #
 # The admin console's own copy differs, in small ways, from the client/vendor errors above (for

@@ -9,6 +9,7 @@ integer pence here, the one place rounding happens.
 
 from __future__ import annotations
 
+from datetime import date
 from typing import Any
 
 # Statuses from which a checkout may start (or restart) and be marked paid.
@@ -189,3 +190,22 @@ def usable_payment_intent_id(payment_intent_id: str | None) -> str | None:
     """The id when it names a payment intent (`pi_…`), else None."""
     text = (payment_intent_id or "").strip()
     return text if text.startswith("pi_") else None
+
+
+def is_missing_checkout_session(stripe_code: str, message: str) -> bool:
+    """Whether Stripe's refusal means the Checkout Session no longer exists (expired, or another account).
+
+    Stripe says `resource_missing`; older errors only name the object ("No such checkout.session").
+    """
+    return stripe_code == "resource_missing" or "checkout.session" in message.lower()
+
+
+def parse_event_date(event_date: str | None) -> date | None:
+    """The booking's first day from its stored ISO text, or None when missing or unreadable."""
+    text = (event_date or "").strip()
+    if not text:
+        return None
+    try:
+        return date.fromisoformat(text[:10])
+    except ValueError:
+        return None

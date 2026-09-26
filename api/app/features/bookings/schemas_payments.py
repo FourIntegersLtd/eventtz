@@ -1,4 +1,4 @@
-"""Response shapes of the booking money flows: the vendor payout ledger, checkout and its sync.
+"""Response shapes of the vendor payout ledger (checkout's are in `schemas.py`, beside the client routes).
 
 Field names are the baseline's (`contracts/payments.py`); the web app reads them directly.
 """

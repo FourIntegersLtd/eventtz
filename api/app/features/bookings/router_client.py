@@ -7,16 +7,25 @@ from fastapi import APIRouter, Query
 from app.core.auth import ROLE_ERRORS, CurrentClient
 from app.core.db import SessionDep
 from app.core.errors import error_responses
-from app.core.ports import MailerDependency
+from app.core.ports import (
+    MailerDependency,
+    PaymentGatewayDependency,
+    PaymentGatewayError,
+    PaymentsUnavailable,
+)
 from app.features.bookings import (
     errors,
     service_completion,
     service_create,
+    service_payments_checkout,
     service_queries,
     service_status,
     service_venue,
 )
 from app.features.bookings.schemas import (
+    BookingCheckoutResponse,
+    BookingCheckoutSyncBody,
+    BookingCheckoutSyncResponse,
     BookingRequestCreated,
     ClientBookingDetailResponse,
     ClientBookingsListResponse,
@@ -146,6 +155,72 @@ async def patch_client_booking_venue(
     """Set the venue of an accepted booking before paying."""
     booking = await service_venue.update_venue(session, client.id, require_booking_id(booking_id), body)
     return ClientBookingDetailResponse(booking=booking)
+
+
+@router.post(
+    "/booking-requests/{booking_id}/checkout",
+    response_model=BookingCheckoutResponse,
+    responses=error_responses(
+        *ROLE_ERRORS,
+        errors.InvalidBookingId,
+        errors.CheckoutBookingNotFound,
+        errors.OnlyAcceptedCanBePaid,
+        errors.CheckoutAlreadyPaid,
+        errors.VendorPayoutsNotReady,
+        errors.CheckoutVendorUnavailable,
+        errors.CheckoutMissingEventDate,
+        errors.CheckoutPricesToConfirm,
+        errors.NothingToPay,
+        errors.EventAddressRequiredToPay,
+        PaymentsUnavailable,
+        PaymentGatewayError,
+    ),
+)
+async def post_booking_checkout(
+    session: SessionDep, client: CurrentClient, booking_id: str, gateway: PaymentGatewayDependency
+) -> BookingCheckoutResponse:
+    """Re-price the accepted booking and return the Stripe Checkout URL to pay it."""
+    checkout_url = await service_payments_checkout.start_checkout(
+        session, gateway, client_user_id=client.id, booking_id=require_booking_id(booking_id)
+    )
+    return BookingCheckoutResponse(checkout_url=checkout_url)
+
+
+@router.post(
+    "/booking-requests/{booking_id}/checkout/sync",
+    response_model=BookingCheckoutSyncResponse,
+    responses=error_responses(
+        *ROLE_ERRORS,
+        errors.InvalidBookingId,
+        errors.CheckoutBookingNotFound,
+        errors.BookingNoLongerPayable,
+        errors.NoCheckoutSession,
+        errors.PaymentLinkExpired,
+        errors.CheckoutSessionMismatch,
+        errors.CheckoutSessionAccountMismatch,
+        errors.PaymentNotFinished,
+        PaymentsUnavailable,
+        PaymentGatewayError,
+    ),
+)
+async def post_booking_checkout_sync(
+    session: SessionDep,
+    client: CurrentClient,
+    booking_id: str,
+    body: BookingCheckoutSyncBody,
+    mailer: MailerDependency,
+    gateway: PaymentGatewayDependency,
+) -> BookingCheckoutSyncResponse:
+    """Confirm the payment after Stripe's redirect, in case the webhook has not arrived yet."""
+    payment_status = await service_payments_checkout.sync_checkout(
+        session,
+        mailer,
+        gateway,
+        client_user_id=client.id,
+        booking_id=require_booking_id(booking_id),
+        session_id=body.session_id,
+    )
+    return BookingCheckoutSyncResponse(payment_status=payment_status)
 
 
 @router.post(

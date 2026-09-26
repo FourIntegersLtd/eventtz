@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.logging import get_logger
 from app.core.ports import Mailer, PaymentGateway, PaymentGatewayError
 from app.core.settings import get_settings
-from app.features.bookings import service_payout_ledger
+from app.features.bookings import service_payments_checkout, service_payout_ledger
 from app.features.identity import service as identity
 from app.features.payments import domain, repository
 from app.features.payments.errors import (
@@ -288,7 +288,9 @@ async def _dispatch(
     event_object: dict[str, Any],
 ) -> None:
     """Hand a new event to the flow it belongs to."""
-    if event_type == ACCOUNT_UPDATED:
+    if event_type == CHECKOUT_COMPLETED:
+        await service_payments_checkout.finalize_checkout_session(session, mailer, gateway, event_object)
+    elif event_type == ACCOUNT_UPDATED:
         account_id = str(event_object.get("id") or "")
         if not account_id:
             return

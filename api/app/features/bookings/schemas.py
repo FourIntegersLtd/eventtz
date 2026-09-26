@@ -518,3 +518,23 @@ class ConfirmCompletionResponse(BaseModel):
     status: str
     payment_status: str
     awaiting_other_party: bool = False
+
+
+class BookingCheckoutResponse(BaseModel):
+    """Where to send the client to pay: Stripe's hosted Checkout page."""
+
+    success: bool = True
+    checkout_url: str
+
+
+class BookingCheckoutSyncBody(BaseModel):
+    """The session id Stripe put in the success URL, when the page has it."""
+
+    session_id: str | None = Field(default=None, max_length=256)
+
+
+class BookingCheckoutSyncResponse(BaseModel):
+    """The booking's payment status after checking the session with Stripe."""
+
+    success: bool = True
+    payment_status: str

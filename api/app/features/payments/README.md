@@ -39,7 +39,9 @@ bookings slice (`service_payments*.py`); this slice calls them, never the revers
 - `POST /vendor/payments/connect-account?return_path=` (vendor)
 - `GET /vendor/payments/status` (vendor)
 - `GET /vendor/payments/history` (vendor)
-- `POST /webhooks/stripe` (public, signed): `account.updated`
+- `POST /webhooks/stripe` (public, signed): `account.updated` (refresh the vendor's
+  Connect flags) and `checkout.session.completed` (handed to
+  `bookings.service_payments_checkout.finalize_checkout_session`)
 
 Differences from the baseline:
 - With no Stripe key, `connect-account` is a 503 `payments_unavailable`, not a 500.
