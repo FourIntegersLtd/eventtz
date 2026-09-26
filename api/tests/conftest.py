@@ -42,6 +42,7 @@ from app.core.db import (  # noqa: E402
     sqlalchemy_url,
 )
 from app.core.settings import Settings, get_settings  # noqa: E402
+from tests.support.fakes import FakePaymentGateway  # noqa: E402
 
 API_ROOT = Path(__file__).resolve().parents[1]
 
@@ -118,11 +119,18 @@ async def db_session(_engine: None) -> AsyncIterator[AsyncSession]:
             await outer_transaction.rollback()
 
 
+@pytest.fixture
+def payment_gateway() -> FakePaymentGateway:
+    """Stripe in memory: every HTTP test gets it, so no test can reach the real Stripe adapter."""
+    return FakePaymentGateway()
+
+
 @pytest_asyncio.fixture
-async def app(db_session: AsyncSession) -> FastAPI:
-    """The real app, wired to the test's transaction."""
+async def app(db_session: AsyncSession, payment_gateway: FakePaymentGateway) -> FastAPI:
+    """The real app, wired to the test's transaction and to the fake payment gateway."""
     from contextlib import asynccontextmanager  # noqa: PLC0415
 
+    from app.core.ports import payment_gateway_port  # noqa: PLC0415 - settings must be fixed first
     from app.main import create_app  # noqa: PLC0415 - settings must be fixed first
 
     built = create_app()
@@ -158,6 +166,7 @@ async def app(db_session: AsyncSession) -> FastAPI:
 
     built.dependency_overrides[get_session] = override_get_session
     built.dependency_overrides[get_session_opener] = lambda: override_stream_session
+    built.dependency_overrides[payment_gateway_port] = lambda: payment_gateway
     return built
 
 

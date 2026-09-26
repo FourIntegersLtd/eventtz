@@ -65,6 +65,18 @@ class BookingRow(BaseModel):
         return list(raw_value) if isinstance(raw_value, list) else []
 
 
+class EnquiryReminderRow(BaseModel):
+    """A client enquiry the vendor has not answered yet, with which reminders it has had."""
+
+    id: str
+    vendor_user_id: str
+    event_name: str = ""
+    created_at: str | None = None
+    enquiry_reminder_1h_at: str | None = None
+    enquiry_reminder_6h_at: str | None = None
+    enquiry_reminder_24h_at: str | None = None
+
+
 class CapacityRow(BaseModel):
     """An open booking's dates, for counting the vendor's bookings on each day."""
 

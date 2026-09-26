@@ -71,7 +71,6 @@ class Timestamps:
 UNMAPPED_BASELINE_TABLES = frozenset(
     {
         "job_runs",
-        "stripe_webhook_events",
     }
 )
 

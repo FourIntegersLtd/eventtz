@@ -11,8 +11,8 @@ from typing import Literal
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.ports import Mailer
-from app.features.bookings import domain, repository, service_pricing
+from app.core.ports import Mailer, PaymentGateway
+from app.features.bookings import domain, repository, service_payments, service_pricing
 from app.features.bookings.errors import (
     AcceptOnlyPendingOrDeclined,
     BookingNotFound,
@@ -23,6 +23,7 @@ from app.features.bookings.errors import (
     DeclineOnlyPending,
     NothingToRespondTo,
     PayoutSetupRequired,
+    RefundedButBookingChanged,
     RespondOnlyPending,
     WithdrawQuoteWithCancel,
 )
@@ -62,14 +63,18 @@ async def _client_booking(session: AsyncSession, client_user_id: str, booking_id
 
 
 async def _vendor_cancel(
-    session: AsyncSession, mailer: Mailer, booking: BookingRow
+    session: AsyncSession, mailer: Mailer, gateway: PaymentGateway, booking: BookingRow
 ) -> VendorBookingStatusResponse:
-    """Cancel an accepted booking, or withdraw the vendor's own pending quote."""
+    """Cancel an accepted booking (a paid one is refunded in full), or withdraw the vendor's own quote."""
     withdrawing_quote = booking.status == "pending" and booking.initiator == "vendor"
     if booking.status != "accepted" and not withdrawing_quote:
         raise CancelOnlyAcceptedOrQuote()
+    refunded = False
     if not withdrawing_quote:
         await check_may_cancel(session, booking)
+        refunded = await service_payments.prepare_cancel(
+            session, mailer, gateway, booking, cancelled_by="vendor"
+        )
     changed = await repository.update_booking(
         session,
         booking.id,
@@ -79,7 +84,7 @@ async def _vendor_cancel(
         now_columns=("cancelled_at",),
     )
     if not changed:
-        raise BookingNotFound()
+        raise RefundedButBookingChanged() if refunded else BookingNotFound()
     if withdrawing_quote:
         await notices.dispatch_booking_notification(
             session,
@@ -90,6 +95,18 @@ async def _vendor_cancel(
             body=(
                 "The vendor withdrew their quote.\n\n"
                 "This booking is no longer active. You can message them or explore other vendors."
+            ),
+        )
+    elif refunded:
+        await notices.dispatch_booking_notification(
+            session,
+            mailer,
+            user_id=booking.client_user_id,
+            booking_id=booking.id,
+            kind="booking_cancelled_by_vendor",
+            body=(
+                "The vendor has cancelled this booking. Your payment has been refunded in full.\n\n"
+                "It should reach your card within 5-10 working days, depending on your bank."
             ),
         )
     else:
@@ -196,12 +213,17 @@ async def _vendor_decline(
 
 
 async def set_vendor_status(
-    session: AsyncSession, mailer: Mailer, vendor_user_id: str, booking_id: str, new_status: VendorStatus
+    session: AsyncSession,
+    mailer: Mailer,
+    gateway: PaymentGateway,
+    vendor_user_id: str,
+    booking_id: str,
+    new_status: VendorStatus,
 ) -> VendorBookingStatusResponse:
     """The vendor's answer: pending→accepted/declined, declined→accepted, accepted or own quote→cancelled."""
     booking = await _vendor_booking(session, vendor_user_id, booking_id)
     if new_status == "cancelled":
-        return await _vendor_cancel(session, mailer, booking)
+        return await _vendor_cancel(session, mailer, gateway, booking)
     if new_status == "accepted":
         return await _vendor_accept(session, mailer, booking)
     return await _vendor_decline(session, mailer, booking)
@@ -211,15 +233,16 @@ async def set_vendor_status(
 
 
 async def cancel_for_client(
-    session: AsyncSession, mailer: Mailer, client_user_id: str, booking_id: str
+    session: AsyncSession, mailer: Mailer, gateway: PaymentGateway, client_user_id: str, booking_id: str
 ) -> VendorBookingStatusResponse:
-    """The client cancels a pending or accepted booking; the vendor is told."""
+    """The client cancels a pending or accepted booking (refunded in full if paid); the vendor is told."""
     booking = await _client_booking(session, client_user_id, booking_id)
     if booking.status == "completed":
         domain.check_cancel_money_state(status=booking.status, payment_status=booking.payment_status)
     if booking.status not in ("pending", "accepted"):
         raise CancelOnlyPendingOrAccepted()
     await check_may_cancel(session, booking)
+    refunded = await service_payments.prepare_cancel(session, mailer, gateway, booking, cancelled_by="client")
     changed = await repository.update_booking(
         session,
         booking.id,
@@ -229,7 +252,7 @@ async def cancel_for_client(
         now_columns=("cancelled_at",),
     )
     if not changed:
-        raise BookingNotFound()
+        raise RefundedButBookingChanged() if refunded else BookingNotFound()
     await notices.dispatch_booking_notification(
         session,
         mailer,
@@ -237,8 +260,13 @@ async def cancel_for_client(
         booking_id=booking.id,
         kind="booking_cancelled_by_client",
         body=(
-            "The client has cancelled this booking.\n\n"
-            "The booking is now closed. You can still message them on Eventtz if you need to."
+            "The client has cancelled this booking. Their payment has been refunded in full.\n\n"
+            "No further action is needed on your side."
+            if refunded
+            else (
+                "The client has cancelled this booking.\n\n"
+                "The booking is now closed. You can still message them on Eventtz if you need to."
+            )
         ),
     )
     announce_change(session, booking)

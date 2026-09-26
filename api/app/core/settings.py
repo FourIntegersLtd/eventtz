@@ -118,6 +118,9 @@ class Settings(BaseSettings):
     booking_max_adjustment_pct_of_subtotal: float = 100.0
     # Hours after the event day ends before a paid booking's payout is released automatically.
     booking_payout_auto_release_hours_after_event: int = 48
+    # Hours a client enquiry may wait for the vendor's first reply before the hourly job marks it
+    # VENDOR_NO_RESPONSE (a funnel signal only; the booking stays open). 0 turns the marking off.
+    enquiry_response_sla_hours: int = 72
 
     # --- Marketplace search ---
     # How long a parsed search query is reused before the language model is asked again (0 = never cache).

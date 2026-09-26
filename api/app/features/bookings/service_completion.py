@@ -1,8 +1,9 @@
 """Both parties confirm the event went ahead; then the held payment can go to the vendor.
 
 Confirming is allowed once the event's last day is over and the client has paid.
-The first confirmation asks the other party to confirm too. Paying the vendor is a
-Stripe transfer owned by the payments slice (not rebuilt yet).
+The first confirmation asks the other party to confirm too, then runs the post-event
+step (completion reminder, and the automatic payout once due). Paying the vendor is a
+Stripe Transfer made by `service_payments.release_vendor_payout`.
 """
 
 from __future__ import annotations
@@ -12,20 +13,18 @@ from typing import Literal
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.ports import Mailer
-from app.features.bookings import domain, repository
+from app.core.ports import Mailer, PaymentGateway
+from app.features.bookings import domain, repository, service_maintenance, service_payments
 from app.features.bookings.errors import (
     BookingNotFound,
     CompleteNeedsPayment,
     CompleteOnlyAccepted,
     EventDayNotOver,
-    PayoutReleaseNotRebuilt,
 )
 from app.features.bookings.rows import BookingRow
 from app.features.bookings.schemas import ConfirmCompletionResponse
 from app.features.bookings.service_common import announce_change
 from app.features.notifications import service_booking as notices
-from app.features.vendors import service_profile
 
 Party = Literal["client", "vendor"]
 
@@ -45,28 +44,14 @@ def _result(booking: BookingRow) -> ConfirmCompletionResponse:
     return ConfirmCompletionResponse.model_validate(domain.completion_result(booking))
 
 
-async def _finalize(session: AsyncSession, mailer: Mailer, booking: BookingRow) -> ConfirmCompletionResponse:
-    """Both confirmed: hold the payout until Stripe can pay the vendor, else release it."""
-    if not await service_profile.payout_route_ready(session, booking.vendor_user_id):
-        await notices.dispatch_booking_notification(
-            session,
-            mailer,
-            user_id=booking.vendor_user_id,
-            booking_id=booking.id,
-            kind="payout_held_connect_incomplete",
-            mode="insert_if_absent",
-            body=(
-                "Both of you confirmed the event is complete. We are holding your payout until you finish "
-                "Stripe payout setup.\n\nOpen Payouts to complete verification so we can send your funds."
-            ),
-        )
-        announce_change(session, booking)
-        return _result(booking)
-    raise PayoutReleaseNotRebuilt()
-
-
 async def confirm_completion(
-    session: AsyncSession, mailer: Mailer, *, party: Party, user_id: str, booking_id: str
+    session: AsyncSession,
+    mailer: Mailer,
+    gateway: PaymentGateway,
+    *,
+    party: Party,
+    user_id: str,
+    booking_id: str,
 ) -> ConfirmCompletionResponse:
     """Record that this party confirms the event went ahead (once), and finalize when both have."""
     client_user_id = user_id if party == "client" else None
@@ -84,7 +69,9 @@ async def confirm_completion(
     confirmed_column = f"{party}_completion_confirmed_at"
     if getattr(booking, confirmed_column):
         if booking.client_completion_confirmed_at and booking.vendor_completion_confirmed_at:
-            return await _finalize(session, mailer, booking)
+            return await service_payments.release_vendor_payout(
+                session, mailer, gateway, booking_id=booking.id
+            )
         return _result(booking)
     if not domain.event_day_over(booking, datetime.now(UTC)):
         raise EventDayNotOver()
@@ -102,7 +89,7 @@ async def confirm_completion(
     if confirmed is None:
         raise BookingNotFound()
     if confirmed.client_completion_confirmed_at and confirmed.vendor_completion_confirmed_at:
-        return await _finalize(session, mailer, confirmed)
+        return await service_payments.release_vendor_payout(session, mailer, gateway, booking_id=confirmed.id)
     waiting_user_id = confirmed.vendor_user_id if party == "client" else confirmed.client_user_id
     await notices.dispatch_booking_notification(
         session,
@@ -113,4 +100,7 @@ async def confirm_completion(
         body=_AWAITING_OTHER_PARTY_BODY[party],
     )
     announce_change(session, confirmed)
+    # As the baseline did: remind the other party now, and pay out if the automatic date has passed.
+    # The response is still the state this confirmation left, as the baseline returned it.
+    await service_maintenance.run_post_event_step(session, mailer, gateway, confirmed)
     return _result(confirmed)

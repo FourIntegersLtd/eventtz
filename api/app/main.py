@@ -27,6 +27,7 @@ from app.core.redis import close_redis
 from app.core.settings import LOCAL_ORIGIN_REGEX, get_settings
 from app.features.admin_insights import router as admin_insights_router
 from app.features.bookings import router_admin as bookings_admin_router
+from app.features.bookings import router_admin_recovery as bookings_admin_recovery_router
 from app.features.bookings import router_client as bookings_client_router
 from app.features.bookings import router_vendor as bookings_vendor_router
 from app.features.content import router as content_router
@@ -46,6 +47,8 @@ from app.features.messaging import router as messaging_router
 from app.features.messaging import router_admin as messaging_admin_router
 from app.features.notifications import router_client as notifications_client_router
 from app.features.notifications import router_vendor as notifications_vendor_router
+from app.features.payments import router_vendor as payments_vendor_router
+from app.features.payments import router_webhooks as payments_webhooks_router
 from app.features.planner import router as planner_router
 from app.features.realtime import router as realtime_router
 from app.features.referrals import router as referrals_router
@@ -72,6 +75,7 @@ def _routers() -> list[APIRouter]:
         admin_insights_router.router,
         bookings_client_router.router,
         bookings_vendor_router.router,
+        bookings_admin_recovery_router.router,
         content_router.router,
         content_admin_router.router,
         copilot_router.router,
@@ -88,6 +92,8 @@ def _routers() -> list[APIRouter]:
         messaging_admin_router.router,
         notifications_client_router.router,
         notifications_vendor_router.router,
+        payments_vendor_router.router,
+        payments_webhooks_router.router,
         planner_router.router,
         realtime_router.router,
         referrals_router.router,

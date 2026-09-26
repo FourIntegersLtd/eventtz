@@ -32,7 +32,7 @@ from app.features.bookings import domain
 from app.features.bookings.models import BookingRequest
 from app.features.bookings.rows import BookingRow, ClientReviewRow, VendorReviewRow
 
-_BOOKING_COLUMNS = (
+BOOKING_COLUMNS = (
     BookingRequest.id,
     BookingRequest.client_user_id,
     BookingRequest.vendor_user_id,
@@ -124,7 +124,7 @@ async def get_booking(
     if booking_uuid is None:
         return None
     result = await session.execute(
-        select(*_BOOKING_COLUMNS).where(
+        select(*BOOKING_COLUMNS).where(
             BookingRequest.id == booking_uuid,
             *_party_filters(client_user_id=client_user_id, vendor_user_id=vendor_user_id),
         )
@@ -144,7 +144,7 @@ async def list_bookings(
     exclude_payment_status: str | None,
 ) -> list[BookingRow]:
     """The party's bookings in the given statuses, narrowed by the optional exact filters."""
-    query = select(*_BOOKING_COLUMNS).where(
+    query = select(*BOOKING_COLUMNS).where(
         *_party_filters(client_user_id=client_user_id, vendor_user_id=vendor_user_id)
     )
     if statuses is not None:
@@ -270,7 +270,7 @@ async def insert_booking(session: AsyncSession, values: dict[str, Any]) -> Booki
     try:
         async with session.begin_nested():
             result = await session.execute(
-                insert(BookingRequest).values(**row_values).returning(*_BOOKING_COLUMNS)
+                insert(BookingRequest).values(**row_values).returning(*BOOKING_COLUMNS)
             )
             created = result.one()
     except DBAPIError as error:

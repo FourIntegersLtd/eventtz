@@ -9,7 +9,7 @@ from app.core.db import as_uuid
 from app.core.events import publish_after_commit, user_topic
 from app.features.bookings import domain, repository
 from app.features.bookings.domain import BOOKING_CHANGED
-from app.features.bookings.errors import CancelNeedsPayments, CancelOpenDispute, InvalidBookingId
+from app.features.bookings.errors import CancelOpenDispute, InvalidBookingId
 from app.features.bookings.rows import BookingRow
 from app.features.messaging import service_bookings as messaging
 
@@ -46,12 +46,9 @@ async def link_notes_thread(session: AsyncSession, booking: BookingRow) -> str |
 async def check_may_cancel(session: AsyncSession, booking: BookingRow) -> None:
     """Refuse a cancel the money state or an open problem report forbids.
 
-    A booking mid-checkout or paid also needs Stripe (close the checkout, refund in
-    full); that belongs to the payments slice, so until it is rebuilt such a cancel
-    is refused rather than leaving money behind.
+    What passes may still hold money: `service_payments.prepare_cancel` closes an open
+    checkout or refunds a paid booking before the cancel is written.
     """
     domain.check_cancel_money_state(status=booking.status, payment_status=booking.payment_status)
     if await repository.has_active_dispute(session, booking.id):
         raise CancelOpenDispute()
-    if booking.payment_status in ("pending", "paid"):
-        raise CancelNeedsPayments()

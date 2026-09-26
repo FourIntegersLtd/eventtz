@@ -822,6 +822,31 @@
         "title": "AdminBugReportBody",
         "type": "object"
       },
+      "AdminCancelOnBehalfBody": {
+        "description": "Staff cancel a booking for one party, writing down why (kept in the audit log).",
+        "properties": {
+          "party": {
+            "enum": [
+              "client",
+              "vendor"
+            ],
+            "title": "Party",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 2000,
+            "minLength": 3,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "party",
+          "reason"
+        ],
+        "title": "AdminCancelOnBehalfBody",
+        "type": "object"
+      },
       "AdminChatMessageItem": {
         "description": "A message in the staff viewer for any thread (DMs included).",
         "properties": {
@@ -952,6 +977,24 @@
           "clients"
         ],
         "title": "AdminClientsListResponse",
+        "type": "object"
+      },
+      "AdminConfirmCompletionBody": {
+        "description": "Staff confirm, for one party, that the event went ahead.",
+        "properties": {
+          "party": {
+            "enum": [
+              "client",
+              "vendor"
+            ],
+            "title": "Party",
+            "type": "string"
+          }
+        },
+        "required": [
+          "party"
+        ],
+        "title": "AdminConfirmCompletionBody",
         "type": "object"
       },
       "AdminConversationMessagesResponse": {
@@ -4183,6 +4226,63 @@
           "file"
         ],
         "title": "Body_upload_image_api_v1_media_images_post",
+        "type": "object"
+      },
+      "BookingCheckoutResponse": {
+        "description": "Where to send the client to pay: Stripe's hosted Checkout page.",
+        "properties": {
+          "checkout_url": {
+            "title": "Checkout Url",
+            "type": "string"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "checkout_url"
+        ],
+        "title": "BookingCheckoutResponse",
+        "type": "object"
+      },
+      "BookingCheckoutSyncBody": {
+        "description": "The session id Stripe put in the success URL, when the page has it.",
+        "properties": {
+          "session_id": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id"
+          }
+        },
+        "title": "BookingCheckoutSyncBody",
+        "type": "object"
+      },
+      "BookingCheckoutSyncResponse": {
+        "description": "The booking's payment status after checking the session with Stripe.",
+        "properties": {
+          "payment_status": {
+            "title": "Payment Status",
+            "type": "string"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "payment_status"
+        ],
+        "title": "BookingCheckoutSyncResponse",
         "type": "object"
       },
       "BookingLineItemIn": {
@@ -9640,6 +9740,18 @@
         "title": "StreamTicketResponse",
         "type": "object"
       },
+      "StripeWebhookResponse": {
+        "description": "Every correctly signed webhook gets this, whatever happened while handling it.",
+        "properties": {
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "title": "StripeWebhookResponse",
+        "type": "object"
+      },
       "SubmittedReview": {
         "description": "The just-created review, as returned to the client who submitted it.",
         "properties": {
@@ -10715,6 +10827,174 @@
           }
         },
         "title": "VendorOwnerReviewsResponse",
+        "type": "object"
+      },
+      "VendorPaymentsConnectResponse": {
+        "description": "Where to send the vendor to set up (or resume setting up) Stripe payouts.",
+        "properties": {
+          "onboarding_url": {
+            "title": "Onboarding Url",
+            "type": "string"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "onboarding_url"
+        ],
+        "title": "VendorPaymentsConnectResponse",
+        "type": "object"
+      },
+      "VendorPaymentsStatusResponse": {
+        "description": "The vendor's payout setup, and whether they may accept bookings.",
+        "properties": {
+          "can_accept_bookings": {
+            "default": false,
+            "title": "Can Accept Bookings",
+            "type": "boolean"
+          },
+          "charges_enabled": {
+            "default": false,
+            "title": "Charges Enabled",
+            "type": "boolean"
+          },
+          "payout_gate_waived": {
+            "default": false,
+            "title": "Payout Gate Waived",
+            "type": "boolean"
+          },
+          "payouts_enabled": {
+            "default": false,
+            "title": "Payouts Enabled",
+            "type": "boolean"
+          },
+          "stripe_account_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stripe Account Id"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "title": "VendorPaymentsStatusResponse",
+        "type": "object"
+      },
+      "VendorPayoutHistoryResponse": {
+        "description": "The vendor's payout ledger.",
+        "properties": {
+          "payouts": {
+            "items": {
+              "$ref": "#/components/schemas/VendorPayoutRow"
+            },
+            "title": "Payouts",
+            "type": "array"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "total_awaiting_gbp": {
+            "default": 0.0,
+            "title": "Total Awaiting Gbp",
+            "type": "number"
+          },
+          "total_awaiting_label": {
+            "default": "GBP 0",
+            "title": "Total Awaiting Label",
+            "type": "string"
+          },
+          "total_paid_out_gbp": {
+            "default": 0.0,
+            "title": "Total Paid Out Gbp",
+            "type": "number"
+          },
+          "total_paid_out_label": {
+            "default": "GBP 0",
+            "title": "Total Paid Out Label",
+            "type": "string"
+          }
+        },
+        "title": "VendorPayoutHistoryResponse",
+        "type": "object"
+      },
+      "VendorPayoutRow": {
+        "description": "One booking's vendor share: never the client total, which includes the Eventtz fee.",
+        "properties": {
+          "amount_gbp": {
+            "title": "Amount Gbp",
+            "type": "number"
+          },
+          "amount_label": {
+            "title": "Amount Label",
+            "type": "string"
+          },
+          "booking_id": {
+            "title": "Booking Id",
+            "type": "string"
+          },
+          "client_display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Display Name"
+          },
+          "event_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Date"
+          },
+          "event_name": {
+            "title": "Event Name",
+            "type": "string"
+          },
+          "paid_out_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid Out At"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "booking_id",
+          "event_name",
+          "amount_gbp",
+          "amount_label",
+          "status"
+        ],
+        "title": "VendorPayoutRow",
         "type": "object"
       },
       "VendorProfilePutBody": {
@@ -12238,6 +12518,309 @@
         ]
       }
     },
+    "/api/v1/admin/bookings/{booking_id}/cancel-on-behalf": {
+      "post": {
+        "description": "Cancel (and refund, if paid) for the client or vendor who asked support to.",
+        "operationId": "admin_cancel_booking_on_behalf_api_v1_admin_bookings__booking_id__cancel_on_behalf_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminCancelOnBehalfBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminBookingDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id, recovery_booking_not_found, recovery_reason_required, cancel_only_pending_or_accepted, cancel_complete_instead, cancel_after_payout, cancel_partial_refund, booking_already_refunded, cancel_open_dispute, refund_failed, recovery_only_refunded_complete_cancel, recovery_not_accepted_refunded, recovery_could_not_complete_cancellation, recovery_could_not_cancel",
+            "x-codes": [
+              "invalid_booking_id",
+              "recovery_booking_not_found",
+              "recovery_reason_required",
+              "cancel_only_pending_or_accepted",
+              "cancel_complete_instead",
+              "cancel_after_payout",
+              "cancel_partial_refund",
+              "booking_already_refunded",
+              "cancel_open_dispute",
+              "refund_failed",
+              "recovery_only_refunded_complete_cancel",
+              "recovery_not_accepted_refunded",
+              "recovery_could_not_complete_cancellation",
+              "recovery_could_not_cancel"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Cancel Booking On Behalf",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/bookings/{booking_id}/complete-cancellation": {
+      "post": {
+        "description": "Mark a refunded booking cancelled when its cancel stopped halfway.",
+        "operationId": "admin_complete_booking_cancellation_api_v1_admin_bookings__booking_id__complete_cancellation_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminBookingDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id, recovery_booking_not_found, recovery_only_refunded_complete_cancel, recovery_not_accepted_refunded, recovery_could_not_complete_cancellation",
+            "x-codes": [
+              "invalid_booking_id",
+              "recovery_booking_not_found",
+              "recovery_only_refunded_complete_cancel",
+              "recovery_not_accepted_refunded",
+              "recovery_could_not_complete_cancellation"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Complete Booking Cancellation",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/bookings/{booking_id}/confirm-completion": {
+      "post": {
+        "description": "Confirm the event went ahead for a party; the vendor is paid once both have.",
+        "operationId": "admin_confirm_booking_completion_api_v1_admin_bookings__booking_id__confirm_completion_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminConfirmCompletionBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminBookingDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id, recovery_booking_not_found, complete_only_accepted, recovery_payment_required_mark_complete, payout_amount_missing, payout_release_failed",
+            "x-codes": [
+              "invalid_booking_id",
+              "recovery_booking_not_found",
+              "complete_only_accepted",
+              "recovery_payment_required_mark_complete",
+              "payout_amount_missing",
+              "payout_release_failed"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Confirm Booking Completion",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/v1/admin/bookings/{booking_id}/payment-fields": {
       "patch": {
         "description": "Write staff-verified Stripe ids and amount onto a booking, after checking them with Stripe.",
@@ -12366,6 +12949,101 @@
         ]
       }
     },
+    "/api/v1/admin/bookings/{booking_id}/release-payout": {
+      "post": {
+        "description": "Pay the vendor once both parties confirmed or the automatic payout date has passed.",
+        "operationId": "admin_release_booking_payout_api_v1_admin_bookings__booking_id__release_payout_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminBookingDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id, recovery_booking_not_found, recovery_only_paid_payout_release, recovery_payout_needs_accepted, recovery_dispute_blocks_payout, recovery_payout_not_eligible, recovery_payout_not_released, payout_amount_missing, payout_release_failed",
+            "x-codes": [
+              "invalid_booking_id",
+              "recovery_booking_not_found",
+              "recovery_only_paid_payout_release",
+              "recovery_payout_needs_accepted",
+              "recovery_dispute_blocks_payout",
+              "recovery_payout_not_eligible",
+              "recovery_payout_not_released",
+              "payout_amount_missing",
+              "payout_release_failed"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Release Booking Payout",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/v1/admin/bookings/{booking_id}/reset-checkout": {
       "post": {
         "description": "Clear a stale Stripe Checkout session and return the booking to unpaid.",
@@ -12466,6 +13144,189 @@
         ]
       }
     },
+    "/api/v1/admin/bookings/{booking_id}/retry-payout": {
+      "post": {
+        "description": "Try a failed vendor payout again (the same tool as release-payout, audited as a retry).",
+        "operationId": "admin_retry_booking_payout_api_v1_admin_bookings__booking_id__retry_payout_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminBookingDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id, recovery_booking_not_found, recovery_only_paid_payout_release, recovery_payout_needs_accepted, recovery_dispute_blocks_payout, recovery_payout_not_eligible, recovery_payout_not_released, payout_amount_missing, payout_release_failed",
+            "x-codes": [
+              "invalid_booking_id",
+              "recovery_booking_not_found",
+              "recovery_only_paid_payout_release",
+              "recovery_payout_needs_accepted",
+              "recovery_dispute_blocks_payout",
+              "recovery_payout_not_eligible",
+              "recovery_payout_not_released",
+              "payout_amount_missing",
+              "payout_release_failed"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Retry Booking Payout",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/bookings/{booking_id}/run-maintenance": {
+      "post": {
+        "description": "Run the post-event step now: the completion reminder, then any payout that is due.",
+        "operationId": "admin_run_booking_maintenance_api_v1_admin_bookings__booking_id__run_maintenance_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminBookingDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id, recovery_booking_not_found",
+            "x-codes": [
+              "invalid_booking_id",
+              "recovery_booking_not_found"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Run Booking Maintenance",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/v1/admin/bookings/{booking_id}/support-hold": {
       "patch": {
         "description": "Pause or resume a booking's automatic payout release.",
@@ -12558,6 +13419,101 @@
           }
         ],
         "summary": "Set Booking Support Hold",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/bookings/{booking_id}/sync-payment": {
+      "post": {
+        "description": "Ask Stripe whether the client paid and mark the booking paid when they did.",
+        "operationId": "admin_sync_booking_payment_api_v1_admin_bookings__booking_id__sync_payment_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminBookingDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id, recovery_booking_not_found, recovery_only_accepted_mark_paid, recovery_checkout_session_not_found, recovery_nothing_to_sync, recovery_payment_intent_not_succeeded, recovery_payment_intent_mismatch, recovery_payment_intent_no_amount, recovery_mark_paid_failed",
+            "x-codes": [
+              "invalid_booking_id",
+              "recovery_booking_not_found",
+              "recovery_only_accepted_mark_paid",
+              "recovery_checkout_session_not_found",
+              "recovery_nothing_to_sync",
+              "recovery_payment_intent_not_succeeded",
+              "recovery_payment_intent_mismatch",
+              "recovery_payment_intent_no_amount",
+              "recovery_mark_paid_failed"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Sync Booking Payment",
         "tags": [
           "admin"
         ]
@@ -13250,7 +14206,7 @@
     },
     "/api/v1/admin/disputes/{dispute_id}": {
       "patch": {
-        "description": "Triage or resolve a dispute; only a super admin may set a financial `resolution_action`.\n\nNo `PaymentGatewayDependency` here yet: `core.ports.payment_gateway_port` is not wired\nin `app.main.create_app` until the payments slice (ws1) lands. The money branch below\nis a placeholder that never reaches Stripe, so it needs no gateway to raise.",
+        "description": "Triage or resolve a dispute; only a super admin may set a financial `resolution_action`.\n\nResolving with a `resolution_action` refunds the client or pays the vendor in Stripe\nbefore the dispute is written, so a failed payment leaves no resolution behind.",
         "operationId": "patch_admin_dispute_api_v1_admin_disputes__dispute_id__patch",
         "parameters": [
           {
@@ -13292,7 +14248,7 @@
                 }
               }
             },
-            "description": "invalid_dispute_id, no_fields_to_update, dispute_not_found_for_resolution, refund_amount_required_partial, only_paid_partial_refund, no_recorded_payment_amount, partial_refund_out_of_range, dispute_assignee_must_be_admin, dispute_assignee_admin_suspended",
+            "description": "invalid_dispute_id, no_fields_to_update, dispute_not_found_for_resolution, refund_amount_required_partial, only_paid_partial_refund, no_recorded_payment_amount, partial_refund_out_of_range, dispute_assignee_must_be_admin, dispute_assignee_admin_suspended, refund_only_paid, refund_no_payment_on_record, refund_failed, payout_only_paid, payout_amount_missing, payout_release_failed",
             "x-codes": [
               "invalid_dispute_id",
               "no_fields_to_update",
@@ -13302,7 +14258,13 @@
               "no_recorded_payment_amount",
               "partial_refund_out_of_range",
               "dispute_assignee_must_be_admin",
-              "dispute_assignee_admin_suspended"
+              "dispute_assignee_admin_suspended",
+              "refund_only_paid",
+              "refund_no_payment_on_record",
+              "refund_failed",
+              "payout_only_paid",
+              "payout_amount_missing",
+              "payout_release_failed"
             ]
           },
           "401": {
@@ -13355,19 +14317,6 @@
               }
             },
             "description": "Validation Error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "dispute_money_action_not_rebuilt",
-            "x-codes": [
-              "dispute_money_action_not_rebuilt"
-            ]
           }
         },
         "security": [
@@ -18075,7 +19024,7 @@
     },
     "/api/v1/client/booking-requests/{booking_id}/cancel": {
       "post": {
-        "description": "Cancel a pending or accepted booking; the vendor is told.",
+        "description": "Cancel a pending or accepted booking (a paid one is refunded in full first); the vendor is told.",
         "operationId": "post_cancel_client_booking_api_v1_client_booking_requests__booking_id__cancel_post",
         "parameters": [
           {
@@ -18107,7 +19056,7 @@
                 }
               }
             },
-            "description": "invalid_booking_id, cancel_only_pending_or_accepted, cancel_complete_instead, cancel_after_payout, cancel_partial_refund, booking_already_refunded, cancel_open_dispute",
+            "description": "invalid_booking_id, cancel_only_pending_or_accepted, cancel_complete_instead, cancel_after_payout, cancel_partial_refund, booking_already_refunded, cancel_open_dispute, refund_failed",
             "x-codes": [
               "invalid_booking_id",
               "cancel_only_pending_or_accepted",
@@ -18115,7 +19064,8 @@
               "cancel_after_payout",
               "cancel_partial_refund",
               "booking_already_refunded",
-              "cancel_open_dispute"
+              "cancel_open_dispute",
+              "refund_failed"
             ]
           },
           "401": {
@@ -18166,6 +19116,102 @@
               }
             },
             "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Cancel Client Booking",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/booking-requests/{booking_id}/checkout": {
+      "post": {
+        "description": "Re-price the accepted booking and return the Stripe Checkout URL to pay it.",
+        "operationId": "post_booking_checkout_api_v1_client_booking_requests__booking_id__checkout_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingCheckoutResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id, checkout_booking_not_found, checkout_only_accepted, checkout_already_paid, checkout_vendor_payouts_not_ready, checkout_vendor_unavailable, checkout_missing_event_date, checkout_prices_to_confirm, checkout_nothing_to_pay, checkout_event_address_required",
+            "x-codes": [
+              "invalid_booking_id",
+              "checkout_booking_not_found",
+              "checkout_only_accepted",
+              "checkout_already_paid",
+              "checkout_vendor_payouts_not_ready",
+              "checkout_vendor_unavailable",
+              "checkout_missing_event_date",
+              "checkout_prices_to_confirm",
+              "checkout_nothing_to_pay",
+              "checkout_event_address_required"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           },
           "503": {
             "content": {
@@ -18175,9 +19221,10 @@
                 }
               }
             },
-            "description": "booking_cancel_needs_payments",
+            "description": "payments_unavailable, payment_provider_error",
             "x-codes": [
-              "booking_cancel_needs_payments"
+              "payments_unavailable",
+              "payment_provider_error"
             ]
           }
         },
@@ -18186,7 +19233,125 @@
             "HTTPBearer": []
           }
         ],
-        "summary": "Post Cancel Client Booking",
+        "summary": "Post Booking Checkout",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/booking-requests/{booking_id}/checkout/sync": {
+      "post": {
+        "description": "Confirm the payment after Stripe's redirect, in case the webhook has not arrived yet.",
+        "operationId": "post_booking_checkout_sync_api_v1_client_booking_requests__booking_id__checkout_sync_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookingCheckoutSyncBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingCheckoutSyncResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id, checkout_booking_not_found, checkout_no_longer_payable, checkout_no_session, checkout_payment_link_expired, checkout_session_mismatch, checkout_session_account_mismatch, checkout_payment_not_finished",
+            "x-codes": [
+              "invalid_booking_id",
+              "checkout_booking_not_found",
+              "checkout_no_longer_payable",
+              "checkout_no_session",
+              "checkout_payment_link_expired",
+              "checkout_session_mismatch",
+              "checkout_session_account_mismatch",
+              "checkout_payment_not_finished"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "payments_unavailable, payment_provider_error",
+            "x-codes": [
+              "payments_unavailable",
+              "payment_provider_error"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Booking Checkout Sync",
         "tags": [
           "client"
         ]
@@ -18226,12 +19391,14 @@
                 }
               }
             },
-            "description": "invalid_booking_id, complete_only_accepted, complete_needs_payment, event_day_not_over",
+            "description": "invalid_booking_id, complete_only_accepted, complete_needs_payment, event_day_not_over, payout_amount_missing, payout_release_failed",
             "x-codes": [
               "invalid_booking_id",
               "complete_only_accepted",
               "complete_needs_payment",
-              "event_day_not_over"
+              "event_day_not_over",
+              "payout_amount_missing",
+              "payout_release_failed"
             ]
           },
           "401": {
@@ -18282,19 +19449,6 @@
               }
             },
             "description": "Validation Error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "booking_payout_release_unavailable",
-            "x-codes": [
-              "booking_payout_release_unavailable"
-            ]
           }
         },
         "security": [
@@ -22179,12 +23333,14 @@
                 }
               }
             },
-            "description": "invalid_booking_id, complete_only_accepted, complete_needs_payment, event_day_not_over",
+            "description": "invalid_booking_id, complete_only_accepted, complete_needs_payment, event_day_not_over, payout_amount_missing, payout_release_failed",
             "x-codes": [
               "invalid_booking_id",
               "complete_only_accepted",
               "complete_needs_payment",
-              "event_day_not_over"
+              "event_day_not_over",
+              "payout_amount_missing",
+              "payout_release_failed"
             ]
           },
           "401": {
@@ -22235,19 +23391,6 @@
               }
             },
             "description": "Validation Error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "booking_payout_release_unavailable",
-            "x-codes": [
-              "booking_payout_release_unavailable"
-            ]
           }
         },
         "security": [
@@ -22473,7 +23616,7 @@
     },
     "/api/v1/vendor/booking-requests/{booking_id}/status": {
       "patch": {
-        "description": "Accept, decline or cancel a booking (withdrawing a quote is a cancel).",
+        "description": "Accept, decline or cancel a booking (withdrawing a quote is a cancel; a paid one is refunded).",
         "operationId": "patch_vendor_booking_status_api_v1_vendor_booking_requests__booking_id__status_patch",
         "parameters": [
           {
@@ -22515,7 +23658,7 @@
                 }
               }
             },
-            "description": "invalid_booking_id, cancel_only_accepted_or_quote, client_must_accept_quote, payout_setup_required, client_must_confirm_price, accept_only_pending_or_declined, withdraw_quote_with_cancel, decline_only_pending, cancel_after_payout, cancel_partial_refund, booking_already_refunded, cancel_open_dispute",
+            "description": "invalid_booking_id, cancel_only_accepted_or_quote, client_must_accept_quote, payout_setup_required, client_must_confirm_price, accept_only_pending_or_declined, withdraw_quote_with_cancel, decline_only_pending, cancel_after_payout, cancel_partial_refund, booking_already_refunded, cancel_open_dispute, refund_failed",
             "x-codes": [
               "invalid_booking_id",
               "cancel_only_accepted_or_quote",
@@ -22528,7 +23671,8 @@
               "cancel_after_payout",
               "cancel_partial_refund",
               "booking_already_refunded",
-              "cancel_open_dispute"
+              "cancel_open_dispute",
+              "refund_failed"
             ]
           },
           "401": {
@@ -22579,19 +23723,6 @@
               }
             },
             "description": "Validation Error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "booking_cancel_needs_payments",
-            "x-codes": [
-              "booking_cancel_needs_payments"
-            ]
           }
         },
         "security": [
@@ -23795,6 +24926,219 @@
         ]
       }
     },
+    "/api/v1/vendor/payments/connect-account": {
+      "post": {
+        "description": "Create the vendor's Stripe Express account if needed and return its onboarding URL.",
+        "operationId": "post_connect_account_api_v1_vendor_payments_connect_account_post",
+        "parameters": [
+          {
+            "description": "Where Stripe sends the vendor back (allowlisted)",
+            "in": "query",
+            "name": "return_path",
+            "required": false,
+            "schema": {
+              "default": "/vendor/payments",
+              "description": "Where Stripe sends the vendor back (allowlisted)",
+              "title": "Return Path",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorPaymentsConnectResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "stripe_connect_unavailable, stripe_connect_restore_required, stripe_connect_sync_failed, payments_unavailable, payment_provider_error",
+            "x-codes": [
+              "stripe_connect_unavailable",
+              "stripe_connect_restore_required",
+              "stripe_connect_sync_failed",
+              "payments_unavailable",
+              "payment_provider_error"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Connect Account",
+        "tags": [
+          "vendor-payments"
+        ]
+      }
+    },
+    "/api/v1/vendor/payments/history": {
+      "get": {
+        "description": "Vendor earnings ledger: their share only, not the client total Eventtz charged.",
+        "operationId": "get_payout_history_api_v1_vendor_payments_history_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorPayoutHistoryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Payout History",
+        "tags": [
+          "vendor-payments"
+        ]
+      }
+    },
+    "/api/v1/vendor/payments/status": {
+      "get": {
+        "description": "The vendor's payout setup, refreshed from Stripe while onboarding is unfinished.",
+        "operationId": "get_vendor_stripe_connect_status_api_v1_vendor_payments_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorPaymentsStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "payment_provider_error",
+            "x-codes": [
+              "payment_provider_error"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Vendor Stripe Connect Status",
+        "tags": [
+          "vendor-payments"
+        ]
+      }
+    },
     "/api/v1/vendor/profile": {
       "get": {
         "description": "The caller's onboarding form and listing state (a blank draft before they start).",
@@ -24785,6 +26129,70 @@
         "summary": "Get Vendor Public Reviews",
         "tags": [
           "vendors"
+        ]
+      }
+    },
+    "/api/v1/webhooks/stripe": {
+      "post": {
+        "description": "Verify the signature over the raw body, then act on the event (at most once per event id).",
+        "operationId": "post_stripe_webhook_api_v1_webhooks_stripe_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Stripe-Signature",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stripe-Signature"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeWebhookResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "missing_stripe_signature, invalid_stripe_signature",
+            "x-codes": [
+              "missing_stripe_signature",
+              "invalid_stripe_signature"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Stripe Webhook",
+        "tags": [
+          "webhooks"
         ]
       }
     }
