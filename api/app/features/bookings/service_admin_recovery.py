@@ -92,8 +92,7 @@ async def _audited_detail(
         details=details or {},
     )
     booking = await _load(session, booking_id)
-    # ws2 owns `service_admin`; `_to_admin_detail` is the one builder of the admin view.
-    detail = await service_admin._to_admin_detail(session, booking)
+    detail = await service_admin.to_admin_detail(session, booking)
     return AdminBookingDetailResponse(success=True, booking=detail)
 
 

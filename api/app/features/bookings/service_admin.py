@@ -133,7 +133,7 @@ async def _list_items(session: AsyncSession, bookings: list[BookingRow]) -> Any:
         )
 
 
-async def _to_admin_detail(session: AsyncSession, booking: BookingRow) -> AdminBookingDetail:
+async def to_admin_detail(session: AsyncSession, booking: BookingRow) -> AdminBookingDetail:
     """The admin detail view of one booking: resolved party details and its diagnostics."""
     emails = await identity.emails_by_id(session, [booking.client_user_id, booking.vendor_user_id])
     vendor_names = await vendor_listing.display_names(session, [booking.vendor_user_id])
@@ -188,7 +188,7 @@ async def get_booking_detail(session: AsyncSession, staff: Principal, booking_id
     booking = await repository_admin.get_admin_booking(session, booking_id)
     if booking is None:
         raise AdminBookingNotFound()
-    detail = await _to_admin_detail(session, booking)
+    detail = await to_admin_detail(session, booking)
     await staff_service.record_admin_action(
         session,
         admin_user_id=staff.id,
@@ -287,7 +287,7 @@ async def reset_checkout(session: AsyncSession, staff: Principal, booking_id: st
     )
     updated = await repository_admin.get_admin_booking(session, booking_id)
     assert updated is not None, "just-updated booking vanished mid-request"  # noqa: S101
-    return await _to_admin_detail(session, updated)
+    return await to_admin_detail(session, updated)
 
 
 async def set_support_hold(
@@ -308,4 +308,4 @@ async def set_support_hold(
     )
     updated = await repository_admin.get_admin_booking(session, booking_id)
     assert updated is not None, "just-updated booking vanished mid-request"  # noqa: S101
-    return await _to_admin_detail(session, updated)
+    return await to_admin_detail(session, updated)
