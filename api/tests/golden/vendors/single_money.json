@@ -1,0 +1,221 @@
+[
+  {
+    "kind": null,
+    "message": null,
+    "parsed": 150.0,
+    "raise_if_invalid": null,
+    "raw": "150"
+  },
+  {
+    "kind": null,
+    "message": null,
+    "parsed": 150.0,
+    "raise_if_invalid": null,
+    "raw": "150.00"
+  },
+  {
+    "kind": null,
+    "message": null,
+    "parsed": 150.0,
+    "raise_if_invalid": null,
+    "raw": "£150"
+  },
+  {
+    "kind": null,
+    "message": null,
+    "parsed": 150.0,
+    "raise_if_invalid": null,
+    "raw": "gbp150"
+  },
+  {
+    "kind": null,
+    "message": null,
+    "parsed": 150.0,
+    "raise_if_invalid": null,
+    "raw": "GBP 150"
+  },
+  {
+    "kind": "required",
+    "message": "Step pricing: Package price is required.",
+    "parsed": null,
+    "raise_if_invalid": {
+      "error": "ValidationError",
+      "message": "Step pricing: Package price is required."
+    },
+    "raw": ""
+  },
+  {
+    "kind": "required",
+    "message": "Step pricing: Package price is required.",
+    "parsed": null,
+    "raise_if_invalid": {
+      "error": "ValidationError",
+      "message": "Step pricing: Package price is required."
+    },
+    "raw": "   "
+  },
+  {
+    "kind": "required",
+    "message": "Step pricing: Package price is required.",
+    "parsed": null,
+    "raise_if_invalid": {
+      "error": "ValidationError",
+      "message": "Step pricing: Package price is required."
+    },
+    "raw": null
+  },
+  {
+    "kind": "multiple_amounts",
+    "message": "Step pricing: Package price must be one amount only — add a separate package for each price.",
+    "parsed": null,
+    "raise_if_invalid": {
+      "error": "ValidationError",
+      "message": "Step pricing: Package price must be one amount only — add a separate package for each price."
+    },
+    "raw": "100, 200"
+  },
+  {
+    "kind": "multiple_amounts",
+    "message": "Step pricing: Package price must be one amount only — add a separate package for each price.",
+    "parsed": null,
+    "raise_if_invalid": {
+      "error": "ValidationError",
+      "message": "Step pricing: Package price must be one amount only — add a separate package for each price."
+    },
+    "raw": "100/200"
+  },
+  {
+    "kind": "ambiguous",
+    "message": "Step pricing: Package price must be one fixed amount, not a range or “starts from” price.",
+    "parsed": null,
+    "raise_if_invalid": {
+      "error": "ValidationError",
+      "message": "Step pricing: Package price must be one fixed amount, not a range or “starts from” price."
+    },
+    "raw": "100-200"
+  },
+  {
+    "kind": "ambiguous",
+    "message": "Step pricing: Package price must be one fixed amount, not a range or “starts from” price.",
+    "parsed": null,
+    "raise_if_invalid": {
+      "error": "ValidationError",
+      "message": "Step pricing: Package price must be one fixed amount, not a range or “starts from” price."
+    },
+    "raw": "starts from 100"
+  },
+  {
+    "kind": "ambiguous",
+    "message": "Step pricing: Package price must be one fixed amount, not a range or “starts from” price.",
+    "parsed": null,
+    "raise_if_invalid": {
+      "error": "ValidationError",
+      "message": "Step pricing: Package price must be one fixed amount, not a range or “starts from” price."
+    },
+    "raw": "from £100"
+  },
+  {
+    "kind": "ambiguous",
+    "message": "Step pricing: Package price must be one fixed amount, not a range or “starts from” price.",
+    "parsed": null,
+    "raise_if_invalid": {
+      "error": "ValidationError",
+      "message": "Step pricing: Package price must be one fixed amount, not a range or “starts from” price."
+    },
+    "raw": "price on request"
+  },
+  {
+    "kind": "ambiguous",
+    "message": "Step pricing: Package price must be one fixed amount, not a range or “starts from” price.",
+    "parsed": null,
+    "raise_if_invalid": {
+      "error": "ValidationError",
+      "message": "Step pricing: Package price must be one fixed amount, not a range or “starts from” price."
+    },
+    "raw": "poa"
+  },
+  {
+    "kind": "ambiguous",
+    "message": "Step pricing: Package price must be one fixed amount, not a range or “starts from” price.",
+    "parsed": null,
+    "raise_if_invalid": {
+      "error": "ValidationError",
+      "message": "Step pricing: Package price must be one fixed amount, not a range or “starts from” price."
+    },
+    "raw": "tbc"
+  },
+  {
+    "kind": "ambiguous",
+    "message": "Step pricing: Package price must be one fixed amount, not a range or “starts from” price.",
+    "parsed": null,
+    "raise_if_invalid": {
+      "error": "ValidationError",
+      "message": "Step pricing: Package price must be one fixed amount, not a range or “starts from” price."
+    },
+    "raw": "100 and 200"
+  },
+  {
+    "kind": "invalid_format",
+    "message": "Step pricing: Package price must be a single number (e.g. 150 or 150.00).",
+    "parsed": null,
+    "raise_if_invalid": {
+      "error": "ValidationError",
+      "message": "Step pricing: Package price must be a single number (e.g. 150 or 150.00)."
+    },
+    "raw": "abc"
+  },
+  {
+    "kind": "below_min",
+    "message": "Step pricing: Package price must be at least £0.10.",
+    "parsed": null,
+    "raise_if_invalid": {
+      "error": "ValidationError",
+      "message": "Step pricing: Package price must be at least £0.10."
+    },
+    "raw": "0.05"
+  },
+  {
+    "kind": null,
+    "message": null,
+    "parsed": 0.1,
+    "raise_if_invalid": null,
+    "raw": "0.1"
+  },
+  {
+    "kind": null,
+    "message": null,
+    "parsed": 1000000.0,
+    "raise_if_invalid": null,
+    "raw": "1000000"
+  },
+  {
+    "kind": "above_max",
+    "message": "Step pricing: Package price is out of allowed range.",
+    "parsed": null,
+    "raise_if_invalid": {
+      "error": "ValidationError",
+      "message": "Step pricing: Package price is out of allowed range."
+    },
+    "raw": "1000000.01"
+  },
+  {
+    "kind": "invalid_format",
+    "message": "Step pricing: Package price must be a single number (e.g. 150 or 150.00).",
+    "parsed": null,
+    "raise_if_invalid": {
+      "error": "ValidationError",
+      "message": "Step pricing: Package price must be a single number (e.g. 150 or 150.00)."
+    },
+    "raw": "-5"
+  },
+  {
+    "kind": "multiple_amounts",
+    "message": "Step pricing: Package price must be one amount only — add a separate package for each price.",
+    "parsed": null,
+    "raise_if_invalid": {
+      "error": "ValidationError",
+      "message": "Step pricing: Package price must be one amount only — add a separate package for each price."
+    },
+    "raw": "1,200"
+  }
+]

@@ -1,0 +1,149 @@
+[
+  {
+    "error": null,
+    "name": "no services requiring packages, no packages, not on submit",
+    "on_submit": false,
+    "payload": {
+      "servicesOffered": [
+        "photography"
+      ]
+    },
+    "require_service_packages": false
+  },
+  {
+    "error": {
+      "error": "ValidationError",
+      "message": "Step pricing: tell clients what's included (at least a short sentence)."
+    },
+    "name": "catering requires a package, none complete, on submit",
+    "on_submit": true,
+    "payload": {
+      "packages": [
+        {
+          "details": "short",
+          "duration": "8 hours",
+          "id": "pkg-1",
+          "maxQuantity": null,
+          "minQuantity": null,
+          "price": "500",
+          "pricingMode": "fixed",
+          "title": "Classic package",
+          "unitLabel": ""
+        }
+      ],
+      "servicesOffered": [
+        "catering"
+      ]
+    },
+    "require_service_packages": false
+  },
+  {
+    "error": null,
+    "name": "catering requires a package, one complete, on submit, has photo",
+    "on_submit": true,
+    "payload": {
+      "packages": [
+        {
+          "details": "A full day of coverage with two photographers and an online gallery.",
+          "duration": "8 hours",
+          "id": "pkg-1",
+          "maxQuantity": null,
+          "minQuantity": null,
+          "price": "500",
+          "pricingMode": "fixed",
+          "title": "Classic package",
+          "unitLabel": ""
+        }
+      ],
+      "profileImageUrl": "https://example.com/photo.jpg",
+      "servicesOffered": [
+        "catering"
+      ]
+    },
+    "require_service_packages": false
+  },
+  {
+    "error": {
+      "error": "ValidationError",
+      "message": "Add a profile photo before submitting."
+    },
+    "name": "on submit missing profile photo",
+    "on_submit": true,
+    "payload": {
+      "packages": [
+        {
+          "details": "A full day of coverage with two photographers and an online gallery.",
+          "duration": "8 hours",
+          "id": "pkg-1",
+          "maxQuantity": null,
+          "minQuantity": null,
+          "price": "500",
+          "pricingMode": "fixed",
+          "title": "Classic package",
+          "unitLabel": ""
+        }
+      ],
+      "servicesOffered": [
+        "photography"
+      ]
+    },
+    "require_service_packages": false
+  },
+  {
+    "error": {
+      "error": "ValidationError",
+      "message": "Step pricing: add at least one complete package for decor."
+    },
+    "name": "require_service_packages true, not on submit, no complete package",
+    "on_submit": false,
+    "payload": {
+      "packages": [],
+      "servicesOffered": [
+        "decor"
+      ]
+    },
+    "require_service_packages": true
+  },
+  {
+    "error": {
+      "error": "ValidationError",
+      "message": "Step pricing: each package needs a clear name."
+    },
+    "name": "broken package field fails before the completeness check",
+    "on_submit": true,
+    "payload": {
+      "packages": [
+        {
+          "details": "A full day of coverage with two photographers and an online gallery.",
+          "duration": "8 hours",
+          "id": "pkg-1",
+          "maxQuantity": null,
+          "minQuantity": null,
+          "price": "500",
+          "pricingMode": "fixed",
+          "title": "",
+          "unitLabel": ""
+        }
+      ],
+      "servicesOffered": [
+        "catering"
+      ]
+    },
+    "require_service_packages": false
+  },
+  {
+    "error": {
+      "error": "ValidationError",
+      "message": "Step pricing: add at least one complete package for catering."
+    },
+    "name": "not a list of packages",
+    "on_submit": true,
+    "payload": {
+      "packages": "oops",
+      "servicesOffered": [
+        "catering"
+      ]
+    },
+    "require_service_packages": false
+  }
+]

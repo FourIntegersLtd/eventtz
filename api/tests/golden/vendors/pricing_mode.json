@@ -1,0 +1,38 @@
+[
+  {
+    "mode": "per_unit",
+    "raw": "'per_unit'"
+  },
+  {
+    "mode": "per_unit",
+    "raw": "'PER_UNIT'"
+  },
+  {
+    "mode": "per_unit",
+    "raw": "' per_unit '"
+  },
+  {
+    "mode": "fixed",
+    "raw": "'fixed'"
+  },
+  {
+    "mode": "fixed",
+    "raw": "''"
+  },
+  {
+    "mode": "fixed",
+    "raw": "None"
+  },
+  {
+    "mode": "fixed",
+    "raw": "5"
+  },
+  {
+    "mode": "fixed",
+    "raw": "True"
+  },
+  {
+    "mode": "fixed",
+    "raw": "'other'"
+  }
+]

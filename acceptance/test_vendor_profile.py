@@ -38,6 +38,7 @@ def _s3_url(user_id: str, name: str) -> str:
 
 
 def _unique_business_name(label: str) -> str:
+    """A business name no other test run has used, so saves never clash."""
     return f"Acceptance {label} {uuid.uuid4().hex[:8]}"
 
 

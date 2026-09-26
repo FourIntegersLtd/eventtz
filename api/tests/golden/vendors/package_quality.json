@@ -1,0 +1,158 @@
+[
+  {
+    "complete_count": 0,
+    "configured_count": 0,
+    "name": "no packages",
+    "payload": {},
+    "per_package": [],
+    "quality_level": "needs_review"
+  },
+  {
+    "complete_count": 1,
+    "configured_count": 1,
+    "name": "one complete package",
+    "payload": {
+      "packages": [
+        {
+          "details": "A full day of coverage with two photographers and an online gallery.",
+          "duration": "8 hours",
+          "id": "pkg-1",
+          "maxQuantity": null,
+          "minQuantity": null,
+          "price": "500",
+          "pricingMode": "fixed",
+          "title": "Classic package",
+          "unitLabel": ""
+        }
+      ]
+    },
+    "per_package": [
+      {
+        "complete": true,
+        "configured": true
+      }
+    ],
+    "quality_level": "high"
+  },
+  {
+    "complete_count": 1,
+    "configured_count": 2,
+    "name": "one complete, one incomplete",
+    "payload": {
+      "packages": [
+        {
+          "details": "A full day of coverage with two photographers and an online gallery.",
+          "duration": "8 hours",
+          "id": "pkg-a",
+          "maxQuantity": null,
+          "minQuantity": null,
+          "price": "500",
+          "pricingMode": "fixed",
+          "title": "Classic package",
+          "unitLabel": ""
+        },
+        {
+          "details": "short",
+          "duration": "8 hours",
+          "id": "pkg-b",
+          "maxQuantity": null,
+          "minQuantity": null,
+          "price": "500",
+          "pricingMode": "fixed",
+          "title": "Classic package",
+          "unitLabel": ""
+        }
+      ]
+    },
+    "per_package": [
+      {
+        "complete": true,
+        "configured": true
+      },
+      {
+        "complete": false,
+        "configured": true
+      }
+    ],
+    "quality_level": "needs_review"
+  },
+  {
+    "complete_count": 2,
+    "configured_count": 2,
+    "name": "two complete packages",
+    "payload": {
+      "packages": [
+        {
+          "details": "A full day of coverage with two photographers and an online gallery.",
+          "duration": "8 hours",
+          "id": "pkg-a",
+          "maxQuantity": null,
+          "minQuantity": null,
+          "price": "500",
+          "pricingMode": "fixed",
+          "title": "Classic package",
+          "unitLabel": ""
+        },
+        {
+          "details": "A full day of coverage with two photographers and an online gallery.",
+          "duration": "8 hours",
+          "id": "pkg-b",
+          "maxQuantity": null,
+          "minQuantity": null,
+          "price": "750",
+          "pricingMode": "fixed",
+          "title": "Classic package",
+          "unitLabel": ""
+        }
+      ]
+    },
+    "per_package": [
+      {
+        "complete": true,
+        "configured": true
+      },
+      {
+        "complete": true,
+        "configured": true
+      }
+    ],
+    "quality_level": "high"
+  },
+  {
+    "complete_count": 0,
+    "configured_count": 0,
+    "name": "one unconfigured (blank) package",
+    "payload": {
+      "packages": [
+        {
+          "details": "",
+          "duration": "",
+          "id": "pkg-1",
+          "maxQuantity": null,
+          "minQuantity": null,
+          "price": "",
+          "pricingMode": "fixed",
+          "title": "",
+          "unitLabel": ""
+        }
+      ]
+    },
+    "per_package": [
+      {
+        "complete": false,
+        "configured": false
+      }
+    ],
+    "quality_level": "needs_review"
+  },
+  {
+    "complete_count": 0,
+    "configured_count": 0,
+    "name": "packages not a list",
+    "payload": {
+      "packages": "oops"
+    },
+    "per_package": [],
+    "quality_level": "needs_review"
+  }
+]

@@ -1,0 +1,294 @@
+[
+  {
+    "error": null,
+    "name": "blank package skipped",
+    "package": {
+      "details": "",
+      "duration": "",
+      "id": "pkg-1",
+      "maxQuantity": null,
+      "minQuantity": null,
+      "price": "",
+      "pricingMode": "fixed",
+      "title": "",
+      "unitLabel": ""
+    },
+    "strict": false
+  },
+  {
+    "error": null,
+    "name": "complete fixed package, non-strict",
+    "package": {
+      "details": "A full day of coverage with two photographers and an online gallery.",
+      "duration": "8 hours",
+      "id": "pkg-1",
+      "maxQuantity": null,
+      "minQuantity": null,
+      "price": "500",
+      "pricingMode": "fixed",
+      "title": "Classic package",
+      "unitLabel": ""
+    },
+    "strict": false
+  },
+  {
+    "error": null,
+    "name": "complete fixed package, strict",
+    "package": {
+      "details": "A full day of coverage with two photographers and an online gallery.",
+      "duration": "8 hours",
+      "id": "pkg-1",
+      "maxQuantity": null,
+      "minQuantity": null,
+      "price": "500",
+      "pricingMode": "fixed",
+      "title": "Classic package",
+      "unitLabel": ""
+    },
+    "strict": true
+  },
+  {
+    "error": {
+      "error": "ValidationError",
+      "message": "Step pricing: each package needs a clear name."
+    },
+    "name": "title too short",
+    "package": {
+      "details": "A full day of coverage with two photographers and an online gallery.",
+      "duration": "8 hours",
+      "id": "pkg-1",
+      "maxQuantity": null,
+      "minQuantity": null,
+      "price": "500",
+      "pricingMode": "fixed",
+      "title": "Ab",
+      "unitLabel": ""
+    },
+    "strict": false
+  },
+  {
+    "error": {
+      "error": "ValidationError",
+      "message": "Step pricing: each package needs a clear name."
+    },
+    "name": "missing title but has price (configured)",
+    "package": {
+      "details": "A full day of coverage with two photographers and an online gallery.",
+      "duration": "8 hours",
+      "id": "pkg-1",
+      "maxQuantity": null,
+      "minQuantity": null,
+      "price": "500",
+      "pricingMode": "fixed",
+      "title": "",
+      "unitLabel": ""
+    },
+    "strict": false
+  },
+  {
+    "error": {
+      "error": "ValidationError",
+      "message": "Step pricing: each package needs a price."
+    },
+    "name": "missing price, fixed",
+    "package": {
+      "details": "A full day of coverage with two photographers and an online gallery.",
+      "duration": "8 hours",
+      "id": "pkg-1",
+      "maxQuantity": null,
+      "minQuantity": null,
+      "price": "",
+      "pricingMode": "fixed",
+      "title": "Classic package",
+      "unitLabel": ""
+    },
+    "strict": false
+  },
+  {
+    "error": {
+      "error": "ValidationError",
+      "message": "Step pricing: each per-item package needs a unit price."
+    },
+    "name": "missing price, per-unit",
+    "package": {
+      "details": "A full day of coverage with two photographers and an online gallery.",
+      "duration": "8 hours",
+      "id": "pkg-1",
+      "maxQuantity": null,
+      "minQuantity": null,
+      "price": "",
+      "pricingMode": "per_unit",
+      "title": "Classic package",
+      "unitLabel": "guest"
+    },
+    "strict": false
+  },
+  {
+    "error": {
+      "error": "ValidationError",
+      "message": "Step pricing: Package price must be one fixed amount, not a range or “starts from” price."
+    },
+    "name": "invalid price range",
+    "package": {
+      "details": "A full day of coverage with two photographers and an online gallery.",
+      "duration": "8 hours",
+      "id": "pkg-1",
+      "maxQuantity": null,
+      "minQuantity": null,
+      "price": "100-200",
+      "pricingMode": "fixed",
+      "title": "Classic package",
+      "unitLabel": ""
+    },
+    "strict": false
+  },
+  {
+    "error": {
+      "error": "ValidationError",
+      "message": "Step pricing: tell clients what's included (at least a short sentence)."
+    },
+    "name": "details too short, strict",
+    "package": {
+      "details": "short",
+      "duration": "8 hours",
+      "id": "pkg-1",
+      "maxQuantity": null,
+      "minQuantity": null,
+      "price": "500",
+      "pricingMode": "fixed",
+      "title": "Classic package",
+      "unitLabel": ""
+    },
+    "strict": true
+  },
+  {
+    "error": {
+      "error": "ValidationError",
+      "message": "Step pricing: tell clients what's included (at least a short sentence)."
+    },
+    "name": "details too short, non-strict but priced",
+    "package": {
+      "details": "short",
+      "duration": "8 hours",
+      "id": "pkg-1",
+      "maxQuantity": null,
+      "minQuantity": null,
+      "price": "500",
+      "pricingMode": "fixed",
+      "title": "Classic package",
+      "unitLabel": ""
+    },
+    "strict": false
+  },
+  {
+    "error": {
+      "error": "ValidationError",
+      "message": "Step pricing: each per-item package needs a unit name (e.g. chair, table)."
+    },
+    "name": "per-unit missing unit label",
+    "package": {
+      "details": "A full day of coverage with two photographers and an online gallery.",
+      "duration": "8 hours",
+      "id": "pkg-1",
+      "maxQuantity": null,
+      "minQuantity": null,
+      "price": "12.50",
+      "pricingMode": "per_unit",
+      "title": "Classic package",
+      "unitLabel": ""
+    },
+    "strict": false
+  },
+  {
+    "error": {
+      "error": "ValidationError",
+      "message": "Step pricing: keep the unit name short."
+    },
+    "name": "per-unit unit label too long",
+    "package": {
+      "details": "A full day of coverage with two photographers and an online gallery.",
+      "duration": "8 hours",
+      "id": "pkg-1",
+      "maxQuantity": null,
+      "minQuantity": null,
+      "price": "12.50",
+      "pricingMode": "per_unit",
+      "title": "Classic package",
+      "unitLabel": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    "strict": false
+  },
+  {
+    "error": {
+      "error": "ValidationError",
+      "message": "Step pricing: minimum quantity must be a whole number of at least 1."
+    },
+    "name": "per-unit min quantity invalid",
+    "package": {
+      "details": "A full day of coverage with two photographers and an online gallery.",
+      "duration": "8 hours",
+      "id": "pkg-1",
+      "maxQuantity": null,
+      "minQuantity": "abc",
+      "price": "12.50",
+      "pricingMode": "per_unit",
+      "title": "Classic package",
+      "unitLabel": "guest"
+    },
+    "strict": false
+  },
+  {
+    "error": {
+      "error": "ValidationError",
+      "message": "Step pricing: maximum quantity must be a whole number of at least 1."
+    },
+    "name": "per-unit max quantity invalid",
+    "package": {
+      "details": "A full day of coverage with two photographers and an online gallery.",
+      "duration": "8 hours",
+      "id": "pkg-1",
+      "maxQuantity": "-1",
+      "minQuantity": null,
+      "price": "12.50",
+      "pricingMode": "per_unit",
+      "title": "Classic package",
+      "unitLabel": "guest"
+    },
+    "strict": false
+  },
+  {
+    "error": {
+      "error": "ValidationError",
+      "message": "Step pricing: minimum quantity cannot be greater than maximum."
+    },
+    "name": "per-unit min above max",
+    "package": {
+      "details": "A full day of coverage with two photographers and an online gallery.",
+      "duration": "8 hours",
+      "id": "pkg-1",
+      "maxQuantity": "10",
+      "minQuantity": "50",
+      "price": "12.50",
+      "pricingMode": "per_unit",
+      "title": "Classic package",
+      "unitLabel": "guest"
+    },
+    "strict": false
+  },
+  {
+    "error": null,
+    "name": "per-unit complete",
+    "package": {
+      "details": "A full day of coverage with two photographers and an online gallery.",
+      "duration": "8 hours",
+      "id": "pkg-1",
+      "maxQuantity": "200",
+      "minQuantity": "10",
+      "price": "12.50",
+      "pricingMode": "per_unit",
+      "title": "Classic package",
+      "unitLabel": "guest"
+    },
+    "strict": false
+  }
+]

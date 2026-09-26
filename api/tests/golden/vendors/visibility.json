@@ -1,0 +1,104 @@
+[
+  {
+    "listable": false,
+    "override": "auto",
+    "payouts_verified": false,
+    "row": {}
+  },
+  {
+    "listable": false,
+    "override": "auto",
+    "payouts_verified": false,
+    "row": {
+      "approval_status": "approved"
+    }
+  },
+  {
+    "listable": true,
+    "override": "auto",
+    "payouts_verified": true,
+    "row": {
+      "approval_status": "approved",
+      "stripe_account_id": "acct_1",
+      "stripe_charges_enabled": true,
+      "stripe_payouts_enabled": true
+    }
+  },
+  {
+    "listable": false,
+    "override": "auto",
+    "payouts_verified": false,
+    "row": {
+      "approval_status": "approved",
+      "stripe_account_id": "acct_1",
+      "stripe_charges_enabled": true
+    }
+  },
+  {
+    "listable": true,
+    "override": "visible",
+    "payouts_verified": false,
+    "row": {
+      "approval_status": "approved",
+      "listing_override": "visible"
+    }
+  },
+  {
+    "listable": true,
+    "override": "visible",
+    "payouts_verified": false,
+    "row": {
+      "approval_status": "approved",
+      "listing_override": " VISIBLE "
+    }
+  },
+  {
+    "listable": false,
+    "override": "hidden",
+    "payouts_verified": true,
+    "row": {
+      "approval_status": "approved",
+      "listing_override": "hidden",
+      "stripe_account_id": "acct_1",
+      "stripe_charges_enabled": true,
+      "stripe_payouts_enabled": true
+    }
+  },
+  {
+    "listable": false,
+    "override": "visible",
+    "payouts_verified": false,
+    "row": {
+      "approval_status": "pending",
+      "listing_override": "visible"
+    }
+  },
+  {
+    "listable": false,
+    "override": "visible",
+    "payouts_verified": false,
+    "row": {
+      "approval_status": "banned",
+      "listing_override": "visible"
+    }
+  },
+  {
+    "listable": false,
+    "override": "auto",
+    "payouts_verified": false,
+    "row": {
+      "approval_status": "approved",
+      "listing_override": "weird"
+    }
+  },
+  {
+    "listable": false,
+    "override": "auto",
+    "payouts_verified": false,
+    "row": {
+      "approval_status": "approved",
+      "listing_override": null,
+      "stripe_account_id": ""
+    }
+  }
+]

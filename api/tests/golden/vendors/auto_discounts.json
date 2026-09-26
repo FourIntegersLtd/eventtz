@@ -1,0 +1,313 @@
+[
+  {
+    "computed": [
+      {
+        "description": null,
+        "feature_lines": [],
+        "heading": "Bulk booking discount (10%)",
+        "id": "auto-bulk",
+        "timeline_line": null,
+        "unit_price_gbp": -50.0
+      },
+      {
+        "description": null,
+        "feature_lines": [],
+        "heading": "Off-peak discount (20%)",
+        "id": "auto-off-peak",
+        "timeline_line": null,
+        "unit_price_gbp": -90.0
+      }
+    ],
+    "event_date": "2024-01-15",
+    "line_items": [
+      {
+        "id": "pkg-1",
+        "unit_price_gbp": 500.0
+      }
+    ],
+    "name": "bulk and off-peak both apply",
+    "payload": {
+      "bulkDiscountPercent": "10",
+      "bulkDiscountThreshold": "400",
+      "discountLabel": "Early bird",
+      "discountPercentage": "10",
+      "offPeakDiscountPercent": "20",
+      "offerDiscounts": true
+    },
+    "reconciled": [
+      {
+        "id": "pkg-1",
+        "unit_price_gbp": 500.0
+      },
+      {
+        "description": null,
+        "feature_lines": [],
+        "heading": "Bulk booking discount (10%)",
+        "id": "auto-bulk",
+        "timeline_line": null,
+        "unit_price_gbp": -50.0
+      },
+      {
+        "description": null,
+        "feature_lines": [],
+        "heading": "Off-peak discount (20%)",
+        "id": "auto-off-peak",
+        "timeline_line": null,
+        "unit_price_gbp": -90.0
+      }
+    ]
+  },
+  {
+    "computed": [
+      {
+        "description": null,
+        "feature_lines": [],
+        "heading": "Bulk booking discount (10%)",
+        "id": "auto-bulk",
+        "timeline_line": null,
+        "unit_price_gbp": -50.0
+      }
+    ],
+    "event_date": "2024-06-15",
+    "line_items": [
+      {
+        "id": "pkg-1",
+        "unit_price_gbp": 500.0
+      }
+    ],
+    "name": "bulk only, not off-peak",
+    "payload": {
+      "bulkDiscountPercent": "10",
+      "bulkDiscountThreshold": "400",
+      "discountLabel": "Early bird",
+      "discountPercentage": "10",
+      "offPeakDiscountPercent": "20",
+      "offerDiscounts": true
+    },
+    "reconciled": [
+      {
+        "id": "pkg-1",
+        "unit_price_gbp": 500.0
+      },
+      {
+        "description": null,
+        "feature_lines": [],
+        "heading": "Bulk booking discount (10%)",
+        "id": "auto-bulk",
+        "timeline_line": null,
+        "unit_price_gbp": -50.0
+      }
+    ]
+  },
+  {
+    "computed": [
+      {
+        "description": null,
+        "feature_lines": [],
+        "heading": "Off-peak discount (20%)",
+        "id": "auto-off-peak",
+        "timeline_line": null,
+        "unit_price_gbp": -100.0
+      }
+    ],
+    "event_date": "2024-01-15",
+    "line_items": [
+      {
+        "id": "pkg-1",
+        "unit_price_gbp": 500.0
+      }
+    ],
+    "name": "below bulk threshold, off-peak still applies",
+    "payload": {
+      "bulkDiscountPercent": "10",
+      "bulkDiscountThreshold": "1000",
+      "discountLabel": "Early bird",
+      "discountPercentage": "10",
+      "offPeakDiscountPercent": "20",
+      "offerDiscounts": true
+    },
+    "reconciled": [
+      {
+        "id": "pkg-1",
+        "unit_price_gbp": 500.0
+      },
+      {
+        "description": null,
+        "feature_lines": [],
+        "heading": "Off-peak discount (20%)",
+        "id": "auto-off-peak",
+        "timeline_line": null,
+        "unit_price_gbp": -100.0
+      }
+    ]
+  },
+  {
+    "computed": [],
+    "event_date": "2024-01-15",
+    "line_items": [
+      {
+        "id": "pkg-1",
+        "unit_price_gbp": 500.0
+      }
+    ],
+    "name": "discounts switched off",
+    "payload": {
+      "bulkDiscountPercent": "5",
+      "bulkDiscountThreshold": "1000",
+      "discountLabel": "Early bird",
+      "discountPercentage": "10",
+      "offPeakDiscountPercent": "15",
+      "offerDiscounts": false
+    },
+    "reconciled": [
+      {
+        "id": "pkg-1",
+        "unit_price_gbp": 500.0
+      }
+    ]
+  },
+  {
+    "computed": [],
+    "event_date": "2024-01-15",
+    "line_items": [],
+    "name": "no positive line items",
+    "payload": {
+      "bulkDiscountPercent": "5",
+      "bulkDiscountThreshold": "1000",
+      "discountLabel": "Early bird",
+      "discountPercentage": "10",
+      "offPeakDiscountPercent": "15",
+      "offerDiscounts": true
+    },
+    "reconciled": []
+  },
+  {
+    "computed": [
+      {
+        "description": null,
+        "feature_lines": [],
+        "heading": "Bulk booking discount (10%)",
+        "id": "auto-bulk",
+        "timeline_line": null,
+        "unit_price_gbp": -50.0
+      },
+      {
+        "description": null,
+        "feature_lines": [],
+        "heading": "Off-peak discount (20%)",
+        "id": "auto-off-peak",
+        "timeline_line": null,
+        "unit_price_gbp": -90.0
+      }
+    ],
+    "event_date": "2024-01-15",
+    "line_items": [
+      {
+        "id": "pkg-1",
+        "unit_price_gbp": 500.0
+      },
+      {
+        "id": "auto-bulk",
+        "unit_price_gbp": -999.0
+      }
+    ],
+    "name": "existing auto lines are stripped and recalculated",
+    "payload": {
+      "bulkDiscountPercent": "10",
+      "bulkDiscountThreshold": "400",
+      "discountLabel": "Early bird",
+      "discountPercentage": "10",
+      "offPeakDiscountPercent": "20",
+      "offerDiscounts": true
+    },
+    "reconciled": [
+      {
+        "id": "pkg-1",
+        "unit_price_gbp": 500.0
+      },
+      {
+        "description": null,
+        "feature_lines": [],
+        "heading": "Bulk booking discount (10%)",
+        "id": "auto-bulk",
+        "timeline_line": null,
+        "unit_price_gbp": -50.0
+      },
+      {
+        "description": null,
+        "feature_lines": [],
+        "heading": "Off-peak discount (20%)",
+        "id": "auto-off-peak",
+        "timeline_line": null,
+        "unit_price_gbp": -90.0
+      }
+    ]
+  },
+  {
+    "computed": [
+      {
+        "description": null,
+        "feature_lines": [],
+        "heading": "Off-peak discount (20%)",
+        "id": "auto-off-peak",
+        "timeline_line": null,
+        "unit_price_gbp": -100.0
+      }
+    ],
+    "event_date": "2024-11-01",
+    "line_items": [
+      {
+        "id": "pkg-1",
+        "unit_price_gbp": 500.0
+      }
+    ],
+    "name": "off-peak boundary first day",
+    "payload": {
+      "bulkDiscountPercent": null,
+      "bulkDiscountThreshold": null,
+      "discountLabel": "Early bird",
+      "discountPercentage": "10",
+      "offPeakDiscountPercent": "20",
+      "offerDiscounts": true
+    },
+    "reconciled": [
+      {
+        "id": "pkg-1",
+        "unit_price_gbp": 500.0
+      },
+      {
+        "description": null,
+        "feature_lines": [],
+        "heading": "Off-peak discount (20%)",
+        "id": "auto-off-peak",
+        "timeline_line": null,
+        "unit_price_gbp": -100.0
+      }
+    ]
+  },
+  {
+    "computed": [],
+    "event_date": "2024-03-01",
+    "line_items": [
+      {
+        "id": "pkg-1",
+        "unit_price_gbp": 500.0
+      }
+    ],
+    "name": "off-peak boundary day after (not off-peak)",
+    "payload": {
+      "bulkDiscountPercent": null,
+      "bulkDiscountThreshold": null,
+      "discountLabel": "Early bird",
+      "discountPercentage": "10",
+      "offPeakDiscountPercent": "20",
+      "offerDiscounts": true
+    },
+    "reconciled": [
+      {
+        "id": "pkg-1",
+        "unit_price_gbp": 500.0
+      }
+    ]
+  }
+]

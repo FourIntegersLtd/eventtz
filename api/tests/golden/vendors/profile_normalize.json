@@ -1,0 +1,752 @@
+{
+  "cases": [
+    {
+      "name": "empty",
+      "normalized": {
+        "bulkDiscountPercent": "",
+        "bulkDiscountThreshold": "",
+        "countryCode": "GB",
+        "discountLabel": "",
+        "discountPercentage": "",
+        "listingDisplayOrder": [],
+        "listingHiddenImageUrls": [],
+        "maxBookingsPerDay": "1",
+        "offPeakDiscountPercent": "",
+        "portfolioFileNames": [],
+        "portfolioVideoNamePersisted": "",
+        "portfolioVideoNamesPersisted": [],
+        "postalCode": "",
+        "region": ""
+      },
+      "payload": {}
+    },
+    {
+      "name": "complete",
+      "normalized": {
+        "availableWeekdays": [
+          "sat",
+          "sun"
+        ],
+        "baseCity": " London ",
+        "bulkDiscountPercent": "",
+        "bulkDiscountThreshold": "",
+        "businessName": "  Ada's   Cakes ",
+        "countryCode": "GB",
+        "dailyRate": "",
+        "deliveryModes": [
+          "travel"
+        ],
+        "discountLabel": "",
+        "discountPercentage": "",
+        "firstName": "Ada",
+        "hourlyRate": "",
+        "lastName": "Lovelace",
+        "listingDisplayOrder": [],
+        "listingHiddenImageUrls": [],
+        "maxBookingsPerDay": "2",
+        "offPeakDiscountPercent": "",
+        "offerDiscounts": false,
+        "packages": [
+          {
+            "details": "Three tier sponge with buttercream, delivered and set up at your venue on the day.",
+            "maxQuantity": "",
+            "minQuantity": "",
+            "price": "450",
+            "pricingMode": "fixed",
+            "title": "Wedding cake",
+            "unitLabel": ""
+          },
+          {
+            "details": "A hot and cold buffet for your guests, with vegetarian and vegan options included.",
+            "maxQuantity": "200",
+            "minQuantity": "20",
+            "price": "25",
+            "pricingMode": "per_unit",
+            "title": "Catering buffet",
+            "unitLabel": "guest"
+          }
+        ],
+        "phone": "07700 900123",
+        "portfolioFileNames": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-4.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-5.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-6.jpg"
+        ],
+        "portfolioVideoNamePersisted": "",
+        "portfolioVideoNamesPersisted": [],
+        "postalCode": "",
+        "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg",
+        "region": "",
+        "servicesOffered": [
+          "baking",
+          "Catering",
+          "unknown"
+        ],
+        "travelDeliveryPolicy": "included",
+        "travelRadius": "25"
+      },
+      "payload": {
+        "availableWeekdays": [
+          "sat",
+          "sun"
+        ],
+        "baseCity": " London ",
+        "businessName": "  Ada's   Cakes ",
+        "countryCode": "gb",
+        "dailyRate": "",
+        "deliveryModes": [
+          "travel"
+        ],
+        "firstName": "Ada",
+        "hourlyRate": "",
+        "lastName": "Lovelace",
+        "maxBookingsPerDay": "2",
+        "offerDiscounts": false,
+        "packages": [
+          {
+            "details": "Three tier sponge with buttercream, delivered and set up at your venue on the day.",
+            "price": "450",
+            "pricingMode": "fixed",
+            "title": "Wedding cake"
+          },
+          {
+            "details": "A hot and cold buffet for your guests, with vegetarian and vegan options included.",
+            "maxQuantity": "200",
+            "minQuantity": "20",
+            "price": "25",
+            "pricingMode": "per_unit",
+            "title": "Catering buffet",
+            "unitLabel": "guest"
+          }
+        ],
+        "phone": "07700 900123",
+        "portfolioFileNames": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-4.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-5.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-6.jpg"
+        ],
+        "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg",
+        "servicesOffered": [
+          "baking",
+          "Catering",
+          "unknown"
+        ],
+        "travelDeliveryPolicy": "included",
+        "travelRadius": "25"
+      }
+    },
+    {
+      "name": "discounts off blanks them",
+      "normalized": {
+        "bulkDiscountPercent": "",
+        "bulkDiscountThreshold": "",
+        "countryCode": "GB",
+        "discountLabel": "",
+        "discountPercentage": "",
+        "listingDisplayOrder": [],
+        "listingHiddenImageUrls": [],
+        "maxBookingsPerDay": "1",
+        "offPeakDiscountPercent": "",
+        "offerDiscounts": false,
+        "portfolioFileNames": [],
+        "portfolioVideoNamePersisted": "",
+        "portfolioVideoNamesPersisted": [],
+        "postalCode": "",
+        "region": ""
+      },
+      "payload": {
+        "bulkDiscountPercent": "5",
+        "bulkDiscountThreshold": "500",
+        "discountLabel": "Spring",
+        "discountPercentage": "10",
+        "offPeakDiscountPercent": "15",
+        "offerDiscounts": false
+      }
+    },
+    {
+      "name": "discounts clamp",
+      "normalized": {
+        "bulkDiscountPercent": "5",
+        "bulkDiscountThreshold": "2000000",
+        "countryCode": "GB",
+        "discountLabel": "Spring",
+        "discountPercentage": "100",
+        "listingDisplayOrder": [],
+        "listingHiddenImageUrls": [],
+        "maxBookingsPerDay": "1",
+        "offPeakDiscountPercent": "12.5",
+        "offerDiscounts": true,
+        "portfolioFileNames": [],
+        "portfolioVideoNamePersisted": "",
+        "portfolioVideoNamesPersisted": [],
+        "postalCode": "",
+        "region": ""
+      },
+      "payload": {
+        "bulkDiscountPercent": "-5",
+        "bulkDiscountThreshold": "2000000",
+        "discountLabel": "Spring",
+        "discountPercentage": "150",
+        "offPeakDiscountPercent": "12.5",
+        "offerDiscounts": true
+      }
+    },
+    {
+      "name": "discount junk",
+      "normalized": {
+        "bulkDiscountPercent": "",
+        "bulkDiscountThreshold": "",
+        "countryCode": "GB",
+        "discountPercentage": "",
+        "listingDisplayOrder": [],
+        "listingHiddenImageUrls": [],
+        "maxBookingsPerDay": "1",
+        "offPeakDiscountPercent": "",
+        "offerDiscounts": true,
+        "portfolioFileNames": [],
+        "portfolioVideoNamePersisted": "",
+        "portfolioVideoNamesPersisted": [],
+        "postalCode": "",
+        "region": ""
+      },
+      "payload": {
+        "discountPercentage": "abc",
+        "offerDiscounts": true
+      }
+    },
+    {
+      "name": "rates clamp",
+      "normalized": {
+        "bulkDiscountPercent": "",
+        "bulkDiscountThreshold": "",
+        "countryCode": "GB",
+        "dailyRate": "99999999",
+        "discountLabel": "",
+        "discountPercentage": "",
+        "hourlyRate": "£1,250.50",
+        "listingDisplayOrder": [],
+        "listingHiddenImageUrls": [],
+        "maxBookingsPerDay": "20",
+        "offPeakDiscountPercent": "",
+        "portfolioFileNames": [],
+        "portfolioVideoNamePersisted": "",
+        "portfolioVideoNamesPersisted": [],
+        "postalCode": "",
+        "region": ""
+      },
+      "payload": {
+        "dailyRate": "99999999",
+        "hourlyRate": "£1,250.50",
+        "maxBookingsPerDay": "50"
+      }
+    },
+    {
+      "name": "rate text kept",
+      "normalized": {
+        "bulkDiscountPercent": "",
+        "bulkDiscountThreshold": "",
+        "countryCode": "GB",
+        "dailyRate": "300",
+        "discountLabel": "",
+        "discountPercentage": "",
+        "hourlyRate": "from 100",
+        "listingDisplayOrder": [],
+        "listingHiddenImageUrls": [],
+        "maxBookingsPerDay": "1",
+        "offPeakDiscountPercent": "",
+        "portfolioFileNames": [],
+        "portfolioVideoNamePersisted": "",
+        "portfolioVideoNamesPersisted": [],
+        "postalCode": "",
+        "region": ""
+      },
+      "payload": {
+        "dailyRate": 300,
+        "hourlyRate": " from 100 "
+      }
+    },
+    {
+      "name": "max bookings low",
+      "normalized": {
+        "bulkDiscountPercent": "",
+        "bulkDiscountThreshold": "",
+        "countryCode": "GB",
+        "discountLabel": "",
+        "discountPercentage": "",
+        "listingDisplayOrder": [],
+        "listingHiddenImageUrls": [],
+        "maxBookingsPerDay": "1",
+        "offPeakDiscountPercent": "",
+        "portfolioFileNames": [],
+        "portfolioVideoNamePersisted": "",
+        "portfolioVideoNamesPersisted": [],
+        "postalCode": "",
+        "region": ""
+      },
+      "payload": {
+        "maxBookingsPerDay": "0"
+      }
+    },
+    {
+      "name": "max bookings junk",
+      "normalized": {
+        "bulkDiscountPercent": "",
+        "bulkDiscountThreshold": "",
+        "countryCode": "GB",
+        "discountLabel": "",
+        "discountPercentage": "",
+        "listingDisplayOrder": [],
+        "listingHiddenImageUrls": [],
+        "maxBookingsPerDay": "1",
+        "offPeakDiscountPercent": "",
+        "portfolioFileNames": [],
+        "portfolioVideoNamePersisted": "",
+        "portfolioVideoNamesPersisted": [],
+        "postalCode": "",
+        "region": ""
+      },
+      "payload": {
+        "maxBookingsPerDay": "lots"
+      }
+    },
+    {
+      "name": "packages",
+      "normalized": {
+        "bulkDiscountPercent": "",
+        "bulkDiscountThreshold": "",
+        "countryCode": "GB",
+        "discountLabel": "",
+        "discountPercentage": "",
+        "listingDisplayOrder": [],
+        "listingHiddenImageUrls": [],
+        "maxBookingsPerDay": "1",
+        "offPeakDiscountPercent": "",
+        "packages": [
+          {
+            "maxQuantity": "",
+            "minQuantity": "",
+            "price": "12.5",
+            "pricingMode": "per_unit",
+            "title": "A",
+            "unitLabel": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          },
+          {
+            "maxQuantity": "",
+            "minQuantity": "0",
+            "price": "abc",
+            "pricingMode": "fixed",
+            "title": "B",
+            "unitLabel": ""
+          },
+          {
+            "maxQuantity": "2.5",
+            "minQuantity": "3",
+            "price": "10",
+            "pricingMode": "fixed",
+            "title": "C",
+            "unitLabel": ""
+          },
+          {
+            "maxQuantity": "",
+            "minQuantity": "",
+            "price": "100.1",
+            "pricingMode": "fixed",
+            "title": "D",
+            "unitLabel": ""
+          }
+        ],
+        "portfolioFileNames": [],
+        "portfolioVideoNamePersisted": "",
+        "portfolioVideoNamesPersisted": [],
+        "postalCode": "",
+        "region": ""
+      },
+      "payload": {
+        "packages": [
+          {
+            "price": "12.50",
+            "pricingMode": "per_unit",
+            "title": "A",
+            "unitLabel": "  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          },
+          {
+            "maxQuantity": "",
+            "minQuantity": "0",
+            "price": "abc",
+            "pricingMode": "weird",
+            "title": "B"
+          },
+          {
+            "maxQuantity": "2.5",
+            "minQuantity": 3,
+            "price": 10,
+            "title": "C"
+          },
+          {
+            "maxQuantity": null,
+            "minQuantity": "",
+            "price": "100.10",
+            "title": "D"
+          },
+          "not a package"
+        ]
+      }
+    },
+    {
+      "name": "uploads",
+      "normalized": {
+        "bulkDiscountPercent": "",
+        "bulkDiscountThreshold": "",
+        "countryCode": "GB",
+        "discountLabel": "",
+        "discountPercentage": "",
+        "foodHygieneCertNamePersisted": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/hygiene.pdf",
+        "indemnityCertNamePersisted": "",
+        "listingCoverImageUrl": "",
+        "listingDisplayOrder": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-4.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+        ],
+        "listingHiddenImageUrls": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+        ],
+        "maxBookingsPerDay": "1",
+        "offPeakDiscountPercent": "",
+        "otherDocsNamesPersisted": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/doc1.pdf"
+        ],
+        "portfolioFileNames": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg"
+        ],
+        "portfolioVideoNamePersisted": "",
+        "portfolioVideoNamesPersisted": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/legacy.mp4",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/v1.mp4"
+        ],
+        "postalCode": "",
+        "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg",
+        "region": "",
+        "uploadedFileLabels": {
+          "doc": "My certificate yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+        }
+      },
+      "payload": {
+        "foodHygieneCertNamePersisted": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/hygiene.pdf",
+        "indemnityCertNamePersisted": "https://evil.example.com/users/vendor-0001/indemnity.pdf",
+        "listingCoverImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-9999/cover.jpg",
+        "listingDisplayOrder": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-4.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+        ],
+        "listingHiddenImageUrls": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg",
+          "https://evil.example.com/users/vendor-0001/c.jpg"
+        ],
+        "listingTailImageUrls": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-5.jpg"
+        ],
+        "otherDocsNamesPersisted": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/doc1.pdf",
+          "https://evil.example.com/users/vendor-0001/doc2.pdf"
+        ],
+        "portfolioFileNames": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+          "  https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg  ",
+          "https://evil.example.com/users/vendor-0001/a.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-9999/b.jpg",
+          "ftp://nope",
+          42,
+          ""
+        ],
+        "portfolioVideoNamePersisted": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/legacy.mp4",
+        "portfolioVideoNamesPersisted": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/v1.mp4",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/legacy.mp4",
+          "https://evil.example.com/users/vendor-0001/v.mp4"
+        ],
+        "profileImageUrl": "  https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg",
+        "uploadedFileLabels": {
+          " doc ": "  My certificate yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+          "blank": "   ",
+          "number": 3
+        }
+      }
+    },
+    {
+      "name": "too many uploads",
+      "normalized": {
+        "bulkDiscountPercent": "",
+        "bulkDiscountThreshold": "",
+        "countryCode": "GB",
+        "discountLabel": "",
+        "discountPercentage": "",
+        "listingDisplayOrder": [],
+        "listingHiddenImageUrls": [],
+        "maxBookingsPerDay": "1",
+        "offPeakDiscountPercent": "",
+        "portfolioFileNames": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p0.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p1.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p2.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p3.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p4.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p5.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p6.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p7.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p8.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p9.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p10.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p11.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p12.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p13.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p14.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p15.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p16.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p17.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p18.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p19.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p20.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p21.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p22.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p23.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p24.jpg"
+        ],
+        "portfolioVideoNamePersisted": "",
+        "portfolioVideoNamesPersisted": [],
+        "postalCode": "",
+        "region": ""
+      },
+      "payload": {
+        "portfolioFileNames": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p0.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p1.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p2.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p3.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p4.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p5.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p6.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p7.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p8.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p9.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p10.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p11.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p12.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p13.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p14.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p15.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p16.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p17.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p18.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p19.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p20.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p21.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p22.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p23.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p24.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p25.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p26.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p27.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p28.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p29.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p30.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p31.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p32.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p33.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p34.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p35.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p36.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p37.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p38.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/p39.jpg"
+        ]
+      }
+    },
+    {
+      "name": "legacy video only",
+      "normalized": {
+        "bulkDiscountPercent": "",
+        "bulkDiscountThreshold": "",
+        "countryCode": "GB",
+        "discountLabel": "",
+        "discountPercentage": "",
+        "listingDisplayOrder": [],
+        "listingHiddenImageUrls": [],
+        "maxBookingsPerDay": "1",
+        "offPeakDiscountPercent": "",
+        "portfolioFileNames": [],
+        "portfolioVideoNamePersisted": "",
+        "portfolioVideoNamesPersisted": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/only.mp4"
+        ],
+        "postalCode": "",
+        "region": ""
+      },
+      "payload": {
+        "portfolioVideoNamePersisted": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/only.mp4"
+      }
+    },
+    {
+      "name": "videos not a list",
+      "normalized": {
+        "bulkDiscountPercent": "",
+        "bulkDiscountThreshold": "",
+        "countryCode": "GB",
+        "discountLabel": "",
+        "discountPercentage": "",
+        "listingDisplayOrder": [],
+        "listingHiddenImageUrls": [],
+        "maxBookingsPerDay": "1",
+        "offPeakDiscountPercent": "",
+        "portfolioFileNames": [],
+        "portfolioVideoNamePersisted": "",
+        "portfolioVideoNamesPersisted": [],
+        "postalCode": "",
+        "region": ""
+      },
+      "payload": {
+        "portfolioVideoNamesPersisted": "x"
+      }
+    },
+    {
+      "name": "other docs empty list",
+      "normalized": {
+        "bulkDiscountPercent": "",
+        "bulkDiscountThreshold": "",
+        "countryCode": "GB",
+        "discountLabel": "",
+        "discountPercentage": "",
+        "listingDisplayOrder": [],
+        "listingHiddenImageUrls": [],
+        "maxBookingsPerDay": "1",
+        "offPeakDiscountPercent": "",
+        "otherDocsNamesPersisted": [],
+        "portfolioFileNames": [],
+        "portfolioVideoNamePersisted": "",
+        "portfolioVideoNamesPersisted": [],
+        "postalCode": "",
+        "region": ""
+      },
+      "payload": {
+        "otherDocsNamesPersisted": []
+      }
+    },
+    {
+      "name": "labels not a dict",
+      "normalized": {
+        "bulkDiscountPercent": "",
+        "bulkDiscountThreshold": "",
+        "countryCode": "GB",
+        "discountLabel": "",
+        "discountPercentage": "",
+        "listingDisplayOrder": [],
+        "listingHiddenImageUrls": [],
+        "maxBookingsPerDay": "1",
+        "offPeakDiscountPercent": "",
+        "portfolioFileNames": [],
+        "portfolioVideoNamePersisted": "",
+        "portfolioVideoNamesPersisted": [],
+        "postalCode": "",
+        "region": "",
+        "uploadedFileLabels": [
+          "a"
+        ]
+      },
+      "payload": {
+        "uploadedFileLabels": [
+          "a"
+        ]
+      }
+    },
+    {
+      "name": "blocked dates",
+      "normalized": {
+        "blockedDates": [
+          "2026-10-01",
+          "2026-10-02T00:00:00Z"
+        ],
+        "bulkDiscountPercent": "",
+        "bulkDiscountThreshold": "",
+        "countryCode": "GB",
+        "discountLabel": "",
+        "discountPercentage": "",
+        "listingDisplayOrder": [],
+        "listingHiddenImageUrls": [],
+        "maxBookingsPerDay": "1",
+        "offPeakDiscountPercent": "",
+        "portfolioFileNames": [],
+        "portfolioVideoNamePersisted": "",
+        "portfolioVideoNamesPersisted": [],
+        "postalCode": "",
+        "region": ""
+      },
+      "payload": {
+        "blockedDates": [
+          "2026-10-01",
+          "2026-10-02T00:00:00Z",
+          "1/2/2026",
+          20261001,
+          null,
+          "2026-1-1"
+        ]
+      }
+    },
+    {
+      "name": "location",
+      "normalized": {
+        "bulkDiscountPercent": "",
+        "bulkDiscountThreshold": "",
+        "countryCode": "GB",
+        "discountLabel": "",
+        "discountPercentage": "",
+        "listingDisplayOrder": [],
+        "listingHiddenImageUrls": [],
+        "maxBookingsPerDay": "1",
+        "offPeakDiscountPercent": "",
+        "portfolioFileNames": [],
+        "portfolioVideoNamePersisted": "",
+        "portfolioVideoNamesPersisted": [],
+        "postalCode": "SW1A 1AA 99999999999999999999999",
+        "region": "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr"
+      },
+      "payload": {
+        "countryCode": " us ",
+        "postalCode": " SW1A 1AA 9999999999999999999999999999999999999999",
+        "region": "  rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr"
+      }
+    },
+    {
+      "name": "location blanks",
+      "normalized": {
+        "bulkDiscountPercent": "",
+        "bulkDiscountThreshold": "",
+        "countryCode": "GB",
+        "discountLabel": "",
+        "discountPercentage": "",
+        "listingDisplayOrder": [],
+        "listingHiddenImageUrls": [],
+        "maxBookingsPerDay": "1",
+        "offPeakDiscountPercent": "",
+        "portfolioFileNames": [],
+        "portfolioVideoNamePersisted": "",
+        "portfolioVideoNamesPersisted": [],
+        "postalCode": "",
+        "region": ""
+      },
+      "payload": {
+        "countryCode": "",
+        "postalCode": null,
+        "region": "   "
+      }
+    }
+  ],
+  "upload_host": "eventtz.s3.eu-west-2.amazonaws.com",
+  "user_id": "vendor-0001"
+}

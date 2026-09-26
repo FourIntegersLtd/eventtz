@@ -1,0 +1,26 @@
+[
+  {
+    "details": "Ask the vendor for a price.",
+    "vague": true
+  },
+  {
+    "details": "A full day of coverage with two photographers and an online gallery.",
+    "vague": false
+  },
+  {
+    "details": "Contact for details.",
+    "vague": true
+  },
+  {
+    "details": "POA",
+    "vague": true
+  },
+  {
+    "details": "Enquire for our best rate.",
+    "vague": true
+  },
+  {
+    "details": "",
+    "vague": false
+  }
+]

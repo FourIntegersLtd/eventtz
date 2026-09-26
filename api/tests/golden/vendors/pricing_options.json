@@ -1,0 +1,452 @@
+[
+  {
+    "min_listing_price_gbp": null,
+    "name": "no packages, no rates",
+    "options": [
+      {
+        "description": "This vendor has not published package prices or fixed hourly/daily rates yet. Send an enquiry to discuss your event.",
+        "feature_lines": [],
+        "heading": "Request a quote",
+        "id": "quote",
+        "max_quantity": null,
+        "min_quantity": 1,
+        "pricing_mode": "fixed",
+        "timeline_line": null,
+        "unit_label": null,
+        "unit_price_gbp": null
+      }
+    ],
+    "payload": {}
+  },
+  {
+    "min_listing_price_gbp": 80.0,
+    "name": "hourly and daily rates only",
+    "options": [
+      {
+        "description": "Per-hour rate from this vendor's pricing step. Scope, hours, and travel are confirmed when you enquire.",
+        "feature_lines": [
+          "catering",
+          "dj"
+        ],
+        "heading": "Hourly rate",
+        "id": "fixed-hourly",
+        "max_quantity": null,
+        "min_quantity": 1,
+        "pricing_mode": "fixed",
+        "timeline_line": null,
+        "unit_label": null,
+        "unit_price_gbp": 80.0
+      },
+      {
+        "description": "Per-day rate from this vendor's pricing step. Coverage and travel are confirmed when you enquire.",
+        "feature_lines": [
+          "catering",
+          "dj"
+        ],
+        "heading": "Daily rate",
+        "id": "fixed-daily",
+        "max_quantity": null,
+        "min_quantity": 1,
+        "pricing_mode": "fixed",
+        "timeline_line": null,
+        "unit_label": null,
+        "unit_price_gbp": 600.0
+      }
+    ],
+    "payload": {
+      "dailyRate": "600",
+      "hourlyRate": "80",
+      "servicesOffered": [
+        "catering",
+        "dj"
+      ]
+    }
+  },
+  {
+    "min_listing_price_gbp": 80.0,
+    "name": "hourly rate only",
+    "options": [
+      {
+        "description": "Per-hour rate from this vendor's pricing step. Scope, hours, and travel are confirmed when you enquire.",
+        "feature_lines": [],
+        "heading": "Hourly rate",
+        "id": "fixed-hourly",
+        "max_quantity": null,
+        "min_quantity": 1,
+        "pricing_mode": "fixed",
+        "timeline_line": null,
+        "unit_label": null,
+        "unit_price_gbp": 80.0
+      }
+    ],
+    "payload": {
+      "hourlyRate": "80"
+    }
+  },
+  {
+    "min_listing_price_gbp": 500.0,
+    "name": "one complete fixed package",
+    "options": [
+      {
+        "description": "A full day of coverage with two photographers and an online gallery.",
+        "feature_lines": [
+          "catering"
+        ],
+        "heading": "Classic package",
+        "id": "pkg-1",
+        "max_quantity": null,
+        "min_quantity": 1,
+        "pricing_mode": "fixed",
+        "timeline_line": "8 hours",
+        "unit_label": null,
+        "unit_price_gbp": 500.0
+      }
+    ],
+    "payload": {
+      "packages": [
+        {
+          "details": "A full day of coverage with two photographers and an online gallery.",
+          "duration": "8 hours",
+          "id": "pkg-1",
+          "maxQuantity": null,
+          "minQuantity": null,
+          "price": "500",
+          "pricingMode": "fixed",
+          "title": "Classic package",
+          "unitLabel": ""
+        }
+      ],
+      "servicesOffered": [
+        "catering"
+      ]
+    }
+  },
+  {
+    "min_listing_price_gbp": 450.0,
+    "name": "one complete fixed package with discount",
+    "options": [
+      {
+        "description": "A full day of coverage with two photographers and an online gallery.",
+        "feature_lines": [],
+        "heading": "Classic package",
+        "id": "pkg-1",
+        "max_quantity": null,
+        "min_quantity": 1,
+        "pricing_mode": "fixed",
+        "timeline_line": "8 hours",
+        "unit_label": null,
+        "unit_price_gbp": 450.0
+      }
+    ],
+    "payload": {
+      "bulkDiscountPercent": "5",
+      "bulkDiscountThreshold": "1000",
+      "discountLabel": "Early bird",
+      "discountPercentage": "10",
+      "offPeakDiscountPercent": "15",
+      "offerDiscounts": true,
+      "packages": [
+        {
+          "details": "A full day of coverage with two photographers and an online gallery.",
+          "duration": "8 hours",
+          "id": "pkg-1",
+          "maxQuantity": null,
+          "minQuantity": null,
+          "price": "500",
+          "pricingMode": "fixed",
+          "title": "Classic package",
+          "unitLabel": ""
+        }
+      ]
+    }
+  },
+  {
+    "min_listing_price_gbp": 50.0,
+    "name": "incomplete package (short details) falls back to rates",
+    "options": [
+      {
+        "description": "Per-hour rate from this vendor's pricing step. Scope, hours, and travel are confirmed when you enquire.",
+        "feature_lines": [],
+        "heading": "Hourly rate",
+        "id": "fixed-hourly",
+        "max_quantity": null,
+        "min_quantity": 1,
+        "pricing_mode": "fixed",
+        "timeline_line": null,
+        "unit_label": null,
+        "unit_price_gbp": 50.0
+      }
+    ],
+    "payload": {
+      "hourlyRate": "50",
+      "packages": [
+        {
+          "details": "too short",
+          "duration": "8 hours",
+          "id": "pkg-1",
+          "maxQuantity": null,
+          "minQuantity": null,
+          "price": "500",
+          "pricingMode": "fixed",
+          "title": "Classic package",
+          "unitLabel": ""
+        }
+      ]
+    }
+  },
+  {
+    "min_listing_price_gbp": null,
+    "name": "incomplete package, no rates, falls back to quote",
+    "options": [
+      {
+        "description": "This vendor has not published package prices or fixed hourly/daily rates yet. Send an enquiry to discuss your event.",
+        "feature_lines": [],
+        "heading": "Request a quote",
+        "id": "quote",
+        "max_quantity": null,
+        "min_quantity": 1,
+        "pricing_mode": "fixed",
+        "timeline_line": null,
+        "unit_label": null,
+        "unit_price_gbp": null
+      }
+    ],
+    "payload": {
+      "packages": [
+        {
+          "details": "too short",
+          "duration": "8 hours",
+          "id": "pkg-1",
+          "maxQuantity": null,
+          "minQuantity": null,
+          "price": "500",
+          "pricingMode": "fixed",
+          "title": "Classic package",
+          "unitLabel": ""
+        }
+      ]
+    }
+  },
+  {
+    "min_listing_price_gbp": 12.5,
+    "name": "per-unit package complete",
+    "options": [
+      {
+        "description": "A full day of coverage with two photographers and an online gallery.",
+        "feature_lines": [],
+        "heading": "Classic package",
+        "id": "pkg-per-unit",
+        "max_quantity": 200,
+        "min_quantity": 10,
+        "pricing_mode": "per_unit",
+        "timeline_line": "8 hours",
+        "unit_label": "guest",
+        "unit_price_gbp": 12.5
+      }
+    ],
+    "payload": {
+      "packages": [
+        {
+          "details": "A full day of coverage with two photographers and an online gallery.",
+          "duration": "8 hours",
+          "id": "pkg-per-unit",
+          "maxQuantity": "200",
+          "minQuantity": "10",
+          "price": "12.50",
+          "pricingMode": "per_unit",
+          "title": "Classic package",
+          "unitLabel": "guest"
+        }
+      ]
+    }
+  },
+  {
+    "min_listing_price_gbp": null,
+    "name": "per-unit package missing unit label is incomplete",
+    "options": [
+      {
+        "description": "This vendor has not published package prices or fixed hourly/daily rates yet. Send an enquiry to discuss your event.",
+        "feature_lines": [],
+        "heading": "Request a quote",
+        "id": "quote",
+        "max_quantity": null,
+        "min_quantity": 1,
+        "pricing_mode": "fixed",
+        "timeline_line": null,
+        "unit_label": null,
+        "unit_price_gbp": null
+      }
+    ],
+    "payload": {
+      "packages": [
+        {
+          "details": "A full day of coverage with two photographers and an online gallery.",
+          "duration": "8 hours",
+          "id": "pkg-no-label",
+          "maxQuantity": null,
+          "minQuantity": null,
+          "price": "12.50",
+          "pricingMode": "per_unit",
+          "title": "Classic package",
+          "unitLabel": ""
+        }
+      ]
+    }
+  },
+  {
+    "min_listing_price_gbp": null,
+    "name": "per-unit package min above max is incomplete",
+    "options": [
+      {
+        "description": "This vendor has not published package prices or fixed hourly/daily rates yet. Send an enquiry to discuss your event.",
+        "feature_lines": [],
+        "heading": "Request a quote",
+        "id": "quote",
+        "max_quantity": null,
+        "min_quantity": 1,
+        "pricing_mode": "fixed",
+        "timeline_line": null,
+        "unit_label": null,
+        "unit_price_gbp": null
+      }
+    ],
+    "payload": {
+      "packages": [
+        {
+          "details": "A full day of coverage with two photographers and an online gallery.",
+          "duration": "8 hours",
+          "id": "pkg-bad-bounds",
+          "maxQuantity": "10",
+          "minQuantity": "50",
+          "price": "12.50",
+          "pricingMode": "per_unit",
+          "title": "Classic package",
+          "unitLabel": "guest"
+        }
+      ]
+    }
+  },
+  {
+    "min_listing_price_gbp": 500.0,
+    "name": "two complete packages, one incomplete, with services feature lines",
+    "options": [
+      {
+        "description": "A full day of coverage with two photographers and an online gallery.",
+        "feature_lines": [
+          "catering",
+          "baking",
+          "decor",
+          "dj",
+          "mc",
+          "photography"
+        ],
+        "heading": "Package A",
+        "id": "pkg-a",
+        "max_quantity": null,
+        "min_quantity": 1,
+        "pricing_mode": "fixed",
+        "timeline_line": "8 hours",
+        "unit_label": null,
+        "unit_price_gbp": 500.0
+      },
+      {
+        "description": "A full day of coverage with two photographers and an online gallery.",
+        "feature_lines": [
+          "catering",
+          "baking",
+          "decor",
+          "dj",
+          "mc",
+          "photography"
+        ],
+        "heading": "Package B",
+        "id": "pkg-b",
+        "max_quantity": null,
+        "min_quantity": 1,
+        "pricing_mode": "fixed",
+        "timeline_line": "8 hours",
+        "unit_label": null,
+        "unit_price_gbp": 750.0
+      }
+    ],
+    "payload": {
+      "packages": [
+        {
+          "details": "A full day of coverage with two photographers and an online gallery.",
+          "duration": "8 hours",
+          "id": "pkg-a",
+          "maxQuantity": null,
+          "minQuantity": null,
+          "price": "500",
+          "pricingMode": "fixed",
+          "title": "Package A",
+          "unitLabel": ""
+        },
+        {
+          "details": "A full day of coverage with two photographers and an online gallery.",
+          "duration": "8 hours",
+          "id": "pkg-b",
+          "maxQuantity": null,
+          "minQuantity": null,
+          "price": "750",
+          "pricingMode": "fixed",
+          "title": "Package B",
+          "unitLabel": ""
+        },
+        {
+          "details": "short",
+          "duration": "8 hours",
+          "id": "pkg-c",
+          "maxQuantity": null,
+          "minQuantity": null,
+          "price": "500",
+          "pricingMode": "fixed",
+          "title": "Package C",
+          "unitLabel": ""
+        }
+      ],
+      "servicesOffered": [
+        "catering",
+        "baking",
+        "decor",
+        "dj",
+        "mc",
+        "photography",
+        "rentals"
+      ]
+    }
+  },
+  {
+    "min_listing_price_gbp": null,
+    "name": "package price unparseable falls back to no price for that option",
+    "options": [
+      {
+        "description": "A full day of coverage with two photographers and an online gallery.",
+        "feature_lines": [],
+        "heading": "Classic package",
+        "id": "pkg-1",
+        "max_quantity": null,
+        "min_quantity": 1,
+        "pricing_mode": "fixed",
+        "timeline_line": "8 hours",
+        "unit_label": null,
+        "unit_price_gbp": null
+      }
+    ],
+    "payload": {
+      "packages": [
+        {
+          "details": "A full day of coverage with two photographers and an online gallery.",
+          "duration": "8 hours",
+          "id": "pkg-1",
+          "maxQuantity": null,
+          "minQuantity": null,
+          "price": "ask us",
+          "pricingMode": "fixed",
+          "title": "Classic package",
+          "unitLabel": ""
+        }
+      ]
+    }
+  }
+]

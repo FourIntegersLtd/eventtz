@@ -1,0 +1,440 @@
+{
+  "public": [
+    {
+      "cover": null,
+      "default_order": [],
+      "name": "empty",
+      "payload": {},
+      "state": {
+        "display_order": [],
+        "hidden_image_urls": [],
+        "listing_cover_image_url": null
+      },
+      "urls": []
+    },
+    {
+      "cover": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+      "default_order": [
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+      ],
+      "name": "portfolio only",
+      "payload": {
+        "portfolioFileNames": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+        ]
+      },
+      "state": {
+        "display_order": [],
+        "hidden_image_urls": [],
+        "listing_cover_image_url": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg"
+      },
+      "urls": [
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+      ]
+    },
+    {
+      "cover": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg",
+      "default_order": [
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+      ],
+      "name": "profile and portfolio",
+      "payload": {
+        "portfolioFileNames": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+        ],
+        "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg"
+      },
+      "state": {
+        "display_order": [],
+        "hidden_image_urls": [],
+        "listing_cover_image_url": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg"
+      },
+      "urls": [
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+      ]
+    },
+    {
+      "cover": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+      "default_order": [
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+      ],
+      "name": "profile also in portfolio",
+      "payload": {
+        "portfolioFileNames": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+        ],
+        "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg"
+      },
+      "state": {
+        "display_order": [],
+        "hidden_image_urls": [],
+        "listing_cover_image_url": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg"
+      },
+      "urls": [
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+      ]
+    },
+    {
+      "cover": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg",
+      "default_order": [
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+      ],
+      "name": "stored order partial",
+      "payload": {
+        "listingDisplayOrder": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg",
+          "https://gone.example/x.jpg"
+        ],
+        "listingHiddenImageUrls": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg"
+        ],
+        "portfolioFileNames": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+        ],
+        "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg"
+      },
+      "state": {
+        "display_order": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg",
+          "https://gone.example/x.jpg"
+        ],
+        "hidden_image_urls": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg"
+        ],
+        "listing_cover_image_url": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+      },
+      "urls": [
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg"
+      ]
+    },
+    {
+      "cover": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+      "default_order": [
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+      ],
+      "name": "legacy cover",
+      "payload": {
+        "listingCoverImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+        "portfolioFileNames": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+        ],
+        "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg"
+      },
+      "state": {
+        "display_order": [],
+        "hidden_image_urls": [],
+        "listing_cover_image_url": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg"
+      },
+      "urls": [
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+      ]
+    },
+    {
+      "cover": null,
+      "default_order": [
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg"
+      ],
+      "name": "all hidden",
+      "payload": {
+        "listingHiddenImageUrls": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg"
+        ],
+        "portfolioFileNames": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg"
+        ]
+      },
+      "state": {
+        "display_order": [],
+        "hidden_image_urls": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg"
+        ],
+        "listing_cover_image_url": null
+      },
+      "urls": []
+    }
+  ],
+  "updates": [
+    {
+      "base": {
+        "listingCoverImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "portfolioFileNames": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+        ],
+        "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg"
+      },
+      "hidden": [],
+      "name": "clear",
+      "order": [],
+      "payload": {
+        "bulkDiscountPercent": "",
+        "bulkDiscountThreshold": "",
+        "countryCode": "GB",
+        "discountLabel": "",
+        "discountPercentage": "",
+        "listingDisplayOrder": [],
+        "listingHiddenImageUrls": [],
+        "maxBookingsPerDay": "1",
+        "offPeakDiscountPercent": "",
+        "portfolioFileNames": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+        ],
+        "portfolioVideoNamePersisted": "",
+        "portfolioVideoNamesPersisted": [],
+        "postalCode": "",
+        "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg",
+        "region": ""
+      }
+    },
+    {
+      "base": {
+        "listingCoverImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "portfolioFileNames": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+        ],
+        "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg"
+      },
+      "hidden": [],
+      "name": "default order",
+      "order": [
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+      ],
+      "payload": {
+        "bulkDiscountPercent": "",
+        "bulkDiscountThreshold": "",
+        "countryCode": "GB",
+        "discountLabel": "",
+        "discountPercentage": "",
+        "listingDisplayOrder": [],
+        "listingHiddenImageUrls": [],
+        "maxBookingsPerDay": "1",
+        "offPeakDiscountPercent": "",
+        "portfolioFileNames": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+        ],
+        "portfolioVideoNamePersisted": "",
+        "portfolioVideoNamesPersisted": [],
+        "postalCode": "",
+        "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg",
+        "region": ""
+      }
+    },
+    {
+      "base": {
+        "listingCoverImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "portfolioFileNames": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+        ],
+        "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg"
+      },
+      "hidden": [
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg"
+      ],
+      "name": "default order with hidden",
+      "order": [
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+      ],
+      "payload": {
+        "bulkDiscountPercent": "",
+        "bulkDiscountThreshold": "",
+        "countryCode": "GB",
+        "discountLabel": "",
+        "discountPercentage": "",
+        "listingDisplayOrder": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+        ],
+        "listingHiddenImageUrls": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg"
+        ],
+        "maxBookingsPerDay": "1",
+        "offPeakDiscountPercent": "",
+        "portfolioFileNames": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+        ],
+        "portfolioVideoNamePersisted": "",
+        "portfolioVideoNamesPersisted": [],
+        "postalCode": "",
+        "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg",
+        "region": ""
+      }
+    },
+    {
+      "base": {
+        "listingCoverImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "portfolioFileNames": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+        ],
+        "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg"
+      },
+      "hidden": [],
+      "name": "custom order",
+      "order": [
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg",
+        " https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg",
+        ""
+      ],
+      "payload": {
+        "bulkDiscountPercent": "",
+        "bulkDiscountThreshold": "",
+        "countryCode": "GB",
+        "discountLabel": "",
+        "discountPercentage": "",
+        "listingDisplayOrder": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg"
+        ],
+        "listingHiddenImageUrls": [],
+        "maxBookingsPerDay": "1",
+        "offPeakDiscountPercent": "",
+        "portfolioFileNames": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+        ],
+        "portfolioVideoNamePersisted": "",
+        "portfolioVideoNamesPersisted": [],
+        "postalCode": "",
+        "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg",
+        "region": ""
+      }
+    },
+    {
+      "base": {
+        "listingCoverImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "portfolioFileNames": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+        ],
+        "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg"
+      },
+      "hidden": [
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg"
+      ],
+      "name": "hidden only",
+      "order": [],
+      "payload": {
+        "bulkDiscountPercent": "",
+        "bulkDiscountThreshold": "",
+        "countryCode": "GB",
+        "discountLabel": "",
+        "discountPercentage": "",
+        "listingDisplayOrder": [],
+        "listingHiddenImageUrls": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg"
+        ],
+        "maxBookingsPerDay": "1",
+        "offPeakDiscountPercent": "",
+        "portfolioFileNames": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+        ],
+        "portfolioVideoNamePersisted": "",
+        "portfolioVideoNamesPersisted": [],
+        "postalCode": "",
+        "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg",
+        "region": ""
+      }
+    },
+    {
+      "base": {
+        "listingCoverImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "portfolioFileNames": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+        ],
+        "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg"
+      },
+      "error": "Listing media overrides must use the vendor profile photo or portfolio images.",
+      "hidden": [],
+      "name": "foreign in order",
+      "order": [
+        "https://elsewhere.example/x.jpg"
+      ]
+    },
+    {
+      "base": {
+        "listingCoverImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "portfolioFileNames": [
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+          "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg"
+        ],
+        "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg"
+      },
+      "error": "Listing media overrides must use the vendor profile photo or portfolio images.",
+      "hidden": [
+        "https://elsewhere.example/x.jpg"
+      ],
+      "name": "foreign in hidden",
+      "order": [
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg"
+      ]
+    }
+  ]
+}

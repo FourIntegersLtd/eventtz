@@ -1,0 +1,533 @@
+[
+  {
+    "current": 3,
+    "name": "draft forward from 1",
+    "payload": {
+      "availableWeekdays": [
+        "sat",
+        "sun"
+      ],
+      "baseCity": " London ",
+      "businessName": "  Ada's   Cakes ",
+      "countryCode": "gb",
+      "dailyRate": "",
+      "deliveryModes": [
+        "travel"
+      ],
+      "firstName": "Ada",
+      "hourlyRate": "",
+      "lastName": "Lovelace",
+      "maxBookingsPerDay": "2",
+      "offerDiscounts": false,
+      "packages": [
+        {
+          "details": "Three tier sponge with buttercream, delivered and set up at your venue on the day.",
+          "price": "450",
+          "pricingMode": "fixed",
+          "title": "Wedding cake"
+        },
+        {
+          "details": "A hot and cold buffet for your guests, with vegetarian and vegan options included.",
+          "maxQuantity": "200",
+          "minQuantity": "20",
+          "price": "25",
+          "pricingMode": "per_unit",
+          "title": "Catering buffet",
+          "unitLabel": "guest"
+        }
+      ],
+      "phone": "07700 900123",
+      "portfolioFileNames": [
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-4.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-5.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-6.jpg"
+      ],
+      "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg",
+      "servicesOffered": [
+        "baking",
+        "Catering",
+        "unknown"
+      ],
+      "travelDeliveryPolicy": "included",
+      "travelRadius": "25"
+    },
+    "previous": 1,
+    "result": "ok",
+    "services_after": [
+      "baking",
+      "Catering",
+      "unknown"
+    ],
+    "status": "draft"
+  },
+  {
+    "current": 2,
+    "name": "draft forward bad account",
+    "payload": {},
+    "previous": 1,
+    "result": "Step account: first name is required.",
+    "services_after": null,
+    "status": null
+  },
+  {
+    "current": 1,
+    "name": "draft backwards",
+    "payload": {},
+    "previous": 5,
+    "result": "ok",
+    "services_after": null,
+    "status": "draft"
+  },
+  {
+    "current": 4,
+    "name": "draft same step",
+    "payload": {},
+    "previous": 4,
+    "result": "ok",
+    "services_after": null,
+    "status": "draft"
+  },
+  {
+    "current": 4,
+    "name": "draft from zero",
+    "payload": {},
+    "previous": 0,
+    "result": "ok",
+    "services_after": null,
+    "status": "draft"
+  },
+  {
+    "current": 8,
+    "name": "submit complete",
+    "payload": {
+      "availableWeekdays": [
+        "sat",
+        "sun"
+      ],
+      "baseCity": " London ",
+      "businessName": "  Ada's   Cakes ",
+      "countryCode": "gb",
+      "dailyRate": "",
+      "deliveryModes": [
+        "travel"
+      ],
+      "firstName": "Ada",
+      "hourlyRate": "",
+      "lastName": "Lovelace",
+      "maxBookingsPerDay": "2",
+      "offerDiscounts": false,
+      "packages": [
+        {
+          "details": "Three tier sponge with buttercream, delivered and set up at your venue on the day.",
+          "price": "450",
+          "pricingMode": "fixed",
+          "title": "Wedding cake"
+        },
+        {
+          "details": "A hot and cold buffet for your guests, with vegetarian and vegan options included.",
+          "maxQuantity": "200",
+          "minQuantity": "20",
+          "price": "25",
+          "pricingMode": "per_unit",
+          "title": "Catering buffet",
+          "unitLabel": "guest"
+        }
+      ],
+      "phone": "07700 900123",
+      "portfolioFileNames": [
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-4.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-5.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-6.jpg"
+      ],
+      "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg",
+      "servicesOffered": [
+        "baking",
+        "Catering",
+        "unknown"
+      ],
+      "travelDeliveryPolicy": "included",
+      "travelRadius": "25"
+    },
+    "previous": 8,
+    "result": "ok",
+    "services_after": [
+      "baking",
+      "catering"
+    ],
+    "status": "submitted"
+  },
+  {
+    "current": 8,
+    "name": "complete status",
+    "payload": {
+      "availableWeekdays": [
+        "sat",
+        "sun"
+      ],
+      "baseCity": " London ",
+      "businessName": "  Ada's   Cakes ",
+      "countryCode": "gb",
+      "dailyRate": "",
+      "deliveryModes": [
+        "travel"
+      ],
+      "firstName": "Ada",
+      "hourlyRate": "",
+      "lastName": "Lovelace",
+      "maxBookingsPerDay": "2",
+      "offerDiscounts": false,
+      "packages": [
+        {
+          "details": "Three tier sponge with buttercream, delivered and set up at your venue on the day.",
+          "price": "450",
+          "pricingMode": "fixed",
+          "title": "Wedding cake"
+        },
+        {
+          "details": "A hot and cold buffet for your guests, with vegetarian and vegan options included.",
+          "maxQuantity": "200",
+          "minQuantity": "20",
+          "price": "25",
+          "pricingMode": "per_unit",
+          "title": "Catering buffet",
+          "unitLabel": "guest"
+        }
+      ],
+      "phone": "07700 900123",
+      "portfolioFileNames": [
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-4.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-5.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-6.jpg"
+      ],
+      "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg",
+      "servicesOffered": [
+        "baking",
+        "Catering",
+        "unknown"
+      ],
+      "travelDeliveryPolicy": "included",
+      "travelRadius": "25"
+    },
+    "previous": 8,
+    "result": "ok",
+    "services_after": [
+      "baking",
+      "catering"
+    ],
+    "status": " Complete "
+  },
+  {
+    "current": 8,
+    "name": "submit no business name",
+    "payload": {
+      "availableWeekdays": [
+        "sat",
+        "sun"
+      ],
+      "baseCity": " London ",
+      "businessName": " ",
+      "countryCode": "gb",
+      "dailyRate": "",
+      "deliveryModes": [
+        "travel"
+      ],
+      "firstName": "Ada",
+      "hourlyRate": "",
+      "lastName": "Lovelace",
+      "maxBookingsPerDay": "2",
+      "offerDiscounts": false,
+      "packages": [
+        {
+          "details": "Three tier sponge with buttercream, delivered and set up at your venue on the day.",
+          "price": "450",
+          "pricingMode": "fixed",
+          "title": "Wedding cake"
+        },
+        {
+          "details": "A hot and cold buffet for your guests, with vegetarian and vegan options included.",
+          "maxQuantity": "200",
+          "minQuantity": "20",
+          "price": "25",
+          "pricingMode": "per_unit",
+          "title": "Catering buffet",
+          "unitLabel": "guest"
+        }
+      ],
+      "phone": "07700 900123",
+      "portfolioFileNames": [
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-4.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-5.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-6.jpg"
+      ],
+      "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg",
+      "servicesOffered": [
+        "baking",
+        "Catering",
+        "unknown"
+      ],
+      "travelDeliveryPolicy": "included",
+      "travelRadius": "25"
+    },
+    "previous": 8,
+    "result": "Business name is required before submit.",
+    "services_after": [
+      "baking",
+      "Catering",
+      "unknown"
+    ],
+    "status": "submitted"
+  },
+  {
+    "current": 8,
+    "name": "submit no services",
+    "payload": {
+      "availableWeekdays": [
+        "sat",
+        "sun"
+      ],
+      "baseCity": " London ",
+      "businessName": "  Ada's   Cakes ",
+      "countryCode": "gb",
+      "dailyRate": "",
+      "deliveryModes": [
+        "travel"
+      ],
+      "firstName": "Ada",
+      "hourlyRate": "",
+      "lastName": "Lovelace",
+      "maxBookingsPerDay": "2",
+      "offerDiscounts": false,
+      "packages": [
+        {
+          "details": "Three tier sponge with buttercream, delivered and set up at your venue on the day.",
+          "price": "450",
+          "pricingMode": "fixed",
+          "title": "Wedding cake"
+        },
+        {
+          "details": "A hot and cold buffet for your guests, with vegetarian and vegan options included.",
+          "maxQuantity": "200",
+          "minQuantity": "20",
+          "price": "25",
+          "pricingMode": "per_unit",
+          "title": "Catering buffet",
+          "unitLabel": "guest"
+        }
+      ],
+      "phone": "07700 900123",
+      "portfolioFileNames": [
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-4.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-5.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-6.jpg"
+      ],
+      "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg",
+      "servicesOffered": [],
+      "travelDeliveryPolicy": "included",
+      "travelRadius": "25"
+    },
+    "previous": 8,
+    "result": "Select at least one service before submit.",
+    "services_after": [],
+    "status": "submitted"
+  },
+  {
+    "current": 8,
+    "name": "submit unknown services",
+    "payload": {
+      "availableWeekdays": [
+        "sat",
+        "sun"
+      ],
+      "baseCity": " London ",
+      "businessName": "  Ada's   Cakes ",
+      "countryCode": "gb",
+      "dailyRate": "",
+      "deliveryModes": [
+        "travel"
+      ],
+      "firstName": "Ada",
+      "hourlyRate": "",
+      "lastName": "Lovelace",
+      "maxBookingsPerDay": "2",
+      "offerDiscounts": false,
+      "packages": [
+        {
+          "details": "Three tier sponge with buttercream, delivered and set up at your venue on the day.",
+          "price": "450",
+          "pricingMode": "fixed",
+          "title": "Wedding cake"
+        },
+        {
+          "details": "A hot and cold buffet for your guests, with vegetarian and vegan options included.",
+          "maxQuantity": "200",
+          "minQuantity": "20",
+          "price": "25",
+          "pricingMode": "per_unit",
+          "title": "Catering buffet",
+          "unitLabel": "guest"
+        }
+      ],
+      "phone": "07700 900123",
+      "portfolioFileNames": [
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-4.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-5.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-6.jpg"
+      ],
+      "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg",
+      "servicesOffered": [
+        "juggling"
+      ],
+      "travelDeliveryPolicy": "included",
+      "travelRadius": "25"
+    },
+    "previous": 8,
+    "result": "Select a valid service category before submit.",
+    "services_after": [
+      "juggling"
+    ],
+    "status": "submitted"
+  },
+  {
+    "current": 8,
+    "name": "submit no country",
+    "payload": {
+      "availableWeekdays": [
+        "sat",
+        "sun"
+      ],
+      "baseCity": " London ",
+      "businessName": "  Ada's   Cakes ",
+      "dailyRate": "",
+      "deliveryModes": [
+        "travel"
+      ],
+      "firstName": "Ada",
+      "hourlyRate": "",
+      "lastName": "Lovelace",
+      "maxBookingsPerDay": "2",
+      "offerDiscounts": false,
+      "packages": [
+        {
+          "details": "Three tier sponge with buttercream, delivered and set up at your venue on the day.",
+          "price": "450",
+          "pricingMode": "fixed",
+          "title": "Wedding cake"
+        },
+        {
+          "details": "A hot and cold buffet for your guests, with vegetarian and vegan options included.",
+          "maxQuantity": "200",
+          "minQuantity": "20",
+          "price": "25",
+          "pricingMode": "per_unit",
+          "title": "Catering buffet",
+          "unitLabel": "guest"
+        }
+      ],
+      "phone": "07700 900123",
+      "portfolioFileNames": [
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-4.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-5.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-6.jpg"
+      ],
+      "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg",
+      "servicesOffered": [
+        "baking",
+        "Catering",
+        "unknown"
+      ],
+      "travelDeliveryPolicy": "included",
+      "travelRadius": "25"
+    },
+    "previous": 8,
+    "result": "ok",
+    "services_after": [
+      "baking",
+      "Catering",
+      "unknown"
+    ],
+    "status": "submitted"
+  },
+  {
+    "current": 8,
+    "name": "submit no profile photo",
+    "payload": {
+      "availableWeekdays": [
+        "sat",
+        "sun"
+      ],
+      "baseCity": " London ",
+      "businessName": "  Ada's   Cakes ",
+      "countryCode": "gb",
+      "dailyRate": "",
+      "deliveryModes": [
+        "travel"
+      ],
+      "firstName": "Ada",
+      "hourlyRate": "",
+      "lastName": "Lovelace",
+      "maxBookingsPerDay": "2",
+      "offerDiscounts": false,
+      "packages": [
+        {
+          "details": "Three tier sponge with buttercream, delivered and set up at your venue on the day.",
+          "price": "450",
+          "pricingMode": "fixed",
+          "title": "Wedding cake"
+        },
+        {
+          "details": "A hot and cold buffet for your guests, with vegetarian and vegan options included.",
+          "maxQuantity": "200",
+          "minQuantity": "20",
+          "price": "25",
+          "pricingMode": "per_unit",
+          "title": "Catering buffet",
+          "unitLabel": "guest"
+        }
+      ],
+      "phone": "07700 900123",
+      "portfolioFileNames": [
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-4.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-5.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-6.jpg"
+      ],
+      "servicesOffered": [
+        "baking",
+        "Catering",
+        "unknown"
+      ],
+      "travelDeliveryPolicy": "included",
+      "travelRadius": "25"
+    },
+    "previous": 8,
+    "result": "Add a profile photo before submitting.",
+    "services_after": [
+      "baking",
+      "catering"
+    ],
+    "status": "submitted"
+  }
+]

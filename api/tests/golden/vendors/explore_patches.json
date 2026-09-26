@@ -1,0 +1,125 @@
+[
+  {
+    "patch": {
+      "base_city_normalized": null,
+      "country_code": "GB",
+      "currency": "GBP",
+      "min_list_price_gbp": null,
+      "services_offered": null
+    },
+    "payload": {}
+  },
+  {
+    "patch": {
+      "base_city_normalized": "london",
+      "country_code": "GB",
+      "currency": "GBP",
+      "min_list_price_gbp": 25.0,
+      "services_offered": [
+        "baking",
+        "catering"
+      ]
+    },
+    "payload": {
+      "availableWeekdays": [
+        "sat",
+        "sun"
+      ],
+      "baseCity": " London ",
+      "businessName": "  Ada's   Cakes ",
+      "countryCode": "gb",
+      "dailyRate": "",
+      "deliveryModes": [
+        "travel"
+      ],
+      "firstName": "Ada",
+      "hourlyRate": "",
+      "lastName": "Lovelace",
+      "maxBookingsPerDay": "2",
+      "offerDiscounts": false,
+      "packages": [
+        {
+          "details": "Three tier sponge with buttercream, delivered and set up at your venue on the day.",
+          "price": "450",
+          "pricingMode": "fixed",
+          "title": "Wedding cake"
+        },
+        {
+          "details": "A hot and cold buffet for your guests, with vegetarian and vegan options included.",
+          "maxQuantity": "200",
+          "minQuantity": "20",
+          "price": "25",
+          "pricingMode": "per_unit",
+          "title": "Catering buffet",
+          "unitLabel": "guest"
+        }
+      ],
+      "phone": "07700 900123",
+      "portfolioFileNames": [
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-1.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-2.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-3.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-4.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-5.jpg",
+        "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/portfolio-6.jpg"
+      ],
+      "profileImageUrl": "https://eventtz.s3.eu-west-2.amazonaws.com/users/vendor-0001/profile.jpg",
+      "servicesOffered": [
+        "baking",
+        "Catering",
+        "unknown"
+      ],
+      "travelDeliveryPolicy": "included",
+      "travelRadius": "25"
+    }
+  },
+  {
+    "patch": {
+      "base_city_normalized": null,
+      "country_code": "GB",
+      "currency": "GBP",
+      "min_list_price_gbp": null,
+      "services_offered": null
+    },
+    "payload": {
+      "baseCity": "   ",
+      "country_code": "gb",
+      "servicesOffered": "baking"
+    }
+  },
+  {
+    "patch": {
+      "base_city_normalized": null,
+      "country_code": "GB",
+      "currency": "GBP",
+      "min_list_price_gbp": 80.0,
+      "services_offered": [
+        "dj",
+        "mc"
+      ]
+    },
+    "payload": {
+      "countryCode": "FR",
+      "hourlyRate": "80",
+      "servicesOffered": [
+        "DJ",
+        " ",
+        "mc",
+        "dj"
+      ]
+    }
+  },
+  {
+    "patch": {
+      "base_city_normalized": null,
+      "country_code": "GB",
+      "currency": "GBP",
+      "min_list_price_gbp": null,
+      "services_offered": null
+    },
+    "payload": {
+      "baseCity": 12,
+      "dailyRate": "1234.567"
+    }
+  }
+]

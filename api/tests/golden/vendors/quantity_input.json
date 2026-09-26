@@ -1,0 +1,107 @@
+[
+  {
+    "invalid": false,
+    "raw": "None",
+    "value": null
+  },
+  {
+    "invalid": false,
+    "raw": "''",
+    "value": null
+  },
+  {
+    "invalid": false,
+    "raw": "'   '",
+    "value": null
+  },
+  {
+    "invalid": false,
+    "raw": "'5'",
+    "value": 5
+  },
+  {
+    "invalid": true,
+    "raw": "'0'",
+    "value": null
+  },
+  {
+    "invalid": true,
+    "raw": "'-1'",
+    "value": null
+  },
+  {
+    "invalid": false,
+    "raw": "'100000'",
+    "value": 100000
+  },
+  {
+    "invalid": true,
+    "raw": "'100001'",
+    "value": null
+  },
+  {
+    "invalid": false,
+    "raw": "5",
+    "value": 5
+  },
+  {
+    "invalid": false,
+    "raw": "5.0",
+    "value": 5
+  },
+  {
+    "invalid": true,
+    "raw": "5.5",
+    "value": null
+  },
+  {
+    "invalid": true,
+    "raw": "0",
+    "value": null
+  },
+  {
+    "invalid": true,
+    "raw": "-1",
+    "value": null
+  },
+  {
+    "invalid": true,
+    "raw": "True",
+    "value": null
+  },
+  {
+    "invalid": true,
+    "raw": "False",
+    "value": null
+  },
+  {
+    "invalid": false,
+    "raw": "100000",
+    "value": 100000
+  },
+  {
+    "invalid": true,
+    "raw": "100001",
+    "value": null
+  },
+  {
+    "invalid": false,
+    "raw": "'05'",
+    "value": 5
+  },
+  {
+    "invalid": true,
+    "raw": "'5.0'",
+    "value": null
+  },
+  {
+    "invalid": true,
+    "raw": "'abc'",
+    "value": null
+  },
+  {
+    "invalid": true,
+    "raw": "'５'",
+    "value": null
+  }
+]

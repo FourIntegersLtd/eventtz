@@ -1,0 +1,54 @@
+[
+  {
+    "phone": "",
+    "valid": false
+  },
+  {
+    "phone": "   ",
+    "valid": false
+  },
+  {
+    "phone": "07700 900123",
+    "valid": true
+  },
+  {
+    "phone": "0770090012",
+    "valid": true
+  },
+  {
+    "phone": "077009001234",
+    "valid": false
+  },
+  {
+    "phone": "+44 7700 900123",
+    "valid": true
+  },
+  {
+    "phone": "+1 555 0100",
+    "valid": false
+  },
+  {
+    "phone": "+123456789012345",
+    "valid": true
+  },
+  {
+    "phone": "+1234567890123456",
+    "valid": false
+  },
+  {
+    "phone": "1234567890",
+    "valid": true
+  },
+  {
+    "phone": "(020) 7946 0958",
+    "valid": true
+  },
+  {
+    "phone": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "valid": false
+  },
+  {
+    "phone": "phone",
+    "valid": false
+  }
+]

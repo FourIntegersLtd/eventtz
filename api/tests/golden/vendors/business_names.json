@@ -1,0 +1,32 @@
+[
+  {
+    "from_payload": "ada's cakes",
+    "name": "  Ada's   Cakes ",
+    "normalized": "ada's cakes"
+  },
+  {
+    "from_payload": "ada's cakes",
+    "name": "ADA'S\tCAKES",
+    "normalized": "ada's cakes"
+  },
+  {
+    "from_payload": null,
+    "name": "",
+    "normalized": ""
+  },
+  {
+    "from_payload": null,
+    "name": "   ",
+    "normalized": ""
+  },
+  {
+    "from_payload": "café déjà",
+    "name": "Café  Déjà",
+    "normalized": "café déjà"
+  },
+  {
+    "from_payload": "a b",
+    "name": "a\n\nb",
+    "normalized": "a b"
+  }
+]

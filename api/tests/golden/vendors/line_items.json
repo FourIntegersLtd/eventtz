@@ -1,0 +1,380 @@
+[
+  {
+    "error": null,
+    "name": "single fixed package success",
+    "payload": {
+      "packages": [
+        {
+          "details": "A full day of coverage with two photographers and an online gallery.",
+          "duration": "8 hours",
+          "id": "pkg-1",
+          "maxQuantity": null,
+          "minQuantity": null,
+          "price": "500",
+          "pricingMode": "fixed",
+          "title": "Classic package",
+          "unitLabel": ""
+        }
+      ]
+    },
+    "quantities": null,
+    "result": [
+      {
+        "description": "A full day of coverage with two photographers and an online gallery.",
+        "feature_lines": [],
+        "heading": "Classic package",
+        "id": "pkg-1",
+        "timeline_line": "8 hours",
+        "unit_price_gbp": 500.0
+      }
+    ],
+    "selected_option_ids": [
+      "pkg-1"
+    ]
+  },
+  {
+    "error": null,
+    "name": "two fixed packages success",
+    "payload": {
+      "packages": [
+        {
+          "details": "A full day of coverage with two photographers and an online gallery.",
+          "duration": "8 hours",
+          "id": "pkg-a",
+          "maxQuantity": null,
+          "minQuantity": null,
+          "price": "500",
+          "pricingMode": "fixed",
+          "title": "Classic package",
+          "unitLabel": ""
+        },
+        {
+          "details": "A full day of coverage with two photographers and an online gallery.",
+          "duration": "8 hours",
+          "id": "pkg-b",
+          "maxQuantity": null,
+          "minQuantity": null,
+          "price": "750",
+          "pricingMode": "fixed",
+          "title": "Classic package",
+          "unitLabel": ""
+        }
+      ]
+    },
+    "quantities": null,
+    "result": [
+      {
+        "description": "A full day of coverage with two photographers and an online gallery.",
+        "feature_lines": [],
+        "heading": "Classic package",
+        "id": "pkg-a",
+        "timeline_line": "8 hours",
+        "unit_price_gbp": 500.0
+      },
+      {
+        "description": "A full day of coverage with two photographers and an online gallery.",
+        "feature_lines": [],
+        "heading": "Classic package",
+        "id": "pkg-b",
+        "timeline_line": "8 hours",
+        "unit_price_gbp": 750.0
+      }
+    ],
+    "selected_option_ids": [
+      "pkg-a",
+      "pkg-b"
+    ]
+  },
+  {
+    "error": null,
+    "name": "per-unit package success with quantity",
+    "payload": {
+      "packages": [
+        {
+          "details": "A full day of coverage with two photographers and an online gallery.",
+          "duration": "8 hours",
+          "id": "pkg-per-unit",
+          "maxQuantity": "200",
+          "minQuantity": "10",
+          "price": "12.50",
+          "pricingMode": "per_unit",
+          "title": "Classic package",
+          "unitLabel": "guest"
+        }
+      ]
+    },
+    "quantities": {
+      "pkg-per-unit": 20
+    },
+    "result": [
+      {
+        "description": "A full day of coverage with two photographers and an online gallery.",
+        "feature_lines": [],
+        "heading": "Classic package",
+        "id": "pkg-per-unit",
+        "quantity": 20,
+        "timeline_line": "8 hours",
+        "unit_label": "guest",
+        "unit_price_gbp": 250.0,
+        "unit_rate_gbp": 12.5
+      }
+    ],
+    "selected_option_ids": [
+      "pkg-per-unit"
+    ]
+  },
+  {
+    "error": {
+      "error": "ValueError",
+      "message": "Select at least one package or rate."
+    },
+    "name": "empty selection",
+    "payload": {
+      "packages": [
+        {
+          "details": "A full day of coverage with two photographers and an online gallery.",
+          "duration": "8 hours",
+          "id": "pkg-1",
+          "maxQuantity": null,
+          "minQuantity": null,
+          "price": "500",
+          "pricingMode": "fixed",
+          "title": "Classic package",
+          "unitLabel": ""
+        }
+      ]
+    },
+    "quantities": null,
+    "result": null,
+    "selected_option_ids": []
+  },
+  {
+    "error": {
+      "error": "ValueError",
+      "message": "Select at least one package or rate."
+    },
+    "name": "selection is only blank strings",
+    "payload": {
+      "packages": [
+        {
+          "details": "A full day of coverage with two photographers and an online gallery.",
+          "duration": "8 hours",
+          "id": "pkg-1",
+          "maxQuantity": null,
+          "minQuantity": null,
+          "price": "500",
+          "pricingMode": "fixed",
+          "title": "Classic package",
+          "unitLabel": ""
+        }
+      ]
+    },
+    "quantities": null,
+    "result": null,
+    "selected_option_ids": [
+      "  ",
+      ""
+    ]
+  },
+  {
+    "error": {
+      "error": "ValueError",
+      "message": "Duplicate package or rate selected."
+    },
+    "name": "duplicate selection",
+    "payload": {
+      "packages": [
+        {
+          "details": "A full day of coverage with two photographers and an online gallery.",
+          "duration": "8 hours",
+          "id": "pkg-1",
+          "maxQuantity": null,
+          "minQuantity": null,
+          "price": "500",
+          "pricingMode": "fixed",
+          "title": "Classic package",
+          "unitLabel": ""
+        }
+      ]
+    },
+    "quantities": null,
+    "result": null,
+    "selected_option_ids": [
+      "pkg-1",
+      "pkg-1"
+    ]
+  },
+  {
+    "error": {
+      "error": "ValueError",
+      "message": "One or more selected packages or rates are no longer available."
+    },
+    "name": "selected id no longer available",
+    "payload": {
+      "packages": [
+        {
+          "details": "A full day of coverage with two photographers and an online gallery.",
+          "duration": "8 hours",
+          "id": "pkg-1",
+          "maxQuantity": null,
+          "minQuantity": null,
+          "price": "500",
+          "pricingMode": "fixed",
+          "title": "Classic package",
+          "unitLabel": ""
+        }
+      ]
+    },
+    "quantities": null,
+    "result": null,
+    "selected_option_ids": [
+      "missing-package"
+    ]
+  },
+  {
+    "error": {
+      "error": "ValueError",
+      "message": "Choose how many you need for each priced-per-item package."
+    },
+    "name": "per-unit missing quantity",
+    "payload": {
+      "packages": [
+        {
+          "details": "A full day of coverage with two photographers and an online gallery.",
+          "duration": "8 hours",
+          "id": "pkg-per-unit",
+          "maxQuantity": null,
+          "minQuantity": null,
+          "price": "12.50",
+          "pricingMode": "per_unit",
+          "title": "Classic package",
+          "unitLabel": "guest"
+        }
+      ]
+    },
+    "quantities": null,
+    "result": null,
+    "selected_option_ids": [
+      "pkg-per-unit"
+    ]
+  },
+  {
+    "error": {
+      "error": "ValueError",
+      "message": "Choose between 10 and 200 for Classic package."
+    },
+    "name": "per-unit quantity below minimum",
+    "payload": {
+      "packages": [
+        {
+          "details": "A full day of coverage with two photographers and an online gallery.",
+          "duration": "8 hours",
+          "id": "pkg-per-unit",
+          "maxQuantity": "200",
+          "minQuantity": "10",
+          "price": "12.50",
+          "pricingMode": "per_unit",
+          "title": "Classic package",
+          "unitLabel": "guest"
+        }
+      ]
+    },
+    "quantities": {
+      "pkg-per-unit": 5
+    },
+    "result": null,
+    "selected_option_ids": [
+      "pkg-per-unit"
+    ]
+  },
+  {
+    "error": {
+      "error": "ValueError",
+      "message": "Choose between 10 and 200 for Classic package."
+    },
+    "name": "per-unit quantity above maximum",
+    "payload": {
+      "packages": [
+        {
+          "details": "A full day of coverage with two photographers and an online gallery.",
+          "duration": "8 hours",
+          "id": "pkg-per-unit",
+          "maxQuantity": "200",
+          "minQuantity": "10",
+          "price": "12.50",
+          "pricingMode": "per_unit",
+          "title": "Classic package",
+          "unitLabel": "guest"
+        }
+      ]
+    },
+    "quantities": {
+      "pkg-per-unit": 500
+    },
+    "result": null,
+    "selected_option_ids": [
+      "pkg-per-unit"
+    ]
+  },
+  {
+    "error": {
+      "error": "ValueError",
+      "message": "That quantity takes this package over the maximum price."
+    },
+    "name": "line total too high",
+    "payload": {
+      "packages": [
+        {
+          "details": "A full day of coverage with two photographers and an online gallery.",
+          "duration": "8 hours",
+          "id": "pkg-per-unit",
+          "maxQuantity": "100000",
+          "minQuantity": "1",
+          "price": "999999",
+          "pricingMode": "per_unit",
+          "title": "Classic package",
+          "unitLabel": "guest"
+        }
+      ]
+    },
+    "quantities": {
+      "pkg-per-unit": 100000
+    },
+    "result": null,
+    "selected_option_ids": [
+      "pkg-per-unit"
+    ]
+  },
+  {
+    "error": null,
+    "name": "quote only selected correctly",
+    "payload": {},
+    "quantities": null,
+    "result": [
+      {
+        "description": "This vendor has not published package prices or fixed hourly/daily rates yet. Send an enquiry to discuss your event.",
+        "feature_lines": [],
+        "heading": "Request a quote",
+        "id": "quote",
+        "timeline_line": null,
+        "unit_price_gbp": null
+      }
+    ],
+    "selected_option_ids": [
+      "quote"
+    ]
+  },
+  {
+    "error": {
+      "error": "ValueError",
+      "message": "One or more selected packages or rates are no longer available."
+    },
+    "name": "quote only selected id does not exist",
+    "payload": {},
+    "quantities": null,
+    "result": null,
+    "selected_option_ids": [
+      "not-a-real-id"
+    ]
+  }
+]
