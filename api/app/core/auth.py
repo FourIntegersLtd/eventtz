@@ -213,6 +213,55 @@ def decode_access_token(token: str, *, settings: Settings) -> AccessClaims | Non
     )
 
 
+# --- stream tickets (ADR 0005) ---------------------------------------------------------------------
+
+STREAM_TICKET_TYPE = "stream"  # noqa: S105 — the token's type claim, not a secret
+
+
+@dataclass(frozen=True)
+class StreamClaims:
+    """What a verified stream ticket says: whose topics the SSE route may subscribe to."""
+
+    user_id: str
+    expires_at: int
+
+
+def issue_stream_ticket(*, user_id: str, settings: Settings, now: datetime | None = None) -> str:
+    """Sign a short-lived ticket naming `user_id`, good for `settings.stream_ticket_ttl_seconds`.
+
+    `EventSource` cannot send an `Authorization` header, so the stream reads
+    this from a query parameter instead of a Bearer token. Its own `typ` and
+    short lifetime keep it from working as a substitute access token if it
+    leaks into browser history or a proxy access log.
+    """
+    issued_at = now or datetime.now(UTC)
+    claims: dict[str, Any] = {
+        "iss": settings.jwt_issuer,
+        "sub": user_id,
+        "typ": STREAM_TICKET_TYPE,
+        "iat": int(issued_at.timestamp()),
+        "exp": int((issued_at + timedelta(seconds=settings.stream_ticket_ttl_seconds)).timestamp()),
+    }
+    return jwt.encode(claims, settings.jwt_secret, algorithm="HS256")
+
+
+def decode_stream_ticket(token: str, *, settings: Settings) -> StreamClaims | None:
+    """Verify the signature, issuer, expiry and `typ`; `None` when any check fails."""
+    try:
+        claims = jwt.decode(
+            token,
+            settings.jwt_secret,
+            algorithms=["HS256"],
+            issuer=settings.jwt_issuer,
+            options={"require": ["exp", "iat", "sub"]},
+        )
+    except jwt.PyJWTError:
+        return None
+    if claims.get("typ") != STREAM_TICKET_TYPE or not isinstance(claims.get("sub"), str):
+        return None
+    return StreamClaims(user_id=claims["sub"], expires_at=int(claims["exp"]))
+
+
 # --- the account-lookup seam ----------------------------------------------------------------------
 
 AccountLookup = Callable[[AsyncSession, str], Awaitable[AccountRecord | None]]
