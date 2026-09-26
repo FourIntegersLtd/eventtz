@@ -20,6 +20,7 @@ from app.features.vendors.domain_price_list import (
     compute_automatic_discount_lines,
     min_listing_price_gbp,
     parse_money_gbp,
+    reconcile_automatic_discount_lines,
     resolve_line_items,
 )
 
@@ -33,6 +34,7 @@ __all__ = [
     "compute_automatic_discount_lines",
     "min_listing_price_gbp",
     "parse_money_gbp",
+    "reconcile_automatic_discount_lines",
     "resolve_line_items",
     "normalize_country_code",
 ]
