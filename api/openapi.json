@@ -1025,6 +1025,249 @@
         "title": "AdminConversationMessagesResponse",
         "type": "object"
       },
+      "AdminDashboardMetrics": {
+        "description": "The admin dashboard's charts over a rolling window of days.",
+        "properties": {
+          "bookings_created": {
+            "items": {
+              "$ref": "#/components/schemas/AdminDashboardTimeBucket"
+            },
+            "title": "Bookings Created",
+            "type": "array"
+          },
+          "bookings_paid": {
+            "items": {
+              "$ref": "#/components/schemas/AdminDashboardTimeBucket"
+            },
+            "title": "Bookings Paid",
+            "type": "array"
+          },
+          "open_disputes_count": {
+            "default": 0,
+            "title": "Open Disputes Count",
+            "type": "integer"
+          },
+          "period_days": {
+            "title": "Period Days",
+            "type": "integer"
+          },
+          "signups": {
+            "items": {
+              "$ref": "#/components/schemas/AdminDashboardSignupBucket"
+            },
+            "title": "Signups",
+            "type": "array"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "period_days"
+        ],
+        "title": "AdminDashboardMetrics",
+        "type": "object"
+      },
+      "AdminDashboardSignupBucket": {
+        "description": "One day's new client and vendor accounts.",
+        "properties": {
+          "clients": {
+            "default": 0,
+            "title": "Clients",
+            "type": "integer"
+          },
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "vendors": {
+            "default": 0,
+            "title": "Vendors",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "date"
+        ],
+        "title": "AdminDashboardSignupBucket",
+        "type": "object"
+      },
+      "AdminDashboardSummary": {
+        "description": "Headline counts across users, vendors, bookings, conversations and reviews.",
+        "properties": {
+          "bookings_accepted": {
+            "title": "Bookings Accepted",
+            "type": "integer"
+          },
+          "bookings_cancelled": {
+            "title": "Bookings Cancelled",
+            "type": "integer"
+          },
+          "bookings_completed": {
+            "title": "Bookings Completed",
+            "type": "integer"
+          },
+          "bookings_declined": {
+            "title": "Bookings Declined",
+            "type": "integer"
+          },
+          "bookings_needing_support": {
+            "title": "Bookings Needing Support",
+            "type": "integer"
+          },
+          "bookings_paid_count": {
+            "title": "Bookings Paid Count",
+            "type": "integer"
+          },
+          "bookings_pending": {
+            "title": "Bookings Pending",
+            "type": "integer"
+          },
+          "conversations_count": {
+            "title": "Conversations Count",
+            "type": "integer"
+          },
+          "reviews_count": {
+            "title": "Reviews Count",
+            "type": "integer"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "users_admin": {
+            "title": "Users Admin",
+            "type": "integer"
+          },
+          "users_client": {
+            "title": "Users Client",
+            "type": "integer"
+          },
+          "users_vendor": {
+            "title": "Users Vendor",
+            "type": "integer"
+          },
+          "vendors_approved": {
+            "title": "Vendors Approved",
+            "type": "integer"
+          },
+          "vendors_banned": {
+            "title": "Vendors Banned",
+            "type": "integer"
+          },
+          "vendors_pending": {
+            "title": "Vendors Pending",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "users_client",
+          "users_vendor",
+          "users_admin",
+          "vendors_pending",
+          "vendors_approved",
+          "vendors_banned",
+          "bookings_pending",
+          "bookings_accepted",
+          "bookings_completed",
+          "bookings_declined",
+          "bookings_cancelled",
+          "bookings_paid_count",
+          "bookings_needing_support",
+          "conversations_count",
+          "reviews_count"
+        ],
+        "title": "AdminDashboardSummary",
+        "type": "object"
+      },
+      "AdminDashboardTimeBucket": {
+        "description": "One day's count and takings, for the bookings-created and bookings-paid charts.",
+        "properties": {
+          "count": {
+            "default": 0,
+            "title": "Count",
+            "type": "integer"
+          },
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "gmv_gbp": {
+            "default": 0.0,
+            "title": "Gmv Gbp",
+            "type": "number"
+          }
+        },
+        "required": [
+          "date"
+        ],
+        "title": "AdminDashboardTimeBucket",
+        "type": "object"
+      },
+      "AdminDirectorySearchResponse": {
+        "description": "Every account matching a directory search, capped at `limit`.",
+        "properties": {
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "users": {
+            "items": {
+              "$ref": "#/components/schemas/AdminDirectoryUserRow"
+            },
+            "title": "Users",
+            "type": "array"
+          }
+        },
+        "required": [
+          "users"
+        ],
+        "title": "AdminDirectorySearchResponse",
+        "type": "object"
+      },
+      "AdminDirectoryUserRow": {
+        "description": "One matched account: a client or vendor, with the label the console should show.",
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "kind": {
+            "enum": [
+              "client",
+              "vendor"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "label",
+          "kind"
+        ],
+        "title": "AdminDirectoryUserRow",
+        "type": "object"
+      },
       "AdminDisputeCase": {
         "description": "A dispute as staff see it: every internal field, plus who everyone involved is.",
         "properties": {
@@ -1676,6 +1919,88 @@
           }
         },
         "title": "AdminFinancialsSummary",
+        "type": "object"
+      },
+      "AdminMarketplaceAnalyticsResponse": {
+        "description": "The marketplace funnel: enquiries through acceptance, payment and completion.",
+        "properties": {
+          "by_category": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "By Category",
+            "type": "array"
+          },
+          "by_location": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "By Location",
+            "type": "array"
+          },
+          "completed_by_month": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Completed By Month",
+            "type": "array"
+          },
+          "enquiries_by_month": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Enquiries By Month",
+            "type": "array"
+          },
+          "failure_reasons": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Failure Reasons",
+            "type": "array"
+          },
+          "from_date": {
+            "title": "From Date",
+            "type": "string"
+          },
+          "overview": {
+            "additionalProperties": true,
+            "title": "Overview",
+            "type": "object"
+          },
+          "recruitment_hints": {
+            "additionalProperties": true,
+            "title": "Recruitment Hints",
+            "type": "object"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "to_date": {
+            "title": "To Date",
+            "type": "string"
+          },
+          "top_vendors": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Top Vendors",
+            "type": "array"
+          }
+        },
+        "required": [
+          "from_date",
+          "to_date"
+        ],
+        "title": "AdminMarketplaceAnalyticsResponse",
         "type": "object"
       },
       "AdminMessageSendBody": {
@@ -2577,6 +2902,71 @@
           "approval_status"
         ],
         "title": "AdminVendorApprovalResponse",
+        "type": "object"
+      },
+      "AdminVendorInsightsResponse": {
+        "description": "One vendor's booking history and review standing, for the admin console's vendor page.",
+        "properties": {
+          "bookings_by_month": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Bookings By Month",
+            "type": "array"
+          },
+          "bookings_by_status": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Bookings By Status",
+            "type": "object"
+          },
+          "bookings_total": {
+            "default": 0,
+            "title": "Bookings Total",
+            "type": "integer"
+          },
+          "explore_path": {
+            "default": "",
+            "title": "Explore Path",
+            "type": "string"
+          },
+          "open_disputes_on_bookings": {
+            "default": 0,
+            "title": "Open Disputes On Bookings",
+            "type": "integer"
+          },
+          "review_average": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Average"
+          },
+          "review_count": {
+            "default": 0,
+            "title": "Review Count",
+            "type": "integer"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "AdminVendorInsightsResponse",
         "type": "object"
       },
       "AdminVendorListingMediaBody": {
@@ -12538,6 +12928,236 @@
         ]
       }
     },
+    "/api/v1/admin/dashboard-metrics": {
+      "get": {
+        "description": "Bookings-created, bookings-paid and signup charts over a rolling window of days.",
+        "operationId": "get_dashboard_metrics_api_v1_admin_dashboard_metrics_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "maximum": 90,
+              "minimum": 7,
+              "title": "Days",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminDashboardMetrics"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Dashboard Metrics",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/dashboard-summary": {
+      "get": {
+        "description": "Headline counts across users, vendors, bookings, conversations and reviews.",
+        "operationId": "get_dashboard_summary_api_v1_admin_dashboard_summary_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminDashboardSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Dashboard Summary",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/directory/search": {
+      "get": {
+        "description": "Accounts matching `q`: a client's email, or a vendor's email or business name.",
+        "operationId": "search_directory_api_v1_admin_directory_search_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma-separated: client, vendor, or both.",
+            "in": "query",
+            "name": "kinds",
+            "required": false,
+            "schema": {
+              "default": "client,vendor",
+              "description": "Comma-separated: client, vendor, or both.",
+              "title": "Kinds",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminDirectorySearchResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Search Directory",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/v1/admin/disputes": {
       "get": {
         "description": "Every dispute in the requested status bucket (\"open\" also surfaces under_review).",
@@ -13083,6 +13703,116 @@
           }
         ],
         "summary": "Financials Summary",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/marketplace-analytics": {
+      "get": {
+        "description": "The marketplace funnel over client-initiated enquiries in a date range (default: last 30 days).",
+        "operationId": "get_marketplace_analytics_api_v1_admin_marketplace_analytics_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from_date",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From Date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to_date",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminMarketplaceAnalyticsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_date_filter",
+            "x-codes": [
+              "invalid_date_filter"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Marketplace Analytics",
         "tags": [
           "admin"
         ]
@@ -15338,6 +16068,80 @@
           }
         ],
         "summary": "Set Approval",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/vendors/{user_id}/insights": {
+      "get": {
+        "description": "One vendor's booking history and review standing. Never 404s: an unknown id reads as all-zero.",
+        "operationId": "get_vendor_insights_api_v1_admin_vendors__user_id__insights_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminVendorInsightsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Vendor Insights",
         "tags": [
           "admin"
         ]

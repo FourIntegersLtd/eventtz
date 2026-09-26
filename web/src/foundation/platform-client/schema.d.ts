@@ -316,6 +316,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/dashboard-metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Dashboard Metrics
+         * @description Bookings-created, bookings-paid and signup charts over a rolling window of days.
+         */
+        get: operations["get_dashboard_metrics_api_v1_admin_dashboard_metrics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/dashboard-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Dashboard Summary
+         * @description Headline counts across users, vendors, bookings, conversations and reviews.
+         */
+        get: operations["get_dashboard_summary_api_v1_admin_dashboard_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/directory/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search Directory
+         * @description Accounts matching `q`: a client's email, or a vendor's email or business name.
+         */
+        get: operations["search_directory_api_v1_admin_directory_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/disputes": {
         parameters: {
             query?: never;
@@ -432,6 +492,26 @@ export interface paths {
          * @description Totals for the admin financials screen, over an optional `paid_at` date range.
          */
         get: operations["financials_summary_api_v1_admin_financials_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/marketplace-analytics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Marketplace Analytics
+         * @description The marketplace funnel over client-initiated enquiries in a date range (default: last 30 days).
+         */
+        get: operations["get_marketplace_analytics_api_v1_admin_marketplace_analytics_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -870,6 +950,26 @@ export interface paths {
          * @description Approve, ban or re-queue a vendor.
          */
         patch: operations["set_approval_api_v1_admin_vendors__user_id__approval_patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/vendors/{user_id}/insights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Vendor Insights
+         * @description One vendor's booking history and review standing. Never 404s: an unknown id reads as all-zero.
+         */
+        get: operations["get_vendor_insights_api_v1_admin_vendors__user_id__insights_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/admin/vendors/{user_id}/listing-media": {
@@ -3232,6 +3332,137 @@ export interface components {
             vendor_user_id?: string | null;
         };
         /**
+         * AdminDashboardMetrics
+         * @description The admin dashboard's charts over a rolling window of days.
+         */
+        AdminDashboardMetrics: {
+            /** Bookings Created */
+            bookings_created?: components["schemas"]["AdminDashboardTimeBucket"][];
+            /** Bookings Paid */
+            bookings_paid?: components["schemas"]["AdminDashboardTimeBucket"][];
+            /**
+             * Open Disputes Count
+             * @default 0
+             */
+            open_disputes_count: number;
+            /** Period Days */
+            period_days: number;
+            /** Signups */
+            signups?: components["schemas"]["AdminDashboardSignupBucket"][];
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+        };
+        /**
+         * AdminDashboardSignupBucket
+         * @description One day's new client and vendor accounts.
+         */
+        AdminDashboardSignupBucket: {
+            /**
+             * Clients
+             * @default 0
+             */
+            clients: number;
+            /** Date */
+            date: string;
+            /**
+             * Vendors
+             * @default 0
+             */
+            vendors: number;
+        };
+        /**
+         * AdminDashboardSummary
+         * @description Headline counts across users, vendors, bookings, conversations and reviews.
+         */
+        AdminDashboardSummary: {
+            /** Bookings Accepted */
+            bookings_accepted: number;
+            /** Bookings Cancelled */
+            bookings_cancelled: number;
+            /** Bookings Completed */
+            bookings_completed: number;
+            /** Bookings Declined */
+            bookings_declined: number;
+            /** Bookings Needing Support */
+            bookings_needing_support: number;
+            /** Bookings Paid Count */
+            bookings_paid_count: number;
+            /** Bookings Pending */
+            bookings_pending: number;
+            /** Conversations Count */
+            conversations_count: number;
+            /** Reviews Count */
+            reviews_count: number;
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /** Users Admin */
+            users_admin: number;
+            /** Users Client */
+            users_client: number;
+            /** Users Vendor */
+            users_vendor: number;
+            /** Vendors Approved */
+            vendors_approved: number;
+            /** Vendors Banned */
+            vendors_banned: number;
+            /** Vendors Pending */
+            vendors_pending: number;
+        };
+        /**
+         * AdminDashboardTimeBucket
+         * @description One day's count and takings, for the bookings-created and bookings-paid charts.
+         */
+        AdminDashboardTimeBucket: {
+            /**
+             * Count
+             * @default 0
+             */
+            count: number;
+            /** Date */
+            date: string;
+            /**
+             * Gmv Gbp
+             * @default 0
+             */
+            gmv_gbp: number;
+        };
+        /**
+         * AdminDirectorySearchResponse
+         * @description Every account matching a directory search, capped at `limit`.
+         */
+        AdminDirectorySearchResponse: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /** Users */
+            users: components["schemas"]["AdminDirectoryUserRow"][];
+        };
+        /**
+         * AdminDirectoryUserRow
+         * @description One matched account: a client or vendor, with the label the console should show.
+         */
+        AdminDirectoryUserRow: {
+            /** Email */
+            email?: string | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "client" | "vendor";
+            /** Label */
+            label: string;
+            /** User Id */
+            user_id: string;
+        };
+        /**
          * AdminDisputeCase
          * @description A dispute as staff see it: every internal field, plus who everyone involved is.
          */
@@ -3459,6 +3690,53 @@ export interface components {
              * @default 0
              */
             vendor_portion_gbp: number;
+        };
+        /**
+         * AdminMarketplaceAnalyticsResponse
+         * @description The marketplace funnel: enquiries through acceptance, payment and completion.
+         */
+        AdminMarketplaceAnalyticsResponse: {
+            /** By Category */
+            by_category?: {
+                [key: string]: unknown;
+            }[];
+            /** By Location */
+            by_location?: {
+                [key: string]: unknown;
+            }[];
+            /** Completed By Month */
+            completed_by_month?: {
+                [key: string]: unknown;
+            }[];
+            /** Enquiries By Month */
+            enquiries_by_month?: {
+                [key: string]: unknown;
+            }[];
+            /** Failure Reasons */
+            failure_reasons?: {
+                [key: string]: unknown;
+            }[];
+            /** From Date */
+            from_date: string;
+            /** Overview */
+            overview?: {
+                [key: string]: unknown;
+            };
+            /** Recruitment Hints */
+            recruitment_hints?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /** To Date */
+            to_date: string;
+            /** Top Vendors */
+            top_vendors?: {
+                [key: string]: unknown;
+            }[];
         };
         /**
          * AdminMessageSendBody
@@ -3896,6 +4174,49 @@ export interface components {
         AdminVendorApprovalResponse: {
             /** Approval Status */
             approval_status: string;
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /** User Id */
+            user_id: string;
+        };
+        /**
+         * AdminVendorInsightsResponse
+         * @description One vendor's booking history and review standing, for the admin console's vendor page.
+         */
+        AdminVendorInsightsResponse: {
+            /** Bookings By Month */
+            bookings_by_month?: {
+                [key: string]: unknown;
+            }[];
+            /** Bookings By Status */
+            bookings_by_status?: {
+                [key: string]: number;
+            };
+            /**
+             * Bookings Total
+             * @default 0
+             */
+            bookings_total: number;
+            /**
+             * Explore Path
+             * @default
+             */
+            explore_path: string;
+            /**
+             * Open Disputes On Bookings
+             * @default 0
+             */
+            open_disputes_on_bookings: number;
+            /** Review Average */
+            review_average?: number | null;
+            /**
+             * Review Count
+             * @default 0
+             */
+            review_count: number;
             /**
              * Success
              * @default true
@@ -8567,6 +8888,145 @@ export interface operations {
             };
         };
     };
+    get_dashboard_metrics_api_v1_admin_dashboard_metrics_get: {
+        parameters: {
+            query?: {
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminDashboardMetrics"];
+                };
+            };
+            /** @description unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_dashboard_summary_api_v1_admin_dashboard_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminDashboardSummary"];
+                };
+            };
+            /** @description unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    search_directory_api_v1_admin_directory_search_get: {
+        parameters: {
+            query: {
+                q: string;
+                /** @description Comma-separated: client, vendor, or both. */
+                kinds?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminDirectorySearchResponse"];
+                };
+            };
+            /** @description unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_admin_disputes_api_v1_admin_disputes_get: {
         parameters: {
             query?: {
@@ -8871,6 +9331,65 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminFinancialsSummary"];
+                };
+            };
+            /** @description unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_marketplace_analytics_api_v1_admin_marketplace_analytics_get: {
+        parameters: {
+            query?: {
+                from_date?: string | null;
+                to_date?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminMarketplaceAnalyticsResponse"];
+                };
+            };
+            /** @description invalid_date_filter */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
             /** @description unauthenticated */
@@ -10288,6 +10807,55 @@ export interface operations {
             };
             /** @description vendor_profile_not_found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_vendor_insights_api_v1_admin_vendors__user_id__insights_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminVendorInsightsResponse"];
+                };
+            };
+            /** @description unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description forbidden */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
