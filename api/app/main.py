@@ -35,6 +35,8 @@ from app.features.marketplace import router_vendor as marketplace_vendor_router
 from app.features.media import router as media_router
 from app.features.messaging import router as messaging_router
 from app.features.messaging import router_admin as messaging_admin_router
+from app.features.notifications import router_client as notifications_client_router
+from app.features.notifications import router_vendor as notifications_vendor_router
 from app.features.referrals import router as referrals_router
 from app.features.referrals import router_admin as referrals_admin_router
 from app.features.vendors import router as vendors_router
@@ -57,6 +59,8 @@ def _routers() -> list[APIRouter]:
         media_router.router,
         messaging_router.router,
         messaging_admin_router.router,
+        notifications_client_router.router,
+        notifications_vendor_router.router,
         referrals_router.router,
         referrals_admin_router.router,
         vendors_router.router,

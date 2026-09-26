@@ -1800,6 +1800,25 @@
         "title": "Body_upload_image_api_v1_media_images_post",
         "type": "object"
       },
+      "BookingNotificationsUnreadResponse": {
+        "description": "How many booking notices the caller has not read (the dashboard bell badge).",
+        "properties": {
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "unread_count": {
+            "title": "Unread Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "unread_count"
+        ],
+        "title": "BookingNotificationsUnreadResponse",
+        "type": "object"
+      },
       "ChangePasswordRequest": {
         "description": "The current password (re-checked) and the new one.",
         "properties": {
@@ -3437,6 +3456,135 @@
           "messages"
         ],
         "title": "MessagesListResponse",
+        "type": "object"
+      },
+      "NotificationFeedItem": {
+        "description": "One line in the dashboard feed: a booking notice, a dispute, or the unread-chat summary.",
+        "properties": {
+          "body": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body"
+          },
+          "booking_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booking Id"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "href": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Href"
+          },
+          "kind": {
+            "enum": [
+              "booking_update",
+              "dispute_update",
+              "chat_unread_summary"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "notification_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notification Id"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "unread": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unread"
+          }
+        },
+        "required": [
+          "kind",
+          "title"
+        ],
+        "title": "NotificationFeedItem",
+        "type": "object"
+      },
+      "NotificationFeedResponse": {
+        "description": "The caller's feed, newest first.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/NotificationFeedItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "NotificationFeedResponse",
+        "type": "object"
+      },
+      "NotificationMarkReadResponse": {
+        "description": "Whether the mark-read changed anything; marking one notice is false for an id that is not yours.",
+        "properties": {
+          "success": {
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "success"
+        ],
+        "title": "NotificationMarkReadResponse",
         "type": "object"
       },
       "PublicReviewItem": {
@@ -9260,6 +9408,239 @@
         ]
       }
     },
+    "/api/v1/client/notifications/bookings/mark-all-read": {
+      "post": {
+        "description": "Mark every booking notice read.",
+        "operationId": "post_client_booking_notifications_mark_all_read_api_v1_client_notifications_bookings_mark_all_read_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationMarkReadResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Client Booking Notifications Mark All Read",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/notifications/bookings/unread-count": {
+      "get": {
+        "description": "How many booking notices the client has not read.",
+        "operationId": "get_client_booking_notifications_unread_count_api_v1_client_notifications_bookings_unread_count_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingNotificationsUnreadResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Client Booking Notifications Unread Count",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/notifications/bookings/{notification_id}/mark-read": {
+      "post": {
+        "description": "Mark one notice read; `success` is false when it is not one of the client's.",
+        "operationId": "post_client_booking_notification_mark_read_api_v1_client_notifications_bookings__notification_id__mark_read_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notification_id",
+            "required": true,
+            "schema": {
+              "title": "Notification Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationMarkReadResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Client Booking Notification Mark Read",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/notifications/feed": {
+      "get": {
+        "description": "The client's dashboard feed, newest first.",
+        "operationId": "get_client_notifications_feed_api_v1_client_notifications_feed_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationFeedResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Client Notifications Feed",
+        "tags": [
+          "client"
+        ]
+      }
+    },
     "/api/v1/client/onboarding": {
       "get": {
         "description": "Whether the client finished first-visit setup, and their preferred name.",
@@ -10298,6 +10679,239 @@
           }
         ],
         "summary": "Submit Vendor Contact",
+        "tags": [
+          "vendor"
+        ]
+      }
+    },
+    "/api/v1/vendor/notifications/bookings/mark-all-read": {
+      "post": {
+        "description": "Mark every booking notice read.",
+        "operationId": "post_vendor_booking_notifications_mark_all_read_api_v1_vendor_notifications_bookings_mark_all_read_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationMarkReadResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Vendor Booking Notifications Mark All Read",
+        "tags": [
+          "vendor"
+        ]
+      }
+    },
+    "/api/v1/vendor/notifications/bookings/unread-count": {
+      "get": {
+        "description": "How many booking notices the vendor has not read.",
+        "operationId": "get_vendor_booking_notifications_unread_count_api_v1_vendor_notifications_bookings_unread_count_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingNotificationsUnreadResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Vendor Booking Notifications Unread Count",
+        "tags": [
+          "vendor"
+        ]
+      }
+    },
+    "/api/v1/vendor/notifications/bookings/{notification_id}/mark-read": {
+      "post": {
+        "description": "Mark one notice read; `success` is false when it is not one of the vendor's.",
+        "operationId": "post_vendor_booking_notification_mark_read_api_v1_vendor_notifications_bookings__notification_id__mark_read_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notification_id",
+            "required": true,
+            "schema": {
+              "title": "Notification Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationMarkReadResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Vendor Booking Notification Mark Read",
+        "tags": [
+          "vendor"
+        ]
+      }
+    },
+    "/api/v1/vendor/notifications/feed": {
+      "get": {
+        "description": "The vendor's dashboard feed, newest first.",
+        "operationId": "get_vendor_notifications_feed_api_v1_vendor_notifications_feed_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationFeedResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Vendor Notifications Feed",
         "tags": [
           "vendor"
         ]
