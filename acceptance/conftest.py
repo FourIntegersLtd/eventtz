@@ -49,7 +49,6 @@ NOT_YET_ON_API = {
         "account deletion arrives after bookings, disputes and messaging (identity README)"
     ),
     "test_payments.py::*": "the payments slice follows bookings",
-    "test_reviews.py::*": "the reviews slice follows payments",
     "test_disputes.py::*": "the disputes slice follows reviews",
     "test_planner.py::*": "the planner slice follows disputes",
     "test_ai_onboarding.py::test_copilot_*": "the copilot slice follows the planner",
