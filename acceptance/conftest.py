@@ -77,6 +77,7 @@ NOT_YET_ON_API = {
         "waits for payments merge — ws18 wires the money branch"
     ),
     "test_admin_team.py::*": "admin team console (workstream 7)",
+    "test_admin_dashboards.py::*": "admin dashboards, analytics, directory, vendor insights (workstream 8)",
 }
 LOCAL_HOSTS = ("http://127.0.0.1", "http://localhost", "postgresql://postgres:postgres@127.0.0.1:")
 
