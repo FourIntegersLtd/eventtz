@@ -79,7 +79,8 @@ def _sign_in_with_supabase(browser: httpx.Client, account: SeededAccount) -> Non
     """
     env = _local_env()
     auth_only = create_client(env["SUPABASE_URL"], env["SUPABASE_SERVICE_ROLE_KEY"])
-    session = auth_only.auth.sign_in_with_password({"email": account.email, "password": account.password}).session
+    credentials = {"email": account.email, "password": account.password}
+    session = auth_only.auth.sign_in_with_password(credentials).session
     assert session is not None, f"local Supabase refused {account.email}"
     host = httpx.URL(BASE_URL).host
     browser.cookies.set(ACCESS_COOKIE, session.access_token, domain=host)
