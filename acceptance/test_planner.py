@@ -51,7 +51,7 @@ from datetime import date
 
 from supabase import Client
 
-from conftest import API, new_browser, sign_in
+from conftest import API, TARGET, new_browser, sign_in
 from support.accounts import seed_account, unique_email
 
 PLANNER_URL = f"{API}/client/planner"
@@ -81,6 +81,14 @@ BUDGET_ASSUMPTION_LINE = (
 OVER_BUDGET_ASSUMPTION_LINE = (
     "Your budget is a target. We still recommend strong vendors and flag when estimates exceed it."
 )
+
+
+def _assert_error_code(body: dict[str, object], api_code: str) -> None:
+    """The baseline sends these errors without a `code`; api/ gives every error one (ADR 0004)."""
+    if TARGET == "api":
+        assert body["code"] == api_code
+    else:
+        assert "code" not in body
 
 
 def _unique_city(label: str) -> str:
@@ -229,7 +237,9 @@ def test_create_plan_rejects_a_blank_prompt(admin_db: Client) -> None:
     browser = sign_in(account)
     response = browser.post(f"{PLANNER_URL}/plans", json={"prompt": "   "})
     assert response.status_code == 400
-    assert response.json() == {"detail": DESCRIBE_CELEBRATION}
+    body = response.json()
+    assert body["detail"] == DESCRIBE_CELEBRATION
+    _assert_error_code(body, "describe_celebration")
 
 
 def test_create_plan_rejects_a_nonsense_prompt(admin_db: Client) -> None:
@@ -415,7 +425,9 @@ def test_get_plan_detail_is_not_found_for_another_clients_plan(admin_db: Client)
 
     response = other_browser.get(f"{PLANNER_URL}/plans/{plan_row['id']}")
     assert response.status_code == 404
-    assert response.json() == {"detail": PLAN_NOT_FOUND}
+    body = response.json()
+    assert body["detail"] == PLAN_NOT_FOUND
+    _assert_error_code(body, "plan_not_found")
 
 
 def test_get_plan_detail_is_not_found_for_an_unknown_plan_id(admin_db: Client) -> None:
@@ -424,7 +436,9 @@ def test_get_plan_detail_is_not_found_for_an_unknown_plan_id(admin_db: Client) -
     browser = sign_in(account)
     response = browser.get(f"{PLANNER_URL}/plans/{MISSING_ID}")
     assert response.status_code == 404
-    assert response.json() == {"detail": PLAN_NOT_FOUND}
+    body = response.json()
+    assert body["detail"] == PLAN_NOT_FOUND
+    _assert_error_code(body, "plan_not_found")
 
 
 def test_replace_plan_item_for_an_unknown_need_id_is_not_found(admin_db: Client) -> None:
@@ -449,7 +463,9 @@ def test_replace_plan_item_for_an_unknown_need_id_is_not_found(admin_db: Client)
 
     response = browser.post(f"{PLANNER_URL}/plans/{plan_row['id']}/items/not-a-need/replace", json={})
     assert response.status_code == 404
-    assert response.json() == {"detail": PLAN_ITEM_NOT_FOUND}
+    body = response.json()
+    assert body["detail"] == PLAN_ITEM_NOT_FOUND
+    _assert_error_code(body, "plan_item_not_found")
 
 
 def test_ensure_plan_event_creates_and_links_a_client_event(admin_db: Client) -> None:
@@ -532,7 +548,9 @@ def test_ensure_plan_event_on_an_archived_plan_is_rejected(admin_db: Client) -> 
 
     response = browser.post(f"{PLANNER_URL}/plans/{plan_row['id']}/ensure-event")
     assert response.status_code == 400
-    assert response.json() == {"detail": PLAN_ARCHIVED}
+    body = response.json()
+    assert body["detail"] == PLAN_ARCHIVED
+    _assert_error_code(body, "plan_archived")
 
 
 def test_archive_plan_hides_it_from_the_list_but_not_from_detail(admin_db: Client) -> None:
@@ -578,7 +596,9 @@ def test_archive_plan_for_an_unknown_plan_id_is_not_found(admin_db: Client) -> N
     browser = sign_in(account)
     response = browser.post(f"{PLANNER_URL}/plans/{MISSING_ID}/archive")
     assert response.status_code == 404
-    assert response.json() == {"detail": PLAN_NOT_FOUND}
+    body = response.json()
+    assert body["detail"] == PLAN_NOT_FOUND
+    _assert_error_code(body, "plan_not_found")
 
 
 def test_list_client_events_without_a_session_is_401() -> None:
@@ -604,7 +624,9 @@ def test_list_client_events_rejects_an_invalid_status_filter(admin_db: Client) -
     browser = sign_in(account)
     response = browser.get(EVENTS_URL, params={"status": "bogus"})
     assert response.status_code == 400
-    assert response.json() == {"detail": INVALID_STATUS_FILTER}
+    body = response.json()
+    assert body["detail"] == INVALID_STATUS_FILTER
+    _assert_error_code(body, "invalid_status_filter")
 
 
 def test_list_client_events_filters_by_status(admin_db: Client) -> None:
@@ -709,7 +731,9 @@ def test_get_client_event_detail_rejects_a_malformed_event_id(admin_db: Client) 
     browser = sign_in(account)
     response = browser.get(f"{EVENTS_URL}/not-a-uuid")
     assert response.status_code == 400
-    assert response.json() == {"detail": INVALID_EVENT_ID}
+    body = response.json()
+    assert body["detail"] == INVALID_EVENT_ID
+    _assert_error_code(body, "invalid_event_id")
 
 
 def test_get_client_event_detail_is_not_found_for_an_unknown_event_id(admin_db: Client) -> None:
@@ -718,7 +742,9 @@ def test_get_client_event_detail_is_not_found_for_an_unknown_event_id(admin_db: 
     browser = sign_in(account)
     response = browser.get(f"{EVENTS_URL}/{MISSING_ID}")
     assert response.status_code == 404
-    assert response.json() == {"detail": EVENT_NOT_FOUND}
+    body = response.json()
+    assert body["detail"] == EVENT_NOT_FOUND
+    _assert_error_code(body, "event_not_found")
 
 
 def test_get_client_event_detail_is_not_found_for_another_clients_event(admin_db: Client) -> None:
@@ -743,4 +769,6 @@ def test_get_client_event_detail_is_not_found_for_another_clients_event(admin_db
 
     response = other_browser.get(f"{EVENTS_URL}/{row['id']}")
     assert response.status_code == 404
-    assert response.json() == {"detail": EVENT_NOT_FOUND}
+    body = response.json()
+    assert body["detail"] == EVENT_NOT_FOUND
+    _assert_error_code(body, "event_not_found")

@@ -51,7 +51,6 @@ NOT_YET_ON_API = {
     "test_payments.py::*": "the payments slice follows bookings",
     "test_reviews.py::*": "the reviews slice follows payments",
     "test_disputes.py::*": "the disputes slice follows reviews",
-    "test_planner.py::*": "the planner slice follows disputes",
     "test_ai_onboarding.py::test_copilot_*": "the copilot slice follows the planner",
     "test_ai_onboarding.py::test_generate_bio_*": "vendor AI helpers arrive with the copilot slice",
     "test_ai_onboarding.py::test_review_packages_*": "vendor AI helpers arrive with the copilot slice",
