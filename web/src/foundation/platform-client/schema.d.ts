@@ -4,6 +4,46 @@
  */
 
 export interface paths {
+    "/api/v1/admin/audit-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Audit Log
+         * @description A page of the audit trail, most recent first, optionally narrowed to one category.
+         */
+        get: operations["list_audit_log_api_v1_admin_audit_log_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/audit-log/{entry_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Audit Log Entry
+         * @description One audit entry by id.
+         */
+        get: operations["get_audit_log_entry_api_v1_admin_audit_log__entry_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/blog/posts": {
         parameters: {
             query?: never;
@@ -216,6 +256,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/clients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Clients
+         * @description A page of the client directory, optionally filtered by email search or suspension.
+         */
+        get: operations["list_clients_api_v1_admin_clients_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/clients/{user_id}/suspended": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Set Client Suspended
+         * @description Suspend or restore one client account.
+         */
+        patch: operations["set_client_suspended_api_v1_admin_clients__user_id__suspended_patch"];
+        trace?: never;
+    };
     "/api/v1/admin/contact": {
         parameters: {
             query?: never;
@@ -278,6 +358,46 @@ export interface paths {
          *     is a placeholder that never reaches Stripe, so it needs no gateway to raise.
          */
         patch: operations["patch_admin_dispute_api_v1_admin_disputes__dispute_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/email/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Templates
+         * @description The fixed set of templates the test-send screen may choose from.
+         */
+        get: operations["list_templates_api_v1_admin_email_templates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/email/test-send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send Test
+         * @description Send one fixed test email, and log the attempt to the audit trail.
+         */
+        post: operations["send_test_api_v1_admin_email_test_send_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/admin/financials/export.csv": {
@@ -586,6 +706,90 @@ export interface paths {
          * @description Hide or unhide a review, logging the change to the admin audit log.
          */
         patch: operations["set_review_visibility_api_v1_admin_reviews__review_id__visibility_patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/team": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Team
+         * @description Every admin account, for the team roster screen.
+         */
+        get: operations["list_team_api_v1_admin_team_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/team/invite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Invite Team Member
+         * @description Create, promote or top up the password of an admin account, by email.
+         */
+        post: operations["invite_team_member_api_v1_admin_team_invite_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/team/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Team Member
+         * @description Remove an admin from the team, or demote them if something else references the account.
+         */
+        delete: operations["delete_team_member_api_v1_admin_team__user_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Patch Team Member
+         * @description Change an admin's role and/or suspension flag.
+         */
+        patch: operations["patch_team_member_api_v1_admin_team__user_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/team/{user_id}/send-reset-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send Reset Link
+         * @description Email an existing admin a fresh password-reset link.
+         */
+        post: operations["send_reset_link_api_v1_admin_team__user_id__send_reset_link_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/admin/vendors": {
@@ -2667,6 +2871,60 @@ export interface components {
             town_or_city?: string | null;
         };
         /**
+         * AdminAuditLogDetailResponse
+         * @description `GET /admin/audit-log/{entry_id}`.
+         */
+        AdminAuditLogDetailResponse: {
+            entry: components["schemas"]["AdminAuditLogItem"];
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+        };
+        /**
+         * AdminAuditLogItem
+         * @description One entry of the audit trail.
+         */
+        AdminAuditLogItem: {
+            /** Action */
+            action: string;
+            /** Admin Email */
+            admin_email?: string | null;
+            /** Admin User Id */
+            admin_user_id?: string | null;
+            /** Audit Event Details */
+            audit_event_details?: {
+                [key: string]: unknown;
+            } | null;
+            /** Created At */
+            created_at?: string | null;
+            /** Entity Id */
+            entity_id?: string | null;
+            /** Entity Type */
+            entity_type: string;
+            /** Id */
+            id: string;
+        };
+        /**
+         * AdminAuditLogResponse
+         * @description `GET /admin/audit-log`.
+         */
+        AdminAuditLogResponse: {
+            /** Entries */
+            entries: components["schemas"]["AdminAuditLogItem"][];
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+        };
+        /**
          * AdminBookingDetail
          * @description One booking as the admin console sees it: every column plus resolved party details.
          */
@@ -2893,6 +3151,64 @@ export interface components {
             sender_user_id: string;
         };
         /**
+         * AdminClientRow
+         * @description One row of the client directory.
+         */
+        AdminClientRow: {
+            /**
+             * Account Suspended
+             * @default false
+             */
+            account_suspended: boolean;
+            /**
+             * Booking Count
+             * @default 0
+             */
+            booking_count: number;
+            /** Created At */
+            created_at?: string | null;
+            /** Email */
+            email?: string | null;
+            /** User Id */
+            user_id: string;
+        };
+        /**
+         * AdminClientSuspendedBody
+         * @description `PATCH /admin/clients/{user_id}/suspended`.
+         */
+        AdminClientSuspendedBody: {
+            /** Suspended */
+            suspended: boolean;
+        };
+        /**
+         * AdminClientsListResponse
+         * @description `GET /admin/clients`.
+         */
+        AdminClientsListResponse: {
+            /** Clients */
+            clients: components["schemas"]["AdminClientRow"][];
+            /**
+             * Limit
+             * @default 50
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+        };
+        /**
          * AdminConversationMessagesResponse
          * @description Any thread's first messages plus who is on it, for staff investigating a DM.
          */
@@ -3005,6 +3321,59 @@ export interface components {
         AdminDisputesListResponse: {
             /** Disputes */
             disputes: components["schemas"]["AdminDisputeCase"][];
+        };
+        /**
+         * AdminEmailTemplateRow
+         * @description One entry of the fixed test-send template list.
+         */
+        AdminEmailTemplateRow: {
+            /** Category */
+            category: string;
+            /** Description */
+            description?: string | null;
+            /** Id */
+            id: string;
+            /** Label */
+            label: string;
+        };
+        /**
+         * AdminEmailTemplatesListResponse
+         * @description `GET /admin/email/templates`.
+         */
+        AdminEmailTemplatesListResponse: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /** Templates */
+            templates: components["schemas"]["AdminEmailTemplateRow"][];
+        };
+        /**
+         * AdminEmailTestSendBody
+         * @description `POST /admin/email/test-send`.
+         */
+        AdminEmailTestSendBody: {
+            /** Message Body */
+            message_body?: string | null;
+            /** Message Body Html */
+            message_body_html?: string | null;
+            /** Template Id */
+            template_id: string;
+            /** To Email */
+            to_email: string;
+        };
+        /**
+         * AdminEmailTestSendResponse
+         * @description `POST /admin/email/test-send`.
+         */
+        AdminEmailTestSendResponse: {
+            /** Delivered */
+            delivered: boolean;
+            /** Message */
+            message?: string | null;
+            /** Success */
+            success: boolean;
         };
         /**
          * AdminFinancialsDailyBucket
@@ -3377,6 +3746,136 @@ export interface components {
              * @default true
              */
             success: boolean;
+        };
+        /**
+         * AdminTeamDeleteResponse
+         * @description `DELETE /admin/team/{user_id}`.
+         */
+        AdminTeamDeleteResponse: {
+            /**
+             * Deleted
+             * @default false
+             */
+            deleted: boolean;
+            /** Demoted To */
+            demoted_to?: ("client" | "vendor") | null;
+            /** Email */
+            email?: string | null;
+            /** Message */
+            message: string;
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /** User Id */
+            user_id: string;
+        };
+        /**
+         * AdminTeamInviteBody
+         * @description `POST /admin/team/invite`. An omitted `password` sends a setup link instead.
+         */
+        AdminTeamInviteBody: {
+            /** Email */
+            email: string;
+            /** Password */
+            password?: string | null;
+        };
+        /**
+         * AdminTeamInviteResponse
+         * @description `POST /admin/team/invite`.
+         */
+        AdminTeamInviteResponse: {
+            /**
+             * Admin Role
+             * @default admin
+             * @enum {string}
+             */
+            admin_role: "super_admin" | "admin";
+            /**
+             * Created
+             * @default false
+             */
+            created: boolean;
+            /** Email */
+            email: string;
+            /**
+             * Invite Link Sent
+             * @default false
+             */
+            invite_link_sent: boolean;
+            /** Message */
+            message: string;
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /** User Id */
+            user_id: string;
+        };
+        /**
+         * AdminTeamListResponse
+         * @description `GET /admin/team`.
+         */
+        AdminTeamListResponse: {
+            /** Members */
+            members: components["schemas"]["AdminTeamMember"][];
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+        };
+        /**
+         * AdminTeamMember
+         * @description One row of the team roster.
+         */
+        AdminTeamMember: {
+            /**
+             * Account Suspended
+             * @default false
+             */
+            account_suspended: boolean;
+            /**
+             * Admin Role
+             * @default admin
+             * @enum {string}
+             */
+            admin_role: "super_admin" | "admin";
+            /** Created At */
+            created_at?: string | null;
+            /** Email */
+            email?: string | null;
+            /** User Id */
+            user_id: string;
+        };
+        /**
+         * AdminTeamPatchBody
+         * @description `PATCH /admin/team/{user_id}`. At least one field must be set.
+         */
+        AdminTeamPatchBody: {
+            /** Account Suspended */
+            account_suspended?: boolean | null;
+            /** Admin Role */
+            admin_role?: ("super_admin" | "admin") | null;
+        };
+        /**
+         * AdminTeamSendResetLinkResponse
+         * @description `POST /admin/team/{user_id}/send-reset-link`.
+         */
+        AdminTeamSendResetLinkResponse: {
+            /** Email */
+            email: string;
+            /** Message */
+            message: string;
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /** User Id */
+            user_id: string;
         };
         /**
          * AdminVendorApprovalBody
@@ -6322,6 +6821,17 @@ export interface components {
             rating: number;
         };
         /**
+         * SuccessResponse
+         * @description The bare `{"success": true}` a few mutating routes answer with.
+         */
+        SuccessResponse: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+        };
+        /**
          * UpdateBookingVenueBody
          * @description The venue of an accepted, unpaid booking.
          */
@@ -6984,6 +7494,116 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    list_audit_log_api_v1_admin_audit_log_get: {
+        parameters: {
+            query?: {
+                offset?: number;
+                limit?: number;
+                /** @description all | bookings | clients | vendors | disputes | reviews | chat | financials | team */
+                category?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminAuditLogResponse"];
+                };
+            };
+            /** @description unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_audit_log_entry_api_v1_admin_audit_log__entry_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminAuditLogDetailResponse"];
+                };
+            };
+            /** @description unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description audit_entry_not_found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_posts_api_v1_admin_blog_posts_get: {
         parameters: {
             query?: never;
@@ -7782,6 +8402,111 @@ export interface operations {
             };
         };
     };
+    list_clients_api_v1_admin_clients_get: {
+        parameters: {
+            query?: {
+                offset?: number;
+                limit?: number;
+                q?: string | null;
+                suspended?: boolean | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminClientsListResponse"];
+                };
+            };
+            /** @description unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_client_suspended_api_v1_admin_clients__user_id__suspended_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminClientSuspendedBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"];
+                };
+            };
+            /** @description unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     submit_bug_report_api_v1_admin_contact_post: {
         parameters: {
             query?: never;
@@ -7977,6 +8702,104 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_templates_api_v1_admin_email_templates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminEmailTemplatesListResponse"];
+                };
+            };
+            /** @description unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    send_test_api_v1_admin_email_test_send_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminEmailTestSendBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminEmailTestSendResponse"];
+                };
+            };
+            /** @description unknown_email_template, invalid_email_address */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -8940,6 +9763,300 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReviewVisibilityResponse"];
+                };
+            };
+            /** @description unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_team_api_v1_admin_team_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminTeamListResponse"];
+                };
+            };
+            /** @description unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    invite_team_member_api_v1_admin_team_invite_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminTeamInviteBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminTeamInviteResponse"];
+                };
+            };
+            /** @description invalid_email_address */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_team_member_api_v1_admin_team__user_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminTeamDeleteResponse"];
+                };
+            };
+            /** @description admin_user_not_found, cannot_delete_self */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description cannot_delete_last_super_admin */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_team_member_api_v1_admin_team__user_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminTeamPatchBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminTeamMember"];
+                };
+            };
+            /** @description no_fields_to_update, admin_user_not_found, cannot_demote_self, cannot_suspend_self */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description cannot_demote_last_super_admin */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    send_reset_link_api_v1_admin_team__user_id__send_reset_link_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminTeamSendResetLinkResponse"];
+                };
+            };
+            /** @description admin_user_not_found */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
             /** @description unauthenticated */
