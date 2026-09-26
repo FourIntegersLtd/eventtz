@@ -9,6 +9,7 @@ set of filters (date range, free-text search) and their own writes.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import Boolean, Text, Uuid, column, exists, func, select, table, update
@@ -18,6 +19,17 @@ from app.core.db import as_uuid, plain_row
 from app.features.bookings.domain_financials import PAID_PAYMENT_STATUSES
 from app.features.bookings.models import BookingRequest
 from app.features.bookings.rows import BookingRow
+
+
+def _as_datetime_bound(value: str) -> datetime:
+    """An admin's `date_from`/`date_to` query string, as a timestamp Postgres can compare.
+
+    The admin console sends plain dates (`2030-01-01`) or full ISO timestamps; a
+    `timestamptz` column has no `>=`/`<=` operator against a bare string, so this
+    parses it before it reaches a query. A date-only string means midnight UTC.
+    """
+    return datetime.fromisoformat(value if len(value) > 10 else f"{value}T00:00:00+00:00").astimezone(UTC)
+
 
 # Every column the admin list, detail and financials views read.
 _BOOKING_COLUMNS = (
@@ -87,9 +99,9 @@ def _list_conditions(
     if status and status != "all":
         conditions.append(BookingRequest.status == status)
     if date_from:
-        conditions.append(BookingRequest.created_at >= date_from)
+        conditions.append(BookingRequest.created_at >= _as_datetime_bound(date_from))
     if date_to:
-        conditions.append(BookingRequest.created_at <= date_to)
+        conditions.append(BookingRequest.created_at <= _as_datetime_bound(date_to))
     if search:
         conditions.append(BookingRequest.event_name.ilike(f"%{search}%"))
     return conditions
@@ -228,9 +240,9 @@ async def paid_bookings_for_financials(
     """
     conditions: list[Any] = [BookingRequest.payment_status.in_(PAID_PAYMENT_STATUSES)]
     if date_from:
-        conditions.append(BookingRequest.paid_at >= date_from)
+        conditions.append(BookingRequest.paid_at >= _as_datetime_bound(date_from))
     if date_to:
-        conditions.append(BookingRequest.paid_at <= date_to)
+        conditions.append(BookingRequest.paid_at <= _as_datetime_bound(date_to))
     result = await session.execute(
         select(*_BOOKING_COLUMNS).where(*conditions).order_by(BookingRequest.paid_at.asc()).limit(5000)
     )

@@ -57,6 +57,14 @@ Vendor (`/vendor`): `POST /booking-requests/vendor-quote`, `GET /booking-request
 `GET /booking-requests/{id}`, `PUT /booking-requests/{id}/adjustments`,
 `PATCH /booking-requests/{id}/status`, `POST /booking-requests/{id}/confirm-completion`.
 
+Admin (`/admin`): `GET /bookings`, `GET /bookings/{id}` (any staff member);
+`PATCH /bookings/{id}/payment-fields`, `POST /bookings/{id}/reset-checkout`,
+`PATCH /bookings/{id}/support-hold` (super admin only). `GET /financials/summary`
+(any staff member) and `GET /financials/export.csv` (super admin only) total every
+paid booking in an optional `paid_at` range; the export additionally writes a
+`financials.export_csv` audit row. See `service_admin.py` and
+`service_admin_financials.py`.
+
 Differences from the baseline:
 - Each rule has its own error `code`; statuses and messages are unchanged.
 - An unexpected failure is a plain 500, not the baseline's "Could not save" text.
@@ -71,6 +79,13 @@ These wait for the slices that own them; until then the api answers as noted.
   (503). Releasing the payout once both parties confirm raises
   `booking_payout_release_unavailable` (503) after the confirmation is stored.
   Checkout, checkout sync, receipts, payout statements and payment records.
+- **Admin recovery routes** (also payments): `POST /admin/bookings/{id}/sync-payment`,
+  `POST /admin/bookings/{id}/release-payout`, `POST /admin/bookings/{id}/retry-payout`,
+  `POST /admin/bookings/{id}/cancel-on-behalf`,
+  `POST /admin/bookings/{id}/complete-cancellation`,
+  `POST /admin/bookings/{id}/confirm-completion`, `POST /admin/run-maintenance`. The
+  admin bookings console (list/detail/payment-fields/reset-checkout/support-hold) and
+  the financials summary/export above are built; these seven are not yet.
 - **Maintenance jobs** (procrastinate periodic tasks): automatic payout release
   after the event, completion and enquiry reminders, stale-enquiry marking, and
   the reminders the baseline also ran when the active list was opened.

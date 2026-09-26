@@ -27,13 +27,35 @@ from app.features.bookings.errors import (
 from app.features.bookings.rows import BookingRow
 from app.features.bookings.schemas_admin import (
     AdminBookingDetail,
+    AdminBookingDetailResponse,
     AdminBookingListItem,
     AdminBookingListSupportSummary,
+    AdminBookingsListResponse,
     AdminBookingSupportMeta,
+    AdminPaymentFieldsPatchBody,
+    AdminPaymentFieldsPatchResponse,
+    AdminSupportHoldBody,
 )
 from app.features.identity import service as identity
 from app.features.staff import service as staff_service
 from app.features.vendors import service_listing as vendor_listing
+
+# Re-exported so `router_admin.py` can import every schema it needs from this one module: the
+# router-thin guard only lets a router reach a sibling module named `schemas`/`errors` or one
+# starting with `service`, and `schemas_admin` matches neither (see `vendors/service_ai.py`
+# for the same pattern).
+__all__ = [
+    "AdminBookingDetailResponse",
+    "AdminBookingsListResponse",
+    "AdminPaymentFieldsPatchBody",
+    "AdminPaymentFieldsPatchResponse",
+    "AdminSupportHoldBody",
+    "get_booking_detail",
+    "list_bookings",
+    "patch_payment_fields",
+    "reset_checkout",
+    "set_support_hold",
+]
 
 # Vendor display name for a booking whose vendor has no profile row yet (baseline parity).
 _UNKNOWN_VENDOR_NAME = "Vendor"
