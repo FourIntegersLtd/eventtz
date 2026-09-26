@@ -49,7 +49,18 @@ NOT_YET_ON_API = {
         "account deletion arrives after bookings, disputes and messaging (identity README)"
     ),
     "test_payments.py::*": "the payments slice follows bookings",
-    "test_disputes.py::*": "the disputes slice follows reviews",
+    "test_disputes.py::test_admin_release_to_vendor_on_unpaid_booking_is_400": (
+        "waits for payments merge — ws18 wires the money branch"
+    ),
+    "test_disputes.py::test_admin_release_to_vendor_on_paid_booking_is_a_stripe_off_noop": (
+        "waits for payments merge — ws18 wires the money branch"
+    ),
+    "test_disputes.py::test_admin_refund_client_on_unpaid_booking_is_400": (
+        "waits for payments merge — ws18 wires the money branch"
+    ),
+    "test_disputes.py::test_admin_refund_client_on_paid_booking_without_payment_intent_is_400": (
+        "waits for payments merge — ws18 wires the money branch"
+    ),
     "test_planner.py::*": "the planner slice follows disputes",
     "test_ai_onboarding.py::test_copilot_*": "the copilot slice follows the planner",
     "test_ai_onboarding.py::test_generate_bio_*": "vendor AI helpers arrive with the copilot slice",
