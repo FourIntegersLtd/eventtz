@@ -10,14 +10,17 @@ enquiries, pay through Stripe Checkout; vendors quote, accept and get paid out
 via Stripe Connect after the event. Staff moderate vendors and resolve disputes.
 Real vendors and clients use the live site.
 
-Stack: FastAPI + supabase-py (service role) + Supabase Auth, raw numbered SQL
-migrations, Next.js (App Router) + TypeScript + Tailwind + axios, Stripe
-Connect, Resend, OpenAI, S3, Sentry, Mixpanel. Backend deploys to Railway.
+Baseline stack (live): FastAPI + supabase-py + Supabase Auth, raw numbered SQL
+migrations, Next.js + axios. Rebuild stack (`api/`, `web/`), copied from OSCE Guide
+so both projects share one stack: FastAPI + SQLAlchemy 2.0 async on psycopg 3 +
+Alembic, on Railway Postgres; platform-issued JWTs with argon2 passwords;
+procrastinate jobs; structlog; optional Redis; Next.js with a fetch client and
+generated types. Both: Stripe Connect, Resend, OpenAI, S3, Sentry, Mixpanel.
 
 The code is being rebuilt to the architecture in `docs/adr/` (borrowed from OSCE
 Guide `platform-api` / `platform-web`) in **new folders**: `api/` replaces
-`backend/`, `web/` replaces `frontend/`. Both talk to the same Supabase project and
-serve the same URLs. `backend/` and `frontend/` are the **baseline** that runs the
+`backend/`, `web/` replaces `frontend/`, serving the same URLs. At cutover the
+Supabase data (and bcrypt password hashes) move to Railway Postgres. `backend/` and `frontend/` are the **baseline** that runs the
 live site: do not edit them (only critical live fixes, and only when asked). When
 `api/`/`web/` reach parity they are deployed in place of the baseline, which is then deleted.
 
@@ -30,7 +33,8 @@ live site: do not edit them (only critical live fixes, and only when asked). Whe
 | `api/app/features/<slice>/` | One product area. Template in `api/CONTRIBUTING.md` |
 | `api/tests/guards/` | AST architecture guards (each with a meta-test) |
 | `api/tests/golden/` | Byte-exact fixtures of money maths captured from the baseline code |
-| `backend/sql/NNN_*.sql` | The one migration folder for the shared DB, applied in numeric order. Moves to `api/sql/` at cutover |
+| `api/alembic/` | Schema for `api/`. `0002` is a snapshot of `backend/sql/`; later changes are revisions |
+| `backend/sql/NNN_*.sql` | Baseline migrations for the live Supabase DB, until cutover |
 | `web/app/` | Routes only. URLs are public contracts |
 | `web/{surfaces,domains,capabilities,foundation}/` | Frontend tiers, imports downwards only |
 | `backend/`, `frontend/` | **Baseline** (live). Reference for behaviour; do not edit |
@@ -42,8 +46,12 @@ live site: do not edit them (only critical live fixes, and only when asked). Whe
 
 ```bash
 # api (from api/)
+make db-up              # Postgres :5434 + Redis :6381 (docker compose)
+make migrate            # alembic upgrade head
+make new-migration M=x  # autogenerate, then review by hand
 make dev                # uvicorn :8001 (baseline backend keeps :8000)
-make ci                 # lint + typecheck + arch + guards + tests (what CI runs)
+make worker             # procrastinate worker
+make ci                 # lint + typecheck + arch (incl. alembic check) + tests
 make openapi            # regenerate openapi.json (then web: npm run api:types)
 
 # web (from web/)
@@ -56,16 +64,17 @@ Traps in this machine's shell:
 - Node is not on PATH: `export PATH="$HOME/.nvm/versions/node/v22.22.3/bin:$PATH"`.
 - `poetry run pytest` can hit a stale shebang; use `poetry run python -m pytest -q`.
 - Check pytest's **exit code**, not the tail of its output.
+- Without Docker the `db` tests are skipped, not failed. Check they ran.
 
 ## Boundaries
 
 ### Always do
 
 - Keep API paths and methods stable: `openapi.baseline.json` fails CI if one disappears.
-- Put Supabase calls (`.table`, `.rpc`, `.storage`) only in a slice's `repository.py`.
+- Put SQL (`select()`, `.execute()`, model imports) only in a slice's `repository*.py`. Only `core/db.py` and `core/jobs.py` commit.
 - Raise `AppError` subclasses with a stable `code`; the frontend branches on `code`, never on message text.
 - Keep money as integer pence inside `domain.py`; format only at the edge.
-- New setting → `api/app/core/settings.py` + `api/.env.example`. Schema change → next `backend/sql/NNN_*.sql`.
+- New setting → `api/app/core/settings.py` + `api/.env.example`. Schema change → an Alembic revision (review autogenerate by hand).
 - Name things for what they hold or do. No single-letter names, even in loops: `for booking in bookings`. Give every module, class and function a docstring, and comment any *why* that isn't obvious. New engineers onboard by reading the code (guarded in `api/tests/guards/`).
 - Fix the lint and type errors you introduce.
 
@@ -86,8 +95,10 @@ Traps in this machine's shell:
 
 - **Payments are two lifecycles.** `booking_requests.status` is the request; `payment_status` is money. Only the payments slice writes `payment_status`, with conditional `.eq("payment_status", expected)` writes.
 - **Held funds.** Checkout pays Eventtz; vendor payout is always an explicit `Transfer`. That is what lets disputes block payouts.
-- **SSE is in-memory.** The API must run as a single replica (ADR 0005).
-- **Daily capacity** is enforced by a Postgres trigger (migration 033); the Python check is only for friendly errors.
+- **SSE fans out over Redis** (ADR 0005). Without Redis the in-process bus only works on one replica.
+- **Two schemas until cutover.** A live fix added to `backend/sql/` must also land as an Alembic revision in `api/`.
+- **Imported passwords are bcrypt.** Sign-in rehashes them to argon2; delete the bcrypt path once none remain (ADR 0003).
+- **Daily capacity** is enforced by a Postgres trigger (migration 033, kept in Alembic `0002`); the Python check is only for friendly errors.
 - **Closed accounts are tombstones** (`users.deleted_at`); never restore one on upsert.
 - **Local auth mode** logs reset URLs instead of emailing them.
 
