@@ -57,6 +57,7 @@ addopts = "-p no:cacheprovider"
 markers = [
     "db: needs the migrated Postgres (skipped with a message when Docker is unavailable)",
     "e2e: drives the whole app over HTTP",
+    "redis: needs a reachable Redis (skipped with a message when one is not configured)",
 ]
 
 [tool.ruff]
