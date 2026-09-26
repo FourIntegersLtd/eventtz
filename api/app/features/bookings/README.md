@@ -71,6 +71,8 @@ These wait for the slices that own them; until then the api answers as noted.
   (503). Releasing the payout once both parties confirm raises
   `booking_payout_release_unavailable` (503) after the confirmation is stored.
   Checkout, checkout sync, receipts, payout statements and payment records.
+- The vendor payout ledger (`service_payout_ledger.py`, `repository_payments.py`)
+  is built; the payments slice serves it at `GET /vendor/payments/history`.
 - **Maintenance jobs** (procrastinate periodic tasks): automatic payout release
   after the event, completion and enquiry reminders, stale-enquiry marking, and
   the reminders the baseline also ran when the active list was opened.

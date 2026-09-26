@@ -21,6 +21,8 @@ is publicly listed.
 - A vendor is listed when approved and payouts are verified, unless a super admin overrides it.
 - Listing photo overrides may only use the vendor's own profile photo or portfolio images.
 - Every staff action is written to the audit log.
+- The Stripe Connect columns (`stripe_account_id`, `stripe_charges_enabled`, `stripe_payouts_enabled`) are
+  written only through `service_payouts.py`, which the payments slice calls.
 
 ## Routes
 Built (cut 1): `GET/PUT /vendor/profile`, `GET /vendor/profile/business-name-available`,
@@ -33,7 +35,8 @@ Baseline quirks kept on purpose (the freeze tests pin them):
 - The admin 404 reads "Vendor profile not found" with no full stop; a nudge failure reads "Vendor profile not found." with one.
 
 Not yet like the baseline:
-- `GET /vendor/profile` does not refresh the payout flags from Stripe; that arrives with the payments slice.
+- `GET /vendor/profile` does not refresh the payout flags from Stripe; `GET /vendor/payments/status` and the
+  `account.updated` webhook do.
 - Emails go out before the request's transaction commits (the Mailer is synchronous); they move to a job after commit.
 
 ## Onboarding AI (bio, photo QA, package coach)

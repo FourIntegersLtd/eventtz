@@ -44,6 +44,8 @@ from app.features.messaging import router as messaging_router
 from app.features.messaging import router_admin as messaging_admin_router
 from app.features.notifications import router_client as notifications_client_router
 from app.features.notifications import router_vendor as notifications_vendor_router
+from app.features.payments import router_vendor as payments_vendor_router
+from app.features.payments import router_webhooks as payments_webhooks_router
 from app.features.planner import router as planner_router
 from app.features.realtime import router as realtime_router
 from app.features.referrals import router as referrals_router
@@ -80,6 +82,8 @@ def _routers() -> list[APIRouter]:
         messaging_admin_router.router,
         notifications_client_router.router,
         notifications_vendor_router.router,
+        payments_vendor_router.router,
+        payments_webhooks_router.router,
         planner_router.router,
         realtime_router.router,
         referrals_router.router,

@@ -49,8 +49,6 @@ NOT_YET_ON_API = {
         "account deletion arrives after bookings, disputes and messaging (identity README)"
     ),
     "test_payments.py::test_checkout_*": "payments core (workstream 1)",
-    "test_payments.py::test_stripe_webhook_*": "payments core (workstream 1)",
-    "test_payments.py::test_vendor_*": "payments core (workstream 1)",
     "test_payments.py::test_admin_cancel_on_*": "payments core (workstream 1)",
     "test_payments.py::test_admin_complete_cancellation_*": "payments core (workstream 1)",
     "test_payments.py::test_admin_confirm_completion_*": "payments core (workstream 1)",
