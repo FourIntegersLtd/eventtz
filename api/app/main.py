@@ -28,6 +28,9 @@ from app.features.bookings import router_client as bookings_client_router
 from app.features.bookings import router_vendor as bookings_vendor_router
 from app.features.content import router as content_router
 from app.features.content import router_admin as content_admin_router
+from app.features.disputes import router_admin as disputes_admin_router
+from app.features.disputes import router_client as disputes_client_router
+from app.features.disputes import router_vendor as disputes_vendor_router
 from app.features.identity import router as identity_router
 from app.features.identity import router_settings as identity_settings_router
 from app.features.identity import service_accounts as identity_accounts
@@ -55,6 +58,9 @@ def _routers() -> list[APIRouter]:
         bookings_vendor_router.router,
         content_router.router,
         content_admin_router.router,
+        disputes_client_router.router,
+        disputes_vendor_router.router,
+        disputes_admin_router.router,
         identity_router.router,
         identity_settings_router.router,
         marketplace_router.router,
