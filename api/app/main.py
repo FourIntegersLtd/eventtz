@@ -52,6 +52,10 @@ from app.features.referrals import router_admin as referrals_admin_router
 from app.features.reviews import router_admin as reviews_admin_router
 from app.features.reviews import router_client as reviews_client_router
 from app.features.reviews import router_vendor as reviews_vendor_router
+from app.features.staff import router_audit as staff_audit_router
+from app.features.staff import router_clients as staff_clients_router
+from app.features.staff import router_email as staff_email_router
+from app.features.staff import router_team as staff_team_router
 from app.features.vendors import router as vendors_router
 from app.features.vendors import router_admin as vendors_admin_router
 from app.features.vendors import router_ai as vendors_ai_router
@@ -89,6 +93,10 @@ def _routers() -> list[APIRouter]:
         reviews_client_router.router,
         reviews_vendor_router.router,
         reviews_admin_router.router,
+        staff_audit_router.router,
+        staff_clients_router.router,
+        staff_email_router.router,
+        staff_team_router.router,
         vendors_router.router,
         vendors_admin_router.router,
         vendors_ai_router.router,
