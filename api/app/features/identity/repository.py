@@ -155,6 +155,16 @@ async def update_profile(session: AsyncSession, user_id: str, changes: dict[str,
     await session.execute(update(User).where(User.id == account_id).values(**changes))
 
 
+async def user_ids_of_type_with_email_like(
+    session: AsyncSession, *, user_type: str, pattern: str, limit: int
+) -> list[str]:
+    """Accounts of `user_type` whose email matches the ILIKE `pattern`, at most `limit` of them."""
+    result = await session.scalars(
+        select(User.id).where(User.user_type == user_type, User.email.ilike(pattern)).limit(limit)
+    )
+    return [str(user_id) for user_id in result]
+
+
 async def set_password_hash(session: AsyncSession, user_id: str, password_hash: str) -> None:
     """Store a new password hash for this account."""
     await update_profile(session, user_id, {"password_hash": password_hash})

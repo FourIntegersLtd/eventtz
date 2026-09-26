@@ -71,6 +71,10 @@ class S3Storage:
             )
         )
 
+    def public_host(self) -> str:
+        """The bucket's virtual-hosted S3 host name."""
+        return public_host()
+
     def save(self, *, key: str, body: bytes, content_type: str) -> StoredFile:
         """Upload `body` as a public, cacheable object; boto3 errors propagate to the caller."""
         extra_arguments = {"CacheControl": CACHE_CONTROL}

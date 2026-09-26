@@ -32,6 +32,8 @@ from app.features.identity import service_accounts as identity_accounts
 from app.features.media import router as media_router
 from app.features.referrals import router as referrals_router
 from app.features.referrals import router_admin as referrals_admin_router
+from app.features.vendors import router as vendors_router
+from app.features.vendors import router_admin as vendors_admin_router
 
 # Every product route lives under this prefix; the web app and the baseline use the same one.
 API_PREFIX = "/api/v1"
@@ -47,6 +49,8 @@ def _routers() -> list[APIRouter]:
         media_router.router,
         referrals_router.router,
         referrals_admin_router.router,
+        vendors_router.router,
+        vendors_admin_router.router,
     ]
 
 

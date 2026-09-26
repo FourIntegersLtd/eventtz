@@ -11,7 +11,7 @@ import uuid
 import httpx
 from supabase import Client
 
-from conftest import API, new_browser, sign_in
+from conftest import API, TARGET, new_browser, sign_in
 from support.accounts import seed_account, unique_email
 
 SIGN_IN_REQUIRED = "Please sign in to continue."
@@ -35,6 +35,14 @@ S3_HOST = "eventtz.s3.eu-west-2.amazonaws.com"
 def _s3_url(user_id: str, name: str) -> str:
     """A URL that `is_our_s3_url` accepts as this vendor's own upload, without touching S3."""
     return f"https://{S3_HOST}/users/{user_id}/{name}"
+
+
+def _assert_error_code(body: dict[str, object], api_code: str) -> None:
+    """The baseline sends these errors without a `code`; api/ gives every error one (ADR 0004)."""
+    if TARGET == "api":
+        assert body["code"] == api_code
+    else:
+        assert "code" not in body
 
 
 def _unique_business_name(label: str) -> str:
@@ -232,7 +240,7 @@ def test_put_profile_advancing_a_step_with_missing_fields_is_a_validation_error(
     admin_db: Client,
 ) -> None:
     """Advancing past step 3 (location) without its required fields is rejected with the
-    first missing field's message and no `code` on the error body.
+    first missing field's message (and, on api/ only, a stable `code`).
     """
     browser, _user_id = _fresh_vendor(admin_db, "put-validation")
     first = browser.put(
@@ -248,7 +256,7 @@ def test_put_profile_advancing_a_step_with_missing_fields_is_a_validation_error(
     assert response.status_code == 400
     body = response.json()
     assert body["detail"] == STEP_LOCATION_BASE_CITY_REQUIRED
-    assert "code" not in body
+    _assert_error_code(body, "vendor_profile_invalid")
 
 
 def test_put_profile_business_name_conflict_is_409(admin_db: Client) -> None:
@@ -266,7 +274,7 @@ def test_put_profile_business_name_conflict_is_409(admin_db: Client) -> None:
     assert response.status_code == 409
     body = response.json()
     assert body["detail"] == BUSINESS_NAME_ALREADY_REGISTERED
-    assert "code" not in body
+    _assert_error_code(body, "business_name_taken")
 
 
 def test_put_profile_submit_with_a_complete_payload_marks_it_submitted(admin_db: Client) -> None:

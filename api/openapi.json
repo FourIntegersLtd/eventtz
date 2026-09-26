@@ -17,6 +17,479 @@
         "title": "AdminBugReportBody",
         "type": "object"
       },
+      "AdminVendorApprovalBody": {
+        "description": "The approval state staff are moving a vendor to.",
+        "properties": {
+          "approval_status": {
+            "description": "pending = awaiting review; approved = visible on client explore; banned = hidden from client explore.",
+            "enum": [
+              "pending",
+              "approved",
+              "banned"
+            ],
+            "title": "Approval Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "approval_status"
+        ],
+        "title": "AdminVendorApprovalBody",
+        "type": "object"
+      },
+      "AdminVendorApprovalResponse": {
+        "description": "The vendor's approval state after the change.",
+        "properties": {
+          "approval_status": {
+            "title": "Approval Status",
+            "type": "string"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "approval_status"
+        ],
+        "title": "AdminVendorApprovalResponse",
+        "type": "object"
+      },
+      "AdminVendorListingMediaBody": {
+        "description": "Staff's order for the vendor's listing photos and which ones to hide.",
+        "properties": {
+          "display_order": {
+            "description": "Full admin drag order of profile/portfolio URLs (hidden items stay in order). First visible item becomes the browse card cover.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Display Order",
+            "type": "array"
+          },
+          "hidden_image_urls": {
+            "description": "Full list of profile/portfolio URLs hidden from public listing.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Hidden Image Urls",
+            "type": "array"
+          }
+        },
+        "title": "AdminVendorListingMediaBody",
+        "type": "object"
+      },
+      "AdminVendorListingMediaResponse": {
+        "description": "The listing photos as clients now see them.",
+        "properties": {
+          "display_order": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Display Order",
+            "type": "array"
+          },
+          "hidden_image_urls": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Hidden Image Urls",
+            "type": "array"
+          },
+          "listing_cover_image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Listing Cover Image Url"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "AdminVendorListingMediaResponse",
+        "type": "object"
+      },
+      "AdminVendorListingOverrideBody": {
+        "description": "Force a listing on or off, or hand it back to the automatic rule.",
+        "properties": {
+          "listing_override": {
+            "description": "auto = follow approval and payouts; visible/hidden = super admin only, with a reason.",
+            "enum": [
+              "auto",
+              "visible",
+              "hidden"
+            ],
+            "title": "Listing Override",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "required": [
+          "listing_override"
+        ],
+        "title": "AdminVendorListingOverrideBody",
+        "type": "object"
+      },
+      "AdminVendorListingOverrideResponse": {
+        "description": "The override now stored and whether clients can find the vendor.",
+        "properties": {
+          "listing_override": {
+            "title": "Listing Override",
+            "type": "string"
+          },
+          "listing_visible": {
+            "default": false,
+            "title": "Listing Visible",
+            "type": "boolean"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "listing_override"
+        ],
+        "title": "AdminVendorListingOverrideResponse",
+        "type": "object"
+      },
+      "AdminVendorPayoutNudgeBody": {
+        "description": "Approved vendors to email a \"set up payouts\" nudge (duplicates and blanks are ignored).",
+        "properties": {
+          "user_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "User Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "user_ids"
+        ],
+        "title": "AdminVendorPayoutNudgeBody",
+        "type": "object"
+      },
+      "AdminVendorProfileNudgeBody": {
+        "description": "Draft vendors to email a \"finish your profile\" nudge (duplicates and blanks are ignored).",
+        "properties": {
+          "user_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "User Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "user_ids"
+        ],
+        "title": "AdminVendorProfileNudgeBody",
+        "type": "object"
+      },
+      "AdminVendorProfileNudgeFailure": {
+        "description": "A vendor who could not be nudged, and why.",
+        "properties": {
+          "error": {
+            "title": "Error",
+            "type": "string"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "error"
+        ],
+        "title": "AdminVendorProfileNudgeFailure",
+        "type": "object"
+      },
+      "AdminVendorProfileNudgeResponse": {
+        "description": "How many vendors were emailed, how many were not eligible, and who could not be reached.",
+        "properties": {
+          "failures": {
+            "items": {
+              "$ref": "#/components/schemas/AdminVendorProfileNudgeFailure"
+            },
+            "title": "Failures",
+            "type": "array"
+          },
+          "sent": {
+            "default": 0,
+            "title": "Sent",
+            "type": "integer"
+          },
+          "skipped": {
+            "default": 0,
+            "title": "Skipped",
+            "type": "integer"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "title": "AdminVendorProfileNudgeResponse",
+        "type": "object"
+      },
+      "AdminVendorRow": {
+        "description": "One vendor on the staff vendor list.",
+        "properties": {
+          "approval_status": {
+            "default": "pending",
+            "title": "Approval Status",
+            "type": "string"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "current_step": {
+            "default": 1,
+            "title": "Current Step",
+            "type": "integer"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "listing_override": {
+            "default": "auto",
+            "title": "Listing Override",
+            "type": "string"
+          },
+          "listing_override_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Listing Override Reason"
+          },
+          "listing_visible": {
+            "default": false,
+            "title": "Listing Visible",
+            "type": "boolean"
+          },
+          "onboarding_status": {
+            "default": "draft",
+            "title": "Onboarding Status",
+            "type": "string"
+          },
+          "payouts_verified": {
+            "default": false,
+            "title": "Payouts Verified",
+            "type": "boolean"
+          },
+          "profile_form_data": {
+            "additionalProperties": true,
+            "title": "Profile Form Data",
+            "type": "object"
+          },
+          "stripe_account_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stripe Account Id"
+          },
+          "stripe_charges_enabled": {
+            "default": false,
+            "title": "Stripe Charges Enabled",
+            "type": "boolean"
+          },
+          "stripe_payouts_enabled": {
+            "default": false,
+            "title": "Stripe Payouts Enabled",
+            "type": "boolean"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "AdminVendorRow",
+        "type": "object"
+      },
+      "AdminVendorUnsubmitBody": {
+        "description": "Returning a profile for edits, with an optional note for the vendor.",
+        "properties": {
+          "message": {
+            "anyOf": [
+              {
+                "maxLength": 5000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Shown to the vendor in the email, if one is sent.",
+            "title": "Message"
+          },
+          "send_email": {
+            "default": true,
+            "description": "Email the vendor that their profile needs edits.",
+            "title": "Send Email",
+            "type": "boolean"
+          }
+        },
+        "title": "AdminVendorUnsubmitBody",
+        "type": "object"
+      },
+      "AdminVendorUnsubmitResponse": {
+        "description": "The vendor's onboarding status after being returned for edits.",
+        "properties": {
+          "email_sent": {
+            "default": false,
+            "description": "The vendor was emailed (false if skipped or failed).",
+            "title": "Email Sent",
+            "type": "boolean"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "status"
+        ],
+        "title": "AdminVendorUnsubmitResponse",
+        "type": "object"
+      },
+      "AdminVendorsListResponse": {
+        "description": "One page of the staff vendor list and how many vendors match in total.",
+        "properties": {
+          "limit": {
+            "default": 50,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
+          },
+          "vendors": {
+            "items": {
+              "$ref": "#/components/schemas/AdminVendorRow"
+            },
+            "title": "Vendors",
+            "type": "array"
+          }
+        },
+        "title": "AdminVendorsListResponse",
+        "type": "object"
+      },
       "AuthSession": {
         "description": "A session: a short-lived access token (sent as `Authorization: Bearer`) and a refresh token.\n\n`expires_at` is when the access token expires, in seconds since the epoch.",
         "properties": {
@@ -2186,6 +2659,25 @@
         "title": "ValidationError",
         "type": "object"
       },
+      "VendorBusinessNameAvailabilityResponse": {
+        "description": "Whether a business name is free (the caller's own name counts as free).",
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "available"
+        ],
+        "title": "VendorBusinessNameAvailabilityResponse",
+        "type": "object"
+      },
       "VendorClientReferralResponse": {
         "description": "A vendor's referral screen: their code and link (empty until set), the fee and the tiers.",
         "properties": {
@@ -2231,6 +2723,106 @@
           "tiers"
         ],
         "title": "VendorClientReferralResponse",
+        "type": "object"
+      },
+      "VendorProfilePutBody": {
+        "description": "One save of the onboarding form: the step reached, the fields changed and, optionally, a status.",
+        "properties": {
+          "current_step": {
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Current Step",
+            "type": "integer"
+          },
+          "profile_form_data": {
+            "additionalProperties": true,
+            "title": "Profile Form Data",
+            "type": "object"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "draft",
+                  "submitted",
+                  "complete"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "draft = still editing; submitted = sent for review. Omit to keep the stored status.",
+            "title": "Status"
+          }
+        },
+        "required": [
+          "current_step"
+        ],
+        "title": "VendorProfilePutBody",
+        "type": "object"
+      },
+      "VendorProfileState": {
+        "description": "The vendor's onboarding form and where it stands, with why they are (or are not) listed.",
+        "properties": {
+          "approval_status": {
+            "default": "pending",
+            "title": "Approval Status",
+            "type": "string"
+          },
+          "current_step": {
+            "title": "Current Step",
+            "type": "integer"
+          },
+          "listing_override": {
+            "default": "auto",
+            "title": "Listing Override",
+            "type": "string"
+          },
+          "listing_visible": {
+            "default": false,
+            "description": "Clients can find this vendor: approved, and payouts verified unless overridden.",
+            "title": "Listing Visible",
+            "type": "boolean"
+          },
+          "onboarding_status": {
+            "title": "Onboarding Status",
+            "type": "string"
+          },
+          "payouts_verified": {
+            "default": false,
+            "description": "Stripe Connect can both take charges and pay out.",
+            "title": "Payouts Verified",
+            "type": "boolean"
+          },
+          "profile_form_data": {
+            "additionalProperties": true,
+            "title": "Profile Form Data",
+            "type": "object"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "current_step",
+          "onboarding_status"
+        ],
+        "title": "VendorProfileState",
         "type": "object"
       },
       "VendorReferralBookingRow": {
@@ -3716,6 +4308,720 @@
         "tags": [
           "admin",
           "referrals"
+        ]
+      }
+    },
+    "/api/v1/admin/vendors": {
+      "get": {
+        "description": "Vendors, most recently updated first, searched and filtered.",
+        "operationId": "list_vendors_api_v1_admin_vendors_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Part of an email or business name.",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Part of an email or business name.",
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "approval_status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Approval Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminVendorsListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Vendors",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/vendors/nudge-profile-complete": {
+      "post": {
+        "description": "Email draft vendors to finish their profile.",
+        "operationId": "nudge_to_complete_profile_api_v1_admin_vendors_nudge_profile_complete_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminVendorProfileNudgeBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminVendorProfileNudgeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Nudge To Complete Profile",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/vendors/nudge-setup-payouts": {
+      "post": {
+        "description": "Email approved vendors to finish Stripe payout setup.",
+        "operationId": "nudge_to_set_up_payouts_api_v1_admin_vendors_nudge_setup_payouts_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminVendorPayoutNudgeBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminVendorProfileNudgeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Nudge To Set Up Payouts",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/vendors/{user_id}/approval": {
+      "patch": {
+        "description": "Approve, ban or re-queue a vendor.",
+        "operationId": "set_approval_api_v1_admin_vendors__user_id__approval_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminVendorApprovalBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminVendorApprovalResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "vendor_profile_not_found",
+            "x-codes": [
+              "vendor_profile_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Set Approval",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/vendors/{user_id}/listing-media": {
+      "patch": {
+        "description": "Reorder or hide the vendor's listing photos.",
+        "operationId": "set_listing_media_api_v1_admin_vendors__user_id__listing_media_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminVendorListingMediaBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminVendorListingMediaResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "listing_media_url_invalid",
+            "x-codes": [
+              "listing_media_url_invalid"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "vendor_profile_not_found",
+            "x-codes": [
+              "vendor_profile_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Set Listing Media",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/vendors/{user_id}/listing-override": {
+      "patch": {
+        "description": "Force a listing visible or hidden, or return it to the automatic rule.",
+        "operationId": "set_listing_override_api_v1_admin_vendors__user_id__listing_override_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminVendorListingOverrideBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminVendorListingOverrideResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "listing_override_reason_required",
+            "x-codes": [
+              "listing_override_reason_required"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden, listing_override_super_admin_only",
+            "x-codes": [
+              "forbidden",
+              "listing_override_super_admin_only"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "vendor_profile_not_found",
+            "x-codes": [
+              "vendor_profile_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Set Listing Override",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/vendors/{user_id}/unsubmit": {
+      "patch": {
+        "description": "Send a submitted profile back to the vendor for edits.",
+        "operationId": "return_for_edits_api_v1_admin_vendors__user_id__unsubmit_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminVendorUnsubmitBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminVendorUnsubmitResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "only_submitted_to_draft, only_pending_to_draft",
+            "x-codes": [
+              "only_submitted_to_draft",
+              "only_pending_to_draft"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "vendor_profile_not_found",
+            "x-codes": [
+              "vendor_profile_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Return For Edits",
+        "tags": [
+          "admin"
         ]
       }
     },
@@ -5514,6 +6820,206 @@
           }
         ],
         "summary": "Submit Vendor Contact",
+        "tags": [
+          "vendor"
+        ]
+      }
+    },
+    "/api/v1/vendor/profile": {
+      "get": {
+        "description": "The caller's onboarding form and listing state (a blank draft before they start).",
+        "operationId": "get_profile_api_v1_vendor_profile_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorProfileState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Profile",
+        "tags": [
+          "vendor"
+        ]
+      },
+      "put": {
+        "description": "Save a step of the onboarding form, or submit it for review.",
+        "operationId": "save_profile_api_v1_vendor_profile_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VendorProfilePutBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorProfileState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "vendor_profile_invalid",
+            "x-codes": [
+              "vendor_profile_invalid"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "business_name_taken",
+            "x-codes": [
+              "business_name_taken"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Save Profile",
+        "tags": [
+          "vendor"
+        ]
+      }
+    },
+    "/api/v1/vendor/profile/business-name-available": {
+      "get": {
+        "description": "Whether another vendor already uses this business name.",
+        "operationId": "business_name_available_api_v1_vendor_profile_business_name_available_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "business_name",
+            "required": true,
+            "schema": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Business Name",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorBusinessNameAvailabilityResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Business Name Available",
         "tags": [
           "vendor"
         ]

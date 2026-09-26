@@ -7,7 +7,7 @@ small subset of that builder with SQL over psycopg. The tests stay byte-identica
 across targets, which is the point of a freeze suite.
 
 Only what the tests use is supported: `select`/`insert`/`update`/`delete` with
-`eq`, `in_`, `order` and `limit`, plus `auth.admin.delete_user`. Rows come back
+`eq`, `in_`, `is_` (null only), `order` and `limit`, plus `auth.admin.delete_user`. Rows come back
 in PostgREST's JSON shape (UUIDs and timestamps as text, numerics as floats).
 """
 
@@ -92,6 +92,13 @@ class TableQuery:
         self.filters.append((column, "in", list(values)))
         return self
 
+    def is_(self, column: str, value: str) -> TableQuery:
+        """Keep rows where `column` is null; PostgREST spells that `is_(column, "null")`."""
+        if value != "null":
+            raise NotImplementedError(f"is_({column!r}, {value!r}): only null is supported")
+        self.filters.append((column, "is_null", None))
+        return self
+
     def order(self, column: str, *, desc: bool = False) -> TableQuery:
         """Sort by `column`, ascending unless `desc`."""
         self.ordering.append((column, desc))
@@ -160,6 +167,9 @@ class TableQuery:
         if self.filters:
             conditions = []
             for column, operator, value in self.filters:
+                if operator == "is_null":
+                    conditions.append(sql.SQL("{} is null").format(sql.Identifier(column)))
+                    continue
                 if operator == "in":
                     conditions.append(
                         sql.SQL("{} = any(%s::{}[])").format(

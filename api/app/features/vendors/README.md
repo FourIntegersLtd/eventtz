@@ -23,7 +23,15 @@ is publicly listed.
 - Every staff action is written to the audit log.
 
 ## Routes
-Being rebuilt (cut 1): `GET/PUT /vendor/profile`, `GET /vendor/profile/business-name-available`,
+Built (cut 1): `GET/PUT /vendor/profile`, `GET /vendor/profile/business-name-available`,
 `GET /admin/vendors`, `PATCH /admin/vendors/{user_id}/approval|unsubmit|listing-override|listing-media`,
 `POST /admin/vendors/nudge-profile-complete|nudge-setup-payouts`.
 Cut 2: `GET /admin/vendors/{user_id}/insights`, `POST /admin/vendors/{user_id}/restore-stripe-connect`.
+
+Baseline quirks kept on purpose (the freeze tests pin them):
+- `GET/PUT /vendor/profile` accept any signed-in account, and a `PUT` turns the caller into a vendor.
+- The admin 404 reads "Vendor profile not found" with no full stop; a nudge failure reads "Vendor profile not found." with one.
+
+Not yet like the baseline:
+- `GET /vendor/profile` does not refresh the payout flags from Stripe; that arrives with the payments slice.
+- Emails go out before the request's transaction commits (the Mailer is synchronous); they move to a job after commit.

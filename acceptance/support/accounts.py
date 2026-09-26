@@ -36,10 +36,17 @@ class SeededAccount:
 
 
 def _find_user_id(admin_db: Client, email: str) -> str | None:
-    """The Auth user id for `email`, searching the (small, local) user list."""
-    for auth_user in admin_db.auth.admin.list_users(page=1, per_page=1000):
-        if (auth_user.email or "").lower() == email.lower():
-            return str(auth_user.id)
+    """The Auth user id for `email`, paging through the local user list.
+
+    Every run seeds fresh accounts, so the list outgrows one page; stopping at
+    page one made fixed addresses look new and `create_user` then failed.
+    """
+    page = 1
+    while auth_users := admin_db.auth.admin.list_users(page=page, per_page=1000):
+        for auth_user in auth_users:
+            if (auth_user.email or "").lower() == email.lower():
+                return str(auth_user.id)
+        page += 1
     return None
 
 

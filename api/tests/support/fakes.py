@@ -80,6 +80,10 @@ class SavedObject:
     content_type: str
 
 
+# The host every `FakeStorage` URL uses, so tests can build "our" upload URLs.
+FAKE_STORAGE_HOST = "files.example"
+
+
 @dataclass
 class FakeStorage:
     """Keeps uploads in memory. `configured=False` simulates missing keys; `error` makes saves fail."""
@@ -97,4 +101,8 @@ class FakeStorage:
         if self.error is not None:
             raise self.error
         self.saved.append(SavedObject(key=key, body=body, content_type=content_type))
-        return StoredFile(bucket="fake-bucket", key=key, public_url=f"https://files.example/{key}")
+        return StoredFile(bucket="fake-bucket", key=key, public_url=f"https://{FAKE_STORAGE_HOST}/{key}")
+
+    def public_host(self) -> str:
+        """The host of every URL `save` returns."""
+        return FAKE_STORAGE_HOST

@@ -144,6 +144,10 @@ class Storage(Protocol):
         """Store `body` under `key` as a public object. Raises on any storage failure."""
         ...
 
+    def public_host(self) -> str:
+        """The host every stored file's public URL starts with, so saved forms can keep only our uploads."""
+        ...
+
 
 # --- live updates -------------------------------------------------------------------------------
 

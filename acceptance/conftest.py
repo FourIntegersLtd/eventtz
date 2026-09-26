@@ -48,8 +48,8 @@ NOT_YET_ON_API = {
     "test_identity_settings.py::test_account_deletion_*": (
         "account deletion arrives after bookings, disputes and messaging (identity README)"
     ),
-    "test_vendor_profile.py::*": "vendors slice: services and routes are Phase B",
-    "test_vendor_moderation.py::*": "vendors slice: services and routes are Phase B",
+    "test_marketplace_*.py::*": "the marketplace slice is next after vendors cut 1",
+    "test_messaging_*.py::*": "the messaging slice follows marketplace",
 }
 LOCAL_HOSTS = ("http://127.0.0.1", "http://localhost", "postgresql://postgres:postgres@127.0.0.1:")
 
