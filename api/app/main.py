@@ -28,6 +28,7 @@ from app.features.bookings import router_client as bookings_client_router
 from app.features.bookings import router_vendor as bookings_vendor_router
 from app.features.content import router as content_router
 from app.features.content import router_admin as content_admin_router
+from app.features.copilot import router as copilot_router
 from app.features.disputes import router_admin as disputes_admin_router
 from app.features.disputes import router_client as disputes_client_router
 from app.features.disputes import router_vendor as disputes_vendor_router
@@ -49,6 +50,7 @@ from app.features.reviews import router_client as reviews_client_router
 from app.features.reviews import router_vendor as reviews_vendor_router
 from app.features.vendors import router as vendors_router
 from app.features.vendors import router_admin as vendors_admin_router
+from app.features.vendors import router_ai as vendors_ai_router
 
 # Every product route lives under this prefix; the web app and the baseline use the same one.
 API_PREFIX = "/api/v1"
@@ -61,6 +63,7 @@ def _routers() -> list[APIRouter]:
         bookings_vendor_router.router,
         content_router.router,
         content_admin_router.router,
+        copilot_router.router,
         disputes_client_router.router,
         disputes_vendor_router.router,
         disputes_admin_router.router,
@@ -81,6 +84,7 @@ def _routers() -> list[APIRouter]:
         reviews_admin_router.router,
         vendors_router.router,
         vendors_admin_router.router,
+        vendors_ai_router.router,
     ]
 
 
