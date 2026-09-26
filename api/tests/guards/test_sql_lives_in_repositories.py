@@ -19,6 +19,7 @@ import pytest
 
 from tests.guards._scan import (
     CORE_ROOT,
+    MIGRATION_ROOT,
     attribute_names,
     imported_modules,
     names_imported_from,
@@ -62,8 +63,13 @@ def is_repository(path: Path) -> bool:
 
 
 def may_query(path: Path) -> bool:
-    """Repositories, mapped models and the core query helpers."""
-    return is_repository(path) or path.name == "models.py" or path in CORE_QUERY_HELPERS
+    """Repositories, mapped models, the core query helpers, and the standalone migration tool."""
+    return (
+        is_repository(path)
+        or path.name == "models.py"
+        or path in CORE_QUERY_HELPERS
+        or MIGRATION_ROOT in path.parents
+    )
 
 
 def sql_literals(path: Path) -> list[str]:
