@@ -69,9 +69,19 @@ class LanguageModel(Protocol):
     """Ask a chat model for a reply that fits a Pydantic model (structured output)."""
 
     def parse(
-        self, *, model: str, messages: list[ChatMessage], reply_model: type[ReplyModel], purpose: str
+        self,
+        *,
+        model: str,
+        messages: list[ChatMessage],
+        reply_model: type[ReplyModel],
+        purpose: str,
+        image_data_url: str | None = None,
     ) -> ReplyModel:
         """Return the parsed reply.
+
+        `image_data_url`, when given, is a `data:` URL attached to the last user
+        message as vision input (added for the vendor portfolio-photo QA call;
+        every other caller leaves it `None` and gets plain chat completion).
 
         Raises `LanguageModelUnavailable` when no model is configured, and
         `LanguageModelFailed`, `LanguageModelRefused` or `LanguageModelEmptyReply`

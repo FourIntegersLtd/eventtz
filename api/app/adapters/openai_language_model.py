@@ -20,11 +20,28 @@ from app.core.settings import get_settings
 log = get_logger(__name__)
 
 
+def _with_image(message: ChatMessage, image_data_url: str) -> dict[str, Any]:
+    """`message`, but with its text alongside an image content-part (OpenAI vision input shape)."""
+    return {
+        "role": message["role"],
+        "content": [
+            {"type": "text", "text": message["content"]},
+            {"type": "image_url", "image_url": {"url": image_data_url}},
+        ],
+    }
+
+
 class OpenAILanguageModel:
     """Calls OpenAI with the key from settings; with no key every call raises `LanguageModelUnavailable`."""
 
     def parse(
-        self, *, model: str, messages: list[ChatMessage], reply_model: type[ReplyModel], purpose: str
+        self,
+        *,
+        model: str,
+        messages: list[ChatMessage],
+        reply_model: type[ReplyModel],
+        purpose: str,
+        image_data_url: str | None = None,
     ) -> ReplyModel:
         """Send `messages` and parse the reply into `reply_model` (see `LanguageModel.parse`)."""
         api_key = get_settings().openai_api_key.strip()
@@ -32,6 +49,10 @@ class OpenAILanguageModel:
             log.warning("%s: OPENAI_API_KEY is not set; AI features are off", purpose)
             raise LanguageModelUnavailable()
         prompt: Any = messages  # the SDK's message union type is stricter than our TypedDict
+        if image_data_url is not None:
+            # Attach the image to the last message as vision input (chat.completions
+            # accepts a content-parts list in place of a plain string).
+            prompt = [*messages[:-1], _with_image(messages[-1], image_data_url)] if messages else messages
         try:
             completion = OpenAI(api_key=api_key).chat.completions.parse(
                 model=model, messages=prompt, response_format=reply_model

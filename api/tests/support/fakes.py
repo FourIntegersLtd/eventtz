@@ -32,6 +32,7 @@ class LanguageModelCall:
     messages: list[ChatMessage]
     reply_model: type[BaseModel]
     purpose: str
+    image_data_url: str | None = None
 
 
 @dataclass
@@ -43,11 +44,23 @@ class FakeLanguageModel:
     calls: list[LanguageModelCall] = field(default_factory=list)
 
     def parse(
-        self, *, model: str, messages: list[ChatMessage], reply_model: type[ReplyModel], purpose: str
+        self,
+        *,
+        model: str,
+        messages: list[ChatMessage],
+        reply_model: type[ReplyModel],
+        purpose: str,
+        image_data_url: str | None = None,
     ) -> ReplyModel:
         """Record the call, then raise the configured error or return the configured reply."""
         self.calls.append(
-            LanguageModelCall(model=model, messages=messages, reply_model=reply_model, purpose=purpose)
+            LanguageModelCall(
+                model=model,
+                messages=messages,
+                reply_model=reply_model,
+                purpose=purpose,
+                image_data_url=image_data_url,
+            )
         )
         if self.error is not None:
             raise self.error
