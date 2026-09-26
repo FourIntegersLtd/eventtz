@@ -26,9 +26,12 @@ def _as_datetime_bound(value: str) -> datetime:
 
     The admin console sends plain dates (`2030-01-01`) or full ISO timestamps; a
     `timestamptz` column has no `>=`/`<=` operator against a bare string, so this
-    parses it before it reaches a query. A date-only string means midnight UTC.
+    parses it before it reaches a query. A date-only string means midnight UTC, and so
+    does a timestamp without an offset: Postgres read those in the database's UTC
+    session zone on the baseline, not in this server's local zone.
     """
-    return datetime.fromisoformat(value if len(value) > 10 else f"{value}T00:00:00+00:00").astimezone(UTC)
+    bound = datetime.fromisoformat(value if len(value) > 10 else f"{value}T00:00:00+00:00")
+    return bound.replace(tzinfo=UTC) if bound.tzinfo is None else bound.astimezone(UTC)
 
 
 # Every column the admin list, detail and financials views read.
