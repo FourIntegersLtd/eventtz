@@ -34,7 +34,7 @@ CONTACT_ALERT_CASES: list[dict[str, Any]] = [
         "portal": "admin",
         "user_email": "staff@example.com",
         "subject_line": "Bug report",
-        "message": 'Quotes "double" and \'single\'',
+        "message": "Quotes \"double\" and 'single'",
         "booking_id": None,
     },
 ]
