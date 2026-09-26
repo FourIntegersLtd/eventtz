@@ -417,3 +417,39 @@ def format_booking_notification(
         body = fallback_body
 
     return title, body
+
+
+# Booking emails sent at most once per (kind, booking, recipient): the lifecycle
+# emails a retried request or job could otherwise repeat. Other kinds may resend.
+EMAIL_DEDUPE_KINDS = frozenset(
+    {
+        "booking_completed",
+        "booking_request_sent",
+        "payment_received",
+        "payment_receipt",
+        "vendor_payment_received",
+        "vendor_payment_record",
+        "vendor_payout_released",
+        "vendor_payout_statement",
+        "payment_refunded",
+        "completion_reminder",
+        "vendor_completion_reminder",
+        "enquiry_reminder_1h",
+        "enquiry_reminder_6h",
+        "enquiry_reminder_24h",
+        "client_vendor_no_response",
+        "event_tomorrow",
+        "vendor_event_tomorrow",
+        "pay_to_confirm",
+    }
+)
+
+
+def booking_portal_path(portal: Portal, booking_id: str) -> str:
+    """The booking's page in the recipient's portal, e.g. `/client/bookings/<id>`."""
+    return f"/{portal}/bookings/{booking_id}"
+
+
+def booking_email_template_id(kind: str) -> str:
+    """The `email_delivery_log.template_id` for a booking email of this kind."""
+    return f"booking.{kind}"

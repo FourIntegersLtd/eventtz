@@ -48,7 +48,6 @@ NOT_YET_ON_API = {
     "test_identity_settings.py::test_account_deletion_*": (
         "account deletion arrives after bookings, disputes and messaging (identity README)"
     ),
-    "test_bookings_*.py::*": "the bookings slice follows notifications",
     "test_payments.py::*": "the payments slice follows bookings",
     "test_reviews.py::*": "the reviews slice follows payments",
     "test_disputes.py::*": "the disputes slice follows reviews",

@@ -21,6 +21,7 @@ from app.features.referrals.errors import (
     CodeFormatInvalid,
     CodeLocked,
     CodeTaken,
+    ReferralCodeInvalid,
     ReferralProgrammeClosed,
     ReferralProgrammeNotFound,
 )
@@ -154,6 +155,46 @@ async def preview(
         service_fee_before_discount_gbp=breakdown.service_fee_before_discount_gbp,
         service_fee_gbp=breakdown.service_fee_gbp,
     )
+
+
+# --- bookings made with a code ----------------------------------------------------------------
+
+
+async def code_for_booking(session: AsyncSession, vendor_user_id: str, typed_code: str | None) -> str | None:
+    """The normalised code a new booking stores, `None` when none was typed.
+
+    A code that was typed but does not work for this vendor fails the booking,
+    so the client is never charged a fee they expected to be discounted.
+    """
+    if not normalise_client_code(typed_code):
+        if (typed_code or "").strip():
+            raise ReferralCodeInvalid()
+        return None
+    if not await _code_works_for_vendor(session, vendor_user_id, typed_code or ""):
+        raise ReferralCodeInvalid()
+    return normalise_client_code(typed_code)
+
+
+async def code_owners(session: AsyncSession, codes: set[str]) -> dict[str, str]:
+    """Map each (normalised) code to the vendor who owns it today; unowned codes are left out."""
+    return await repository.code_owners(session, {code for code in codes if code})
+
+
+def booking_code_discount(
+    *, stored_code: object, booking_vendor_id: str | None, owners: dict[str, str], vendor_portion_gbp: float
+) -> tuple[float, float | None]:
+    """The fee discount a booking's stored code earns, and its tier minimum (see `stored_code_discount`)."""
+    return stored_code_discount(
+        stored_code=stored_code,
+        booking_vendor_id=booking_vendor_id,
+        code_owners=owners,
+        vendor_portion_gbp=vendor_portion_gbp,
+    )
+
+
+def spend_discount(vendor_portion_gbp: float) -> tuple[float, float | None]:
+    """The fee discount a valid code earns on this spend, and its tier minimum."""
+    return discount_and_tier(vendor_portion_gbp)
 
 
 # --- the vendor's referral bookings ------------------------------------------------------------

@@ -76,8 +76,12 @@ class MarketplaceEvent(Base, UUIDPrimaryKey):
     vendor_user_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid, ForeignKey("users.id", name="marketplace_events_vendor_user_id_fkey", ondelete="SET NULL")
     )
-    # The database's foreign key into `booking_requests` is declared once bookings is mapped.
-    booking_request_id: Mapped[uuid.UUID | None] = mapped_column(Uuid)
+    booking_request_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid,
+        ForeignKey(
+            "booking_requests.id", name="marketplace_events_booking_request_id_fkey", ondelete="SET NULL"
+        ),
+    )
     category: Mapped[str | None] = mapped_column(Text)
     location: Mapped[str | None] = mapped_column(Text)
     booking_value_gbp: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))

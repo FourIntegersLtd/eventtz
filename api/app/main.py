@@ -24,6 +24,8 @@ from app.core.observability import configure_sentry
 from app.core.ports import language_model_port, mailer_port, storage_port, webhooks_port
 from app.core.redis import close_redis
 from app.core.settings import LOCAL_ORIGIN_REGEX, get_settings
+from app.features.bookings import router_client as bookings_client_router
+from app.features.bookings import router_vendor as bookings_vendor_router
 from app.features.content import router as content_router
 from app.features.content import router_admin as content_admin_router
 from app.features.identity import router as identity_router
@@ -49,6 +51,8 @@ API_PREFIX = "/api/v1"
 def _routers() -> list[APIRouter]:
     """Every slice router, in mount order. Add a slice's router here when it is rebuilt."""
     return [
+        bookings_client_router.router,
+        bookings_vendor_router.router,
         content_router.router,
         content_admin_router.router,
         identity_router.router,

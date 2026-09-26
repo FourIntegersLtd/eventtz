@@ -26,3 +26,11 @@ class DisputeNoticeRow(BaseModel):
     summary: str | None = None
     created_at: str | None = None
     updated_at: str | None = None
+
+
+class BookingPartiesRow(BaseModel):
+    """Who is on a booking, and its event name, for addressing a booking notice."""
+
+    client_user_id: str
+    vendor_user_id: str
+    event_name: str | None = None

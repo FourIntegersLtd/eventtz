@@ -1,15 +1,17 @@
-"""Database access for `booking_notifications`, the in-app booking notices.
+"""Database access for `booking_notifications` (the in-app booking notices) and `email_delivery_log`.
 
 Every function takes the request's session and never commits (ADR 0002).
 """
 
 from __future__ import annotations
 
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, func, insert, select, update
+from sqlalchemy.dialects.postgresql import insert as postgres_insert
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import as_uuid, plain_row
-from app.features.notifications.models import BookingNotification
+from app.features.notifications.models import BookingNotification, EmailDeliveryLog
 from app.features.notifications.rows import StoredNotificationRow
 
 
@@ -73,3 +75,66 @@ async def mark_read(session: AsyncSession, *, user_id: str, notification_id: str
         .returning(BookingNotification.id)
     )
     return updated_id is not None
+
+
+async def insert_notification_if_absent(
+    session: AsyncSession, *, user_id: str, booking_id: str, kind: str
+) -> bool:
+    """Add an unread notice unless the booking already has one of this kind. True when it was added."""
+    parsed_user_id, parsed_booking_id = as_uuid(user_id), as_uuid(booking_id)
+    if parsed_user_id is None or parsed_booking_id is None:
+        return False
+    inserted_id = await session.scalar(
+        postgres_insert(BookingNotification)
+        .values(user_id=parsed_user_id, booking_id=parsed_booking_id, kind=kind)
+        .on_conflict_do_nothing(constraint="uq_booking_notifications_booking_kind")
+        .returning(BookingNotification.id)
+    )
+    return inserted_id is not None
+
+
+async def replace_notification(
+    session: AsyncSession, *, user_id: str, booking_id: str, kind: str, body: str | None
+) -> bool:
+    """Replace the booking's notice of this kind with a fresh unread one carrying `body`.
+
+    Delete then insert, as the baseline did, so the notice gets a new id and
+    moves to the top of the feed. False when an id cannot name a row.
+    """
+    parsed_user_id, parsed_booking_id = as_uuid(user_id), as_uuid(booking_id)
+    if parsed_user_id is None or parsed_booking_id is None:
+        return False
+    await session.execute(
+        delete(BookingNotification).where(
+            BookingNotification.booking_id == parsed_booking_id, BookingNotification.kind == kind
+        )
+    )
+    await session.execute(
+        insert(BookingNotification).values(
+            user_id=parsed_user_id, booking_id=parsed_booking_id, kind=kind, body=body
+        )
+    )
+    return True
+
+
+async def claim_email_delivery(
+    session: AsyncSession, *, template_id: str, recipient_email: str, recipient_user_id: str, booking_id: str
+) -> bool:
+    """Log a booking email as sent. False when this template already went to this person for this booking.
+
+    The insert runs in a savepoint, so the unique-index clash that means
+    "already sent" leaves the request's transaction usable.
+    """
+    try:
+        async with session.begin_nested():
+            await session.execute(
+                insert(EmailDeliveryLog).values(
+                    template_id=template_id,
+                    recipient_email=recipient_email.strip().lower(),
+                    recipient_user_id=as_uuid(recipient_user_id),
+                    booking_id=as_uuid(booking_id),
+                )
+            )
+    except IntegrityError:
+        return False
+    return True

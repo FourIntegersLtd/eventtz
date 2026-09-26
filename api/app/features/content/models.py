@@ -115,11 +115,7 @@ class HelpArticle(Base, UUIDPrimaryKey, Timestamps):
 
 
 class ContactSubmission(Base, UUIDPrimaryKey):
-    """A message sent through a portal's contact form, optionally about one booking.
-
-    `booking_id` references `booking_requests`, which the bookings slice will own;
-    the foreign key is in the schema, and joins the model when that table is mapped.
-    """
+    """A message sent through a portal's contact form, optionally about one booking."""
 
     __tablename__ = "contact_submissions"
     __table_args__ = (
@@ -135,7 +131,9 @@ class ContactSubmission(Base, UUIDPrimaryKey):
     portal: Mapped[str] = mapped_column(Text, nullable=False)
     subject: Mapped[str] = mapped_column(Text, nullable=False)
     message: Mapped[str] = mapped_column(Text, nullable=False)
-    booking_id: Mapped[uuid.UUID | None] = mapped_column(Uuid)
+    booking_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("booking_requests.id", name="contact_submissions_booking_id_fkey")
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

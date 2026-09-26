@@ -1800,6 +1800,106 @@
         "title": "Body_upload_image_api_v1_media_images_post",
         "type": "object"
       },
+      "BookingLineItemIn": {
+        "description": "One line of a vendor's quote.",
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "feature_lines": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 25,
+            "title": "Feature Lines",
+            "type": "array"
+          },
+          "heading": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Heading",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "maximum": 100000.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "timeline_line": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timeline Line"
+          },
+          "unit_label": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Label"
+          },
+          "unit_price_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Price Gbp"
+          },
+          "unit_rate_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Rate Gbp"
+          }
+        },
+        "required": [
+          "id",
+          "heading"
+        ],
+        "title": "BookingLineItemIn",
+        "type": "object"
+      },
       "BookingNotificationsUnreadResponse": {
         "description": "How many booking notices the caller has not read (the dashboard bell badge).",
         "properties": {
@@ -1817,6 +1917,195 @@
           "unread_count"
         ],
         "title": "BookingNotificationsUnreadResponse",
+        "type": "object"
+      },
+      "BookingPricingBreakdown": {
+        "description": "Every figure and label the booking screens show for the price.",
+        "properties": {
+          "adjustments_total_gbp": {
+            "title": "Adjustments Total Gbp",
+            "type": "number"
+          },
+          "client_total_gbp": {
+            "title": "Client Total Gbp",
+            "type": "number"
+          },
+          "client_total_label": {
+            "title": "Client Total Label",
+            "type": "string"
+          },
+          "has_pricing_tbc": {
+            "title": "Has Pricing Tbc",
+            "type": "boolean"
+          },
+          "line_items_subtotal_gbp": {
+            "title": "Line Items Subtotal Gbp",
+            "type": "number"
+          },
+          "line_items_subtotal_label": {
+            "title": "Line Items Subtotal Label",
+            "type": "string"
+          },
+          "referral_fee_applied": {
+            "default": false,
+            "title": "Referral Fee Applied",
+            "type": "boolean"
+          },
+          "referral_fee_discount_gbp": {
+            "default": 0.0,
+            "title": "Referral Fee Discount Gbp",
+            "type": "number"
+          },
+          "referral_fee_discount_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Referral Fee Discount Label"
+          },
+          "referral_tier_min_spend_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Referral Tier Min Spend Gbp"
+          },
+          "service_fee_before_discount_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Fee Before Discount Gbp"
+          },
+          "service_fee_before_discount_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Fee Before Discount Label"
+          },
+          "service_fee_gbp": {
+            "title": "Service Fee Gbp",
+            "type": "number"
+          },
+          "service_fee_label": {
+            "title": "Service Fee Label",
+            "type": "string"
+          },
+          "service_fee_percent": {
+            "title": "Service Fee Percent",
+            "type": "number"
+          },
+          "vendor_adjustments": {
+            "items": {
+              "$ref": "#/components/schemas/VendorAdjustmentItem"
+            },
+            "title": "Vendor Adjustments",
+            "type": "array"
+          },
+          "vendor_portion_gbp": {
+            "title": "Vendor Portion Gbp",
+            "type": "number"
+          },
+          "vendor_portion_label": {
+            "title": "Vendor Portion Label",
+            "type": "string"
+          },
+          "vendor_referral_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor Referral Code"
+          }
+        },
+        "required": [
+          "line_items_subtotal_gbp",
+          "vendor_adjustments",
+          "adjustments_total_gbp",
+          "vendor_portion_gbp",
+          "service_fee_percent",
+          "service_fee_gbp",
+          "client_total_gbp",
+          "has_pricing_tbc",
+          "vendor_portion_label",
+          "service_fee_label",
+          "client_total_label",
+          "line_items_subtotal_label"
+        ],
+        "title": "BookingPricingBreakdown",
+        "type": "object"
+      },
+      "BookingRequestCreated": {
+        "description": "The new booking's id and status.",
+        "properties": {
+          "booking_request_id": {
+            "title": "Booking Request Id",
+            "type": "string"
+          },
+          "booking_status": {
+            "default": "pending",
+            "enum": [
+              "pending",
+              "accepted",
+              "declined",
+              "cancelled"
+            ],
+            "title": "Booking Status",
+            "type": "string"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "event_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Id"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "booking_request_id"
+        ],
+        "title": "BookingRequestCreated",
         "type": "object"
       },
       "ChangePasswordRequest": {
@@ -1879,6 +2168,543 @@
           "unread_count"
         ],
         "title": "ChatUnreadCountResponse",
+        "type": "object"
+      },
+      "ClientBookingDetail": {
+        "description": "One booking as the client sees it.",
+        "properties": {
+          "booking_request_id": {
+            "title": "Booking Request Id",
+            "type": "string"
+          },
+          "booking_status": {
+            "title": "Booking Status",
+            "type": "string"
+          },
+          "client_completion_confirmed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Completion Confirmed At"
+          },
+          "completion_waiting_on": {
+            "anyOf": [
+              {
+                "enum": [
+                  "client",
+                  "vendor",
+                  "both"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completion Waiting On"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "counterparty_phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Counterparty Phone"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "event_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Address"
+          },
+          "event_date": {
+            "title": "Event Date",
+            "type": "string"
+          },
+          "event_end_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event End Date"
+          },
+          "event_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Id"
+          },
+          "event_name": {
+            "title": "Event Name",
+            "type": "string"
+          },
+          "event_postcode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Postcode"
+          },
+          "event_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Title"
+          },
+          "initial_client_total_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Initial Client Total Label"
+          },
+          "initiator": {
+            "default": "client",
+            "enum": [
+              "client",
+              "vendor"
+            ],
+            "title": "Initiator",
+            "type": "string"
+          },
+          "line_items": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Line Items",
+            "type": "array"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "paid_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid At"
+          },
+          "payment_status": {
+            "default": "unpaid",
+            "title": "Payment Status",
+            "type": "string"
+          },
+          "payout_auto_release_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payout Auto Release At"
+          },
+          "pricing": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BookingPricingBreakdown"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "review": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClientReviewSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "selected_option_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Selected Option Ids",
+            "type": "array"
+          },
+          "total_label": {
+            "title": "Total Label",
+            "type": "string"
+          },
+          "vendor_adjustments": {
+            "items": {
+              "$ref": "#/components/schemas/VendorAdjustmentItem"
+            },
+            "title": "Vendor Adjustments",
+            "type": "array"
+          },
+          "vendor_completion_confirmed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor Completion Confirmed At"
+          },
+          "vendor_display_name": {
+            "title": "Vendor Display Name",
+            "type": "string"
+          },
+          "vendor_referral_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor Referral Code"
+          },
+          "vendor_user_id": {
+            "title": "Vendor User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "booking_request_id",
+          "booking_status",
+          "vendor_user_id",
+          "vendor_display_name",
+          "event_name",
+          "event_date",
+          "total_label",
+          "selected_option_ids",
+          "line_items"
+        ],
+        "title": "ClientBookingDetail",
+        "type": "object"
+      },
+      "ClientBookingDetailResponse": {
+        "description": "The client's view of one booking.",
+        "properties": {
+          "booking": {
+            "$ref": "#/components/schemas/ClientBookingDetail"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "booking"
+        ],
+        "title": "ClientBookingDetailResponse",
+        "type": "object"
+      },
+      "ClientBookingListItem": {
+        "description": "One row of the client's bookings list.",
+        "properties": {
+          "booking_request_id": {
+            "title": "Booking Request Id",
+            "type": "string"
+          },
+          "booking_status": {
+            "title": "Booking Status",
+            "type": "string"
+          },
+          "client_completion_confirmed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Completion Confirmed At"
+          },
+          "client_total_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Total Label"
+          },
+          "completion_waiting_on": {
+            "anyOf": [
+              {
+                "enum": [
+                  "client",
+                  "vendor",
+                  "both"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completion Waiting On"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "event_date": {
+            "title": "Event Date",
+            "type": "string"
+          },
+          "event_end_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event End Date"
+          },
+          "event_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Id"
+          },
+          "event_name": {
+            "title": "Event Name",
+            "type": "string"
+          },
+          "event_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Title"
+          },
+          "has_price_update": {
+            "default": false,
+            "title": "Has Price Update",
+            "type": "boolean"
+          },
+          "has_review": {
+            "default": false,
+            "title": "Has Review",
+            "type": "boolean"
+          },
+          "initiator": {
+            "default": "client",
+            "enum": [
+              "client",
+              "vendor"
+            ],
+            "title": "Initiator",
+            "type": "string"
+          },
+          "payment_status": {
+            "default": "unpaid",
+            "title": "Payment Status",
+            "type": "string"
+          },
+          "total_label": {
+            "title": "Total Label",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "vendor_display_name": {
+            "title": "Vendor Display Name",
+            "type": "string"
+          },
+          "vendor_user_id": {
+            "title": "Vendor User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "booking_request_id",
+          "booking_status",
+          "event_name",
+          "event_date",
+          "total_label",
+          "vendor_user_id",
+          "vendor_display_name"
+        ],
+        "title": "ClientBookingListItem",
+        "type": "object"
+      },
+      "ClientBookingStatusBody": {
+        "description": "The client's answer to a vendor quote or a vendor's updated price.",
+        "properties": {
+          "event_address": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Address"
+          },
+          "event_postcode": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Postcode"
+          },
+          "status": {
+            "enum": [
+              "accepted",
+              "declined"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "ClientBookingStatusBody",
+        "type": "object"
+      },
+      "ClientBookingsListResponse": {
+        "description": "The client's bookings, most recently active first.",
+        "properties": {
+          "bookings": {
+            "items": {
+              "$ref": "#/components/schemas/ClientBookingListItem"
+            },
+            "title": "Bookings",
+            "type": "array"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "bookings"
+        ],
+        "title": "ClientBookingsListResponse",
         "type": "object"
       },
       "ClientFavoriteResponse": {
@@ -2015,6 +2841,82 @@
           }
         },
         "title": "ClientOnboardingState",
+        "type": "object"
+      },
+      "ClientReviewSummary": {
+        "description": "The review the client left on this booking, shown back to them.",
+        "properties": {
+          "body": {
+            "default": "",
+            "title": "Body",
+            "type": "string"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "image_urls": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Image Urls",
+            "type": "array"
+          },
+          "rating": {
+            "title": "Rating",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "rating"
+        ],
+        "title": "ClientReviewSummary",
+        "type": "object"
+      },
+      "ConfirmCompletionResponse": {
+        "description": "The booking after one party confirmed the event went ahead.",
+        "properties": {
+          "awaiting_other_party": {
+            "default": false,
+            "title": "Awaiting Other Party",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "payment_status": {
+            "title": "Payment Status",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "payment_status"
+        ],
+        "title": "ConfirmCompletionResponse",
         "type": "object"
       },
       "ContactSharingSettings": {
@@ -2313,6 +3215,142 @@
         "title": "ConversationsListResponse",
         "type": "object"
       },
+      "CreateBookingRequestBody": {
+        "additionalProperties": false,
+        "description": "A client's booking request for some of a vendor's packages.",
+        "properties": {
+          "client_search_context": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Search Context"
+          },
+          "event_address": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Address"
+          },
+          "event_date": {
+            "format": "date",
+            "title": "Event Date",
+            "type": "string"
+          },
+          "event_end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event End Date"
+          },
+          "event_id": {
+            "anyOf": [
+              {
+                "maxLength": 36,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Id"
+          },
+          "event_name": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Event Name",
+            "type": "string"
+          },
+          "event_postcode": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Postcode"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "quantities": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantities"
+          },
+          "selected_option_ids": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Selected Option Ids",
+            "type": "array"
+          },
+          "vendor_referral_code": {
+            "anyOf": [
+              {
+                "maxLength": 6,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor Referral Code"
+          },
+          "vendor_user_id": {
+            "minLength": 1,
+            "title": "Vendor User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "vendor_user_id",
+          "event_name",
+          "event_date",
+          "selected_option_ids"
+        ],
+        "title": "CreateBookingRequestBody",
+        "type": "object"
+      },
       "CreateReferralPartnerRequest": {
         "description": "A new partner. Leave `slug` blank to make one from the display name.",
         "properties": {
@@ -2363,6 +3401,78 @@
           "display_name"
         ],
         "title": "CreateReferralPartnerRequest",
+        "type": "object"
+      },
+      "CreateVendorQuoteBody": {
+        "description": "A vendor's priced quote sent to a client.",
+        "properties": {
+          "client_user_id": {
+            "minLength": 1,
+            "title": "Client User Id",
+            "type": "string"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "event_date": {
+            "format": "date",
+            "title": "Event Date",
+            "type": "string"
+          },
+          "event_end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event End Date"
+          },
+          "event_name": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Event Name",
+            "type": "string"
+          },
+          "line_items": {
+            "items": {
+              "$ref": "#/components/schemas/BookingLineItemIn"
+            },
+            "minItems": 1,
+            "title": "Line Items",
+            "type": "array"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "required": [
+          "client_user_id",
+          "event_name",
+          "event_date",
+          "line_items"
+        ],
+        "title": "CreateVendorQuoteBody",
         "type": "object"
       },
       "ErrorResponse": {
@@ -3651,6 +4761,39 @@
         "title": "PublicReviewItem",
         "type": "object"
       },
+      "PutVendorBookingAdjustmentsBody": {
+        "description": "The full new list of the vendor's extras and discounts (replaces the old one).",
+        "properties": {
+          "adjustments": {
+            "items": {
+              "$ref": "#/components/schemas/VendorAdjustmentIn"
+            },
+            "maxItems": 20,
+            "title": "Adjustments",
+            "type": "array"
+          }
+        },
+        "title": "PutVendorBookingAdjustmentsBody",
+        "type": "object"
+      },
+      "PutVendorBookingAdjustmentsResponse": {
+        "description": "The booking after the vendor changed its extras and discounts.",
+        "properties": {
+          "booking": {
+            "$ref": "#/components/schemas/VendorBookingDetail"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "booking"
+        ],
+        "title": "PutVendorBookingAdjustmentsResponse",
+        "type": "object"
+      },
       "ReferralFeeTier": {
         "description": "Spend at least `min_spend_gbp` and get `fee_discount_gbp` off the service fee.",
         "properties": {
@@ -4219,6 +5362,34 @@
         "title": "SignupResponse",
         "type": "object"
       },
+      "UpdateBookingVenueBody": {
+        "description": "The venue of an accepted, unpaid booking.",
+        "properties": {
+          "event_address": {
+            "maxLength": 500,
+            "minLength": 3,
+            "title": "Event Address",
+            "type": "string"
+          },
+          "event_postcode": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Postcode"
+          }
+        },
+        "required": [
+          "event_address"
+        ],
+        "title": "UpdateBookingVenueBody",
+        "type": "object"
+      },
       "UpdateReferralPartnerRequest": {
         "description": "A partner edit: only the fields sent (and not null) change. The slug never changes.",
         "properties": {
@@ -4328,6 +5499,64 @@
         "title": "ValidationError",
         "type": "object"
       },
+      "VendorAdjustmentIn": {
+        "description": "One extra or discount a vendor puts on a pending request.",
+        "properties": {
+          "amount_gbp": {
+            "maximum": 1000000.0,
+            "minimum": -1000000.0,
+            "title": "Amount Gbp",
+            "type": "number"
+          },
+          "label": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "tag": {
+            "default": "other",
+            "maxLength": 50,
+            "title": "Tag",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "amount_gbp"
+        ],
+        "title": "VendorAdjustmentIn",
+        "type": "object"
+      },
+      "VendorAdjustmentItem": {
+        "description": "A stored vendor extra (positive) or discount (negative).",
+        "properties": {
+          "adjustment_category": {
+            "title": "Adjustment Category",
+            "type": "string"
+          },
+          "amount_gbp": {
+            "title": "Amount Gbp",
+            "type": "number"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "adjustment_category",
+          "label",
+          "amount_gbp"
+        ],
+        "title": "VendorAdjustmentItem",
+        "type": "object"
+      },
       "VendorAnalyticsResponse": {
         "description": "The vendor's analytics screen: headline numbers, the funnel and monthly series.",
         "properties": {
@@ -4385,6 +5614,551 @@
           }
         },
         "title": "VendorAnalyticsResponse",
+        "type": "object"
+      },
+      "VendorBookingDetail": {
+        "description": "One booking as the vendor sees it.",
+        "properties": {
+          "booking_request_id": {
+            "title": "Booking Request Id",
+            "type": "string"
+          },
+          "booking_status": {
+            "title": "Booking Status",
+            "type": "string"
+          },
+          "client_completion_confirmed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Completion Confirmed At"
+          },
+          "client_display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Display Name"
+          },
+          "client_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Email"
+          },
+          "client_user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client User Id"
+          },
+          "completion_waiting_on": {
+            "anyOf": [
+              {
+                "enum": [
+                  "client",
+                  "vendor",
+                  "both"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completion Waiting On"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "counterparty_phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Counterparty Phone"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "event_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Address"
+          },
+          "event_date": {
+            "title": "Event Date",
+            "type": "string"
+          },
+          "event_end_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event End Date"
+          },
+          "event_name": {
+            "title": "Event Name",
+            "type": "string"
+          },
+          "event_postcode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Postcode"
+          },
+          "initial_client_total_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Initial Client Total Label"
+          },
+          "initiator": {
+            "default": "client",
+            "enum": [
+              "client",
+              "vendor"
+            ],
+            "title": "Initiator",
+            "type": "string"
+          },
+          "line_items": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Line Items",
+            "type": "array"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "paid_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid At"
+          },
+          "payment_status": {
+            "default": "unpaid",
+            "title": "Payment Status",
+            "type": "string"
+          },
+          "payout_auto_release_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payout Auto Release At"
+          },
+          "pricing": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BookingPricingBreakdown"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "review": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VendorReviewSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "selected_option_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Selected Option Ids",
+            "type": "array"
+          },
+          "total_label": {
+            "title": "Total Label",
+            "type": "string"
+          },
+          "vendor_adjustments": {
+            "items": {
+              "$ref": "#/components/schemas/VendorAdjustmentItem"
+            },
+            "title": "Vendor Adjustments",
+            "type": "array"
+          },
+          "vendor_completion_confirmed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor Completion Confirmed At"
+          }
+        },
+        "required": [
+          "booking_request_id",
+          "booking_status",
+          "event_name",
+          "event_date",
+          "total_label",
+          "selected_option_ids",
+          "line_items"
+        ],
+        "title": "VendorBookingDetail",
+        "type": "object"
+      },
+      "VendorBookingDetailResponse": {
+        "description": "The vendor's view of one booking.",
+        "properties": {
+          "booking": {
+            "$ref": "#/components/schemas/VendorBookingDetail"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "booking"
+        ],
+        "title": "VendorBookingDetailResponse",
+        "type": "object"
+      },
+      "VendorBookingListItem": {
+        "description": "One row of the vendor's bookings list.",
+        "properties": {
+          "booking_request_id": {
+            "title": "Booking Request Id",
+            "type": "string"
+          },
+          "booking_status": {
+            "title": "Booking Status",
+            "type": "string"
+          },
+          "client_display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Display Name"
+          },
+          "client_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Email"
+          },
+          "client_total_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Total Label"
+          },
+          "completion_waiting_on": {
+            "anyOf": [
+              {
+                "enum": [
+                  "client",
+                  "vendor",
+                  "both"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completion Waiting On"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "event_date": {
+            "title": "Event Date",
+            "type": "string"
+          },
+          "event_end_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event End Date"
+          },
+          "event_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Id"
+          },
+          "event_name": {
+            "title": "Event Name",
+            "type": "string"
+          },
+          "event_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Title"
+          },
+          "has_price_update": {
+            "default": false,
+            "title": "Has Price Update",
+            "type": "boolean"
+          },
+          "initiator": {
+            "default": "client",
+            "enum": [
+              "client",
+              "vendor"
+            ],
+            "title": "Initiator",
+            "type": "string"
+          },
+          "payment_status": {
+            "default": "unpaid",
+            "title": "Payment Status",
+            "type": "string"
+          },
+          "review": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VendorReviewSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "total_label": {
+            "title": "Total Label",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "vendor_completion_confirmed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor Completion Confirmed At"
+          }
+        },
+        "required": [
+          "booking_request_id",
+          "booking_status",
+          "event_name",
+          "event_date",
+          "total_label"
+        ],
+        "title": "VendorBookingListItem",
+        "type": "object"
+      },
+      "VendorBookingStatusBody": {
+        "description": "The vendor's answer. Completion is a separate step both parties confirm.",
+        "properties": {
+          "status": {
+            "enum": [
+              "accepted",
+              "declined",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "VendorBookingStatusBody",
+        "type": "object"
+      },
+      "VendorBookingStatusResponse": {
+        "description": "The booking's id and new status.",
+        "properties": {
+          "booking_request_id": {
+            "title": "Booking Request Id",
+            "type": "string"
+          },
+          "booking_status": {
+            "title": "Booking Status",
+            "type": "string"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "booking_request_id",
+          "booking_status"
+        ],
+        "title": "VendorBookingStatusResponse",
+        "type": "object"
+      },
+      "VendorBookingsListResponse": {
+        "description": "The vendor's bookings, most recently active first.",
+        "properties": {
+          "bookings": {
+            "items": {
+              "$ref": "#/components/schemas/VendorBookingListItem"
+            },
+            "title": "Bookings",
+            "type": "array"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "bookings"
+        ],
+        "title": "VendorBookingsListResponse",
         "type": "object"
       },
       "VendorBusinessNameAvailabilityResponse": {
@@ -4799,6 +6573,55 @@
           "share_link"
         ],
         "title": "VendorReferralSetCodeResponse",
+        "type": "object"
+      },
+      "VendorReviewSummary": {
+        "description": "The client's review of this booking, as the vendor sees it.",
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "image_urls": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Image Urls",
+            "type": "array"
+          },
+          "rating": {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Rating",
+            "type": "integer"
+          },
+          "reviewer_display": {
+            "title": "Reviewer Display",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "rating",
+          "body",
+          "reviewer_display"
+        ],
+        "title": "VendorReviewSummary",
         "type": "object"
       },
       "VerifyEmailRequest": {
@@ -8791,6 +10614,801 @@
         ]
       }
     },
+    "/api/v1/client/booking-requests": {
+      "get": {
+        "description": "The client's bookings in one bucket, most recently active first.",
+        "operationId": "list_client_bookings_api_v1_client_booking_requests_get",
+        "parameters": [
+          {
+            "description": "Filter bucket: active, completed, closed, or all",
+            "in": "query",
+            "name": "group",
+            "required": false,
+            "schema": {
+              "default": "active",
+              "description": "Filter bucket: active, completed, closed, or all",
+              "title": "Group",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional exact booking status, e.g. pending",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional exact booking status, e.g. pending",
+              "title": "Status"
+            }
+          },
+          {
+            "description": "Optional exact payment_status",
+            "in": "query",
+            "name": "payment_status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional exact payment_status",
+              "title": "Payment Status"
+            }
+          },
+          {
+            "description": "Exclude this payment_status (e.g. unpaid for payment history)",
+            "in": "query",
+            "name": "exclude_payment_status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exclude this payment_status (e.g. unpaid for payment history)",
+              "title": "Exclude Payment Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientBookingsListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_invalid_group",
+            "x-codes": [
+              "booking_invalid_group"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Client Bookings",
+        "tags": [
+          "client"
+        ]
+      },
+      "post": {
+        "description": "Ask a vendor for some of their packages on a date; the vendor is told and the notes go to chat.",
+        "operationId": "post_booking_request_api_v1_client_booking_requests_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBookingRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingRequestCreated"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_invalid_vendor_id, cannot_book_own_vendor, vendor_not_bookable, booking_party_suspended, event_dates_unavailable, event_span_too_long, vendor_full_on_date, booking_line_items_invalid, booking_no_valid_price",
+            "x-codes": [
+              "booking_invalid_vendor_id",
+              "cannot_book_own_vendor",
+              "vendor_not_bookable",
+              "booking_party_suspended",
+              "event_dates_unavailable",
+              "event_span_too_long",
+              "vendor_full_on_date",
+              "booking_line_items_invalid",
+              "booking_no_valid_price"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Booking Request",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/booking-requests/{booking_id}": {
+      "get": {
+        "description": "One booking with its price breakdown, the vendor's phone once paid, and the client's review.",
+        "operationId": "get_client_booking_api_v1_client_booking_requests__booking_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientBookingDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id",
+            "x-codes": [
+              "invalid_booking_id"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_not_found",
+            "x-codes": [
+              "booking_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Client Booking",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/booking-requests/{booking_id}/cancel": {
+      "post": {
+        "description": "Cancel a pending or accepted booking; the vendor is told.",
+        "operationId": "post_cancel_client_booking_api_v1_client_booking_requests__booking_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorBookingStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id, cancel_only_pending_or_accepted, cancel_complete_instead, cancel_after_payout, cancel_partial_refund, booking_already_refunded, cancel_open_dispute",
+            "x-codes": [
+              "invalid_booking_id",
+              "cancel_only_pending_or_accepted",
+              "cancel_complete_instead",
+              "cancel_after_payout",
+              "cancel_partial_refund",
+              "booking_already_refunded",
+              "cancel_open_dispute"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_not_found",
+            "x-codes": [
+              "booking_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_cancel_needs_payments",
+            "x-codes": [
+              "booking_cancel_needs_payments"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Cancel Client Booking",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/booking-requests/{booking_id}/confirm-completion": {
+      "post": {
+        "description": "Confirm the event went ahead; the vendor is paid once they confirm too.",
+        "operationId": "post_client_confirm_completion_api_v1_client_booking_requests__booking_id__confirm_completion_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmCompletionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id, complete_only_accepted, complete_needs_payment, event_day_not_over",
+            "x-codes": [
+              "invalid_booking_id",
+              "complete_only_accepted",
+              "complete_needs_payment",
+              "event_day_not_over"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_not_found",
+            "x-codes": [
+              "booking_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_payout_release_unavailable",
+            "x-codes": [
+              "booking_payout_release_unavailable"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Client Confirm Completion",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/booking-requests/{booking_id}/status": {
+      "patch": {
+        "description": "Accept or decline a vendor's quote or updated price (declining a new price keeps the old one).",
+        "operationId": "patch_client_booking_status_api_v1_client_booking_requests__booking_id__status_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientBookingStatusBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorBookingStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id, respond_only_pending, nothing_to_respond_to",
+            "x-codes": [
+              "invalid_booking_id",
+              "respond_only_pending",
+              "nothing_to_respond_to"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_not_found",
+            "x-codes": [
+              "booking_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Patch Client Booking Status",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/booking-requests/{booking_id}/venue": {
+      "patch": {
+        "description": "Set the venue of an accepted booking before paying.",
+        "operationId": "patch_client_booking_venue_api_v1_client_booking_requests__booking_id__venue_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBookingVenueBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientBookingDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id, venue_accepted_only, booking_already_paid",
+            "x-codes": [
+              "invalid_booking_id",
+              "venue_accepted_only",
+              "booking_already_paid"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_not_found",
+            "x-codes": [
+              "booking_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Patch Client Booking Venue",
+        "tags": [
+          "client"
+        ]
+      }
+    },
     "/api/v1/client/contact": {
       "post": {
         "description": "A client's message to the Eventtz team.",
@@ -10592,6 +13210,716 @@
         "summary": "Vendor Analytics",
         "tags": [
           "vendor-analytics"
+        ]
+      }
+    },
+    "/api/v1/vendor/booking-requests": {
+      "get": {
+        "description": "The vendor's bookings in one bucket, most recently active first.",
+        "operationId": "list_vendor_bookings_api_v1_vendor_booking_requests_get",
+        "parameters": [
+          {
+            "description": "Filter bucket: active, completed, closed, or all",
+            "in": "query",
+            "name": "group",
+            "required": false,
+            "schema": {
+              "default": "active",
+              "description": "Filter bucket: active, completed, closed, or all",
+              "title": "Group",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional exact booking status, e.g. pending",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional exact booking status, e.g. pending",
+              "title": "Status"
+            }
+          },
+          {
+            "description": "Optional exact payment_status",
+            "in": "query",
+            "name": "payment_status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional exact payment_status",
+              "title": "Payment Status"
+            }
+          },
+          {
+            "description": "Exclude this payment_status",
+            "in": "query",
+            "name": "exclude_payment_status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exclude this payment_status",
+              "title": "Exclude Payment Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorBookingsListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_invalid_group",
+            "x-codes": [
+              "booking_invalid_group"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Vendor Bookings",
+        "tags": [
+          "vendor"
+        ]
+      }
+    },
+    "/api/v1/vendor/booking-requests/vendor-quote": {
+      "post": {
+        "description": "Send a client a priced quote (optionally from a chat thread); it waits for their answer.",
+        "operationId": "post_vendor_quote_api_v1_vendor_booking_requests_vendor_quote_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVendorQuoteBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingRequestCreated"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_invalid_client_id, booking_invalid_conversation_id, cannot_quote_self, vendor_profile_not_bookable, booking_party_suspended, quote_client_not_found, quotes_client_only, quote_client_suspended, event_dates_unavailable, event_span_too_long, vendor_full_on_date, quote_needs_line_item, quote_line_invalid, quote_line_needs_price, quote_total_not_positive",
+            "x-codes": [
+              "booking_invalid_client_id",
+              "booking_invalid_conversation_id",
+              "cannot_quote_self",
+              "vendor_profile_not_bookable",
+              "booking_party_suspended",
+              "quote_client_not_found",
+              "quotes_client_only",
+              "quote_client_suspended",
+              "event_dates_unavailable",
+              "event_span_too_long",
+              "vendor_full_on_date",
+              "quote_needs_line_item",
+              "quote_line_invalid",
+              "quote_line_needs_price",
+              "quote_total_not_positive"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Vendor Quote",
+        "tags": [
+          "vendor"
+        ]
+      }
+    },
+    "/api/v1/vendor/booking-requests/{booking_id}": {
+      "get": {
+        "description": "One booking with its price breakdown, the client's contact once paid, and any review.",
+        "operationId": "get_vendor_booking_api_v1_vendor_booking_requests__booking_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorBookingDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id",
+            "x-codes": [
+              "invalid_booking_id"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_not_found",
+            "x-codes": [
+              "booking_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Vendor Booking",
+        "tags": [
+          "vendor"
+        ]
+      }
+    },
+    "/api/v1/vendor/booking-requests/{booking_id}/adjustments": {
+      "put": {
+        "description": "Replace the extras and discounts on a pending request; the client must confirm the new price.",
+        "operationId": "put_vendor_booking_adjustments_api_v1_vendor_booking_requests__booking_id__adjustments_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PutVendorBookingAdjustmentsBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PutVendorBookingAdjustmentsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id, adjustments_not_on_vendor_quote, adjustments_pending_only, adjustment_amount_invalid, adjustment_out_of_range, surcharge_too_high, discounts_too_high",
+            "x-codes": [
+              "invalid_booking_id",
+              "adjustments_not_on_vendor_quote",
+              "adjustments_pending_only",
+              "adjustment_amount_invalid",
+              "adjustment_out_of_range",
+              "surcharge_too_high",
+              "discounts_too_high"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_not_found",
+            "x-codes": [
+              "booking_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Put Vendor Booking Adjustments",
+        "tags": [
+          "vendor"
+        ]
+      }
+    },
+    "/api/v1/vendor/booking-requests/{booking_id}/confirm-completion": {
+      "post": {
+        "description": "Confirm the event went ahead; the payout follows once the client confirms too.",
+        "operationId": "post_vendor_confirm_completion_api_v1_vendor_booking_requests__booking_id__confirm_completion_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmCompletionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id, complete_only_accepted, complete_needs_payment, event_day_not_over",
+            "x-codes": [
+              "invalid_booking_id",
+              "complete_only_accepted",
+              "complete_needs_payment",
+              "event_day_not_over"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_not_found",
+            "x-codes": [
+              "booking_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_payout_release_unavailable",
+            "x-codes": [
+              "booking_payout_release_unavailable"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Vendor Confirm Completion",
+        "tags": [
+          "vendor"
+        ]
+      }
+    },
+    "/api/v1/vendor/booking-requests/{booking_id}/status": {
+      "patch": {
+        "description": "Accept, decline or cancel a booking (withdrawing a quote is a cancel).",
+        "operationId": "patch_vendor_booking_status_api_v1_vendor_booking_requests__booking_id__status_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VendorBookingStatusBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorBookingStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id, cancel_only_accepted_or_quote, client_must_accept_quote, payout_setup_required, client_must_confirm_price, accept_only_pending_or_declined, withdraw_quote_with_cancel, decline_only_pending, cancel_after_payout, cancel_partial_refund, booking_already_refunded, cancel_open_dispute",
+            "x-codes": [
+              "invalid_booking_id",
+              "cancel_only_accepted_or_quote",
+              "client_must_accept_quote",
+              "payout_setup_required",
+              "client_must_confirm_price",
+              "accept_only_pending_or_declined",
+              "withdraw_quote_with_cancel",
+              "decline_only_pending",
+              "cancel_after_payout",
+              "cancel_partial_refund",
+              "booking_already_refunded",
+              "cancel_open_dispute"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_not_found",
+            "x-codes": [
+              "booking_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_cancel_needs_payments",
+            "x-codes": [
+              "booking_cancel_needs_payments"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Patch Vendor Booking Status",
+        "tags": [
+          "vendor"
         ]
       }
     },

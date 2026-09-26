@@ -23,6 +23,14 @@ async def emails_by_id(session: AsyncSession, user_ids: list[str]) -> dict[str, 
     return {user.id: user.email for user in await repository.list_user_summaries(session, user_ids)}
 
 
+async def contact_emails(session: AsyncSession, user_ids: list[str]) -> dict[str, str | None]:
+    """Map each existing user id to the email the other side of a booking may see; `None` once closed."""
+    return {
+        user.id: None if user.deleted_at else user.email
+        for user in await repository.list_user_summaries(session, user_ids)
+    }
+
+
 async def email_labels(session: AsyncSession, user_ids: list[str]) -> dict[str, str]:
     """Map each existing user id to the email staff screens show for them.
 

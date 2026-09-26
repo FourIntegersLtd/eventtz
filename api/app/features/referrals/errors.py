@@ -112,3 +112,10 @@ class CodeAllocationFailed(Unavailable):
 
     code = "referral_code_allocation_failed"
     default_message = "Could not allocate a unique referral code."
+
+
+class ReferralCodeInvalid(InvalidInput):
+    """A client booked with a code that is not this vendor's, is switched off, or has no approved owner."""
+
+    code = "referral_code_invalid"
+    default_message = "That referral code is not valid for this vendor."

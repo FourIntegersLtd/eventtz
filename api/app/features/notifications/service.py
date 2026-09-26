@@ -92,7 +92,7 @@ def _render_transactional(email: str, content: TransactionalEmail) -> OutgoingEm
     )
 
 
-def _render_notification(email: str, content: TransactionalEmail) -> OutgoingEmail:
+def render_booking_notification(email: str, content: TransactionalEmail) -> OutgoingEmail:
     """Render a `TransactionalEmail` with the booking layout (`booking/notification.html`).
 
     The baseline renders the admin welcome email with this layout, not the auth
@@ -203,7 +203,7 @@ def send_password_changed(mailer: Mailer, *, email: str, user_type: str | None =
 def render_welcome(*, email: str, user_type: str) -> OutgoingEmail:
     """Render the welcome email for `email`. Raises `ValueError` for any `user_type` but the three below."""
     if user_type == "admin":
-        return _render_notification(email, admin_welcome_email())
+        return render_booking_notification(email, admin_welcome_email())
     if user_type == "vendor":
         welcome = welcome_email(email=email, user_type="vendor")
     elif user_type == "client":
@@ -276,7 +276,7 @@ def render_vendor_approval_changed(
         listing_visible=listing_visible,
         payouts_verified=payouts_verified,
     )
-    return _render_notification(vendor_email, content)
+    return render_booking_notification(vendor_email, content)
 
 
 def send_vendor_approval_changed(
@@ -310,7 +310,7 @@ def render_vendor_returned_for_edits(
 ) -> OutgoingEmail:
     """Render "returned for edits" to `vendor_email`, without sending it."""
     content = vendor_returned_for_edits_email(business_name=business_name, admin_message=admin_message)
-    return _render_notification(vendor_email, content)
+    return render_booking_notification(vendor_email, content)
 
 
 def send_vendor_returned_for_edits(
@@ -336,7 +336,7 @@ def send_vendor_returned_for_edits(
 def render_vendor_profile_nudge(*, vendor_email: str, business_name: str | None) -> OutgoingEmail:
     """Render the draft-profile completion nudge to `vendor_email`, without sending it."""
     content = vendor_complete_profile_nudge_email(vendor_email=vendor_email, business_name=business_name)
-    return _render_notification(vendor_email, content)
+    return render_booking_notification(vendor_email, content)
 
 
 def send_vendor_profile_nudge(mailer: Mailer, *, vendor_email: str | None, business_name: str | None) -> bool:
@@ -354,7 +354,7 @@ def send_vendor_profile_nudge(mailer: Mailer, *, vendor_email: str | None, busin
 def render_vendor_payout_nudge(*, vendor_email: str, business_name: str | None) -> OutgoingEmail:
     """Render the payout-setup nudge to `vendor_email`, without sending it."""
     content = vendor_setup_payouts_nudge_email(vendor_email=vendor_email, business_name=business_name)
-    return _render_notification(vendor_email, content)
+    return render_booking_notification(vendor_email, content)
 
 
 def send_vendor_payout_nudge(mailer: Mailer, *, vendor_email: str | None, business_name: str | None) -> bool:
@@ -374,7 +374,7 @@ def render_support_message(
 ) -> OutgoingEmail:
     """Render "Eventtz Support sent you a message" for `email`, without sending it."""
     content = support_message_email(messages_url=messages_url, body_html=body_html, body_plain=body_plain)
-    return _render_notification(email, content)
+    return render_booking_notification(email, content)
 
 
 def send_support_message(

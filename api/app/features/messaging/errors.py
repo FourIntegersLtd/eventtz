@@ -136,3 +136,17 @@ class BroadcastSuperAdminOnly(Forbidden):
 
     code = "broadcast_super_admin_only"
     default_message = "Only super admins can broadcast support messages to all clients, vendors, or users."
+
+
+class QuoteConversationNotFound(InvalidInput):
+    """A vendor quote names a conversation that does not exist (400, as the baseline did)."""
+
+    code = "quote_conversation_not_found"
+    default_message = "Conversation not found."
+
+
+class BookingConversationMismatch(InvalidInput):
+    """A vendor quote names a thread that is not the DM between this vendor and client."""
+
+    code = "booking_conversation_mismatch"
+    default_message = "That conversation doesn't match this booking. Open Messages and try again."

@@ -8,13 +8,18 @@ when they are approved but not otherwise listed.
 from __future__ import annotations
 
 import uuid
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import Principal
 from app.core.settings import get_settings
 from app.features.marketplace import repository_explore, service_events
-from app.features.marketplace.domain_metrics import VendorSignals, reviewer_display, vendor_signals
+from app.features.marketplace.domain_metrics import VendorSignals, vendor_signals
+
+# Re-exported: bookings names a booking's reviewer the way public reviews do.
+from app.features.marketplace.domain_metrics import reviewer_display as reviewer_display
+from app.features.marketplace.domain_search import vendor_available_on
 from app.features.marketplace.errors import InvalidVendorId, VendorNotListed
 from app.features.marketplace.schemas import ExploreVendorRow, PublicReviewItem, VendorPublicReviewsResponse
 from app.features.vendors import service_listing
@@ -49,6 +54,29 @@ def _qa_vendor_ids_for(viewer: Principal | None) -> frozenset[str]:
 def _is_qa_vendor(vendor_user_id: str) -> bool:
     """True when the vendor is a staff-designated QA vendor."""
     return vendor_user_id.strip() in get_settings().qa_scoped_vendor_ids
+
+
+async def bookable_vendor_payload(
+    session: AsyncSession, vendor_user_id: str, *, viewer: Principal | None, operator: bool = False
+) -> dict[str, Any] | None:
+    """The profile form of a vendor who can take this booking, or `None` when they cannot.
+
+    A listed vendor qualifies. A QA vendor qualifies only when approved and either the
+    viewer is the test client assigned to them or the vendor is acting on their own
+    bookings (`operator`). Closed accounts never qualify.
+    """
+    if _is_qa_vendor(vendor_user_id):
+        if not operator and vendor_user_id.strip() not in _qa_vendor_ids_for(viewer):
+            return None
+        found = await service_listing.approved_vendors(session, user_ids=[vendor_user_id], country_code=None)
+        return found[0].payload if found else None
+    listed = await service_listing.listed_vendor(session, vendor_user_id)
+    return listed.payload if listed is not None else None
+
+
+def vendor_works_on(payload: dict[str, Any], event_dates: list[str]) -> bool:
+    """True unless a date is blocked or falls on a weekday the vendor does not work (as in search)."""
+    return vendor_available_on(payload, event_dates)
 
 
 async def vendors_for_viewer(

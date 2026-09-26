@@ -111,6 +111,14 @@ class Settings(BaseSettings):
     # comma-separated `client-email:vendor-user-id` pairs. Empty = no QA vendors.
     qa_client_vendor_visibility: str = ""
 
+    # --- Bookings ---
+    # Largest single vendor surcharge on a booking, in pounds.
+    booking_max_adjustment_gbp: float = 5000.0
+    # Surcharges together may not exceed this percentage of the quoted line items.
+    booking_max_adjustment_pct_of_subtotal: float = 100.0
+    # Hours after the event day ends before a paid booking's payout is released automatically.
+    booking_payout_auto_release_hours_after_event: int = 48
+
     # --- Marketplace search ---
     # How long a parsed search query is reused before the language model is asked again (0 = never cache).
     marketplace_search_ai_cache_ttl_seconds: int = 3600

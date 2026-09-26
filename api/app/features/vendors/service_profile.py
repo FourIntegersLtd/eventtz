@@ -43,6 +43,31 @@ def listing_is_visible(vendor: VendorRow) -> bool:
     )
 
 
+async def payouts_ready_for_bookings(session: AsyncSession, vendor_user_id: str) -> bool:
+    """True when the vendor may accept a booking: Stripe can pay them, or staff forced them visible."""
+    vendor = await repository.get_vendor(session, vendor_user_id)
+    if vendor is None:
+        return False
+    return listing_override_of(vendor.listing_override) == "visible" or payouts_are_verified(vendor)
+
+
+async def payout_route_ready(session: AsyncSession, vendor_user_id: str) -> bool:
+    """True when Stripe can pay the vendor: a connected account with payouts switched on.
+
+    Stricter than `payouts_ready_for_bookings`: a staff listing override lets a vendor
+    accept bookings, but money can only move once Stripe itself can pay them.
+    """
+    vendor = await repository.get_vendor(session, vendor_user_id)
+    return bool(vendor and vendor.stripe_account_id and vendor.stripe_payouts_enabled)
+
+
+async def listed_phone(session: AsyncSession, vendor_user_id: str) -> str | None:
+    """The phone number on the vendor's profile form, or `None` when there is none."""
+    vendor = await repository.get_vendor(session, vendor_user_id)
+    phone = vendor.payload.get("phone") if vendor is not None else None
+    return phone.strip() or None if isinstance(phone, str) else None
+
+
 def _profile_state(vendor: VendorRow) -> VendorProfileState:
     """The profile screen's view of a stored vendor row."""
     return VendorProfileState(

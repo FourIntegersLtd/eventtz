@@ -11,7 +11,7 @@ from sqlalchemy import DateTime, Text, Uuid, column, or_, select, table
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import as_uuid, plain_row
-from app.features.notifications.rows import DisputeNoticeRow
+from app.features.notifications.rows import BookingPartiesRow, DisputeNoticeRow
 
 _booking_requests = table(
     "booking_requests",
@@ -49,6 +49,23 @@ async def event_names(session: AsyncSession, booking_ids: list[str]) -> dict[str
         if trimmed:
             names[str(booking_id)] = trimmed
     return names
+
+
+async def booking_parties(session: AsyncSession, booking_id: str) -> BookingPartiesRow | None:
+    """The booking's client, vendor and event name, or None for an unknown id."""
+    parsed_id = as_uuid(booking_id)
+    if parsed_id is None:
+        return None
+    row = (
+        await session.execute(
+            select(
+                _booking_requests.c.client_user_id,
+                _booking_requests.c.vendor_user_id,
+                _booking_requests.c.event_name,
+            ).where(_booking_requests.c.id == parsed_id)
+        )
+    ).first()
+    return BookingPartiesRow.model_validate(plain_row(row)) if row else None
 
 
 async def latest_disputes_for_party(
