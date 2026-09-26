@@ -17204,25 +17204,6 @@
         ]
       }
     },
-    "/api/v1/realtime/stream-ticket": {
-      "post": {
-        "operationId": "issue_stream_ticket_api_v1_realtime_stream_ticket_post",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "Successful Response"
-          }
-        },
-        "summary": "Issue Stream Ticket",
-        "tags": [
-          "realtime"
-        ]
-      }
-    },
     "/api/v1/referrals/partners/{slug}": {
       "get": {
         "operationId": "get_public_referral_partner_api_v1_referrals_partners__slug__get",

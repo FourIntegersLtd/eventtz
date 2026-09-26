@@ -3,6 +3,14 @@
 `openapi.baseline.json` was exported from the running baseline backend. Paths
 are compared with their parameter names blanked (`{post_id}` and `{id}` are the
 same URL). Run `make parity` to list the baseline routes api/ does not serve yet.
+
+One family of routes is allowed to be additive: `/api/v1/realtime/` (workstream
+9, ADR 0005). `EventSource` cannot send an Authorization header, so the SSE
+stream authenticates with a short-lived ticket minted by `POST
+/api/v1/realtime/stream-ticket`, which has no baseline equivalent (the baseline
+stream authenticates with a cookie instead). That route does not rename or
+remove anything the baseline serves, so re-exporting `openapi.baseline.json`
+from the (unmodified) baseline is not required for it.
 """
 
 from __future__ import annotations
@@ -19,6 +27,9 @@ BASELINE_DOCUMENT = PROJECT_ROOT / "openapi.baseline.json"
 # OpenAPI keys under a path that are HTTP methods (the rest are shared parameters etc).
 HTTP_METHODS = frozenset({"get", "put", "post", "delete", "patch", "head", "options"})
 _PATH_PARAMETER = re.compile(r"\{[^}]+\}")
+# Path prefixes allowed to add operations the baseline does not serve. See the module
+# docstring: only the realtime slice's ticket-issue route needs this today.
+ADDITIVE_PATH_PREFIXES = ("/api/v1/realtime/",)
 
 
 def operations(document: dict[str, Any]) -> set[tuple[str, str]]:
@@ -42,7 +53,11 @@ def api_operations() -> set[tuple[str, str]]:
 
 
 def test_every_api_route_exists_in_the_baseline() -> None:
-    invented = sorted(api_operations() - baseline_operations())
+    invented = sorted(
+        operation
+        for operation in api_operations() - baseline_operations()
+        if not operation[1].startswith(ADDITIVE_PATH_PREFIXES)
+    )
     assert not invented, f"api/ serves routes the baseline does not (renamed or new URLs?): {invented}"
 
 
@@ -53,6 +68,23 @@ def test_the_guard_would_catch_an_invented_route(tmp_path: Path) -> None:
     )
     rebuilt = {"paths": {"/api/v1/blog/posts/{post_slug}": {"get": {}}, "/api/v1/blog/feed": {"get": {}}}}
     assert operations(rebuilt) - baseline_operations(baseline_file) == {("GET", "/api/v1/blog/feed")}
+
+
+def test_the_guard_only_exempts_the_realtime_prefix(tmp_path: Path) -> None:
+    """An invented route outside `/api/v1/realtime/` still fails, even alongside an exempt one."""
+    baseline_file = tmp_path / "baseline.json"
+    baseline_file.write_text(json.dumps({"paths": {}}), encoding="utf-8")
+    rebuilt = {
+        "paths": {
+            "/api/v1/realtime/stream-ticket": {"post": {}},
+            "/api/v1/blog/feed": {"get": {}},
+        }
+    }
+    invented = operations(rebuilt) - baseline_operations(baseline_file)
+    still_flagged = sorted(
+        operation for operation in invented if not operation[1].startswith(ADDITIVE_PATH_PREFIXES)
+    )
+    assert still_flagged == [("GET", "/api/v1/blog/feed")]
 
 
 if __name__ == "__main__":

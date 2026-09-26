@@ -1,9 +1,10 @@
 """Realtime routes: mint a stream ticket, then stream that user's events over SSE.
 
 `POST /stream-ticket` is not in the baseline (it authenticates with a cookie
-there); it is a new, additive route the parity guard allows because it does
-not rename or remove anything the baseline serves (see `README.md`'s Routes
-section for the corresponding `openapi.baseline.json` entry).
+there); it is a new, additive route under `/api/v1/realtime/`, a prefix
+`tests/guards/test_routes_match_baseline.py` exempts from the "every api/
+route exists in the baseline" check because it does not rename or remove
+anything the baseline serves (see `README.md`'s Invariants section).
 """
 
 from __future__ import annotations

@@ -45,9 +45,10 @@ in-process bus) lives in `core.events` and `core.sse`; slices publish through
   itself — it only asks for the bus and subscribes.
 - `POST /realtime/stream-ticket` is not in the baseline (the baseline stream
   authenticates by cookie, so it needs no separate ticket step). It is
-  additive under `/api/v1/realtime/`, which is why it was added to
-  `openapi.baseline.json` alongside the existing `GET /realtime/stream`
-  entry rather than left to fail the route-parity guard.
+  additive under `/api/v1/realtime/`; `openapi.baseline.json` stays an
+  unmodified export of the baseline, and
+  `tests/guards/test_routes_match_baseline.py` exempts that one prefix from
+  the "every api/ route exists in the baseline" check instead.
 
 ## Routes
 
