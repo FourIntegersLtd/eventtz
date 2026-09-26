@@ -48,7 +48,22 @@ NOT_YET_ON_API = {
     "test_identity_settings.py::test_account_deletion_*": (
         "account deletion arrives after bookings, disputes and messaging (identity README)"
     ),
-    "test_payments.py::*": "the payments slice follows bookings",
+    "test_payments.py::test_checkout_*": "payments core (workstream 1)",
+    "test_payments.py::test_stripe_webhook_*": "payments core (workstream 1)",
+    "test_payments.py::test_vendor_*": "payments core (workstream 1)",
+    "test_payments.py::test_admin_cancel_on_*": "payments core (workstream 1)",
+    "test_payments.py::test_admin_complete_cancellation_*": "payments core (workstream 1)",
+    "test_payments.py::test_admin_confirm_completion_*": "payments core (workstream 1)",
+    "test_payments.py::test_admin_release_payout_*": "payments core (workstream 1)",
+    "test_payments.py::test_admin_retry_payout_*": "payments core (workstream 1)",
+    "test_payments.py::test_admin_run_maintenance_*": "payments core (workstream 1)",
+    "test_payments.py::test_admin_sync_payment_*": "payments core (workstream 1)",
+    "test_payments.py::test_admin_list_bookings_*": "admin bookings console (workstream 2)",
+    "test_payments.py::test_admin_get_booking_*": "admin bookings console (workstream 2)",
+    "test_payments.py::test_admin_patch_payment_*": "admin bookings console (workstream 2)",
+    "test_payments.py::test_admin_reset_checkout_*": "admin bookings console (workstream 2)",
+    "test_payments.py::test_admin_support_hold_*": "admin bookings console (workstream 2)",
+    "test_payments.py::test_admin_financials_*": "admin bookings console (workstream 2)",
     "test_disputes.py::test_admin_release_to_vendor_on_unpaid_booking_is_400": (
         "waits for payments merge — ws18 wires the money branch"
     ),
