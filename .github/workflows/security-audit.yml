@@ -1,0 +1,93 @@
+# Dependency vulnerability scanning for api/ and web/, run as its own workflow
+# so it does not disturb ci.yml's job list or gate (owned by other workstreams
+# rebuilding those trees). Triggers match ci.yml (pull_request + push to main)
+# so a Dependabot PR gets scanned the same as a human one.
+#
+# Neither tool is added as a project dependency (AGENTS.md: ask first for new
+# Poetry/npm dependencies). pip-audit runs via `pipx run`, which downloads and
+# runs it in a throwaway environment for the life of the job only; `npm audit`
+# ships inside npm itself, so no install is needed at all.
+name: security-audit
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  pip-audit:
+    name: pip-audit (api)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Setup Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@a783c322200f0519c7926aa6faa857c4e23e9263 # v1
+
+      - name: Install dependencies
+        # A real install (not just a lock-file scan) so pip-audit can also see
+        # any vulnerability that only shows up in a transitively resolved
+        # version, not just what poetry.lock names.
+        run: poetry install --no-interaction --extras dev
+
+      - name: Audit installed packages
+        # `pipx run` fetches pip-audit into its own isolated environment for
+        # this one command; `--python` points it at the Poetry venv's
+        # interpreter so it audits *that* environment's installed packages
+        # rather than the empty one pipx just created.
+        run: pipx run pip-audit --python "$(poetry env info --path)/bin/python"
+
+  npm-audit:
+    name: npm-audit (web)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Check web/ exists
+        # web/ is being built by a parallel workstream and may not have
+        # landed on this branch yet. Skip cleanly rather than failing a job
+        # for a directory nobody has created yet.
+        id: web-check
+        run: |
+          if [ -f web/package.json ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::web/package.json not found yet; skipping npm audit until web/ lands."
+          fi
+
+      - name: Setup Node
+        if: steps.web-check.outputs.present == 'true'
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        if: steps.web-check.outputs.present == 'true'
+        working-directory: web
+        run: npm ci
+
+      - name: Audit dependencies (high and critical only)
+        # `--audit-level=high` matches the bar this repo cares about in CI: a
+        # low/moderate advisory in a dev-only tool should not block a deploy.
+        if: steps.web-check.outputs.present == 'true'
+        working-directory: web
+        run: npm audit --audit-level=high
