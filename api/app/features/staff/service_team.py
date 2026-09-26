@@ -1,13 +1,10 @@
 """Use cases behind `/admin/team*`: list, invite, patch, delete, send a reset link.
 
-Mirrors `backend/app/features/admin/team_admin_commands.py`. Two simplifications
-the rebuild's different account architecture allows (see the identity slice's
-`service_staff_accounts.py` module docstring):
-
-- An invited admin with no password is created with no password hash at all,
-  and a one-click setup link, rather than a throwaway Supabase password.
-- Only one invite/welcome email is sent (`notifications.send_welcome`), not the
-  baseline's separate "team invite" and "welcome" emails.
+Mirrors `backend/app/features/admin/team_admin_commands.py`, with one simplification
+the rebuild's account architecture allows (see the identity slice's
+`service_staff_accounts.py` module docstring): an admin invited with no password is
+created with no password hash at all and a one-click setup link, rather than a
+throwaway Supabase password.
 """
 
 from __future__ import annotations
@@ -114,7 +111,7 @@ async def invite(
             await accounts.send_admin_setup_link(session, mailer, email=normalised, user_id=user_id)
             message = PROMOTED_ADMIN_PASSWORD_LINK
         else:
-            notifications.send_welcome(mailer, email=normalised, user_type="admin")
+            notifications.send_team_invite(mailer, email=normalised)
             message = PROMOTED_TO_ADMIN
         return AdminTeamInviteResponse(
             user_id=user_id,
@@ -135,6 +132,7 @@ async def invite(
         await accounts.send_admin_setup_link(session, mailer, email=normalised, user_id=user_id)
         message = ADMIN_CREATED_PASSWORD_LINK
     else:
+        notifications.send_team_invite(mailer, email=normalised)
         notifications.send_welcome(mailer, email=normalised, user_type="admin")
         message = ADMIN_CREATED
     return AdminTeamInviteResponse(

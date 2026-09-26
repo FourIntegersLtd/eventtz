@@ -184,6 +184,19 @@ def support_message_email(*, messages_url: str, body_html: str, body_plain: str)
     )
 
 
+def team_invite_email() -> TransactionalEmail:
+    """Content for the admin team invite, sent when an admin is added with a password already set."""
+    return TransactionalEmail(
+        subject=f"{APP_NAME} admin invite | {APP_NAME}",
+        title=f"You've been invited to {APP_NAME} admin",
+        headline="Admin team invite",
+        subtitle=f"An administrator added you to the {APP_NAME} admin console.",
+        body="Sign in with the email address this message was sent to.",
+        action_url=public_url(ADMIN_LOGIN_PATH),
+        action_label="Sign in",
+    )
+
+
 def admin_welcome_email() -> TransactionalEmail:
     """Content for the admin team's welcome email (a staff member was invited)."""
     title = f"Welcome to {APP_NAME} admin"

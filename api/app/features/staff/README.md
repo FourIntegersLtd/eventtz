@@ -13,7 +13,9 @@ test-send screen for checking email templates render. Mirrors
 - As **another slice**, I **record a staff action** (a blog post published, a
   vendor approved) so that super admins can see who changed what, and when.
 - As a **super admin**, I **invite a new admin** by email, either with a
-  password I set or with a one-click link they use to set their own.
+  password I set or with a one-click link they use to set their own. With a
+  password set they get the team invite email instead of a link (a brand-new
+  account also gets the admin welcome email), as on the baseline.
 - As a **super admin**, I **promote an existing client or vendor** to admin the
   same way, without losing their client/vendor history.
 - As a **super admin**, I **change an admin's role or suspend them**, but never

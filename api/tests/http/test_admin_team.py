@@ -75,15 +75,36 @@ async def test_inviting_with_a_password_sends_no_link_but_still_welcomes_the_new
     )
     assert invited.status_code == 200, invited.text
     assert invited.json()["invite_link_sent"] is False
-    # No one-click link (a password was set), but the ordinary welcome email still goes out.
-    assert mailer.sent and mailer.sent[-1].to == ("with-password@example.com",)
-    assert "token=" not in mailer.sent[-1].html
+    # No one-click link (a password was set): the team invite, then the admin welcome, as on the baseline.
+    assert [(email.to, email.subject) for email in mailer.sent] == [
+        (("with-password@example.com",), "Eventtz admin invite | Eventtz"),
+        (("with-password@example.com",), "Welcome to Eventtz admin | Eventtz"),
+    ]
+    assert all("token=" not in email.html for email in mailer.sent)
 
     signed_in = await client.post(
         "/api/v1/auth/signin",
         json={"email": "with-password@example.com", "password": "Correct-horse-9battery"},
     )
     assert signed_in.status_code == 200, signed_in.text
+
+
+async def test_promoting_a_client_with_a_password_sends_only_the_team_invite(
+    client: AsyncClient, make_actor: MakeActor, mailer: FakeMailer
+) -> None:
+    headers = await auth(make_actor, email="super@example.com", user_type="admin", admin_role="super_admin")
+    await make_actor(email="existing-client@example.com", user_type="client")
+
+    promoted = await client.post(
+        "/api/v1/admin/team/invite",
+        json={"email": "existing-client@example.com", "password": "Correct-horse-9battery"},
+        headers=headers,
+    )
+    assert promoted.status_code == 200, promoted.text
+    assert (promoted.json()["created"], promoted.json()["invite_link_sent"]) == (False, False)
+    assert [(email.to, email.subject) for email in mailer.sent] == [
+        (("existing-client@example.com",), "Eventtz admin invite | Eventtz"),
+    ]
 
 
 async def test_a_plain_admin_cannot_invite(

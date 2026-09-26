@@ -20,6 +20,7 @@ from app.features.notifications.domain_account_emails import (
     password_changed_email,
     password_reset_email,
     support_message_email,
+    team_invite_email,
     transactional_context,
     welcome_context,
     welcome_email,
@@ -231,6 +232,18 @@ def send_welcome(mailer: Mailer, *, email: str, user_type: str) -> bool:
         return mailer.send(outgoing)
     except Exception:
         log.exception("welcome email could not be sent email=%s user_type=%s", normalized, user_type)
+        return False
+
+
+def send_team_invite(mailer: Mailer, *, email: str) -> bool:
+    """Email `email` the admin team invite. False for an invalid address or a failed send."""
+    normalized = email.strip().lower()
+    if not normalized or "@" not in normalized:
+        return False
+    try:
+        return mailer.send(render_booking_notification(normalized, team_invite_email()))
+    except Exception:
+        log.exception("admin team invite could not be sent email=%s", normalized)
         return False
 
 
