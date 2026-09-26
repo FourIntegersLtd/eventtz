@@ -14,6 +14,8 @@ vendor-insights zeros).
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from supabase import Client
 
 from conftest import API
@@ -156,6 +158,45 @@ def test_dashboard_metrics_off_allowed_set_falls_back_to_30(as_staff) -> None:
     assert response.json()["period_days"] == 30
 
 
+def test_dashboard_metrics_prices_a_paid_booking_with_no_payment_amount_snapshot(
+    admin_db: Client, as_staff
+) -> None:
+    """`bookings_paid`'s takings for a paid booking that never got a `payment_amount_gbp`
+    snapshot fall back to pricing its stored line items and vendor adjustments, same as
+    `backend/app/features/admin/dashboard_metrics.py`'s `_booking_gmv_gbp` (which prices
+    the row through `build_pricing_breakdown_for_booking_row` when the snapshot is null).
+    One £100 line item, no adjustments, the platform's default 5% fee and no referral
+    code prices to £105 - the shared dashboard total for today can only ever rise by at
+    least that much once this booking is seeded.
+    """
+    before = as_staff.get(DASHBOARD_METRICS_URL, params={"days": 7}).json()
+    today = datetime.now(UTC).date().isoformat()
+    before_gmv = next(day["gmv_gbp"] for day in before["bookings_paid"] if day["date"] == today)
+
+    vendor = seed_account(admin_db, unique_email("dashboard-gmv-fallback-vendor"), "vendor")
+    client_account = seed_account(admin_db, unique_email("dashboard-gmv-fallback-client"), "client")
+    paid_at = datetime.now(UTC).isoformat()
+    admin_db.table("booking_requests").insert(
+        {
+            "client_user_id": client_account.user_id,
+            "vendor_user_id": vendor.user_id,
+            "event_name": "Acceptance GMV-fallback event",
+            "event_date": today,
+            "total_label": "£105",
+            "status": "accepted",
+            "initiator": "client",
+            "payment_status": "paid",
+            "paid_at": paid_at,
+            "line_items": [{"unit_price_gbp": 100}],
+            "vendor_adjustments": [],
+        }
+    ).execute()
+
+    after = as_staff.get(DASHBOARD_METRICS_URL, params={"days": 7}).json()
+    after_gmv = next(day["gmv_gbp"] for day in after["bookings_paid"] if day["date"] == today)
+    assert after_gmv >= round(before_gmv + 105.0, 2)
+
+
 # --- GET /admin/marketplace-analytics --------------------------------------------------------------
 
 
@@ -183,6 +224,10 @@ def test_marketplace_analytics_default_shape_for_plain_admin(as_staff) -> None:
         assert isinstance(overview[key], int), key
     for key in ("by_category", "by_location", "failure_reasons", "top_vendors"):
         assert isinstance(body[key], list), key
+    for key in ("enquiries_by_month", "completed_by_month"):
+        assert isinstance(body[key], list), key
+        for entry in body[key]:
+            assert set(entry) == {"month", "count"}
     assert set(body["recruitment_hints"]) == {"categories", "locations"}
 
 
@@ -206,6 +251,77 @@ def test_marketplace_analytics_accepts_a_date_range(as_staff) -> None:
     body = response.json()
     assert body["from_date"] == "2025-01-01"
     assert body["to_date"] == "2025-01-31"
+
+
+def test_marketplace_analytics_buckets_enquiries_and_completions_by_month(
+    admin_db: Client, as_staff
+) -> None:
+    """`enquiries_by_month` counts by when a booking was made; `completed_by_month` by when
+    it finished, falling back to `updated_at` and then `created_at` for a completed booking
+    that never got its own `completed_at` (matches
+    `backend/app/features/admin/marketplace_analytics.py`'s `completed_at or updated_at or
+    created_at`). Two bookings, fixed a few years in the past so no other test's rows can
+    land in the same months, prove the union-of-months ordering spans both.
+    """
+    vendor = seed_account(admin_db, unique_email("marketplace-month-vendor"), "vendor")
+    client_one = seed_account(admin_db, unique_email("marketplace-month-client-one"), "client")
+    client_two = seed_account(admin_db, unique_email("marketplace-month-client-two"), "client")
+
+    # March: enquired and completed in the same month (direct `completed_at`).
+    admin_db.table("booking_requests").insert(
+        {
+            "client_user_id": client_one.user_id,
+            "vendor_user_id": vendor.user_id,
+            "event_name": "Acceptance month-bucket event (march)",
+            "event_date": "2019-03-01",
+            "total_label": "£300",
+            "status": "completed",
+            "initiator": "client",
+            "payment_status": "paid",
+            "payment_amount_gbp": 300,
+            "created_at": "2019-03-15T10:00:00+00:00",
+            "updated_at": "2019-03-20T10:00:00+00:00",
+            "completed_at": "2019-03-20T10:00:00+00:00",
+        }
+    ).execute()
+
+    # April: enquired in April, completed later with no `completed_at` of its own, so
+    # `completed_by_month` must fall back to `updated_at`.
+    admin_db.table("booking_requests").insert(
+        {
+            "client_user_id": client_two.user_id,
+            "vendor_user_id": vendor.user_id,
+            "event_name": "Acceptance month-bucket event (april)",
+            "event_date": "2019-04-01",
+            "total_label": "£150",
+            "status": "completed",
+            "initiator": "client",
+            "payment_status": "paid",
+            "payment_amount_gbp": 150,
+            "created_at": "2019-04-05T10:00:00+00:00",
+            "updated_at": "2019-04-25T10:00:00+00:00",
+        }
+    ).execute()
+
+    response = as_staff.get(
+        MARKETPLACE_ANALYTICS_URL, params={"from_date": "2019-03-01", "to_date": "2019-04-30"}
+    )
+    assert response.status_code == 200
+    body = response.json()
+
+    enquiries_by_month = {row["month"]: row["count"] for row in body["enquiries_by_month"]}
+    completed_by_month = {row["month"]: row["count"] for row in body["completed_by_month"]}
+    assert enquiries_by_month.get("2019-03", 0) >= 1
+    assert enquiries_by_month.get("2019-04", 0) >= 1
+    assert completed_by_month.get("2019-03", 0) >= 1
+    assert completed_by_month.get("2019-04", 0) >= 1
+    # Union-of-months ordering: every month named in either series appears in both,
+    # ascending, and the two series cover exactly the same months.
+    assert [row["month"] for row in body["enquiries_by_month"]] == sorted(enquiries_by_month)
+    assert [row["month"] for row in body["completed_by_month"]] == sorted(completed_by_month)
+    assert {row["month"] for row in body["enquiries_by_month"]} == {
+        row["month"] for row in body["completed_by_month"]
+    }
 
 
 # --- GET /admin/directory/search --------------------------------------------------------------------

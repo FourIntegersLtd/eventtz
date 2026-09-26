@@ -57,6 +57,12 @@ def day_key(value: Any) -> str | None:
     return text[:10] if len(text) >= 10 else None
 
 
+def month_key(value: Any) -> str | None:
+    """The `YYYY-MM` prefix of an ISO timestamp/date (mirrors baseline's `_month_key`)."""
+    day = day_key(value)
+    return day[:7] if day else None
+
+
 def build_booking_created_buckets(days: list[str], rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """One `{date, count, gmv_gbp}` row per day: bookings created that day."""
     counts = dict.fromkeys(days, 0)
@@ -70,8 +76,11 @@ def build_booking_created_buckets(days: list[str], rows: list[dict[str, Any]]) -
 def build_booking_paid_buckets(days: list[str], rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """One `{date, count, gmv_gbp}` row per day: bookings paid that day, and their takings.
 
-    Takings use the stored `payment_amount_gbp` snapshot; a booking paid before that
-    column existed contributes to `count` but not `gmv_gbp`, same as a missing amount.
+    Each row must already carry a `gmv_gbp` figure (the service layer fills this in:
+    the stored `payment_amount_gbp` snapshot where present, else a priced breakdown of
+    the booking's line items — see `service.py`'s `_with_gmv_fallback`, which mirrors
+    the baseline's `build_pricing_breakdown_for_booking_row` fallback). A row without a
+    usable figure at all contributes to `count` but not `gmv_gbp`.
     """
     counts = dict.fromkeys(days, 0)
     totals = dict.fromkeys(days, 0.0)
@@ -80,7 +89,7 @@ def build_booking_paid_buckets(days: list[str], rows: list[dict[str, Any]]) -> l
         if day not in counts:
             continue
         counts[day] += 1
-        amount = row.get("payment_amount_gbp")
+        amount = row.get("gmv_gbp")
         if amount is not None:
             totals[day] += float(amount)
     return [{"date": day, "count": counts[day], "gmv_gbp": round(totals[day], 2)} for day in days]
@@ -278,6 +287,23 @@ def build_marketplace_analytics(
         """A fraction of `responded`, or `None` when nobody has replied yet."""
         return round(count / responded, 4) if responded else None
 
+    # Time series by month: every enquiry counts against the month it was created in;
+    # a completed one counts (separately) against the month it finished in, falling
+    # back to when it was last touched and then to when it was created (mirrors
+    # baseline's `completed_at or updated_at or created_at`, for rows with no
+    # `completed_at` of their own).
+    enquiries_by_month: dict[str, int] = {}
+    completed_by_month: dict[str, int] = {}
+    for row in enquiries:
+        month = month_key(row.get("created_at"))
+        if month:
+            enquiries_by_month[month] = enquiries_by_month.get(month, 0) + 1
+        if row.get("status") == "completed" or row.get("completed_at"):
+            finished_at = row.get("completed_at") or row.get("updated_at") or row.get("created_at")
+            completed_month = month_key(finished_at)
+            if completed_month:
+                completed_by_month[completed_month] = completed_by_month.get(completed_month, 0) + 1
+
     by_category: dict[str, dict[str, Any]] = {}
     by_location: dict[str, dict[str, Any]] = {}
     failure_counts: dict[str, int] = {}
@@ -398,6 +424,8 @@ def build_marketplace_analytics(
         round(sum(completed_paid_values) / len(completed_paid_values), 2) if completed_paid_values else 0.0
     )
 
+    months = sorted(set(enquiries_by_month) | set(completed_by_month))
+
     return {
         "success": True,
         "from_date": from_date,
@@ -431,6 +459,12 @@ def build_marketplace_analytics(
             "profile_views": profile_views,
             "unfulfilled": sum(failure_counts.values()),
         },
+        "enquiries_by_month": [
+            {"month": month, "count": enquiries_by_month.get(month, 0)} for month in months
+        ],
+        "completed_by_month": [
+            {"month": month, "count": completed_by_month.get(month, 0)} for month in months
+        ],
         "by_category": category_rows,
         "by_location": location_rows,
         "failure_reasons": [
@@ -443,12 +477,6 @@ def build_marketplace_analytics(
             "locations": _recruitment_hints(location_rows, "supply", "location"),
         },
     }
-
-
-def _booking_month_key(created_at: Any) -> str | None:
-    """The `YYYY-MM` this booking was created in, for the vendor-insights month buckets."""
-    day = day_key(created_at)
-    return day[:7] if day else None
 
 
 def build_vendor_insights(
@@ -470,7 +498,7 @@ def build_vendor_insights(
     for row in booking_rows:
         status = str(row.get("status") or "unknown")
         bookings_by_status[status] = bookings_by_status.get(status, 0) + 1
-        month = _booking_month_key(row.get("created_at"))
+        month = month_key(row.get("created_at"))
         if month:
             bookings_by_month.setdefault(month, {})
             bookings_by_month[month][status] = bookings_by_month[month].get(status, 0) + 1

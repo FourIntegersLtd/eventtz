@@ -64,6 +64,7 @@ _booking_requests = table(
     column("payment_status", Text),
     column("initiator", Text),
     column("created_at", DateTime(timezone=True)),
+    column("updated_at", DateTime(timezone=True)),
     column("paid_at", DateTime(timezone=True)),
     column("accepted_at", DateTime(timezone=True)),
     column("completed_at", DateTime(timezone=True)),
@@ -77,6 +78,10 @@ _booking_requests = table(
     column("vendor_completion_confirmed_at", DateTime(timezone=True)),
     column("stripe_checkout_session_id", Text),
     column("support_hold", Boolean),
+    column("line_items", JSON),
+    column("vendor_adjustments", JSON),
+    column("service_fee_percent", Numeric(5, 2)),
+    column("vendor_referral_code", Text),
 )
 
 _booking_reviews = table(
@@ -152,12 +157,10 @@ async def count_open_disputes(session: AsyncSession) -> int:
 
 
 async def bookings_for_support_scan(session: AsyncSession, *, scan_limit: int) -> list[dict[str, Any]]:
-    """The `scan_limit` most recently created bookings, for the needs-attention count.
+    """The `scan_limit` most recently *updated* bookings, for the needs-attention count.
 
-    The baseline scans by `updated_at`; this slice's table handle does not carry
-    that column (only the bookings slice's own repository writes it), so this
-    reads the most recently *created* bookings instead - close enough for a
-    dashboard count, and never used to drive a specific booking's flags.
+    Matches the baseline's `count_bookings_needing_support_attention`, which orders
+    by `updated_at desc` so a booking that just changed state is scanned first.
     """
     result = await session.execute(
         select(
@@ -173,7 +176,7 @@ async def bookings_for_support_scan(session: AsyncSession, *, scan_limit: int) -
             _booking_requests.c.support_hold,
             _booking_requests.c.paid_at,
         )
-        .order_by(_booking_requests.c.created_at.desc())
+        .order_by(_booking_requests.c.updated_at.desc())
         .limit(scan_limit)
     )
     return [plain_row(row) for row in result]
@@ -232,13 +235,23 @@ async def bookings_created_in_range(session: AsyncSession, days: list[str]) -> l
 
 
 async def bookings_paid_in_range(session: AsyncSession, days: list[str]) -> list[dict[str, Any]]:
-    """Every booking paid within the given days (their `paid_at` and takings)."""
+    """Every booking paid within the given days: `paid_at`, takings, and enough pricing
+    columns (`line_items`, `vendor_adjustments`, `service_fee_percent`, `vendor_referral_code`)
+    to price a booking whose `payment_amount_gbp` snapshot is missing.
+    """
     start = _day_bounds(days[0])[0]
     end = _day_bounds(days[-1])[1]
     result = await session.execute(
-        select(_booking_requests.c.paid_at, _booking_requests.c.payment_amount_gbp).where(
-            _booking_requests.c.paid_at >= start, _booking_requests.c.paid_at < end
-        )
+        select(
+            _booking_requests.c.id,
+            _booking_requests.c.vendor_user_id,
+            _booking_requests.c.paid_at,
+            _booking_requests.c.payment_amount_gbp,
+            _booking_requests.c.line_items,
+            _booking_requests.c.vendor_adjustments,
+            _booking_requests.c.service_fee_percent,
+            _booking_requests.c.vendor_referral_code,
+        ).where(_booking_requests.c.paid_at >= start, _booking_requests.c.paid_at < end)
     )
     return [plain_row(row) for row in result]
 
@@ -266,6 +279,8 @@ async def enquiries_in_range(session: AsyncSession, *, from_date: str, to_date: 
             _booking_requests.c.vendor_user_id,
             _booking_requests.c.status,
             _booking_requests.c.payment_status,
+            _booking_requests.c.created_at,
+            _booking_requests.c.updated_at,
             _booking_requests.c.accepted_at,
             _booking_requests.c.completed_at,
             _booking_requests.c.event_postcode,

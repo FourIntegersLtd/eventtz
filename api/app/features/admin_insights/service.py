@@ -23,6 +23,8 @@ from app.features.admin_insights.schemas import (
     AdminMarketplaceAnalyticsResponse,
     AdminVendorInsightsResponse,
 )
+from app.features.pricing import service as pricing
+from app.features.referrals import service_client_codes as referral_codes
 
 #: `marketplace_events.event_name` values the analytics overview counts.
 _PROFILE_VIEW_EVENT = "vendor_profile_viewed"
@@ -73,13 +75,55 @@ async def dashboard_summary(session: AsyncSession) -> AdminDashboardSummary:
     )
 
 
+async def _with_gmv_fallback(session: AsyncSession, paid_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Each paid-booking row, plus the `gmv_gbp` the takings chart should count for it.
+
+    Mirrors the baseline's `build_pricing_breakdown_for_booking_row` fallback
+    (`backend/app/features/admin/dashboard_metrics.py`): a row with a stored
+    `payment_amount_gbp` snapshot uses it as-is; a row without one (paid before
+    that column existed, or never snapshotted) is priced from its own line items,
+    vendor adjustments and referral code instead of being silently dropped.
+    """
+    rows_needing_pricing = [row for row in paid_rows if row.get("payment_amount_gbp") is None]
+    codes = {
+        str(row["vendor_referral_code"]) for row in rows_needing_pricing if row.get("vendor_referral_code")
+    }
+    owners = await referral_codes.code_owners(session, codes) if codes else {}
+
+    priced_rows: list[dict[str, Any]] = []
+    for row in paid_rows:
+        amount = row.get("payment_amount_gbp")
+        try:
+            gmv_gbp = float(amount) if amount is not None else None
+        except (TypeError, ValueError):
+            gmv_gbp = None
+        if gmv_gbp is None:
+            vendor_portion = pricing.vendor_portion_gbp(row.get("line_items"), row.get("vendor_adjustments"))
+            discount, tier_min = referral_codes.booking_code_discount(
+                stored_code=row.get("vendor_referral_code"),
+                booking_vendor_id=str(row.get("vendor_user_id") or "") or None,
+                owners=owners,
+                vendor_portion_gbp=vendor_portion,
+            )
+            breakdown = pricing.build_pricing_breakdown(
+                line_items=row.get("line_items"),
+                vendor_adjustments=row.get("vendor_adjustments"),
+                service_fee_percent=pricing.resolve_service_fee_percent(row),
+                referral_fee_discount_gbp=discount,
+                referral_tier_min_spend_gbp=tier_min,
+            )
+            gmv_gbp = breakdown.client_total_gbp
+        priced_rows.append({**row, "gmv_gbp": gmv_gbp})
+    return priced_rows
+
+
 async def dashboard_metrics(session: AsyncSession, *, requested_days: int) -> AdminDashboardMetrics:
     """The rolling-window charts: bookings created, bookings paid, signups, and open disputes."""
     period_days = domain.resolve_metrics_days(requested_days)
     days = domain.date_range(period_days)
 
     created_rows = await repository.bookings_created_in_range(session, days)
-    paid_rows = await repository.bookings_paid_in_range(session, days)
+    paid_rows = await _with_gmv_fallback(session, await repository.bookings_paid_in_range(session, days))
     signup_rows = await repository.signups_in_range(session, days)
     open_disputes = await repository.count_open_disputes(session)
 

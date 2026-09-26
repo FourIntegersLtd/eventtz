@@ -70,6 +70,8 @@ class AdminMarketplaceAnalyticsResponse(BaseModel):
     from_date: str
     to_date: str
     overview: dict[str, Any] = Field(default_factory=dict)
+    enquiries_by_month: list[dict[str, Any]] = Field(default_factory=list)
+    completed_by_month: list[dict[str, Any]] = Field(default_factory=list)
     by_category: list[dict[str, Any]] = Field(default_factory=list)
     by_location: list[dict[str, Any]] = Field(default_factory=list)
     failure_reasons: list[dict[str, Any]] = Field(default_factory=list)

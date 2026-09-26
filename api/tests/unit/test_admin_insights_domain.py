@@ -47,11 +47,14 @@ def test_build_booking_created_buckets_counts_by_day_and_never_carries_gmv() -> 
 
 
 def test_build_booking_paid_buckets_sums_takings_and_skips_missing_amounts() -> None:
+    # `gmv_gbp` is precomputed by the service layer (the stored snapshot, or a priced
+    # breakdown when it's missing - see `service._with_gmv_fallback`); a row that still
+    # has no usable figure at all contributes to `count` but not `gmv_gbp`.
     days = ["2025-01-01"]
     rows = [
-        {"paid_at": "2025-01-01T09:00:00+00:00", "payment_amount_gbp": "150.00"},
-        {"paid_at": "2025-01-01T10:00:00+00:00", "payment_amount_gbp": "49.50"},
-        {"paid_at": "2025-01-01T11:00:00+00:00", "payment_amount_gbp": None},
+        {"paid_at": "2025-01-01T09:00:00+00:00", "gmv_gbp": 150.00},
+        {"paid_at": "2025-01-01T10:00:00+00:00", "gmv_gbp": 49.50},
+        {"paid_at": "2025-01-01T11:00:00+00:00", "gmv_gbp": None},
     ]
     buckets = domain.build_booking_paid_buckets(days, rows)
     assert buckets == [{"date": "2025-01-01", "count": 3, "gmv_gbp": 199.50}]
@@ -231,3 +234,63 @@ def test_build_marketplace_analytics_computes_the_funnel_for_one_vendor() -> Non
 
     assert {row["key"] for row in built["by_location"]} == {"SW1A"}
     assert set(built["recruitment_hints"]) == {"categories", "locations"}
+
+
+def test_build_marketplace_analytics_buckets_enquiries_and_completions_by_month() -> None:
+    """Mirrors `backend/app/features/admin/marketplace_analytics.py`'s time series: every
+    enquiry counts against the month it was created in; a completed one counts (separately)
+    against the month it finished in, falling back to `updated_at` then `created_at`. Both
+    series cover the union of months, in order, with zero-filled gaps.
+    """
+    enquiries = [
+        # Created and completed in January.
+        {
+            "vendor_user_id": "vendor-1",
+            "status": "completed",
+            "payment_status": "paid",
+            "created_at": "2025-01-05T00:00:00+00:00",
+            "completed_at": "2025-01-20T00:00:00+00:00",
+        },
+        # Created in January, completed in February with no `completed_at` snapshot -
+        # falls back to `updated_at`.
+        {
+            "vendor_user_id": "vendor-1",
+            "status": "completed",
+            "payment_status": "paid",
+            "created_at": "2025-01-10T00:00:00+00:00",
+            "updated_at": "2025-02-15T00:00:00+00:00",
+            "completed_at": None,
+        },
+        # Created in March, never completed - counts only in enquiries_by_month.
+        {
+            "vendor_user_id": "vendor-1",
+            "status": "declined",
+            "payment_status": "unpaid",
+            "created_at": "2025-03-01T00:00:00+00:00",
+            "completed_at": None,
+        },
+    ]
+    built = domain.build_marketplace_analytics(
+        from_date="2025-01-01",
+        to_date="2025-03-31",
+        enquiries=enquiries,
+        vendors_by_id={},
+        vendors_total=1,
+        vendors_active=1,
+        avg_rating=0.0,
+        review_count=0,
+        profile_views=0,
+        vendor_reminders=0,
+        client_nudges=0,
+        multi_batches=0,
+    )
+    assert built["enquiries_by_month"] == [
+        {"month": "2025-01", "count": 2},
+        {"month": "2025-02", "count": 0},
+        {"month": "2025-03", "count": 1},
+    ]
+    assert built["completed_by_month"] == [
+        {"month": "2025-01", "count": 1},
+        {"month": "2025-02", "count": 1},
+        {"month": "2025-03", "count": 0},
+    ]
