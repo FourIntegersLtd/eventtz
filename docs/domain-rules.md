@@ -264,3 +264,25 @@ Client-initiated **DM** conversations require `vendor_is_bookable_for_explore` (
 Search/filter/pagination for directory, disputes, audit, payments, and booking `status=` live on the API - avoid dumping then filtering large lists in the browser. Compose recipient pickers use directory search, not a full client/vendor dump.
 ---
 
+
+### Found while freezing marketplace, messaging and bookings (2026-09-26)
+
+The acceptance files pin each of these; the comments marked `BASELINE BUG/QUIRK` there hold the detail.
+
+- **Explore/search:** only `GB` is an enabled market; any other `country` quietly becomes GB. Search uses the same listable pool as explore. Without OpenAI it falls back to a token-only parser (`mode=simple`). An unknown `sort` falls back to `relevance`.
+- **Explore scale bug:** `deleted_user_ids` puts every vendor id into one PostgREST `in.(...)` filter. At a few hundred vendors it returns 414, and explore returns 500. The rebuild must not copy this.
+- **Favorites** (`client_saved_vendors`): the foreign key points at `users`, not `vendors`, so any known user can be saved. `PUT` is idempotent. `PUT` with an unknown id returns 200 `{"success": false}`. `DELETE` of an id that was never saved succeeds. `merge` counts only the inserts that succeeded (at most 500 ids).
+- **Geo:** the address provider is switched off. Autocomplete and find return nothing, and resolve always returns 404. All three need a client session.
+- **Vendor analytics:** counts only `initiator = "client"` bookings. `days` is limited to 7–365.
+- **Chat not-yours:** GET returns 404, mark-read returns 403, and send returns 400. Staff on the client/vendor chat routes get 403 on list/create and 404 on the others. The older `/admin/chat/.../messages` viewer never returns 404 and has no participant check.
+- **Chat create:** when a vendor opens a DM, the create response describes the vendor as the peer. A later GET is correct.
+- **Chat edits and broadcasts:** an admin may edit only messages they sent themselves. Only a super admin may broadcast to an audience.
+- **Chat bodies:** DM bodies are 1–5000 characters of plain text. Support bodies are sanitised HTML, up to 15000 characters stored, with at most 5000 visible.
+- **Bookings status machine:** `pending → accepted|declined|cancelled`, and `accepted → cancelled|completed`. On a vendor-initiated quote, the client accepts or declines and the vendor may only cancel. On a client-initiated request it is the other way round. 404 (never 403) for someone else's booking.
+- **Vendor accept gate:** accepting needs a Stripe payout route (or `listing_override = visible`) and no unconfirmed client price adjustment.
+- **Declining an adjusted booking:** declining a client-initiated booking with a pending adjustment puts it back to `pending` and clears the adjustments.
+- **Bookability:** a vendor is bookable when listable and with a non-empty `payload` (an empty payload is falsy and reads as "not available").
+- **Booking money:** `vendor_portion = subtotal + adjustments`, then `service_fee = round(vendor_portion × fee_pct / 100, 2)`, then `client_total = vendor_portion + service_fee`. Adjustments may be edited only on client-initiated bookings that are still pending, and a discount may not take the vendor portion to zero or below.
+- **Completion:** needs `accepted` + `paid` and the event day to be over. Without Stripe Connect, a booking both sides have confirmed stays `accepted` / `paid` / `awaiting_other_party`.
+- **Dormant bug:** `adjustments.py` has a dormant reference to an undefined `total_label`.
+- **Suspension wording:** one message at sign-in ("This account is suspended…") and another mid-session ("Your account has been suspended…").

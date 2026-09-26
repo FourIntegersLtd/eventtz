@@ -50,6 +50,7 @@ NOT_YET_ON_API = {
     ),
     "test_marketplace_*.py::*": "the marketplace slice is next after vendors cut 1",
     "test_messaging_*.py::*": "the messaging slice follows marketplace",
+    "test_bookings_*.py::*": "the bookings slice follows notifications",
 }
 LOCAL_HOSTS = ("http://127.0.0.1", "http://localhost", "postgresql://postgres:postgres@127.0.0.1:")
 
