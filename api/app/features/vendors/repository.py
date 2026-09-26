@@ -5,6 +5,7 @@ Every function takes the request's session and never commits (ADR 0002).
 
 from __future__ import annotations
 
+from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
@@ -232,3 +233,41 @@ async def marketplace_vendors(
         .order_by(Vendor.updated_at.desc(), Vendor.created_at.desc(), Vendor.id.desc())
     )
     return [ListedVendorRow.model_validate(plain_row(row)) for row in result]
+
+
+# --- the payout account (Stripe Connect), for the payments slice ----------------------------
+
+
+async def vendor_id_for_stripe_account(session: AsyncSession, account_id: str) -> str | None:
+    """The vendor whose Stripe Connect account is `account_id`, if any."""
+    owner_id = await session.scalar(
+        select(Vendor.user_id).where(Vendor.stripe_account_id == account_id).limit(1)
+    )
+    return str(owner_id) if owner_id is not None else None
+
+
+async def payouts_nudge_candidates(
+    session: AsyncSession, *, approved_before: datetime, limit: int
+) -> list[VendorRow]:
+    """Approved vendors not yet nudged about payouts, approved at or before `approved_before`.
+
+    Whether their payouts are already verified (or waived) is decided by the
+    caller from the returned rows, with the same rule the listing uses.
+    """
+    result = await session.execute(
+        select(*_VENDOR_COLUMNS)
+        .where(
+            Vendor.approval_status == "approved",
+            Vendor.payouts_setup_nudge_at.is_(None),
+            Vendor.approved_at.is_not(None),
+            Vendor.approved_at <= approved_before,
+        )
+        .order_by(Vendor.approved_at)
+        .limit(limit)
+    )
+    return [VendorRow.model_validate(plain_row(row)) for row in result]
+
+
+async def stamp_payouts_nudge(session: AsyncSession, user_id: str) -> None:
+    """Record that the one payouts-setup nudge was handled for this vendor."""
+    await update_vendor(session, user_id, {"payouts_setup_nudge_at": func.now()})
