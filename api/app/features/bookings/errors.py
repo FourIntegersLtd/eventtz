@@ -411,3 +411,73 @@ class PayoutReleaseNotRebuilt(Unavailable):
     # The party's confirmation still counts; only the transfer waits.
     persist_effects = True
     default_message = "We could not release the payout right now. Please try again later."
+
+
+# --- admin console (staff/super admin) ----------------------------------------------------------------
+#
+# The admin console's own copy differs, in small ways, from the client/vendor errors above (for
+# instance `AdminBookingNotFound`'s message has no trailing period, unlike `BookingNotFound`'s),
+# because the baseline's `admin` feature kept its own `messages.py` rather than sharing one.
+
+
+class AdminBookingNotFound(NotFound):
+    """No booking with that id (the admin console's own wording, without the trailing period)."""
+
+    code = "admin_booking_not_found"
+    default_message = "Booking not found"
+
+
+class NoPaymentFieldsToUpdate(InvalidInput):
+    """The payment-fields patch body set nothing."""
+
+    code = "no_payment_fields_to_update"
+    default_message = "No fields to update"
+
+
+class StripePaymentIntentRequiredForAmount(InvalidInput):
+    """Setting `payment_amount_gbp` needs a payment intent to verify it against (given or already stored)."""
+
+    code = "stripe_pi_required_for_amount"
+    default_message = "stripe_payment_intent_id is required to set payment_amount_gbp."
+
+
+class StripeVerificationFailed(Unavailable):
+    """Stripe could not be reached to verify the payment intent."""
+
+    code = "stripe_verify_failed"
+    default_message = "Could not verify payment with Stripe. Try again later."
+
+
+class StripePaymentIntentNoConfirmedAmount(InvalidInput):
+    """The payment intent has no `amount_received` (or successful `amount`) to record."""
+
+    code = "stripe_pi_no_confirmed_amount"
+    default_message = "Stripe payment intent has no confirmed amount."
+
+
+class StripeChargeUnverified(InvalidInput):
+    """The payment intent has no charge yet, so `stripe_charge_id` cannot be checked against it."""
+
+    code = "stripe_charge_unverified"
+    default_message = "Could not verify stripe_charge_id - payment intent has no charge yet."
+
+
+class StripeChargeMismatch(InvalidInput):
+    """The given `stripe_charge_id` is not the payment intent's charge."""
+
+    code = "stripe_charge_mismatch"
+    default_message = "stripe_charge_id does not match the payment intent."
+
+
+class CouldNotUpdatePaymentFields(InvalidInput):
+    """The payment-fields write matched no row (the booking id was valid but nothing changed)."""
+
+    code = "could_not_update_payment_fields"
+    default_message = "Could not update payment fields"
+
+
+class OnlyUnpaidOrPendingCanBeReset(InvalidInput):
+    """Only an unpaid or pending-checkout booking's stale session can be cleared."""
+
+    code = "only_unpaid_pending_reset"
+    default_message = "Only unpaid or pending checkout bookings can be reset."
