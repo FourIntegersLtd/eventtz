@@ -1,0 +1,61 @@
+{% extends "partials/transactional/layout.html" %}
+{% block content %}
+{% if headline %}
+<h1 style="margin: 0 0 12px; color: #1d1d1f; font-size: 26px; line-height: 1.25; font-weight: 600">
+  {{ headline }}
+</h1>
+{% endif %}
+{% if subtitle %}
+<p style="margin: 0 0 20px; color: #6e6e73; font-size: 16px; line-height: 1.6">{{ subtitle }}</p>
+{% endif %}
+{% if body_html %}
+<div style="margin: 0 0 16px; color: #1d1d1f; font-size: 15px; line-height: 1.65">{{ body_html | safe }}</div>
+{% elif body_plain %}
+<p style="margin: 0 0 16px; color: #1d1d1f; font-size: 15px; line-height: 1.65">{{ body_plain }}</p>
+{% elif body %}
+{% for paragraph in body.split('\n\n') %}
+{% if paragraph.strip() %}
+<p style="margin: 0 0 16px; color: #1d1d1f; font-size: 15px; line-height: 1.65">{{ paragraph.strip() }}</p>
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if body and body_html %}
+<p style="margin: 0 0 16px; color: #1d1d1f; font-size: 15px; line-height: 1.65">{{ body }}</p>
+{% endif %}
+{% if action_url and action_label %}
+<p style="margin: 24px 0 0">
+  <a
+    href="{{ action_url }}"
+    style="
+      display: inline-block;
+      background: #3e1964;
+      color: #ffffff;
+      text-decoration: none;
+      padding: 14px 28px;
+      border-radius: 980px;
+      font-size: 15px;
+      font-weight: 600;
+    "
+    >{{ action_label }}</a
+  >
+</p>
+{% endif %}
+{% if secondary_action_url and secondary_action_label %}
+<p style="margin: 16px 0 0">
+  <a
+    href="{{ secondary_action_url }}"
+    style="
+      display: inline-block;
+      color: #3e1964;
+      text-decoration: none;
+      padding: 12px 24px;
+      border-radius: 980px;
+      font-size: 15px;
+      font-weight: 600;
+      border: 2px solid #3e1964;
+    "
+    >{{ secondary_action_label }}</a
+  >
+</p>
+{% endif %}
+{% endblock %}

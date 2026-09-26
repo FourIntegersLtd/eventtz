@@ -2,10 +2,27 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from app.core.logging import get_logger
 from app.core.ports import Mailer, OutgoingEmail
 from app.core.settings import get_settings
-from app.features.notifications.domain import AdminAlert, admin_alert_context, contact_submitted_alert
+from app.features.notifications.domain import (
+    APP_NAME,
+    AdminAlert,
+    admin_alert_context,
+    contact_submitted_alert,
+)
+from app.features.notifications.domain_account_emails import (
+    TransactionalEmail,
+    admin_welcome_email,
+    email_verification_email,
+    password_changed_email,
+    password_reset_email,
+    transactional_context,
+    welcome_context,
+    welcome_email,
+)
 from app.features.notifications.rendering import render_template
 
 log = get_logger(__name__)
@@ -50,3 +67,160 @@ def send_contact_submitted_alert(
         booking_id=booking_id,
     )
     return send_admin_alert(mailer, alert)
+
+
+def _render_transactional(email: str, content: TransactionalEmail) -> OutgoingEmail:
+    """Render a `TransactionalEmail` with the shared auth layout (`auth/password_reset.html`).
+
+    Verification, password reset and "password changed" all use this one layout
+    in the baseline, so the rendering is shared here too.
+    """
+    context = transactional_context(content)
+    return OutgoingEmail(
+        to=(email,),
+        subject=content.subject,
+        html=render_template("auth/password_reset.html", context),
+        text=render_template("auth/password_reset.txt", context),
+    )
+
+
+def _render_notification(email: str, content: TransactionalEmail) -> OutgoingEmail:
+    """Render a `TransactionalEmail` with the booking layout (`booking/notification.html`).
+
+    The baseline renders the admin welcome email with this layout, not the auth
+    one, even though the two templates look alike.
+    """
+    context = transactional_context(content)
+    return OutgoingEmail(
+        to=(email,),
+        subject=content.subject,
+        html=render_template("booking/notification.html", context),
+        text=render_template("booking/notification.txt", context),
+    )
+
+
+def render_email_verification(
+    *, email: str, verify_url: str, expires_minutes: int = 60, user_type: str | None = None
+) -> OutgoingEmail:
+    """Render "verify your email" for `email`, without sending it."""
+    content = email_verification_email(
+        verify_url=verify_url, expires_minutes=expires_minutes, user_type=user_type
+    )
+    return _render_transactional(email, content)
+
+
+def send_email_verification(
+    mailer: Mailer,
+    *,
+    email: str,
+    verify_url: str,
+    expires_minutes: int = 60,
+    user_type: str | None = None,
+) -> bool:
+    """Email `email` a link to verify their address. False for an invalid address, never raises."""
+    normalized = email.strip().lower()
+    if not normalized or "@" not in normalized or not verify_url.strip():
+        return False
+    try:
+        outgoing = render_email_verification(
+            email=normalized, verify_url=verify_url, expires_minutes=expires_minutes, user_type=user_type
+        )
+        return mailer.send(outgoing)
+    except Exception:
+        log.exception("email verification could not be sent email=%s", normalized)
+        return False
+
+
+def render_password_reset(
+    *,
+    email: str,
+    reset_url: str,
+    expires_minutes: int = 60,
+    user_type: str | None = None,
+    purpose: Literal["reset", "setup"] = "reset",
+) -> OutgoingEmail:
+    """Render a password reset (or admin password setup) link for `email`, without sending it."""
+    content = password_reset_email(
+        reset_url=reset_url, expires_minutes=expires_minutes, user_type=user_type, purpose=purpose
+    )
+    return _render_transactional(email, content)
+
+
+def send_password_reset(
+    mailer: Mailer,
+    *,
+    email: str,
+    reset_url: str,
+    expires_minutes: int = 60,
+    user_type: str | None = None,
+    purpose: Literal["reset", "setup"] = "reset",
+) -> bool:
+    """Email `email` a password reset (or admin setup) link. False for an invalid address, never raises."""
+    normalized = email.strip().lower()
+    if not normalized or "@" not in normalized or not reset_url.strip():
+        return False
+    try:
+        outgoing = render_password_reset(
+            email=normalized,
+            reset_url=reset_url,
+            expires_minutes=expires_minutes,
+            user_type=user_type,
+            purpose=purpose,
+        )
+        return mailer.send(outgoing)
+    except Exception:
+        log.exception("password reset could not be sent email=%s", normalized)
+        return False
+
+
+def render_password_changed(*, email: str, user_type: str | None = None) -> OutgoingEmail:
+    """Render the "your password was changed" security notice for `email`, without sending it."""
+    content = password_changed_email(user_type=user_type)
+    return _render_transactional(email, content)
+
+
+def send_password_changed(mailer: Mailer, *, email: str, user_type: str | None = None) -> bool:
+    """Email `email` that their password changed. False for an invalid address, never raises."""
+    normalized = email.strip().lower()
+    if not normalized or "@" not in normalized:
+        return False
+    try:
+        outgoing = render_password_changed(email=normalized, user_type=user_type)
+        return mailer.send(outgoing)
+    except Exception:
+        log.exception("password changed notice could not be sent email=%s", normalized)
+        return False
+
+
+def render_welcome(*, email: str, user_type: str) -> OutgoingEmail:
+    """Render the welcome email for `email`. Raises `ValueError` for any `user_type` but the three below."""
+    if user_type == "admin":
+        return _render_notification(email, admin_welcome_email())
+    if user_type == "vendor":
+        welcome = welcome_email(email=email, user_type="vendor")
+    elif user_type == "client":
+        welcome = welcome_email(email=email, user_type="client")
+    else:
+        raise ValueError(f"unsupported welcome user_type: {user_type!r}")
+    context = welcome_context(welcome)
+    return OutgoingEmail(
+        to=(email,),
+        subject=f"Welcome to {APP_NAME}",
+        html=render_template("marketing/welcome.html", context),
+        text=render_template("marketing/welcome.txt", context),
+    )
+
+
+def send_welcome(mailer: Mailer, *, email: str, user_type: str) -> bool:
+    """Email `email` the client/vendor/admin welcome. False for an invalid address or user type."""
+    normalized = email.strip().lower()
+    if not normalized or "@" not in normalized:
+        return False
+    if user_type not in {"client", "vendor", "admin"}:
+        return False
+    try:
+        outgoing = render_welcome(email=normalized, user_type=user_type)
+        return mailer.send(outgoing)
+    except Exception:
+        log.exception("welcome email could not be sent email=%s user_type=%s", normalized, user_type)
+        return False
