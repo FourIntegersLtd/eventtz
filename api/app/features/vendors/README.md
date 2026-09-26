@@ -35,3 +35,25 @@ Baseline quirks kept on purpose (the freeze tests pin them):
 Not yet like the baseline:
 - `GET /vendor/profile` does not refresh the payout flags from Stripe; that arrives with the payments slice.
 - Emails go out before the request's transaction commits (the Mailer is synchronous); they move to a job after commit.
+
+## Onboarding AI (bio, photo QA, package coach)
+New files only (`schemas_ai.py`, `service_ai.py`, `router_ai.py`); the rest of this README's
+routes and files are unaffected. Every call goes through the `LanguageModel` port
+(`api/app/core/ports.py`), so with no OpenAI key configured every route below fails at
+`LanguageModelUnavailable` (503) before any prompt is built — matching the baseline's
+`require_openai_client()`-first behaviour byte for byte. Ported from
+`backend/app/features/vendors/onboarding_ai.py`.
+
+Routes: `POST /vendor/onboarding/ai/generate-bio`, `POST /vendor/onboarding/ai/analyze-portfolio-image`,
+`POST /vendor/onboarding/ai/review-packages`. All three require a signed-in vendor.
+
+Invariants:
+- The bio and package-coach calls only ever see a safe subset of `profile_form_data` (business
+  name, city, services, existing bio, years' experience, packages, portfolio URLs) — never phone,
+  email, or anything not already public on the profile.
+- The portfolio photo upload is validated before ever reaching the language model: an empty file
+  raises `ImageRequired` (400, "Please choose an image to upload."), and a non-`image/*` content
+  type raises `ImageContentTypeInvalid` (400, "Only image uploads are supported.").
+- The photo QA call uses the `LanguageModel` port's `image_data_url` parameter (a `data:` URL),
+  a small additive extension to the port and its fake for this one vision-input call; every other
+  caller in the codebase leaves it `None` and gets a plain chat completion.
