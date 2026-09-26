@@ -17,6 +17,125 @@
         "title": "AdminBugReportBody",
         "type": "object"
       },
+      "AuthSession": {
+        "description": "The Supabase session tokens (also set as httpOnly cookies).",
+        "properties": {
+          "access_token": {
+            "title": "Access Token",
+            "type": "string"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "refresh_token": {
+            "title": "Refresh Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "access_token",
+          "refresh_token"
+        ],
+        "title": "AuthSession",
+        "type": "object"
+      },
+      "AuthUser": {
+        "description": "The account as the web app sees it: Supabase identity merged with the `users` row.\n\n`preferred_name` and `client_onboarding_completed` are only filled for clients.",
+        "properties": {
+          "account_suspended": {
+            "default": false,
+            "title": "Account Suspended",
+            "type": "boolean"
+          },
+          "admin_role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Admin Role"
+          },
+          "app_metadata": {
+            "additionalProperties": true,
+            "title": "App Metadata",
+            "type": "object"
+          },
+          "client_onboarding_completed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Onboarding Completed"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "email_verified": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Verified"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "preferred_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preferred Name"
+          },
+          "user_metadata": {
+            "additionalProperties": true,
+            "title": "User Metadata",
+            "type": "object"
+          },
+          "user_type": {
+            "default": "client",
+            "title": "User Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "AuthUser",
+        "type": "object"
+      },
       "BlogPostAdminDetail": {
         "description": "A post as the CMS editor loads it: the editor document as well as the HTML.",
         "properties": {
@@ -621,6 +740,223 @@
         "title": "Body_upload_image_api_v1_media_images_post",
         "type": "object"
       },
+      "ChangePasswordRequest": {
+        "description": "The current password (re-checked) and the new one.",
+        "properties": {
+          "current_password": {
+            "minLength": 1,
+            "title": "Current Password",
+            "type": "string"
+          },
+          "new_password": {
+            "minLength": 6,
+            "title": "New Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "title": "ChangePasswordRequest",
+        "type": "object"
+      },
+      "ChangePasswordResponse": {
+        "description": "The password changed; the session cookies are cleared, so the user signs in again.",
+        "properties": {
+          "message": {
+            "default": "Password updated.",
+            "title": "Message",
+            "type": "string"
+          },
+          "requires_sign_in": {
+            "default": true,
+            "title": "Requires Sign In",
+            "type": "boolean"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "title": "ChangePasswordResponse",
+        "type": "object"
+      },
+      "ClientOnboardingPatchBody": {
+        "description": "Set the preferred name (blank clears it) and/or mark onboarding done.",
+        "properties": {
+          "mark_completed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mark Completed"
+          },
+          "preferred_name": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preferred Name"
+          }
+        },
+        "title": "ClientOnboardingPatchBody",
+        "type": "object"
+      },
+      "ClientOnboardingResponse": {
+        "description": "The client's onboarding state.",
+        "properties": {
+          "onboarding": {
+            "$ref": "#/components/schemas/ClientOnboardingState"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "onboarding"
+        ],
+        "title": "ClientOnboardingResponse",
+        "type": "object"
+      },
+      "ClientOnboardingState": {
+        "description": "Whether a client finished first-visit setup, and what they like to be called.",
+        "properties": {
+          "completed": {
+            "default": false,
+            "title": "Completed",
+            "type": "boolean"
+          },
+          "preferred_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preferred Name"
+          }
+        },
+        "title": "ClientOnboardingState",
+        "type": "object"
+      },
+      "ContactSharingSettings": {
+        "description": "What the other side of a paid booking may see.",
+        "properties": {
+          "contact_phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Phone"
+          },
+          "share_address": {
+            "default": true,
+            "title": "Share Address",
+            "type": "boolean"
+          },
+          "share_email": {
+            "default": true,
+            "title": "Share Email",
+            "type": "boolean"
+          },
+          "share_phone": {
+            "default": true,
+            "title": "Share Phone",
+            "type": "boolean"
+          }
+        },
+        "title": "ContactSharingSettings",
+        "type": "object"
+      },
+      "ContactSharingSettingsPutBody": {
+        "description": "Fields to change; omitted fields are left alone. Vendors cannot set phone or address here.",
+        "properties": {
+          "contact_phone": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Phone"
+          },
+          "share_address": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Share Address"
+          },
+          "share_email": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Share Email"
+          },
+          "share_phone": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Share Phone"
+          }
+        },
+        "title": "ContactSharingSettingsPutBody",
+        "type": "object"
+      },
+      "ContactSharingSettingsResponse": {
+        "description": "The saved contact-sharing settings.",
+        "properties": {
+          "settings": {
+            "$ref": "#/components/schemas/ContactSharingSettings"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "settings"
+        ],
+        "title": "ContactSharingSettingsResponse",
+        "type": "object"
+      },
       "ContactSubmitBody": {
         "description": "A client or vendor contact message, optionally about one of their bookings.",
         "properties": {
@@ -729,6 +1065,40 @@
           "code"
         ],
         "title": "ErrorResponse",
+        "type": "object"
+      },
+      "ForgotPasswordRequest": {
+        "description": "The address to send a reset link to.",
+        "properties": {
+          "email": {
+            "minLength": 3,
+            "title": "Email",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "title": "ForgotPasswordRequest",
+        "type": "object"
+      },
+      "ForgotPasswordResponse": {
+        "description": "The same message whether or not the account exists.",
+        "properties": {
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "ForgotPasswordResponse",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -1121,6 +1491,24 @@
         "title": "ImageUploadResponse",
         "type": "object"
       },
+      "MeResponse": {
+        "description": "`GET /auth/me`.",
+        "properties": {
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AuthUser"
+          }
+        },
+        "required": [
+          "user"
+        ],
+        "title": "MeResponse",
+        "type": "object"
+      },
       "ReferralFeeTier": {
         "description": "Spend at least `min_spend_gbp` and get `fee_discount_gbp` off the service fee.",
         "properties": {
@@ -1417,6 +1805,258 @@
           "user_id"
         ],
         "title": "ReferralVendorSignupRow",
+        "type": "object"
+      },
+      "RefreshSessionRequest": {
+        "description": "A refresh token; leave it out to use the refresh cookie.",
+        "properties": {
+          "refresh_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refresh Token"
+          }
+        },
+        "title": "RefreshSessionRequest",
+        "type": "object"
+      },
+      "RefreshSessionResponse": {
+        "description": "The account and its new session.",
+        "properties": {
+          "session": {
+            "$ref": "#/components/schemas/AuthSession"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AuthUser"
+          }
+        },
+        "required": [
+          "user",
+          "session"
+        ],
+        "title": "RefreshSessionResponse",
+        "type": "object"
+      },
+      "ResendVerificationRequest": {
+        "description": "The address to send a new verification link to.",
+        "properties": {
+          "email": {
+            "minLength": 3,
+            "title": "Email",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "title": "ResendVerificationRequest",
+        "type": "object"
+      },
+      "ResendVerificationResponse": {
+        "description": "The same message whether or not a link was sent.",
+        "properties": {
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "ResendVerificationResponse",
+        "type": "object"
+      },
+      "ResetPasswordRequest": {
+        "description": "The token from the reset link and the new password.",
+        "properties": {
+          "password": {
+            "minLength": 6,
+            "title": "Password",
+            "type": "string"
+          },
+          "token": {
+            "minLength": 20,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "password"
+        ],
+        "title": "ResetPasswordRequest",
+        "type": "object"
+      },
+      "ResetPasswordResponse": {
+        "description": "The account, signed in with its new password.",
+        "properties": {
+          "session": {
+            "$ref": "#/components/schemas/AuthSession"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AuthUser"
+          }
+        },
+        "required": [
+          "user",
+          "session"
+        ],
+        "title": "ResetPasswordResponse",
+        "type": "object"
+      },
+      "SignInRequest": {
+        "description": "Email and password.",
+        "properties": {
+          "email": {
+            "minLength": 3,
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "minLength": 1,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "SignInRequest",
+        "type": "object"
+      },
+      "SignInResponse": {
+        "description": "The signed-in account and its session.",
+        "properties": {
+          "session": {
+            "$ref": "#/components/schemas/AuthSession"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AuthUser"
+          }
+        },
+        "required": [
+          "user",
+          "session"
+        ],
+        "title": "SignInResponse",
+        "type": "object"
+      },
+      "SignOutResponse": {
+        "description": "Always a success: the cookies are cleared either way.",
+        "properties": {
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "title": "SignOutResponse",
+        "type": "object"
+      },
+      "SignupRequest": {
+        "description": "A new client or vendor account. `referral_code` is a creator's `?ref=` slug (vendors only).",
+        "properties": {
+          "email": {
+            "minLength": 3,
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "minLength": 6,
+            "title": "Password",
+            "type": "string"
+          },
+          "referral_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Referral Code"
+          },
+          "user_type": {
+            "default": "client",
+            "enum": [
+              "client",
+              "vendor"
+            ],
+            "title": "User Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "SignupRequest",
+        "type": "object"
+      },
+      "SignupResponse": {
+        "description": "The new account. `session` is always empty: the user must verify their email, then sign in.",
+        "properties": {
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "session": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AuthSession"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AuthUser"
+          }
+        },
+        "required": [
+          "user"
+        ],
+        "title": "SignupResponse",
         "type": "object"
       },
       "UpdateReferralPartnerRequest": {
@@ -1786,6 +2426,60 @@
           "share_link"
         ],
         "title": "VendorReferralSetCodeResponse",
+        "type": "object"
+      },
+      "VerifyEmailRequest": {
+        "description": "The token from the verification link.",
+        "properties": {
+          "token": {
+            "minLength": 20,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "VerifyEmailRequest",
+        "type": "object"
+      },
+      "VerifyEmailResponse": {
+        "description": "The email is verified; the user signs in next (`session` is always empty).",
+        "properties": {
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "session": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AuthSession"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "user": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AuthUser"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "VerifyEmailResponse",
         "type": "object"
       }
     }
@@ -3033,6 +3727,662 @@
         ]
       }
     },
+    "/api/v1/auth/change-password": {
+      "post": {
+        "description": "Change the password (the current one is re-checked); every session ends, including this one.",
+        "operationId": "change_password_api_v1_auth_change_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangePasswordResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "password_update_failed, change_password_rate_limited, weak_password, password_unchanged, current_password_incorrect",
+            "x-codes": [
+              "password_update_failed",
+              "change_password_rate_limited",
+              "weak_password",
+              "password_unchanged",
+              "current_password_incorrect"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "auth_unavailable",
+            "x-codes": [
+              "auth_unavailable"
+            ]
+          }
+        },
+        "summary": "Change Password",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/forgot-password": {
+      "post": {
+        "description": "Email a reset link if the account exists. The answer is the same either way.",
+        "operationId": "forgot_password_api_v1_auth_forgot_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForgotPasswordResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "reset_request_rate_limited",
+            "x-codes": [
+              "reset_request_rate_limited"
+            ]
+          }
+        },
+        "summary": "Forgot Password",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "description": "The signed-in account.",
+        "operationId": "me_api_v1_auth_me_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "auth_unavailable",
+            "x-codes": [
+              "auth_unavailable"
+            ]
+          }
+        },
+        "summary": "Me",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "description": "Swap the refresh token (from the body, else the cookie) for a new session.",
+        "operationId": "refresh_session_api_v1_auth_refresh_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefreshSessionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "session_expired",
+            "x-codes": [
+              "session_expired"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "auth_unavailable",
+            "x-codes": [
+              "auth_unavailable"
+            ]
+          }
+        },
+        "summary": "Refresh Session",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/resend-verification": {
+      "post": {
+        "description": "Send a new verification link if the account still needs one. The answer is the same either way.",
+        "operationId": "resend_verification_api_v1_auth_resend_verification_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendVerificationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResendVerificationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "verification_email_rate_limited",
+            "x-codes": [
+              "verification_email_rate_limited"
+            ]
+          }
+        },
+        "summary": "Resend Verification",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/reset-password": {
+      "post": {
+        "description": "Follow a reset link: set the new password and sign in with it.",
+        "operationId": "reset_password_api_v1_auth_reset_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResetPasswordResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "link_rate_limited, reset_link_invalid, reset_link_used, weak_password, password_update_failed, reset_sign_in_failed",
+            "x-codes": [
+              "link_rate_limited",
+              "reset_link_invalid",
+              "reset_link_used",
+              "weak_password",
+              "password_update_failed",
+              "reset_sign_in_failed"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reset Password",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/signin": {
+      "post": {
+        "description": "Sign in with email and password; the session is also set as cookies.",
+        "operationId": "sign_in_api_v1_auth_signin_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignInRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignInResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "wrong_credentials, email_not_confirmed, sign_in_failed, account_deleted",
+            "x-codes": [
+              "wrong_credentials",
+              "email_not_confirmed",
+              "sign_in_failed",
+              "account_deleted"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "account_suspended, email_not_verified",
+            "x-codes": [
+              "account_suspended",
+              "email_not_verified"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "sign_in_rate_limited",
+            "x-codes": [
+              "sign_in_rate_limited"
+            ]
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "sign_in_unavailable",
+            "x-codes": [
+              "sign_in_unavailable"
+            ]
+          }
+        },
+        "summary": "Sign In",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/signout": {
+      "post": {
+        "description": "End this browser's session and clear its cookies. Succeeds even without a session.",
+        "operationId": "sign_out_api_v1_auth_signout_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignOutResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "internal_error",
+            "x-codes": [
+              "internal_error"
+            ]
+          }
+        },
+        "summary": "Sign Out",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/signup": {
+      "post": {
+        "description": "Create an unverified client or vendor account; the user verifies their email, then signs in.",
+        "operationId": "sign_up_api_v1_auth_signup_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignupResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "email_already_registered, signup_failed",
+            "x-codes": [
+              "email_already_registered",
+              "signup_failed"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "verification_email_rate_limited",
+            "x-codes": [
+              "verification_email_rate_limited"
+            ]
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "auth_unavailable",
+            "x-codes": [
+              "auth_unavailable"
+            ]
+          }
+        },
+        "summary": "Sign Up",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/verify-email": {
+      "post": {
+        "description": "Follow a verification link. The user signs in next, so any old session cookies are cleared.",
+        "operationId": "verify_email_api_v1_auth_verify_email_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyEmailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "link_rate_limited, verification_link_invalid, verify_email_failed",
+            "x-codes": [
+              "link_rate_limited",
+              "verification_link_invalid",
+              "verify_email_failed"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Verify Email",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/api/v1/blog/posts": {
       "get": {
         "description": "The public blog index, newest first.",
@@ -3240,6 +4590,146 @@
           }
         },
         "summary": "Submit Client Contact",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/onboarding": {
+      "get": {
+        "description": "Whether the client finished first-visit setup, and their preferred name.",
+        "operationId": "get_onboarding_api_v1_client_onboarding_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientOnboardingResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "auth_unavailable",
+            "x-codes": [
+              "auth_unavailable"
+            ]
+          }
+        },
+        "summary": "Get Onboarding",
+        "tags": [
+          "client"
+        ]
+      },
+      "patch": {
+        "description": "Set the client's preferred name and/or mark first-visit setup done.",
+        "operationId": "patch_onboarding_api_v1_client_onboarding_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientOnboardingPatchBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientOnboardingResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "auth_unavailable",
+            "x-codes": [
+              "auth_unavailable"
+            ]
+          }
+        },
+        "summary": "Patch Onboarding",
         "tags": [
           "client"
         ]
@@ -3883,6 +5373,146 @@
         "summary": "Get Partner For Signup",
         "tags": [
           "referrals"
+        ]
+      }
+    },
+    "/api/v1/user/contact-settings": {
+      "get": {
+        "description": "What the caller shares with the other side of a paid booking.",
+        "operationId": "get_contact_settings_api_v1_user_contact_settings_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactSharingSettingsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "auth_unavailable",
+            "x-codes": [
+              "auth_unavailable"
+            ]
+          }
+        },
+        "summary": "Get Contact Settings",
+        "tags": [
+          "user"
+        ]
+      },
+      "put": {
+        "description": "Change what the caller shares; omitted fields are left alone.",
+        "operationId": "put_contact_settings_api_v1_user_contact_settings_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactSharingSettingsPutBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactSharingSettingsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "auth_unavailable",
+            "x-codes": [
+              "auth_unavailable"
+            ]
+          }
+        },
+        "summary": "Put Contact Settings",
+        "tags": [
+          "user"
         ]
       }
     },

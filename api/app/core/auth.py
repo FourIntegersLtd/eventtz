@@ -10,7 +10,7 @@ copy does not change.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Annotated, Any, Literal
 
 from fastapi import Depends, Request, Response
@@ -111,6 +111,9 @@ class Principal:
     account_suspended: bool = False
     email_verified: bool = True
     deleted: bool = False
+    # The Supabase Auth metadata, echoed back by `/auth/me` for the web app.
+    user_metadata: dict[str, Any] = field(default_factory=dict)
+    app_metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
     def is_super_admin(self) -> bool:
@@ -158,7 +161,14 @@ def principal_from(
         account_suspended=suspended,
         email_verified=verified,
         deleted=bool((profile or {}).get("deleted_at")),
+        user_metadata=_metadata(auth_user.get("user_metadata")),
+        app_metadata=_metadata(auth_user.get("app_metadata")),
     )
+
+
+def _metadata(value: Any) -> dict[str, Any]:
+    """A metadata value as a dict (Supabase sometimes sends `None`)."""
+    return dict(value) if isinstance(value, dict) else {}
 
 
 def cookie_options() -> dict[str, Any]:
@@ -317,6 +327,8 @@ def require_super_admin(principal: Annotated[Principal, Depends(require_staff)])
 
 
 # What routers declare as a parameter type, e.g. `def list_mine(vendor: CurrentVendor)`.
+# `AnyAccount` is any live session, suspended or not: only for sign-out and password changes.
+AnyAccount = Annotated[Principal, Depends(resolve_principal)]
 CurrentUser = Annotated[Principal, Depends(require_user)]
 CurrentClient = Annotated[Principal, Depends(require_client)]
 CurrentVendor = Annotated[Principal, Depends(require_vendor)]

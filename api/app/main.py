@@ -20,6 +20,8 @@ from app.core.ports import language_model_port, mailer_port, storage_port, webho
 from app.core.settings import LOCAL_ORIGIN_REGEX, get_settings
 from app.features.content import router as content_router
 from app.features.content import router_admin as content_admin_router
+from app.features.identity import router as identity_router
+from app.features.identity import router_settings as identity_settings_router
 from app.features.media import router as media_router
 from app.features.referrals import router as referrals_router
 from app.features.referrals import router_admin as referrals_admin_router
@@ -33,6 +35,8 @@ def _routers() -> list[APIRouter]:
     return [
         content_router.router,
         content_admin_router.router,
+        identity_router.router,
+        identity_settings_router.router,
         media_router.router,
         referrals_router.router,
         referrals_admin_router.router,
