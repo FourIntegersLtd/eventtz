@@ -23,6 +23,13 @@ from app.features.notifications.domain_account_emails import (
     welcome_context,
     welcome_email,
 )
+from app.features.notifications.domain_vendor_emails import (
+    vendor_approval_status_email,
+    vendor_complete_profile_nudge_email,
+    vendor_returned_for_edits_email,
+    vendor_setup_payouts_nudge_email,
+    vendor_submitted_alert,
+)
 from app.features.notifications.rendering import render_template
 
 log = get_logger(__name__)
@@ -223,4 +230,139 @@ def send_welcome(mailer: Mailer, *, email: str, user_type: str) -> bool:
         return mailer.send(outgoing)
     except Exception:
         log.exception("welcome email could not be sent email=%s user_type=%s", normalized, user_type)
+        return False
+
+
+# --- vendor moderation emails ----------------------------------------------------------------
+
+
+def render_vendor_submitted_alert(
+    *, vendor_user_id: str, vendor_email: str | None, business_name: str | None
+) -> OutgoingEmail:
+    """Render the staff alert for a vendor profile submission, without sending it."""
+    alert = vendor_submitted_alert(
+        vendor_user_id=vendor_user_id, vendor_email=vendor_email, business_name=business_name
+    )
+    return render_admin_alert(alert)
+
+
+def send_vendor_submitted_alert(
+    mailer: Mailer, *, vendor_user_id: str, vendor_email: str | None, business_name: str | None
+) -> bool:
+    """Tell staff a vendor submitted their profile for review. Never raises."""
+    try:
+        outgoing = render_vendor_submitted_alert(
+            vendor_user_id=vendor_user_id, vendor_email=vendor_email, business_name=business_name
+        )
+        return mailer.send(outgoing)
+    except Exception:
+        log.exception("vendor submitted alert could not be sent vendor_user_id=%s", vendor_user_id)
+        return False
+
+
+def render_vendor_approval_changed(
+    *,
+    vendor_email: str,
+    approval_status: str,
+    business_name: str | None,
+    listing_visible: bool = False,
+    payouts_verified: bool = False,
+) -> OutgoingEmail:
+    """Render the approval-change email to `vendor_email` for `approval_status`, without sending it."""
+    content = vendor_approval_status_email(
+        approval_status=approval_status,
+        business_name=business_name,
+        listing_visible=listing_visible,
+        payouts_verified=payouts_verified,
+    )
+    return _render_notification(vendor_email, content)
+
+
+def send_vendor_approval_changed(
+    mailer: Mailer,
+    *,
+    vendor_email: str | None,
+    approval_status: str,
+    business_name: str | None,
+    listing_visible: bool = False,
+    payouts_verified: bool = False,
+) -> bool:
+    """Email a vendor that an admin changed their approval status. False for a missing/invalid address."""
+    if not vendor_email or "@" not in vendor_email:
+        return False
+    try:
+        outgoing = render_vendor_approval_changed(
+            vendor_email=vendor_email,
+            approval_status=approval_status,
+            business_name=business_name,
+            listing_visible=listing_visible,
+            payouts_verified=payouts_verified,
+        )
+        return mailer.send(outgoing)
+    except Exception:
+        log.exception("vendor approval email could not be sent approval_status=%s", approval_status)
+        return False
+
+
+def render_vendor_returned_for_edits(
+    *, vendor_email: str, business_name: str | None, admin_message: str | None = None
+) -> OutgoingEmail:
+    """Render "returned for edits" to `vendor_email`, without sending it."""
+    content = vendor_returned_for_edits_email(business_name=business_name, admin_message=admin_message)
+    return _render_notification(vendor_email, content)
+
+
+def send_vendor_returned_for_edits(
+    mailer: Mailer,
+    *,
+    vendor_email: str | None,
+    business_name: str | None,
+    admin_message: str | None = None,
+) -> bool:
+    """Email a vendor that their profile was returned for edits. False for a missing/invalid address."""
+    if not vendor_email or "@" not in vendor_email:
+        return False
+    try:
+        outgoing = render_vendor_returned_for_edits(
+            vendor_email=vendor_email, business_name=business_name, admin_message=admin_message
+        )
+        return mailer.send(outgoing)
+    except Exception:
+        log.exception("vendor returned-for-edits email could not be sent")
+        return False
+
+
+def render_vendor_profile_nudge(*, vendor_email: str, business_name: str | None) -> OutgoingEmail:
+    """Render the draft-profile completion nudge to `vendor_email`, without sending it."""
+    content = vendor_complete_profile_nudge_email(vendor_email=vendor_email, business_name=business_name)
+    return _render_notification(vendor_email, content)
+
+
+def send_vendor_profile_nudge(mailer: Mailer, *, vendor_email: str | None, business_name: str | None) -> bool:
+    """Email a draft vendor to finish and submit their profile. False for a missing/invalid address."""
+    if not vendor_email or "@" not in vendor_email:
+        return False
+    try:
+        outgoing = render_vendor_profile_nudge(vendor_email=vendor_email, business_name=business_name)
+        return mailer.send(outgoing)
+    except Exception:
+        log.exception("vendor profile nudge email could not be sent")
+        return False
+
+
+def render_vendor_payout_nudge(*, vendor_email: str, business_name: str | None) -> OutgoingEmail:
+    """Render the payout-setup nudge to `vendor_email`, without sending it."""
+    content = vendor_setup_payouts_nudge_email(vendor_email=vendor_email, business_name=business_name)
+    return _render_notification(vendor_email, content)
+
+
+def send_vendor_payout_nudge(mailer: Mailer, *, vendor_email: str | None, business_name: str | None) -> bool:
+    """Email an approved vendor to finish Stripe payout setup. False for a missing/invalid address."""
+    if not vendor_email or "@" not in vendor_email:
+        return False
+    try:
+        outgoing = render_vendor_payout_nudge(vendor_email=vendor_email, business_name=business_name)
+        return mailer.send(outgoing)
+    except Exception:
+        log.exception("vendor payout nudge email could not be sent")
         return False
