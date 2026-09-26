@@ -25,6 +25,7 @@ from app.core.observability import configure_sentry
 from app.core.ports import language_model_port, mailer_port, payment_gateway_port, storage_port, webhooks_port
 from app.core.redis import close_redis
 from app.core.settings import LOCAL_ORIGIN_REGEX, get_settings
+from app.features.bookings import router_admin_recovery as bookings_admin_recovery_router
 from app.features.bookings import router_client as bookings_client_router
 from app.features.bookings import router_vendor as bookings_vendor_router
 from app.features.content import router as content_router
@@ -66,6 +67,7 @@ def _routers() -> list[APIRouter]:
     return [
         bookings_client_router.router,
         bookings_vendor_router.router,
+        bookings_admin_recovery_router.router,
         content_router.router,
         content_admin_router.router,
         copilot_router.router,

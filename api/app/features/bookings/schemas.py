@@ -14,6 +14,10 @@ from typing import Any, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+# The admin console's booking view, re-exported so the recovery routes can answer with it
+# (a router imports only its slice's `schemas`).
+from app.features.bookings.schemas_admin import AdminBookingDetailResponse as AdminBookingDetailResponse
+
 # A client referral code is at most this many digits (as in the referrals slice).
 _REFERRAL_CODE_MAX_DIGITS = 6
 _PRICE_OUT_OF_RANGE = "Enter a price between £0 and £1,000,000."
@@ -538,3 +542,19 @@ class BookingCheckoutSyncResponse(BaseModel):
 
     success: bool = True
     payment_status: str
+
+
+# --- admin recovery tools ---------------------------------------------------------------------------
+
+
+class AdminCancelOnBehalfBody(BaseModel):
+    """Staff cancel a booking for one party, writing down why (kept in the audit log)."""
+
+    party: Literal["client", "vendor"]
+    reason: str = Field(min_length=3, max_length=2000)
+
+
+class AdminConfirmCompletionBody(BaseModel):
+    """Staff confirm, for one party, that the event went ahead."""
+
+    party: Literal["client", "vendor"]

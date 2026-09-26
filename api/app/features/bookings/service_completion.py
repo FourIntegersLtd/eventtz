@@ -1,7 +1,8 @@
 """Both parties confirm the event went ahead; then the held payment can go to the vendor.
 
 Confirming is allowed once the event's last day is over and the client has paid.
-The first confirmation asks the other party to confirm too. Paying the vendor is a
+The first confirmation asks the other party to confirm too, then runs the post-event
+step (completion reminder, and the automatic payout once due). Paying the vendor is a
 Stripe Transfer made by `service_payments.release_vendor_payout`.
 """
 
@@ -13,7 +14,7 @@ from typing import Literal
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.ports import Mailer, PaymentGateway
-from app.features.bookings import domain, repository, service_payments
+from app.features.bookings import domain, repository, service_maintenance, service_payments
 from app.features.bookings.errors import (
     BookingNotFound,
     CompleteNeedsPayment,
@@ -99,4 +100,7 @@ async def confirm_completion(
         body=_AWAITING_OTHER_PARTY_BODY[party],
     )
     announce_change(session, confirmed)
+    # As the baseline did: remind the other party now, and pay out if the automatic date has passed.
+    # The response is still the state this confirmation left, as the baseline returned it.
+    await service_maintenance.run_post_event_step(session, mailer, gateway, confirmed)
     return _result(confirmed)

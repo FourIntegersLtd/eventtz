@@ -634,3 +634,148 @@ class OnlyUnpaidOrPendingCanBeReset(InvalidInput):
 
     code = "only_unpaid_pending_reset"
     default_message = "Only unpaid or pending checkout bookings can be reset."
+
+
+# --- admin recovery tools (`service_admin_recovery.py`) ---------------------------------------------
+#
+# The baseline's recovery commands raised a plain ValueError for every refusal, a missing
+# booking included, and each route answered it with a 400; these keep that status and copy.
+
+
+class RecoveryBookingNotFound(InvalidInput):
+    """No booking with that id (the recovery tools answer 400 here, not 404, as the baseline did)."""
+
+    code = "recovery_booking_not_found"
+    default_message = "Booking not found."
+
+
+class RecoveryOnlyAcceptedMarkPaid(InvalidInput):
+    """Only an accepted booking's payment can be synced from Stripe."""
+
+    code = "recovery_only_accepted_mark_paid"
+    default_message = "Only accepted bookings can be marked paid."
+
+
+class RecoveryCheckoutSessionNotFound(InvalidInput):
+    """Stripe no longer knows the stored Checkout Session; the booking's checkout was reset."""
+
+    code = "recovery_checkout_session_not_found"
+    # The reset checkout is kept so the client can pay again.
+    persist_effects = True
+    default_message = "Checkout session not found in Stripe. Checkout was reset - verify charge manually."
+
+
+class RecoveryNothingToSync(InvalidInput):
+    """No Checkout Session or payment intent is stored, so there is nothing to ask Stripe about."""
+
+    code = "recovery_nothing_to_sync"
+    default_message = "No checkout session or payment intent on file to sync."
+
+
+class RecoveryPaymentIntentNotSucceeded(InvalidInput):
+    """The stored payment intent has not succeeded, so the booking is not paid."""
+
+    code = "recovery_payment_intent_not_succeeded"
+    default_message = "Payment intent is not in a succeeded state."
+
+
+class RecoveryPaymentIntentMismatch(InvalidInput):
+    """The payment intent's metadata names a different booking."""
+
+    code = "recovery_payment_intent_mismatch"
+    default_message = "Payment intent does not match this booking."
+
+
+class RecoveryPaymentIntentNoAmount(InvalidInput):
+    """The payment intent carries no confirmed amount to record."""
+
+    code = "recovery_payment_intent_no_amount"
+    default_message = "Payment intent has no confirmed amount."
+
+
+class RecoveryMarkPaidFailed(InvalidInput):
+    """The paid write matched nothing: the booking moved on while Stripe was being asked."""
+
+    code = "recovery_mark_paid_failed"
+    default_message = "Booking could not be marked paid - check status and payment state."
+
+
+class RecoveryOnlyPaidPayoutRelease(InvalidInput):
+    """Staff can release a payout only while the client's payment is held (the console's wording)."""
+
+    code = "recovery_only_paid_payout_release"
+    default_message = "Only paid bookings can have payout released."
+
+
+class RecoveryPayoutNeedsAccepted(InvalidInput):
+    """A paid booking that is no longer accepted cannot be paid out."""
+
+    code = "recovery_payout_needs_accepted"
+    default_message = "Booking must be accepted to release payout."
+
+
+class RecoveryDisputeBlocksPayout(InvalidInput):
+    """An open problem report holds the vendor's payout until staff resolve it."""
+
+    code = "recovery_dispute_blocks_payout"
+    default_message = "Open dispute blocks payout release."
+
+
+class RecoveryPayoutNotEligible(InvalidInput):
+    """Neither both confirmations nor the automatic payout date allow paying the vendor yet."""
+
+    code = "recovery_payout_not_eligible"
+    default_message = "Payout can only be released when both parties confirmed or auto-release is due."
+
+
+class RecoveryPayoutNotReleased(InvalidInput):
+    """The payout was attempted but the booking is not paid out (vendor Stripe not ready, or refused)."""
+
+    code = "recovery_payout_not_released"
+    # The payout-held notice and any ops alert are kept.
+    persist_effects = True
+    default_message = "Payout was not released - vendor Stripe account may not be ready or transfer failed."
+
+
+class RecoveryOnlyRefundedCompleteCancel(InvalidInput):
+    """Only a fully refunded booking can be closed as cancelled."""
+
+    code = "recovery_only_refunded_complete_cancel"
+    default_message = "Only refunded bookings can be completed as cancelled."
+
+
+class RecoveryNotAcceptedRefunded(InvalidInput):
+    """The refunded booking is not accepted any more, so there is no cancel left to complete."""
+
+    code = "recovery_not_accepted_refunded"
+    default_message = "Booking is not in accepted + refunded state."
+
+
+class RecoveryCouldNotCompleteCancellation(InvalidInput):
+    """The cancel write matched nothing: the booking changed meanwhile."""
+
+    code = "recovery_could_not_complete_cancellation"
+    default_message = "Could not complete cancellation."
+
+
+class RecoveryReasonRequired(InvalidInput):
+    """A cancel on a party's behalf needs the internal reason written down."""
+
+    code = "recovery_reason_required"
+    default_message = "Internal reason is required."
+
+
+class RecoveryCouldNotCancel(InvalidInput):
+    """The cancel write matched nothing: the booking changed meanwhile."""
+
+    code = "recovery_could_not_cancel"
+    # A refund already made in Stripe must stay recorded on the booking.
+    persist_effects = True
+    default_message = "Could not cancel booking."
+
+
+class RecoveryPaymentRequiredMarkComplete(InvalidInput):
+    """Completion can be confirmed on a party's behalf only once the client has paid."""
+
+    code = "recovery_payment_required_mark_complete"
+    default_message = "Payment must be completed before marking complete."
