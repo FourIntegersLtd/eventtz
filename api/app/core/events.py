@@ -77,7 +77,13 @@ async def _listen(pubsub: Any) -> AsyncIterator[str]:
         message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
         if message is None:
             continue
-        yield str(message["data"])
+        data = message["data"]
+        # `get_redis` always builds its client with `decode_responses=True`, so
+        # in production `data` already is `str`. `str(b"name")` on a client
+        # without that option gives the literal text "b'name'", not the event
+        # name, so decode bytes explicitly rather than assume the caller's
+        # client is configured the one way production happens to configure it.
+        yield data.decode() if isinstance(data, bytes) else str(data)
 
 
 class InProcessEventBus:
