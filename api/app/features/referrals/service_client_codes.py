@@ -1,0 +1,220 @@
+"""Vendor client codes: a vendor sets their code, clients preview it, the vendor sees its bookings."""
+
+from __future__ import annotations
+
+from app.features.identity import service as identity
+from app.features.pricing import service as pricing
+from app.features.referrals import repository
+from app.features.referrals.domain import (
+    FEE_TIERS,
+    PAID_STATUSES,
+    client_share_link,
+    discount_and_tier,
+    normalise_client_code,
+    random_client_code,
+    stored_code_discount,
+)
+from app.features.referrals.errors import (
+    CodeAllocationFailed,
+    CodeFormatInvalid,
+    CodeLocked,
+    CodeTaken,
+    ReferralProgrammeClosed,
+    ReferralProgrammeNotFound,
+)
+from app.features.referrals.models import ReferralBookingRow, VendorCodeRow
+from app.features.referrals.schemas import (
+    ReferralFeeTier,
+    VendorClientReferralResponse,
+    VendorReferralBookingRow,
+    VendorReferralBookingsResponse,
+    VendorReferralPreviewResponse,
+    VendorReferralSetCodeResponse,
+)
+
+# How many random codes to try before giving up (a million codes, so collisions are rare).
+CODE_ALLOCATION_ATTEMPTS = 50
+
+
+def _tier_views() -> list[ReferralFeeTier]:
+    """The discount tiers, best first, as the screens list them."""
+    return [
+        ReferralFeeTier(min_spend_gbp=tier.min_spend_gbp, fee_discount_gbp=tier.fee_discount_gbp)
+        for tier in FEE_TIERS
+    ]
+
+
+def _approved_settings(vendor_user_id: str) -> VendorCodeRow | None:
+    """The vendor's referral settings, or `None` until they have an approved profile."""
+    settings = repository.find_vendor_code_settings(vendor_user_id)
+    return settings if settings and settings.approval_status == "approved" else None
+
+
+# --- the vendor's own code ---------------------------------------------------------------------
+
+
+def referral_programme(vendor_user_id: str) -> VendorClientReferralResponse:
+    """The vendor's referral screen: their code and share link (blank until set), the fee and the tiers."""
+    settings = _approved_settings(vendor_user_id)
+    if settings is None:
+        raise ReferralProgrammeNotFound()
+    code = normalise_client_code(settings.client_referral_code) or ""
+    return VendorClientReferralResponse(
+        referral_code=code,
+        has_referral_code=bool(code),
+        share_link=client_share_link(vendor_user_id, code) if code else "",
+        service_fee_percent=pricing.BOOKING_SERVICE_FEE_PERCENT,
+        tiers=_tier_views(),
+        enabled=bool(settings.client_referral_enabled),
+    )
+
+
+def _allocate_random_code(vendor_user_id: str) -> str:
+    """A random six-digit code no other vendor owns."""
+    for _attempt in range(CODE_ALLOCATION_ATTEMPTS):
+        candidate = random_client_code()
+        if not repository.code_taken_by_another_vendor(candidate, vendor_user_id):
+            return candidate
+    raise CodeAllocationFailed()
+
+
+def choose_code(vendor_user_id: str, requested_code: str | None) -> VendorReferralSetCodeResponse:
+    """Set the vendor's code once: the one they typed (digits only), or a random one when left blank.
+
+    A code never changes after it is set, so links already shared keep working; sending
+    the existing code again is accepted and changes nothing.
+    """
+    settings = _approved_settings(vendor_user_id)
+    if settings is None:
+        raise ReferralProgrammeClosed()
+    wants_random = not (requested_code or "").strip()
+    existing = normalise_client_code(settings.client_referral_code)
+    if existing:
+        if wants_random or normalise_client_code(requested_code) != existing:
+            raise CodeLocked()
+        return VendorReferralSetCodeResponse(
+            referral_code=existing, share_link=client_share_link(vendor_user_id, existing)
+        )
+
+    if wants_random:
+        code = _allocate_random_code(vendor_user_id)
+    else:
+        chosen = normalise_client_code(requested_code)
+        # `\d` also matches digits such as "１２３"; the column only accepts ASCII 0-9.
+        if not chosen or not chosen.isascii():
+            raise CodeFormatInvalid()
+        if repository.code_taken_by_another_vendor(chosen, vendor_user_id):
+            raise CodeTaken()
+        code = chosen
+    # The column is unique, so a vendor who claims the same code a moment earlier wins.
+    if not repository.save_vendor_code(vendor_user_id, code):
+        raise CodeTaken()
+    return VendorReferralSetCodeResponse(
+        referral_code=code, share_link=client_share_link(vendor_user_id, code)
+    )
+
+
+# --- clients previewing a code -----------------------------------------------------------------
+
+
+def _code_works_for_vendor(vendor_user_id: str, typed_code: str) -> bool:
+    """True when the code belongs to this vendor, is switched on, and the vendor is approved."""
+    code = normalise_client_code(typed_code)
+    owner = repository.find_vendor_by_code(code) if code else None
+    return bool(
+        owner
+        and owner.user_id == vendor_user_id.strip()
+        and owner.client_referral_enabled
+        and owner.approval_status == "approved"
+    )
+
+
+def preview(vendor_user_id: str, typed_code: str, vendor_portion_gbp: float) -> VendorReferralPreviewResponse:
+    """What a code takes off the service fee for this spend. A bad code is not an error; it saves nothing."""
+    code_valid = _code_works_for_vendor(vendor_user_id, typed_code)
+    discount, tier_min = discount_and_tier(vendor_portion_gbp) if code_valid else (0.0, None)
+    breakdown = pricing.build_pricing_breakdown(
+        line_items=[{"unit_price_gbp": max(0.0, vendor_portion_gbp)}],
+        vendor_adjustments=[],
+        referral_fee_discount_gbp=discount,
+    )
+    return VendorReferralPreviewResponse(
+        valid=code_valid and discount > 0,
+        code_valid=code_valid,
+        tiers=_tier_views(),
+        service_fee_percent=pricing.BOOKING_SERVICE_FEE_PERCENT,
+        qualified_discount_gbp=discount,
+        tier_min_spend_gbp=tier_min,
+        service_fee_before_discount_gbp=breakdown.service_fee_before_discount_gbp,
+        service_fee_gbp=breakdown.service_fee_gbp,
+    )
+
+
+# --- the vendor's referral bookings ------------------------------------------------------------
+
+
+def _discount_saved(booking: ReferralBookingRow, owners: dict[str, str]) -> tuple[float, float]:
+    """The booking's vendor portion and what its code saved the client.
+
+    Paid bookings report the discount stored when they were paid; others are re-priced
+    with today's tiers from the code stored on the booking.
+    """
+    discount, tier_min = stored_code_discount(
+        stored_code=booking.vendor_referral_code,
+        booking_vendor_id=booking.vendor_user_id,
+        code_owners=owners,
+        vendor_portion_gbp=pricing.vendor_portion_gbp(booking.line_items, booking.vendor_adjustments),
+    )
+    breakdown = pricing.build_pricing_breakdown(
+        line_items=booking.line_items if isinstance(booking.line_items, list) else [],
+        vendor_adjustments=booking.vendor_adjustments,
+        service_fee_percent=pricing.service_fee_percent_or_default(booking.service_fee_percent),
+        referral_fee_discount_gbp=discount,
+        referral_tier_min_spend_gbp=tier_min,
+    )
+    saved = breakdown.referral_fee_discount_gbp
+    if (
+        booking.payment_status or "unpaid"
+    ) in PAID_STATUSES and booking.referral_fee_discount_gbp is not None:
+        try:
+            saved = float(booking.referral_fee_discount_gbp)
+        except (TypeError, ValueError):
+            saved = breakdown.referral_fee_discount_gbp
+    return breakdown.vendor_portion_gbp, saved
+
+
+def referral_bookings(vendor_user_id: str) -> VendorReferralBookingsResponse:
+    """Every booking made with the vendor's codes (current or retired), and the clients' total savings."""
+    bookings = [
+        booking
+        for booking in repository.list_referral_bookings(vendor_user_id)
+        if (booking.vendor_referral_code or "").strip()
+    ]
+    stored_codes = {normalise_client_code(booking.vendor_referral_code) for booking in bookings}
+    owners = repository.code_owners({code for code in stored_codes if code})
+    client_names = identity.client_display_names(
+        [booking.client_user_id for booking in bookings if booking.client_user_id]
+    )
+
+    views = []
+    total_saved = 0.0
+    for booking in bookings:
+        vendor_portion, saved = _discount_saved(booking, owners)
+        total_saved += saved
+        views.append(
+            VendorReferralBookingRow(
+                booking_request_id=booking.id,
+                event_name=booking.event_name or "",
+                event_date=(booking.event_date or "")[:10],
+                booking_status=booking.status or "",
+                payment_status=booking.payment_status or "unpaid",
+                vendor_portion_gbp=vendor_portion,
+                referral_fee_discount_gbp=round(saved, 2),
+                referral_code=(booking.vendor_referral_code or "").strip(),
+                client_display_name=client_names.get(booking.client_user_id or ""),
+                created_at=booking.created_at if isinstance(booking.created_at, str) else None,
+            )
+        )
+    return VendorReferralBookingsResponse(
+        total_referral_bookings=len(views), total_fee_savings_gbp=round(total_saved, 2), bookings=views
+    )

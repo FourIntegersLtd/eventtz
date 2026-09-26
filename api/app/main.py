@@ -21,6 +21,8 @@ from app.core.settings import LOCAL_ORIGIN_REGEX, get_settings
 from app.features.content import router as content_router
 from app.features.content import router_admin as content_admin_router
 from app.features.media import router as media_router
+from app.features.referrals import router as referrals_router
+from app.features.referrals import router_admin as referrals_admin_router
 
 # Every product route lives under this prefix; the web app and the baseline use the same one.
 API_PREFIX = "/api/v1"
@@ -28,7 +30,13 @@ API_PREFIX = "/api/v1"
 
 def _routers() -> list[APIRouter]:
     """Every slice router, in mount order. Add a slice's router here when it is rebuilt."""
-    return [content_router.router, content_admin_router.router, media_router.router]
+    return [
+        content_router.router,
+        content_admin_router.router,
+        media_router.router,
+        referrals_router.router,
+        referrals_admin_router.router,
+    ]
 
 
 def _plug_in_adapters(app: FastAPI) -> None:

@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from app.core.site import PUBLIC_WEBSITE, public_url
+
 APP_NAME = "Eventtz"
 COMPANY_LEGAL_NAME = "Eventtz Ltd"
 SUPPORT_EMAIL = "hello@eventtz.com"
 
-# Emails always link to the production site, whichever environment sent them.
-PUBLIC_WEBSITE = "https://www.eventtz.com"
+# Emails always link to the production site (`PUBLIC_WEBSITE`), whichever environment sent them.
 PUBLIC_WEBSITE_LABEL = "eventtz.com"
 PRIVACY_URL = "https://eventtz.com/compliances/privacy-policy"
 TERMS_URL = "https://eventtz.com/compliances/terms-of-service"
@@ -68,14 +69,6 @@ class AdminAlert:
 def alert_chip(template_id: str) -> tuple[str, str]:
     """The (label, tone) chip for an alert kind; unknown kinds get a grey ALERT chip."""
     return ADMIN_ALERT_CHIPS.get(template_id, DEFAULT_ALERT_CHIP)
-
-
-def public_url(path: str) -> str:
-    """An absolute link on the public website for a path such as `/login`."""
-    normalized = path.strip()
-    if not normalized:
-        return PUBLIC_WEBSITE
-    return f"{PUBLIC_WEBSITE}{normalized if normalized.startswith('/') else f'/{normalized}'}"
 
 
 def admin_sign_in_url() -> str:

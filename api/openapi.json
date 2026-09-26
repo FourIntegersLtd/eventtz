@@ -660,6 +660,58 @@
         "title": "ContactSubmitResponse",
         "type": "object"
       },
+      "CreateReferralPartnerRequest": {
+        "description": "A new partner. Leave `slug` blank to make one from the display name.",
+        "properties": {
+          "display_name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Display Name",
+            "type": "string"
+          },
+          "instagram_handle": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instagram Handle"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slug"
+          }
+        },
+        "required": [
+          "display_name"
+        ],
+        "title": "CreateReferralPartnerRequest",
+        "type": "object"
+      },
       "ErrorResponse": {
         "description": "The JSON body of every error response, and its OpenAPI schema.",
         "properties": {
@@ -1069,6 +1121,373 @@
         "title": "ImageUploadResponse",
         "type": "object"
       },
+      "ReferralFeeTier": {
+        "description": "Spend at least `min_spend_gbp` and get `fee_discount_gbp` off the service fee.",
+        "properties": {
+          "fee_discount_gbp": {
+            "title": "Fee Discount Gbp",
+            "type": "number"
+          },
+          "min_spend_gbp": {
+            "title": "Min Spend Gbp",
+            "type": "number"
+          }
+        },
+        "required": [
+          "min_spend_gbp",
+          "fee_discount_gbp"
+        ],
+        "title": "ReferralFeeTier",
+        "type": "object"
+      },
+      "ReferralPartnerListResponse": {
+        "description": "Every partner, newest first.",
+        "properties": {
+          "partners": {
+            "items": {
+              "$ref": "#/components/schemas/ReferralPartnerRow"
+            },
+            "title": "Partners",
+            "type": "array"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "partners"
+        ],
+        "title": "ReferralPartnerListResponse",
+        "type": "object"
+      },
+      "ReferralPartnerPublicResponse": {
+        "description": "What the vendor sign-up page shows for a partner's link (\"Referred by ...\").",
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "slug",
+          "display_name"
+        ],
+        "title": "ReferralPartnerPublicResponse",
+        "type": "object"
+      },
+      "ReferralPartnerResponse": {
+        "description": "One partner after a create or edit.",
+        "properties": {
+          "partner": {
+            "$ref": "#/components/schemas/ReferralPartnerRow"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "partner"
+        ],
+        "title": "ReferralPartnerResponse",
+        "type": "object"
+      },
+      "ReferralPartnerRow": {
+        "description": "A creator partner as staff see it, with the sign-up link they share.",
+        "properties": {
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "instagram_handle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instagram Handle"
+          },
+          "is_active": {
+            "default": true,
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "referral_link": {
+            "title": "Referral Link",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "display_name",
+          "referral_link"
+        ],
+        "title": "ReferralPartnerRow",
+        "type": "object"
+      },
+      "ReferralSignupListResponse": {
+        "description": "One page of a partner's sign-ups.",
+        "properties": {
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "partner": {
+            "$ref": "#/components/schemas/ReferralPartnerRow"
+          },
+          "signups": {
+            "items": {
+              "$ref": "#/components/schemas/ReferralVendorSignupRow"
+            },
+            "title": "Signups",
+            "type": "array"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "partner",
+          "signups",
+          "total",
+          "offset",
+          "limit"
+        ],
+        "title": "ReferralSignupListResponse",
+        "type": "object"
+      },
+      "ReferralVendorSignupRow": {
+        "description": "A vendor who signed up through a partner's link, and whether the partner has been thanked.",
+        "properties": {
+          "approval_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Status"
+          },
+          "attributed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attributed At"
+          },
+          "business_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Business Name"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "explore_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Explore Path"
+          },
+          "onboarding_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Onboarding Status"
+          },
+          "shoutout_completed": {
+            "default": false,
+            "title": "Shoutout Completed",
+            "type": "boolean"
+          },
+          "shoutout_completed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shoutout Completed At"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "ReferralVendorSignupRow",
+        "type": "object"
+      },
+      "UpdateReferralPartnerRequest": {
+        "description": "A partner edit: only the fields sent (and not null) change. The slug never changes.",
+        "properties": {
+          "display_name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "instagram_handle": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instagram Handle"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "title": "UpdateReferralPartnerRequest",
+        "type": "object"
+      },
+      "UpdateReferralShoutoutRequest": {
+        "description": "Mark a sign-up's shout-out as done (stamps the time) or not done (clears it).",
+        "properties": {
+          "shoutout_completed": {
+            "title": "Shoutout Completed",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "shoutout_completed"
+        ],
+        "title": "UpdateReferralShoutoutRequest",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -1107,6 +1526,266 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "VendorClientReferralResponse": {
+        "description": "A vendor's referral screen: their code and link (empty until set), the fee and the tiers.",
+        "properties": {
+          "enabled": {
+            "default": true,
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "has_referral_code": {
+            "default": false,
+            "title": "Has Referral Code",
+            "type": "boolean"
+          },
+          "referral_code": {
+            "default": "",
+            "title": "Referral Code",
+            "type": "string"
+          },
+          "service_fee_percent": {
+            "title": "Service Fee Percent",
+            "type": "number"
+          },
+          "share_link": {
+            "default": "",
+            "title": "Share Link",
+            "type": "string"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "tiers": {
+            "items": {
+              "$ref": "#/components/schemas/ReferralFeeTier"
+            },
+            "title": "Tiers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "service_fee_percent",
+          "tiers"
+        ],
+        "title": "VendorClientReferralResponse",
+        "type": "object"
+      },
+      "VendorReferralBookingRow": {
+        "description": "A booking a client made with a referral code, and what the code saved them.",
+        "properties": {
+          "booking_request_id": {
+            "title": "Booking Request Id",
+            "type": "string"
+          },
+          "booking_status": {
+            "title": "Booking Status",
+            "type": "string"
+          },
+          "client_display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Display Name"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "event_date": {
+            "title": "Event Date",
+            "type": "string"
+          },
+          "event_name": {
+            "title": "Event Name",
+            "type": "string"
+          },
+          "payment_status": {
+            "title": "Payment Status",
+            "type": "string"
+          },
+          "referral_code": {
+            "default": "",
+            "title": "Referral Code",
+            "type": "string"
+          },
+          "referral_fee_discount_gbp": {
+            "title": "Referral Fee Discount Gbp",
+            "type": "number"
+          },
+          "vendor_portion_gbp": {
+            "title": "Vendor Portion Gbp",
+            "type": "number"
+          }
+        },
+        "required": [
+          "booking_request_id",
+          "event_name",
+          "event_date",
+          "booking_status",
+          "payment_status",
+          "vendor_portion_gbp",
+          "referral_fee_discount_gbp"
+        ],
+        "title": "VendorReferralBookingRow",
+        "type": "object"
+      },
+      "VendorReferralBookingsResponse": {
+        "description": "Every referral booking for the vendor and the clients' total savings.",
+        "properties": {
+          "bookings": {
+            "items": {
+              "$ref": "#/components/schemas/VendorReferralBookingRow"
+            },
+            "title": "Bookings",
+            "type": "array"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "total_fee_savings_gbp": {
+            "title": "Total Fee Savings Gbp",
+            "type": "number"
+          },
+          "total_referral_bookings": {
+            "title": "Total Referral Bookings",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total_referral_bookings",
+          "total_fee_savings_gbp",
+          "bookings"
+        ],
+        "title": "VendorReferralBookingsResponse",
+        "type": "object"
+      },
+      "VendorReferralPreviewResponse": {
+        "description": "What a client's code would take off the fee for a given spend with this vendor.",
+        "properties": {
+          "code_valid": {
+            "default": false,
+            "title": "Code Valid",
+            "type": "boolean"
+          },
+          "qualified_discount_gbp": {
+            "default": 0.0,
+            "title": "Qualified Discount Gbp",
+            "type": "number"
+          },
+          "service_fee_before_discount_gbp": {
+            "default": 0.0,
+            "title": "Service Fee Before Discount Gbp",
+            "type": "number"
+          },
+          "service_fee_gbp": {
+            "default": 0.0,
+            "title": "Service Fee Gbp",
+            "type": "number"
+          },
+          "service_fee_percent": {
+            "title": "Service Fee Percent",
+            "type": "number"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "tier_min_spend_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tier Min Spend Gbp"
+          },
+          "tiers": {
+            "items": {
+              "$ref": "#/components/schemas/ReferralFeeTier"
+            },
+            "title": "Tiers",
+            "type": "array"
+          },
+          "valid": {
+            "title": "Valid",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "valid",
+          "tiers",
+          "service_fee_percent"
+        ],
+        "title": "VendorReferralPreviewResponse",
+        "type": "object"
+      },
+      "VendorReferralSetCodeRequest": {
+        "description": "Omit code or pass null to generate a random 6-digit code. `generate` is accepted but ignored.",
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "generate": {
+            "default": false,
+            "title": "Generate",
+            "type": "boolean"
+          }
+        },
+        "title": "VendorReferralSetCodeRequest",
+        "type": "object"
+      },
+      "VendorReferralSetCodeResponse": {
+        "description": "The vendor's code once set, and the link to share.",
+        "properties": {
+          "referral_code": {
+            "title": "Referral Code",
+            "type": "string"
+          },
+          "share_link": {
+            "title": "Share Link",
+            "type": "string"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "referral_code",
+          "share_link"
+        ],
+        "title": "VendorReferralSetCodeResponse",
         "type": "object"
       }
     }
@@ -1834,6 +2513,523 @@
         "summary": "Submit Bug Report",
         "tags": [
           "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/referrals/partners": {
+      "get": {
+        "description": "Every partner, newest first, with the link each one shares.",
+        "operationId": "list_partners_api_v1_admin_referrals_partners_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralPartnerListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "auth_unavailable",
+            "x-codes": [
+              "auth_unavailable"
+            ]
+          }
+        },
+        "summary": "List Partners",
+        "tags": [
+          "admin",
+          "referrals"
+        ]
+      },
+      "post": {
+        "description": "Add a partner; the slug comes from the chosen slug or the name, made unique with `-2`, `-3`, ...",
+        "operationId": "create_partner_api_v1_admin_referrals_partners_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReferralPartnerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralPartnerResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "referral_display_name_required, referral_slug_invalid",
+            "x-codes": [
+              "referral_display_name_required",
+              "referral_slug_invalid"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "auth_unavailable, referral_partner_not_created",
+            "x-codes": [
+              "auth_unavailable",
+              "referral_partner_not_created"
+            ]
+          }
+        },
+        "summary": "Create Partner",
+        "tags": [
+          "admin",
+          "referrals"
+        ]
+      }
+    },
+    "/api/v1/admin/referrals/partners/{partner_id}": {
+      "patch": {
+        "description": "Edit a partner's name, handle, notes or on/off switch (the slug never changes).",
+        "operationId": "update_partner_api_v1_admin_referrals_partners__partner_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "partner_id",
+            "required": true,
+            "schema": {
+              "title": "Partner Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReferralPartnerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralPartnerResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "referral_no_fields_to_update, referral_display_name_empty",
+            "x-codes": [
+              "referral_no_fields_to_update",
+              "referral_display_name_empty"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "referral_partner_not_found",
+            "x-codes": [
+              "referral_partner_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "auth_unavailable",
+            "x-codes": [
+              "auth_unavailable"
+            ]
+          }
+        },
+        "summary": "Update Partner",
+        "tags": [
+          "admin",
+          "referrals"
+        ]
+      }
+    },
+    "/api/v1/admin/referrals/partners/{partner_id}/signups": {
+      "get": {
+        "description": "One page of the vendors a partner brought in, newest first, optionally by shout-out state.",
+        "operationId": "list_signups_api_v1_admin_referrals_partners__partner_id__signups_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "partner_id",
+            "required": true,
+            "schema": {
+              "title": "Partner Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "shoutout",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "enum": [
+                "all",
+                "pending",
+                "completed"
+              ],
+              "title": "Shoutout",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralSignupListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "referral_partner_not_found",
+            "x-codes": [
+              "referral_partner_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "auth_unavailable",
+            "x-codes": [
+              "auth_unavailable"
+            ]
+          }
+        },
+        "summary": "List Signups",
+        "tags": [
+          "admin",
+          "referrals"
+        ]
+      }
+    },
+    "/api/v1/admin/referrals/signups/{user_id}": {
+      "patch": {
+        "description": "Mark the partner as thanked (or not) for bringing in this vendor.",
+        "operationId": "set_shoutout_api_v1_admin_referrals_signups__user_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReferralShoutoutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralVendorSignupRow"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "referral_signup_not_found",
+            "x-codes": [
+              "referral_signup_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "auth_unavailable",
+            "x-codes": [
+              "auth_unavailable"
+            ]
+          }
+        },
+        "summary": "Set Shoutout",
+        "tags": [
+          "admin",
+          "referrals"
         ]
       }
     },
@@ -2634,6 +3830,62 @@
         ]
       }
     },
+    "/api/v1/referrals/partners/{slug}": {
+      "get": {
+        "description": "The creator named on the vendor sign-up page for a `?ref=` link.",
+        "operationId": "get_partner_for_signup_api_v1_referrals_partners__slug__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralPartnerPublicResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "referral_link_not_found",
+            "x-codes": [
+              "referral_link_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Partner For Signup",
+        "tags": [
+          "referrals"
+        ]
+      }
+    },
     "/api/v1/vendor/contact": {
       "post": {
         "description": "A vendor's message to the Eventtz team.",
@@ -2728,6 +3980,317 @@
         "summary": "Submit Vendor Contact",
         "tags": [
           "vendor"
+        ]
+      }
+    },
+    "/api/v1/vendor/referral": {
+      "get": {
+        "description": "The vendor's code and share link (blank until set), the service fee and the discount tiers.",
+        "operationId": "get_referral_programme_api_v1_vendor_referral_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorClientReferralResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "referral_programme_not_found",
+            "x-codes": [
+              "referral_programme_not_found"
+            ]
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "auth_unavailable",
+            "x-codes": [
+              "auth_unavailable"
+            ]
+          }
+        },
+        "summary": "Get Referral Programme",
+        "tags": [
+          "vendor-referrals"
+        ]
+      }
+    },
+    "/api/v1/vendor/referral/bookings": {
+      "get": {
+        "description": "Bookings clients made with the vendor's codes, and what the codes saved them.",
+        "operationId": "list_referral_bookings_api_v1_vendor_referral_bookings_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorReferralBookingsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "auth_unavailable",
+            "x-codes": [
+              "auth_unavailable"
+            ]
+          }
+        },
+        "summary": "List Referral Bookings",
+        "tags": [
+          "vendor-referrals"
+        ]
+      }
+    },
+    "/api/v1/vendor/referral/code": {
+      "post": {
+        "description": "Set the vendor's code once: the digits they typed, or a random six-digit code when blank.",
+        "operationId": "choose_referral_code_api_v1_vendor_referral_code_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VendorReferralSetCodeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorReferralSetCodeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "referral_programme_closed, referral_code_locked, referral_code_format_invalid, referral_code_taken",
+            "x-codes": [
+              "referral_programme_closed",
+              "referral_code_locked",
+              "referral_code_format_invalid",
+              "referral_code_taken"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "auth_unavailable, referral_code_allocation_failed",
+            "x-codes": [
+              "auth_unavailable",
+              "referral_code_allocation_failed"
+            ]
+          }
+        },
+        "summary": "Choose Referral Code",
+        "tags": [
+          "vendor-referrals"
+        ]
+      }
+    },
+    "/api/v1/vendors/explore/vendor/{vendor_user_id}/referral-preview": {
+      "get": {
+        "description": "What a client's code would take off the service fee for this spend with this vendor.",
+        "operationId": "preview_referral_code_api_v1_vendors_explore_vendor__vendor_user_id__referral_preview_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "vendor_user_id",
+            "required": true,
+            "schema": {
+              "title": "Vendor User Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "code",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Code",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "vendor_portion_gbp",
+            "required": false,
+            "schema": {
+              "default": 0.0,
+              "maximum": 10000000.0,
+              "minimum": 0.0,
+              "title": "Vendor Portion Gbp",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorReferralPreviewResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "internal_error",
+            "x-codes": [
+              "internal_error"
+            ]
+          }
+        },
+        "summary": "Preview Referral Code",
+        "tags": [
+          "vendor-referrals"
         ]
       }
     }
