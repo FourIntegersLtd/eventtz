@@ -35,6 +35,7 @@ async def issue_stream_ticket_route(principal: CurrentUser) -> StreamTicketRespo
 
 @router.get(
     "/stream",
+    response_class=StreamingResponse,
     responses=error_responses(InvalidStreamTicket),
 )
 async def stream(ticket: str | None = Query(default=None)) -> StreamingResponse:

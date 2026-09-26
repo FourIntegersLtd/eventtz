@@ -6,6 +6,12 @@ authenticates the ordinary way. The stream itself never touches the database;
 this proves that too, by publishing straight onto the process bus rather than
 through another slice's route.
 
+The two tests that read a live stream drive the ASGI app directly
+(`open_stream`): httpx's `ASGITransport` runs the app until its body is
+complete before returning a response, so `client.stream()` on an endless SSE
+body never returns. Every read is bounded, so a regression fails instead of
+hanging the suite.
+
 Heartbeats are proved in `tests/unit/test_sse.py` (against a short interval
 passed directly to `event_stream`), because the route's default
 `HEARTBEAT_SECONDS` is bound as a default argument at import time and cannot
@@ -15,10 +21,14 @@ workstream hand-off note observed one over a real connection.
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager, suppress
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import pytest
+from fastapi import FastAPI
 from httpx import AsyncClient
 
 from app.core.auth import decode_access_token, issue_stream_ticket
@@ -47,13 +57,81 @@ async def stream_ticket_for(client: AsyncClient, access_token: str) -> str:
     return ticket
 
 
-async def next_lines(lines: AsyncIterator[str], count: int) -> list[str]:
-    """The next `count` lines off an SSE body's line iterator."""
-    return [await anext(lines) for _ in range(count)]
+READ_TIMEOUT_SECONDS = 5.0
+
+
+class OpenStream:
+    """An SSE response read message by message as the app sends it."""
+
+    def __init__(self, messages: asyncio.Queue[dict[str, Any]]) -> None:
+        """Wrap the queue the app's ASGI `send` fills."""
+        self._messages = messages
+        self._unread_text = ""
+
+    async def _next_message(self) -> dict[str, Any]:
+        """The app's next ASGI message, failing the test if none arrives in time."""
+        return await asyncio.wait_for(self._messages.get(), timeout=READ_TIMEOUT_SECONDS)
+
+    async def status_code(self) -> int:
+        """The status from the response's `http.response.start` message."""
+        start = await self._next_message()
+        assert start["type"] == "http.response.start", start
+        status: int = start["status"]
+        return status
+
+    async def next_frame(self) -> str:
+        """The next whole SSE frame (up to and including its blank line)."""
+        while "\n\n" not in self._unread_text:
+            body = await self._next_message()
+            assert body["type"] == "http.response.body", body
+            self._unread_text += body.get("body", b"").decode()
+        whole_frame, _, self._unread_text = self._unread_text.partition("\n\n")
+        return whole_frame + "\n\n"
+
+
+@asynccontextmanager
+async def open_stream(app: FastAPI, url: str) -> AsyncIterator[OpenStream]:
+    """Run one GET against the ASGI app and expose its response as it streams, then disconnect."""
+    path, _, query = url.partition("?")
+    scope = {
+        "type": "http",
+        "asgi": {"version": "3.0"},
+        "http_version": "1.1",
+        "method": "GET",
+        "scheme": "http",
+        "path": path,
+        "raw_path": path.encode(),
+        "query_string": query.encode(),
+        "root_path": "",
+        "headers": [(b"host", b"testserver")],
+        "client": ("127.0.0.1", 50000),
+        "server": ("testserver", 80),
+    }
+    disconnected = asyncio.Event()
+    request_delivered = False
+
+    async def receive() -> dict[str, Any]:
+        """Hand over the (empty) request body once, then block until the test disconnects."""
+        nonlocal request_delivered
+        if not request_delivered:
+            request_delivered = True
+            return {"type": "http.request", "body": b"", "more_body": False}
+        await disconnected.wait()
+        return {"type": "http.disconnect"}
+
+    messages: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
+    running_app = asyncio.create_task(app(scope, receive, messages.put))
+    try:
+        yield OpenStream(messages)
+    finally:
+        disconnected.set()
+        running_app.cancel()
+        with suppress(asyncio.CancelledError):
+            await running_app
 
 
 async def test_a_signed_in_user_mints_a_ticket_and_opens_the_stream(
-    client: AsyncClient, make_actor: MakeActor
+    app: FastAPI, client: AsyncClient, make_actor: MakeActor
 ) -> None:
     """The ticket-issue route works for any signed-in account, and the stream accepts its ticket."""
     access_token = await make_actor()
@@ -64,25 +142,25 @@ async def test_a_signed_in_user_mints_a_ticket_and_opens_the_stream(
     assert issued.json()["expires_in_seconds"] == get_settings().stream_ticket_ttl_seconds
 
     ticket = issued.json()["ticket"]
-    async with client.stream("GET", f"/api/v1/realtime/stream?ticket={ticket}") as response:
-        assert response.status_code == 200
-        first_line = await anext(response.aiter_lines())
-        assert first_line == "event: connected"
+    async with open_stream(app, f"/api/v1/realtime/stream?ticket={ticket}") as stream:
+        assert await stream.status_code() == 200
+        assert await stream.next_frame() == frame("connected")
 
 
-async def test_a_published_event_reaches_the_open_stream(client: AsyncClient, make_actor: MakeActor) -> None:
+async def test_a_published_event_reaches_the_open_stream(
+    app: FastAPI, client: AsyncClient, make_actor: MakeActor
+) -> None:
     """Publishing to the ticket's user topic arrives at that user's open stream, named as sent."""
     access_token = await make_actor("stream-user@example.com")
     ticket = await stream_ticket_for(client, access_token)
 
-    async with client.stream("GET", f"/api/v1/realtime/stream?ticket={ticket}") as response:
-        lines = response.aiter_lines()
-        await next_lines(lines, 2)  # "event: connected" and its "data: {}"
+    async with open_stream(app, f"/api/v1/realtime/stream?ticket={ticket}") as stream:
+        assert await stream.status_code() == 200
+        assert await stream.next_frame() == frame("connected")
 
         await get_event_bus().publish(user_topic(user_id_from(access_token)), "booking_changed")
 
-        event_and_data = await next_lines(lines, 2)
-        assert "\n".join(event_and_data) + "\n" == frame("booking_changed").rstrip("\n")
+        assert await stream.next_frame() == frame("booking_changed")
 
 
 async def test_a_missing_ticket_is_refused(client: AsyncClient) -> None:
