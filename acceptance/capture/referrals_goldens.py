@@ -268,6 +268,7 @@ def capture_stored_discounts() -> list[dict[str, Any]]:
     """Run the stored-code discount rule with the owner lookup answered from `CODE_OWNERS`."""
 
     def owner_row(code: str) -> dict[str, Any] | None:
+        """The baseline's code-owner lookup, answered from `CODE_OWNERS` instead of the database."""
         normalised = normalize_client_referral_code(code)
         owner = CODE_OWNERS.get(normalised or "")
         return {"user_id": owner, "client_referral_code": normalised} if owner else None

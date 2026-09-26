@@ -66,6 +66,7 @@ def unused_code(admin_db: Client) -> Callable[[], str]:
     handed_out: set[str] = set()
 
     def pick() -> str:
+        """A six-digit code not handed out yet in this test and not owned by any vendor."""
         while True:
             candidate = f"{secrets.randbelow(900_000) + 100_000}"
             if candidate in handed_out:
@@ -91,6 +92,7 @@ def make_vendor(admin_db: Client) -> Iterator[Callable[..., SeededAccount]]:
         code: str | None = None,
         enabled: bool = True,
     ) -> SeededAccount:
+        """A vendor account with a `vendors` row in the given approval state, code and on/off switch."""
         vendor = seed_account(admin_db, unique_email("ref-vendor"), "vendor")
         admin_db.table("vendors").insert(
             {
@@ -117,6 +119,7 @@ def signed_in() -> Iterator[Callable[[SeededAccount], httpx.Client]]:
     browsers: list[httpx.Client] = []
 
     def open_browser(account: SeededAccount) -> httpx.Client:
+        """A signed-in client for the account, closed when the test ends."""
         browser = sign_in(account)
         browsers.append(browser)
         return browser
