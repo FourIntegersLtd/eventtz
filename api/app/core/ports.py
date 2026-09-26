@@ -173,6 +173,129 @@ class EventBus(Protocol):
         ...
 
 
+# --- payments ---------------------------------------------------------------------------------
+
+
+class PaymentsUnavailable(Unavailable):
+    """No Stripe key is configured, so checkout, payouts and refunds are switched off."""
+
+    code = "payments_unavailable"
+    default_message = "Stripe is not configured."
+
+
+class PaymentGatewayError(Unavailable):
+    """Stripe answered a request with an error, or could not be reached.
+
+    `stripe_code` is Stripe's own error code (e.g. `resource_missing`) and
+    `http_status` its HTTP status, so a service can tell "that object does not
+    exist" from "Stripe is down" without parsing message text.
+    """
+
+    code = "payment_provider_error"
+    default_message = "The payment provider could not complete the request. Please try again shortly."
+
+    def __init__(self, message: str | None = None, *, stripe_code: str = "", http_status: int = 0) -> None:
+        """Keep Stripe's code and status next to the message."""
+        super().__init__(message)
+        self.stripe_code = stripe_code
+        self.http_status = http_status
+
+
+@dataclass(frozen=True)
+class CheckoutLink:
+    """A hosted Checkout Session: its id (`cs_…`) and the URL the client is sent to."""
+
+    session_id: str
+    url: str
+
+
+class PaymentGateway(Protocol):
+    """Stripe, reduced to the calls Eventtz makes (ADR 0002's held-funds model).
+
+    Checkout pays Eventtz's own balance; the vendor is paid later by an explicit
+    Transfer, which is what lets a dispute block a payout. Every call that moves
+    money (`create_refund`, `create_transfer`) takes an idempotency key.
+    Objects come back as Stripe's JSON (plain dicts). Every method raises
+    `PaymentsUnavailable` when no key is configured and `PaymentGatewayError`
+    when Stripe refuses or cannot be reached.
+    """
+
+    def is_configured(self) -> bool:
+        """False when no Stripe key is set, so callers can skip optional Stripe reads."""
+        ...
+
+    async def create_checkout_session(
+        self,
+        *,
+        amount_pence: int,
+        description: str,
+        metadata: dict[str, str],
+        customer_email: str | None,
+        success_url: str,
+        cancel_url: str,
+    ) -> CheckoutLink:
+        """Open a one-line GBP Checkout Session for `amount_pence`."""
+        ...
+
+    async def retrieve_checkout_session(self, session_id: str) -> dict[str, Any]:
+        """The session with its `payment_intent` expanded."""
+        ...
+
+    async def expire_checkout_session(self, session_id: str) -> None:
+        """Close an open session so it can no longer be paid."""
+        ...
+
+    async def retrieve_payment_intent(self, payment_intent_id: str) -> dict[str, Any]:
+        """The payment intent with its `latest_charge` expanded."""
+        ...
+
+    async def retrieve_charge(self, charge_id: str) -> dict[str, Any]:
+        """One charge (for its `receipt_url`)."""
+        ...
+
+    async def create_refund(
+        self,
+        *,
+        payment_intent_id: str,
+        amount_pence: int | None,
+        metadata: dict[str, str],
+        idempotency_key: str,
+    ) -> str:
+        """Refund `amount_pence` (everything when None) of a payment; returns the refund id."""
+        ...
+
+    async def list_transfer_ids(self, transfer_group: str) -> list[str]:
+        """Ids of transfers already made in `transfer_group`, newest first."""
+        ...
+
+    async def create_transfer(
+        self,
+        *,
+        amount_pence: int,
+        destination_account_id: str,
+        transfer_group: str,
+        metadata: dict[str, str],
+        source_charge_id: str | None,
+        idempotency_key: str,
+    ) -> str:
+        """Pay a connected account from the platform balance (or from `source_charge_id`)."""
+        ...
+
+    async def create_express_account(
+        self, *, email: str | None, individual: dict[str, Any], business_profile: dict[str, Any]
+    ) -> str:
+        """Open a UK Express Connect account prefilled with what we know; returns `acct_…`."""
+        ...
+
+    async def retrieve_account(self, account_id: str) -> dict[str, Any]:
+        """One connected account (for `charges_enabled` / `payouts_enabled`)."""
+        ...
+
+    async def create_account_link(self, *, account_id: str, refresh_url: str, return_url: str) -> str:
+        """A one-time onboarding URL for a connected account."""
+        ...
+
+
 # --- dependencies the routers declare ----------------------------------------------------------
 
 
@@ -196,8 +319,14 @@ def storage_port() -> Storage:
     raise NotImplementedError("storage_port is wired in app.main.create_app")
 
 
+def payment_gateway_port() -> PaymentGateway:
+    """Replaced by `create_app()` with the Stripe adapter (and by tests with a fake)."""
+    raise NotImplementedError("payment_gateway_port is wired in app.main.create_app")
+
+
 # What routers declare as a parameter type, e.g. `def ask(language_model: LanguageModelDependency)`.
 LanguageModelDependency = Annotated[LanguageModel, Depends(language_model_port)]
 MailerDependency = Annotated[Mailer, Depends(mailer_port)]
 WebhooksDependency = Annotated[Webhooks, Depends(webhooks_port)]
 StorageDependency = Annotated[Storage, Depends(storage_port)]
+PaymentGatewayDependency = Annotated[PaymentGateway, Depends(payment_gateway_port)]

@@ -59,6 +59,22 @@ _BOOKING_COLUMNS = (
     BookingRequest.paid_at,
     BookingRequest.client_completion_confirmed_at,
     BookingRequest.vendor_completion_confirmed_at,
+    BookingRequest.stripe_checkout_session_id,
+    BookingRequest.stripe_payment_intent_id,
+    BookingRequest.stripe_charge_id,
+    BookingRequest.stripe_transfer_id,
+    BookingRequest.stripe_receipt_url,
+    BookingRequest.payment_amount_gbp,
+    BookingRequest.vendor_amount_gbp,
+    BookingRequest.platform_fee_gbp,
+    BookingRequest.referral_fee_discount_gbp,
+    BookingRequest.payout_released_at,
+    BookingRequest.payout_auto_released_at,
+    BookingRequest.completion_reminder_sent_at,
+    BookingRequest.completed_at,
+    BookingRequest.refunded_at,
+    BookingRequest.cancelled_by,
+    BookingRequest.support_hold,
 )
 
 # Reviews and disputes belong to slices not rebuilt yet; these handles read their tables.
@@ -273,13 +289,15 @@ async def update_booking(
     client_user_id: str | None = None,
     vendor_user_id: str | None = None,
     status_in: tuple[str, ...] | None = None,
+    payment_status_in: tuple[str, ...] | None = None,
     unset_column: str | None = None,
     now_columns: tuple[str, ...] = (),
 ) -> bool:
     """Write `values` (and stamp `now_columns` with the database clock) on the party's booking.
 
-    `status_in` only updates while the status is one of those; `unset_column` only
-    while that column is still empty. Returns whether a row changed.
+    `status_in` / `payment_status_in` only update while the status / payment status
+    is one of those; `unset_column` only while that column is still empty. Returns
+    whether a row changed.
     """
     booking_uuid = as_uuid(booking_id)
     if booking_uuid is None:
@@ -290,6 +308,8 @@ async def update_booking(
     ]
     if status_in is not None:
         conditions.append(BookingRequest.status.in_(status_in))
+    if payment_status_in is not None:
+        conditions.append(BookingRequest.payment_status.in_(payment_status_in))
     if unset_column is not None:
         conditions.append(getattr(BookingRequest, unset_column).is_(None))
     stamped = {column_name: func.now() for column_name in now_columns}

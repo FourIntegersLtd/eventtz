@@ -134,6 +134,11 @@ class Settings(BaseSettings):
     cursor_automation_webhook_url: str = ""
     cursor_automation_webhook_secret: str = ""
 
+    # Stripe secret key (sk_test_… locally). Empty switches checkout, payouts and refunds off (503).
+    stripe_secret_key: str = ""
+    # Signing secret of the `/webhooks/stripe` endpoint (whsec_…). Empty rejects every webhook.
+    stripe_webhook_secret: str = ""
+
     # S3 bucket for user uploads (photos, videos, certificates). Empty keys switch uploads off (503).
     aws_access_key: str = ""
     aws_secret_access_key: str = ""

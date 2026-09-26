@@ -40,6 +40,23 @@ class BookingRow(BaseModel):
     paid_at: str | None = None
     client_completion_confirmed_at: str | None = None
     vendor_completion_confirmed_at: str | None = None
+    # Money columns. Only the payment services write them (conditionally on payment_status).
+    stripe_checkout_session_id: str | None = None
+    stripe_payment_intent_id: str | None = None
+    stripe_charge_id: str | None = None
+    stripe_transfer_id: str | None = None
+    stripe_receipt_url: str | None = None
+    payment_amount_gbp: float | None = None
+    vendor_amount_gbp: float | None = None
+    platform_fee_gbp: float | None = None
+    referral_fee_discount_gbp: float | None = None
+    payout_released_at: str | None = None
+    payout_auto_released_at: str | None = None
+    completion_reminder_sent_at: str | None = None
+    completed_at: str | None = None
+    refunded_at: str | None = None
+    cancelled_by: str | None = None
+    support_hold: bool = False
 
     @field_validator("line_items", "vendor_adjustments", "selected_option_ids", mode="before")
     @classmethod

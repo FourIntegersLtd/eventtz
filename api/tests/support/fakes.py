@@ -12,7 +12,16 @@ from typing import Any
 from pydantic import BaseModel
 
 from app.core.errors import AppError
-from app.core.ports import ChatMessage, OutgoingEmail, ReplyModel, StoredFile, WebhookCall
+from app.core.ports import (
+    ChatMessage,
+    CheckoutLink,
+    OutgoingEmail,
+    PaymentGatewayError,
+    PaymentsUnavailable,
+    ReplyModel,
+    StoredFile,
+    WebhookCall,
+)
 
 
 @dataclass
@@ -106,3 +115,106 @@ class FakeStorage:
     def public_host(self) -> str:
         """The host of every URL `save` returns."""
         return FAKE_STORAGE_HOST
+
+
+@dataclass
+class PaymentCall:
+    """One money-moving or state-changing call the fake gateway received."""
+
+    name: str
+    arguments: dict[str, Any]
+
+
+@dataclass
+class FakePaymentGateway:
+    """Stripe in memory. Seed `objects` by id; every write is recorded in `calls`.
+
+    `configured=False` behaves like a missing Stripe key. `error` makes the next
+    call raise it (then clears, so a retry can succeed).
+    """
+
+    configured: bool = True
+    error: Exception | None = None
+    objects: dict[str, dict[str, Any]] = field(default_factory=dict)
+    transfers_by_group: dict[str, list[str]] = field(default_factory=dict)
+    calls: list[PaymentCall] = field(default_factory=list)
+
+    def _enter(self, name: str, **arguments: Any) -> None:
+        """Record the call, then fail like the real adapter would if told to."""
+        if not self.configured:
+            raise PaymentsUnavailable()
+        self.calls.append(PaymentCall(name=name, arguments=arguments))
+        if self.error is not None:
+            error, self.error = self.error, None
+            raise error
+
+    def _object(self, object_id: str) -> dict[str, Any]:
+        """A seeded Stripe object, or Stripe's `resource_missing` refusal."""
+        if object_id not in self.objects:
+            raise PaymentGatewayError("No such object", stripe_code="resource_missing", http_status=404)
+        return self.objects[object_id]
+
+    def is_configured(self) -> bool:
+        """Whether a key is "set"."""
+        return self.configured
+
+    async def create_checkout_session(self, **arguments: Any) -> CheckoutLink:
+        """A predictable session id per call."""
+        self._enter("create_checkout_session", **arguments)
+        session_id = f"cs_test_{len(self.calls)}"
+        return CheckoutLink(session_id=session_id, url=f"https://checkout.example/{session_id}")
+
+    async def retrieve_checkout_session(self, session_id: str) -> dict[str, Any]:
+        """The seeded session."""
+        self._enter("retrieve_checkout_session", session_id=session_id)
+        return self._object(session_id)
+
+    async def expire_checkout_session(self, session_id: str) -> None:
+        """Record the expiry."""
+        self._enter("expire_checkout_session", session_id=session_id)
+
+    async def retrieve_payment_intent(self, payment_intent_id: str) -> dict[str, Any]:
+        """The seeded payment intent."""
+        self._enter("retrieve_payment_intent", payment_intent_id=payment_intent_id)
+        return self._object(payment_intent_id)
+
+    async def retrieve_charge(self, charge_id: str) -> dict[str, Any]:
+        """The seeded charge."""
+        self._enter("retrieve_charge", charge_id=charge_id)
+        return self._object(charge_id)
+
+    async def create_refund(self, **arguments: Any) -> str:
+        """A refund id derived from the idempotency key, so a retry returns the same id."""
+        self._enter("create_refund", **arguments)
+        return f"re_{arguments['idempotency_key']}"
+
+    async def list_transfer_ids(self, transfer_group: str) -> list[str]:
+        """Transfers this fake already made for the group."""
+        self._enter("list_transfer_ids", transfer_group=transfer_group)
+        return list(self.transfers_by_group.get(transfer_group, []))
+
+    async def create_transfer(self, **arguments: Any) -> str:
+        """Record a transfer under its group."""
+        self._enter("create_transfer", **arguments)
+        transfer_id = f"tr_{len(self.calls)}"
+        self.transfers_by_group.setdefault(arguments["transfer_group"], []).insert(0, transfer_id)
+        return transfer_id
+
+    async def create_express_account(self, **arguments: Any) -> str:
+        """A fresh connected account, not yet enabled."""
+        self._enter("create_express_account", **arguments)
+        account_id = f"acct_{len(self.calls)}"
+        self.objects[account_id] = {"id": account_id, "charges_enabled": False, "payouts_enabled": False}
+        return account_id
+
+    async def retrieve_account(self, account_id: str) -> dict[str, Any]:
+        """The seeded account."""
+        self._enter("retrieve_account", account_id=account_id)
+        return self._object(account_id)
+
+    async def create_account_link(self, *, account_id: str, refresh_url: str, return_url: str) -> str:
+        """An onboarding URL naming the account."""
+        self._enter(
+            "create_account_link", account_id=account_id, refresh_url=refresh_url, return_url=return_url
+        )
+        return f"https://connect.example/{account_id}"
