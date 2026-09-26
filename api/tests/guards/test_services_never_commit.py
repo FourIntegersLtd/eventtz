@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.guards._scan import CORE_ROOT, attribute_names, python_files, rel
+from tests.guards._scan import CORE_ROOT, MIGRATION_ROOT, attribute_names, python_files, rel
 
 # Ending or restarting the transaction is core's job alone.
 TRANSACTION_CONTROL = {"commit", "rollback", "transaction", "begin", "begin_nested"}
@@ -32,13 +32,18 @@ def is_repository(path: Path) -> bool:
     return path.name.startswith("repository")
 
 
+def is_exempt(path: Path) -> bool:
+    """`ALLOWED` core files, plus the standalone migration tool (its own connections, own transactions)."""
+    return path in ALLOWED or MIGRATION_ROOT in path.parents
+
+
 def transaction_calls(path: Path) -> list[str]:
     """Transaction control this file may not use (repositories may use savepoints)."""
     banned = TRANSACTION_CONTROL - {SAVEPOINT} if is_repository(path) else TRANSACTION_CONTROL
     return sorted(attribute_names(path) & banned)
 
 
-@pytest.mark.parametrize("path", [path for path in python_files() if path not in ALLOWED], ids=rel)
+@pytest.mark.parametrize("path", [path for path in python_files() if not is_exempt(path)], ids=rel)
 def test_only_core_db_controls_transactions(path: Path) -> None:
     bad = transaction_calls(path)
     assert not bad, (
@@ -48,7 +53,7 @@ def test_only_core_db_controls_transactions(path: Path) -> None:
 
 
 @pytest.mark.parametrize(
-    "path", [path for path in python_files() if path not in ALLOWED and not is_repository(path)], ids=rel
+    "path", [path for path in python_files() if not is_exempt(path) and not is_repository(path)], ids=rel
 )
 def test_only_repositories_flush(path: Path) -> None:
     assert FLUSH not in attribute_names(path), (
