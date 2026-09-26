@@ -23,6 +23,9 @@ Other slices name people through `client_display_names` and `emails_by_id`.
 - As a **client**, I **finish first-visit onboarding** and set the name vendors see.
 - As a **vendor**, I **see my clients' names** (`client_display_names`) without their email.
 - As **staff**, I **see a user's email** (`emails_by_id`) on admin screens.
+- As the **staff slice**, I **create, promote, and email a one-click
+  setup/reset link to an admin account** (`service_staff_accounts.py`), so the
+  team console never touches `users` or the token tables directly.
 
 ## Invariants
 
@@ -51,6 +54,10 @@ Other slices name people through `client_display_names` and `emails_by_id`.
   `tests/golden/referrals/client_names.json` pins this.
 - Account deletion is not here yet; it arrives once bookings, disputes, messaging,
   planner and payments are rebuilt (it has to check and clean up all of them).
+- Admin accounts created with no password (`service_staff_accounts.create_admin_account`)
+  get `password_hash=None` and a one-click setup link instead of the baseline's
+  throwaway Supabase password; the setup link reuses the same
+  `password_reset_tokens` machinery as a normal reset, with `purpose="setup"`.
 
 ## Routes
 
