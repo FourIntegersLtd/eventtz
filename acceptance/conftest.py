@@ -61,18 +61,6 @@ NOT_YET_ON_API = {
     "test_payments.py::test_admin_reset_checkout_*": "admin bookings console (workstream 2)",
     "test_payments.py::test_admin_support_hold_*": "admin bookings console (workstream 2)",
     "test_payments.py::test_admin_financials_*": "admin bookings console (workstream 2)",
-    "test_disputes.py::test_admin_release_to_vendor_on_unpaid_booking_is_400": (
-        "waits for payments merge — ws18 wires the money branch"
-    ),
-    "test_disputes.py::test_admin_release_to_vendor_on_paid_booking_is_a_stripe_off_noop": (
-        "waits for payments merge — ws18 wires the money branch"
-    ),
-    "test_disputes.py::test_admin_refund_client_on_unpaid_booking_is_400": (
-        "waits for payments merge — ws18 wires the money branch"
-    ),
-    "test_disputes.py::test_admin_refund_client_on_paid_booking_without_payment_intent_is_400": (
-        "waits for payments merge — ws18 wires the money branch"
-    ),
     "test_admin_team.py::*": "admin team console (workstream 7)",
 }
 LOCAL_HOSTS = ("http://127.0.0.1", "http://localhost", "postgresql://postgres:postgres@127.0.0.1:")

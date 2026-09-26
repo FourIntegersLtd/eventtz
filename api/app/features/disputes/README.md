@@ -45,26 +45,22 @@ payout, refunding the client in full, or a partial refund).
 `GET /client/disputes/{dispute_id}`, the same three under `/vendor/...`,
 `GET /admin/disputes`, `PATCH /admin/disputes/{dispute_id}`.
 
-## Integration seam: the money branch
-`resolution_action` needs the payments slice (ws1), not yet merged when this slice was
-built. Every other validation (permissions, partial-refund range, assignee) is real; the
-one place left as a placeholder is `service_admin._perform_money_action`, which currently
-raises `DisputeMoneyActionNotRebuilt` (503). Once
-`app.features.bookings.service_payments` exists with `refund_booking_for_staff` and
-`release_payout_for_staff`, **and** `app.core.ports.payment_gateway_port` is wired in
-`app.main.create_app` (it isn't yet — no route anywhere uses `PaymentGatewayDependency`
-today, since resolving it 500s until an adapter is registered), that one function is the
-only place to change — see its docstring for the exact calls to make, including adding
-back a `gateway` parameter threaded from `router_admin.patch_admin_dispute`. Four
-acceptance tests that exercise this branch are listed as narrow strict-xfail entries in
-`acceptance/conftest.py`'s `NOT_YET_ON_API` until then.
+## The money branch
+`service_admin._perform_money_action` calls the bookings slice, which owns `payment_status`:
+`release_to_vendor` → `service_payments.release_payout_for_staff`, `refund_client` →
+`refund_booking_for_staff(amount_pence=None)`, `partial_refund` → the same with the amount in
+pence. Money moves before the dispute is written, so a refusal (`payout_only_paid`,
+`refund_only_paid`, `refund_no_payment_on_record`, `refund_failed`, …, all 400 as in the
+baseline) leaves the dispute unresolved. A vendor Stripe cannot pay yet gets a "payout held"
+notice and the booking stays paid, yet the dispute is still resolved — the baseline's own
+behaviour.
 
 Note: the task brief that named this slice paraphrased the resolution literal as
 "release_payout"; the baseline's actual value (kept here) is `"release_to_vendor"`.
 
 ## Deliberately not touched
-- `bookings/` (its `has_active_dispute` / `_dispute_cases` handle already exists and is
-  untouched).
+- `bookings/` internals (its `has_active_dispute` / `_dispute_cases` handle already exists);
+  only its public `service_payments` and `errors` are used.
 - `messaging/` and `staff/`: this slice reads `conversations` and `users` through its own
   lightweight table handles in `repository.py` (the same sanctioned pattern
   `bookings/repository.py` uses for tables it doesn't own), rather than adding new

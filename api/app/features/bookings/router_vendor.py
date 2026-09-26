@@ -7,7 +7,7 @@ from fastapi import APIRouter, Query
 from app.core.auth import ROLE_ERRORS, CurrentVendor
 from app.core.db import SessionDep
 from app.core.errors import error_responses
-from app.core.ports import MailerDependency
+from app.core.ports import MailerDependency, PaymentGatewayDependency
 from app.features.bookings import (
     errors,
     service_adjustments,
@@ -136,7 +136,7 @@ async def put_vendor_booking_adjustments(
         errors.CancelPartialRefund,
         errors.BookingAlreadyRefunded,
         errors.CancelOpenDispute,
-        errors.CancelNeedsPayments,
+        errors.RefundFailed,
     ),
 )
 async def patch_vendor_booking_status(
@@ -145,10 +145,11 @@ async def patch_vendor_booking_status(
     booking_id: str,
     body: VendorBookingStatusBody,
     mailer: MailerDependency,
+    gateway: PaymentGatewayDependency,
 ) -> VendorBookingStatusResponse:
-    """Accept, decline or cancel a booking (withdrawing a quote is a cancel)."""
+    """Accept, decline or cancel a booking (withdrawing a quote is a cancel; a paid one is refunded)."""
     return await service_status.set_vendor_status(
-        session, mailer, vendor.id, require_booking_id(booking_id), body.booking_status
+        session, mailer, gateway, vendor.id, require_booking_id(booking_id), body.booking_status
     )
 
 
@@ -162,15 +163,25 @@ async def patch_vendor_booking_status(
         errors.CompleteOnlyAccepted,
         errors.CompleteNeedsPayment,
         errors.EventDayNotOver,
-        errors.PayoutReleaseNotRebuilt,
+        errors.PayoutAmountMissing,
+        errors.PayoutReleaseFailed,
     ),
 )
 async def post_vendor_confirm_completion(
-    session: SessionDep, vendor: CurrentVendor, booking_id: str, mailer: MailerDependency
+    session: SessionDep,
+    vendor: CurrentVendor,
+    booking_id: str,
+    mailer: MailerDependency,
+    gateway: PaymentGatewayDependency,
 ) -> ConfirmCompletionResponse:
     """Confirm the event went ahead; the payout follows once the client confirms too."""
     return await service_completion.confirm_completion(
-        session, mailer, party="vendor", user_id=vendor.id, booking_id=require_booking_id(booking_id)
+        session,
+        mailer,
+        gateway,
+        party="vendor",
+        user_id=vendor.id,
+        booking_id=require_booking_id(booking_id),
     )
 
 

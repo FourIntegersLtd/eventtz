@@ -394,23 +394,62 @@ class EventDayNotOver(InvalidInput):
     default_message = "You can confirm the event is complete after the event day has ended."
 
 
-# --- money steps the payments slice will own ---------------------------------------------------------
+# --- refunds and payouts (`service_payments.py`) -----------------------------------------------------
+#
+# The baseline raised these as ValueError, answered 400, so they keep that status.
 
 
-class CancelNeedsPayments(Unavailable):
-    """Cancelling a paid or mid-checkout booking refunds or closes it in Stripe; not rebuilt yet."""
+class OnlyPaidCanRefund(InvalidInput):
+    """Only money actually held (payment status paid) can be refunded."""
 
-    code = "booking_cancel_needs_payments"
-    default_message = "This booking can't be cancelled here yet because a payment is in progress or taken."
+    code = "refund_only_paid"
+    default_message = "Only paid bookings can be refunded."
 
 
-class PayoutReleaseNotRebuilt(Unavailable):
-    """Both parties confirmed; paying the vendor is a Stripe transfer the payments slice will make."""
+class NoPaymentOnRecord(InvalidInput):
+    """The booking is marked paid but no Stripe payment intent was stored, so there is nothing to refund."""
 
-    code = "booking_payout_release_unavailable"
-    # The party's confirmation still counts; only the transfer waits.
+    code = "refund_no_payment_on_record"
+    default_message = "No payment on record for this booking."
+
+
+class RefundFailed(InvalidInput):
+    """Stripe refused the refund; staff are emailed and the booking is left as it was."""
+
+    code = "refund_failed"
+    default_message = "We couldn't process the refund right now. Please try again shortly."
+
+
+class RefundedButBookingChanged(BookingNotFound):
+    """The refund went through but the cancel lost a race; the refund is still recorded."""
+
+    # Stripe has refunded, so the booking must say so even though the cancel did not happen.
     persist_effects = True
-    default_message = "We could not release the payout right now. Please try again later."
+
+
+class OnlyPaidPayoutRelease(InvalidInput):
+    """Staff can release a payout only while the client's payment is held."""
+
+    code = "payout_only_paid"
+    default_message = "Only paid bookings can have their payout released."
+
+
+class PayoutAmountMissing(InvalidInput):
+    """The booking has no vendor share to transfer; staff are emailed."""
+
+    code = "payout_amount_missing"
+    # The confirmation and the once-per-booking ops alert are kept.
+    persist_effects = True
+    default_message = "Payout amount is missing for this booking. Please contact support."
+
+
+class PayoutReleaseFailed(InvalidInput):
+    """Stripe refused the Transfer; staff are emailed once and a later retry can succeed."""
+
+    code = "payout_release_failed"
+    # The confirmation and the once-per-booking ops alert are kept.
+    persist_effects = True
+    default_message = "We couldn't release the payout right now. Please try again shortly."
 
 
 # --- checkout (the client pays) ---------------------------------------------------------------------

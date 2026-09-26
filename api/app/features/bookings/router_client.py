@@ -46,7 +46,7 @@ _CANCEL_ERRORS = (
     errors.CancelPartialRefund,
     errors.BookingAlreadyRefunded,
     errors.CancelOpenDispute,
-    errors.CancelNeedsPayments,
+    errors.RefundFailed,
 )
 
 
@@ -132,10 +132,16 @@ async def patch_client_booking_status(
     ),
 )
 async def post_cancel_client_booking(
-    session: SessionDep, client: CurrentClient, booking_id: str, mailer: MailerDependency
+    session: SessionDep,
+    client: CurrentClient,
+    booking_id: str,
+    mailer: MailerDependency,
+    gateway: PaymentGatewayDependency,
 ) -> VendorBookingStatusResponse:
-    """Cancel a pending or accepted booking; the vendor is told."""
-    return await service_status.cancel_for_client(session, mailer, client.id, require_booking_id(booking_id))
+    """Cancel a pending or accepted booking (a paid one is refunded in full first); the vendor is told."""
+    return await service_status.cancel_for_client(
+        session, mailer, gateway, client.id, require_booking_id(booking_id)
+    )
 
 
 @router.patch(
@@ -233,15 +239,25 @@ async def post_booking_checkout_sync(
         errors.CompleteOnlyAccepted,
         errors.CompleteNeedsPayment,
         errors.EventDayNotOver,
-        errors.PayoutReleaseNotRebuilt,
+        errors.PayoutAmountMissing,
+        errors.PayoutReleaseFailed,
     ),
 )
 async def post_client_confirm_completion(
-    session: SessionDep, client: CurrentClient, booking_id: str, mailer: MailerDependency
+    session: SessionDep,
+    client: CurrentClient,
+    booking_id: str,
+    mailer: MailerDependency,
+    gateway: PaymentGatewayDependency,
 ) -> ConfirmCompletionResponse:
     """Confirm the event went ahead; the vendor is paid once they confirm too."""
     return await service_completion.confirm_completion(
-        session, mailer, party="client", user_id=client.id, booking_id=require_booking_id(booking_id)
+        session,
+        mailer,
+        gateway,
+        party="client",
+        user_id=client.id,
+        booking_id=require_booking_id(booking_id),
     )
 
 

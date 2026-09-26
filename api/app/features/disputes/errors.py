@@ -11,7 +11,15 @@ baseline's exact wording (and status code, in the resolution-action case) surviv
 
 from __future__ import annotations
 
-from app.core.errors import Conflict, Forbidden, InvalidInput, NotFound, Unavailable
+from app.core.errors import Conflict, Forbidden, InvalidInput, NotFound
+from app.features.bookings.errors import (
+    NoPaymentOnRecord,
+    OnlyPaidCanRefund,
+    OnlyPaidPayoutRelease,
+    PayoutAmountMissing,
+    PayoutReleaseFailed,
+    RefundFailed,
+)
 
 
 class InvalidBookingId(InvalidInput):
@@ -163,17 +171,12 @@ class AssigneeAdminSuspended(InvalidInput):
     default_message = "Assignee admin account is suspended."
 
 
-class DisputeMoneyActionNotRebuilt(Unavailable):
-    """The money-moving half of resolving a dispute needs the payments slice (ws1), not yet merged.
-
-    `resolution_action` (release_to_vendor / refund_client / partial_refund) ends here once
-    every other validation this slice owns has passed. See
-    `service_admin._perform_money_action` for the integration seam: once
-    `app.features.bookings.service_payments` exists with `refund_booking_for_staff` and
-    `release_payout_for_staff`, that one function is the only place to change.
-    """
-
-    code = "dispute_money_action_not_rebuilt"
-    default_message = (
-        "This dispute resolution needs a payments feature that isn't live yet. Please try again later."
-    )
+# What resolving with a `resolution_action` can answer: the bookings slice moves the money.
+MONEY_ACTION_ERRORS = (
+    OnlyPaidCanRefund,
+    NoPaymentOnRecord,
+    RefundFailed,
+    OnlyPaidPayoutRelease,
+    PayoutAmountMissing,
+    PayoutReleaseFailed,
+)

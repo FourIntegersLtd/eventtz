@@ -7,7 +7,7 @@ from fastapi import APIRouter, Query
 from app.core.auth import ROLE_ERRORS, CurrentStaff
 from app.core.db import SessionDep
 from app.core.errors import error_responses
-from app.core.ports import MailerDependency
+from app.core.ports import MailerDependency, PaymentGatewayDependency
 from app.features.disputes import errors, service_admin
 from app.features.disputes.schemas import AdminDisputeCase, AdminDisputePatchBody, AdminDisputesListResponse
 
@@ -45,7 +45,7 @@ async def list_admin_disputes(
         errors.PartialRefundOutOfRange,
         errors.AssigneeMustBeAdmin,
         errors.AssigneeAdminSuspended,
-        errors.DisputeMoneyActionNotRebuilt,
+        *errors.MONEY_ACTION_ERRORS,
         errors.DisputeNotFoundPlain,
     ),
 )
@@ -55,11 +55,13 @@ async def patch_admin_dispute(
     dispute_id: str,
     body: AdminDisputePatchBody,
     mailer: MailerDependency,
+    gateway: PaymentGatewayDependency,
 ) -> AdminDisputeCase:
     """Triage or resolve a dispute; only a super admin may set a financial `resolution_action`.
 
-    No `PaymentGatewayDependency` here yet: `core.ports.payment_gateway_port` is not wired
-    in `app.main.create_app` until the payments slice (ws1) lands. The money branch below
-    is a placeholder that never reaches Stripe, so it needs no gateway to raise.
+    Resolving with a `resolution_action` refunds the client or pays the vendor in Stripe
+    before the dispute is written, so a failed payment leaves no resolution behind.
     """
-    return await service_admin.patch_dispute(session, mailer, staff, dispute_id=dispute_id, body=body)
+    return await service_admin.patch_dispute(
+        session, mailer, gateway, staff, dispute_id=dispute_id, body=body
+    )

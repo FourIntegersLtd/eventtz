@@ -14,13 +14,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import Principal
 from app.core.db import as_uuid
-from app.core.ports import Mailer
+from app.core.ports import Mailer, PaymentGateway
+from app.features.bookings import service_payments
 from app.features.disputes import domain, repository
 from app.features.disputes.errors import (
     AssigneeAdminSuspended,
     AssigneeMustBeAdmin,
     DisputeFinancialResolutionSuperAdminOnly,
-    DisputeMoneyActionNotRebuilt,
     DisputeNotFoundForResolution,
     DisputeNotFoundPlain,
     DisputeRefundAmountSuperAdminOnly,
@@ -75,6 +75,7 @@ async def _assert_active_admin_assignee(session: AsyncSession, assigned_admin_id
 async def _perform_money_action(
     session: AsyncSession,
     mailer: Mailer,
+    gateway: PaymentGateway,
     *,
     booking_request_id: str,
     resolution_action: str,
@@ -82,27 +83,32 @@ async def _perform_money_action(
 ) -> None:
     """Carry out the money movement a resolved dispute's `resolution_action` names.
 
-    # INTEGRATION(ws1): once `app.features.bookings.service_payments` exists AND
-    # `app.core.ports.payment_gateway_port` is wired in `app.main.create_app`, add a
-    # `gateway: PaymentGateway` parameter here (and thread `PaymentGatewayDependency`
-    # through `router_admin.patch_admin_dispute` and `patch_dispute` below), then import
-    # `refund_booking_for_staff` and `release_payout_for_staff` here (a local import, as
-    # the baseline does, to avoid a cycle with `bookings`) and dispatch on
-    # `resolution_action` instead of raising:
-    #   - "release_to_vendor" -> `await release_payout_for_staff(session, mailer, gateway,
-    #     booking_id=booking_request_id)`
-    #   - "refund_client" -> `await refund_booking_for_staff(session, mailer, gateway,
-    #     booking_id=booking_request_id, amount_pence=None)`
-    #   - "partial_refund" -> the same call with `amount_pence=round(refund_amount_gbp * 100)`
-    #     (validation of the range against what was actually paid already happened above).
-    This is the only function to change to wire the money branch up.
+    The bookings slice owns `payment_status`, so it moves the money: `release_to_vendor`
+    pays the vendor, `refund_client` refunds in full, `partial_refund` refunds the amount
+    already checked against what was paid. Its refusals (not paid, Stripe failed) propagate.
     """
-    raise DisputeMoneyActionNotRebuilt()
+    if resolution_action == "release_to_vendor":
+        await service_payments.release_payout_for_staff(
+            session, mailer, gateway, booking_id=booking_request_id
+        )
+    elif resolution_action == "refund_client":
+        await service_payments.refund_booking_for_staff(
+            session, mailer, gateway, booking_id=booking_request_id, amount_pence=None
+        )
+    elif resolution_action == "partial_refund" and refund_amount_gbp is not None:
+        await service_payments.refund_booking_for_staff(
+            session,
+            mailer,
+            gateway,
+            booking_id=booking_request_id,
+            amount_pence=round(refund_amount_gbp * 100),
+        )
 
 
 async def patch_dispute(
     session: AsyncSession,
     mailer: Mailer,
+    gateway: PaymentGateway,
     principal: Principal,
     *,
     dispute_id: str,
@@ -131,6 +137,7 @@ async def patch_dispute(
         await _perform_money_action(
             session,
             mailer,
+            gateway,
             booking_request_id=dispute.booking_request_id,
             resolution_action=resolution_action,
             refund_amount_gbp=refund_amount_gbp,

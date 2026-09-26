@@ -21,6 +21,8 @@ slice owns Stripe's side (webhooks, Connect) and calls these, never the reverse.
   then **accepts or declines the new price** (declining restores the original).
 - As a **client**, I **accept or decline a vendor's quote** (giving the venue),
   and **cancel** a pending or accepted booking.
+- As a **client or vendor**, I **cancel a paid booking**; the client is refunded
+  in full first, and a checkout still open is closed so it cannot be paid.
 - As a **client**, I **set the venue of an accepted booking** before paying.
 - As a **client or vendor**, I **list my bookings by bucket** (active, completed,
   closed, all) and **open one** with its price breakdown, the other party's
@@ -30,6 +32,8 @@ slice owns Stripe's side (webhooks, Connect) and calls these, never the reverse.
 - As a **client**, I **pay an accepted booking** through Stripe Checkout; the
   booking is re-priced from the vendor's list first. After Stripe's redirect the
   page **syncs the payment** in case the webhook has not arrived.
+- As **staff** (a dispute resolution or recovery), I **refund a paid booking** in
+  full or in part, or **release the vendor's payout** without both confirmations.
 - As **Stripe**, I **report a completed Checkout** (webhook); the booking is marked
   paid once, or the payment is refunded when the booking can no longer take it.
 
@@ -59,8 +63,16 @@ slice owns Stripe's side (webhooks, Connect) and calls these, never the reverse.
   by a Transfer. A completed session is marked paid only when the charged pence
   equal the total the server priced; a session for a booking no longer accepted,
   or one a newer checkout replaced, is refunded in full.
-- Every Stripe refund carries an idempotency key `refund-{booking id}-{reason}`,
-  so a redelivered webhook never refunds twice.
+- Every Stripe refund carries an idempotency key `refund-{booking id}-{reason}`
+  (`full`, `partial`, `cancel-client`, `cancel-vendor`, or a checkout reason), so a
+  redelivered webhook or a retry never refunds twice.
+- Money moves first, then the booking is written: a refund Stripe refuses stops
+  the cancel (400 `refund_failed`, staff emailed). The vendor is paid only by a
+  Transfer in group `booking_{id}`, funded from the client's charge; one already in
+  that group is reused, and the key `transfer-{id}-{pence}-{account}[-src-{charge}]`
+  guards a retry. A vendor Stripe cannot pay yet is told the payout is held and the
+  booking stays paid. `completed` + `payout_released` is written only from
+  `accepted` + `paid`.
 
 ## Routes
 
@@ -84,18 +96,21 @@ Differences from the baseline:
   the baseline's 500 "Could not start checkout" / "Could not confirm payment".
 - A refusal after re-pricing (no event address) rolls back the refreshed line
   items; the baseline had already saved them. The next checkout re-prices anyway.
+- A refund or payout refusal has its own code (`refund_only_paid`,
+  `refund_no_payment_on_record`, `refund_failed`, `payout_only_paid`,
+  `payout_amount_missing`, `payout_release_failed`), still 400 as the baseline's
+  ValueErrors were. A vendor share under one penny is `payout_amount_missing`.
+- A cancel that loses a race after its refund went through answers 404 as before,
+  but keeps the refund recorded (the baseline did too, by never rolling back).
 
 ## Deferred
 
 These wait for the slices that own them; until then the api answers as noted.
 
-- **Payments:** cancelling a booking that is mid-checkout or paid (close the
-  Checkout Session, refund in full) is refused with `booking_cancel_needs_payments`
-  (503). Releasing the payout once both parties confirm raises
-  `booking_payout_release_unavailable` (503) after the confirmation is stored.
-  Receipts (the snapshot stored when a payment completes, and the receipt emails),
-  payout statements and payment records. Checkout and its sync are built
-  (`service_payments_checkout.py`).
+- **Payments:** receipts (the snapshot stored when a payment completes, and the
+  receipt emails), payout statements and payment records. Checkout and its sync
+  (`service_payments_checkout.py`), refunds and payouts (`service_payments.py`) are
+  built.
 - The vendor payout ledger (`service_payout_ledger.py`, `repository_payments.py`)
   is built; the payments slice serves it at `GET /vendor/payments/history`.
 - **Maintenance jobs** (procrastinate periodic tasks): automatic payout release
