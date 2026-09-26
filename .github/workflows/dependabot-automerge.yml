@@ -1,8 +1,9 @@
 # Auto-merge for Dependabot patch/minor PRs, once (and only once) CI is green.
 #
 # `ci.yml` already triggers on `pull_request` (untouched by this file), so a
-# Dependabot PR gets the same `backend`/`frontend` test run as a human PR
-# before this workflow ever looks at it. This workflow does not run tests
+# Dependabot PR gets the same CI run as a human PR before this workflow ever
+# looks at it. Until `ci.yml` also tests `api/` and `web/`, that run covers only
+# the baseline: see docs/runbooks/github-security-settings.md before enabling this. This workflow does not run tests
 # itself; it only reads the PR's dependency-update metadata and, for
 # patch/minor bumps, tells GitHub to merge the PR automatically the moment its
 # other required checks (CI) pass. A major-version bump is left alone for a
@@ -17,6 +18,7 @@ name: dependabot-automerge
 
 on:
   pull_request_target:
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
@@ -27,9 +29,13 @@ jobs:
     name: automerge
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    # Only Dependabot's own PRs are eligible; a human PR that merely edits a
-    # dependency file is never auto-merged by this workflow.
-    if: github.actor == 'dependabot[bot]'
+    # Only PRs Dependabot opened, in this repository, are eligible. The check is on
+    # the PR's author, not `github.actor`: the actor is whoever triggered this run,
+    # so Dependabot rebasing a PR someone else had pushed commits to would pass an
+    # actor check while merging code Dependabot never wrote.
+    if: >-
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      github.repository == 'FourIntegersLtd/eventtz'
     steps:
       - name: Read the dependency update metadata
         id: metadata

@@ -24,6 +24,13 @@ needs no file — it is a toggle only.
 
 ## 3. Auto-merge, repo-wide
 
+> **Do not turn this on yet.** `ci.yml`'s `ci-gate` currently tests only the
+> baseline `backend/` and `frontend/`. A Dependabot bump to `api/` or `web/`
+> would pass that gate without a single `api/` or `web/` test running, and
+> auto-merge would merge it. Enable auto-merge only after `ci.yml` runs
+> `make ci` for `api/` and `npm run ci` for `web/` and `ci-gate` depends on both
+> (planned for the cut-over, when `api/` and `web/` replace the baseline).
+
 **Settings → General → Pull Requests → "Allow auto-merge"** must be checked,
 or `.github/workflows/dependabot-automerge.yml`'s `gh pr merge --auto` call
 fails outright (GitHub rejects enabling auto-merge on a repo where the
