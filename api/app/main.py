@@ -16,12 +16,13 @@ from app.adapters.http_webhooks import BackgroundWebhooks
 from app.adapters.openai_language_model import OpenAILanguageModel
 from app.adapters.resend_mailer import ResendMailer
 from app.adapters.s3_storage import S3Storage
+from app.adapters.stripe_payments import StripePaymentGateway
 from app.core.auth import bind_account_lookup
 from app.core.db import dispose_engine
 from app.core.errors import register_error_handlers
 from app.core.logging import RequestContextMiddleware, configure_logging
 from app.core.observability import configure_sentry
-from app.core.ports import language_model_port, mailer_port, storage_port, webhooks_port
+from app.core.ports import language_model_port, mailer_port, payment_gateway_port, storage_port, webhooks_port
 from app.core.redis import close_redis
 from app.core.settings import LOCAL_ORIGIN_REGEX, get_settings
 from app.features.bookings import router_client as bookings_client_router
@@ -96,6 +97,7 @@ def _plug_in_adapters(app: FastAPI) -> None:
     app.dependency_overrides[mailer_port] = ResendMailer
     app.dependency_overrides[webhooks_port] = BackgroundWebhooks
     app.dependency_overrides[storage_port] = S3Storage
+    app.dependency_overrides[payment_gateway_port] = StripePaymentGateway
 
 
 @asynccontextmanager
