@@ -1,8 +1,20 @@
-"""Who is calling: session cookie → Supabase Auth user → `Principal` (ADR 0003).
+"""Who is calling: `Authorization: Bearer <access token>` → `users` row → `Principal` (ADR 0003).
 
-Routers declare exactly one of `CurrentUser`, `CurrentClient`, `CurrentVendor`,
-`CurrentStaff`, `CurrentSuperAdmin` or `OptionalUser`. Tests replace
-`resolve_principal` through `app.dependency_overrides`, never by patching.
+Copied in shape from OSCE `platform-api`: the API signs its own short-lived
+HS256 access tokens, and accepts them only as a Bearer header — it sets no
+cookies. Issuing tokens (sign-in, refresh) lives in the `identity` slice; this
+module only mints and verifies them.
+
+The token says only *who* the caller is. What they may do (account type, staff
+role, suspended, closed) is read from their `users` row on every request, so a
+suspension or a closed account bites on the very next request, like the
+baseline. `core` cannot import `identity`, which owns that row, so the two meet
+at a seam: `identity` binds the lookup (`bind_account_lookup`) in
+`app.main.create_app`, and the dependencies here call it.
+
+Routers declare exactly one of `AnyAccount`, `CurrentUser`, `CurrentClient`,
+`CurrentVendor`, `CurrentStaff`, `CurrentSuperAdmin` or `OptionalUser`. Tests
+replace `resolve_principal` through `app.dependency_overrides`, never by patching.
 
 Refusal messages are copied verbatim from the baseline API so the web app's
 copy does not change.
@@ -10,24 +22,24 @@ copy does not change.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any, Literal
 
-from fastapi import Depends, Request, Response
-from supabase_auth.errors import AuthApiError
+import jwt
+from fastapi import Depends
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core import db
-from app.core.errors import Forbidden, Unauthenticated, Unavailable
+from app.core.db import SessionDep
+from app.core.errors import Forbidden, Unauthenticated
 from app.core.logging import get_logger
-from app.core.settings import get_settings
+from app.core.settings import Settings, get_settings
 
 log = get_logger(__name__)
 
-# Session cookies, same names and lifetimes as the baseline so existing sessions keep working.
-ACCESS_COOKIE = "eventtz_access_token"
-REFRESH_COOKIE = "eventtz_refresh_token"
-ACCESS_MAX_AGE = 60 * 60
-REFRESH_MAX_AGE = 60 * 60 * 24 * 14
+ACCESS_TOKEN_TYPE = "access"  # noqa: S105 — the token's type claim, not a secret
 
 # The three account types. Staff are `admin`; `admin_role` says whether they are super admins.
 UserType = Literal["client", "vendor", "admin"]
@@ -36,7 +48,6 @@ _USER_TYPES: frozenset[str] = frozenset({"client", "vendor", "admin"})
 # User-facing refusal copy (verbatim from `backend/app/features/auth/messages.py`).
 SIGN_IN_REQUIRED = "Please sign in to continue."
 SESSION_EXPIRED = "Session expired. Please sign in again."
-AUTH_SERVICE_UNAVAILABLE = "Authentication is temporarily unavailable. Please try again."
 ACCOUNT_DELETED = "This account has been deleted."
 ACCOUNT_SUSPENDED_CONTACT = "Your account has been suspended. Contact support if you think this is a mistake."
 ADMIN_ACCOUNT_SUSPENDED = "Your admin account is suspended. Contact a super admin."
@@ -57,7 +68,7 @@ CLIENT_PORTAL_FORBIDDEN = (
 
 
 class SessionExpired(Unauthenticated):
-    """The cookie is malformed or the session was revoked; the web app sends the user to sign in."""
+    """The token is not even shaped like one; the web app sends the user to sign in."""
 
     code = "session_expired"
     default_message = SESSION_EXPIRED
@@ -90,19 +101,9 @@ class SuperAdminOnly(Forbidden):
     default_message = SUPER_ADMIN_ONLY
 
 
-class AuthUnavailable(Unavailable):
-    """Supabase Auth did not answer, so we cannot tell who is calling."""
-
-    code = "auth_unavailable"
-    default_message = AUTH_SERVICE_UNAVAILABLE
-
-
 @dataclass(frozen=True)
 class Principal:
-    """The signed-in caller, as every service sees them.
-
-    Built from the Supabase Auth user plus the `public.users` row by `principal_from`.
-    """
+    """The signed-in caller, as every service sees them. Built by `principal_from`."""
 
     id: str
     email: str | None
@@ -111,9 +112,6 @@ class Principal:
     account_suspended: bool = False
     email_verified: bool = True
     deleted: bool = False
-    # The Supabase Auth metadata, echoed back by `/auth/me` for the web app.
-    user_metadata: dict[str, Any] = field(default_factory=dict)
-    app_metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
     def is_super_admin(self) -> bool:
@@ -121,167 +119,168 @@ class Principal:
         return self.user_type == "admin" and self.admin_role == "super_admin"
 
 
-def _metadata_user_type(auth_user: dict[str, Any]) -> str | None:
-    """`app_metadata` (staff-set) wins over `user_metadata` (set at signup)."""
-    for key in ("app_metadata", "user_metadata"):
-        metadata = auth_user.get(key)
-        if isinstance(metadata, dict) and metadata.get("user_type") in _USER_TYPES:
-            return str(metadata["user_type"])
-    return None
+@dataclass(frozen=True)
+class AccountRecord:
+    """The columns of a `users` row that decide what its owner may do."""
+
+    id: str
+    email: str | None
+    user_type: str | None
+    admin_role: str | None
+    account_suspended: bool
+    email_verified: bool
+    deleted: bool
 
 
-def principal_from(
-    auth_user: dict[str, Any], profile: dict[str, Any] | None, super_admin_emails: list[str]
-) -> Principal:
-    """Merge the Supabase Auth user with its `public.users` row. Pure."""
-    email = auth_user.get("email")
-    user_type = _metadata_user_type(auth_user) or "client"
+def principal_from(account: AccountRecord, super_admin_emails: list[str]) -> Principal:
+    """Turn a `users` row into the `Principal` services see. Pure.
+
+    An unknown or missing `user_type` counts as a client, like the baseline.
+    Staff are always treated as verified. Staff without a stored role are super
+    admins when their email is in `SUPER_ADMIN_EMAILS`, plain admins otherwise.
+    """
+    user_type: UserType = account.user_type if account.user_type in _USER_TYPES else "client"  # type: ignore[assignment]
     admin_role: str | None = None
-    suspended = False
-    verified = True
-    if profile:
-        if profile.get("user_type") == "admin":
-            user_type = "admin"
-        suspended = bool(profile.get("account_suspended"))
-        verified = user_type == "admin" or bool(profile.get("email_verified_at"))
     if user_type == "admin":
-        role = (profile or {}).get("admin_role")
-        known_email = str(email or (profile or {}).get("email") or "").strip().lower()
-        if role in ("super_admin", "admin"):
-            admin_role = str(role)
+        known_email = (account.email or "").strip().lower()
+        if account.admin_role in ("super_admin", "admin"):
+            admin_role = account.admin_role
         elif known_email and known_email in super_admin_emails:
             admin_role = "super_admin"
         else:
             admin_role = "admin"
     return Principal(
-        id=str(auth_user["id"]),
-        email=email,
-        user_type=user_type,  # type: ignore[arg-type]
+        id=account.id,
+        email=account.email,
+        user_type=user_type,
         admin_role=admin_role,
-        account_suspended=suspended,
-        email_verified=verified,
-        deleted=bool((profile or {}).get("deleted_at")),
-        user_metadata=_metadata(auth_user.get("user_metadata")),
-        app_metadata=_metadata(auth_user.get("app_metadata")),
+        account_suspended=account.account_suspended,
+        email_verified=user_type == "admin" or account.email_verified,
+        deleted=account.deleted,
     )
 
 
-def _metadata(value: Any) -> dict[str, Any]:
-    """A metadata value as a dict (Supabase sometimes sends `None`)."""
-    return dict(value) if isinstance(value, dict) else {}
+# --- tokens ---------------------------------------------------------------------------------------
 
 
-def cookie_options() -> dict[str, Any]:
-    """Cross-site in production (web and API on different hosts) needs SameSite=None + Secure."""
-    if get_settings().is_production:
-        return {"httponly": True, "secure": True, "samesite": "none", "path": "/"}
-    return {"httponly": True, "secure": False, "samesite": "lax", "path": "/"}
+@dataclass(frozen=True)
+class AccessClaims:
+    """What a verified access token says: who, and until when."""
+
+    user_id: str
+    email: str | None
+    expires_at: int
 
 
-def set_session_cookies(response: Response, access_token: str, refresh_token: str) -> None:
-    """Store a new Supabase session on the response as the two httpOnly cookies."""
-    response.set_cookie(ACCESS_COOKIE, access_token, max_age=ACCESS_MAX_AGE, **cookie_options())
-    response.set_cookie(REFRESH_COOKIE, refresh_token, max_age=REFRESH_MAX_AGE, **cookie_options())
+def issue_access_token(
+    *, user_id: str, email: str | None, settings: Settings, now: datetime | None = None
+) -> str:
+    """Sign a short-lived JWT naming this user."""
+    issued_at = now or datetime.now(UTC)
+    claims: dict[str, Any] = {
+        "iss": settings.jwt_issuer,
+        "sub": user_id,
+        "typ": ACCESS_TOKEN_TYPE,
+        "iat": int(issued_at.timestamp()),
+        "exp": int((issued_at + timedelta(seconds=settings.jwt_access_ttl_seconds)).timestamp()),
+        "email": email,
+    }
+    return jwt.encode(claims, settings.jwt_secret, algorithm="HS256")
 
 
-def clear_session_cookies(response: Response) -> None:
-    """Delete both session cookies; attributes must match the ones they were set with."""
-    options = cookie_options()
-    for cookie_name in (ACCESS_COOKIE, REFRESH_COOKIE):
-        response.delete_cookie(cookie_name, path="/", secure=options["secure"], samesite=options["samesite"])
-
-
-def _looks_like_jwt(token: str) -> bool:
-    """Cheap shape check (three dot-separated parts) before spending a network call on the token."""
+def looks_like_jwt(token: str) -> bool:
+    """Cheap shape check (three dot-separated parts, no spaces) before verifying the signature."""
     return token.count(".") == 2 and " " not in token
 
 
-def _auth_user(access_token: str) -> dict[str, Any] | None:
-    """The Supabase Auth user for a token, `None` if refused. Raises `AuthUnavailable` on outage."""
+def decode_access_token(token: str, *, settings: Settings) -> AccessClaims | None:
+    """Verify the signature, issuer, expiry and type; `None` when any check fails."""
     try:
-        response = db.auth_client().auth.get_user(access_token)
-        user = response.user if response else None
-    except AuthApiError:
-        return None
-    except Exception as exc:
-        if db.is_upstream_unavailable(exc):
-            log.warning("auth: Supabase Auth did not answer")
-            raise AuthUnavailable() from exc
-        log.exception("auth: token lookup failed")
-        return None
-    if user is None:
-        return None
-    return {
-        "id": str(user.id),
-        "email": user.email,
-        "user_metadata": user.user_metadata or {},
-        "app_metadata": user.app_metadata or {},
-    }
-
-
-def _profile(user_id: str) -> dict[str, Any] | None:
-    """The caller's `public.users` row (type, role, status flags), or `None` if missing or unreadable."""
-    try:
-        return db.first(
-            db.service_client()
-            .table("users")
-            .select("id,email,user_type,admin_role,account_suspended,email_verified_at,deleted_at")
-            .eq("id", user_id)
-            .limit(1)
-            .execute()
+        claims = jwt.decode(
+            token,
+            settings.jwt_secret,
+            algorithms=["HS256"],
+            issuer=settings.jwt_issuer,
+            options={"require": ["exp", "iat", "sub"]},
         )
-    except Exception:
-        log.warning("auth: profile lookup failed user_id=%s", user_id)
+    except jwt.PyJWTError:
         return None
+    if claims.get("typ") != ACCESS_TOKEN_TYPE or not isinstance(claims.get("sub"), str):
+        return None
+    email = claims.get("email")
+    return AccessClaims(
+        user_id=claims["sub"], email=email if isinstance(email, str) else None, expires_at=int(claims["exp"])
+    )
 
 
-def _session_principal(request: Request, response: Response, *, strict: bool) -> Principal | None:
-    """Resolve the access cookie to a `Principal`.
+# --- the account-lookup seam ----------------------------------------------------------------------
+
+AccountLookup = Callable[[AsyncSession, str], Awaitable[AccountRecord | None]]
+
+_account_lookup: list[AccountLookup] = []
+
+
+def bind_account_lookup(lookup: AccountLookup) -> None:
+    """Bound by `app.main.create_app` to `identity`'s `users` row lookup."""
+    _account_lookup.clear()
+    _account_lookup.append(lookup)
+
+
+async def _lookup_account(session: AsyncSession, user_id: str) -> AccountRecord | None:
+    """The caller's `users` row, through the bound seam. Refuses to run unbound."""
+    if not _account_lookup:
+        raise RuntimeError("No account lookup bound. app.main.create_app must call bind_account_lookup.")
+    return await _account_lookup[0](session, user_id)
+
+
+# --- the dependencies routers declare -------------------------------------------------------------
+
+_bearer = HTTPBearer(auto_error=False)
+BearerCredentials = Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)]
+
+
+async def _bearer_principal(
+    credentials: HTTPAuthorizationCredentials | None, session: AsyncSession, *, strict: bool
+) -> Principal | None:
+    """Resolve the Bearer token to a `Principal`.
 
     `strict=True` raises the matching `AppError` for every failure (for routes that
     need a user); `strict=False` returns `None` instead (for routes that work
-    anonymously). A bad or dead session also clears the cookies either way.
+    anonymously).
     """
-    token = request.cookies.get(ACCESS_COOKIE)
+    token = credentials.credentials if credentials else ""
     if not token:
         if strict:
             raise Unauthenticated(SIGN_IN_REQUIRED)
         return None
-    if not _looks_like_jwt(token):
-        clear_session_cookies(response)
+    if not looks_like_jwt(token):
         if strict:
             raise SessionExpired()
         return None
-    try:
-        auth_user = _auth_user(token)
-    except AuthUnavailable:
-        if strict:
-            raise
-        return None
-    if auth_user is None:
-        clear_session_cookies(response)
+    claims = decode_access_token(token, settings=get_settings())
+    account = await _lookup_account(session, claims.user_id) if claims else None
+    if account is None:
         if strict:
             raise Unauthenticated(SIGN_IN_REQUIRED)
         return None
-    principal = principal_from(auth_user, _profile(auth_user["id"]), get_settings().super_admin_emails_list)
+    principal = principal_from(account, get_settings().super_admin_emails_list)
     if principal.deleted:
-        clear_session_cookies(response)
         if strict:
             raise AccountDeleted()
         return None
     return principal
 
 
-def resolve_principal(request: Request, response: Response) -> Principal:
-    """The signed-in caller, or an `Unauthenticated`/`AuthUnavailable` error. Tests override this."""
-    principal = _session_principal(request, response, strict=True)
+async def resolve_principal(credentials: BearerCredentials, session: SessionDep) -> Principal:
+    """The signed-in caller, or an `Unauthenticated` error. Tests override this."""
+    principal = await _bearer_principal(credentials, session, strict=True)
     assert principal is not None  # strict mode raises instead of returning None
     return principal
 
 
-def optional_principal(request: Request, response: Response) -> Principal | None:
-    """Signed-in user if the session is valid, else anonymous. Never raises for a bad session."""
-    return _session_principal(request, response, strict=False)
+async def optional_principal(credentials: BearerCredentials, session: SessionDep) -> Principal | None:
+    """Signed-in user if the token is valid, else anonymous. Never raises for a bad token."""
+    return await _bearer_principal(credentials, session, strict=False)
 
 
 def require_user(principal: Annotated[Principal, Depends(resolve_principal)]) -> Principal:
@@ -337,5 +336,5 @@ CurrentSuperAdmin = Annotated[Principal, Depends(require_super_admin)]
 OptionalUser = Annotated[Principal | None, Depends(optional_principal)]
 
 # Errors each dependency can raise, for `error_responses(...)` on a route.
-AUTH_ERRORS = (Unauthenticated, AuthUnavailable)
+AUTH_ERRORS = (Unauthenticated,)
 ROLE_ERRORS = (*AUTH_ERRORS, Forbidden)

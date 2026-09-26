@@ -9,7 +9,7 @@ from __future__ import annotations
 import httpx
 from supabase import Client
 
-from conftest import API, new_browser
+from conftest import API, assert_session_cookies_touched, new_browser, present_access_token
 from support.accounts import SeededAccount, close_account, seed_account, unique_email
 
 SIGN_IN_REQUIRED = "Please sign in to continue."
@@ -42,7 +42,7 @@ def test_me_without_a_session_is_401(anonymous: httpx.Client) -> None:
 
 
 def test_me_with_a_garbage_cookie_is_401(anonymous: httpx.Client) -> None:
-    anonymous.cookies.set("eventtz_access_token", "not-a-jwt")
+    present_access_token(anonymous, "not-a-jwt")
     response = anonymous.get(f"{API}/auth/me")
     assert response.status_code == 401
 
@@ -51,9 +51,7 @@ def test_signin_sets_both_session_cookies(admin_db: Client) -> None:
     client_account = seed_account(admin_db, unique_email("cookies"), "client")
     response = sign_in_response(client_account)
     assert response.status_code == 200
-    set_cookie_headers = response.headers.get_list("set-cookie")
-    assert any(header.startswith("eventtz_access_token=") for header in set_cookie_headers)
-    assert any(header.startswith("eventtz_refresh_token=") for header in set_cookie_headers)
+    assert_session_cookies_touched(response)
     body = response.json()
     assert body["success"] is True
     assert body["user"]["email"] == client_account.email

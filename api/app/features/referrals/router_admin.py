@@ -5,6 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Query
 
 from app.core.auth import ROLE_ERRORS, CurrentStaff
+from app.core.db import SessionDep
 from app.core.errors import error_responses
 from app.features.referrals import service_partners
 from app.features.referrals.errors import (
@@ -29,14 +30,15 @@ from app.features.referrals.schemas import (
 
 router = APIRouter(prefix="/admin/referrals", tags=["admin", "referrals"])
 
+
 # The largest sign-up page staff can ask for.
 MAX_SIGNUPS_PAGE = 200
 
 
 @router.get("/partners", response_model=ReferralPartnerListResponse, responses=error_responses(*ROLE_ERRORS))
-def list_partners(principal: CurrentStaff) -> ReferralPartnerListResponse:
+async def list_partners(session: SessionDep, principal: CurrentStaff) -> ReferralPartnerListResponse:
     """Every partner, newest first, with the link each one shares."""
-    return ReferralPartnerListResponse(partners=service_partners.list_partners())
+    return ReferralPartnerListResponse(partners=await service_partners.list_partners(session))
 
 
 @router.post(
@@ -44,9 +46,11 @@ def list_partners(principal: CurrentStaff) -> ReferralPartnerListResponse:
     response_model=ReferralPartnerResponse,
     responses=error_responses(*ROLE_ERRORS, DisplayNameRequired, InvalidSlug, PartnerNotCreated),
 )
-def create_partner(principal: CurrentStaff, body: CreateReferralPartnerRequest) -> ReferralPartnerResponse:
+async def create_partner(
+    session: SessionDep, principal: CurrentStaff, body: CreateReferralPartnerRequest
+) -> ReferralPartnerResponse:
     """Add a partner; the slug comes from the chosen slug or the name, made unique with `-2`, `-3`, ..."""
-    return ReferralPartnerResponse(partner=service_partners.create_partner(principal.id, body))
+    return ReferralPartnerResponse(partner=await service_partners.create_partner(session, principal.id, body))
 
 
 @router.patch(
@@ -54,11 +58,13 @@ def create_partner(principal: CurrentStaff, body: CreateReferralPartnerRequest) 
     response_model=ReferralPartnerResponse,
     responses=error_responses(*ROLE_ERRORS, NoFieldsToUpdate, DisplayNameEmpty, PartnerNotFound),
 )
-def update_partner(
-    principal: CurrentStaff, partner_id: str, body: UpdateReferralPartnerRequest
+async def update_partner(
+    session: SessionDep, principal: CurrentStaff, partner_id: str, body: UpdateReferralPartnerRequest
 ) -> ReferralPartnerResponse:
     """Edit a partner's name, handle, notes or on/off switch (the slug never changes)."""
-    return ReferralPartnerResponse(partner=service_partners.update_partner(principal.id, partner_id, body))
+    return ReferralPartnerResponse(
+        partner=await service_partners.update_partner(session, principal.id, partner_id, body)
+    )
 
 
 @router.get(
@@ -66,7 +72,8 @@ def update_partner(
     response_model=ReferralSignupListResponse,
     responses=error_responses(*ROLE_ERRORS, PartnerNotFound),
 )
-def list_signups(
+async def list_signups(
+    session: SessionDep,
     principal: CurrentStaff,
     partner_id: str,
     offset: int = Query(0, ge=0),
@@ -74,7 +81,9 @@ def list_signups(
     shoutout: ShoutoutFilter = "all",
 ) -> ReferralSignupListResponse:
     """One page of the vendors a partner brought in, newest first, optionally by shout-out state."""
-    return service_partners.list_signups(partner_id, shoutout=shoutout, offset=offset, limit=limit)
+    return await service_partners.list_signups(
+        session, partner_id, shoutout=shoutout, offset=offset, limit=limit
+    )
 
 
 @router.patch(
@@ -82,8 +91,10 @@ def list_signups(
     response_model=ReferralVendorSignupRow,
     responses=error_responses(*ROLE_ERRORS, SignupNotFound),
 )
-def set_shoutout(
-    principal: CurrentStaff, user_id: str, body: UpdateReferralShoutoutRequest
+async def set_shoutout(
+    session: SessionDep, principal: CurrentStaff, user_id: str, body: UpdateReferralShoutoutRequest
 ) -> ReferralVendorSignupRow:
     """Mark the partner as thanked (or not) for bringing in this vendor."""
-    return service_partners.set_shoutout(principal.id, user_id, completed=body.shoutout_completed)
+    return await service_partners.set_shoutout(
+        session, principal.id, user_id, completed=body.shoutout_completed
+    )

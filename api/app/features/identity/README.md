@@ -2,9 +2,11 @@
 
 ## Purpose
 
-Who a user is: accounts, sessions, passwords, email verification and account settings,
-on top of Supabase Auth. Supabase holds credentials and sessions; the `users` table holds
-the profile (type, staff role, suspension, verification, preferred name, contact sharing).
+Who a user is: accounts, sessions, passwords, email verification and account settings
+(ADR 0003). The `users` table holds the password hash (argon2) and the profile (type,
+staff role, suspension, verification, preferred name, contact sharing). A session is a
+15-minute access token sent as `Authorization: Bearer`, plus a 30-day refresh token kept
+as a hash in `refresh_tokens`, grouped into `refresh_chains`. The API sets no cookies.
 Other slices name people through `client_display_names` and `emails_by_id`.
 
 ## Use cases
@@ -24,16 +26,23 @@ Other slices name people through `client_display_names` and `emails_by_id`.
 
 ## Invariants
 
-- Clients and vendors cannot sign in until their email is verified; staff never verify,
-  and accounts with no `users` row predate verification and count as verified.
-- A suspended or closed account is refused at sign-in, and the session Supabase just
-  opened is revoked.
+- Clients and vendors cannot sign in until their email is verified; staff never verify.
+- A suspended or closed account is refused at sign-in, after the password check, so the
+  refusal never tells a stranger which state an account is in. An unknown address and a
+  wrong password get the same error and take the same time.
+- Passwords imported from Supabase are bcrypt; one is rewritten as argon2 at that
+  account's next successful sign-in (ADR 0003).
+- Each refresh spends its token and issues the next in the same chain. Presenting a spent
+  token again revokes the whole chain (`RefreshTokenReused`). Sign-out ends the presented
+  chain, or every chain when none is named; a password reset or change ends every chain.
 - One-click tokens (verify, reset) are stored only as SHA-256 hashes, work for an hour
   and once; issuing a new one voids the account's unused ones.
 - "Forgot password" and "resend verification" answer the same whether or not the
   account exists.
-- Sign-in, password changes, emails and link clicks are rate limited in memory per
-  account and per IP (`domain_limits.py`); each worker counts separately.
+- Sign-in, password changes, emails and link clicks are rate limited per account and per
+  IP (the `Limit`s in `service_accounts.py`), counted in Redis so every replica shares
+  them. Without Redis the limits are off; when Redis errors, sign-in, password changes and
+  reset links refuse rather than let requests through.
 - Staff password events go in the audit log; every password change emails the user.
 - User-facing copy and error messages match the baseline verbatim (the web app shows
   them as-is); errors carry stable `code`s.
@@ -49,8 +58,8 @@ Other slices name people through `client_display_names` and `emails_by_id`.
 |---|---|---|
 | POST | `/auth/signup` | anyone |
 | POST | `/auth/signin` | anyone |
-| POST | `/auth/signout` | anyone (ends this browser's session) |
-| POST | `/auth/refresh` | refresh token (body or cookie) |
+| POST | `/auth/signout` | anyone (ends the presented refresh token's session) |
+| POST | `/auth/refresh` | refresh token (body) |
 | GET | `/auth/me` | signed-in user |
 | POST | `/auth/forgot-password` | anyone |
 | POST | `/auth/reset-password` | reset link holder |

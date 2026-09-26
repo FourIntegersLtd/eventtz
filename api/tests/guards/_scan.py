@@ -73,10 +73,50 @@ def imported_modules(path: Path) -> set[str]:
     return modules
 
 
-def attribute_calls(path: Path) -> set[str]:
-    """Method names of every `something.<name>(...)` call in a file."""
-    return {
-        node.func.attr
-        for node in ast.walk(parse(path))
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
-    }
+def docstring_nodes(tree: ast.AST) -> set[int]:
+    """The ids of the string constants that are docstrings (prose, not code)."""
+    ids: set[int] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Module | ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef):
+            body = getattr(node, "body", [])
+            if (
+                body
+                and isinstance(body[0], ast.Expr)
+                and isinstance(body[0].value, ast.Constant)
+                and isinstance(body[0].value.value, str)
+            ):
+                ids.add(id(body[0].value))
+    return ids
+
+
+def string_literals(path: Path) -> list[str]:
+    """Runtime string literals in a file (docstrings excluded), original case."""
+    tree = parse(path)
+    docstrings = docstring_nodes(tree)
+    return [
+        node.value
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Constant) and isinstance(node.value, str) and id(node) not in docstrings
+    ]
+
+
+def attribute_names(path: Path) -> set[str]:
+    """Every `something.<name>` attribute a file uses, called or not."""
+    return {node.attr for node in ast.walk(parse(path)) if isinstance(node, ast.Attribute)}
+
+
+def names_imported_from(path: Path, package: str) -> set[str]:
+    """Names a file imports from a package, e.g. `select` in `from sqlalchemy import select`.
+
+    Matching bare tokens instead would catch `dict.update`, which is how a guard
+    earns a reputation for crying wolf and gets deleted.
+    """
+    found: set[str] = set()
+    for node in ast.walk(parse(path)):
+        if (
+            isinstance(node, ast.ImportFrom)
+            and node.module
+            and (node.module == package or node.module.startswith(f"{package}."))
+        ):
+            found.update(alias.name for alias in node.names)
+    return found

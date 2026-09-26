@@ -1,42 +1,30 @@
 """Account routes under `/auth`: sign up, sign in and out, sessions, email links and passwords.
 
-Routes that start or end a session set or clear the httpOnly session cookies here; everything
-else is in the services.
+The API sets no cookies: sessions travel as `Authorization: Bearer` access tokens,
+and the web app sends the refresh token in the body. Everything else is in the services.
 """
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter
 
-from app.core.auth import (
-    ACCESS_COOKIE,
-    AUTH_ERRORS,
-    REFRESH_COOKIE,
-    AnyAccount,
-    CurrentUser,
-    clear_session_cookies,
-    set_session_cookies,
-)
-from app.core.client_ip import ClientIp
+from app.core.auth import AUTH_ERRORS, AnyAccount, CurrentUser, OptionalUser
+from app.core.db import SessionDep
 from app.core.errors import AppError, Forbidden, error_responses
 from app.core.ports import MailerDependency
+from app.core.rate_limit import CallerKey
 from app.features.identity import service_passwords, service_session, service_signup
 from app.features.identity.errors import (
-    AuthServiceUnavailable,
     CurrentPasswordIncorrect,
     DeletedAtSignIn,
     EmailAlreadyRegistered,
-    EmailNotConfirmed,
     EmailNotVerified,
     PasswordUnchanged,
     PasswordUpdateFailed,
     RefreshExpired,
+    RefreshTokenReused,
     ResetLinkInvalid,
     ResetLinkUsed,
-    ResetSignInFailed,
-    SignInFailed,
-    SignInUnavailable,
-    SignupFailed,
     SuspendedAtSignIn,
     TooManyLinkAttempts,
     TooManyPasswordChanges,
@@ -62,6 +50,7 @@ from app.features.identity.schemas import (
     ResetPasswordResponse,
     SignInRequest,
     SignInResponse,
+    SignOutRequest,
     SignOutResponse,
     SignupRequest,
     SignupResponse,
@@ -75,77 +64,63 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 @router.post(
     "/signup",
     response_model=SignupResponse,
-    responses=error_responses(
-        EmailAlreadyRegistered, SignupFailed, AuthServiceUnavailable, TooManyVerificationEmails
-    ),
+    responses=error_responses(EmailAlreadyRegistered, TooManyVerificationEmails),
 )
-def sign_up(
-    body: SignupRequest, response: Response, caller_ip: ClientIp, mailer: MailerDependency
+async def sign_up(
+    body: SignupRequest, session: SessionDep, caller: CallerKey, mailer: MailerDependency
 ) -> SignupResponse:
     """Create an unverified client or vendor account; the user verifies their email, then signs in."""
-    created = service_signup.sign_up(body, client_ip=caller_ip, mailer=mailer)
-    clear_session_cookies(response)
-    return created
+    return await service_signup.sign_up(session, body, caller=caller, mailer=mailer)
 
 
 @router.post(
     "/signin",
     response_model=SignInResponse,
     responses=error_responses(
-        TooManySignIns,
-        WrongCredentials,
-        EmailNotConfirmed,
-        SignInFailed,
-        SignInUnavailable,
-        SuspendedAtSignIn,
-        DeletedAtSignIn,
-        EmailNotVerified,
+        TooManySignIns, WrongCredentials, SuspendedAtSignIn, DeletedAtSignIn, EmailNotVerified
     ),
 )
-def sign_in(body: SignInRequest, response: Response, caller_ip: ClientIp) -> SignInResponse:
-    """Sign in with email and password; the session is also set as cookies."""
-    signed_in = service_session.sign_in(body, client_ip=caller_ip)
-    set_session_cookies(response, signed_in.session.access_token, signed_in.session.refresh_token)
-    return signed_in
+async def sign_in(body: SignInRequest, session: SessionDep, caller: CallerKey) -> SignInResponse:
+    """Sign in with email and password."""
+    return await service_session.sign_in(session, body, caller=caller)
 
 
 @router.post("/signout", response_model=SignOutResponse, responses=error_responses(AppError))
-def sign_out(request: Request, response: Response) -> SignOutResponse:
-    """End this browser's session and clear its cookies. Succeeds even without a session."""
-    service_session.sign_out(request.cookies.get(ACCESS_COOKIE))
-    clear_session_cookies(response)
+async def sign_out(
+    session: SessionDep, principal: OptionalUser, body: SignOutRequest | None = None
+) -> SignOutResponse:
+    """End the presented sign-in, or all of the caller's. Succeeds even without a session."""
+    await service_session.sign_out(
+        session, principal=principal, refresh_token=body.refresh_token if body is not None else None
+    )
     return SignOutResponse()
 
 
 @router.post(
     "/refresh",
     response_model=RefreshSessionResponse,
-    responses=error_responses(RefreshExpired, AuthServiceUnavailable),
+    responses=error_responses(RefreshExpired, RefreshTokenReused),
 )
-def refresh_session(
-    body: RefreshSessionRequest, request: Request, response: Response
-) -> RefreshSessionResponse:
-    """Swap the refresh token (from the body, else the cookie) for a new session."""
-    refreshed = service_session.refresh(body.refresh_token or request.cookies.get(REFRESH_COOKIE))
-    set_session_cookies(response, refreshed.session.access_token, refreshed.session.refresh_token)
-    return refreshed
+async def refresh_session(body: RefreshSessionRequest, session: SessionDep) -> RefreshSessionResponse:
+    """Swap the refresh token for a new session."""
+    return await service_session.refresh(session, body.refresh_token)
 
 
 @router.get("/me", response_model=MeResponse, responses=error_responses(*AUTH_ERRORS, Forbidden))
-def me(principal: CurrentUser) -> MeResponse:
+async def me(principal: CurrentUser, session: SessionDep) -> MeResponse:
     """The signed-in account."""
-    return service_session.me(principal)
+    return await service_session.me(session, principal)
 
 
 @router.post(
     "/forgot-password", response_model=ForgotPasswordResponse, responses=error_responses(TooManyResetRequests)
 )
-def forgot_password(
-    body: ForgotPasswordRequest, caller_ip: ClientIp, mailer: MailerDependency
+async def forgot_password(
+    body: ForgotPasswordRequest, session: SessionDep, caller: CallerKey, mailer: MailerDependency
 ) -> ForgotPasswordResponse:
     """Email a reset link if the account exists. The answer is the same either way."""
     return ForgotPasswordResponse(
-        message=service_passwords.request_reset(body.email, client_ip=caller_ip, mailer=mailer)
+        message=await service_passwords.request_reset(session, body.email, caller=caller, mailer=mailer)
     )
 
 
@@ -153,21 +128,16 @@ def forgot_password(
     "/reset-password",
     response_model=ResetPasswordResponse,
     responses=error_responses(
-        TooManyLinkAttempts,
-        ResetLinkInvalid,
-        ResetLinkUsed,
-        WeakPassword,
-        PasswordUpdateFailed,
-        ResetSignInFailed,
+        TooManyLinkAttempts, ResetLinkInvalid, ResetLinkUsed, WeakPassword, PasswordUpdateFailed
     ),
 )
-def reset_password(
-    body: ResetPasswordRequest, response: Response, caller_ip: ClientIp, mailer: MailerDependency
+async def reset_password(
+    body: ResetPasswordRequest, session: SessionDep, caller: CallerKey, mailer: MailerDependency
 ) -> ResetPasswordResponse:
     """Follow a reset link: set the new password and sign in with it."""
-    reset = service_passwords.reset_with_link(body.token, body.password, client_ip=caller_ip, mailer=mailer)
-    set_session_cookies(response, reset.session.access_token, reset.session.refresh_token)
-    return reset
+    return await service_passwords.reset_with_link(
+        session, body.token, body.password, caller=caller, mailer=mailer
+    )
 
 
 @router.post(
@@ -175,12 +145,12 @@ def reset_password(
     response_model=ResendVerificationResponse,
     responses=error_responses(TooManyVerificationEmails),
 )
-def resend_verification(
-    body: ResendVerificationRequest, caller_ip: ClientIp, mailer: MailerDependency
+async def resend_verification(
+    body: ResendVerificationRequest, session: SessionDep, caller: CallerKey, mailer: MailerDependency
 ) -> ResendVerificationResponse:
     """Send a new verification link if the account still needs one. The answer is the same either way."""
     return ResendVerificationResponse(
-        message=service_signup.resend_verification(body.email, client_ip=caller_ip, mailer=mailer)
+        message=await service_signup.resend_verification(session, body.email, caller=caller, mailer=mailer)
     )
 
 
@@ -189,13 +159,11 @@ def resend_verification(
     response_model=VerifyEmailResponse,
     responses=error_responses(TooManyLinkAttempts, VerificationLinkInvalid, VerifyEmailFailed),
 )
-def verify_email(
-    body: VerifyEmailRequest, response: Response, caller_ip: ClientIp, mailer: MailerDependency
+async def verify_email(
+    body: VerifyEmailRequest, session: SessionDep, caller: CallerKey, mailer: MailerDependency
 ) -> VerifyEmailResponse:
-    """Follow a verification link. The user signs in next, so any old session cookies are cleared."""
-    verified = service_signup.verify_email(body.token, client_ip=caller_ip, mailer=mailer)
-    clear_session_cookies(response)
-    return verified
+    """Follow a verification link. No session is issued: the user signs in next."""
+    return await service_signup.verify_email(session, body.token, caller=caller, mailer=mailer)
 
 
 @router.post(
@@ -208,23 +176,21 @@ def verify_email(
         WeakPassword,
         PasswordUnchanged,
         CurrentPasswordIncorrect,
-        AuthServiceUnavailable,
     ),
 )
-def change_password(
+async def change_password(
     body: ChangePasswordRequest,
     principal: AnyAccount,
-    response: Response,
-    caller_ip: ClientIp,
+    session: SessionDep,
+    caller: CallerKey,
     mailer: MailerDependency,
 ) -> ChangePasswordResponse:
-    """Change the password (the current one is re-checked); every session ends, including this one."""
-    changed = service_passwords.change_password(
+    """Change the password (the current one is re-checked); every sign-in ends, including this one."""
+    return await service_passwords.change_password(
+        session,
         principal,
         current_password=body.current_password,
         new_password=body.new_password,
-        client_ip=caller_ip,
+        caller=caller,
         mailer=mailer,
     )
-    clear_session_cookies(response)
-    return changed

@@ -6,6 +6,9 @@ builds the app. Tests call `create_app()` directly to get a fresh instance.
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -13,15 +16,19 @@ from app.adapters.http_webhooks import BackgroundWebhooks
 from app.adapters.openai_language_model import OpenAILanguageModel
 from app.adapters.resend_mailer import ResendMailer
 from app.adapters.s3_storage import S3Storage
+from app.core.auth import bind_account_lookup
+from app.core.db import dispose_engine
 from app.core.errors import register_error_handlers
-from app.core.logging import setup_logging
-from app.core.observability import init_sentry
+from app.core.logging import RequestContextMiddleware, configure_logging
+from app.core.observability import configure_sentry
 from app.core.ports import language_model_port, mailer_port, storage_port, webhooks_port
+from app.core.redis import close_redis
 from app.core.settings import LOCAL_ORIGIN_REGEX, get_settings
 from app.features.content import router as content_router
 from app.features.content import router_admin as content_admin_router
 from app.features.identity import router as identity_router
 from app.features.identity import router_settings as identity_settings_router
+from app.features.identity import service_accounts as identity_accounts
 from app.features.media import router as media_router
 from app.features.referrals import router as referrals_router
 from app.features.referrals import router_admin as referrals_admin_router
@@ -51,12 +58,24 @@ def _plug_in_adapters(app: FastAPI) -> None:
     app.dependency_overrides[storage_port] = S3Storage
 
 
+@asynccontextmanager
+async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    """Close the database pool and the Redis client when the server stops."""
+    yield
+    await dispose_engine()
+    await close_redis()
+
+
 def create_app() -> FastAPI:
     """Build the app: error rendering, CORS for the web app, slice routers and `/health`."""
     settings = get_settings()
-    app = FastAPI(title="Eventtz API", version="1.0.0")
+    # `core.auth` reads the signed-in account's row through identity, which it cannot import.
+    bind_account_lookup(identity_accounts.lookup_account)
+    app = FastAPI(title="Eventtz API", version="1.0.0", lifespan=_lifespan)
     register_error_handlers(app)
     _plug_in_adapters(app)
+    # Added before CORS so CORS wraps it: preflight answers carry no request id, every other one does.
+    app.add_middleware(RequestContextMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins_list,
@@ -76,6 +95,6 @@ def create_app() -> FastAPI:
     return app
 
 
-setup_logging()
-init_sentry()
+configure_logging(get_settings())
+configure_sentry(get_settings())
 app = create_app()

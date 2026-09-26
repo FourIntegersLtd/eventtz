@@ -14,7 +14,7 @@ from collections.abc import Iterator
 import httpx
 from supabase import Client
 
-from conftest import API, new_browser
+from conftest import API, assert_session_cookies_touched, new_browser
 from support.accounts import SeededAccount, seed_account, unique_email
 from support.tokens import seed_email_verification_token, seed_password_reset_token
 
@@ -164,8 +164,7 @@ def test_reset_password_with_a_seeded_token_signs_the_user_in_with_the_new_passw
     body = response.json()
     assert body["user"]["email"] == account.email
     assert body["session"]["access_token"]
-    set_cookie_headers = response.headers.get_list("set-cookie")
-    assert any(header.startswith("eventtz_access_token=") for header in set_cookie_headers)
+    assert_session_cookies_touched(response)
 
     token_row = (
         admin_db.table("password_reset_tokens")
@@ -262,9 +261,7 @@ def test_verify_email_with_a_seeded_token_marks_the_account_verified(admin_db: C
     assert body["session"] is None
     assert body["user"]["email"] == account.email
     # No session was set, so the route explicitly clears any (nonexistent) session cookies.
-    set_cookie_headers = response.headers.get_list("set-cookie")
-    assert any(header.startswith("eventtz_access_token=") for header in set_cookie_headers)
-    assert any(header.startswith("eventtz_refresh_token=") for header in set_cookie_headers)
+    assert_session_cookies_touched(response)
 
     row = admin_db.table("users").select("email_verified_at").eq("id", account.user_id).execute().data[0]
     assert row["email_verified_at"] is not None

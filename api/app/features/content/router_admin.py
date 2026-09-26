@@ -5,6 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from app.core.auth import ROLE_ERRORS, CurrentStaff
+from app.core.db import SessionDep
 from app.core.errors import error_responses
 from app.core.ports import MailerDependency, WebhooksDependency
 from app.features.content import service_blog, service_contact
@@ -21,6 +22,7 @@ from app.features.content.schemas import (
 
 router = APIRouter(prefix="/admin")
 
+
 # Errors every route that changes an existing post can return.
 _POST_CHANGE_ERRORS = (*ROLE_ERRORS, PostNotFound, PostWriteFailed)
 
@@ -31,9 +33,9 @@ _POST_CHANGE_ERRORS = (*ROLE_ERRORS, PostNotFound, PostWriteFailed)
     response_model=BlogPostsListResponse,
     responses=error_responses(*ROLE_ERRORS),
 )
-def list_posts(principal: CurrentStaff) -> BlogPostsListResponse:
+async def list_posts(session: SessionDep, principal: CurrentStaff) -> BlogPostsListResponse:
     """Every post, draft or published, most recently edited first."""
-    return BlogPostsListResponse(posts=service_blog.list_posts_for_staff())
+    return BlogPostsListResponse(posts=await service_blog.list_posts_for_staff(session))
 
 
 @router.post(
@@ -42,9 +44,11 @@ def list_posts(principal: CurrentStaff) -> BlogPostsListResponse:
     response_model=BlogPostAdminDetailResponse,
     responses=error_responses(*ROLE_ERRORS, PostWriteFailed),
 )
-def create_post(principal: CurrentStaff, body: BlogPostCreateBody) -> BlogPostAdminDetailResponse:
+async def create_post(
+    session: SessionDep, principal: CurrentStaff, body: BlogPostCreateBody
+) -> BlogPostAdminDetailResponse:
     """Start a new draft."""
-    return BlogPostAdminDetailResponse(post=service_blog.create_draft(principal.id, body))
+    return BlogPostAdminDetailResponse(post=await service_blog.create_draft(session, principal.id, body))
 
 
 @router.get(
@@ -53,9 +57,9 @@ def create_post(principal: CurrentStaff, body: BlogPostCreateBody) -> BlogPostAd
     response_model=BlogPostAdminDetailResponse,
     responses=error_responses(*ROLE_ERRORS, PostNotFound),
 )
-def get_post(principal: CurrentStaff, post_id: str) -> BlogPostAdminDetailResponse:
+async def get_post(session: SessionDep, principal: CurrentStaff, post_id: str) -> BlogPostAdminDetailResponse:
     """One post for the editor."""
-    return BlogPostAdminDetailResponse(post=service_blog.get_post_for_staff(post_id))
+    return BlogPostAdminDetailResponse(post=await service_blog.get_post_for_staff(session, post_id))
 
 
 @router.patch(
@@ -64,11 +68,13 @@ def get_post(principal: CurrentStaff, post_id: str) -> BlogPostAdminDetailRespon
     response_model=BlogPostAdminDetailResponse,
     responses=error_responses(*_POST_CHANGE_ERRORS),
 )
-def update_post(
-    principal: CurrentStaff, post_id: str, body: BlogPostUpdateBody
+async def update_post(
+    session: SessionDep, principal: CurrentStaff, post_id: str, body: BlogPostUpdateBody
 ) -> BlogPostAdminDetailResponse:
     """Save an edit (only the fields sent change)."""
-    return BlogPostAdminDetailResponse(post=service_blog.update_post(principal.id, post_id, body))
+    return BlogPostAdminDetailResponse(
+        post=await service_blog.update_post(session, principal.id, post_id, body)
+    )
 
 
 @router.delete(
@@ -77,9 +83,9 @@ def update_post(
     response_model=BlogPostDeleteResponse,
     responses=error_responses(*_POST_CHANGE_ERRORS),
 )
-def delete_post(principal: CurrentStaff, post_id: str) -> BlogPostDeleteResponse:
+async def delete_post(session: SessionDep, principal: CurrentStaff, post_id: str) -> BlogPostDeleteResponse:
     """Delete a post for good."""
-    service_blog.delete_post(principal.id, post_id)
+    await service_blog.delete_post(session, principal.id, post_id)
     return BlogPostDeleteResponse()
 
 
@@ -89,9 +95,11 @@ def delete_post(principal: CurrentStaff, post_id: str) -> BlogPostDeleteResponse
     response_model=BlogPostAdminDetailResponse,
     responses=error_responses(*_POST_CHANGE_ERRORS),
 )
-def publish_post(principal: CurrentStaff, post_id: str) -> BlogPostAdminDetailResponse:
+async def publish_post(
+    session: SessionDep, principal: CurrentStaff, post_id: str
+) -> BlogPostAdminDetailResponse:
     """Make a post public."""
-    return BlogPostAdminDetailResponse(post=service_blog.publish_post(principal.id, post_id))
+    return BlogPostAdminDetailResponse(post=await service_blog.publish_post(session, principal.id, post_id))
 
 
 @router.post(
@@ -100,9 +108,11 @@ def publish_post(principal: CurrentStaff, post_id: str) -> BlogPostAdminDetailRe
     response_model=BlogPostAdminDetailResponse,
     responses=error_responses(*_POST_CHANGE_ERRORS),
 )
-def unpublish_post(principal: CurrentStaff, post_id: str) -> BlogPostAdminDetailResponse:
+async def unpublish_post(
+    session: SessionDep, principal: CurrentStaff, post_id: str
+) -> BlogPostAdminDetailResponse:
     """Take a post back to draft."""
-    return BlogPostAdminDetailResponse(post=service_blog.unpublish_post(principal.id, post_id))
+    return BlogPostAdminDetailResponse(post=await service_blog.unpublish_post(session, principal.id, post_id))
 
 
 @router.post(
@@ -111,9 +121,15 @@ def unpublish_post(principal: CurrentStaff, post_id: str) -> BlogPostAdminDetail
     response_model=ContactSubmitResponse,
     responses=error_responses(*ROLE_ERRORS, MessageTooShort),
 )
-def submit_bug_report(
-    principal: CurrentStaff, body: AdminBugReportBody, mailer: MailerDependency, webhooks: WebhooksDependency
+async def submit_bug_report(
+    session: SessionDep,
+    principal: CurrentStaff,
+    body: AdminBugReportBody,
+    mailer: MailerDependency,
+    webhooks: WebhooksDependency,
 ) -> ContactSubmitResponse:
     """A staff bug report from the admin console."""
-    service_contact.submit_bug_report(principal, message=body.message, mailer=mailer, webhooks=webhooks)
+    await service_contact.submit_bug_report(
+        session, principal, message=body.message, mailer=mailer, webhooks=webhooks
+    )
     return ContactSubmitResponse()

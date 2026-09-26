@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.auth import Principal
 from app.features.identity import repository
 from app.features.identity.domain_accounts import contact_settings_changes, onboarding_changes
@@ -15,9 +17,9 @@ from app.features.identity.schemas import (
 )
 
 
-def contact_settings(user_id: str) -> ContactSharingSettings:
+async def contact_settings(session: AsyncSession, user_id: str) -> ContactSharingSettings:
     """The saved settings; everything shared (and no phone) until the user changes them."""
-    row = repository.get_contact_settings(user_id)
+    row = await repository.get_contact_settings(session, user_id)
     if row is None:
         return ContactSharingSettings()
     return ContactSharingSettings(
@@ -28,8 +30,8 @@ def contact_settings(user_id: str) -> ContactSharingSettings:
     )
 
 
-def update_contact_settings(
-    principal: Principal, body: ContactSharingSettingsPutBody
+async def update_contact_settings(
+    session: AsyncSession, principal: Principal, body: ContactSharingSettingsPutBody
 ) -> ContactSharingSettings:
     """Save the fields sent (vendors cannot set phone or address here) and return the result."""
     changes = contact_settings_changes(
@@ -40,13 +42,13 @@ def update_contact_settings(
         share_address=body.share_address,
     )
     if changes:
-        repository.update_profile(principal.id, changes)
-    return contact_settings(principal.id)
+        await repository.update_profile(session, principal.id, changes)
+    return await contact_settings(session, principal.id)
 
 
-def client_onboarding(user_id: str) -> ClientOnboardingState:
+async def client_onboarding(session: AsyncSession, user_id: str) -> ClientOnboardingState:
     """Whether the client finished first-visit setup, and their preferred name."""
-    profile = repository.get_profile(user_id)
+    profile = await repository.get_profile(session, user_id)
     if profile is None:
         return ClientOnboardingState()
     return ClientOnboardingState(
@@ -55,11 +57,13 @@ def client_onboarding(user_id: str) -> ClientOnboardingState:
     )
 
 
-def update_client_onboarding(user_id: str, body: ClientOnboardingPatchBody) -> ClientOnboardingState:
+async def update_client_onboarding(
+    session: AsyncSession, user_id: str, body: ClientOnboardingPatchBody
+) -> ClientOnboardingState:
     """Save the preferred name and/or mark onboarding done, and return the result."""
     changes = onboarding_changes(
         preferred_name=body.preferred_name, mark_completed=bool(body.mark_completed), now=datetime.now(UTC)
     )
     if changes:
-        repository.update_profile(user_id, changes)
-    return client_onboarding(user_id)
+        await repository.update_profile(session, user_id, changes)
+    return await client_onboarding(session, user_id)

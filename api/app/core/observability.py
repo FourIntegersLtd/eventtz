@@ -1,39 +1,31 @@
-"""Sentry error and performance reporting. An empty `SENTRY_DSN` turns it off."""
+"""Error reporting (copied from OSCE `platform-api`).
+
+Off unless `SENTRY_DSN` is set, which keeps local and test runs silent and
+means a deployment opts in by configuration rather than by code.
+"""
 
 from __future__ import annotations
 
-from typing import Any
-
 import sentry_sdk
 
-from app.core.settings import get_settings
+from app.core.settings import Settings
+
+# Sampled rather than everything: traces are priced per span, and uptime probes
+# and polling screens would otherwise bill for their own heartbeat.
+TRACES_SAMPLE_RATE = 0.05
 
 
-def traces_sampler(sampling_context: dict[str, Any]) -> float:
-    """Decide what fraction of requests Sentry traces.
-
-    Health checks are never traced (uptime probes would dominate), a trace that
-    continues an upstream one keeps its parent's decision, and everything else is
-    sampled at 10% in production and 100% locally.
-    """
-    asgi_scope = sampling_context.get("asgi_scope")
-    path = str(asgi_scope.get("path") or "") if isinstance(asgi_scope, dict) else ""
-    if path.rstrip("/").endswith("/health"):
-        return 0.0
-    parent_sampled = sampling_context.get("parent_sampled")
-    if parent_sampled is not None:
-        return 1.0 if parent_sampled else 0.0
-    return 0.1 if get_settings().is_production else 1.0
-
-
-def init_sentry() -> None:
-    """Start the Sentry SDK if a DSN is configured. Never sends personal data."""
-    settings = get_settings()
+def configure_sentry(settings: Settings) -> bool:
+    """Start reporting, if there is somewhere to report to. Returns whether it did."""
     if not settings.sentry_dsn.strip():
-        return
+        return False
     sentry_sdk.init(
         dsn=settings.sentry_dsn.strip(),
-        environment="production" if settings.is_production else "development",
+        environment=settings.app_env.value,
+        traces_sample_rate=TRACES_SAMPLE_RATE,
+        # A request body can hold a password or a reset token. None of that
+        # belongs in an error report, and the default is to send it.
         send_default_pii=False,
-        traces_sampler=traces_sampler,
+        max_request_body_size="never",
     )
+    return True

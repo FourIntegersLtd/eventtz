@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 
 from app.core.ports import ChatMessage
 from app.features.content.errors import AudienceMismatch
-from app.features.content.models import HelpArticleText
+from app.features.content.rows import HelpArticleText
 
 Audience = Literal["client", "vendor", "admin"]
 _AUDIENCES: tuple[Audience, ...] = ("client", "vendor", "admin")

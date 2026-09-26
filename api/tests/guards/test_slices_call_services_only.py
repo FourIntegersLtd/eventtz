@@ -1,4 +1,8 @@
-"""A slice reaches another slice only through its `service*`, `schemas` or `errors`."""
+"""A slice reaches another slice only through its `service*`, `schemas`, `errors` or `jobs`.
+
+`jobs` is public so a slice can defer another slice's task inside its own
+transaction (ADR 0008), as OSCE `platform-api` allows.
+"""
 
 from __future__ import annotations
 
@@ -9,7 +13,7 @@ import pytest
 from tests.guards._scan import FEATURES_ROOT, imported_modules, python_files, rel, slice_of
 
 # The only modules of another slice that a slice may import: its public surface.
-PUBLIC = ("service", "schemas", "errors")
+PUBLIC = ("service", "schemas", "errors", "jobs")
 
 
 def violations(path: Path, own_slice: str) -> list[str]:

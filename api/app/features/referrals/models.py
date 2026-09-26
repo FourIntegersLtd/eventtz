@@ -1,68 +1,68 @@
-"""Typed rows the referrals repository returns. Only the repository builds them; schemas never import them."""
+"""Tables owned by `referrals`: creator partners and the vendor sign-ups they brought in.
+
+Only this slice's repository imports these classes. They mirror the baseline
+schema (Alembic 0002); `alembic check` fails when the two drift apart. CHECK
+constraints (the slug format) live in the migrations only.
+"""
 
 from __future__ import annotations
 
-from typing import Any
+import uuid
+from datetime import datetime
 
-from pydantic import BaseModel
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Text, UniqueConstraint, Uuid, func, text
+from sqlalchemy.orm import Mapped, mapped_column
 
-
-class PartnerRow(BaseModel):
-    """A `referral_partners` row: a creator who shares a vendor sign-up link."""
-
-    id: str
-    slug: str
-    display_name: str = ""
-    instagram_handle: str | None = None
-    notes: str | None = None
-    is_active: bool = True
-    created_at: str | None = None
-    updated_at: str | None = None
+from app.core.db import Base, Timestamps, UUIDPrimaryKey
 
 
-class AttributionRow(BaseModel):
-    """A `referral_attributions` row: which partner brought a vendor in, and whether they were thanked."""
+class ReferralPartner(Base, UUIDPrimaryKey, Timestamps):
+    """A creator with a trackable vendor sign-up link (`?ref=<slug>`)."""
 
-    user_id: str
-    referral_partner_id: str | None = None
-    referral_slug: str | None = None
-    attributed_at: str | None = None
-    shoutout_completed: bool | None = False
-    shoutout_completed_at: str | None = None
+    __tablename__ = "referral_partners"
+    __table_args__ = (
+        UniqueConstraint("slug", name="referral_partners_slug_unique"),
+        Index("idx_referral_partners_active_slug", "slug", postgresql_where=text("is_active = true")),
+        {"comment": "Instagram creators / partners with trackable vendor signup links (?ref=slug)."},
+    )
 
-
-class SignupVendorRow(BaseModel):
-    """The `vendors` columns the sign-up list shows: onboarding and approval state, and the profile."""
-
-    user_id: str
-    status: str | None = None
-    approval_status: str | None = None
-    payload: Any = None
-
-
-class VendorCodeRow(BaseModel):
-    """A vendor's client referral settings from their `vendors` row."""
-
-    user_id: str
-    approval_status: str | None = None
-    client_referral_code: str | None = None
-    # A NULL here reads as disabled, as in the baseline (`bool(None)`).
-    client_referral_enabled: bool | None = True
+    slug: Mapped[str] = mapped_column(Text, nullable=False)
+    display_name: Mapped[str] = mapped_column(Text, nullable=False)
+    instagram_handle: Mapped[str | None] = mapped_column(Text)
+    notes: Mapped[str | None] = mapped_column(Text)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
+    created_by_admin_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("users.id", name="referral_partners_created_by_admin_id_fkey", ondelete="SET NULL")
+    )
 
 
-class ReferralBookingRow(BaseModel):
-    """The `booking_requests` columns needed to show a booking made with a referral code and price it."""
+class ReferralAttribution(Base):
+    """Which partner brought a vendor in (first touch at sign-up), and whether they were thanked."""
 
-    id: str
-    status: str | None = None
-    payment_status: str | None = None
-    event_name: str | None = None
-    event_date: str | None = None
-    created_at: Any = None
-    client_user_id: str | None = None
-    vendor_user_id: str | None = None
-    line_items: Any = None
-    vendor_adjustments: Any = None
-    vendor_referral_code: str | None = None
-    service_fee_percent: Any = None
-    referral_fee_discount_gbp: Any = None
+    __tablename__ = "referral_attributions"
+    __table_args__ = (
+        Index(
+            "idx_referral_attributions_partner_attributed", "referral_partner_id", text("attributed_at DESC")
+        ),
+        {"comment": "Vendor signups attributed to a referral partner link (first-touch at registration)."},
+    )
+
+    # One attribution per vendor account, so the account is the key.
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        ForeignKey("users.id", name="referral_attributions_user_id_fkey", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    referral_partner_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        ForeignKey(
+            "referral_partners.id", name="referral_attributions_referral_partner_id_fkey", ondelete="RESTRICT"
+        ),
+        nullable=False,
+    )
+    referral_slug: Mapped[str] = mapped_column(Text, nullable=False)
+    attributed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    shoutout_completed: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))
+    shoutout_completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

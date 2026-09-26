@@ -7,7 +7,10 @@ bug, booking and payment subjects, forwarded to the Cursor automation webhook.
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
+
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import Principal
 from app.core.logging import get_logger
@@ -33,10 +36,12 @@ from app.features.notifications import service as notifications_service
 log = get_logger(__name__)
 
 
-def classify(language_model: LanguageModel, *, portal: str, message: str) -> ContactSubject:
+async def classify(language_model: LanguageModel, *, portal: str, message: str) -> ContactSubject:
     """The subject the model picks for a message; `other` when the model is off or fails."""
     try:
-        classification = language_model.parse(
+        # The model call blocks; a worker thread keeps the event loop serving others.
+        classification = await asyncio.to_thread(
+            language_model.parse,
             model=CLASSIFIER_MODEL,
             messages=classifier_messages(portal=portal, message=message),
             reply_model=ContactClassification,
@@ -49,9 +54,11 @@ def classify(language_model: LanguageModel, *, portal: str, message: str) -> Con
     return classification.subject
 
 
-def _check_booking_belongs_to(principal: Principal, portal: str, booking_id: str) -> None:
+async def _check_booking_belongs_to(
+    session: AsyncSession, principal: Principal, portal: str, booking_id: str
+) -> None:
     """Refuse a booking reference that does not exist or is not the caller's on this portal."""
-    booking = repository.find_booking_parties(booking_id)
+    booking = await repository.find_booking_parties(session, booking_id)
     if booking is None:
         raise BookingNotFound()
     if portal == "client" and booking.client_user_id != principal.id:
@@ -74,7 +81,8 @@ def _forward_to_automation(webhooks: Webhooks, payload: dict[str, Any]) -> None:
     webhooks.post_in_background(WebhookCall(url=url, payload=payload, headers=headers))
 
 
-def _file_message(
+async def _file_message(
+    session: AsyncSession,
     principal: Principal,
     *,
     portal: str,
@@ -86,8 +94,13 @@ def _file_message(
 ) -> None:
     """Store a checked message, forward triage-worthy subjects, and email staff (neither can fail it)."""
     subject_label = SUBJECT_LABELS[subject]
-    submission_id = repository.insert_contact_submission(
-        user_id=principal.id, portal=portal, subject_label=subject_label, message=body, booking_id=booking_id
+    submission_id = await repository.insert_contact_submission(
+        session,
+        user_id=principal.id,
+        portal=portal,
+        subject_label=subject_label,
+        message=body,
+        booking_id=booking_id,
     )
     if submission_id is None:
         log.warning("contact_submissions insert returned no row user=%s", principal.id)
@@ -113,7 +126,8 @@ def _file_message(
     )
 
 
-def submit_portal_message(
+async def submit_portal_message(
+    session: AsyncSession,
     principal: Principal,
     *,
     portal: str,
@@ -131,9 +145,10 @@ def submit_portal_message(
     body = clean_message(message)
     booking_id = booking_reference(raw_booking_id)
     if booking_id:
-        _check_booking_belongs_to(principal, portal, booking_id)
-    subject = classify(language_model, portal=portal, message=body)
-    _file_message(
+        await _check_booking_belongs_to(session, principal, portal, booking_id)
+    subject = await classify(language_model, portal=portal, message=body)
+    await _file_message(
+        session,
         principal,
         portal=portal,
         body=body,
@@ -144,10 +159,13 @@ def submit_portal_message(
     )
 
 
-def submit_bug_report(principal: Principal, *, message: str, mailer: Mailer, webhooks: Webhooks) -> None:
+async def submit_bug_report(
+    session: AsyncSession, principal: Principal, *, message: str, mailer: Mailer, webhooks: Webhooks
+) -> None:
     """A staff bug report from the admin console: always filed as a bug report, never classified."""
     body = clean_message(message)
-    _file_message(
+    await _file_message(
+        session,
         principal,
         portal="admin",
         body=body,

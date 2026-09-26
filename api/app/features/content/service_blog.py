@@ -5,9 +5,11 @@ Every staff change is written to the admin audit log (entity type `blog_post`).
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from typing import Any
+
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.features.content import repository
@@ -22,7 +24,7 @@ from app.features.content.domain_blog import (
     slugify,
 )
 from app.features.content.errors import PostNotFound, PostWriteFailed
-from app.features.content.models import BlogPostRow
+from app.features.content.rows import BlogPostRow
 from app.features.content.schemas import (
     BlogPostAdminDetail,
     BlogPostCreateBody,
@@ -93,37 +95,38 @@ def _public_detail(row: BlogPostRow) -> BlogPostPublicDetail:
 # --- helpers -----------------------------------------------------------------------------------------
 
 
-def _existing_post(post_id: str) -> BlogPostRow:
+async def _existing_post(session: AsyncSession, post_id: str) -> BlogPostRow:
     """The post with this id, or `PostNotFound` (also for ids that are not UUIDs)."""
-    post = repository.find_post(post_id) if is_uuid(post_id) else None
+    post = await repository.find_post(session, post_id) if is_uuid(post_id) else None
     if post is None:
         raise PostNotFound()
     return post
 
 
-def _unique_slug(desired: str, *, exclude_post_id: str | None = None) -> str:
+async def _unique_slug(session: AsyncSession, desired: str, *, exclude_post_id: str | None = None) -> str:
     """A free slug based on `desired`: `base`, then `base-2` … `base-49`, then a random suffix.
 
-    A slug used by the post being edited (`exclude_post_id`) counts as free. If
-    the lookup itself fails, a random suffix is used rather than failing the save.
+    A slug used by the post being edited (`exclude_post_id`) counts as free. The
+    baseline fell back to a random suffix when the lookup failed; inside one
+    transaction a failed statement aborts the save anyway, so a failure now
+    propagates instead.
     """
     base = slugify(desired)
     candidate = base
     for number in range(2, LAST_NUMBERED_SLUG + 1):
-        try:
-            owner_id = repository.post_id_with_slug(candidate)
-        except Exception:
-            log.exception("blog: slug check failed")
-            return random_slug(base)
+        owner_id = await repository.post_id_with_slug(session, candidate)
         if owner_id is None or owner_id == exclude_post_id:
             return candidate
         candidate = numbered_slug(base, number)
     return random_slug(base)
 
 
-def _audit(admin_user_id: str, action: str, post_id: str, details: dict[str, Any]) -> None:
+async def _audit(
+    session: AsyncSession, admin_user_id: str, action: str, post_id: str, details: dict[str, Any]
+) -> None:
     """Record a staff action on a post."""
-    staff_service.record_admin_action(
+    await staff_service.record_admin_action(
+        session,
         admin_user_id=admin_user_id,
         action=action,
         entity_type=AUDIT_ENTITY,
@@ -132,12 +135,15 @@ def _audit(admin_user_id: str, action: str, post_id: str, details: dict[str, Any
     )
 
 
-def _write(
-    action_failed_message: str, write: Callable[..., BlogPostRow | None], *arguments: Any
+async def _write(
+    action_failed_message: str, write: Callable[..., Awaitable[BlogPostRow | None]], *arguments: Any
 ) -> BlogPostRow | None:
-    """Run a repository write, turning any database failure into `PostWriteFailed(message)`."""
+    """Run a repository write, turning any database failure into `PostWriteFailed(message)`.
+
+    The request's transaction then rolls back as the error leaves the handler.
+    """
     try:
-        written = write(*arguments)
+        written = await write(*arguments)
     except Exception as error:
         log.exception("blog: %s", action_failed_message)
         raise PostWriteFailed(action_failed_message) from error
@@ -147,22 +153,24 @@ def _write(
 # --- staff use cases ---------------------------------------------------------------------------------
 
 
-def list_posts_for_staff() -> list[BlogPostListItem]:
+async def list_posts_for_staff(session: AsyncSession) -> list[BlogPostListItem]:
     """Every post, draft or published, most recently edited first."""
-    return [_list_item(row) for row in repository.list_posts_newest_first()]
+    return [_list_item(row) for row in await repository.list_posts_newest_first(session)]
 
 
-def get_post_for_staff(post_id: str) -> BlogPostAdminDetail:
+async def get_post_for_staff(session: AsyncSession, post_id: str) -> BlogPostAdminDetail:
     """One post for the editor."""
-    return _admin_detail(_existing_post(post_id))
+    return _admin_detail(await _existing_post(session, post_id))
 
 
-def create_draft(admin_user_id: str, body: BlogPostCreateBody) -> BlogPostAdminDetail:
+async def create_draft(
+    session: AsyncSession, admin_user_id: str, body: BlogPostCreateBody
+) -> BlogPostAdminDetail:
     """Start a new empty draft, slugged from `slug` if given, else from the title."""
     title = body.title.strip() or DEFAULT_TITLE
     requested_slug = body.slug.strip() if body.slug and body.slug.strip() else title
     values = {
-        "slug": _unique_slug(requested_slug),
+        "slug": await _unique_slug(session, requested_slug),
         "title": title,
         "subtitle": (body.subtitle.strip() if body.subtitle else None) or None,
         "body_json": NEW_POST_BODY,
@@ -170,64 +178,70 @@ def create_draft(admin_user_id: str, body: BlogPostCreateBody) -> BlogPostAdminD
         "status": "draft",
         "author_admin_user_id": admin_user_id,
     }
-    created = _write(CREATE_FAILED, repository.insert_post, values)
+    created = await _write(CREATE_FAILED, repository.insert_post, session, values)
     if created is None:
         raise PostWriteFailed(CREATE_FAILED)
-    _audit(admin_user_id, "blog.create", created.id, {"slug": created.slug})
+    await _audit(session, admin_user_id, "blog.create", created.id, {"slug": created.slug})
     return _admin_detail(created)
 
 
-def update_post(admin_user_id: str, post_id: str, body: BlogPostUpdateBody) -> BlogPostAdminDetail:
+async def update_post(
+    session: AsyncSession, admin_user_id: str, post_id: str, body: BlogPostUpdateBody
+) -> BlogPostAdminDetail:
     """Apply an edit. Only the fields the editor sent change; the audit lists which ones."""
     fields = body.model_dump(exclude_unset=True)
-    _existing_post(post_id)
+    await _existing_post(session, post_id)
     changes: dict[str, Any] = {"updated_at": _now(), **post_changes(fields)}
     if fields.get("slug"):
-        changes["slug"] = _unique_slug(str(fields["slug"]).strip(), exclude_post_id=post_id)
-    updated = _write(UPDATE_FAILED, repository.update_post, post_id, changes) or _existing_post(post_id)
-    _audit(admin_user_id, "blog.update", post_id, {"fields": list(fields.keys())})
+        changes["slug"] = await _unique_slug(session, str(fields["slug"]).strip(), exclude_post_id=post_id)
+    updated = await _write(
+        UPDATE_FAILED, repository.update_post, session, post_id, changes
+    ) or await _existing_post(session, post_id)
+    await _audit(session, admin_user_id, "blog.update", post_id, {"fields": list(fields.keys())})
     return _admin_detail(updated)
 
 
-def publish_post(admin_user_id: str, post_id: str) -> BlogPostAdminDetail:
+async def publish_post(session: AsyncSession, admin_user_id: str, post_id: str) -> BlogPostAdminDetail:
     """Make a post public. Re-publishing keeps the original publication date."""
-    existing = _existing_post(post_id)
+    existing = await _existing_post(session, post_id)
     now = _now()
     changes = {"status": "published", "published_at": existing.published_at or now, "updated_at": now}
-    _write(PUBLISH_FAILED, repository.update_post, post_id, changes)
-    published = _existing_post(post_id)
-    _audit(admin_user_id, "blog.publish", post_id, {"slug": published.slug})
+    await _write(PUBLISH_FAILED, repository.update_post, session, post_id, changes)
+    published = await _existing_post(session, post_id)
+    await _audit(session, admin_user_id, "blog.publish", post_id, {"slug": published.slug})
     return _admin_detail(published)
 
 
-def unpublish_post(admin_user_id: str, post_id: str) -> BlogPostAdminDetail:
+async def unpublish_post(session: AsyncSession, admin_user_id: str, post_id: str) -> BlogPostAdminDetail:
     """Take a post back to draft (its publication date is kept for a later re-publish)."""
-    _existing_post(post_id)
-    _write(UNPUBLISH_FAILED, repository.update_post, post_id, {"status": "draft", "updated_at": _now()})
-    unpublished = _existing_post(post_id)
-    _audit(admin_user_id, "blog.unpublish", post_id, {"slug": unpublished.slug})
+    await _existing_post(session, post_id)
+    await _write(
+        UNPUBLISH_FAILED, repository.update_post, session, post_id, {"status": "draft", "updated_at": _now()}
+    )
+    unpublished = await _existing_post(session, post_id)
+    await _audit(session, admin_user_id, "blog.unpublish", post_id, {"slug": unpublished.slug})
     return _admin_detail(unpublished)
 
 
-def delete_post(admin_user_id: str, post_id: str) -> None:
+async def delete_post(session: AsyncSession, admin_user_id: str, post_id: str) -> None:
     """Delete a post for good."""
-    _existing_post(post_id)
-    _write(DELETE_FAILED, repository.delete_post, post_id)
-    _audit(admin_user_id, "blog.delete", post_id, {})
+    await _existing_post(session, post_id)
+    await _write(DELETE_FAILED, repository.delete_post, session, post_id)
+    await _audit(session, admin_user_id, "blog.delete", post_id, {})
 
 
 # --- public use cases --------------------------------------------------------------------------------
 
 
-def list_published_posts(limit: int) -> list[BlogPostListItem]:
+async def list_published_posts(session: AsyncSession, limit: int) -> list[BlogPostListItem]:
     """The public blog index, newest first."""
-    return [_list_item(row) for row in repository.list_published_posts(limit)]
+    return [_list_item(row) for row in await repository.list_published_posts(session, limit)]
 
 
-def get_published_post(slug: str) -> BlogPostPublicDetail:
+async def get_published_post(session: AsyncSession, slug: str) -> BlogPostPublicDetail:
     """A published post by slug; drafts and unknown slugs are `PostNotFound`."""
     trimmed_slug = (slug or "").strip()
-    post = repository.find_published_post(trimmed_slug) if trimmed_slug else None
+    post = await repository.find_published_post(session, trimmed_slug) if trimmed_slug else None
     if post is None:
         raise PostNotFound()
     return _public_detail(post)

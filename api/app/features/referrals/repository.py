@@ -1,20 +1,27 @@
 """Database access for referral partners, attributions and vendor client codes. The only querying file.
 
 Two tables belong to this slice (`referral_partners`, `referral_attributions`). It also
-reads the referral columns of `vendors` and `booking_requests` directly for now; those
-reads move behind `vendors.service` and `bookings.service` when those slices are rebuilt.
+reads the referral columns of `vendors` and `booking_requests` directly for now, through
+the lightweight table handles below rather than the owning slices' models; those reads
+move behind `vendors.service` and `bookings.service` when those slices are rebuilt.
+
+Every function takes the request's session and never commits (ADR 0002).
 """
 
 from __future__ import annotations
 
+import uuid
 from typing import Any
 
-from postgrest.exceptions import APIError
-from postgrest.types import CountMethod
+from sqlalchemy import Boolean, Date, DateTime, Numeric, Text, Uuid, column, func, select, table, update
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core import db
+from app.core.db import as_uuid, plain_row
 from app.features.referrals.domain import ShoutoutFilter
-from app.features.referrals.models import (
+from app.features.referrals.models import ReferralAttribution, ReferralPartner
+from app.features.referrals.rows import (
     AttributionRow,
     PartnerRow,
     ReferralBookingRow,
@@ -22,250 +29,283 @@ from app.features.referrals.models import (
     VendorCodeRow,
 )
 
-# PostgREST's "requested range not satisfiable": an offset past the last row when counting.
-_RANGE_NOT_SATISFIABLE = "PGRST103"
-# Postgres unique-constraint violation.
-_UNIQUE_VIOLATION = "23505"
+# Other slices' tables, declared with only the columns read here (typed, so ids bind as uuid).
+_vendors = table(
+    "vendors",
+    column("user_id", Uuid),
+    column("status", Text),
+    column("approval_status", Text),
+    column("payload", JSONB),
+    column("client_referral_code", Text),
+    column("client_referral_enabled", Boolean),
+)
+_booking_requests = table(
+    "booking_requests",
+    column("id", Uuid),
+    column("status", Text),
+    column("payment_status", Text),
+    column("event_name", Text),
+    column("event_date", Date),
+    column("created_at", DateTime(timezone=True)),
+    column("updated_at", DateTime(timezone=True)),
+    column("client_user_id", Uuid),
+    column("vendor_user_id", Uuid),
+    column("line_items", JSONB),
+    column("vendor_adjustments", JSONB),
+    column("vendor_referral_code", Text),
+    column("service_fee_percent", Numeric),
+    column("referral_fee_discount_gbp", Numeric),
+)
+
+
+def _uuids(ids: list[str]) -> list[uuid.UUID]:
+    """The ids that are valid UUIDs, parsed (the rest cannot name a row)."""
+    return [parsed for parsed in (as_uuid(raw_id) for raw_id in ids) if parsed is not None]
+
 
 # --- creator partners --------------------------------------------------------------------------
 
-_PARTNER_COLUMNS = "id,slug,display_name,instagram_handle,notes,is_active,created_at,updated_at"
+_PARTNER_COLUMNS = (
+    ReferralPartner.id,
+    ReferralPartner.slug,
+    ReferralPartner.display_name,
+    ReferralPartner.instagram_handle,
+    ReferralPartner.notes,
+    ReferralPartner.is_active,
+    ReferralPartner.created_at,
+    ReferralPartner.updated_at,
+)
 
 
-def list_partners_newest_first() -> list[PartnerRow]:
+async def list_partners_newest_first(session: AsyncSession) -> list[PartnerRow]:
     """Every partner, most recently created first."""
-    result = (
-        db.service_client()
-        .table("referral_partners")
-        .select(_PARTNER_COLUMNS)
-        .order("created_at", desc=True)
-        .execute()
-    )
-    return [PartnerRow.model_validate(row) for row in db.rows(result)]
+    result = await session.execute(select(*_PARTNER_COLUMNS).order_by(ReferralPartner.created_at.desc()))
+    return [PartnerRow.model_validate(plain_row(row)) for row in result]
 
 
-def find_partner(partner_id: str) -> PartnerRow | None:
-    """One partner by id (the caller has checked it is a UUID)."""
-    result = (
-        db.service_client()
-        .table("referral_partners")
-        .select(_PARTNER_COLUMNS)
-        .eq("id", partner_id)
-        .limit(1)
-        .execute()
-    )
-    row = db.first(result)
-    return PartnerRow.model_validate(row) if row else None
+async def find_partner(session: AsyncSession, partner_id: str) -> PartnerRow | None:
+    """One partner by id; `None` for an unknown or malformed id."""
+    parsed_id = as_uuid(partner_id)
+    if parsed_id is None:
+        return None
+    row = (await session.execute(select(*_PARTNER_COLUMNS).where(ReferralPartner.id == parsed_id))).first()
+    return PartnerRow.model_validate(plain_row(row)) if row else None
 
 
-def find_partner_by_slug(slug: str, *, active_only: bool) -> PartnerRow | None:
+async def find_partner_by_slug(session: AsyncSession, slug: str, *, active_only: bool) -> PartnerRow | None:
     """One partner by exact slug, optionally only if switched on."""
-    query = db.service_client().table("referral_partners").select(_PARTNER_COLUMNS).eq("slug", slug)
+    query = select(*_PARTNER_COLUMNS).where(ReferralPartner.slug == slug)
     if active_only:
-        query = query.eq("is_active", True)
-    row = db.first(query.limit(1).execute())
-    return PartnerRow.model_validate(row) if row else None
+        query = query.where(ReferralPartner.is_active.is_(True))
+    row = (await session.execute(query.limit(1))).first()
+    return PartnerRow.model_validate(plain_row(row)) if row else None
 
 
-def slugs_starting_with(prefix: str) -> set[str]:
+async def slugs_starting_with(session: AsyncSession, prefix: str) -> set[str]:
     """Every slug that begins with `prefix`, to pick the first free `prefix-N` in one query.
 
     Valid slugs contain only letters, digits and dashes, so `prefix` has no LIKE wildcards.
     """
-    result = (
-        db.service_client().table("referral_partners").select("slug").like("slug", f"{prefix}%").execute()
+    result = await session.execute(
+        select(ReferralPartner.slug).where(ReferralPartner.slug.like(f"{prefix}%"))
     )
-    return {str(row["slug"]) for row in db.rows(result) if row.get("slug")}
+    return {slug for slug in result.scalars() if slug}
 
 
-def insert_partner(values: dict[str, Any]) -> PartnerRow | None:
-    """Store a new partner and return it, or `None` if the insert returned no row."""
-    row = db.first(db.service_client().table("referral_partners").insert(values).execute())
-    return PartnerRow.model_validate(row) if row else None
+async def insert_partner(session: AsyncSession, values: dict[str, Any]) -> PartnerRow | None:
+    """Store a new partner and return it; `None` when the slug was taken meanwhile (unique index)."""
+    creator_id = values.get("created_by_admin_id")
+    partner = ReferralPartner(**{**values, "created_by_admin_id": as_uuid(creator_id)})
+    try:
+        async with session.begin_nested():
+            session.add(partner)
+    except IntegrityError:
+        return None
+    return await find_partner(session, str(partner.id))
 
 
-def update_partner(partner_id: str, changes: dict[str, Any]) -> PartnerRow | None:
+async def update_partner(
+    session: AsyncSession, partner_id: str, changes: dict[str, Any]
+) -> PartnerRow | None:
     """Apply `changes` to a partner and return it, or `None` when no partner has that id."""
-    row = db.first(
-        db.service_client().table("referral_partners").update(changes).eq("id", partner_id).execute()
+    parsed_id = as_uuid(partner_id)
+    if parsed_id is None:
+        return None
+    result = await session.execute(
+        update(ReferralPartner)
+        .where(ReferralPartner.id == parsed_id)
+        .values(**changes)
+        .returning(*_PARTNER_COLUMNS)
     )
-    return PartnerRow.model_validate(row) if row else None
+    row = result.first()
+    return PartnerRow.model_validate(plain_row(row)) if row else None
 
 
 # --- attributions (vendors who signed up through a partner) ------------------------------------
 
 _ATTRIBUTION_COLUMNS = (
-    "user_id,referral_partner_id,referral_slug,attributed_at,shoutout_completed,shoutout_completed_at"
+    ReferralAttribution.user_id,
+    ReferralAttribution.referral_partner_id,
+    ReferralAttribution.referral_slug,
+    ReferralAttribution.attributed_at,
+    ReferralAttribution.shoutout_completed,
+    ReferralAttribution.shoutout_completed_at,
 )
 
 
-def _counted_attributions_query(partner_id: str, shoutout: ShoutoutFilter) -> Any:
-    """The partner's attributions, filtered by shout-out state, with an exact total count."""
-    query = (
-        db.service_client()
-        .table("referral_attributions")
-        .select(_ATTRIBUTION_COLUMNS, count=CountMethod.exact)
-        .eq("referral_partner_id", partner_id)
-    )
+def _attribution_filters(partner_id: uuid.UUID, shoutout: ShoutoutFilter) -> list[Any]:
+    """The WHERE clauses for a partner's attributions in one shout-out state."""
+    filters: list[Any] = [ReferralAttribution.referral_partner_id == partner_id]
     if shoutout == "pending":
-        query = query.eq("shoutout_completed", False)
+        filters.append(ReferralAttribution.shoutout_completed.is_(False))
     elif shoutout == "completed":
-        query = query.eq("shoutout_completed", True)
-    return query
+        filters.append(ReferralAttribution.shoutout_completed.is_(True))
+    return filters
 
 
-def list_attributions_page(
-    partner_id: str, *, shoutout: ShoutoutFilter, offset: int, limit: int
+async def list_attributions_page(
+    session: AsyncSession, partner_id: str, *, shoutout: ShoutoutFilter, offset: int, limit: int
 ) -> tuple[list[AttributionRow], int]:
     """One page of a partner's attributions, newest first, and how many match in total.
 
     An offset past the end is an empty page with the true total (the baseline answered 500).
     """
-    try:
-        result = (
-            _counted_attributions_query(partner_id, shoutout)
-            .order("attributed_at", desc=True)
-            .range(offset, offset + limit - 1)
-            .execute()
-        )
-    except APIError as error:
-        if error.code != _RANGE_NOT_SATISFIABLE:
-            raise
-        counted = _counted_attributions_query(partner_id, shoutout).limit(1).execute()
-        return [], int(counted.count or 0)
-    return [AttributionRow.model_validate(row) for row in db.rows(result)], int(result.count or 0)
+    parsed_id = as_uuid(partner_id)
+    if parsed_id is None:
+        return [], 0
+    filters = _attribution_filters(parsed_id, shoutout)
+    total = await session.scalar(select(func.count()).select_from(ReferralAttribution).where(*filters))
+    result = await session.execute(
+        select(*_ATTRIBUTION_COLUMNS)
+        .where(*filters)
+        .order_by(ReferralAttribution.attributed_at.desc())
+        .offset(offset)
+        .limit(limit)
+    )
+    return [AttributionRow.model_validate(plain_row(row)) for row in result], int(total or 0)
 
 
-def find_attribution(user_id: str) -> AttributionRow | None:
+async def find_attribution(session: AsyncSession, user_id: str) -> AttributionRow | None:
     """The attribution for one vendor (each vendor has at most one: `user_id` is the key)."""
-    result = (
-        db.service_client()
-        .table("referral_attributions")
-        .select(_ATTRIBUTION_COLUMNS)
-        .eq("user_id", user_id)
-        .limit(1)
-        .execute()
-    )
-    row = db.first(result)
-    return AttributionRow.model_validate(row) if row else None
+    parsed_id = as_uuid(user_id)
+    if parsed_id is None:
+        return None
+    row = (
+        await session.execute(select(*_ATTRIBUTION_COLUMNS).where(ReferralAttribution.user_id == parsed_id))
+    ).first()
+    return AttributionRow.model_validate(plain_row(row)) if row else None
 
 
-def set_shoutout(user_id: str, *, completed: bool, completed_at: str | None) -> bool:
+async def set_shoutout(
+    session: AsyncSession, user_id: str, *, completed: bool, completed_at: str | None
+) -> bool:
     """Record whether the partner has been thanked for this vendor. False when no attribution exists."""
-    result = (
-        db.service_client()
-        .table("referral_attributions")
-        .update({"shoutout_completed": completed, "shoutout_completed_at": completed_at})
-        .eq("user_id", user_id)
-        .execute()
+    parsed_id = as_uuid(user_id)
+    if parsed_id is None:
+        return False
+    result = await session.execute(
+        update(ReferralAttribution)
+        .where(ReferralAttribution.user_id == parsed_id)
+        .values(shoutout_completed=completed, shoutout_completed_at=completed_at)
+        .returning(ReferralAttribution.user_id)
     )
-    return db.first(result) is not None
+    return result.first() is not None
 
 
-def insert_attribution(values: dict[str, Any]) -> bool:
+async def insert_attribution(session: AsyncSession, values: dict[str, Any]) -> bool:
     """Attribute a vendor to a partner. False if the vendor already has one (first touch wins)."""
+    attribution = ReferralAttribution(
+        **{
+            **values,
+            "user_id": as_uuid(values["user_id"]),
+            "referral_partner_id": as_uuid(values["referral_partner_id"]),
+        }
+    )
     try:
-        db.service_client().table("referral_attributions").insert(values).execute()
-    except APIError as error:
-        if error.code == _UNIQUE_VIOLATION:
-            return False
-        raise
+        async with session.begin_nested():
+            session.add(attribution)
+    except IntegrityError:
+        return False
     return True
 
 
-def list_signup_vendors(user_ids: list[str]) -> list[SignupVendorRow]:
+async def list_signup_vendors(session: AsyncSession, user_ids: list[str]) -> list[SignupVendorRow]:
     """The vendor profiles of the given users (users without one are absent)."""
-    if not user_ids:
+    parsed_ids = _uuids(user_ids)
+    if not parsed_ids:
         return []
-    result = (
-        db.service_client()
-        .table("vendors")
-        .select("user_id,status,approval_status,payload")
-        .in_("user_id", user_ids)
-        .execute()
+    result = await session.execute(
+        select(_vendors.c.user_id, _vendors.c.status, _vendors.c.approval_status, _vendors.c.payload).where(
+            _vendors.c.user_id.in_(parsed_ids)
+        )
     )
-    return [SignupVendorRow.model_validate(row) for row in db.rows(result)]
+    return [SignupVendorRow.model_validate(plain_row(row)) for row in result]
 
 
 # --- vendor client codes -----------------------------------------------------------------------
 
-_VENDOR_CODE_COLUMNS = "user_id,approval_status,client_referral_code,client_referral_enabled"
+_VENDOR_CODE_COLUMNS = (
+    _vendors.c.user_id,
+    _vendors.c.approval_status,
+    _vendors.c.client_referral_code,
+    _vendors.c.client_referral_enabled,
+)
 
 
-def find_vendor_code_settings(vendor_user_id: str) -> VendorCodeRow | None:
+async def find_vendor_code_settings(session: AsyncSession, vendor_user_id: str) -> VendorCodeRow | None:
     """A vendor's referral settings, or `None` when they have no vendor profile."""
-    result = (
-        db.service_client()
-        .table("vendors")
-        .select(_VENDOR_CODE_COLUMNS)
-        .eq("user_id", vendor_user_id)
-        .limit(1)
-        .execute()
-    )
-    row = db.first(result)
-    return VendorCodeRow.model_validate(row) if row else None
+    parsed_id = as_uuid(vendor_user_id)
+    if parsed_id is None:
+        return None
+    row = (
+        await session.execute(select(*_VENDOR_CODE_COLUMNS).where(_vendors.c.user_id == parsed_id).limit(1))
+    ).first()
+    return VendorCodeRow.model_validate(plain_row(row)) if row else None
 
 
-def find_vendor_by_code(code: str) -> VendorCodeRow | None:
+async def find_vendor_by_code(session: AsyncSession, code: str) -> VendorCodeRow | None:
     """The vendor that owns a (normalised) client code today, if any."""
-    result = (
-        db.service_client()
-        .table("vendors")
-        .select(_VENDOR_CODE_COLUMNS)
-        .eq("client_referral_code", code)
-        .limit(1)
-        .execute()
-    )
-    row = db.first(result)
-    return VendorCodeRow.model_validate(row) if row else None
+    row = (
+        await session.execute(
+            select(*_VENDOR_CODE_COLUMNS).where(_vendors.c.client_referral_code == code).limit(1)
+        )
+    ).first()
+    return VendorCodeRow.model_validate(plain_row(row)) if row else None
 
 
-def code_owners(codes: set[str]) -> dict[str, str]:
+async def code_owners(session: AsyncSession, codes: set[str]) -> dict[str, str]:
     """Map each (normalised) code to the vendor that owns it today; unowned codes are absent."""
     if not codes:
         return {}
-    result = (
-        db.service_client()
-        .table("vendors")
-        .select("user_id,client_referral_code")
-        .in_("client_referral_code", sorted(codes))
-        .execute()
-    )
-    return {
-        str(row["client_referral_code"]): str(row.get("user_id") or "")
-        for row in db.rows(result)
-        if row.get("client_referral_code")
-    }
-
-
-def code_taken_by_another_vendor(code: str, vendor_user_id: str) -> bool:
-    """True when a vendor other than `vendor_user_id` owns `code`."""
-    result = (
-        db.service_client()
-        .table("vendors")
-        .select("user_id")
-        .eq("client_referral_code", code)
-        .neq("user_id", vendor_user_id)
-        .limit(1)
-        .execute()
-    )
-    return db.first(result) is not None
-
-
-def save_vendor_code(vendor_user_id: str, code: str) -> bool:
-    """Give a vendor their code. False when another vendor claimed it first (the column is unique)."""
-    try:
-        (
-            db.service_client()
-            .table("vendors")
-            .update({"client_referral_code": code})
-            .eq("user_id", vendor_user_id)
-            .execute()
+    result = await session.execute(
+        select(_vendors.c.user_id, _vendors.c.client_referral_code).where(
+            _vendors.c.client_referral_code.in_(sorted(codes))
         )
-    except APIError as error:
-        if error.code == _UNIQUE_VIOLATION:
-            return False
-        raise
+    )
+    return {str(code): str(owner_id or "") for owner_id, code in result if code}
+
+
+async def code_taken_by_another_vendor(session: AsyncSession, code: str, vendor_user_id: str) -> bool:
+    """True when a vendor other than `vendor_user_id` owns `code`."""
+    query = select(_vendors.c.user_id).where(_vendors.c.client_referral_code == code)
+    parsed_id = as_uuid(vendor_user_id)
+    if parsed_id is not None:
+        query = query.where(_vendors.c.user_id != parsed_id)
+    return (await session.execute(query.limit(1))).first() is not None
+
+
+async def save_vendor_code(session: AsyncSession, vendor_user_id: str, code: str) -> bool:
+    """Give a vendor their code. False when another vendor claimed it first (the column is unique)."""
+    parsed_id = as_uuid(vendor_user_id)
+    if parsed_id is None:
+        return False
+    try:
+        async with session.begin_nested():
+            await session.execute(
+                update(_vendors).where(_vendors.c.user_id == parsed_id).values(client_referral_code=code)
+            )
+    except IntegrityError:
+        return False
     return True
 
 
@@ -273,21 +313,30 @@ def save_vendor_code(vendor_user_id: str, code: str) -> bool:
 REFERRAL_BOOKINGS_LIMIT = 200
 
 
-def list_referral_bookings(vendor_user_id: str) -> list[ReferralBookingRow]:
+async def list_referral_bookings(session: AsyncSession, vendor_user_id: str) -> list[ReferralBookingRow]:
     """The vendor's bookings made with any referral code (retired ones too), most recent first."""
-    result = (
-        db.service_client()
-        .table("booking_requests")
-        .select(
-            "id,status,payment_status,event_name,event_date,created_at,client_user_id,vendor_user_id,"
-            "line_items,vendor_adjustments,vendor_referral_code,service_fee_percent,referral_fee_discount_gbp"
+    parsed_id = as_uuid(vendor_user_id)
+    if parsed_id is None:
+        return []
+    bookings = _booking_requests.c
+    result = await session.execute(
+        select(
+            bookings.id,
+            bookings.status,
+            bookings.payment_status,
+            bookings.event_name,
+            bookings.event_date,
+            bookings.created_at,
+            bookings.client_user_id,
+            bookings.vendor_user_id,
+            bookings.line_items,
+            bookings.vendor_adjustments,
+            bookings.vendor_referral_code,
+            bookings.service_fee_percent,
+            bookings.referral_fee_discount_gbp,
         )
-        .eq("vendor_user_id", vendor_user_id)
-        .not_.is_("vendor_referral_code", "null")
-        .order("updated_at", desc=True)
-        .order("created_at", desc=True)
-        .order("id", desc=True)
+        .where(bookings.vendor_user_id == parsed_id, bookings.vendor_referral_code.is_not(None))
+        .order_by(bookings.updated_at.desc(), bookings.created_at.desc(), bookings.id.desc())
         .limit(REFERRAL_BOOKINGS_LIMIT)
-        .execute()
     )
-    return [ReferralBookingRow.model_validate(row) for row in db.rows(result)]
+    return [ReferralBookingRow.model_validate(plain_row(row)) for row in result]

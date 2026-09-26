@@ -4,14 +4,21 @@
 tests the rebuilt api/ on :8001. Start the server first with `make serve TARGET=…`.
 
 Every test gets HTTP clients that each look like a different browser: separate
-cookie jars and a unique `X-Forwarded-For`, so the baseline's per-IP sign-in
-rate limit never trips across a long run. Seeded accounts get a fresh email per
-run for the same reason: the baseline also limits sign-ins per email (10 per 15
-minutes, in memory until the server restarts).
+sessions and a unique `X-Forwarded-For`, so the per-IP sign-in rate limit never
+trips across a long run. Seeded accounts get a fresh email per run for the same
+reason: sign-ins are also limited per email (10 per 15 minutes).
+
+The two targets differ in two places, and only these fixtures know it:
+
+- `admin_db` is local Supabase's service client on the baseline, and on api/ a
+  `LocalDatabase` answering the same query-builder calls from api/'s Postgres.
+- A browser's session is cookies on the baseline and Bearer tokens on api/
+  (`support/bearer.py`), the one deliberate contract change of the rebuild.
 """
 
 from __future__ import annotations
 
+import fnmatch
 import os
 import secrets
 from collections.abc import Iterator
@@ -22,6 +29,8 @@ import pytest
 from supabase import Client, create_client
 
 from support.accounts import SeededAccount, seed_account, unique_email
+from support.bearer import BearerSession
+from support.database import LocalDatabase
 
 ACCEPTANCE_DIR = Path(__file__).resolve().parent
 # Which server the suite talks to, and where it listens.
@@ -29,6 +38,20 @@ TARGET_URLS = {"baseline": "http://127.0.0.1:8000", "api": "http://127.0.0.1:800
 TARGET = os.environ.get("TARGET", "baseline")
 BASE_URL = os.environ.get("BASE_URL", TARGET_URLS[TARGET])
 API = "/api/v1"
+# api/'s Postgres from `api/docker-compose.yml` (`make db-up` in api/).
+API_DATABASE_URL = os.environ.get(
+    "ACCEPTANCE_DATABASE_URL", "postgresql://postgres:postgres@127.0.0.1:5434/eventtz"
+)
+# Frozen behaviour api/ has not rebuilt yet: expected to fail on `TARGET=api`, and
+# strictly, so an entry whose tests start passing fails the run until it is removed.
+NOT_YET_ON_API = {
+    "test_identity_settings.py::test_account_deletion_*": (
+        "account deletion arrives after bookings, disputes and messaging (identity README)"
+    ),
+    "test_vendor_profile.py::*": "vendors slice: services and routes are Phase B",
+    "test_vendor_moderation.py::*": "vendors slice: services and routes are Phase B",
+}
+LOCAL_HOSTS = ("http://127.0.0.1", "http://localhost", "postgresql://postgres:postgres@127.0.0.1:")
 
 
 def _local_env() -> dict[str, str]:
@@ -40,14 +63,26 @@ def _local_env() -> dict[str, str]:
     return {key.strip(): value.strip() for key, value in pairs}
 
 
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    """On `TARGET=api`, mark the tests of not-yet-rebuilt behaviour as expected failures."""
+    if TARGET != "api":
+        return
+    for item in items:
+        for pattern, reason in NOT_YET_ON_API.items():
+            if fnmatch.fnmatch(item.nodeid, pattern):
+                item.add_marker(pytest.mark.xfail(reason=f"not yet on api: {reason}", strict=True))
+                break
+
+
 @pytest.fixture(scope="session")
-def admin_db() -> Client:
-    """Service-role client for LOCAL Supabase, used only to seed and inspect test data."""
+def admin_db() -> Client | LocalDatabase:
+    """The target's LOCAL database, used only to seed and inspect test data."""
+    if TARGET == "api":
+        assert API_DATABASE_URL.startswith(LOCAL_HOSTS), "acceptance must use a local database"
+        return LocalDatabase(API_DATABASE_URL)
     env = _local_env()
     supabase_url = env["SUPABASE_URL"]
-    assert supabase_url.startswith(("http://127.0.0.1", "http://localhost")), (
-        "acceptance must use local Supabase"
-    )
+    assert supabase_url.startswith(LOCAL_HOSTS), "acceptance must use local Supabase"
     return create_client(supabase_url, env["SUPABASE_SERVICE_ROLE_KEY"])
 
 
@@ -61,13 +96,36 @@ def server_is_up() -> None:
 
 
 def new_browser() -> httpx.Client:
-    """An HTTP client with its own cookie jar and client IP, like a separate browser."""
+    """An HTTP client with its own session and client IP, like a separate browser."""
     fake_ip = "10." + ".".join(str(octet) for octet in secrets.token_bytes(3))
-    return httpx.Client(base_url=BASE_URL, headers={"X-Forwarded-For": fake_ip}, timeout=30)
+    session = BearerSession() if TARGET == "api" else None
+    return httpx.Client(base_url=BASE_URL, headers={"X-Forwarded-For": fake_ip}, timeout=30, auth=session)
+
+
+def present_access_token(browser: httpx.Client, access_token: str) -> None:
+    """Make `browser` present `access_token` from now on, as a cookie or a Bearer header."""
+    if isinstance(browser.auth, BearerSession):
+        browser.auth.access_token = access_token
+    else:
+        browser.cookies.set("eventtz_access_token", access_token)
+
+
+def assert_session_cookies_touched(response: httpx.Response) -> None:
+    """The baseline sets or clears both session cookies here; api/ never sets a cookie.
+
+    On api/ the web app owns the refresh cookie (ADR 0003), so the API's side of
+    the contract is that no `Set-Cookie` reaches the browser at all.
+    """
+    set_cookie_headers = response.headers.get_list("set-cookie")
+    if TARGET == "api":
+        assert set_cookie_headers == []
+        return
+    assert any(header.startswith("eventtz_access_token=") for header in set_cookie_headers)
+    assert any(header.startswith("eventtz_refresh_token=") for header in set_cookie_headers)
 
 
 def sign_in(account: SeededAccount) -> httpx.Client:
-    """A browser signed in as `account` (session cookies set by `/auth/signin`)."""
+    """A browser signed in as `account` (the session `/auth/signin` hands out)."""
     browser = new_browser()
     response = browser.post(f"{API}/auth/signin", json={"email": account.email, "password": account.password})
     assert response.status_code == 200, (

@@ -1,0 +1,16 @@
+# Railway config for the `api` service (ADR 0002; copied from OSCE `platform-api`).
+# The `worker` service builds the same image but points its config-as-code path
+# at `railway.worker.toml`, so only this service migrates: two services running
+# `alembic upgrade` at once could race on the same revision.
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+# Runs in its own container before the new release takes traffic; a failed
+# migration stops the deploy and the old release keeps serving.
+preDeployCommand = ["alembic upgrade head"]
+healthcheckPath = "/health"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5

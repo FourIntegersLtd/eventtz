@@ -5,6 +5,8 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.logging import get_logger
 from app.features.identity import service as identity
 from app.features.referrals import repository
@@ -28,7 +30,7 @@ from app.features.referrals.errors import (
     PartnerNotFound,
     SignupNotFound,
 )
-from app.features.referrals.models import AttributionRow, PartnerRow, SignupVendorRow
+from app.features.referrals.rows import AttributionRow, PartnerRow, SignupVendorRow
 from app.features.referrals.schemas import (
     CreateReferralPartnerRequest,
     ReferralPartnerPublicResponse,
@@ -55,12 +57,14 @@ def _blank_to_none(text: str | None) -> str | None:
 # --- staff: partners ---------------------------------------------------------------------------
 
 
-def list_partners() -> list[ReferralPartnerRow]:
+async def list_partners(session: AsyncSession) -> list[ReferralPartnerRow]:
     """Every partner, newest first."""
-    return [_partner_view(partner) for partner in repository.list_partners_newest_first()]
+    return [_partner_view(partner) for partner in await repository.list_partners_newest_first(session)]
 
 
-def create_partner(staff_id: str, body: CreateReferralPartnerRequest) -> ReferralPartnerRow:
+async def create_partner(
+    session: AsyncSession, staff_id: str, body: CreateReferralPartnerRequest
+) -> ReferralPartnerRow:
     """Add a partner with a unique slug (`name`, then `name-2`, `name-3`, ...), switched on."""
     display_name = body.display_name.strip()
     if not display_name:
@@ -68,8 +72,9 @@ def create_partner(staff_id: str, body: CreateReferralPartnerRequest) -> Referra
     base = slug_base(display_name=display_name, chosen_slug=body.slug)
     if not is_valid_slug(base):
         raise InvalidSlug()
-    slug = first_free_slug(base, repository.slugs_starting_with(base))
-    stored = repository.insert_partner(
+    slug = first_free_slug(base, await repository.slugs_starting_with(session, base))
+    stored = await repository.insert_partner(
+        session,
         {
             "slug": slug,
             "display_name": display_name,
@@ -77,11 +82,12 @@ def create_partner(staff_id: str, body: CreateReferralPartnerRequest) -> Referra
             "notes": _blank_to_none(body.notes),
             "is_active": True,
             "created_by_admin_id": staff_id,
-        }
-    ) or repository.find_partner_by_slug(slug, active_only=False)
+        },
+    ) or await repository.find_partner_by_slug(session, slug, active_only=False)
     if stored is None:
         raise PartnerNotCreated()
-    staff.record_admin_action(
+    await staff.record_admin_action(
+        session,
         admin_user_id=staff_id,
         action="referral_partner.create",
         entity_type="referral_partner",
@@ -109,15 +115,20 @@ def _partner_changes(body: UpdateReferralPartnerRequest) -> dict[str, Any]:
     return changes
 
 
-def update_partner(staff_id: str, partner_id: str, body: UpdateReferralPartnerRequest) -> ReferralPartnerRow:
+async def update_partner(
+    session: AsyncSession, staff_id: str, partner_id: str, body: UpdateReferralPartnerRequest
+) -> ReferralPartnerRow:
     """Edit a partner's name, handle, notes or on/off switch. The slug (and so the link) never changes."""
     if not body.model_fields_set:
         raise NoFieldsToUpdate()
     changes = _partner_changes(body)
-    updated = repository.update_partner(partner_id, changes) if looks_like_uuid(partner_id) else None
+    updated = (
+        await repository.update_partner(session, partner_id, changes) if looks_like_uuid(partner_id) else None
+    )
     if updated is None:
         raise PartnerNotFound()
-    staff.record_admin_action(
+    await staff.record_admin_action(
+        session,
         admin_user_id=staff_id,
         action="referral_partner.update",
         entity_type="referral_partner",
@@ -137,11 +148,13 @@ def _business_name(vendor: SignupVendorRow | None) -> str | None:
     return _blank_to_none(str(business_name)) if business_name is not None else None
 
 
-def _signup_views(attributions: list[AttributionRow]) -> list[ReferralVendorSignupRow]:
+async def _signup_views(
+    session: AsyncSession, attributions: list[AttributionRow]
+) -> list[ReferralVendorSignupRow]:
     """Attributions joined with each vendor's email and profile (two lookups for the whole page)."""
     user_ids = [attribution.user_id for attribution in attributions]
-    emails = identity.emails_by_id(user_ids)
-    vendors = {vendor.user_id: vendor for vendor in repository.list_signup_vendors(user_ids)}
+    emails = await identity.emails_by_id(session, user_ids)
+    vendors = {vendor.user_id: vendor for vendor in await repository.list_signup_vendors(session, user_ids)}
     views = []
     for attribution in attributions:
         vendor = vendors.get(attribution.user_id)
@@ -161,63 +174,70 @@ def _signup_views(attributions: list[AttributionRow]) -> list[ReferralVendorSign
     return views
 
 
-def list_signups(
-    partner_id: str, *, shoutout: ShoutoutFilter, offset: int, limit: int
+async def list_signups(
+    session: AsyncSession, partner_id: str, *, shoutout: ShoutoutFilter, offset: int, limit: int
 ) -> ReferralSignupListResponse:
     """One page of the vendors a partner brought in, newest first, optionally by shout-out state."""
-    partner = repository.find_partner(partner_id) if looks_like_uuid(partner_id) else None
+    partner = await repository.find_partner(session, partner_id) if looks_like_uuid(partner_id) else None
     if partner is None:
         raise PartnerNotFound()
-    attributions, total = repository.list_attributions_page(
-        partner_id, shoutout=shoutout, offset=offset, limit=limit
+    attributions, total = await repository.list_attributions_page(
+        session, partner_id, shoutout=shoutout, offset=offset, limit=limit
     )
     return ReferralSignupListResponse(
         partner=_partner_view(partner),
-        signups=_signup_views(attributions),
+        signups=await _signup_views(session, attributions),
         total=total,
         offset=offset,
         limit=limit,
     )
 
 
-def set_shoutout(staff_id: str, user_id: str, *, completed: bool) -> ReferralVendorSignupRow:
+async def set_shoutout(
+    session: AsyncSession, staff_id: str, user_id: str, *, completed: bool
+) -> ReferralVendorSignupRow:
     """Mark a partner as thanked (or not) for one vendor; marking done stamps the time."""
     completed_at = datetime.now(UTC).isoformat() if completed else None
-    if not looks_like_uuid(user_id) or not repository.set_shoutout(
-        user_id, completed=completed, completed_at=completed_at
+    if not looks_like_uuid(user_id) or not await repository.set_shoutout(
+        session, user_id, completed=completed, completed_at=completed_at
     ):
         raise SignupNotFound()
-    attribution = repository.find_attribution(user_id)
+    attribution = await repository.find_attribution(session, user_id)
     if attribution is None:
         raise SignupNotFound()
-    staff.record_admin_action(
+    await staff.record_admin_action(
+        session,
         admin_user_id=staff_id,
         action="referral_signup.shoutout",
         entity_type="referral_attribution",
         entity_id=user_id,
         details={"shoutout_completed": completed},
     )
-    return _signup_views([attribution])[0]
+    return (await _signup_views(session, [attribution]))[0]
 
 
 # --- public and sign-up ------------------------------------------------------------------------
 
 
-def _active_partner(raw_slug: str) -> PartnerRow | None:
+async def _active_partner(session: AsyncSession, raw_slug: str) -> PartnerRow | None:
     """The switched-on partner a link's `ref` points at, whatever its case or punctuation."""
     slug = normalise_slug(raw_slug)
-    return repository.find_partner_by_slug(slug, active_only=True) if is_valid_slug(slug) else None
+    return (
+        await repository.find_partner_by_slug(session, slug, active_only=True)
+        if is_valid_slug(slug)
+        else None
+    )
 
 
-def public_partner(raw_slug: str) -> ReferralPartnerPublicResponse:
+async def public_partner(session: AsyncSession, raw_slug: str) -> ReferralPartnerPublicResponse:
     """The partner named on the vendor sign-up page for a `?ref=` link."""
-    partner = _active_partner(raw_slug)
+    partner = await _active_partner(session, raw_slug)
     if partner is None:
         raise LinkNotFound()
     return ReferralPartnerPublicResponse(slug=partner.slug or raw_slug, display_name=partner.display_name)
 
 
-def attribute_vendor_signup(user_id: str, referral_slug: str | None) -> bool:
+async def attribute_vendor_signup(session: AsyncSession, user_id: str, referral_slug: str | None) -> bool:
     """Credit a new vendor to the partner whose link they used (first touch wins). Never raises.
 
     Called by sign-up after the account exists, so a failure here must not fail the sign-up.
@@ -227,16 +247,17 @@ def attribute_vendor_signup(user_id: str, referral_slug: str | None) -> bool:
         return False
     slug = normalise_slug(referral_slug or "")
     try:
-        partner = _active_partner(slug)
+        partner = await _active_partner(session, slug)
         if partner is None:
             return False
-        return repository.insert_attribution(
+        return await repository.insert_attribution(
+            session,
             {
                 "user_id": user_id,
                 "referral_partner_id": partner.id,
                 "referral_slug": slug,
                 "shoutout_completed": False,
-            }
+            },
         )
     except Exception:  # noqa: BLE001 - sign-up has already succeeded; log and move on
         log.exception("referral attribution failed for user %s", user_id)

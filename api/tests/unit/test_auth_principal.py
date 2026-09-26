@@ -1,63 +1,72 @@
-"""`principal_from` reproduces the baseline's user_type / admin_role / status rules."""
+"""`principal_from` reproduces the baseline's user_type / admin_role / status rules from a `users` row."""
 
 from __future__ import annotations
 
-from app.core.auth import principal_from
+from app.core.auth import AccountRecord, principal_from
 
 # The configured super-admin fallback list used by most cases.
-SUPERS = ["boss@example.com"]
+SUPER_ADMIN_EMAILS = ["boss@example.com"]
 
 
-def test_defaults_to_verified_client_without_profile() -> None:
-    principal = principal_from({"id": "u1", "email": "a@example.com"}, None, SUPERS)
-    assert (
-        principal.user_type,
-        principal.admin_role,
-        principal.email_verified,
-        principal.account_suspended,
-        principal.deleted,
-    ) == (
+def account(**overrides: object) -> AccountRecord:
+    """A verified client's `users` row, with `overrides` applied."""
+    columns: dict[str, object] = {
+        "id": "user-1",
+        "email": "ada@example.com",
+        "user_type": "client",
+        "admin_role": None,
+        "account_suspended": False,
+        "email_verified": True,
+        "deleted": False,
+    }
+    columns.update(overrides)
+    return AccountRecord(**columns)  # type: ignore[arg-type]
+
+
+def test_a_client_row_becomes_a_client_principal() -> None:
+    principal = principal_from(account(), SUPER_ADMIN_EMAILS)
+    assert (principal.id, principal.email, principal.user_type, principal.admin_role) == (
+        "user-1",
+        "ada@example.com",
         "client",
         None,
-        True,
-        False,
-        False,
     )
 
 
-def test_app_metadata_beats_user_metadata() -> None:
-    user = {"id": "u1", "app_metadata": {"user_type": "vendor"}, "user_metadata": {"user_type": "client"}}
-    assert principal_from(user, None, SUPERS).user_type == "vendor"
+def test_an_unknown_or_missing_user_type_counts_as_a_client() -> None:
+    assert principal_from(account(user_type="wizard"), SUPER_ADMIN_EMAILS).user_type == "client"
+    assert principal_from(account(user_type=None), SUPER_ADMIN_EMAILS).user_type == "client"
 
 
-def test_user_metadata_used_when_app_metadata_missing() -> None:
-    user = {"id": "u1", "user_metadata": {"user_type": "vendor"}}
-    assert principal_from(user, None, SUPERS).user_type == "vendor"
+def test_vendors_keep_their_type() -> None:
+    assert principal_from(account(user_type="vendor"), SUPER_ADMIN_EMAILS).user_type == "vendor"
 
 
-def test_db_admin_wins_over_metadata() -> None:
-    user = {"id": "u1", "email": "x@example.com", "user_metadata": {"user_type": "client"}}
-    principal = principal_from(user, {"user_type": "admin"}, SUPERS)
-    assert (principal.user_type, principal.admin_role, principal.email_verified) == ("admin", "admin", True)
-
-
-def test_db_admin_role_is_used() -> None:
-    principal = principal_from({"id": "u1"}, {"user_type": "admin", "admin_role": "super_admin"}, [])
+def test_a_stored_admin_role_is_used() -> None:
+    principal = principal_from(account(user_type="admin", admin_role="super_admin"), [])
     assert principal.admin_role == "super_admin"
     assert principal.is_super_admin
 
 
-def test_super_admin_email_list_is_fallback() -> None:
-    principal = principal_from({"id": "u1", "email": "Boss@Example.com"}, {"user_type": "admin"}, SUPERS)
+def test_the_super_admin_email_list_is_the_fallback_whatever_the_case() -> None:
+    principal = principal_from(account(user_type="admin", email="Boss@Example.com"), SUPER_ADMIN_EMAILS)
     assert principal.admin_role == "super_admin"
 
 
-def test_unverified_client_profile() -> None:
-    principal = principal_from({"id": "u1"}, {"user_type": "client", "email_verified_at": None}, SUPERS)
-    assert principal.email_verified is False
+def test_staff_without_a_role_or_listed_email_are_plain_admins() -> None:
+    principal = principal_from(account(user_type="admin"), SUPER_ADMIN_EMAILS)
+    assert (principal.admin_role, principal.is_super_admin) == ("admin", False)
 
 
-def test_suspended_and_deleted_flags() -> None:
-    profile = {"account_suspended": True, "deleted_at": "2026-01-01T00:00:00Z", "email_verified_at": "x"}
-    principal = principal_from({"id": "u1"}, profile, SUPERS)
-    assert (principal.account_suspended, principal.deleted, principal.email_verified) == (True, True, True)
+def test_staff_always_count_as_verified_and_others_keep_their_state() -> None:
+    assert principal_from(account(user_type="admin", email_verified=False), []).email_verified is True
+    assert principal_from(account(email_verified=False), []).email_verified is False
+
+
+def test_a_role_on_a_non_staff_row_is_ignored() -> None:
+    assert principal_from(account(admin_role="super_admin"), []).admin_role is None
+
+
+def test_suspended_and_deleted_flags_carry_over() -> None:
+    principal = principal_from(account(account_suspended=True, deleted=True), SUPER_ADMIN_EMAILS)
+    assert (principal.account_suspended, principal.deleted) == (True, True)

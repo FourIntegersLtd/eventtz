@@ -1,4 +1,4 @@
-"""Seed one-click email tokens directly in local Supabase, standing in for the email link.
+"""Seed one-click email tokens directly in the database, standing in for the email link.
 
 The baseline never reveals the raw token over HTTP (it only appears in an outgoing email,
 which `RESEND_API_KEY=""` suppresses in this environment). Both `email_verification_tokens`
@@ -15,6 +15,8 @@ from datetime import UTC, datetime, timedelta
 
 from supabase import Client
 
+from support.database import LocalDatabase
+
 
 def _hash_token(raw_token: str) -> str:
     """The same SHA-256 hex digest the baseline stores for a raw one-click token."""
@@ -22,7 +24,7 @@ def _hash_token(raw_token: str) -> str:
 
 
 def seed_email_verification_token(
-    admin_db: Client,
+    admin_db: Client | LocalDatabase,
     user_id: str,
     *,
     expires_in_minutes: float = 60,
@@ -43,7 +45,7 @@ def seed_email_verification_token(
 
 
 def seed_password_reset_token(
-    admin_db: Client,
+    admin_db: Client | LocalDatabase,
     user_id: str,
     *,
     expires_in_minutes: float = 60,

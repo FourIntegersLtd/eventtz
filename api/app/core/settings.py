@@ -1,20 +1,28 @@
 """Settings read from environment variables, falling back to `api/.env`.
 
-Every field is documented in `api/.env.example`. Add a field here only when a
-slice actually reads it; unused settings are how config drifts.
+Shaped like OSCE's `platform-api` settings: one `Settings` object, read once.
+Local and test processes get working defaults filled in by the validator at the
+bottom; a staging or production process refuses to start with any of
+`REQUIRED_WHEN_DEPLOYED` missing.
 
-Environment variables always win over the `.env` file (pydantic-settings rule),
-which is what lets the acceptance harness point the API at local Supabase.
+Every field is documented in `api/.env.example`. Add a field here only when a
+slice actually reads it; unused settings are how config drifts. Environment
+variables always win over the `.env` file (pydantic-settings rule), which is
+what lets the acceptance harness point the API at its own database.
 """
 
 from __future__ import annotations
 
+from enum import StrEnum
 from functools import lru_cache
 from pathlib import Path
+from typing import Annotated, Final
 
+from fastapi import Depends
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# The `api/` folder. Used to find `.env` and to write `openapi.json`.
+# The `api/` folder. Used to find `.env`, `alembic.ini` and to write `openapi.json`.
 API_ROOT = Path(__file__).resolve().parents[2]
 
 # Any localhost / 127.0.0.1 / [::1] origin on any port. The baseline allows these
@@ -22,34 +30,89 @@ API_ROOT = Path(__file__).resolve().parents[2]
 LOCAL_ORIGIN_REGEX = r"https?://(localhost|127\.0\.0\.1|\[::1\])(:\d+)?"
 
 
+class AppEnv(StrEnum):
+    """Which environment this process is running as."""
+
+    local = "local"
+    test = "test"
+    staging = "staging"
+    production = "production"
+
+
+# The docker-compose Postgres (`make db-up`). Port 5434 so OSCE's :5433 can run alongside.
+_LOCAL_DATABASE_URL = "postgresql+psycopg://postgres:postgres@localhost:5434/eventtz"
+_LOCAL_JWT_SECRET = "dev-only-jwt-secret-change-me"  # noqa: S105 — local and test only
+_LOCAL_FRONTEND_URL = "http://localhost:3000"
+
+# The values a deployed process refuses to start without, named once so the
+# validator and `.env.example` cannot disagree about what they are.
+REQUIRED_WHEN_DEPLOYED: Final[tuple[str, ...]] = (
+    "JWT_SECRET",
+    "DATABASE_URL",
+    "FRONTEND_URL",
+    "RESEND_API_KEY",
+)
+
+
 class Settings(BaseSettings):
     """Typed view of the API's configuration. Field names map to UPPER_CASE env vars."""
 
     model_config = SettingsConfigDict(env_file=API_ROOT / ".env", env_file_encoding="utf-8", extra="ignore")
 
-    # Supabase project the API reads and writes with the service-role key (bypasses RLS).
-    supabase_url: str = ""
-    supabase_service_role_key: str = ""
+    app_env: AppEnv = AppEnv.local
 
-    # Comma-separated browser origins allowed to call the API with cookies.
+    # --- Persistence (ADR 0002) ---
+    database_url: str = ""
+    database_pool_size: int = 10
+    # Logs every SQL statement. Local debugging only.
+    database_echo: bool = False
+
+    # --- Ephemeral state (ADR 0009) ---
+    # Rate-limit counters and the live-update bus. Optional: with Redis off, limits
+    # are not enforced and live updates stay inside one process.
+    redis_url: str = "redis://localhost:6381/0"
+    redis_disabled: bool = False
+    # How many proxies of ours sit in front of the app. Rate limits count by the
+    # address this many hops from the right of `X-Forwarded-For` — the one our own
+    # proxy saw — rather than the leftmost, which the caller writes and can forge.
+    trusted_proxy_hops: int = 1
+
+    # --- Sign-in tokens (ADR 0003) ---
+    jwt_secret: str = ""
+    jwt_issuer: str = "eventtz"
+    jwt_access_ttl_seconds: int = 15 * 60
+    jwt_refresh_ttl_seconds: int = 30 * 24 * 60 * 60
+    # A stream ticket is redeemed the instant it is minted; a minute is for a slow network.
+    stream_ticket_ttl_seconds: int = 60
+
+    # --- Background jobs (ADR 0008) ---
+    worker_concurrency: int = 4
+    # How often an idle worker looks for jobs that have become due (scheduled
+    # jobs cannot be notified about, only polled for).
+    worker_fetch_job_polling_seconds: float = 5.0
+
+    # --- HTTP ---
+    # Comma-separated browser origins allowed to call the API.
     cors_allowed_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
     # Public URL of the web app; used in email links and always allowed by CORS.
-    frontend_url: str = "http://localhost:3000"
-    # Production switches cookies to SameSite=None + Secure and compacts logs.
-    is_production: bool = False
+    frontend_url: str = ""
+
+    # --- Observability ---
     log_level: str = "INFO"
     # Empty disables Sentry entirely.
     sentry_dsn: str = ""
 
+    # --- Staff ---
     # Comma-separated emails treated as super admins when `users.admin_role` is not set.
     super_admin_emails: str = ""
+    # Comma-separated staff inboxes for ops alerts (contact form, disputes, stuck payouts).
+    admin_alert_emails: str = "hello@eventtz.com"
 
+    # --- Providers ---
     # OpenAI key for the help assistant and contact classifier. Empty switches AI features off.
     openai_api_key: str = ""
     # Resend key for outgoing email. Empty logs and skips every send.
     resend_api_key: str = ""
-    # Comma-separated staff inboxes for ops alerts (contact form, disputes, stuck payouts).
-    admin_alert_emails: str = "hello@eventtz.com"
     # Cursor automation endpoint that triages bug/booking/payment contact messages. Empty = off.
     cursor_automation_webhook_url: str = ""
     cursor_automation_webhook_secret: str = ""
@@ -61,6 +124,21 @@ class Settings(BaseSettings):
     aws_region: str = "eu-west-2"
     # Largest general upload (`POST /media/files`) in bytes. Images have no app-level cap.
     media_max_file_upload_bytes: int = 50_000_000
+
+    @property
+    def is_deployed(self) -> bool:
+        """True on staging and production: secrets are required and logs are JSON."""
+        return self.app_env in (AppEnv.staging, AppEnv.production)
+
+    @property
+    def is_production(self) -> bool:
+        """True only on production (Sentry environment name, stricter defaults)."""
+        return self.app_env == AppEnv.production
+
+    @property
+    def log_json(self) -> bool:
+        """Deployed processes log one JSON object per line; local ones log readable text."""
+        return self.is_deployed
 
     @property
     def admin_alert_emails_list(self) -> list[str]:
@@ -81,8 +159,34 @@ class Settings(BaseSettings):
             origins.append(frontend_origin)
         return origins
 
+    @model_validator(mode="after")
+    def _require_secrets_when_deployed(self) -> Settings:
+        """Fill in local/test defaults, or refuse to start a deployed process missing a secret."""
+        if not self.is_deployed:
+            self.jwt_secret = self.jwt_secret or _LOCAL_JWT_SECRET
+            self.database_url = self.database_url or _LOCAL_DATABASE_URL
+            self.frontend_url = self.frontend_url or _LOCAL_FRONTEND_URL
+            return self
+        present = {
+            "JWT_SECRET": self.jwt_secret,
+            "DATABASE_URL": self.database_url,
+            "FRONTEND_URL": self.frontend_url,
+            "RESEND_API_KEY": self.resend_api_key,
+        }
+        missing = [name for name in REQUIRED_WHEN_DEPLOYED if not present[name].strip()]
+        if missing:
+            raise ValueError(
+                f"{self.app_env.value} requires these environment variables: {', '.join(missing)}"
+            )
+        if len(self.jwt_secret) < 32:
+            raise ValueError("JWT_SECRET must be at least 32 characters in a deployed environment")
+        return self
+
 
 @lru_cache
 def get_settings() -> Settings:
     """The process-wide settings, read once. Tests call `get_settings.cache_clear()` to reload."""
     return Settings()
+
+
+SettingsDep = Annotated[Settings, Depends(get_settings)]

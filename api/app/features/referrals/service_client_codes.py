@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.features.identity import service as identity
 from app.features.pricing import service as pricing
 from app.features.referrals import repository
@@ -22,7 +24,7 @@ from app.features.referrals.errors import (
     ReferralProgrammeClosed,
     ReferralProgrammeNotFound,
 )
-from app.features.referrals.models import ReferralBookingRow, VendorCodeRow
+from app.features.referrals.rows import ReferralBookingRow, VendorCodeRow
 from app.features.referrals.schemas import (
     ReferralFeeTier,
     VendorClientReferralResponse,
@@ -44,18 +46,18 @@ def _tier_views() -> list[ReferralFeeTier]:
     ]
 
 
-def _approved_settings(vendor_user_id: str) -> VendorCodeRow | None:
+async def _approved_settings(session: AsyncSession, vendor_user_id: str) -> VendorCodeRow | None:
     """The vendor's referral settings, or `None` until they have an approved profile."""
-    settings = repository.find_vendor_code_settings(vendor_user_id)
+    settings = await repository.find_vendor_code_settings(session, vendor_user_id)
     return settings if settings and settings.approval_status == "approved" else None
 
 
 # --- the vendor's own code ---------------------------------------------------------------------
 
 
-def referral_programme(vendor_user_id: str) -> VendorClientReferralResponse:
+async def referral_programme(session: AsyncSession, vendor_user_id: str) -> VendorClientReferralResponse:
     """The vendor's referral screen: their code and share link (blank until set), the fee and the tiers."""
-    settings = _approved_settings(vendor_user_id)
+    settings = await _approved_settings(session, vendor_user_id)
     if settings is None:
         raise ReferralProgrammeNotFound()
     code = normalise_client_code(settings.client_referral_code) or ""
@@ -69,22 +71,24 @@ def referral_programme(vendor_user_id: str) -> VendorClientReferralResponse:
     )
 
 
-def _allocate_random_code(vendor_user_id: str) -> str:
+async def _allocate_random_code(session: AsyncSession, vendor_user_id: str) -> str:
     """A random six-digit code no other vendor owns."""
     for _attempt in range(CODE_ALLOCATION_ATTEMPTS):
         candidate = random_client_code()
-        if not repository.code_taken_by_another_vendor(candidate, vendor_user_id):
+        if not await repository.code_taken_by_another_vendor(session, candidate, vendor_user_id):
             return candidate
     raise CodeAllocationFailed()
 
 
-def choose_code(vendor_user_id: str, requested_code: str | None) -> VendorReferralSetCodeResponse:
+async def choose_code(
+    session: AsyncSession, vendor_user_id: str, requested_code: str | None
+) -> VendorReferralSetCodeResponse:
     """Set the vendor's code once: the one they typed (digits only), or a random one when left blank.
 
     A code never changes after it is set, so links already shared keep working; sending
     the existing code again is accepted and changes nothing.
     """
-    settings = _approved_settings(vendor_user_id)
+    settings = await _approved_settings(session, vendor_user_id)
     if settings is None:
         raise ReferralProgrammeClosed()
     wants_random = not (requested_code or "").strip()
@@ -97,17 +101,17 @@ def choose_code(vendor_user_id: str, requested_code: str | None) -> VendorReferr
         )
 
     if wants_random:
-        code = _allocate_random_code(vendor_user_id)
+        code = await _allocate_random_code(session, vendor_user_id)
     else:
         chosen = normalise_client_code(requested_code)
         # `\d` also matches digits such as "１２３"; the column only accepts ASCII 0-9.
         if not chosen or not chosen.isascii():
             raise CodeFormatInvalid()
-        if repository.code_taken_by_another_vendor(chosen, vendor_user_id):
+        if await repository.code_taken_by_another_vendor(session, chosen, vendor_user_id):
             raise CodeTaken()
         code = chosen
     # The column is unique, so a vendor who claims the same code a moment earlier wins.
-    if not repository.save_vendor_code(vendor_user_id, code):
+    if not await repository.save_vendor_code(session, vendor_user_id, code):
         raise CodeTaken()
     return VendorReferralSetCodeResponse(
         referral_code=code, share_link=client_share_link(vendor_user_id, code)
@@ -117,10 +121,10 @@ def choose_code(vendor_user_id: str, requested_code: str | None) -> VendorReferr
 # --- clients previewing a code -----------------------------------------------------------------
 
 
-def _code_works_for_vendor(vendor_user_id: str, typed_code: str) -> bool:
+async def _code_works_for_vendor(session: AsyncSession, vendor_user_id: str, typed_code: str) -> bool:
     """True when the code belongs to this vendor, is switched on, and the vendor is approved."""
     code = normalise_client_code(typed_code)
-    owner = repository.find_vendor_by_code(code) if code else None
+    owner = await repository.find_vendor_by_code(session, code) if code else None
     return bool(
         owner
         and owner.user_id == vendor_user_id.strip()
@@ -129,9 +133,11 @@ def _code_works_for_vendor(vendor_user_id: str, typed_code: str) -> bool:
     )
 
 
-def preview(vendor_user_id: str, typed_code: str, vendor_portion_gbp: float) -> VendorReferralPreviewResponse:
+async def preview(
+    session: AsyncSession, vendor_user_id: str, typed_code: str, vendor_portion_gbp: float
+) -> VendorReferralPreviewResponse:
     """What a code takes off the service fee for this spend. A bad code is not an error; it saves nothing."""
-    code_valid = _code_works_for_vendor(vendor_user_id, typed_code)
+    code_valid = await _code_works_for_vendor(session, vendor_user_id, typed_code)
     discount, tier_min = discount_and_tier(vendor_portion_gbp) if code_valid else (0.0, None)
     breakdown = pricing.build_pricing_breakdown(
         line_items=[{"unit_price_gbp": max(0.0, vendor_portion_gbp)}],
@@ -183,17 +189,17 @@ def _discount_saved(booking: ReferralBookingRow, owners: dict[str, str]) -> tupl
     return breakdown.vendor_portion_gbp, saved
 
 
-def referral_bookings(vendor_user_id: str) -> VendorReferralBookingsResponse:
+async def referral_bookings(session: AsyncSession, vendor_user_id: str) -> VendorReferralBookingsResponse:
     """Every booking made with the vendor's codes (current or retired), and the clients' total savings."""
     bookings = [
         booking
-        for booking in repository.list_referral_bookings(vendor_user_id)
+        for booking in await repository.list_referral_bookings(session, vendor_user_id)
         if (booking.vendor_referral_code or "").strip()
     ]
     stored_codes = {normalise_client_code(booking.vendor_referral_code) for booking in bookings}
-    owners = repository.code_owners({code for code in stored_codes if code})
-    client_names = identity.client_display_names(
-        [booking.client_user_id for booking in bookings if booking.client_user_id]
+    owners = await repository.code_owners(session, {code for code in stored_codes if code})
+    client_names = await identity.client_display_names(
+        session, [booking.client_user_id for booking in bookings if booking.client_user_id]
     )
 
     views = []

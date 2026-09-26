@@ -12,6 +12,8 @@ an adapter. Tests plug in the fakes from `tests/support/fakes.py` the same way.
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator, Sequence
+from contextlib import AbstractAsyncContextManager
 from dataclasses import dataclass, field
 from typing import Annotated, Any, Literal, Protocol, TypedDict, TypeVar
 
@@ -140,6 +142,30 @@ class Storage(Protocol):
 
     def save(self, *, key: str, body: bytes, content_type: str) -> StoredFile:
         """Store `body` under `key` as a public object. Raises on any storage failure."""
+        ...
+
+
+# --- live updates -------------------------------------------------------------------------------
+
+
+class EventBus(Protocol):
+    """Fan-out for live updates, so a screen is told rather than asking (ADR 0005).
+
+    Transport is Redis pub/sub with more than one API replica, in-process
+    otherwise. Nothing durable goes through it: a subscriber that missed an
+    event re-reads the read model on reconnect.
+    """
+
+    async def publish(self, topic: str, name: str) -> None:
+        """Tell every subscriber to `topic` that `name` happened. Carries no payload."""
+        ...
+
+    def subscription(self, topics: Sequence[str]) -> AbstractAsyncContextManager[AsyncIterator[str]]:
+        """Watch `topics`, yielding the name of each event published to them.
+
+        A context manager, not a bare generator: the subscription is registered
+        on entry, so no event published after entry can be missed.
+        """
         ...
 
 

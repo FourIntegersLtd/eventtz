@@ -1,4 +1,4 @@
-"""API schemas never import row models or repositories: rows are mapped in the service."""
+"""API schemas never import mapped tables, rows or repositories; the service maps rows to schemas."""
 
 from __future__ import annotations
 
@@ -15,13 +15,13 @@ def schema_files() -> list[Path]:
 
 
 def violations(path: Path) -> list[str]:
-    """Row-model or repository modules the schema file imports."""
+    """Mapped-table, row or repository modules the schema file imports."""
+    storage_modules = ("models", "rows", "repository")
     return sorted(
         module
         for module in imported_modules(path)
-        if module.split(".")[-1].startswith(("models", "repository"))
-        or ".models." in module
-        or ".repository." in module
+        if module.split(".")[-1].startswith(storage_modules)
+        or any(f".{name}." in module for name in storage_modules)
     )
 
 
@@ -32,6 +32,13 @@ def test_schemas_do_not_expose_rows(path: Path) -> None:
 
 
 def test_the_guard_would_catch_a_row_in_a_schema(tmp_path: Path) -> None:
+    """A schema importing a row or a mapped table is reported."""
     planted = tmp_path / "schemas.py"
-    planted.write_text("from app.features.content.models import PostRow\n", encoding="utf-8")
-    assert violations(planted) == ["app.features.content.models.PostRow"]
+    planted.write_text(
+        "from app.features.content.rows import PostRow\nfrom app.features.content.models import BlogPost\n",
+        encoding="utf-8",
+    )
+    assert violations(planted) == [
+        "app.features.content.models.BlogPost",
+        "app.features.content.rows.PostRow",
+    ]

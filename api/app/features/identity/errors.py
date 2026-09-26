@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.core.errors import Forbidden, InvalidInput, RateLimited, Unauthenticated, Unavailable
+from app.core.errors import Forbidden, InvalidInput, RateLimited, Unauthenticated
 
 # --- sign-up --------------------------------------------------------------------------------------
 
@@ -17,25 +17,14 @@ class EmailAlreadyRegistered(InvalidInput):
     )
 
 
-class SignupFailed(InvalidInput):
-    """Supabase Auth refused the sign-up for another reason."""
-
-    code = "signup_failed"
-    default_message = "We couldn't create your account. Please try again."
-
-
-class AuthServiceUnavailable(Unavailable):
-    """Supabase Auth did not answer (timeout or network error)."""
-
-    code = "auth_unavailable"
-    default_message = "Authentication is temporarily unavailable. Please try again."
-
-
 class TooManyVerificationEmails(RateLimited):
     """Too many verification emails for one address or IP in the last hour."""
 
     code = "verification_email_rate_limited"
     default_message = "Too many verification emails. Try again later."
+    # Sign-up checks the email allowance after creating the account, and the
+    # account must survive the refusal: the user asks for a new link later.
+    persist_effects = True
 
 
 # --- sign-in and session ------------------------------------------------------------------------------
@@ -51,7 +40,7 @@ class TooManySignIns(RateLimited):
 class WrongCredentials(Unauthenticated):
     """Email and password do not match an account.
 
-    The baseline always shows the "registered again" variant, since Supabase answers the same way.
+    The baseline always shows the "registered again" variant; kept so the web app's copy is unchanged.
     """
 
     code = "wrong_credentials"
@@ -60,27 +49,6 @@ class WrongCredentials(Unauthenticated):
         "If you recently registered again with this email, use the password "
         "from your first sign-up, or reset your password."
     )
-
-
-class EmailNotConfirmed(Unauthenticated):
-    """Supabase Auth has not confirmed the email (older accounts from before our own verification)."""
-
-    code = "email_not_confirmed"
-    default_message = "Confirm your email before signing in. Check your inbox for the verification link."
-
-
-class SignInFailed(Unauthenticated):
-    """Supabase Auth refused the sign-in for an unexpected reason."""
-
-    code = "sign_in_failed"
-    default_message = "We couldn't sign you in right now. Please try again."
-
-
-class SignInUnavailable(Unavailable):
-    """Supabase Auth did not answer a sign-in."""
-
-    code = "sign_in_unavailable"
-    default_message = "We couldn't sign you in right now. Please try again."
 
 
 class SuspendedAtSignIn(Forbidden):
@@ -111,10 +79,21 @@ class EmailNotVerified(Forbidden):
 
 
 class RefreshExpired(Unauthenticated):
-    """No refresh token, or Supabase refused it."""
+    """No refresh token, or one that is unknown, revoked or past its 30 days."""
 
     code = "session_expired"
     default_message = "Your session has expired. Please sign in again."
+
+
+class RefreshTokenReused(RefreshExpired):
+    """A refresh token that was already exchanged came back: someone else holds a copy.
+
+    The whole sign-in (its chain) is revoked, and that revocation must be kept
+    even though the request fails, hence `persist_effects`.
+    """
+
+    code = "refresh_token_reused"
+    persist_effects = True
 
 
 # --- email links -----------------------------------------------------------------------------------
@@ -162,15 +141,6 @@ class ResetLinkUsed(InvalidInput):
     default_message = "This reset link has already been used. Request a new one."
 
 
-class ResetSignInFailed(InvalidInput):
-    """The password was reset but signing in with it straight away failed."""
-
-    code = "reset_sign_in_failed"
-    default_message = (
-        "Password updated, but we couldn't sign you in automatically. Please sign in with your new password."
-    )
-
-
 # --- passwords -------------------------------------------------------------------------------------
 
 
@@ -181,7 +151,7 @@ class WeakPassword(InvalidInput):
 
 
 class PasswordUpdateFailed(InvalidInput):
-    """Supabase Auth did not accept the new password, or the account has no email."""
+    """The account has no email address to sign in with, so its password cannot be set."""
 
     code = "password_update_failed"
     default_message = "Could not update password. Try again."

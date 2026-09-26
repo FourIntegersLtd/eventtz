@@ -30,6 +30,10 @@ class AppError(Exception):
     status: int = 500
     code: str = "internal_error"
     default_message: str = "Something went wrong"
+    # A few failures must record something anyway — e.g. revoking a refresh chain
+    # proven to have leaked, while still answering 401. Such an error sets this,
+    # and `core.db.get_session` commits instead of rolling back (copied from OSCE).
+    persist_effects: bool = False
 
     def __init__(self, message: str | None = None) -> None:
         """Use `message` as the user-facing `detail`, or the class's `default_message`."""
@@ -94,7 +98,7 @@ class RateLimited(AppError):
 
 
 class Unavailable(AppError):
-    """503: a service we depend on (Supabase, Stripe…) did not answer."""
+    """503: a service we depend on (the database, Stripe…) did not answer."""
 
     status = 503
     code = "unavailable"

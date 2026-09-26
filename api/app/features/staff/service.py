@@ -4,13 +4,16 @@ from __future__ import annotations
 
 from typing import Any
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.logging import get_logger
 from app.features.staff import repository
 
 log = get_logger(__name__)
 
 
-def record_admin_action(
+async def record_admin_action(
+    session: AsyncSession,
     *,
     admin_user_id: str,
     action: str,
@@ -24,7 +27,8 @@ def record_admin_action(
     audit write is logged for follow-up rather than turned into an error.
     """
     try:
-        repository.insert_audit_event(
+        await repository.insert_audit_event(
+            session,
             admin_user_id=admin_user_id,
             action=action,
             entity_type=entity_type,

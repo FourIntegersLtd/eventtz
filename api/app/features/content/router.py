@@ -5,6 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Query
 
 from app.core.auth import AUTH_ERRORS, ROLE_ERRORS, CurrentClient, CurrentUser, CurrentVendor
+from app.core.db import SessionDep
 from app.core.errors import AppError, error_responses
 from app.core.ports import (
     LanguageModelDependency,
@@ -41,6 +42,7 @@ from app.features.content.schemas import (
 
 router = APIRouter()
 
+
 # Errors every Help Center route can return: not signed in, or another portal's audience.
 _HELP_ERRORS = (*AUTH_ERRORS, AudienceMismatch)
 # Errors both contact forms can return besides auth.
@@ -59,9 +61,9 @@ _CONTACT_ERRORS = (
 @router.get(
     "/blog/posts", tags=["blog"], response_model=BlogPostsListResponse, responses=error_responses(AppError)
 )
-def list_blog_posts(limit: int = Query(50, ge=1, le=100)) -> BlogPostsListResponse:
+async def list_blog_posts(session: SessionDep, limit: int = Query(50, ge=1, le=100)) -> BlogPostsListResponse:
     """The public blog index, newest first."""
-    return BlogPostsListResponse(posts=service_blog.list_published_posts(limit))
+    return BlogPostsListResponse(posts=await service_blog.list_published_posts(session, limit))
 
 
 @router.get(
@@ -70,9 +72,9 @@ def list_blog_posts(limit: int = Query(50, ge=1, le=100)) -> BlogPostsListRespon
     response_model=BlogPostPublicDetailResponse,
     responses=error_responses(PostNotFound),
 )
-def get_blog_post(slug: str) -> BlogPostPublicDetailResponse:
+async def get_blog_post(session: SessionDep, slug: str) -> BlogPostPublicDetailResponse:
     """One published post by slug."""
-    return BlogPostPublicDetailResponse(post=service_blog.get_published_post(slug))
+    return BlogPostPublicDetailResponse(post=await service_blog.get_published_post(session, slug))
 
 
 # --- help center -------------------------------------------------------------------------------------
@@ -84,11 +86,11 @@ def get_blog_post(slug: str) -> BlogPostPublicDetailResponse:
     response_model=HelpCategoriesResponse,
     responses=error_responses(*_HELP_ERRORS),
 )
-def list_help_categories(
-    principal: CurrentUser, audience: str | None = Query(None)
+async def list_help_categories(
+    session: SessionDep, principal: CurrentUser, audience: str | None = Query(None)
 ) -> HelpCategoriesResponse:
     """The Help Center categories for the caller's portal."""
-    return HelpCategoriesResponse(categories=service_help.list_categories(principal, audience))
+    return HelpCategoriesResponse(categories=await service_help.list_categories(session, principal, audience))
 
 
 @router.get(
@@ -97,13 +99,16 @@ def list_help_categories(
     response_model=HelpArticlesResponse,
     responses=error_responses(*_HELP_ERRORS),
 )
-def list_help_articles(
+async def list_help_articles(
+    session: SessionDep,
     principal: CurrentUser,
     audience: str | None = Query(None),
     category: str | None = Query(None, description="Category slug"),
 ) -> HelpArticlesResponse:
     """The Help Center articles for the caller's portal, optionally one category's."""
-    return HelpArticlesResponse(articles=service_help.list_articles(principal, audience, category))
+    return HelpArticlesResponse(
+        articles=await service_help.list_articles(session, principal, audience, category)
+    )
 
 
 @router.get(
@@ -112,11 +117,11 @@ def list_help_articles(
     response_model=HelpArticleResponse,
     responses=error_responses(*_HELP_ERRORS, ArticleNotFound),
 )
-def get_help_article(
-    principal: CurrentUser, slug: str, audience: str | None = Query(None)
+async def get_help_article(
+    session: SessionDep, principal: CurrentUser, slug: str, audience: str | None = Query(None)
 ) -> HelpArticleResponse:
     """One Help Center article."""
-    return HelpArticleResponse(article=service_help.get_article(principal, audience, slug))
+    return HelpArticleResponse(article=await service_help.get_article(session, principal, audience, slug))
 
 
 @router.post(
@@ -133,11 +138,11 @@ def get_help_article(
         LanguageModelRefused,
     ),
 )
-def ask_help_assistant(
-    principal: CurrentUser, body: HelpAskRequest, language_model: LanguageModelDependency
+async def ask_help_assistant(
+    session: SessionDep, principal: CurrentUser, body: HelpAskRequest, language_model: LanguageModelDependency
 ) -> HelpAskResponse:
     """Ask the AI help assistant a question, answered from the caller's portal's articles."""
-    return service_help.ask_assistant(principal, body, language_model)
+    return await service_help.ask_assistant(session, principal, body, language_model)
 
 
 # --- contact ---------------------------------------------------------------------------------------------
@@ -149,7 +154,8 @@ def ask_help_assistant(
     response_model=ContactSubmitResponse,
     responses=error_responses(*_CONTACT_ERRORS),
 )
-def submit_client_contact(
+async def submit_client_contact(
+    session: SessionDep,
     principal: CurrentClient,
     body: ContactSubmitBody,
     language_model: LanguageModelDependency,
@@ -157,7 +163,8 @@ def submit_client_contact(
     webhooks: WebhooksDependency,
 ) -> ContactSubmitResponse:
     """A client's message to the Eventtz team."""
-    service_contact.submit_portal_message(
+    await service_contact.submit_portal_message(
+        session,
         principal,
         portal="client",
         message=body.message,
@@ -175,7 +182,8 @@ def submit_client_contact(
     response_model=ContactSubmitResponse,
     responses=error_responses(*_CONTACT_ERRORS),
 )
-def submit_vendor_contact(
+async def submit_vendor_contact(
+    session: SessionDep,
     principal: CurrentVendor,
     body: ContactSubmitBody,
     language_model: LanguageModelDependency,
@@ -183,7 +191,8 @@ def submit_vendor_contact(
     webhooks: WebhooksDependency,
 ) -> ContactSubmitResponse:
     """A vendor's message to the Eventtz team."""
-    service_contact.submit_portal_message(
+    await service_contact.submit_portal_message(
+        session,
         principal,
         portal="vendor",
         message=body.message,

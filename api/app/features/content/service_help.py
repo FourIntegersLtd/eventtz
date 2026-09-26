@@ -6,6 +6,10 @@ Staff see admin articles, and may preview a client or vendor portal for QA.
 
 from __future__ import annotations
 
+import asyncio
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.auth import Principal
 from app.core.errors import AppError
 from app.core.logging import get_logger
@@ -22,7 +26,7 @@ from app.features.content.domain_help import (
     retrieve_articles,
 )
 from app.features.content.errors import ArticleNotFound, AssistantUnavailable, QuestionRequired
-from app.features.content.models import HelpCategoryName
+from app.features.content.rows import HelpCategoryName
 from app.features.content.schemas import (
     HelpArticleDetail,
     HelpArticleListItem,
@@ -35,12 +39,14 @@ from app.features.content.schemas import (
 log = get_logger(__name__)
 
 
-def list_categories(principal: Principal, requested_audience: str | None) -> list[HelpCategoryOut]:
+async def list_categories(
+    session: AsyncSession, principal: Principal, requested_audience: str | None
+) -> list[HelpCategoryOut]:
     """The published categories for the caller's portal, each with its article count."""
     audiences = audience_values(resolve_audience(principal.user_type, requested_audience))
-    categories = repository.list_published_categories(audiences)
+    categories = await repository.list_published_categories(session, audiences)
     article_counts: dict[str, int] = {}
-    for category_id in repository.published_article_category_ids(audiences):
+    for category_id in await repository.published_article_category_ids(session, audiences):
         article_counts[category_id] = article_counts.get(category_id, 0) + 1
     return [
         HelpCategoryOut(**category.model_dump(), article_count=article_counts.get(category.id, 0))
@@ -48,8 +54,8 @@ def list_categories(principal: Principal, requested_audience: str | None) -> lis
     ]
 
 
-def list_articles(
-    principal: Principal, requested_audience: str | None, category_slug: str | None
+async def list_articles(
+    session: AsyncSession, principal: Principal, requested_audience: str | None, category_slug: str | None
 ) -> list[HelpArticleListItem]:
     """The published articles for the caller's portal, optionally only one category's.
 
@@ -58,14 +64,16 @@ def list_articles(
     audiences = audience_values(resolve_audience(principal.user_type, requested_audience))
     chosen_category: HelpCategoryName | None = None
     if category_slug:
-        chosen_category = repository.find_published_category(category_slug)
+        chosen_category = await repository.find_published_category(session, category_slug)
         if chosen_category is None:
             return []
-    articles = repository.list_published_articles(audiences, chosen_category.id if chosen_category else None)
+    articles = await repository.list_published_articles(
+        session, audiences, chosen_category.id if chosen_category else None
+    )
     categories_by_id = (
         {chosen_category.id: chosen_category}
         if chosen_category
-        else {category.id: category for category in repository.list_published_category_names()}
+        else {category.id: category for category in await repository.list_published_category_names(session)}
     )
     items: list[HelpArticleListItem] = []
     for article in articles:
@@ -86,15 +94,17 @@ def list_articles(
     return items
 
 
-def get_article(principal: Principal, requested_audience: str | None, slug: str) -> HelpArticleDetail:
+async def get_article(
+    session: AsyncSession, principal: Principal, requested_audience: str | None, slug: str
+) -> HelpArticleDetail:
     """One published article for the caller's portal, with its category and "see also" links."""
     audiences = audience_values(resolve_audience(principal.user_type, requested_audience))
-    article = repository.find_published_article(slug, audiences)
+    article = await repository.find_published_article(session, slug, audiences)
     if article is None:
         raise ArticleNotFound()
-    category = repository.find_category_name(article.category_id)
+    category = await repository.find_category_name(session, article.category_id)
     related_slugs = [related_slug for related_slug in article.related_slugs if related_slug]
-    titles = repository.published_titles_by_slug(related_slugs) if related_slugs else {}
+    titles = await repository.published_titles_by_slug(session, related_slugs) if related_slugs else {}
     return HelpArticleDetail(
         id=article.id,
         slug=article.slug,
@@ -114,8 +124,8 @@ def get_article(principal: Principal, requested_audience: str | None, slug: str)
     )
 
 
-def ask_assistant(
-    principal: Principal, request: HelpAskRequest, language_model: LanguageModel
+async def ask_assistant(
+    session: AsyncSession, principal: Principal, request: HelpAskRequest, language_model: LanguageModel
 ) -> HelpAskResponse:
     """Answer a question from the caller's portal's articles only.
 
@@ -127,7 +137,7 @@ def ask_assistant(
     if not request.question.strip():
         raise QuestionRequired()
     try:
-        pool = repository.list_article_texts(audience_values(audience))
+        pool = await repository.list_article_texts(session, audience_values(audience))
         history = [ConversationTurn(role=turn.message_role, content=turn.content) for turn in request.history]
         messages = assistant_messages(
             question=request.question,
@@ -135,8 +145,13 @@ def ask_assistant(
             history=history,
             articles=retrieve_articles(request.question, pool),
         )
-        reply = language_model.parse(
-            model=HELP_MODEL, messages=messages, reply_model=AssistantReply, purpose="help_assistant"
+        # The model call blocks for seconds; a worker thread keeps the event loop serving others.
+        reply = await asyncio.to_thread(
+            language_model.parse,
+            model=HELP_MODEL,
+            messages=messages,
+            reply_model=AssistantReply,
+            purpose="help_assistant",
         )
         finished = finish_reply(reply, {article.slug for article in pool})
     except AppError as error:

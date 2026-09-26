@@ -2,7 +2,13 @@
 
 These are black-box HTTP tests of the product's behaviour. They are written to pass against the **baseline** `backend/` first, which freezes what users see today. The rebuilt `api/` must then pass the **same** tests. After cutover they become the post-deploy smoke test.
 
-Everything here runs against **local Supabase only**. `scripts/local_env.sh` refuses any URL that isn't local. The baseline runs from a copy in `.run/` that has no `.env`, so hosted credentials can never be loaded. All outside services (Stripe, Resend, OpenAI, S3 and so on) are switched off.
+The two targets differ only inside `conftest.py` and `support/`:
+
+- `admin_db` is local Supabase's service client on the baseline. On api/ it is `support/database.py`, which answers the same `table(...).select/insert/update/delete` calls from api/'s own Postgres, so the tests read the same on both.
+- A browser's session is cookies on the baseline. On api/ it is Bearer tokens (`support/bearer.py`), following the baseline's rules for when cookies are set and cleared. That is the rebuild's one deliberate contract change. The few assertions about `Set-Cookie` go through `assert_session_cookies_touched`.
+- Behaviour api/ has not rebuilt yet is listed in `conftest.NOT_YET_ON_API`. On `TARGET=api` those tests are strict expected failures, so an entry must be deleted once its tests pass.
+
+Everything here runs against **local databases only**. `scripts/local_env.sh` and the `admin_db` fixture refuse any URL that isn't local. The baseline runs from a copy in `.run/` that has no `.env`, so hosted credentials can never be loaded. All outside services (Stripe, Resend, OpenAI, S3 and so on) are switched off.
 
 ```bash
 npx supabase start                  # once; then apply backend/sql (see docs/adr/0006)

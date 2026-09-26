@@ -18,7 +18,7 @@
         "type": "object"
       },
       "AuthSession": {
-        "description": "The Supabase session tokens (also set as httpOnly cookies).",
+        "description": "A session: a short-lived access token (sent as `Authorization: Bearer`) and a refresh token.\n\n`expires_at` is when the access token expires, in seconds since the epoch.",
         "properties": {
           "access_token": {
             "title": "Access Token",
@@ -48,7 +48,7 @@
         "type": "object"
       },
       "AuthUser": {
-        "description": "The account as the web app sees it: Supabase identity merged with the `users` row.\n\n`preferred_name` and `client_onboarding_completed` are only filled for clients.",
+        "description": "The account as the web app sees it, built from its `users` row.\n\n`preferred_name` and `client_onboarding_completed` are only filled for clients.\n`user_metadata`/`app_metadata` were Supabase Auth's; they stay in the contract\nfor the web app but are always empty.",
         "properties": {
           "account_suspended": {
             "default": false,
@@ -762,7 +762,7 @@
         "type": "object"
       },
       "ChangePasswordResponse": {
-        "description": "The password changed; the session cookies are cleared, so the user signs in again.",
+        "description": "The password changed and every sign-in ended, so the user signs in again.",
         "properties": {
           "message": {
             "default": "Password updated.",
@@ -1808,7 +1808,7 @@
         "type": "object"
       },
       "RefreshSessionRequest": {
-        "description": "A refresh token; leave it out to use the refresh cookie.",
+        "description": "The refresh token to exchange (the API sets no cookies, so it always comes in the body).",
         "properties": {
           "refresh_token": {
             "anyOf": [
@@ -1967,8 +1967,26 @@
         "title": "SignInResponse",
         "type": "object"
       },
+      "SignOutRequest": {
+        "description": "The refresh token of the sign-in to end; leave it out to end every sign-in of the caller.",
+        "properties": {
+          "refresh_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refresh Token"
+          }
+        },
+        "title": "SignOutRequest",
+        "type": "object"
+      },
       "SignOutResponse": {
-        "description": "Always a success: the cookies are cleared either way.",
+        "description": "Always a success, even when there was nothing to end.",
         "properties": {
           "success": {
             "default": true,
@@ -2482,6 +2500,12 @@
         "title": "VerifyEmailResponse",
         "type": "object"
       }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "scheme": "bearer",
+        "type": "http"
+      }
     }
   },
   "info": {
@@ -2530,21 +2554,13 @@
             "x-codes": [
               "forbidden"
             ]
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "auth_unavailable",
-            "x-codes": [
-              "auth_unavailable"
-            ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "List Posts",
         "tags": [
           "admin-blog"
@@ -2618,13 +2634,17 @@
                 }
               }
             },
-            "description": "auth_unavailable, post_write_failed",
+            "description": "post_write_failed",
             "x-codes": [
-              "auth_unavailable",
               "post_write_failed"
             ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Create Post",
         "tags": [
           "admin-blog"
@@ -2714,13 +2734,17 @@
                 }
               }
             },
-            "description": "auth_unavailable, post_write_failed",
+            "description": "post_write_failed",
             "x-codes": [
-              "auth_unavailable",
               "post_write_failed"
             ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Delete Post",
         "tags": [
           "admin-blog"
@@ -2799,21 +2823,13 @@
               }
             },
             "description": "Validation Error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "auth_unavailable",
-            "x-codes": [
-              "auth_unavailable"
-            ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Get Post",
         "tags": [
           "admin-blog"
@@ -2911,13 +2927,17 @@
                 }
               }
             },
-            "description": "auth_unavailable, post_write_failed",
+            "description": "post_write_failed",
             "x-codes": [
-              "auth_unavailable",
               "post_write_failed"
             ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Update Post",
         "tags": [
           "admin-blog"
@@ -3007,13 +3027,17 @@
                 }
               }
             },
-            "description": "auth_unavailable, post_write_failed",
+            "description": "post_write_failed",
             "x-codes": [
-              "auth_unavailable",
               "post_write_failed"
             ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Publish Post",
         "tags": [
           "admin-blog"
@@ -3103,13 +3127,17 @@
                 }
               }
             },
-            "description": "auth_unavailable, post_write_failed",
+            "description": "post_write_failed",
             "x-codes": [
-              "auth_unavailable",
               "post_write_failed"
             ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Unpublish Post",
         "tags": [
           "admin-blog"
@@ -3189,21 +3217,13 @@
               }
             },
             "description": "Validation Error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "auth_unavailable",
-            "x-codes": [
-              "auth_unavailable"
-            ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Submit Bug Report",
         "tags": [
           "admin"
@@ -3250,21 +3270,13 @@
             "x-codes": [
               "forbidden"
             ]
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "auth_unavailable",
-            "x-codes": [
-              "auth_unavailable"
-            ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "List Partners",
         "tags": [
           "admin",
@@ -3353,13 +3365,17 @@
                 }
               }
             },
-            "description": "auth_unavailable, referral_partner_not_created",
+            "description": "referral_partner_not_created",
             "x-codes": [
-              "auth_unavailable",
               "referral_partner_not_created"
             ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Create Partner",
         "tags": [
           "admin",
@@ -3465,21 +3481,13 @@
               }
             },
             "description": "Validation Error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "auth_unavailable",
-            "x-codes": [
-              "auth_unavailable"
-            ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Update Partner",
         "tags": [
           "admin",
@@ -3599,21 +3607,13 @@
               }
             },
             "description": "Validation Error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "auth_unavailable",
-            "x-codes": [
-              "auth_unavailable"
-            ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "List Signups",
         "tags": [
           "admin",
@@ -3705,21 +3705,13 @@
               }
             },
             "description": "Validation Error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "auth_unavailable",
-            "x-codes": [
-              "auth_unavailable"
-            ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Set Shoutout",
         "tags": [
           "admin",
@@ -3729,7 +3721,7 @@
     },
     "/api/v1/auth/change-password": {
       "post": {
-        "description": "Change the password (the current one is re-checked); every session ends, including this one.",
+        "description": "Change the password (the current one is re-checked); every sign-in ends, including this one.",
         "operationId": "change_password_api_v1_auth_change_password_post",
         "requestBody": {
           "content": {
@@ -3791,21 +3783,13 @@
               }
             },
             "description": "Validation Error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "auth_unavailable",
-            "x-codes": [
-              "auth_unavailable"
-            ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Change Password",
         "tags": [
           "auth"
@@ -3907,21 +3891,13 @@
             "x-codes": [
               "forbidden"
             ]
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "auth_unavailable",
-            "x-codes": [
-              "auth_unavailable"
-            ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Me",
         "tags": [
           "auth"
@@ -3930,7 +3906,7 @@
     },
     "/api/v1/auth/refresh": {
       "post": {
-        "description": "Swap the refresh token (from the body, else the cookie) for a new session.",
+        "description": "Swap the refresh token for a new session.",
         "operationId": "refresh_session_api_v1_auth_refresh_post",
         "requestBody": {
           "content": {
@@ -3961,9 +3937,10 @@
                 }
               }
             },
-            "description": "session_expired",
+            "description": "session_expired, refresh_token_reused",
             "x-codes": [
-              "session_expired"
+              "session_expired",
+              "refresh_token_reused"
             ]
           },
           "422": {
@@ -3975,19 +3952,6 @@
               }
             },
             "description": "Validation Error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "auth_unavailable",
-            "x-codes": [
-              "auth_unavailable"
-            ]
           }
         },
         "summary": "Refresh Session",
@@ -4084,14 +4048,13 @@
                 }
               }
             },
-            "description": "link_rate_limited, reset_link_invalid, reset_link_used, weak_password, password_update_failed, reset_sign_in_failed",
+            "description": "link_rate_limited, reset_link_invalid, reset_link_used, weak_password, password_update_failed",
             "x-codes": [
               "link_rate_limited",
               "reset_link_invalid",
               "reset_link_used",
               "weak_password",
-              "password_update_failed",
-              "reset_sign_in_failed"
+              "password_update_failed"
             ]
           },
           "422": {
@@ -4113,7 +4076,7 @@
     },
     "/api/v1/auth/signin": {
       "post": {
-        "description": "Sign in with email and password; the session is also set as cookies.",
+        "description": "Sign in with email and password.",
         "operationId": "sign_in_api_v1_auth_signin_post",
         "requestBody": {
           "content": {
@@ -4144,11 +4107,9 @@
                 }
               }
             },
-            "description": "wrong_credentials, email_not_confirmed, sign_in_failed, account_deleted",
+            "description": "wrong_credentials, account_deleted",
             "x-codes": [
               "wrong_credentials",
-              "email_not_confirmed",
-              "sign_in_failed",
               "account_deleted"
             ]
           },
@@ -4188,19 +4149,6 @@
             "x-codes": [
               "sign_in_rate_limited"
             ]
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "sign_in_unavailable",
-            "x-codes": [
-              "sign_in_unavailable"
-            ]
           }
         },
         "summary": "Sign In",
@@ -4211,8 +4159,25 @@
     },
     "/api/v1/auth/signout": {
       "post": {
-        "description": "End this browser's session and clear its cookies. Succeeds even without a session.",
+        "description": "End the presented sign-in, or all of the caller's. Succeeds even without a session.",
         "operationId": "sign_out_api_v1_auth_signout_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/SignOutRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "content": {
@@ -4223,6 +4188,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           },
           "500": {
             "content": {
@@ -4238,6 +4213,11 @@
             ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Sign Out",
         "tags": [
           "auth"
@@ -4277,10 +4257,9 @@
                 }
               }
             },
-            "description": "email_already_registered, signup_failed",
+            "description": "email_already_registered",
             "x-codes": [
-              "email_already_registered",
-              "signup_failed"
+              "email_already_registered"
             ]
           },
           "422": {
@@ -4305,19 +4284,6 @@
             "x-codes": [
               "verification_email_rate_limited"
             ]
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "auth_unavailable",
-            "x-codes": [
-              "auth_unavailable"
-            ]
           }
         },
         "summary": "Sign Up",
@@ -4328,7 +4294,7 @@
     },
     "/api/v1/auth/verify-email": {
       "post": {
-        "description": "Follow a verification link. The user signs in next, so any old session cookies are cleared.",
+        "description": "Follow a verification link. No session is issued: the user signs in next.",
         "operationId": "verify_email_api_v1_auth_verify_email_post",
         "requestBody": {
           "content": {
@@ -4574,21 +4540,13 @@
               }
             },
             "description": "Validation Error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "auth_unavailable",
-            "x-codes": [
-              "auth_unavailable"
-            ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Submit Client Contact",
         "tags": [
           "client"
@@ -4635,21 +4593,13 @@
             "x-codes": [
               "forbidden"
             ]
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "auth_unavailable",
-            "x-codes": [
-              "auth_unavailable"
-            ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Get Onboarding",
         "tags": [
           "client"
@@ -4714,21 +4664,13 @@
               }
             },
             "description": "Validation Error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "auth_unavailable",
-            "x-codes": [
-              "auth_unavailable"
-            ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Patch Onboarding",
         "tags": [
           "client"
@@ -4821,21 +4763,13 @@
               }
             },
             "description": "Validation Error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "auth_unavailable",
-            "x-codes": [
-              "auth_unavailable"
-            ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "List Help Articles",
         "tags": [
           "help"
@@ -4932,21 +4866,13 @@
               }
             },
             "description": "Validation Error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "auth_unavailable",
-            "x-codes": [
-              "auth_unavailable"
-            ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Get Help Article",
         "tags": [
           "help"
@@ -5036,9 +4962,8 @@
                 }
               }
             },
-            "description": "auth_unavailable, help_assistant_unavailable, ai_unavailable, ai_failed, ai_empty_reply",
+            "description": "help_assistant_unavailable, ai_unavailable, ai_failed, ai_empty_reply",
             "x-codes": [
-              "auth_unavailable",
               "help_assistant_unavailable",
               "ai_unavailable",
               "ai_failed",
@@ -5046,6 +4971,11 @@
             ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Ask Help Assistant",
         "tags": [
           "help"
@@ -5120,21 +5050,13 @@
               }
             },
             "description": "Validation Error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "auth_unavailable",
-            "x-codes": [
-              "auth_unavailable"
-            ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "List Help Categories",
         "tags": [
           "help"
@@ -5224,13 +5146,17 @@
                 }
               }
             },
-            "description": "auth_unavailable, media_upload_failed",
+            "description": "media_upload_failed",
             "x-codes": [
-              "auth_unavailable",
               "media_upload_failed"
             ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Upload File",
         "tags": [
           "media"
@@ -5307,13 +5233,17 @@
                 }
               }
             },
-            "description": "auth_unavailable, media_upload_failed",
+            "description": "media_upload_failed",
             "x-codes": [
-              "auth_unavailable",
               "media_upload_failed"
             ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Upload Image",
         "tags": [
           "media"
@@ -5416,21 +5346,13 @@
             "x-codes": [
               "forbidden"
             ]
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "auth_unavailable",
-            "x-codes": [
-              "auth_unavailable"
-            ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Get Contact Settings",
         "tags": [
           "user"
@@ -5495,21 +5417,13 @@
               }
             },
             "description": "Validation Error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "auth_unavailable",
-            "x-codes": [
-              "auth_unavailable"
-            ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Put Contact Settings",
         "tags": [
           "user"
@@ -5592,21 +5506,13 @@
               }
             },
             "description": "Validation Error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "auth_unavailable",
-            "x-codes": [
-              "auth_unavailable"
-            ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Submit Vendor Contact",
         "tags": [
           "vendor"
@@ -5666,21 +5572,13 @@
             "x-codes": [
               "referral_programme_not_found"
             ]
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "auth_unavailable",
-            "x-codes": [
-              "auth_unavailable"
-            ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Get Referral Programme",
         "tags": [
           "vendor-referrals"
@@ -5727,21 +5625,13 @@
             "x-codes": [
               "forbidden"
             ]
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "auth_unavailable",
-            "x-codes": [
-              "auth_unavailable"
-            ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "List Referral Bookings",
         "tags": [
           "vendor-referrals"
@@ -5833,13 +5723,17 @@
                 }
               }
             },
-            "description": "auth_unavailable, referral_code_allocation_failed",
+            "description": "referral_code_allocation_failed",
             "x-codes": [
-              "auth_unavailable",
               "referral_code_allocation_failed"
             ]
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Choose Referral Code",
         "tags": [
           "vendor-referrals"

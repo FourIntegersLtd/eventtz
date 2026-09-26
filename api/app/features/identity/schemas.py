@@ -13,9 +13,11 @@ from pydantic import BaseModel, Field
 
 
 class AuthUser(BaseModel):
-    """The account as the web app sees it: Supabase identity merged with the `users` row.
+    """The account as the web app sees it, built from its `users` row.
 
     `preferred_name` and `client_onboarding_completed` are only filled for clients.
+    `user_metadata`/`app_metadata` were Supabase Auth's; they stay in the contract
+    for the web app but are always empty.
     """
 
     id: str
@@ -31,7 +33,10 @@ class AuthUser(BaseModel):
 
 
 class AuthSession(BaseModel):
-    """The Supabase session tokens (also set as httpOnly cookies)."""
+    """A session: a short-lived access token (sent as `Authorization: Bearer`) and a refresh token.
+
+    `expires_at` is when the access token expires, in seconds since the epoch.
+    """
 
     access_token: str
     refresh_token: str
@@ -81,14 +86,20 @@ class SignInResponse(BaseModel):
     session: AuthSession
 
 
+class SignOutRequest(BaseModel):
+    """The refresh token of the sign-in to end; leave it out to end every sign-in of the caller."""
+
+    refresh_token: str | None = Field(default=None)
+
+
 class SignOutResponse(BaseModel):
-    """Always a success: the cookies are cleared either way."""
+    """Always a success, even when there was nothing to end."""
 
     success: bool = True
 
 
 class RefreshSessionRequest(BaseModel):
-    """A refresh token; leave it out to use the refresh cookie."""
+    """The refresh token to exchange (the API sets no cookies, so it always comes in the body)."""
 
     refresh_token: str | None = Field(default=None)
 
@@ -140,7 +151,7 @@ class ChangePasswordRequest(BaseModel):
 
 
 class ChangePasswordResponse(BaseModel):
-    """The password changed; the session cookies are cleared, so the user signs in again."""
+    """The password changed and every sign-in ended, so the user signs in again."""
 
     success: bool = True
     message: str = "Password updated."

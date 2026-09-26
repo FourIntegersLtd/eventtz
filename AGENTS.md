@@ -54,6 +54,12 @@ make worker             # procrastinate worker
 make ci                 # lint + typecheck + arch (incl. alembic check) + tests
 make openapi            # regenerate openapi.json (then web: npm run api:types)
 
+# acceptance (from acceptance/): the freeze suite, same tests on both targets
+make serve              # baseline on :8000 over local Supabase (leave running)
+make test               # must stay green on the baseline
+make serve TARGET=api   # api/ on :8001 over its compose Postgres (db-up + migrate first)
+make test TARGET=api    # unbuilt behaviour is listed in conftest.NOT_YET_ON_API (strict xfail)
+
 # web (from web/)
 npm run dev             # :3001 (baseline frontend keeps :3000)
 npm run ci              # types + lint + tests + build
@@ -96,6 +102,11 @@ Traps in this machine's shell:
 - **Payments are two lifecycles.** `booking_requests.status` is the request; `payment_status` is money. Only the payments slice writes `payment_status`, with conditional `.eq("payment_status", expected)` writes.
 - **Held funds.** Checkout pays Eventtz; vendor payout is always an explicit `Transfer`. That is what lets disputes block payouts.
 - **SSE fans out over Redis** (ADR 0005). Without Redis the in-process bus only works on one replica.
+- **The session commits before the response.** Ask for it as `core.db.SessionDep` only
+  (`scope="function"`). FastAPI's default runs the commit after the body is sent, so a
+  failed commit would follow a 200; a guard and `tests/unit/test_session_scope.py` hold this.
+- **The worker has its own Railway config** (`api/railway.worker.toml`, no pre-deploy step),
+  so only the `api` service runs `alembic upgrade head`.
 - **Two schemas until cutover.** A live fix added to `backend/sql/` must also land as an Alembic revision in `api/`.
 - **Imported passwords are bcrypt.** Sign-in rehashes them to argon2; delete the bcrypt path once none remain (ADR 0003).
 - **Daily capacity** is enforced by a Postgres trigger (migration 033, kept in Alembic `0002`); the Python check is only for friendly errors.

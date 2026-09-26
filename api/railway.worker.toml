@@ -1,0 +1,11 @@
+# Railway config for the `worker` service: the same image as `api`, running the
+# procrastinate job worker (ADR 0008). It never migrates; `api`'s pre-deploy
+# step owns the schema. Set this file as the service's config-as-code path.
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "python -m app.worker.main"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5

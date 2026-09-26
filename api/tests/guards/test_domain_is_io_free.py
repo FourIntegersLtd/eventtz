@@ -11,6 +11,9 @@ from tests.guards._scan import FEATURES_ROOT, imported_modules, rel
 # I/O and framework libraries a pure domain module must not import.
 BANNED = (
     "supabase",
+    "sqlalchemy",
+    "psycopg",
+    "redis",
     "httpx",
     "requests",
     "fastapi",
@@ -40,5 +43,5 @@ def test_domain_has_no_io(path: Path) -> None:
 
 def test_the_guard_would_catch_io_in_a_domain(tmp_path: Path) -> None:
     planted = tmp_path / "domain.py"
-    planted.write_text("import httpx\nfrom app.core.db import service_client\n", encoding="utf-8")
-    assert violations(planted) == ["app.core.db.service_client", "httpx"]
+    planted.write_text("import httpx\nfrom sqlalchemy import select\n", encoding="utf-8")
+    assert violations(planted) == ["httpx", "sqlalchemy.select"]

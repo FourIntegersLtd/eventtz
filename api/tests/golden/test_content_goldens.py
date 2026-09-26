@@ -23,7 +23,7 @@ from app.features.content.domain_help import (
     finish_reply,
     retrieve_articles,
 )
-from app.features.content.models import HelpArticleText
+from app.features.content.rows import HelpArticleText
 from app.features.content.service_contact import classify
 from tests.support.fakes import FakeLanguageModel
 
@@ -63,14 +63,14 @@ def test_help_assistant_prompt_and_reply_match_baseline(case: dict[str, Any]) ->
 
 
 @pytest.mark.parametrize("case", load_golden("contact_classifier"), ids=lambda case: case["portal"])
-def test_contact_classifier_prompt_and_subject_match_baseline(case: dict[str, Any]) -> None:
+async def test_contact_classifier_prompt_and_subject_match_baseline(case: dict[str, Any]) -> None:
     # `reply` is the subject key the model was made to return; none means the call failed.
     language_model = (
         FakeLanguageModel(reply={"subject": case["reply"], "rationale": ""})
         if case["reply"] is not None
         else FakeLanguageModel(error=LanguageModelFailed())
     )
-    subject = classify(language_model, portal=case["portal"], message=case["message"])
+    subject = await classify(language_model, portal=case["portal"], message=case["message"])
     assert subject == case["subject"]
     (call,) = language_model.calls
     assert call.model == case["model"]
