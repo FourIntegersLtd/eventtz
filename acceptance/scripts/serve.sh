@@ -42,10 +42,22 @@ case "$target" in
     cd "$REPO_ROOT/api"
     # api/'s own Postgres (:5434) and Redis (:6381), migrated to head. Settings'
     # local defaults point at them; nothing hosted is ever read.
-    export APP_ENV=local DATABASE_URL="postgresql+psycopg://postgres:postgres@127.0.0.1:5434/eventtz"
+    #
+    # API_PORT and API_DB_NAME let several worktrees run their own server and
+    # database against the one shared compose Postgres at the same time
+    # (workstream N uses port 81NN and database eventtz_wsN). The matching test
+    # run sets BASE_URL and ACCEPTANCE_DATABASE_URL, which conftest.py honours.
+    api_port="${API_PORT:-8001}"
+    api_db_name="${API_DB_NAME:-eventtz}"
+    export APP_ENV=local
+    export DATABASE_URL="postgresql+psycopg://postgres:postgres@127.0.0.1:5434/$api_db_name"
     docker compose up -d --wait
+    # Create the database on first use; the stock `eventtz` already exists.
+    docker compose exec -T postgres psql -U postgres -tAc \
+      "SELECT 1 FROM pg_database WHERE datname = '$api_db_name'" | grep -q 1 ||
+      docker compose exec -T postgres createdb -U postgres "$api_db_name"
     env -u VIRTUAL_ENV poetry run alembic upgrade head
-    exec env -u VIRTUAL_ENV poetry run uvicorn app.main:app --host 127.0.0.1 --port 8001
+    exec env -u VIRTUAL_ENV poetry run uvicorn app.main:app --host 127.0.0.1 --port "$api_port"
     ;;
   *) echo "usage: serve.sh baseline|api" >&2; exit 2 ;;
 esac
