@@ -1,0 +1,230 @@
+{
+  "choose_snippets": {
+    "cases": [
+      {
+        "name": "all vendors, with preferred terms",
+        "prefer_terms": {
+          "vendor-01": [
+            "cake",
+            "baker",
+            "baking",
+            "cupcake",
+            "dessert",
+            "icing"
+          ],
+          "vendor-02": [
+            "food",
+            "cater",
+            "jollof",
+            "chops",
+            "meal",
+            "rice",
+            "buffet"
+          ],
+          "vendor-05": [
+            "makeup",
+            "glam",
+            "mua",
+            "bridal"
+          ]
+        },
+        "result": {
+          "vendor-01": {
+            "body_excerpt": "Best cake in London, would book again!",
+            "rating": 5,
+            "reviewer_display": "Grace"
+          },
+          "vendor-02": {
+            "body_excerpt": "Great food and catering, jollof rice and chops were a hit at our buffet meal.",
+            "rating": 3,
+            "reviewer_display": "Amaka"
+          },
+          "vendor-04": {
+            "body_excerpt": "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd…",
+            "rating": 5,
+            "reviewer_display": "Bola"
+          },
+          "vendor-05": {
+            "body_excerpt": "Glam makeup, no complaints at all.",
+            "rating": 4,
+            "reviewer_display": "Nkem"
+          }
+        },
+        "vendor_ids": [
+          "vendor-01",
+          "vendor-02",
+          "vendor-03",
+          "vendor-04",
+          "vendor-05"
+        ]
+      },
+      {
+        "name": "no preferred terms falls back to rating and length",
+        "prefer_terms": {},
+        "result": {
+          "vendor-01": {
+            "body_excerpt": "Best cake in London, would book again!",
+            "rating": 5,
+            "reviewer_display": "Grace"
+          },
+          "vendor-02": {
+            "body_excerpt": "Great vendor, highly recommend.",
+            "rating": 4,
+            "reviewer_display": "Chidi"
+          },
+          "vendor-04": {
+            "body_excerpt": "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd…",
+            "rating": 5,
+            "reviewer_display": "Bola"
+          },
+          "vendor-05": {
+            "body_excerpt": "Glam makeup, no complaints at all.",
+            "rating": 4,
+            "reviewer_display": "Nkem"
+          }
+        },
+        "vendor_ids": [
+          "vendor-01",
+          "vendor-02",
+          "vendor-03",
+          "vendor-04",
+          "vendor-05"
+        ]
+      }
+    ],
+    "client_emails": {
+      "client-1": "grace@example.com",
+      "client-2": "tunde@example.com",
+      "client-3": "amaka@example.com",
+      "client-4": "chidi@example.com",
+      "client-5": "sade@example.com",
+      "client-6": "femi@example.com",
+      "client-7": "bola@example.com",
+      "client-8": "nkem@example.com",
+      "client-9": "yemi@example.com"
+    },
+    "prefer_terms": {
+      "vendor-01": [
+        "cake",
+        "baker",
+        "baking",
+        "cupcake",
+        "dessert",
+        "icing"
+      ],
+      "vendor-02": [
+        "food",
+        "cater",
+        "jollof",
+        "chops",
+        "meal",
+        "rice",
+        "buffet"
+      ],
+      "vendor-05": [
+        "makeup",
+        "glam",
+        "mua",
+        "bridal"
+      ]
+    },
+    "reviews": [
+      {
+        "body": "Best cake in London, would book again!",
+        "client_user_id": "client-1",
+        "rating": 5,
+        "vendor_user_id": "vendor-01"
+      },
+      {
+        "body": "Lovely cake, a little pricey.",
+        "client_user_id": "client-2",
+        "rating": 4,
+        "vendor_user_id": "vendor-01"
+      },
+      {
+        "body": "Great food and catering, jollof rice and chops were a hit at our buffet meal.",
+        "client_user_id": "client-3",
+        "rating": 3,
+        "vendor_user_id": "vendor-02"
+      },
+      {
+        "body": "Great vendor, highly recommend.",
+        "client_user_id": "client-4",
+        "rating": 4,
+        "vendor_user_id": "vendor-02"
+      },
+      {
+        "body": "",
+        "client_user_id": "client-5",
+        "rating": 1,
+        "vendor_user_id": "vendor-03"
+      },
+      {
+        "body": "Never showed up.",
+        "client_user_id": "client-6",
+        "rating": 0,
+        "vendor_user_id": "vendor-03"
+      },
+      {
+        "body": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "client_user_id": "client-7",
+        "rating": 5,
+        "vendor_user_id": "vendor-04"
+      },
+      {
+        "body": "Glam makeup, no complaints at all.",
+        "client_user_id": "client-8",
+        "rating": 4,
+        "vendor_user_id": "vendor-05"
+      },
+      {
+        "body": "Bridal makeup and glam looked amazing, would recommend to anyone.",
+        "client_user_id": "client-9",
+        "rating": 3,
+        "vendor_user_id": "vendor-05"
+      }
+    ]
+  },
+  "reviewer_display": [
+    {
+      "display": "Verified client",
+      "email": null,
+      "name": "none"
+    },
+    {
+      "display": "Verified client",
+      "email": "",
+      "name": "blank"
+    },
+    {
+      "display": "John.doe",
+      "email": "john.doe@example.com",
+      "name": "ordinary email"
+    },
+    {
+      "display": "A",
+      "email": "a@example.com",
+      "name": "single letter local part"
+    },
+    {
+      "display": "Ada",
+      "email": "Ada@example.com",
+      "name": "already capitalised"
+    },
+    {
+      "display": "Verified client",
+      "email": "!!!@example.com",
+      "name": "symbols stripped down to blank"
+    },
+    {
+      "display": "Verylongusernamehe",
+      "email": "verylongusernamehereverylongusernamehere@example.com",
+      "name": "long local part clipped"
+    },
+    {
+      "display": "User.name-123",
+      "email": "user.name-123@sub.example.com",
+      "name": "dots and dashes kept"
+    }
+  ]
+}

@@ -65,7 +65,7 @@ async def list_user_summaries(session: AsyncSession, user_ids: list[str]) -> lis
     known_ids = sorted(user_id for user_id in unique_ids if user_id is not None)
     if not known_ids:
         return []
-    statement = select(User.id, User.email, User.preferred_name, User.deleted_at).where(
+    statement = select(User.id, User.email, User.preferred_name, User.deleted_at, User.user_type).where(
         User.id.in_(known_ids)
     )
     return [
@@ -74,6 +74,7 @@ async def list_user_summaries(session: AsyncSession, user_ids: list[str]) -> lis
             email=summary.email,
             preferred_name=summary.preferred_name,
             deleted_at=plain_value(summary.deleted_at),
+            user_type=summary.user_type,
         )
         for summary in (await session.execute(statement)).all()
     ]
@@ -163,6 +164,16 @@ async def user_ids_of_type_with_email_like(
         select(User.id).where(User.user_type == user_type, User.email.ilike(pattern)).limit(limit)
     )
     return [str(user_id) for user_id in result]
+
+
+async def open_user_ids_of_type(
+    session: AsyncSession, *, user_type: str, include_suspended: bool
+) -> list[str]:
+    """Every open (not closed) account of `user_type`, optionally leaving out suspended ones."""
+    statement = select(User.id).where(User.user_type == user_type, User.deleted_at.is_(None))
+    if not include_suspended:
+        statement = statement.where(User.account_suspended.is_(False))
+    return [str(user_id) for user_id in await session.scalars(statement.order_by(User.id))]
 
 
 async def set_password_hash(session: AsyncSession, user_id: str, password_hash: str) -> None:

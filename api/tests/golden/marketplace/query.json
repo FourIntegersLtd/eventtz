@@ -1,0 +1,1099 @@
+{
+  "sanitize": [
+    {
+      "name": "empty dict",
+      "reply": {},
+      "result": {
+        "event_types": [],
+        "intent_summary": null,
+        "keywords": [],
+        "location": null,
+        "mode": "simple",
+        "needs": [],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": []
+      }
+    },
+    {
+      "name": "unknown types filtered",
+      "reply": {
+        "mode": "simple",
+        "types": [
+          "baking",
+          "unknown",
+          "juggling"
+        ]
+      },
+      "result": {
+        "event_types": [],
+        "intent_summary": null,
+        "keywords": [],
+        "location": null,
+        "mode": "simple",
+        "needs": [],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": [
+          "baking"
+        ]
+      }
+    },
+    {
+      "name": "related types exclude primary",
+      "reply": {
+        "related_types": [
+          "baking",
+          "catering",
+          "unknown"
+        ],
+        "types": [
+          "baking"
+        ]
+      },
+      "result": {
+        "event_types": [],
+        "intent_summary": null,
+        "keywords": [],
+        "location": null,
+        "mode": "simple",
+        "needs": [],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [
+          "catering"
+        ],
+        "types": [
+          "baking"
+        ]
+      }
+    },
+    {
+      "name": "event types unknown filtered",
+      "reply": {
+        "event_types": [
+          "weddings",
+          "unknown_event"
+        ]
+      },
+      "result": {
+        "event_types": [
+          "weddings"
+        ],
+        "intent_summary": null,
+        "keywords": [],
+        "location": null,
+        "mode": "simple",
+        "needs": [],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": []
+      }
+    },
+    {
+      "name": "keywords dedupe and limit",
+      "reply": {
+        "keywords": [
+          "Cake",
+          "cake",
+          " CAKE ",
+          "kw0",
+          "kw1",
+          "kw2",
+          "kw3",
+          "kw4",
+          "kw5",
+          "kw6",
+          "kw7",
+          "kw8",
+          "kw9",
+          "kw10",
+          "kw11",
+          "kw12",
+          "kw13",
+          "kw14",
+          "kw15",
+          "kw16",
+          "kw17",
+          "kw18",
+          "kw19"
+        ]
+      },
+      "result": {
+        "event_types": [],
+        "intent_summary": null,
+        "keywords": [
+          "cake",
+          "kw0",
+          "kw1",
+          "kw2",
+          "kw3",
+          "kw4",
+          "kw5",
+          "kw6",
+          "kw7",
+          "kw8",
+          "kw9",
+          "kw10",
+          "kw11",
+          "kw12",
+          "kw13",
+          "kw14"
+        ],
+        "location": null,
+        "mode": "simple",
+        "needs": [],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": []
+      }
+    },
+    {
+      "name": "related keywords exclude keywords",
+      "reply": {
+        "keywords": [
+          "cake"
+        ],
+        "related_keywords": [
+          "cake",
+          "bake",
+          "bake"
+        ]
+      },
+      "result": {
+        "event_types": [],
+        "intent_summary": null,
+        "keywords": [
+          "cake"
+        ],
+        "location": null,
+        "mode": "simple",
+        "needs": [],
+        "plan_title": null,
+        "related_keywords": [
+          "bake"
+        ],
+        "related_locations": [],
+        "related_types": [],
+        "types": []
+      }
+    },
+    {
+      "name": "location trims and clips",
+      "reply": {
+        "location": "  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      "result": {
+        "event_types": [],
+        "intent_summary": null,
+        "keywords": [],
+        "location": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "mode": "simple",
+        "needs": [],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": []
+      }
+    },
+    {
+      "name": "related locations exclude location lowercase",
+      "reply": {
+        "location": "London",
+        "related_locations": [
+          "london",
+          "Manchester",
+          "manchester"
+        ]
+      },
+      "result": {
+        "event_types": [],
+        "intent_summary": null,
+        "keywords": [],
+        "location": "London",
+        "mode": "simple",
+        "needs": [],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [
+          "manchester"
+        ],
+        "related_types": [],
+        "types": []
+      }
+    },
+    {
+      "name": "intent summary clipped",
+      "reply": {
+        "intent_summary": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+      },
+      "result": {
+        "event_types": [],
+        "intent_summary": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+        "keywords": [],
+        "location": null,
+        "mode": "simple",
+        "needs": [],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": []
+      }
+    },
+    {
+      "name": "plan title clipped and mode plan",
+      "reply": {
+        "mode": "PLAN",
+        "needs": [
+          {
+            "label": "Cake",
+            "service_key": "baking"
+          }
+        ],
+        "plan_title": "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+      },
+      "result": {
+        "event_types": [],
+        "intent_summary": null,
+        "keywords": [],
+        "location": null,
+        "mode": "plan",
+        "needs": [
+          {
+            "id": "cake",
+            "keywords": [
+              "baking"
+            ],
+            "label": "Cake",
+            "optional": false,
+            "rationale": "Useful for your event. Compare these vendors.",
+            "service_key": "baking"
+          }
+        ],
+        "plan_title": "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": [
+          "baking"
+        ]
+      }
+    },
+    {
+      "name": "mode simple wipes needs and title",
+      "reply": {
+        "mode": "simple",
+        "needs": [
+          {
+            "service_key": "baking"
+          }
+        ],
+        "plan_title": "Title"
+      },
+      "result": {
+        "event_types": [],
+        "intent_summary": null,
+        "keywords": [],
+        "location": null,
+        "mode": "simple",
+        "needs": [],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": []
+      }
+    },
+    {
+      "name": "needs unknown service dropped",
+      "reply": {
+        "mode": "plan",
+        "needs": [
+          {
+            "label": "Juggler",
+            "service_key": "juggling"
+          }
+        ]
+      },
+      "result": {
+        "event_types": [],
+        "intent_summary": null,
+        "keywords": [],
+        "location": null,
+        "mode": "plan",
+        "needs": [],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": []
+      }
+    },
+    {
+      "name": "needs blank label falls back to title",
+      "reply": {
+        "mode": "plan",
+        "needs": [
+          {
+            "label": "  ",
+            "service_key": "hair_styling"
+          }
+        ]
+      },
+      "result": {
+        "event_types": [],
+        "intent_summary": null,
+        "keywords": [],
+        "location": null,
+        "mode": "plan",
+        "needs": [
+          {
+            "id": "hair-styling",
+            "keywords": [
+              "hair_styling"
+            ],
+            "label": "Hair Styling",
+            "optional": false,
+            "rationale": "Useful for your event. Compare these vendors.",
+            "service_key": "hair_styling"
+          }
+        ],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": [
+          "hair_styling"
+        ]
+      }
+    },
+    {
+      "name": "needs blank id falls back to slug",
+      "reply": {
+        "mode": "plan",
+        "needs": [
+          {
+            "id": "",
+            "label": "Great DJ!",
+            "service_key": "dj"
+          }
+        ]
+      },
+      "result": {
+        "event_types": [],
+        "intent_summary": null,
+        "keywords": [],
+        "location": null,
+        "mode": "plan",
+        "needs": [
+          {
+            "id": "great-dj",
+            "keywords": [
+              "dj"
+            ],
+            "label": "Great DJ!",
+            "optional": false,
+            "rationale": "Useful for your event. Compare these vendors.",
+            "service_key": "dj"
+          }
+        ],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": [
+          "dj"
+        ]
+      }
+    },
+    {
+      "name": "needs duplicate ids suffixed",
+      "reply": {
+        "mode": "plan",
+        "needs": [
+          {
+            "id": "dj",
+            "label": "DJ",
+            "service_key": "dj"
+          },
+          {
+            "id": "dj",
+            "label": "DJ",
+            "service_key": "mc"
+          }
+        ]
+      },
+      "result": {
+        "event_types": [],
+        "intent_summary": null,
+        "keywords": [],
+        "location": null,
+        "mode": "plan",
+        "needs": [
+          {
+            "id": "dj",
+            "keywords": [
+              "dj"
+            ],
+            "label": "DJ",
+            "optional": false,
+            "rationale": "Useful for your event. Compare these vendors.",
+            "service_key": "dj"
+          },
+          {
+            "id": "dj-2",
+            "keywords": [
+              "mc"
+            ],
+            "label": "DJ",
+            "optional": false,
+            "rationale": "Useful for your event. Compare these vendors.",
+            "service_key": "mc"
+          }
+        ],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": [
+          "dj",
+          "mc"
+        ]
+      }
+    },
+    {
+      "name": "needs collapse duplicate service merges keywords",
+      "reply": {
+        "mode": "plan",
+        "needs": [
+          {
+            "keywords": [
+              "rice"
+            ],
+            "service_key": "catering"
+          },
+          {
+            "keywords": [
+              "jollof",
+              "rice"
+            ],
+            "service_key": "catering"
+          }
+        ]
+      },
+      "result": {
+        "event_types": [],
+        "intent_summary": null,
+        "keywords": [],
+        "location": null,
+        "mode": "plan",
+        "needs": [
+          {
+            "id": "catering",
+            "keywords": [
+              "rice",
+              "jollof"
+            ],
+            "label": "Catering",
+            "optional": false,
+            "rationale": "Useful for your event. Compare these vendors.",
+            "service_key": "catering"
+          }
+        ],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": [
+          "catering"
+        ]
+      }
+    },
+    {
+      "name": "needs too many capped at six",
+      "reply": {
+        "mode": "plan",
+        "needs": [
+          {
+            "label": "baking",
+            "service_key": "baking"
+          },
+          {
+            "label": "catering",
+            "service_key": "catering"
+          },
+          {
+            "label": "photography",
+            "service_key": "photography"
+          },
+          {
+            "label": "makeup",
+            "service_key": "makeup"
+          },
+          {
+            "label": "rentals",
+            "service_key": "rentals"
+          },
+          {
+            "label": "event_planning",
+            "service_key": "event_planning"
+          },
+          {
+            "label": "decor",
+            "service_key": "decor"
+          }
+        ]
+      },
+      "result": {
+        "event_types": [],
+        "intent_summary": null,
+        "keywords": [],
+        "location": null,
+        "mode": "plan",
+        "needs": [
+          {
+            "id": "baking",
+            "keywords": [
+              "baking"
+            ],
+            "label": "baking",
+            "optional": false,
+            "rationale": "Useful for your event. Compare these vendors.",
+            "service_key": "baking"
+          },
+          {
+            "id": "catering",
+            "keywords": [
+              "catering"
+            ],
+            "label": "catering",
+            "optional": false,
+            "rationale": "Useful for your event. Compare these vendors.",
+            "service_key": "catering"
+          },
+          {
+            "id": "photography",
+            "keywords": [
+              "photography"
+            ],
+            "label": "photography",
+            "optional": false,
+            "rationale": "Useful for your event. Compare these vendors.",
+            "service_key": "photography"
+          },
+          {
+            "id": "makeup",
+            "keywords": [
+              "makeup"
+            ],
+            "label": "makeup",
+            "optional": false,
+            "rationale": "Useful for your event. Compare these vendors.",
+            "service_key": "makeup"
+          },
+          {
+            "id": "rentals",
+            "keywords": [
+              "rentals"
+            ],
+            "label": "rentals",
+            "optional": false,
+            "rationale": "Useful for your event. Compare these vendors.",
+            "service_key": "rentals"
+          },
+          {
+            "id": "event-planning",
+            "keywords": [
+              "event_planning"
+            ],
+            "label": "event_planning",
+            "optional": false,
+            "rationale": "Useful for your event. Compare these vendors.",
+            "service_key": "event_planning"
+          }
+        ],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": [
+          "baking",
+          "catering",
+          "photography",
+          "makeup",
+          "rentals"
+        ]
+      }
+    },
+    {
+      "name": "needs keywords empty default to service key",
+      "reply": {
+        "mode": "plan",
+        "needs": [
+          {
+            "keywords": [],
+            "service_key": "mc"
+          }
+        ]
+      },
+      "result": {
+        "event_types": [],
+        "intent_summary": null,
+        "keywords": [],
+        "location": null,
+        "mode": "plan",
+        "needs": [
+          {
+            "id": "mc",
+            "keywords": [
+              "mc"
+            ],
+            "label": "Mc",
+            "optional": false,
+            "rationale": "Useful for your event. Compare these vendors.",
+            "service_key": "mc"
+          }
+        ],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": [
+          "mc"
+        ]
+      }
+    },
+    {
+      "name": "needs rationale bare service dropped",
+      "reply": {
+        "mode": "plan",
+        "needs": [
+          {
+            "rationale": "  Photography.  ",
+            "service_key": "photography"
+          }
+        ]
+      },
+      "result": {
+        "event_types": [],
+        "intent_summary": null,
+        "keywords": [],
+        "location": null,
+        "mode": "plan",
+        "needs": [
+          {
+            "id": "photography",
+            "keywords": [
+              "photography"
+            ],
+            "label": "Photography",
+            "optional": false,
+            "rationale": "Useful for your event. Compare these vendors.",
+            "service_key": "photography"
+          }
+        ],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": [
+          "photography"
+        ]
+      }
+    },
+    {
+      "name": "needs rationale kept",
+      "reply": {
+        "mode": "plan",
+        "needs": [
+          {
+            "rationale": "Great for capturing memories.",
+            "service_key": "photography"
+          }
+        ]
+      },
+      "result": {
+        "event_types": [],
+        "intent_summary": null,
+        "keywords": [],
+        "location": null,
+        "mode": "plan",
+        "needs": [
+          {
+            "id": "photography",
+            "keywords": [
+              "photography"
+            ],
+            "label": "Photography",
+            "optional": false,
+            "rationale": "Great for capturing memories.",
+            "service_key": "photography"
+          }
+        ],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": [
+          "photography"
+        ]
+      }
+    },
+    {
+      "name": "plan mode derives types from non-optional needs",
+      "reply": {
+        "mode": "plan",
+        "needs": [
+          {
+            "service_key": "baking"
+          },
+          {
+            "optional": true,
+            "service_key": "catering"
+          }
+        ]
+      },
+      "result": {
+        "event_types": [],
+        "intent_summary": null,
+        "keywords": [],
+        "location": null,
+        "mode": "plan",
+        "needs": [
+          {
+            "id": "baking",
+            "keywords": [
+              "baking"
+            ],
+            "label": "Baking",
+            "optional": false,
+            "rationale": "Useful for your event. Compare these vendors.",
+            "service_key": "baking"
+          },
+          {
+            "id": "catering",
+            "keywords": [
+              "catering"
+            ],
+            "label": "Catering",
+            "optional": true,
+            "rationale": "Useful for your event. Compare these vendors.",
+            "service_key": "catering"
+          }
+        ],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": [
+          "baking"
+        ]
+      }
+    },
+    {
+      "name": "plan mode keeps explicit types",
+      "reply": {
+        "mode": "plan",
+        "needs": [
+          {
+            "service_key": "baking"
+          }
+        ],
+        "types": [
+          "dj"
+        ]
+      },
+      "result": {
+        "event_types": [],
+        "intent_summary": null,
+        "keywords": [],
+        "location": null,
+        "mode": "plan",
+        "needs": [
+          {
+            "id": "baking",
+            "keywords": [
+              "baking"
+            ],
+            "label": "Baking",
+            "optional": false,
+            "rationale": "Useful for your event. Compare these vendors.",
+            "service_key": "baking"
+          }
+        ],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": [
+          "dj"
+        ]
+      }
+    },
+    {
+      "name": "blank strings ignored",
+      "reply": {
+        "intent_summary": "  ",
+        "location": "   ",
+        "plan_title": "   "
+      },
+      "result": {
+        "event_types": [],
+        "intent_summary": null,
+        "keywords": [],
+        "location": null,
+        "mode": "simple",
+        "needs": [],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": []
+      }
+    },
+    {
+      "name": "non-list types ignored",
+      "reply": {
+        "event_types": 5,
+        "related_types": null,
+        "types": "baking"
+      },
+      "result": {
+        "event_types": [],
+        "intent_summary": null,
+        "keywords": [],
+        "location": null,
+        "mode": "simple",
+        "needs": [],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": []
+      }
+    }
+  ],
+  "token_only": [
+    {
+      "name": "empty",
+      "query": "",
+      "result": {
+        "event_types": [],
+        "intent_summary": null,
+        "keywords": [],
+        "location": null,
+        "mode": "simple",
+        "needs": [],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": []
+      }
+    },
+    {
+      "name": "blank",
+      "query": "   ",
+      "result": {
+        "event_types": [],
+        "intent_summary": null,
+        "keywords": [],
+        "location": null,
+        "mode": "simple",
+        "needs": [],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": []
+      }
+    },
+    {
+      "name": "ordinary query",
+      "query": "Cake and jollof rice",
+      "result": {
+        "event_types": [],
+        "intent_summary": "cake and jollof rice",
+        "keywords": [
+          "cake",
+          "and",
+          "jollof",
+          "rice"
+        ],
+        "location": null,
+        "mode": "simple",
+        "needs": [],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": []
+      }
+    },
+    {
+      "name": "single char words dropped",
+      "query": "a b cd",
+      "result": {
+        "event_types": [],
+        "intent_summary": "a b cd",
+        "keywords": [
+          "cd"
+        ],
+        "location": null,
+        "mode": "simple",
+        "needs": [],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": []
+      }
+    },
+    {
+      "name": "multiple spaces collapse",
+      "query": "  MULTIPLE   Spaces   Here  ",
+      "result": {
+        "event_types": [],
+        "intent_summary": "multiple spaces here",
+        "keywords": [
+          "multiple",
+          "spaces",
+          "here"
+        ],
+        "location": null,
+        "mode": "simple",
+        "needs": [],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": []
+      }
+    },
+    {
+      "name": "more than sixteen words capped",
+      "query": "word0 word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word12 word13 word14 word15 word16 word17 word18 word19",
+      "result": {
+        "event_types": [],
+        "intent_summary": "word0 word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word12 word13 word14 word15 word16 word17 word",
+        "keywords": [
+          "word0",
+          "word1",
+          "word2",
+          "word3",
+          "word4",
+          "word5",
+          "word6",
+          "word7",
+          "word8",
+          "word9",
+          "word10",
+          "word11",
+          "word12",
+          "word13",
+          "word14",
+          "word15"
+        ],
+        "location": null,
+        "mode": "simple",
+        "needs": [],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": []
+      }
+    },
+    {
+      "name": "unicode",
+      "query": "café déjà vu",
+      "result": {
+        "event_types": [],
+        "intent_summary": "café déjà vu",
+        "keywords": [
+          "café",
+          "déjà",
+          "vu"
+        ],
+        "location": null,
+        "mode": "simple",
+        "needs": [],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": []
+      }
+    },
+    {
+      "name": "punctuation kept",
+      "query": "Caterer in Manchester!!",
+      "result": {
+        "event_types": [],
+        "intent_summary": "caterer in manchester!!",
+        "keywords": [
+          "caterer",
+          "in",
+          "manchester!!"
+        ],
+        "location": null,
+        "mode": "simple",
+        "needs": [],
+        "plan_title": null,
+        "related_keywords": [],
+        "related_locations": [],
+        "related_types": [],
+        "types": []
+      }
+    }
+  ],
+  "why_for_need": [
+    {
+      "name": "no rationale generic",
+      "rationale": null,
+      "result": "Useful for your event. Compare these vendors.",
+      "service_key": "baking"
+    },
+    {
+      "name": "bare service name dropped",
+      "rationale": "Catering.",
+      "result": "Useful for your event. Compare these vendors.",
+      "service_key": "catering"
+    },
+    {
+      "name": "real rationale kept",
+      "rationale": "  Great for keeping the party going.  ",
+      "result": "Great for keeping the party going.",
+      "service_key": "dj"
+    },
+    {
+      "name": "blank rationale generic",
+      "rationale": "",
+      "result": "Useful for your event. Compare these vendors.",
+      "service_key": "mc"
+    },
+    {
+      "name": "bare underscore service dropped",
+      "rationale": "Hair Styling",
+      "result": "Useful for your event. Compare these vendors.",
+      "service_key": "hair_styling"
+    },
+    {
+      "name": "long rationale clipped",
+      "rationale": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "result": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "service_key": "decor"
+    }
+  ]
+}

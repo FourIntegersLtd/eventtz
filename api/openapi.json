@@ -1,6 +1,130 @@
 {
   "components": {
     "schemas": {
+      "AddressAutocompleteItem": {
+        "description": "One address suggestion.",
+        "properties": {
+          "address": {
+            "title": "Address",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "address"
+        ],
+        "title": "AddressAutocompleteItem",
+        "type": "object"
+      },
+      "AddressAutocompleteResponse": {
+        "description": "Address suggestions for a partial address, and whether a lookup provider is set up.",
+        "properties": {
+          "provider_configured": {
+            "default": true,
+            "title": "Provider Configured",
+            "type": "boolean"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "suggestions": {
+            "items": {
+              "$ref": "#/components/schemas/AddressAutocompleteItem"
+            },
+            "title": "Suggestions",
+            "type": "array"
+          }
+        },
+        "title": "AddressAutocompleteResponse",
+        "type": "object"
+      },
+      "AddressFindResponse": {
+        "description": "All address lines at a postcode.",
+        "properties": {
+          "addresses": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Addresses",
+            "type": "array"
+          },
+          "provider_configured": {
+            "default": true,
+            "title": "Provider Configured",
+            "type": "boolean"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "title": "AddressFindResponse",
+        "type": "object"
+      },
+      "AddressResolveResponse": {
+        "description": "One address, resolved to its parts.",
+        "properties": {
+          "county": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "County"
+          },
+          "formatted_line": {
+            "title": "Formatted Line",
+            "type": "string"
+          },
+          "line_1": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line 1"
+          },
+          "postcode": {
+            "title": "Postcode",
+            "type": "string"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "town_or_city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Town Or City"
+          }
+        },
+        "required": [
+          "postcode",
+          "formatted_line"
+        ],
+        "title": "AddressResolveResponse",
+        "type": "object"
+      },
       "AdminBugReportBody": {
         "description": "A bug report from the admin console.",
         "properties": {
@@ -15,6 +139,469 @@
           "message"
         ],
         "title": "AdminBugReportBody",
+        "type": "object"
+      },
+      "AdminChatMessageItem": {
+        "description": "A message in the staff viewer for any thread (DMs included).",
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "sender_user_id": {
+            "title": "Sender User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "sender_user_id",
+          "body"
+        ],
+        "title": "AdminChatMessageItem",
+        "type": "object"
+      },
+      "AdminConversationMessagesResponse": {
+        "description": "Any thread's first messages plus who is on it, for staff investigating a DM.",
+        "properties": {
+          "client_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Email"
+          },
+          "client_user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client User Id"
+          },
+          "conversation_id": {
+            "title": "Conversation Id",
+            "type": "string"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/AdminChatMessageItem"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "vendor_display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor Display Name"
+          },
+          "vendor_user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor User Id"
+          }
+        },
+        "required": [
+          "conversation_id",
+          "messages"
+        ],
+        "title": "AdminConversationMessagesResponse",
+        "type": "object"
+      },
+      "AdminMessageSendBody": {
+        "description": "A staff message to named users and/or a whole audience (audiences are super admin only).",
+        "properties": {
+          "audience": {
+            "anyOf": [
+              {
+                "enum": [
+                  "clients",
+                  "vendors",
+                  "users"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audience"
+          },
+          "body": {
+            "maxLength": 15000,
+            "minLength": 1,
+            "title": "Body",
+            "type": "string"
+          },
+          "recipient_user_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipient User Ids"
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "title": "AdminMessageSendBody",
+        "type": "object"
+      },
+      "AdminMessageSendFailure": {
+        "description": "A recipient the message could not reach, and why.",
+        "properties": {
+          "error": {
+            "title": "Error",
+            "type": "string"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "error"
+        ],
+        "title": "AdminMessageSendFailure",
+        "type": "object"
+      },
+      "AdminMessageSendResponse": {
+        "description": "How many support threads received the message, which ones, and any failures.",
+        "properties": {
+          "conversation_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Conversation Ids",
+            "type": "array"
+          },
+          "failures": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/AdminMessageSendFailure"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failures"
+          },
+          "sent": {
+            "title": "Sent",
+            "type": "integer"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "sent",
+          "conversation_ids"
+        ],
+        "title": "AdminMessageSendResponse",
+        "type": "object"
+      },
+      "AdminSupportConversationDetailResponse": {
+        "description": "One support thread.",
+        "properties": {
+          "conversation": {
+            "$ref": "#/components/schemas/AdminSupportConversationRow"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "conversation"
+        ],
+        "title": "AdminSupportConversationDetailResponse",
+        "type": "object"
+      },
+      "AdminSupportConversationRow": {
+        "description": "One row of the staff support inbox: the end user is the peer.",
+        "properties": {
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "support",
+            "default": "support",
+            "title": "Kind",
+            "type": "string"
+          },
+          "last_message_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Message At"
+          },
+          "peer_display_name": {
+            "title": "Peer Display Name",
+            "type": "string"
+          },
+          "peer_user_id": {
+            "title": "Peer User Id",
+            "type": "string"
+          },
+          "support_user_id": {
+            "title": "Support User Id",
+            "type": "string"
+          },
+          "unread_count": {
+            "default": 0,
+            "title": "Unread Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "support_user_id",
+          "peer_user_id",
+          "peer_display_name"
+        ],
+        "title": "AdminSupportConversationRow",
+        "type": "object"
+      },
+      "AdminSupportConversationsListResponse": {
+        "description": "The newest support threads.",
+        "properties": {
+          "conversations": {
+            "items": {
+              "$ref": "#/components/schemas/AdminSupportConversationRow"
+            },
+            "title": "Conversations",
+            "type": "array"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "conversations"
+        ],
+        "title": "AdminSupportConversationsListResponse",
+        "type": "object"
+      },
+      "AdminSupportMarkReadResponse": {
+        "description": "The support thread is marked read for staff.",
+        "properties": {
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "title": "AdminSupportMarkReadResponse",
+        "type": "object"
+      },
+      "AdminSupportMessageCreateBody": {
+        "description": "A staff reply, as rich-text HTML (sanitised before it is stored).",
+        "properties": {
+          "body": {
+            "maxLength": 15000,
+            "minLength": 1,
+            "title": "Body",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "title": "AdminSupportMessageCreateBody",
+        "type": "object"
+      },
+      "AdminSupportMessageCreateResponse": {
+        "description": "The reply as stored.",
+        "properties": {
+          "message": {
+            "$ref": "#/components/schemas/AdminSupportMessageRow"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "AdminSupportMessageCreateResponse",
+        "type": "object"
+      },
+      "AdminSupportMessageEditBody": {
+        "description": "New rich-text HTML for a staff member's own message.",
+        "properties": {
+          "body": {
+            "maxLength": 15000,
+            "minLength": 1,
+            "title": "Body",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "title": "AdminSupportMessageEditBody",
+        "type": "object"
+      },
+      "AdminSupportMessageEditResponse": {
+        "description": "The message after the edit, stamped `metadata.edited_at`.",
+        "properties": {
+          "message": {
+            "$ref": "#/components/schemas/AdminSupportMessageRow"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "AdminSupportMessageEditResponse",
+        "type": "object"
+      },
+      "AdminSupportMessageRow": {
+        "description": "A support message as staff see it, with the real sender id.",
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata"
+          },
+          "sender_user_id": {
+            "title": "Sender User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "sender_user_id",
+          "body"
+        ],
+        "title": "AdminSupportMessageRow",
+        "type": "object"
+      },
+      "AdminSupportMessagesListResponse": {
+        "description": "The newest messages of a support thread, oldest first.",
+        "properties": {
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/AdminSupportMessageRow"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "messages"
+        ],
+        "title": "AdminSupportMessagesListResponse",
         "type": "object"
       },
       "AdminVendorApprovalBody": {
@@ -1256,6 +1843,90 @@
         "title": "ChangePasswordResponse",
         "type": "object"
       },
+      "ChatUnreadCountResponse": {
+        "description": "How many messages are waiting for the caller across all their threads.",
+        "properties": {
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "unread_count": {
+            "title": "Unread Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "unread_count"
+        ],
+        "title": "ChatUnreadCountResponse",
+        "type": "object"
+      },
+      "ClientFavoriteResponse": {
+        "description": "Whether saving or unsaving a vendor worked.",
+        "properties": {
+          "success": {
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "success"
+        ],
+        "title": "ClientFavoriteResponse",
+        "type": "object"
+      },
+      "ClientFavoritesListResponse": {
+        "description": "The client's saved vendors, most recently saved first.",
+        "properties": {
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "vendor_user_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Vendor User Ids",
+            "type": "array"
+          }
+        },
+        "title": "ClientFavoritesListResponse",
+        "type": "object"
+      },
+      "ClientFavoritesMergeBody": {
+        "description": "Vendors saved while signed out, to add to the account.",
+        "properties": {
+          "vendor_user_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 500,
+            "title": "Vendor User Ids",
+            "type": "array"
+          }
+        },
+        "title": "ClientFavoritesMergeBody",
+        "type": "object"
+      },
+      "ClientFavoritesMergeResponse": {
+        "description": "How many vendor ids were merged into the account.",
+        "properties": {
+          "merged": {
+            "default": 0,
+            "title": "Merged",
+            "type": "integer"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "title": "ClientFavoritesMergeResponse",
+        "type": "object"
+      },
       "ClientOnboardingPatchBody": {
         "description": "Set the preferred name (blank clears it) and/or mark onboarding done.",
         "properties": {
@@ -1469,6 +2140,160 @@
         "title": "ContactSubmitResponse",
         "type": "object"
       },
+      "ConversationCreateBodyShared": {
+        "description": "Open (or reopen) a DM: a client names a vendor, a vendor names a client they have bookings with.",
+        "properties": {
+          "peer_user_id": {
+            "minLength": 1,
+            "title": "Peer User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "peer_user_id"
+        ],
+        "title": "ConversationCreateBodyShared",
+        "type": "object"
+      },
+      "ConversationCreateResponse": {
+        "description": "The DM thread that was opened or already existed.",
+        "properties": {
+          "conversation": {
+            "$ref": "#/components/schemas/ConversationRow"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "conversation"
+        ],
+        "title": "ConversationCreateResponse",
+        "type": "object"
+      },
+      "ConversationDetailResponse": {
+        "description": "One of the caller's threads.",
+        "properties": {
+          "conversation": {
+            "$ref": "#/components/schemas/ConversationRow"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "conversation"
+        ],
+        "title": "ConversationDetailResponse",
+        "type": "object"
+      },
+      "ConversationRow": {
+        "description": "One inbox row. On a support thread the peer is always \"Eventtz Support\".",
+        "properties": {
+          "client_user_id": {
+            "default": "",
+            "title": "Client User Id",
+            "type": "string"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "default": "dm",
+            "enum": [
+              "dm",
+              "support"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "last_message_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Message At"
+          },
+          "peer_display_name": {
+            "title": "Peer Display Name",
+            "type": "string"
+          },
+          "peer_user_id": {
+            "title": "Peer User Id",
+            "type": "string"
+          },
+          "support_user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Support User Id"
+          },
+          "unread_count": {
+            "default": 0,
+            "title": "Unread Count",
+            "type": "integer"
+          },
+          "vendor_user_id": {
+            "default": "",
+            "title": "Vendor User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "peer_user_id",
+          "peer_display_name"
+        ],
+        "title": "ConversationRow",
+        "type": "object"
+      },
+      "ConversationsListResponse": {
+        "description": "The caller's threads, newest activity first.",
+        "properties": {
+          "conversations": {
+            "items": {
+              "$ref": "#/components/schemas/ConversationRow"
+            },
+            "title": "Conversations",
+            "type": "array"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "conversations"
+        ],
+        "title": "ConversationsListResponse",
+        "type": "object"
+      },
       "CreateReferralPartnerRequest": {
         "description": "A new partner. Leave `slug` blank to make one from the display name.",
         "properties": {
@@ -1538,6 +2363,512 @@
           "code"
         ],
         "title": "ErrorResponse",
+        "type": "object"
+      },
+      "ExplorePlanNeed": {
+        "description": "One checklist item of a plan search.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "keywords": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Keywords",
+            "type": "array"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "optional": {
+            "default": false,
+            "title": "Optional",
+            "type": "boolean"
+          },
+          "rationale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rationale"
+          },
+          "service_key": {
+            "title": "Service Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "service_key"
+        ],
+        "title": "ExplorePlanNeed",
+        "type": "object"
+      },
+      "ExploreSearchPlan": {
+        "description": "The checklist a plan search built from the query.",
+        "properties": {
+          "event_types": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Event Types",
+            "type": "array"
+          },
+          "intent_summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Intent Summary"
+          },
+          "needs": {
+            "items": {
+              "$ref": "#/components/schemas/ExplorePlanNeed"
+            },
+            "title": "Needs",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "ExploreSearchPlan",
+        "type": "object"
+      },
+      "ExploreSearchSection": {
+        "description": "One need of a plan search and its vendors.",
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "need_id": {
+            "title": "Need Id",
+            "type": "string"
+          },
+          "optional": {
+            "default": false,
+            "title": "Optional",
+            "type": "boolean"
+          },
+          "service_key": {
+            "title": "Service Key",
+            "type": "string"
+          },
+          "total_count": {
+            "default": 0,
+            "title": "Total Count",
+            "type": "integer"
+          },
+          "vendors": {
+            "items": {
+              "$ref": "#/components/schemas/ExploreVendorSearchRow"
+            },
+            "title": "Vendors",
+            "type": "array"
+          },
+          "why": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Why"
+          }
+        },
+        "required": [
+          "need_id",
+          "label",
+          "service_key"
+        ],
+        "title": "ExploreSearchSection",
+        "type": "object"
+      },
+      "ExploreVendorFeaturedReview": {
+        "description": "A real review quoted on a plan-search card.",
+        "properties": {
+          "body_excerpt": {
+            "title": "Body Excerpt",
+            "type": "string"
+          },
+          "rating": {
+            "title": "Rating",
+            "type": "integer"
+          },
+          "reviewer_display": {
+            "title": "Reviewer Display",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rating",
+          "body_excerpt",
+          "reviewer_display"
+        ],
+        "title": "ExploreVendorFeaturedReview",
+        "type": "object"
+      },
+      "ExploreVendorRow": {
+        "description": "One vendor card: the profile form, approval and public trust signals.",
+        "properties": {
+          "approval_status": {
+            "title": "Approval Status",
+            "type": "string"
+          },
+          "avg_response_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Average first-response time in seconds, when known.",
+            "title": "Avg Response Seconds"
+          },
+          "completed_bookings": {
+            "default": 0,
+            "description": "All-time completed bookings (public trust signal).",
+            "title": "Completed Bookings",
+            "type": "integer"
+          },
+          "conversion_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Completed / client enquiries (0-1), when enquiries exist.",
+            "title": "Conversion Rate"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "profile_form_data": {
+            "additionalProperties": true,
+            "title": "Profile Form Data",
+            "type": "object"
+          },
+          "review_average": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Average"
+          },
+          "review_count": {
+            "default": 0,
+            "title": "Review Count",
+            "type": "integer"
+          },
+          "status": {
+            "default": "draft",
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "approval_status"
+        ],
+        "title": "ExploreVendorRow",
+        "type": "object"
+      },
+      "ExploreVendorSearchResponse": {
+        "description": "A search: one page of ranked vendors (simple) or the checklist sections (plan).",
+        "properties": {
+          "has_exact": {
+            "default": false,
+            "title": "Has Exact",
+            "type": "boolean"
+          },
+          "has_related": {
+            "default": false,
+            "title": "Has Related",
+            "type": "boolean"
+          },
+          "intent_summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Intent Summary"
+          },
+          "match_notice": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Match Notice"
+          },
+          "plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExploreSearchPlan"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "search_mode": {
+            "default": "simple",
+            "description": "simple | plan",
+            "title": "Search Mode",
+            "type": "string"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/ExploreSearchSection"
+            },
+            "title": "Sections",
+            "type": "array"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "total_count": {
+            "default": 0,
+            "title": "Total Count",
+            "type": "integer"
+          },
+          "vendors": {
+            "items": {
+              "$ref": "#/components/schemas/ExploreVendorSearchRow"
+            },
+            "title": "Vendors",
+            "type": "array"
+          }
+        },
+        "title": "ExploreVendorSearchResponse",
+        "type": "object"
+      },
+      "ExploreVendorSearchRow": {
+        "description": "Marketplace listing row, including which services matched the search.",
+        "properties": {
+          "approval_status": {
+            "title": "Approval Status",
+            "type": "string"
+          },
+          "avg_response_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Average first-response time in seconds, when known.",
+            "title": "Avg Response Seconds"
+          },
+          "completed_bookings": {
+            "default": 0,
+            "description": "All-time completed bookings (public trust signal).",
+            "title": "Completed Bookings",
+            "type": "integer"
+          },
+          "conversion_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Completed / client enquiries (0-1), when enquiries exist.",
+            "title": "Conversion Rate"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "featured_review": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExploreVendorFeaturedReview"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "match_hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Match Hint"
+          },
+          "match_tier": {
+            "default": "exact",
+            "description": "exact | related | fallback - how closely the listing matched the search",
+            "title": "Match Tier",
+            "type": "string"
+          },
+          "matched_services": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Matched Services",
+            "type": "array"
+          },
+          "profile_form_data": {
+            "additionalProperties": true,
+            "title": "Profile Form Data",
+            "type": "object"
+          },
+          "review_average": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Average"
+          },
+          "review_count": {
+            "default": 0,
+            "title": "Review Count",
+            "type": "integer"
+          },
+          "status": {
+            "default": "draft",
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "approval_status"
+        ],
+        "title": "ExploreVendorSearchRow",
+        "type": "object"
+      },
+      "ExploreVendorSingleResponse": {
+        "description": "One listed vendor, for the vendor detail page.",
+        "properties": {
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "vendor": {
+            "$ref": "#/components/schemas/ExploreVendorRow"
+          }
+        },
+        "required": [
+          "vendor"
+        ],
+        "title": "ExploreVendorSingleResponse",
+        "type": "object"
+      },
+      "ExploreVendorsResponse": {
+        "description": "Every listed vendor in one market.",
+        "properties": {
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "vendors": {
+            "items": {
+              "$ref": "#/components/schemas/ExploreVendorRow"
+            },
+            "title": "Vendors",
+            "type": "array"
+          }
+        },
+        "title": "ExploreVendorsResponse",
         "type": "object"
       },
       "ForgotPasswordRequest": {
@@ -1964,6 +3295,18 @@
         "title": "ImageUploadResponse",
         "type": "object"
       },
+      "MarkReadResponse": {
+        "description": "The thread is marked read for the caller.",
+        "properties": {
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "title": "MarkReadResponse",
+        "type": "object"
+      },
       "MeResponse": {
         "description": "`GET /auth/me`.",
         "properties": {
@@ -1980,6 +3323,184 @@
           "user"
         ],
         "title": "MeResponse",
+        "type": "object"
+      },
+      "MessageCreateBody": {
+        "description": "A typed message.",
+        "properties": {
+          "body": {
+            "maxLength": 5000,
+            "minLength": 1,
+            "title": "Body",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "title": "MessageCreateBody",
+        "type": "object"
+      },
+      "MessageCreateResponse": {
+        "description": "The message as stored.",
+        "properties": {
+          "message": {
+            "$ref": "#/components/schemas/MessageRow"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "MessageCreateResponse",
+        "type": "object"
+      },
+      "MessageRow": {
+        "description": "One message. Staff senders on a support thread appear as \"Eventtz Admin\", never by email.",
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata"
+          },
+          "sender_display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sender Display Name"
+          },
+          "sender_user_id": {
+            "title": "Sender User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "sender_user_id",
+          "body"
+        ],
+        "title": "MessageRow",
+        "type": "object"
+      },
+      "MessagesListResponse": {
+        "description": "The newest messages of a thread, oldest first.",
+        "properties": {
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/MessageRow"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "messages"
+        ],
+        "title": "MessagesListResponse",
+        "type": "object"
+      },
+      "PublicReviewItem": {
+        "description": "One visible review on a vendor's public page.",
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "booking_total_label": {
+            "default": "",
+            "title": "Booking Total Label",
+            "type": "string"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "event_date": {
+            "default": "",
+            "title": "Event Date",
+            "type": "string"
+          },
+          "event_name": {
+            "title": "Event Name",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "image_urls": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Image Urls",
+            "type": "array"
+          },
+          "rating": {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Rating",
+            "type": "integer"
+          },
+          "reviewer_display": {
+            "title": "Reviewer Display",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "rating",
+          "body",
+          "reviewer_display",
+          "event_name"
+        ],
+        "title": "PublicReviewItem",
         "type": "object"
       },
       "ReferralFeeTier": {
@@ -2659,6 +4180,65 @@
         "title": "ValidationError",
         "type": "object"
       },
+      "VendorAnalyticsResponse": {
+        "description": "The vendor's analytics screen: headline numbers, the funnel and monthly series.",
+        "properties": {
+          "enquiries_by_month": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Enquiries By Month",
+            "type": "array"
+          },
+          "funnel": {
+            "additionalProperties": true,
+            "title": "Funnel",
+            "type": "object"
+          },
+          "overview": {
+            "additionalProperties": true,
+            "title": "Overview",
+            "type": "object"
+          },
+          "period_days": {
+            "default": 90,
+            "title": "Period Days",
+            "type": "integer"
+          },
+          "rating_by_month": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Rating By Month",
+            "type": "array"
+          },
+          "response_time_by_month": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Response Time By Month",
+            "type": "array"
+          },
+          "revenue_by_month": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Revenue By Month",
+            "type": "array"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "title": "VendorAnalyticsResponse",
+        "type": "object"
+      },
       "VendorBusinessNameAvailabilityResponse": {
         "description": "Whether a business name is free (the caller's own name counts as free).",
         "properties": {
@@ -2823,6 +4403,41 @@
           "onboarding_status"
         ],
         "title": "VendorProfileState",
+        "type": "object"
+      },
+      "VendorPublicReviewsResponse": {
+        "description": "A vendor's visible reviews, newest first, with their average and count.",
+        "properties": {
+          "average_rating": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Rating"
+          },
+          "review_count": {
+            "default": 0,
+            "title": "Review Count",
+            "type": "integer"
+          },
+          "reviews": {
+            "items": {
+              "$ref": "#/components/schemas/PublicReviewItem"
+            },
+            "title": "Reviews",
+            "type": "array"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "title": "VendorPublicReviewsResponse",
         "type": "object"
       },
       "VendorReferralBookingRow": {
@@ -3736,6 +5351,80 @@
         ]
       }
     },
+    "/api/v1/admin/chat/conversations/{conversation_id}/messages": {
+      "get": {
+        "description": "Any thread's first messages and participants, for staff investigating a DM (audited).",
+        "operationId": "admin_chat_conversation_messages_api_v1_admin_chat_conversations__conversation_id__messages_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminConversationMessagesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Chat Conversation Messages",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/v1/admin/contact": {
       "post": {
         "description": "A staff bug report from the admin console.",
@@ -3817,6 +5506,677 @@
           }
         ],
         "summary": "Submit Bug Report",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/messages/conversations": {
+      "get": {
+        "description": "The newest support threads.",
+        "operationId": "admin_messages_conversations_api_v1_admin_messages_conversations_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 200,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSupportConversationsListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Messages Conversations",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/messages/conversations/{conversation_id}": {
+      "get": {
+        "description": "One support thread.",
+        "operationId": "admin_messages_conversation_detail_api_v1_admin_messages_conversations__conversation_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSupportConversationDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "support_conversation_not_found",
+            "x-codes": [
+              "support_conversation_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Messages Conversation Detail",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/messages/conversations/{conversation_id}/messages": {
+      "get": {
+        "description": "The newest messages of a support thread, oldest first.",
+        "operationId": "admin_messages_list_api_v1_admin_messages_conversations__conversation_id__messages_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 200,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSupportMessagesListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "support_conversation_not_found",
+            "x-codes": [
+              "support_conversation_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Messages List",
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "description": "Reply on a support thread (the user is emailed a copy).",
+        "operationId": "admin_messages_reply_api_v1_admin_messages_conversations__conversation_id__messages_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminSupportMessageCreateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSupportMessageCreateResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "message_empty, message_too_long",
+            "x-codes": [
+              "message_empty",
+              "message_too_long"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "support_conversation_not_found",
+            "x-codes": [
+              "support_conversation_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Messages Reply",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/messages/conversations/{conversation_id}/messages/{message_id}": {
+      "patch": {
+        "description": "Edit a message the caller sent on a support thread.",
+        "operationId": "admin_messages_edit_api_v1_admin_messages_conversations__conversation_id__messages__message_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "message_id",
+            "required": true,
+            "schema": {
+              "title": "Message Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminSupportMessageEditBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSupportMessageEditResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "message_empty, message_too_long",
+            "x-codes": [
+              "message_empty",
+              "message_too_long"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden, staff_messages_only, edit_own_messages_only",
+            "x-codes": [
+              "forbidden",
+              "staff_messages_only",
+              "edit_own_messages_only"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "support_conversation_not_found, message_not_found",
+            "x-codes": [
+              "support_conversation_not_found",
+              "message_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Messages Edit",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/messages/conversations/{conversation_id}/read": {
+      "post": {
+        "description": "Mark a support thread read for staff.",
+        "operationId": "admin_messages_mark_read_api_v1_admin_messages_conversations__conversation_id__read_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSupportMarkReadResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "support_conversation_not_found",
+            "x-codes": [
+              "support_conversation_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Messages Mark Read",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/messages/send": {
+      "post": {
+        "description": "Send a support message to named users, or (super admins) to a whole audience.",
+        "operationId": "admin_messages_send_api_v1_admin_messages_send_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminMessageSendBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminMessageSendResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "recipients_or_audience_required, message_empty, message_too_long",
+            "x-codes": [
+              "recipients_or_audience_required",
+              "message_empty",
+              "message_too_long"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden, broadcast_super_admin_only",
+            "x-codes": [
+              "forbidden",
+              "broadcast_super_admin_only"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Messages Send",
         "tags": [
           "admin"
         ]
@@ -5770,6 +8130,519 @@
         ]
       }
     },
+    "/api/v1/chat/conversations": {
+      "get": {
+        "description": "The caller's threads, newest activity first.",
+        "operationId": "list_conversations_api_v1_chat_conversations_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationsListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "chat_portal_only",
+            "x-codes": [
+              "chat_portal_only"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Conversations",
+        "tags": [
+          "chat"
+        ]
+      },
+      "post": {
+        "description": "Open (or reopen) a DM with a vendor, or with a client who has enquired.",
+        "operationId": "post_conversation_api_v1_chat_conversations_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversationCreateBodyShared"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationCreateResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "chat_with_self, chat_vendor_not_found, chat_not_vendor_account, chat_vendor_unavailable",
+            "x-codes": [
+              "chat_with_self",
+              "chat_vendor_not_found",
+              "chat_not_vendor_account",
+              "chat_vendor_unavailable"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "chat_portal_only, chat_client_bookings_only",
+            "x-codes": [
+              "chat_portal_only",
+              "chat_client_bookings_only"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Conversation",
+        "tags": [
+          "chat"
+        ]
+      }
+    },
+    "/api/v1/chat/conversations/{conversation_id}": {
+      "get": {
+        "description": "One of the caller's threads.",
+        "operationId": "get_conversation_api_v1_chat_conversations__conversation_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "conversation_not_found",
+            "x-codes": [
+              "conversation_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Conversation",
+        "tags": [
+          "chat"
+        ]
+      }
+    },
+    "/api/v1/chat/conversations/{conversation_id}/messages": {
+      "get": {
+        "description": "The newest messages of one of the caller's threads, oldest first.",
+        "operationId": "get_messages_api_v1_chat_conversations__conversation_id__messages_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessagesListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "conversation_not_found",
+            "x-codes": [
+              "conversation_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Messages",
+        "tags": [
+          "chat"
+        ]
+      },
+      "post": {
+        "description": "Send a message on one of the caller's threads.",
+        "operationId": "post_message_api_v1_chat_conversations__conversation_id__messages_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MessageCreateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageCreateResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "conversation_not_found_on_send, not_in_conversation, message_empty, message_too_long",
+            "x-codes": [
+              "conversation_not_found_on_send",
+              "not_in_conversation",
+              "message_empty",
+              "message_too_long"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Message",
+        "tags": [
+          "chat"
+        ]
+      }
+    },
+    "/api/v1/chat/conversations/{conversation_id}/read": {
+      "post": {
+        "description": "Mark one of the caller's threads read up to now.",
+        "operationId": "post_conversation_read_api_v1_chat_conversations__conversation_id__read_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkReadResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "not_in_conversation_on_read",
+            "x-codes": [
+              "not_in_conversation_on_read"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "conversation_not_found",
+            "x-codes": [
+              "conversation_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Conversation Read",
+        "tags": [
+          "chat"
+        ]
+      }
+    },
+    "/api/v1/chat/unread-count": {
+      "get": {
+        "description": "Messages waiting for the caller across all their threads (the inbox badge).",
+        "operationId": "get_chat_unread_count_api_v1_chat_unread_count_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatUnreadCountResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Chat Unread Count",
+        "tags": [
+          "chat"
+        ]
+      }
+    },
     "/api/v1/client/contact": {
       "post": {
         "description": "A client's message to the Eventtz team.",
@@ -5856,6 +8729,534 @@
         "summary": "Submit Client Contact",
         "tags": [
           "client"
+        ]
+      }
+    },
+    "/api/v1/client/favorites": {
+      "get": {
+        "description": "The client's saved vendors, most recently saved first.",
+        "operationId": "get_client_favorites_api_v1_client_favorites_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientFavoritesListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Client Favorites",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/favorites/merge": {
+      "post": {
+        "description": "Add the vendors saved while signed out to the account.",
+        "operationId": "post_merge_client_favorites_api_v1_client_favorites_merge_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientFavoritesMergeBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientFavoritesMergeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Merge Client Favorites",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/favorites/{vendor_user_id}": {
+      "delete": {
+        "description": "Unsave a vendor.",
+        "operationId": "delete_client_favorite_api_v1_client_favorites__vendor_user_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "vendor_user_id",
+            "required": true,
+            "schema": {
+              "title": "Vendor User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientFavoriteResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Client Favorite",
+        "tags": [
+          "client"
+        ]
+      },
+      "put": {
+        "description": "Save a vendor; `success` is false when the id is not a known account.",
+        "operationId": "put_client_favorite_api_v1_client_favorites__vendor_user_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "vendor_user_id",
+            "required": true,
+            "schema": {
+              "title": "Vendor User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientFavoriteResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Put Client Favorite",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/geo/address-autocomplete": {
+      "get": {
+        "description": "Address suggestions (no provider is configured, so always empty).",
+        "operationId": "get_address_autocomplete_api_v1_client_geo_address_autocomplete_get",
+        "parameters": [
+          {
+            "description": "Postcode or partial address",
+            "in": "query",
+            "name": "term",
+            "required": true,
+            "schema": {
+              "description": "Postcode or partial address",
+              "maxLength": 200,
+              "minLength": 2,
+              "title": "Term",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddressAutocompleteResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Address Autocomplete",
+        "tags": [
+          "client-geo"
+        ]
+      }
+    },
+    "/api/v1/client/geo/address-find": {
+      "get": {
+        "description": "Every address at a postcode (no provider is configured, so always empty).",
+        "operationId": "get_address_find_api_v1_client_geo_address_find_get",
+        "parameters": [
+          {
+            "description": "UK postcode - returns all street-level addresses at that postcode",
+            "in": "query",
+            "name": "postcode",
+            "required": true,
+            "schema": {
+              "description": "UK postcode - returns all street-level addresses at that postcode",
+              "maxLength": 16,
+              "minLength": 4,
+              "title": "Postcode",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddressFindResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Address Find",
+        "tags": [
+          "client-geo"
+        ]
+      }
+    },
+    "/api/v1/client/geo/address-resolve/{address_id}": {
+      "get": {
+        "description": "One address's parts (no provider is configured, so always not found).",
+        "operationId": "get_address_resolve_api_v1_client_geo_address_resolve__address_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "address_id",
+            "required": true,
+            "schema": {
+              "title": "Address Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddressResolveResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "address_id_invalid",
+            "x-codes": [
+              "address_id_invalid"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "address_not_resolved",
+            "x-codes": [
+              "address_not_resolved"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Address Resolve",
+        "tags": [
+          "client-geo"
         ]
       }
     },
@@ -6736,6 +10137,83 @@
         ]
       }
     },
+    "/api/v1/vendor/analytics": {
+      "get": {
+        "description": "Enquiries, the booking funnel, revenue, ratings and reply times over the last `days` days.",
+        "operationId": "vendor_analytics_api_v1_vendor_analytics_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "default": 90,
+              "maximum": 365,
+              "minimum": 7,
+              "title": "Days",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorAnalyticsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Vendor Analytics",
+        "tags": [
+          "vendor-analytics"
+        ]
+      }
+    },
     "/api/v1/vendor/contact": {
       "post": {
         "description": "A vendor's message to the Eventtz team.",
@@ -7246,6 +10724,391 @@
         ]
       }
     },
+    "/api/v1/vendors/explore": {
+      "get": {
+        "description": "Every listed vendor in one market, newest first.",
+        "operationId": "get_explore_vendors_api_v1_vendors_explore_get",
+        "parameters": [
+          {
+            "description": "ISO country code (default GB).",
+            "in": "query",
+            "name": "country",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ISO country code (default GB).",
+              "title": "Country"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExploreVendorsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "internal_error",
+            "x-codes": [
+              "internal_error"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Explore Vendors",
+        "tags": [
+          "vendors"
+        ]
+      }
+    },
+    "/api/v1/vendors/explore/search": {
+      "get": {
+        "description": "Search listed vendors: a ranked page, or checklist sections for event planning.",
+        "operationId": "get_explore_vendors_search_api_v1_vendors_explore_search_get",
+        "parameters": [
+          {
+            "description": "Comma-separated service keys (e.g. photography,catering).",
+            "in": "query",
+            "name": "types",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated service keys (e.g. photography,catering).",
+              "title": "Types"
+            }
+          },
+          {
+            "description": "Substring match against city, name, services.",
+            "in": "query",
+            "name": "location",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Substring match against city, name, services.",
+              "title": "Location"
+            }
+          },
+          {
+            "description": "Free-text search (vendor name, city, services).",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Free-text search (vendor name, city, services).",
+              "title": "Q"
+            }
+          },
+          {
+            "description": "Comma-separated ISO dates (max 3); availability filter later.",
+            "in": "query",
+            "name": "dates",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated ISO dates (max 3); availability filter later.",
+              "title": "Dates"
+            }
+          },
+          {
+            "description": "When true, date selection is not used for filtering (reserved).",
+            "in": "query",
+            "name": "flexible",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "When true, date selection is not used for filtering (reserved).",
+              "title": "Flexible",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "budget_min",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Budget Min"
+            }
+          },
+          {
+            "in": "query",
+            "name": "budget_max",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Budget Max"
+            }
+          },
+          {
+            "description": "relevance | price_asc | price_desc | proximity | rating",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "relevance",
+              "description": "relevance | price_asc | price_desc | proximity | rating",
+              "title": "Sort",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma-separated vendor user IDs - restrict search (e.g. favorites).",
+            "in": "query",
+            "name": "vendor_ids",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated vendor user IDs - restrict search (e.g. favorites).",
+              "title": "Vendor Ids"
+            }
+          },
+          {
+            "description": "ISO country code (default GB).",
+            "in": "query",
+            "name": "country",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ISO country code (default GB).",
+              "title": "Country"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExploreVendorSearchResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "internal_error",
+            "x-codes": [
+              "internal_error"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Explore Vendors Search",
+        "tags": [
+          "vendors"
+        ]
+      }
+    },
+    "/api/v1/vendors/explore/vendor/{vendor_user_id}": {
+      "get": {
+        "description": "One listed vendor for the browse detail page.",
+        "operationId": "get_explore_vendor_by_id_api_v1_vendors_explore_vendor__vendor_user_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "vendor_user_id",
+            "required": true,
+            "schema": {
+              "title": "Vendor User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExploreVendorSingleResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "vendor_id_invalid",
+            "x-codes": [
+              "vendor_id_invalid"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "vendor_not_listed",
+            "x-codes": [
+              "vendor_not_listed"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Explore Vendor By Id",
+        "tags": [
+          "vendors"
+        ]
+      }
+    },
     "/api/v1/vendors/explore/vendor/{vendor_user_id}/referral-preview": {
       "get": {
         "description": "What a client's code would take off the service fee for this spend with this vendor.",
@@ -7321,6 +11184,62 @@
         "summary": "Preview Referral Code",
         "tags": [
           "vendor-referrals"
+        ]
+      }
+    },
+    "/api/v1/vendors/{vendor_user_id}/reviews": {
+      "get": {
+        "description": "A vendor's visible reviews, newest first.",
+        "operationId": "get_vendor_public_reviews_api_v1_vendors__vendor_user_id__reviews_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "vendor_user_id",
+            "required": true,
+            "schema": {
+              "title": "Vendor User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorPublicReviewsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "vendor_id_invalid",
+            "x-codes": [
+              "vendor_id_invalid"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Vendor Public Reviews",
+        "tags": [
+          "vendors"
         ]
       }
     }

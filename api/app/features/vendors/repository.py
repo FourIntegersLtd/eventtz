@@ -5,15 +5,29 @@ Every function takes the request's session and never commits (ADR 0002).
 
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import ColumnElement, func, insert, select, update
+from sqlalchemy import (
+    ColumnElement,
+    DateTime,
+    Text,
+    Uuid,
+    and_,
+    column,
+    func,
+    insert,
+    or_,
+    select,
+    table,
+    update,
+)
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import as_uuid, plain_row
 from app.features.vendors.models import Vendor
-from app.features.vendors.rows import VendorRow
+from app.features.vendors.rows import ListedVendorRow, VendorNameRow, VendorRow
 
 _VENDOR_COLUMNS = (
     Vendor.id,
@@ -29,6 +43,13 @@ _VENDOR_COLUMNS = (
     Vendor.stripe_payouts_enabled,
     Vendor.listing_override,
     Vendor.listing_override_reason,
+)
+# The account table (identity's), read here only to attach the email and skip closed accounts.
+_users = table(
+    "users",
+    column("id", Uuid),
+    column("email", Text),
+    column("deleted_at", DateTime(timezone=True)),
 )
 # The unique index Postgres names when two vendors normalise to the same business name.
 _BUSINESS_NAME_INDEX = "idx_vendors_business_name_normalized_unique"
@@ -127,3 +148,87 @@ async def list_vendors(
     )
     found = [VendorRow.model_validate(plain_row(row)) for row in result]
     return found, int(total or 0)
+
+
+async def vendor_name_rows(session: AsyncSession, user_ids: list[str]) -> list[VendorNameRow]:
+    """The payload and closed flag of each of these vendors that has a `vendors` row."""
+    parsed_ids = sorted(
+        {parsed for parsed in (as_uuid(user_id) for user_id in user_ids) if parsed is not None}
+    )
+    if not parsed_ids:
+        return []
+    result = await session.execute(
+        select(Vendor.user_id, Vendor.payload, _users.c.deleted_at.is_not(None).label("deleted"))
+        .select_from(Vendor)
+        .outerjoin(_users, _users.c.id == Vendor.user_id)
+        .where(Vendor.user_id.in_(parsed_ids))
+    )
+    return [
+        VendorNameRow(user_id=str(found.user_id), payload=found.payload, deleted=bool(found.deleted))
+        for found in result
+    ]
+
+
+def _publicly_listed() -> ColumnElement[bool]:
+    """SQL for `domain_visibility.is_publicly_listable`: approved, not hidden, forced visible or Stripe-ready.
+
+    Keep the two in step; the explore freeze tests cover every branch.
+    """
+    stripe_ready = and_(
+        Vendor.stripe_account_id.is_not(None),
+        Vendor.stripe_charges_enabled.is_(True),
+        Vendor.stripe_payouts_enabled.is_(True),
+    )
+    return and_(
+        Vendor.approval_status == "approved",
+        Vendor.listing_override != "hidden",
+        or_(Vendor.listing_override == "visible", stripe_ready),
+    )
+
+
+async def marketplace_vendors(
+    session: AsyncSession,
+    *,
+    listed_only: bool,
+    country_code: str | None = None,
+    user_ids: list[str] | None = None,
+    budget_min: float | None = None,
+    budget_max: float | None = None,
+    service_types: list[str] | None = None,
+    city_query: str | None = None,
+) -> list[ListedVendorRow]:
+    """Vendors the marketplace may show, most recently updated first, with their account email.
+
+    `listed_only` applies the public listing rule; without it any approved vendor
+    matches (for staff-designated QA vendors). Closed accounts never appear. The
+    budget, service and city filters read the columns copied out of the profile form.
+    """
+    filters: list[ColumnElement[bool]] = [_users.c.deleted_at.is_(None)]
+    filters.append(_publicly_listed() if listed_only else Vendor.approval_status == "approved")
+    if country_code is not None:
+        filters.append(Vendor.country_code == country_code)
+    if user_ids is not None:
+        parsed_ids = [parsed for parsed in (as_uuid(user_id) for user_id in user_ids) if parsed is not None]
+        filters.append(Vendor.user_id.in_(parsed_ids))
+    if budget_min is not None:
+        filters.append(Vendor.min_list_price_gbp >= Decimal(str(budget_min)))
+    if budget_max is not None:
+        filters.append(Vendor.min_list_price_gbp <= Decimal(str(budget_max)))
+    if service_types:
+        filters.append(Vendor.services_offered.overlap(service_types))
+    if city_query:
+        filters.append(Vendor.base_city_normalized.ilike(f"%{city_query}%"))
+    result = await session.execute(
+        select(
+            Vendor.user_id,
+            _users.c.email,
+            Vendor.status,
+            Vendor.approval_status,
+            Vendor.payload,
+            Vendor.updated_at,
+        )
+        .join(_users, _users.c.id == Vendor.user_id)
+        .where(*filters)
+        .order_by(Vendor.updated_at.desc(), Vendor.created_at.desc(), Vendor.id.desc())
+    )
+    return [ListedVendorRow.model_validate(plain_row(row)) for row in result]

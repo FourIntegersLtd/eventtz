@@ -19,6 +19,7 @@ from app.features.notifications.domain_account_emails import (
     email_verification_email,
     password_changed_email,
     password_reset_email,
+    support_message_email,
     transactional_context,
     welcome_context,
     welcome_email,
@@ -365,4 +366,29 @@ def send_vendor_payout_nudge(mailer: Mailer, *, vendor_email: str | None, busine
         return mailer.send(outgoing)
     except Exception:
         log.exception("vendor payout nudge email could not be sent")
+        return False
+
+
+def render_support_message(
+    *, email: str, messages_url: str, body_html: str, body_plain: str
+) -> OutgoingEmail:
+    """Render "Eventtz Support sent you a message" for `email`, without sending it."""
+    content = support_message_email(messages_url=messages_url, body_html=body_html, body_plain=body_plain)
+    return _render_notification(email, content)
+
+
+def send_support_message(
+    mailer: Mailer, *, email: str | None, messages_url: str, body_html: str, body_plain: str
+) -> bool:
+    """Email a user that Eventtz Support messaged them. False for an invalid address, never raises."""
+    normalized = (email or "").strip()
+    if "@" not in normalized:
+        return False
+    try:
+        outgoing = render_support_message(
+            email=normalized, messages_url=messages_url, body_html=body_html, body_plain=body_plain
+        )
+        return mailer.send(outgoing)
+    except Exception:
+        log.exception("support message email could not be sent")
         return False

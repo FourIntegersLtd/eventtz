@@ -48,9 +48,16 @@ NOT_YET_ON_API = {
     "test_identity_settings.py::test_account_deletion_*": (
         "account deletion arrives after bookings, disputes and messaging (identity README)"
     ),
-    "test_marketplace_*.py::*": "the marketplace slice is next after vendors cut 1",
-    "test_messaging_*.py::*": "the messaging slice follows marketplace",
     "test_bookings_*.py::*": "the bookings slice follows notifications",
+    "test_notifications.py::*": "the notifications feed follows messaging",
+    "test_payments.py::*": "the payments slice follows bookings",
+    "test_reviews.py::*": "the reviews slice follows payments",
+    "test_disputes.py::*": "the disputes slice follows reviews",
+    "test_planner.py::*": "the planner slice follows disputes",
+    "test_ai_onboarding.py::test_copilot_*": "the copilot slice follows the planner",
+    "test_ai_onboarding.py::test_generate_bio_*": "vendor AI helpers arrive with the copilot slice",
+    "test_ai_onboarding.py::test_review_packages_*": "vendor AI helpers arrive with the copilot slice",
+    "test_ai_onboarding.py::test_analyze_portfolio_*": "vendor AI helpers arrive with the copilot slice",
 }
 LOCAL_HOSTS = ("http://127.0.0.1", "http://localhost", "postgresql://postgres:postgres@127.0.0.1:")
 

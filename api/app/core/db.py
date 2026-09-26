@@ -76,13 +76,9 @@ UNMAPPED_BASELINE_TABLES = frozenset(
         "celebration_plan_items",
         "celebration_plans",
         "client_events",
-        "client_saved_vendors",
-        "conversations",
         "dispute_cases",
         "email_delivery_log",
         "job_runs",
-        "marketplace_events",
-        "messages",
         "stripe_webhook_events",
     }
 )

@@ -107,6 +107,15 @@ class Settings(BaseSettings):
     super_admin_emails: str = ""
     # Comma-separated staff inboxes for ops alerts (contact form, disputes, stuck payouts).
     admin_alert_emails: str = "hello@eventtz.com"
+    # QA vendors hidden from public explore except for one test client each:
+    # comma-separated `client-email:vendor-user-id` pairs. Empty = no QA vendors.
+    qa_client_vendor_visibility: str = ""
+
+    # --- Marketplace search ---
+    # How long a parsed search query is reused before the language model is asked again (0 = never cache).
+    marketplace_search_ai_cache_ttl_seconds: int = 3600
+    # Most parsed queries kept in memory per process; the oldest is dropped first.
+    marketplace_search_ai_cache_max_entries: int = 500
 
     # --- Providers ---
     # OpenAI key for the help assistant and contact classifier. Empty switches AI features off.
@@ -149,6 +158,26 @@ class Settings(BaseSettings):
     def super_admin_emails_list(self) -> list[str]:
         """`super_admin_emails` split, trimmed and lower-cased, ready for membership checks."""
         return [email.strip().lower() for email in self.super_admin_emails.split(",") if email.strip()]
+
+    @property
+    def qa_client_vendor_visibility_map(self) -> dict[str, frozenset[str]]:
+        """Lower-cased client email to the QA vendor ids only that client may see."""
+        vendor_ids_by_email: dict[str, set[str]] = {}
+        for pair in self.qa_client_vendor_visibility.split(","):
+            client_email, separator, vendor_id = pair.strip().partition(":")
+            email_key = client_email.strip().lower()
+            if separator and email_key and vendor_id.strip():
+                vendor_ids_by_email.setdefault(email_key, set()).add(vendor_id.strip())
+        return {email: frozenset(vendor_ids) for email, vendor_ids in vendor_ids_by_email.items()}
+
+    @property
+    def qa_scoped_vendor_ids(self) -> frozenset[str]:
+        """Every QA vendor id, whichever client may see it."""
+        return frozenset(
+            vendor_id
+            for vendor_ids in self.qa_client_vendor_visibility_map.values()
+            for vendor_id in vendor_ids
+        )
 
     @property
     def cors_origins_list(self) -> list[str]:

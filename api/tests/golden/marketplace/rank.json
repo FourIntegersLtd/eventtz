@@ -1,0 +1,4989 @@
+{
+  "cases": [
+    {
+      "name": "type filter catering",
+      "params": {
+        "primary_types": [
+          "catering"
+        ]
+      },
+      "result": {
+        "has_exact": true,
+        "has_related": false,
+        "intent_summary": null,
+        "match_notice": null,
+        "plan": null,
+        "search_mode": "simple",
+        "sections": [],
+        "total_count": 3,
+        "vendors": [
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 350.0,
+            "completed_bookings": 11,
+            "conversion_rate": 0.6,
+            "email": "allinone@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "catering"
+            ],
+            "payload": {
+              "aiBioDraft": "Food and music for your event",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "All-in-One Events",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "150",
+              "servicesOffered": [
+                "catering",
+                "dj"
+              ]
+            },
+            "review_average": 4.6,
+            "review_count": 15,
+            "status": "active",
+            "updated_at": "2025-09-01T10:00:00Z",
+            "user_id": "vendor-12"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 1200.0,
+            "completed_bookings": 2,
+            "conversion_rate": 0.2,
+            "email": "jollof@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "catering"
+            ],
+            "payload": {
+              "aiBioDraft": "Rice and small chops catering",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Jollof Kings",
+              "eventTypes": [
+                "birthdays"
+              ],
+              "hourlyRate": "30",
+              "servicesOffered": [
+                "catering"
+              ]
+            },
+            "review_average": 4.9,
+            "review_count": 3,
+            "status": "active",
+            "updated_at": "2025-02-01T10:00:00Z",
+            "user_id": "vendor-02"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 600.0,
+            "completed_bookings": 8,
+            "conversion_rate": 0.5,
+            "email": "ada@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "catering"
+            ],
+            "payload": {
+              "aiBioDraft": "Delicious jollof cakes for every celebration",
+              "availableWeekdays": [
+                5,
+                6
+              ],
+              "baseCity": "London",
+              "blockedDates": [
+                "2026-12-25"
+              ],
+              "businessName": "Ada's Cakes",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "50",
+              "servicesOffered": [
+                "baking",
+                "catering"
+              ]
+            },
+            "review_average": 4.5,
+            "review_count": 10,
+            "status": "active",
+            "updated_at": "2025-01-10T10:00:00Z",
+            "user_id": "vendor-01"
+          }
+        ]
+      }
+    },
+    {
+      "name": "type and keyword baking cake",
+      "params": {
+        "keywords": [
+          "cake"
+        ],
+        "primary_types": [
+          "baking"
+        ]
+      },
+      "result": {
+        "has_exact": true,
+        "has_related": false,
+        "intent_summary": null,
+        "match_notice": null,
+        "plan": null,
+        "search_mode": "simple",
+        "sections": [],
+        "total_count": 2,
+        "vendors": [
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": null,
+            "completed_bookings": 0,
+            "conversion_rate": null,
+            "email": "sugar@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "baking"
+            ],
+            "payload": {
+              "aiBioDraft": "Birthday cake baker",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Sugar Rush Cakes",
+              "eventTypes": [
+                "birthdays"
+              ],
+              "hourlyRate": "",
+              "servicesOffered": [
+                "baking"
+              ]
+            },
+            "review_average": null,
+            "review_count": 0,
+            "status": "active",
+            "updated_at": "2025-08-01T10:00:00Z",
+            "user_id": "vendor-11"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 600.0,
+            "completed_bookings": 8,
+            "conversion_rate": 0.5,
+            "email": "ada@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "baking"
+            ],
+            "payload": {
+              "aiBioDraft": "Delicious jollof cakes for every celebration",
+              "availableWeekdays": [
+                5,
+                6
+              ],
+              "baseCity": "London",
+              "blockedDates": [
+                "2026-12-25"
+              ],
+              "businessName": "Ada's Cakes",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "50",
+              "servicesOffered": [
+                "baking",
+                "catering"
+              ]
+            },
+            "review_average": 4.5,
+            "review_count": 10,
+            "status": "active",
+            "updated_at": "2025-01-10T10:00:00Z",
+            "user_id": "vendor-01"
+          }
+        ]
+      }
+    },
+    {
+      "name": "location london",
+      "params": {
+        "location_filter": "London"
+      },
+      "result": {
+        "has_exact": true,
+        "has_related": false,
+        "intent_summary": null,
+        "match_notice": null,
+        "plan": null,
+        "search_mode": "simple",
+        "sections": [],
+        "total_count": 12,
+        "vendors": [
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 350.0,
+            "completed_bookings": 11,
+            "conversion_rate": 0.6,
+            "email": "allinone@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "catering",
+              "dj"
+            ],
+            "payload": {
+              "aiBioDraft": "Food and music for your event",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "All-in-One Events",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "150",
+              "servicesOffered": [
+                "catering",
+                "dj"
+              ]
+            },
+            "review_average": 4.6,
+            "review_count": 15,
+            "status": "active",
+            "updated_at": "2025-09-01T10:00:00Z",
+            "user_id": "vendor-12"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 600.0,
+            "completed_bookings": 8,
+            "conversion_rate": 0.5,
+            "email": "ada@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "baking",
+              "catering"
+            ],
+            "payload": {
+              "aiBioDraft": "Delicious jollof cakes for every celebration",
+              "availableWeekdays": [
+                5,
+                6
+              ],
+              "baseCity": "London",
+              "blockedDates": [
+                "2026-12-25"
+              ],
+              "businessName": "Ada's Cakes",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "50",
+              "servicesOffered": [
+                "baking",
+                "catering"
+              ]
+            },
+            "review_average": 4.5,
+            "review_count": 10,
+            "status": "active",
+            "updated_at": "2025-01-10T10:00:00Z",
+            "user_id": "vendor-01"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 400.0,
+            "completed_bookings": 7,
+            "conversion_rate": 0.35,
+            "email": "braids@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "hair_styling"
+            ],
+            "payload": {
+              "aiBioDraft": "Hair braids stylist bridal hair",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Braids & Wigs",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "70",
+              "servicesOffered": [
+                "hair_styling"
+              ]
+            },
+            "review_average": 4.1,
+            "review_count": 9,
+            "status": "active",
+            "updated_at": "2025-07-01T10:00:00Z",
+            "user_id": "vendor-10"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 1500.0,
+            "completed_bookings": 9,
+            "conversion_rate": 0.3,
+            "email": "plan@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "event_planning"
+            ],
+            "payload": {
+              "aiBioDraft": "Wedding planner coordination timeline",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Plan It",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "300",
+              "servicesOffered": [
+                "event_planning"
+              ]
+            },
+            "review_average": 3.5,
+            "review_count": 12,
+            "status": "active",
+            "updated_at": "2025-06-01T10:00:00Z",
+            "user_id": "vendor-08"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 900.0,
+            "completed_bookings": 4,
+            "conversion_rate": 0.4,
+            "email": "glam@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "makeup"
+            ],
+            "payload": {
+              "aiBioDraft": "Bridal makeup glam looks",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Glam MUA",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "60",
+              "servicesOffered": [
+                "makeup"
+              ]
+            },
+            "review_average": 4.2,
+            "review_count": 5,
+            "status": "active",
+            "updated_at": "2025-04-01T10:00:00Z",
+            "user_id": "vendor-05"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": null,
+            "completed_bookings": 0,
+            "conversion_rate": null,
+            "email": "snap@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "photography"
+            ],
+            "payload": {
+              "aiBioDraft": "Wedding photography album shots",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Snap Studio",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "200",
+              "servicesOffered": [
+                "photography"
+              ]
+            },
+            "review_average": null,
+            "review_count": 0,
+            "status": "active",
+            "updated_at": "2025-03-01T10:00:00Z",
+            "user_id": "vendor-03"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": null,
+            "completed_bookings": 0,
+            "conversion_rate": null,
+            "email": "sugar@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "baking"
+            ],
+            "payload": {
+              "aiBioDraft": "Birthday cake baker",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Sugar Rush Cakes",
+              "eventTypes": [
+                "birthdays"
+              ],
+              "hourlyRate": "",
+              "servicesOffered": [
+                "baking"
+              ]
+            },
+            "review_average": null,
+            "review_count": 0,
+            "status": "active",
+            "updated_at": "2025-08-01T10:00:00Z",
+            "user_id": "vendor-11"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 100.0,
+            "completed_bookings": 1,
+            "conversion_rate": 1.0,
+            "email": "balloon@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "decor"
+            ],
+            "payload": {
+              "aiBioDraft": "Balloon backdrop styling",
+              "availableWeekdays": [],
+              "baseCity": "Birmingham",
+              "blockedDates": [],
+              "businessName": "Balloon Bliss",
+              "eventTypes": [
+                "birthdays",
+                "showers"
+              ],
+              "hourlyRate": "120",
+              "servicesOffered": [
+                "decor"
+              ]
+            },
+            "review_average": 5.0,
+            "review_count": 1,
+            "status": "active",
+            "updated_at": "2025-05-01T10:00:00Z",
+            "user_id": "vendor-06"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 200.0,
+            "completed_bookings": 5,
+            "conversion_rate": 0.83,
+            "email": "alaga@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "mc"
+            ],
+            "payload": {
+              "aiBioDraft": "MC host emcee announce",
+              "availableWeekdays": [],
+              "baseCity": "Leeds",
+              "blockedDates": [],
+              "businessName": "MC Alaga",
+              "eventTypes": [
+                "weddings",
+                "naming_ceremonies"
+              ],
+              "hourlyRate": "90",
+              "servicesOffered": [
+                "mc"
+              ]
+            },
+            "review_average": 4.7,
+            "review_count": 6,
+            "status": "active",
+            "updated_at": "2025-02-15T10:00:00Z",
+            "user_id": "vendor-09"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 1200.0,
+            "completed_bookings": 2,
+            "conversion_rate": 0.2,
+            "email": "jollof@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "catering"
+            ],
+            "payload": {
+              "aiBioDraft": "Rice and small chops catering",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Jollof Kings",
+              "eventTypes": [
+                "birthdays"
+              ],
+              "hourlyRate": "30",
+              "servicesOffered": [
+                "catering"
+              ]
+            },
+            "review_average": 4.9,
+            "review_count": 3,
+            "status": "active",
+            "updated_at": "2025-02-01T10:00:00Z",
+            "user_id": "vendor-02"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 300.0,
+            "completed_bookings": 15,
+            "conversion_rate": 0.75,
+            "email": "spinz@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "dj"
+            ],
+            "payload": {
+              "aiBioDraft": "Dancefloor music all night",
+              "availableWeekdays": [],
+              "baseCity": "Leeds",
+              "blockedDates": [],
+              "businessName": "DJ Spinz",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "80",
+              "servicesOffered": [
+                "dj"
+              ]
+            },
+            "review_average": 3.8,
+            "review_count": 20,
+            "status": "active",
+            "updated_at": "2025-01-15T10:00:00Z",
+            "user_id": "vendor-04"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 500.0,
+            "completed_bookings": 6,
+            "conversion_rate": 0.6,
+            "email": "hire@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "rentals"
+            ],
+            "payload": {
+              "aiBioDraft": "Table chair marquee hire",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Chair Hire Co",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "40",
+              "servicesOffered": [
+                "rentals"
+              ]
+            },
+            "review_average": 4.0,
+            "review_count": 8,
+            "status": "active",
+            "updated_at": "2025-01-01T10:00:00Z",
+            "user_id": "vendor-07"
+          }
+        ]
+      }
+    },
+    {
+      "name": "related location bristol matches london",
+      "params": {
+        "location_filter": "Bristol",
+        "primary_types": [
+          "photography"
+        ],
+        "related_locations": [
+          "london"
+        ]
+      },
+      "result": {
+        "has_exact": true,
+        "has_related": false,
+        "intent_summary": null,
+        "match_notice": null,
+        "plan": null,
+        "search_mode": "simple",
+        "sections": [],
+        "total_count": 1,
+        "vendors": [
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": null,
+            "completed_bookings": 0,
+            "conversion_rate": null,
+            "email": "snap@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "photography"
+            ],
+            "payload": {
+              "aiBioDraft": "Wedding photography album shots",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Snap Studio",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "200",
+              "servicesOffered": [
+                "photography"
+              ]
+            },
+            "review_average": null,
+            "review_count": 0,
+            "status": "active",
+            "updated_at": "2025-03-01T10:00:00Z",
+            "user_id": "vendor-03"
+          }
+        ]
+      }
+    },
+    {
+      "name": "budget narrow 50 100",
+      "params": {
+        "budget_max": 100,
+        "budget_min": 50
+      },
+      "result": {
+        "has_exact": true,
+        "has_related": false,
+        "intent_summary": null,
+        "match_notice": null,
+        "plan": null,
+        "search_mode": "simple",
+        "sections": [],
+        "total_count": 6,
+        "vendors": [
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 600.0,
+            "completed_bookings": 8,
+            "conversion_rate": 0.5,
+            "email": "ada@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "baking",
+              "catering"
+            ],
+            "payload": {
+              "aiBioDraft": "Delicious jollof cakes for every celebration",
+              "availableWeekdays": [
+                5,
+                6
+              ],
+              "baseCity": "London",
+              "blockedDates": [
+                "2026-12-25"
+              ],
+              "businessName": "Ada's Cakes",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "50",
+              "servicesOffered": [
+                "baking",
+                "catering"
+              ]
+            },
+            "review_average": 4.5,
+            "review_count": 10,
+            "status": "active",
+            "updated_at": "2025-01-10T10:00:00Z",
+            "user_id": "vendor-01"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": null,
+            "completed_bookings": 0,
+            "conversion_rate": null,
+            "email": "sugar@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "baking"
+            ],
+            "payload": {
+              "aiBioDraft": "Birthday cake baker",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Sugar Rush Cakes",
+              "eventTypes": [
+                "birthdays"
+              ],
+              "hourlyRate": "",
+              "servicesOffered": [
+                "baking"
+              ]
+            },
+            "review_average": null,
+            "review_count": 0,
+            "status": "active",
+            "updated_at": "2025-08-01T10:00:00Z",
+            "user_id": "vendor-11"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 400.0,
+            "completed_bookings": 7,
+            "conversion_rate": 0.35,
+            "email": "braids@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "hair_styling"
+            ],
+            "payload": {
+              "aiBioDraft": "Hair braids stylist bridal hair",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Braids & Wigs",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "70",
+              "servicesOffered": [
+                "hair_styling"
+              ]
+            },
+            "review_average": 4.1,
+            "review_count": 9,
+            "status": "active",
+            "updated_at": "2025-07-01T10:00:00Z",
+            "user_id": "vendor-10"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 900.0,
+            "completed_bookings": 4,
+            "conversion_rate": 0.4,
+            "email": "glam@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "makeup"
+            ],
+            "payload": {
+              "aiBioDraft": "Bridal makeup glam looks",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Glam MUA",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "60",
+              "servicesOffered": [
+                "makeup"
+              ]
+            },
+            "review_average": 4.2,
+            "review_count": 5,
+            "status": "active",
+            "updated_at": "2025-04-01T10:00:00Z",
+            "user_id": "vendor-05"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 200.0,
+            "completed_bookings": 5,
+            "conversion_rate": 0.83,
+            "email": "alaga@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "mc"
+            ],
+            "payload": {
+              "aiBioDraft": "MC host emcee announce",
+              "availableWeekdays": [],
+              "baseCity": "Leeds",
+              "blockedDates": [],
+              "businessName": "MC Alaga",
+              "eventTypes": [
+                "weddings",
+                "naming_ceremonies"
+              ],
+              "hourlyRate": "90",
+              "servicesOffered": [
+                "mc"
+              ]
+            },
+            "review_average": 4.7,
+            "review_count": 6,
+            "status": "active",
+            "updated_at": "2025-02-15T10:00:00Z",
+            "user_id": "vendor-09"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 300.0,
+            "completed_bookings": 15,
+            "conversion_rate": 0.75,
+            "email": "spinz@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "dj"
+            ],
+            "payload": {
+              "aiBioDraft": "Dancefloor music all night",
+              "availableWeekdays": [],
+              "baseCity": "Leeds",
+              "blockedDates": [],
+              "businessName": "DJ Spinz",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "80",
+              "servicesOffered": [
+                "dj"
+              ]
+            },
+            "review_average": 3.8,
+            "review_count": 20,
+            "status": "active",
+            "updated_at": "2025-01-15T10:00:00Z",
+            "user_id": "vendor-04"
+          }
+        ]
+      }
+    },
+    {
+      "name": "budget excludes cheap vendors",
+      "params": {
+        "budget_min": 100
+      },
+      "result": {
+        "has_exact": true,
+        "has_related": false,
+        "intent_summary": null,
+        "match_notice": null,
+        "plan": null,
+        "search_mode": "simple",
+        "sections": [],
+        "total_count": 5,
+        "vendors": [
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 350.0,
+            "completed_bookings": 11,
+            "conversion_rate": 0.6,
+            "email": "allinone@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "catering",
+              "dj"
+            ],
+            "payload": {
+              "aiBioDraft": "Food and music for your event",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "All-in-One Events",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "150",
+              "servicesOffered": [
+                "catering",
+                "dj"
+              ]
+            },
+            "review_average": 4.6,
+            "review_count": 15,
+            "status": "active",
+            "updated_at": "2025-09-01T10:00:00Z",
+            "user_id": "vendor-12"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": null,
+            "completed_bookings": 0,
+            "conversion_rate": null,
+            "email": "sugar@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "baking"
+            ],
+            "payload": {
+              "aiBioDraft": "Birthday cake baker",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Sugar Rush Cakes",
+              "eventTypes": [
+                "birthdays"
+              ],
+              "hourlyRate": "",
+              "servicesOffered": [
+                "baking"
+              ]
+            },
+            "review_average": null,
+            "review_count": 0,
+            "status": "active",
+            "updated_at": "2025-08-01T10:00:00Z",
+            "user_id": "vendor-11"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 1500.0,
+            "completed_bookings": 9,
+            "conversion_rate": 0.3,
+            "email": "plan@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "event_planning"
+            ],
+            "payload": {
+              "aiBioDraft": "Wedding planner coordination timeline",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Plan It",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "300",
+              "servicesOffered": [
+                "event_planning"
+              ]
+            },
+            "review_average": 3.5,
+            "review_count": 12,
+            "status": "active",
+            "updated_at": "2025-06-01T10:00:00Z",
+            "user_id": "vendor-08"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 100.0,
+            "completed_bookings": 1,
+            "conversion_rate": 1.0,
+            "email": "balloon@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "decor"
+            ],
+            "payload": {
+              "aiBioDraft": "Balloon backdrop styling",
+              "availableWeekdays": [],
+              "baseCity": "Birmingham",
+              "blockedDates": [],
+              "businessName": "Balloon Bliss",
+              "eventTypes": [
+                "birthdays",
+                "showers"
+              ],
+              "hourlyRate": "120",
+              "servicesOffered": [
+                "decor"
+              ]
+            },
+            "review_average": 5.0,
+            "review_count": 1,
+            "status": "active",
+            "updated_at": "2025-05-01T10:00:00Z",
+            "user_id": "vendor-06"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": null,
+            "completed_bookings": 0,
+            "conversion_rate": null,
+            "email": "snap@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "photography"
+            ],
+            "payload": {
+              "aiBioDraft": "Wedding photography album shots",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Snap Studio",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "200",
+              "servicesOffered": [
+                "photography"
+              ]
+            },
+            "review_average": null,
+            "review_count": 0,
+            "status": "active",
+            "updated_at": "2025-03-01T10:00:00Z",
+            "user_id": "vendor-03"
+          }
+        ]
+      }
+    },
+    {
+      "name": "sort price ascending",
+      "params": {
+        "sort_key": "price_asc"
+      },
+      "result": {
+        "has_exact": true,
+        "has_related": false,
+        "intent_summary": null,
+        "match_notice": null,
+        "plan": null,
+        "search_mode": "simple",
+        "sections": [],
+        "total_count": 12,
+        "vendors": [
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 1200.0,
+            "completed_bookings": 2,
+            "conversion_rate": 0.2,
+            "email": "jollof@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "catering"
+            ],
+            "payload": {
+              "aiBioDraft": "Rice and small chops catering",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Jollof Kings",
+              "eventTypes": [
+                "birthdays"
+              ],
+              "hourlyRate": "30",
+              "servicesOffered": [
+                "catering"
+              ]
+            },
+            "review_average": 4.9,
+            "review_count": 3,
+            "status": "active",
+            "updated_at": "2025-02-01T10:00:00Z",
+            "user_id": "vendor-02"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 500.0,
+            "completed_bookings": 6,
+            "conversion_rate": 0.6,
+            "email": "hire@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "rentals"
+            ],
+            "payload": {
+              "aiBioDraft": "Table chair marquee hire",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Chair Hire Co",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "40",
+              "servicesOffered": [
+                "rentals"
+              ]
+            },
+            "review_average": 4.0,
+            "review_count": 8,
+            "status": "active",
+            "updated_at": "2025-01-01T10:00:00Z",
+            "user_id": "vendor-07"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 600.0,
+            "completed_bookings": 8,
+            "conversion_rate": 0.5,
+            "email": "ada@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "baking",
+              "catering"
+            ],
+            "payload": {
+              "aiBioDraft": "Delicious jollof cakes for every celebration",
+              "availableWeekdays": [
+                5,
+                6
+              ],
+              "baseCity": "London",
+              "blockedDates": [
+                "2026-12-25"
+              ],
+              "businessName": "Ada's Cakes",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "50",
+              "servicesOffered": [
+                "baking",
+                "catering"
+              ]
+            },
+            "review_average": 4.5,
+            "review_count": 10,
+            "status": "active",
+            "updated_at": "2025-01-10T10:00:00Z",
+            "user_id": "vendor-01"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 900.0,
+            "completed_bookings": 4,
+            "conversion_rate": 0.4,
+            "email": "glam@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "makeup"
+            ],
+            "payload": {
+              "aiBioDraft": "Bridal makeup glam looks",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Glam MUA",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "60",
+              "servicesOffered": [
+                "makeup"
+              ]
+            },
+            "review_average": 4.2,
+            "review_count": 5,
+            "status": "active",
+            "updated_at": "2025-04-01T10:00:00Z",
+            "user_id": "vendor-05"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 400.0,
+            "completed_bookings": 7,
+            "conversion_rate": 0.35,
+            "email": "braids@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "hair_styling"
+            ],
+            "payload": {
+              "aiBioDraft": "Hair braids stylist bridal hair",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Braids & Wigs",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "70",
+              "servicesOffered": [
+                "hair_styling"
+              ]
+            },
+            "review_average": 4.1,
+            "review_count": 9,
+            "status": "active",
+            "updated_at": "2025-07-01T10:00:00Z",
+            "user_id": "vendor-10"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 300.0,
+            "completed_bookings": 15,
+            "conversion_rate": 0.75,
+            "email": "spinz@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "dj"
+            ],
+            "payload": {
+              "aiBioDraft": "Dancefloor music all night",
+              "availableWeekdays": [],
+              "baseCity": "Leeds",
+              "blockedDates": [],
+              "businessName": "DJ Spinz",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "80",
+              "servicesOffered": [
+                "dj"
+              ]
+            },
+            "review_average": 3.8,
+            "review_count": 20,
+            "status": "active",
+            "updated_at": "2025-01-15T10:00:00Z",
+            "user_id": "vendor-04"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 200.0,
+            "completed_bookings": 5,
+            "conversion_rate": 0.83,
+            "email": "alaga@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "mc"
+            ],
+            "payload": {
+              "aiBioDraft": "MC host emcee announce",
+              "availableWeekdays": [],
+              "baseCity": "Leeds",
+              "blockedDates": [],
+              "businessName": "MC Alaga",
+              "eventTypes": [
+                "weddings",
+                "naming_ceremonies"
+              ],
+              "hourlyRate": "90",
+              "servicesOffered": [
+                "mc"
+              ]
+            },
+            "review_average": 4.7,
+            "review_count": 6,
+            "status": "active",
+            "updated_at": "2025-02-15T10:00:00Z",
+            "user_id": "vendor-09"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 100.0,
+            "completed_bookings": 1,
+            "conversion_rate": 1.0,
+            "email": "balloon@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "decor"
+            ],
+            "payload": {
+              "aiBioDraft": "Balloon backdrop styling",
+              "availableWeekdays": [],
+              "baseCity": "Birmingham",
+              "blockedDates": [],
+              "businessName": "Balloon Bliss",
+              "eventTypes": [
+                "birthdays",
+                "showers"
+              ],
+              "hourlyRate": "120",
+              "servicesOffered": [
+                "decor"
+              ]
+            },
+            "review_average": 5.0,
+            "review_count": 1,
+            "status": "active",
+            "updated_at": "2025-05-01T10:00:00Z",
+            "user_id": "vendor-06"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 350.0,
+            "completed_bookings": 11,
+            "conversion_rate": 0.6,
+            "email": "allinone@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "catering",
+              "dj"
+            ],
+            "payload": {
+              "aiBioDraft": "Food and music for your event",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "All-in-One Events",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "150",
+              "servicesOffered": [
+                "catering",
+                "dj"
+              ]
+            },
+            "review_average": 4.6,
+            "review_count": 15,
+            "status": "active",
+            "updated_at": "2025-09-01T10:00:00Z",
+            "user_id": "vendor-12"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": null,
+            "completed_bookings": 0,
+            "conversion_rate": null,
+            "email": "snap@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "photography"
+            ],
+            "payload": {
+              "aiBioDraft": "Wedding photography album shots",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Snap Studio",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "200",
+              "servicesOffered": [
+                "photography"
+              ]
+            },
+            "review_average": null,
+            "review_count": 0,
+            "status": "active",
+            "updated_at": "2025-03-01T10:00:00Z",
+            "user_id": "vendor-03"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 1500.0,
+            "completed_bookings": 9,
+            "conversion_rate": 0.3,
+            "email": "plan@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "event_planning"
+            ],
+            "payload": {
+              "aiBioDraft": "Wedding planner coordination timeline",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Plan It",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "300",
+              "servicesOffered": [
+                "event_planning"
+              ]
+            },
+            "review_average": 3.5,
+            "review_count": 12,
+            "status": "active",
+            "updated_at": "2025-06-01T10:00:00Z",
+            "user_id": "vendor-08"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": null,
+            "completed_bookings": 0,
+            "conversion_rate": null,
+            "email": "sugar@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "baking"
+            ],
+            "payload": {
+              "aiBioDraft": "Birthday cake baker",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Sugar Rush Cakes",
+              "eventTypes": [
+                "birthdays"
+              ],
+              "hourlyRate": "",
+              "servicesOffered": [
+                "baking"
+              ]
+            },
+            "review_average": null,
+            "review_count": 0,
+            "status": "active",
+            "updated_at": "2025-08-01T10:00:00Z",
+            "user_id": "vendor-11"
+          }
+        ]
+      }
+    },
+    {
+      "name": "sort price descending",
+      "params": {
+        "sort_key": "price_desc"
+      },
+      "result": {
+        "has_exact": true,
+        "has_related": false,
+        "intent_summary": null,
+        "match_notice": null,
+        "plan": null,
+        "search_mode": "simple",
+        "sections": [],
+        "total_count": 12,
+        "vendors": [
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 1500.0,
+            "completed_bookings": 9,
+            "conversion_rate": 0.3,
+            "email": "plan@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "event_planning"
+            ],
+            "payload": {
+              "aiBioDraft": "Wedding planner coordination timeline",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Plan It",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "300",
+              "servicesOffered": [
+                "event_planning"
+              ]
+            },
+            "review_average": 3.5,
+            "review_count": 12,
+            "status": "active",
+            "updated_at": "2025-06-01T10:00:00Z",
+            "user_id": "vendor-08"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": null,
+            "completed_bookings": 0,
+            "conversion_rate": null,
+            "email": "snap@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "photography"
+            ],
+            "payload": {
+              "aiBioDraft": "Wedding photography album shots",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Snap Studio",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "200",
+              "servicesOffered": [
+                "photography"
+              ]
+            },
+            "review_average": null,
+            "review_count": 0,
+            "status": "active",
+            "updated_at": "2025-03-01T10:00:00Z",
+            "user_id": "vendor-03"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 350.0,
+            "completed_bookings": 11,
+            "conversion_rate": 0.6,
+            "email": "allinone@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "catering",
+              "dj"
+            ],
+            "payload": {
+              "aiBioDraft": "Food and music for your event",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "All-in-One Events",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "150",
+              "servicesOffered": [
+                "catering",
+                "dj"
+              ]
+            },
+            "review_average": 4.6,
+            "review_count": 15,
+            "status": "active",
+            "updated_at": "2025-09-01T10:00:00Z",
+            "user_id": "vendor-12"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 100.0,
+            "completed_bookings": 1,
+            "conversion_rate": 1.0,
+            "email": "balloon@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "decor"
+            ],
+            "payload": {
+              "aiBioDraft": "Balloon backdrop styling",
+              "availableWeekdays": [],
+              "baseCity": "Birmingham",
+              "blockedDates": [],
+              "businessName": "Balloon Bliss",
+              "eventTypes": [
+                "birthdays",
+                "showers"
+              ],
+              "hourlyRate": "120",
+              "servicesOffered": [
+                "decor"
+              ]
+            },
+            "review_average": 5.0,
+            "review_count": 1,
+            "status": "active",
+            "updated_at": "2025-05-01T10:00:00Z",
+            "user_id": "vendor-06"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 200.0,
+            "completed_bookings": 5,
+            "conversion_rate": 0.83,
+            "email": "alaga@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "mc"
+            ],
+            "payload": {
+              "aiBioDraft": "MC host emcee announce",
+              "availableWeekdays": [],
+              "baseCity": "Leeds",
+              "blockedDates": [],
+              "businessName": "MC Alaga",
+              "eventTypes": [
+                "weddings",
+                "naming_ceremonies"
+              ],
+              "hourlyRate": "90",
+              "servicesOffered": [
+                "mc"
+              ]
+            },
+            "review_average": 4.7,
+            "review_count": 6,
+            "status": "active",
+            "updated_at": "2025-02-15T10:00:00Z",
+            "user_id": "vendor-09"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 300.0,
+            "completed_bookings": 15,
+            "conversion_rate": 0.75,
+            "email": "spinz@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "dj"
+            ],
+            "payload": {
+              "aiBioDraft": "Dancefloor music all night",
+              "availableWeekdays": [],
+              "baseCity": "Leeds",
+              "blockedDates": [],
+              "businessName": "DJ Spinz",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "80",
+              "servicesOffered": [
+                "dj"
+              ]
+            },
+            "review_average": 3.8,
+            "review_count": 20,
+            "status": "active",
+            "updated_at": "2025-01-15T10:00:00Z",
+            "user_id": "vendor-04"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 400.0,
+            "completed_bookings": 7,
+            "conversion_rate": 0.35,
+            "email": "braids@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "hair_styling"
+            ],
+            "payload": {
+              "aiBioDraft": "Hair braids stylist bridal hair",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Braids & Wigs",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "70",
+              "servicesOffered": [
+                "hair_styling"
+              ]
+            },
+            "review_average": 4.1,
+            "review_count": 9,
+            "status": "active",
+            "updated_at": "2025-07-01T10:00:00Z",
+            "user_id": "vendor-10"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 900.0,
+            "completed_bookings": 4,
+            "conversion_rate": 0.4,
+            "email": "glam@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "makeup"
+            ],
+            "payload": {
+              "aiBioDraft": "Bridal makeup glam looks",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Glam MUA",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "60",
+              "servicesOffered": [
+                "makeup"
+              ]
+            },
+            "review_average": 4.2,
+            "review_count": 5,
+            "status": "active",
+            "updated_at": "2025-04-01T10:00:00Z",
+            "user_id": "vendor-05"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 600.0,
+            "completed_bookings": 8,
+            "conversion_rate": 0.5,
+            "email": "ada@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "baking",
+              "catering"
+            ],
+            "payload": {
+              "aiBioDraft": "Delicious jollof cakes for every celebration",
+              "availableWeekdays": [
+                5,
+                6
+              ],
+              "baseCity": "London",
+              "blockedDates": [
+                "2026-12-25"
+              ],
+              "businessName": "Ada's Cakes",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "50",
+              "servicesOffered": [
+                "baking",
+                "catering"
+              ]
+            },
+            "review_average": 4.5,
+            "review_count": 10,
+            "status": "active",
+            "updated_at": "2025-01-10T10:00:00Z",
+            "user_id": "vendor-01"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 500.0,
+            "completed_bookings": 6,
+            "conversion_rate": 0.6,
+            "email": "hire@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "rentals"
+            ],
+            "payload": {
+              "aiBioDraft": "Table chair marquee hire",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Chair Hire Co",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "40",
+              "servicesOffered": [
+                "rentals"
+              ]
+            },
+            "review_average": 4.0,
+            "review_count": 8,
+            "status": "active",
+            "updated_at": "2025-01-01T10:00:00Z",
+            "user_id": "vendor-07"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 1200.0,
+            "completed_bookings": 2,
+            "conversion_rate": 0.2,
+            "email": "jollof@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "catering"
+            ],
+            "payload": {
+              "aiBioDraft": "Rice and small chops catering",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Jollof Kings",
+              "eventTypes": [
+                "birthdays"
+              ],
+              "hourlyRate": "30",
+              "servicesOffered": [
+                "catering"
+              ]
+            },
+            "review_average": 4.9,
+            "review_count": 3,
+            "status": "active",
+            "updated_at": "2025-02-01T10:00:00Z",
+            "user_id": "vendor-02"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": null,
+            "completed_bookings": 0,
+            "conversion_rate": null,
+            "email": "sugar@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "baking"
+            ],
+            "payload": {
+              "aiBioDraft": "Birthday cake baker",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Sugar Rush Cakes",
+              "eventTypes": [
+                "birthdays"
+              ],
+              "hourlyRate": "",
+              "servicesOffered": [
+                "baking"
+              ]
+            },
+            "review_average": null,
+            "review_count": 0,
+            "status": "active",
+            "updated_at": "2025-08-01T10:00:00Z",
+            "user_id": "vendor-11"
+          }
+        ]
+      }
+    },
+    {
+      "name": "sort proximity",
+      "params": {
+        "sort_key": "proximity"
+      },
+      "result": {
+        "has_exact": true,
+        "has_related": false,
+        "intent_summary": null,
+        "match_notice": null,
+        "plan": null,
+        "search_mode": "simple",
+        "sections": [],
+        "total_count": 12,
+        "vendors": [
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 350.0,
+            "completed_bookings": 11,
+            "conversion_rate": 0.6,
+            "email": "allinone@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "catering",
+              "dj"
+            ],
+            "payload": {
+              "aiBioDraft": "Food and music for your event",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "All-in-One Events",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "150",
+              "servicesOffered": [
+                "catering",
+                "dj"
+              ]
+            },
+            "review_average": 4.6,
+            "review_count": 15,
+            "status": "active",
+            "updated_at": "2025-09-01T10:00:00Z",
+            "user_id": "vendor-12"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": null,
+            "completed_bookings": 0,
+            "conversion_rate": null,
+            "email": "sugar@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "baking"
+            ],
+            "payload": {
+              "aiBioDraft": "Birthday cake baker",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Sugar Rush Cakes",
+              "eventTypes": [
+                "birthdays"
+              ],
+              "hourlyRate": "",
+              "servicesOffered": [
+                "baking"
+              ]
+            },
+            "review_average": null,
+            "review_count": 0,
+            "status": "active",
+            "updated_at": "2025-08-01T10:00:00Z",
+            "user_id": "vendor-11"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 400.0,
+            "completed_bookings": 7,
+            "conversion_rate": 0.35,
+            "email": "braids@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "hair_styling"
+            ],
+            "payload": {
+              "aiBioDraft": "Hair braids stylist bridal hair",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Braids & Wigs",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "70",
+              "servicesOffered": [
+                "hair_styling"
+              ]
+            },
+            "review_average": 4.1,
+            "review_count": 9,
+            "status": "active",
+            "updated_at": "2025-07-01T10:00:00Z",
+            "user_id": "vendor-10"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 1500.0,
+            "completed_bookings": 9,
+            "conversion_rate": 0.3,
+            "email": "plan@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "event_planning"
+            ],
+            "payload": {
+              "aiBioDraft": "Wedding planner coordination timeline",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Plan It",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "300",
+              "servicesOffered": [
+                "event_planning"
+              ]
+            },
+            "review_average": 3.5,
+            "review_count": 12,
+            "status": "active",
+            "updated_at": "2025-06-01T10:00:00Z",
+            "user_id": "vendor-08"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 100.0,
+            "completed_bookings": 1,
+            "conversion_rate": 1.0,
+            "email": "balloon@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "decor"
+            ],
+            "payload": {
+              "aiBioDraft": "Balloon backdrop styling",
+              "availableWeekdays": [],
+              "baseCity": "Birmingham",
+              "blockedDates": [],
+              "businessName": "Balloon Bliss",
+              "eventTypes": [
+                "birthdays",
+                "showers"
+              ],
+              "hourlyRate": "120",
+              "servicesOffered": [
+                "decor"
+              ]
+            },
+            "review_average": 5.0,
+            "review_count": 1,
+            "status": "active",
+            "updated_at": "2025-05-01T10:00:00Z",
+            "user_id": "vendor-06"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 900.0,
+            "completed_bookings": 4,
+            "conversion_rate": 0.4,
+            "email": "glam@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "makeup"
+            ],
+            "payload": {
+              "aiBioDraft": "Bridal makeup glam looks",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Glam MUA",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "60",
+              "servicesOffered": [
+                "makeup"
+              ]
+            },
+            "review_average": 4.2,
+            "review_count": 5,
+            "status": "active",
+            "updated_at": "2025-04-01T10:00:00Z",
+            "user_id": "vendor-05"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": null,
+            "completed_bookings": 0,
+            "conversion_rate": null,
+            "email": "snap@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "photography"
+            ],
+            "payload": {
+              "aiBioDraft": "Wedding photography album shots",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Snap Studio",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "200",
+              "servicesOffered": [
+                "photography"
+              ]
+            },
+            "review_average": null,
+            "review_count": 0,
+            "status": "active",
+            "updated_at": "2025-03-01T10:00:00Z",
+            "user_id": "vendor-03"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 200.0,
+            "completed_bookings": 5,
+            "conversion_rate": 0.83,
+            "email": "alaga@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "mc"
+            ],
+            "payload": {
+              "aiBioDraft": "MC host emcee announce",
+              "availableWeekdays": [],
+              "baseCity": "Leeds",
+              "blockedDates": [],
+              "businessName": "MC Alaga",
+              "eventTypes": [
+                "weddings",
+                "naming_ceremonies"
+              ],
+              "hourlyRate": "90",
+              "servicesOffered": [
+                "mc"
+              ]
+            },
+            "review_average": 4.7,
+            "review_count": 6,
+            "status": "active",
+            "updated_at": "2025-02-15T10:00:00Z",
+            "user_id": "vendor-09"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 1200.0,
+            "completed_bookings": 2,
+            "conversion_rate": 0.2,
+            "email": "jollof@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "catering"
+            ],
+            "payload": {
+              "aiBioDraft": "Rice and small chops catering",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Jollof Kings",
+              "eventTypes": [
+                "birthdays"
+              ],
+              "hourlyRate": "30",
+              "servicesOffered": [
+                "catering"
+              ]
+            },
+            "review_average": 4.9,
+            "review_count": 3,
+            "status": "active",
+            "updated_at": "2025-02-01T10:00:00Z",
+            "user_id": "vendor-02"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 300.0,
+            "completed_bookings": 15,
+            "conversion_rate": 0.75,
+            "email": "spinz@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "dj"
+            ],
+            "payload": {
+              "aiBioDraft": "Dancefloor music all night",
+              "availableWeekdays": [],
+              "baseCity": "Leeds",
+              "blockedDates": [],
+              "businessName": "DJ Spinz",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "80",
+              "servicesOffered": [
+                "dj"
+              ]
+            },
+            "review_average": 3.8,
+            "review_count": 20,
+            "status": "active",
+            "updated_at": "2025-01-15T10:00:00Z",
+            "user_id": "vendor-04"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 600.0,
+            "completed_bookings": 8,
+            "conversion_rate": 0.5,
+            "email": "ada@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "baking",
+              "catering"
+            ],
+            "payload": {
+              "aiBioDraft": "Delicious jollof cakes for every celebration",
+              "availableWeekdays": [
+                5,
+                6
+              ],
+              "baseCity": "London",
+              "blockedDates": [
+                "2026-12-25"
+              ],
+              "businessName": "Ada's Cakes",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "50",
+              "servicesOffered": [
+                "baking",
+                "catering"
+              ]
+            },
+            "review_average": 4.5,
+            "review_count": 10,
+            "status": "active",
+            "updated_at": "2025-01-10T10:00:00Z",
+            "user_id": "vendor-01"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 500.0,
+            "completed_bookings": 6,
+            "conversion_rate": 0.6,
+            "email": "hire@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "rentals"
+            ],
+            "payload": {
+              "aiBioDraft": "Table chair marquee hire",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Chair Hire Co",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "40",
+              "servicesOffered": [
+                "rentals"
+              ]
+            },
+            "review_average": 4.0,
+            "review_count": 8,
+            "status": "active",
+            "updated_at": "2025-01-01T10:00:00Z",
+            "user_id": "vendor-07"
+          }
+        ]
+      }
+    },
+    {
+      "name": "sort rating",
+      "params": {
+        "sort_key": "rating"
+      },
+      "result": {
+        "has_exact": true,
+        "has_related": false,
+        "intent_summary": null,
+        "match_notice": null,
+        "plan": null,
+        "search_mode": "simple",
+        "sections": [],
+        "total_count": 12,
+        "vendors": [
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 100.0,
+            "completed_bookings": 1,
+            "conversion_rate": 1.0,
+            "email": "balloon@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "decor"
+            ],
+            "payload": {
+              "aiBioDraft": "Balloon backdrop styling",
+              "availableWeekdays": [],
+              "baseCity": "Birmingham",
+              "blockedDates": [],
+              "businessName": "Balloon Bliss",
+              "eventTypes": [
+                "birthdays",
+                "showers"
+              ],
+              "hourlyRate": "120",
+              "servicesOffered": [
+                "decor"
+              ]
+            },
+            "review_average": 5.0,
+            "review_count": 1,
+            "status": "active",
+            "updated_at": "2025-05-01T10:00:00Z",
+            "user_id": "vendor-06"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 1200.0,
+            "completed_bookings": 2,
+            "conversion_rate": 0.2,
+            "email": "jollof@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "catering"
+            ],
+            "payload": {
+              "aiBioDraft": "Rice and small chops catering",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Jollof Kings",
+              "eventTypes": [
+                "birthdays"
+              ],
+              "hourlyRate": "30",
+              "servicesOffered": [
+                "catering"
+              ]
+            },
+            "review_average": 4.9,
+            "review_count": 3,
+            "status": "active",
+            "updated_at": "2025-02-01T10:00:00Z",
+            "user_id": "vendor-02"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 200.0,
+            "completed_bookings": 5,
+            "conversion_rate": 0.83,
+            "email": "alaga@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "mc"
+            ],
+            "payload": {
+              "aiBioDraft": "MC host emcee announce",
+              "availableWeekdays": [],
+              "baseCity": "Leeds",
+              "blockedDates": [],
+              "businessName": "MC Alaga",
+              "eventTypes": [
+                "weddings",
+                "naming_ceremonies"
+              ],
+              "hourlyRate": "90",
+              "servicesOffered": [
+                "mc"
+              ]
+            },
+            "review_average": 4.7,
+            "review_count": 6,
+            "status": "active",
+            "updated_at": "2025-02-15T10:00:00Z",
+            "user_id": "vendor-09"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 350.0,
+            "completed_bookings": 11,
+            "conversion_rate": 0.6,
+            "email": "allinone@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "catering",
+              "dj"
+            ],
+            "payload": {
+              "aiBioDraft": "Food and music for your event",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "All-in-One Events",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "150",
+              "servicesOffered": [
+                "catering",
+                "dj"
+              ]
+            },
+            "review_average": 4.6,
+            "review_count": 15,
+            "status": "active",
+            "updated_at": "2025-09-01T10:00:00Z",
+            "user_id": "vendor-12"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 600.0,
+            "completed_bookings": 8,
+            "conversion_rate": 0.5,
+            "email": "ada@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "baking",
+              "catering"
+            ],
+            "payload": {
+              "aiBioDraft": "Delicious jollof cakes for every celebration",
+              "availableWeekdays": [
+                5,
+                6
+              ],
+              "baseCity": "London",
+              "blockedDates": [
+                "2026-12-25"
+              ],
+              "businessName": "Ada's Cakes",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "50",
+              "servicesOffered": [
+                "baking",
+                "catering"
+              ]
+            },
+            "review_average": 4.5,
+            "review_count": 10,
+            "status": "active",
+            "updated_at": "2025-01-10T10:00:00Z",
+            "user_id": "vendor-01"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 900.0,
+            "completed_bookings": 4,
+            "conversion_rate": 0.4,
+            "email": "glam@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "makeup"
+            ],
+            "payload": {
+              "aiBioDraft": "Bridal makeup glam looks",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Glam MUA",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "60",
+              "servicesOffered": [
+                "makeup"
+              ]
+            },
+            "review_average": 4.2,
+            "review_count": 5,
+            "status": "active",
+            "updated_at": "2025-04-01T10:00:00Z",
+            "user_id": "vendor-05"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 400.0,
+            "completed_bookings": 7,
+            "conversion_rate": 0.35,
+            "email": "braids@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "hair_styling"
+            ],
+            "payload": {
+              "aiBioDraft": "Hair braids stylist bridal hair",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Braids & Wigs",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "70",
+              "servicesOffered": [
+                "hair_styling"
+              ]
+            },
+            "review_average": 4.1,
+            "review_count": 9,
+            "status": "active",
+            "updated_at": "2025-07-01T10:00:00Z",
+            "user_id": "vendor-10"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 500.0,
+            "completed_bookings": 6,
+            "conversion_rate": 0.6,
+            "email": "hire@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "rentals"
+            ],
+            "payload": {
+              "aiBioDraft": "Table chair marquee hire",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Chair Hire Co",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "40",
+              "servicesOffered": [
+                "rentals"
+              ]
+            },
+            "review_average": 4.0,
+            "review_count": 8,
+            "status": "active",
+            "updated_at": "2025-01-01T10:00:00Z",
+            "user_id": "vendor-07"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 300.0,
+            "completed_bookings": 15,
+            "conversion_rate": 0.75,
+            "email": "spinz@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "dj"
+            ],
+            "payload": {
+              "aiBioDraft": "Dancefloor music all night",
+              "availableWeekdays": [],
+              "baseCity": "Leeds",
+              "blockedDates": [],
+              "businessName": "DJ Spinz",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "80",
+              "servicesOffered": [
+                "dj"
+              ]
+            },
+            "review_average": 3.8,
+            "review_count": 20,
+            "status": "active",
+            "updated_at": "2025-01-15T10:00:00Z",
+            "user_id": "vendor-04"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 1500.0,
+            "completed_bookings": 9,
+            "conversion_rate": 0.3,
+            "email": "plan@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "event_planning"
+            ],
+            "payload": {
+              "aiBioDraft": "Wedding planner coordination timeline",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Plan It",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "300",
+              "servicesOffered": [
+                "event_planning"
+              ]
+            },
+            "review_average": 3.5,
+            "review_count": 12,
+            "status": "active",
+            "updated_at": "2025-06-01T10:00:00Z",
+            "user_id": "vendor-08"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": null,
+            "completed_bookings": 0,
+            "conversion_rate": null,
+            "email": "sugar@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "baking"
+            ],
+            "payload": {
+              "aiBioDraft": "Birthday cake baker",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Sugar Rush Cakes",
+              "eventTypes": [
+                "birthdays"
+              ],
+              "hourlyRate": "",
+              "servicesOffered": [
+                "baking"
+              ]
+            },
+            "review_average": null,
+            "review_count": 0,
+            "status": "active",
+            "updated_at": "2025-08-01T10:00:00Z",
+            "user_id": "vendor-11"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": null,
+            "completed_bookings": 0,
+            "conversion_rate": null,
+            "email": "snap@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "photography"
+            ],
+            "payload": {
+              "aiBioDraft": "Wedding photography album shots",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Snap Studio",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "200",
+              "servicesOffered": [
+                "photography"
+              ]
+            },
+            "review_average": null,
+            "review_count": 0,
+            "status": "active",
+            "updated_at": "2025-03-01T10:00:00Z",
+            "user_id": "vendor-03"
+          }
+        ]
+      }
+    },
+    {
+      "name": "blocked date excludes exact match",
+      "params": {
+        "apply_date_availability": true,
+        "date_parts": [
+          "2026-12-25"
+        ]
+      },
+      "result": {
+        "has_exact": true,
+        "has_related": true,
+        "intent_summary": null,
+        "match_notice": null,
+        "plan": null,
+        "search_mode": "simple",
+        "sections": [],
+        "total_count": 12,
+        "vendors": [
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 350.0,
+            "completed_bookings": 11,
+            "conversion_rate": 0.6,
+            "email": "allinone@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "catering",
+              "dj"
+            ],
+            "payload": {
+              "aiBioDraft": "Food and music for your event",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "All-in-One Events",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "150",
+              "servicesOffered": [
+                "catering",
+                "dj"
+              ]
+            },
+            "review_average": 4.6,
+            "review_count": 15,
+            "status": "active",
+            "updated_at": "2025-09-01T10:00:00Z",
+            "user_id": "vendor-12"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": null,
+            "completed_bookings": 0,
+            "conversion_rate": null,
+            "email": "sugar@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "baking"
+            ],
+            "payload": {
+              "aiBioDraft": "Birthday cake baker",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Sugar Rush Cakes",
+              "eventTypes": [
+                "birthdays"
+              ],
+              "hourlyRate": "",
+              "servicesOffered": [
+                "baking"
+              ]
+            },
+            "review_average": null,
+            "review_count": 0,
+            "status": "active",
+            "updated_at": "2025-08-01T10:00:00Z",
+            "user_id": "vendor-11"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 400.0,
+            "completed_bookings": 7,
+            "conversion_rate": 0.35,
+            "email": "braids@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "hair_styling"
+            ],
+            "payload": {
+              "aiBioDraft": "Hair braids stylist bridal hair",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Braids & Wigs",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "70",
+              "servicesOffered": [
+                "hair_styling"
+              ]
+            },
+            "review_average": 4.1,
+            "review_count": 9,
+            "status": "active",
+            "updated_at": "2025-07-01T10:00:00Z",
+            "user_id": "vendor-10"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 1500.0,
+            "completed_bookings": 9,
+            "conversion_rate": 0.3,
+            "email": "plan@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "event_planning"
+            ],
+            "payload": {
+              "aiBioDraft": "Wedding planner coordination timeline",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Plan It",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "300",
+              "servicesOffered": [
+                "event_planning"
+              ]
+            },
+            "review_average": 3.5,
+            "review_count": 12,
+            "status": "active",
+            "updated_at": "2025-06-01T10:00:00Z",
+            "user_id": "vendor-08"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 100.0,
+            "completed_bookings": 1,
+            "conversion_rate": 1.0,
+            "email": "balloon@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "decor"
+            ],
+            "payload": {
+              "aiBioDraft": "Balloon backdrop styling",
+              "availableWeekdays": [],
+              "baseCity": "Birmingham",
+              "blockedDates": [],
+              "businessName": "Balloon Bliss",
+              "eventTypes": [
+                "birthdays",
+                "showers"
+              ],
+              "hourlyRate": "120",
+              "servicesOffered": [
+                "decor"
+              ]
+            },
+            "review_average": 5.0,
+            "review_count": 1,
+            "status": "active",
+            "updated_at": "2025-05-01T10:00:00Z",
+            "user_id": "vendor-06"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 900.0,
+            "completed_bookings": 4,
+            "conversion_rate": 0.4,
+            "email": "glam@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "makeup"
+            ],
+            "payload": {
+              "aiBioDraft": "Bridal makeup glam looks",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Glam MUA",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "60",
+              "servicesOffered": [
+                "makeup"
+              ]
+            },
+            "review_average": 4.2,
+            "review_count": 5,
+            "status": "active",
+            "updated_at": "2025-04-01T10:00:00Z",
+            "user_id": "vendor-05"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": null,
+            "completed_bookings": 0,
+            "conversion_rate": null,
+            "email": "snap@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "photography"
+            ],
+            "payload": {
+              "aiBioDraft": "Wedding photography album shots",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Snap Studio",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "200",
+              "servicesOffered": [
+                "photography"
+              ]
+            },
+            "review_average": null,
+            "review_count": 0,
+            "status": "active",
+            "updated_at": "2025-03-01T10:00:00Z",
+            "user_id": "vendor-03"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 200.0,
+            "completed_bookings": 5,
+            "conversion_rate": 0.83,
+            "email": "alaga@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "mc"
+            ],
+            "payload": {
+              "aiBioDraft": "MC host emcee announce",
+              "availableWeekdays": [],
+              "baseCity": "Leeds",
+              "blockedDates": [],
+              "businessName": "MC Alaga",
+              "eventTypes": [
+                "weddings",
+                "naming_ceremonies"
+              ],
+              "hourlyRate": "90",
+              "servicesOffered": [
+                "mc"
+              ]
+            },
+            "review_average": 4.7,
+            "review_count": 6,
+            "status": "active",
+            "updated_at": "2025-02-15T10:00:00Z",
+            "user_id": "vendor-09"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 1200.0,
+            "completed_bookings": 2,
+            "conversion_rate": 0.2,
+            "email": "jollof@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "catering"
+            ],
+            "payload": {
+              "aiBioDraft": "Rice and small chops catering",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Jollof Kings",
+              "eventTypes": [
+                "birthdays"
+              ],
+              "hourlyRate": "30",
+              "servicesOffered": [
+                "catering"
+              ]
+            },
+            "review_average": 4.9,
+            "review_count": 3,
+            "status": "active",
+            "updated_at": "2025-02-01T10:00:00Z",
+            "user_id": "vendor-02"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 300.0,
+            "completed_bookings": 15,
+            "conversion_rate": 0.75,
+            "email": "spinz@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "dj"
+            ],
+            "payload": {
+              "aiBioDraft": "Dancefloor music all night",
+              "availableWeekdays": [],
+              "baseCity": "Leeds",
+              "blockedDates": [],
+              "businessName": "DJ Spinz",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "80",
+              "servicesOffered": [
+                "dj"
+              ]
+            },
+            "review_average": 3.8,
+            "review_count": 20,
+            "status": "active",
+            "updated_at": "2025-01-15T10:00:00Z",
+            "user_id": "vendor-04"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 500.0,
+            "completed_bookings": 6,
+            "conversion_rate": 0.6,
+            "email": "hire@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "rentals"
+            ],
+            "payload": {
+              "aiBioDraft": "Table chair marquee hire",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Chair Hire Co",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "40",
+              "servicesOffered": [
+                "rentals"
+              ]
+            },
+            "review_average": 4.0,
+            "review_count": 8,
+            "status": "active",
+            "updated_at": "2025-01-01T10:00:00Z",
+            "user_id": "vendor-07"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 600.0,
+            "completed_bookings": 8,
+            "conversion_rate": 0.5,
+            "email": "ada@example.com",
+            "match_tier": "related",
+            "matched_services": [
+              "baking",
+              "catering"
+            ],
+            "payload": {
+              "aiBioDraft": "Delicious jollof cakes for every celebration",
+              "availableWeekdays": [
+                5,
+                6
+              ],
+              "baseCity": "London",
+              "blockedDates": [
+                "2026-12-25"
+              ],
+              "businessName": "Ada's Cakes",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "50",
+              "servicesOffered": [
+                "baking",
+                "catering"
+              ]
+            },
+            "review_average": 4.5,
+            "review_count": 10,
+            "status": "active",
+            "updated_at": "2025-01-10T10:00:00Z",
+            "user_id": "vendor-01"
+          }
+        ]
+      }
+    },
+    {
+      "name": "non-working weekday excludes exact match",
+      "params": {
+        "apply_date_availability": true,
+        "date_parts": [
+          "2026-11-02"
+        ]
+      },
+      "result": {
+        "has_exact": true,
+        "has_related": true,
+        "intent_summary": null,
+        "match_notice": null,
+        "plan": null,
+        "search_mode": "simple",
+        "sections": [],
+        "total_count": 12,
+        "vendors": [
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 350.0,
+            "completed_bookings": 11,
+            "conversion_rate": 0.6,
+            "email": "allinone@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "catering",
+              "dj"
+            ],
+            "payload": {
+              "aiBioDraft": "Food and music for your event",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "All-in-One Events",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "150",
+              "servicesOffered": [
+                "catering",
+                "dj"
+              ]
+            },
+            "review_average": 4.6,
+            "review_count": 15,
+            "status": "active",
+            "updated_at": "2025-09-01T10:00:00Z",
+            "user_id": "vendor-12"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": null,
+            "completed_bookings": 0,
+            "conversion_rate": null,
+            "email": "sugar@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "baking"
+            ],
+            "payload": {
+              "aiBioDraft": "Birthday cake baker",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Sugar Rush Cakes",
+              "eventTypes": [
+                "birthdays"
+              ],
+              "hourlyRate": "",
+              "servicesOffered": [
+                "baking"
+              ]
+            },
+            "review_average": null,
+            "review_count": 0,
+            "status": "active",
+            "updated_at": "2025-08-01T10:00:00Z",
+            "user_id": "vendor-11"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 400.0,
+            "completed_bookings": 7,
+            "conversion_rate": 0.35,
+            "email": "braids@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "hair_styling"
+            ],
+            "payload": {
+              "aiBioDraft": "Hair braids stylist bridal hair",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Braids & Wigs",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "70",
+              "servicesOffered": [
+                "hair_styling"
+              ]
+            },
+            "review_average": 4.1,
+            "review_count": 9,
+            "status": "active",
+            "updated_at": "2025-07-01T10:00:00Z",
+            "user_id": "vendor-10"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 1500.0,
+            "completed_bookings": 9,
+            "conversion_rate": 0.3,
+            "email": "plan@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "event_planning"
+            ],
+            "payload": {
+              "aiBioDraft": "Wedding planner coordination timeline",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Plan It",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "300",
+              "servicesOffered": [
+                "event_planning"
+              ]
+            },
+            "review_average": 3.5,
+            "review_count": 12,
+            "status": "active",
+            "updated_at": "2025-06-01T10:00:00Z",
+            "user_id": "vendor-08"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 100.0,
+            "completed_bookings": 1,
+            "conversion_rate": 1.0,
+            "email": "balloon@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "decor"
+            ],
+            "payload": {
+              "aiBioDraft": "Balloon backdrop styling",
+              "availableWeekdays": [],
+              "baseCity": "Birmingham",
+              "blockedDates": [],
+              "businessName": "Balloon Bliss",
+              "eventTypes": [
+                "birthdays",
+                "showers"
+              ],
+              "hourlyRate": "120",
+              "servicesOffered": [
+                "decor"
+              ]
+            },
+            "review_average": 5.0,
+            "review_count": 1,
+            "status": "active",
+            "updated_at": "2025-05-01T10:00:00Z",
+            "user_id": "vendor-06"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 900.0,
+            "completed_bookings": 4,
+            "conversion_rate": 0.4,
+            "email": "glam@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "makeup"
+            ],
+            "payload": {
+              "aiBioDraft": "Bridal makeup glam looks",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Glam MUA",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "60",
+              "servicesOffered": [
+                "makeup"
+              ]
+            },
+            "review_average": 4.2,
+            "review_count": 5,
+            "status": "active",
+            "updated_at": "2025-04-01T10:00:00Z",
+            "user_id": "vendor-05"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": null,
+            "completed_bookings": 0,
+            "conversion_rate": null,
+            "email": "snap@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "photography"
+            ],
+            "payload": {
+              "aiBioDraft": "Wedding photography album shots",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Snap Studio",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "200",
+              "servicesOffered": [
+                "photography"
+              ]
+            },
+            "review_average": null,
+            "review_count": 0,
+            "status": "active",
+            "updated_at": "2025-03-01T10:00:00Z",
+            "user_id": "vendor-03"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 200.0,
+            "completed_bookings": 5,
+            "conversion_rate": 0.83,
+            "email": "alaga@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "mc"
+            ],
+            "payload": {
+              "aiBioDraft": "MC host emcee announce",
+              "availableWeekdays": [],
+              "baseCity": "Leeds",
+              "blockedDates": [],
+              "businessName": "MC Alaga",
+              "eventTypes": [
+                "weddings",
+                "naming_ceremonies"
+              ],
+              "hourlyRate": "90",
+              "servicesOffered": [
+                "mc"
+              ]
+            },
+            "review_average": 4.7,
+            "review_count": 6,
+            "status": "active",
+            "updated_at": "2025-02-15T10:00:00Z",
+            "user_id": "vendor-09"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 1200.0,
+            "completed_bookings": 2,
+            "conversion_rate": 0.2,
+            "email": "jollof@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "catering"
+            ],
+            "payload": {
+              "aiBioDraft": "Rice and small chops catering",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Jollof Kings",
+              "eventTypes": [
+                "birthdays"
+              ],
+              "hourlyRate": "30",
+              "servicesOffered": [
+                "catering"
+              ]
+            },
+            "review_average": 4.9,
+            "review_count": 3,
+            "status": "active",
+            "updated_at": "2025-02-01T10:00:00Z",
+            "user_id": "vendor-02"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 300.0,
+            "completed_bookings": 15,
+            "conversion_rate": 0.75,
+            "email": "spinz@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "dj"
+            ],
+            "payload": {
+              "aiBioDraft": "Dancefloor music all night",
+              "availableWeekdays": [],
+              "baseCity": "Leeds",
+              "blockedDates": [],
+              "businessName": "DJ Spinz",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "80",
+              "servicesOffered": [
+                "dj"
+              ]
+            },
+            "review_average": 3.8,
+            "review_count": 20,
+            "status": "active",
+            "updated_at": "2025-01-15T10:00:00Z",
+            "user_id": "vendor-04"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 500.0,
+            "completed_bookings": 6,
+            "conversion_rate": 0.6,
+            "email": "hire@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "rentals"
+            ],
+            "payload": {
+              "aiBioDraft": "Table chair marquee hire",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Chair Hire Co",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "40",
+              "servicesOffered": [
+                "rentals"
+              ]
+            },
+            "review_average": 4.0,
+            "review_count": 8,
+            "status": "active",
+            "updated_at": "2025-01-01T10:00:00Z",
+            "user_id": "vendor-07"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 600.0,
+            "completed_bookings": 8,
+            "conversion_rate": 0.5,
+            "email": "ada@example.com",
+            "match_tier": "related",
+            "matched_services": [
+              "baking",
+              "catering"
+            ],
+            "payload": {
+              "aiBioDraft": "Delicious jollof cakes for every celebration",
+              "availableWeekdays": [
+                5,
+                6
+              ],
+              "baseCity": "London",
+              "blockedDates": [
+                "2026-12-25"
+              ],
+              "businessName": "Ada's Cakes",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "50",
+              "servicesOffered": [
+                "baking",
+                "catering"
+              ]
+            },
+            "review_average": 4.5,
+            "review_count": 10,
+            "status": "active",
+            "updated_at": "2025-01-10T10:00:00Z",
+            "user_id": "vendor-01"
+          }
+        ]
+      }
+    },
+    {
+      "name": "flexible ignores the date filter",
+      "params": {
+        "apply_date_availability": false,
+        "date_parts": [
+          "2026-12-25"
+        ]
+      },
+      "result": {
+        "has_exact": true,
+        "has_related": false,
+        "intent_summary": null,
+        "match_notice": null,
+        "plan": null,
+        "search_mode": "simple",
+        "sections": [],
+        "total_count": 12,
+        "vendors": [
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 350.0,
+            "completed_bookings": 11,
+            "conversion_rate": 0.6,
+            "email": "allinone@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "catering",
+              "dj"
+            ],
+            "payload": {
+              "aiBioDraft": "Food and music for your event",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "All-in-One Events",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "150",
+              "servicesOffered": [
+                "catering",
+                "dj"
+              ]
+            },
+            "review_average": 4.6,
+            "review_count": 15,
+            "status": "active",
+            "updated_at": "2025-09-01T10:00:00Z",
+            "user_id": "vendor-12"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 600.0,
+            "completed_bookings": 8,
+            "conversion_rate": 0.5,
+            "email": "ada@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "baking",
+              "catering"
+            ],
+            "payload": {
+              "aiBioDraft": "Delicious jollof cakes for every celebration",
+              "availableWeekdays": [
+                5,
+                6
+              ],
+              "baseCity": "London",
+              "blockedDates": [
+                "2026-12-25"
+              ],
+              "businessName": "Ada's Cakes",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "50",
+              "servicesOffered": [
+                "baking",
+                "catering"
+              ]
+            },
+            "review_average": 4.5,
+            "review_count": 10,
+            "status": "active",
+            "updated_at": "2025-01-10T10:00:00Z",
+            "user_id": "vendor-01"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": null,
+            "completed_bookings": 0,
+            "conversion_rate": null,
+            "email": "sugar@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "baking"
+            ],
+            "payload": {
+              "aiBioDraft": "Birthday cake baker",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Sugar Rush Cakes",
+              "eventTypes": [
+                "birthdays"
+              ],
+              "hourlyRate": "",
+              "servicesOffered": [
+                "baking"
+              ]
+            },
+            "review_average": null,
+            "review_count": 0,
+            "status": "active",
+            "updated_at": "2025-08-01T10:00:00Z",
+            "user_id": "vendor-11"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 400.0,
+            "completed_bookings": 7,
+            "conversion_rate": 0.35,
+            "email": "braids@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "hair_styling"
+            ],
+            "payload": {
+              "aiBioDraft": "Hair braids stylist bridal hair",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Braids & Wigs",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "70",
+              "servicesOffered": [
+                "hair_styling"
+              ]
+            },
+            "review_average": 4.1,
+            "review_count": 9,
+            "status": "active",
+            "updated_at": "2025-07-01T10:00:00Z",
+            "user_id": "vendor-10"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 1500.0,
+            "completed_bookings": 9,
+            "conversion_rate": 0.3,
+            "email": "plan@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "event_planning"
+            ],
+            "payload": {
+              "aiBioDraft": "Wedding planner coordination timeline",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Plan It",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "300",
+              "servicesOffered": [
+                "event_planning"
+              ]
+            },
+            "review_average": 3.5,
+            "review_count": 12,
+            "status": "active",
+            "updated_at": "2025-06-01T10:00:00Z",
+            "user_id": "vendor-08"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 100.0,
+            "completed_bookings": 1,
+            "conversion_rate": 1.0,
+            "email": "balloon@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "decor"
+            ],
+            "payload": {
+              "aiBioDraft": "Balloon backdrop styling",
+              "availableWeekdays": [],
+              "baseCity": "Birmingham",
+              "blockedDates": [],
+              "businessName": "Balloon Bliss",
+              "eventTypes": [
+                "birthdays",
+                "showers"
+              ],
+              "hourlyRate": "120",
+              "servicesOffered": [
+                "decor"
+              ]
+            },
+            "review_average": 5.0,
+            "review_count": 1,
+            "status": "active",
+            "updated_at": "2025-05-01T10:00:00Z",
+            "user_id": "vendor-06"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 900.0,
+            "completed_bookings": 4,
+            "conversion_rate": 0.4,
+            "email": "glam@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "makeup"
+            ],
+            "payload": {
+              "aiBioDraft": "Bridal makeup glam looks",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Glam MUA",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "60",
+              "servicesOffered": [
+                "makeup"
+              ]
+            },
+            "review_average": 4.2,
+            "review_count": 5,
+            "status": "active",
+            "updated_at": "2025-04-01T10:00:00Z",
+            "user_id": "vendor-05"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": null,
+            "completed_bookings": 0,
+            "conversion_rate": null,
+            "email": "snap@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "photography"
+            ],
+            "payload": {
+              "aiBioDraft": "Wedding photography album shots",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Snap Studio",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "200",
+              "servicesOffered": [
+                "photography"
+              ]
+            },
+            "review_average": null,
+            "review_count": 0,
+            "status": "active",
+            "updated_at": "2025-03-01T10:00:00Z",
+            "user_id": "vendor-03"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 200.0,
+            "completed_bookings": 5,
+            "conversion_rate": 0.83,
+            "email": "alaga@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "mc"
+            ],
+            "payload": {
+              "aiBioDraft": "MC host emcee announce",
+              "availableWeekdays": [],
+              "baseCity": "Leeds",
+              "blockedDates": [],
+              "businessName": "MC Alaga",
+              "eventTypes": [
+                "weddings",
+                "naming_ceremonies"
+              ],
+              "hourlyRate": "90",
+              "servicesOffered": [
+                "mc"
+              ]
+            },
+            "review_average": 4.7,
+            "review_count": 6,
+            "status": "active",
+            "updated_at": "2025-02-15T10:00:00Z",
+            "user_id": "vendor-09"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 1200.0,
+            "completed_bookings": 2,
+            "conversion_rate": 0.2,
+            "email": "jollof@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "catering"
+            ],
+            "payload": {
+              "aiBioDraft": "Rice and small chops catering",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Jollof Kings",
+              "eventTypes": [
+                "birthdays"
+              ],
+              "hourlyRate": "30",
+              "servicesOffered": [
+                "catering"
+              ]
+            },
+            "review_average": 4.9,
+            "review_count": 3,
+            "status": "active",
+            "updated_at": "2025-02-01T10:00:00Z",
+            "user_id": "vendor-02"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 300.0,
+            "completed_bookings": 15,
+            "conversion_rate": 0.75,
+            "email": "spinz@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "dj"
+            ],
+            "payload": {
+              "aiBioDraft": "Dancefloor music all night",
+              "availableWeekdays": [],
+              "baseCity": "Leeds",
+              "blockedDates": [],
+              "businessName": "DJ Spinz",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "80",
+              "servicesOffered": [
+                "dj"
+              ]
+            },
+            "review_average": 3.8,
+            "review_count": 20,
+            "status": "active",
+            "updated_at": "2025-01-15T10:00:00Z",
+            "user_id": "vendor-04"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 500.0,
+            "completed_bookings": 6,
+            "conversion_rate": 0.6,
+            "email": "hire@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "rentals"
+            ],
+            "payload": {
+              "aiBioDraft": "Table chair marquee hire",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Chair Hire Co",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "40",
+              "servicesOffered": [
+                "rentals"
+              ]
+            },
+            "review_average": 4.0,
+            "review_count": 8,
+            "status": "active",
+            "updated_at": "2025-01-01T10:00:00Z",
+            "user_id": "vendor-07"
+          }
+        ]
+      }
+    },
+    {
+      "name": "limit and offset page through results",
+      "params": {
+        "limit": 3,
+        "offset": 2
+      },
+      "result": {
+        "has_exact": true,
+        "has_related": false,
+        "intent_summary": null,
+        "match_notice": null,
+        "plan": null,
+        "search_mode": "simple",
+        "sections": [],
+        "total_count": 12,
+        "vendors": [
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": null,
+            "completed_bookings": 0,
+            "conversion_rate": null,
+            "email": "sugar@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "baking"
+            ],
+            "payload": {
+              "aiBioDraft": "Birthday cake baker",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Sugar Rush Cakes",
+              "eventTypes": [
+                "birthdays"
+              ],
+              "hourlyRate": "",
+              "servicesOffered": [
+                "baking"
+              ]
+            },
+            "review_average": null,
+            "review_count": 0,
+            "status": "active",
+            "updated_at": "2025-08-01T10:00:00Z",
+            "user_id": "vendor-11"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 400.0,
+            "completed_bookings": 7,
+            "conversion_rate": 0.35,
+            "email": "braids@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "hair_styling"
+            ],
+            "payload": {
+              "aiBioDraft": "Hair braids stylist bridal hair",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Braids & Wigs",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "70",
+              "servicesOffered": [
+                "hair_styling"
+              ]
+            },
+            "review_average": 4.1,
+            "review_count": 9,
+            "status": "active",
+            "updated_at": "2025-07-01T10:00:00Z",
+            "user_id": "vendor-10"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 1500.0,
+            "completed_bookings": 9,
+            "conversion_rate": 0.3,
+            "email": "plan@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "event_planning"
+            ],
+            "payload": {
+              "aiBioDraft": "Wedding planner coordination timeline",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Plan It",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "300",
+              "servicesOffered": [
+                "event_planning"
+              ]
+            },
+            "review_average": 3.5,
+            "review_count": 12,
+            "status": "active",
+            "updated_at": "2025-06-01T10:00:00Z",
+            "user_id": "vendor-08"
+          }
+        ]
+      }
+    },
+    {
+      "name": "service match counts as exact",
+      "params": {
+        "keywords": [
+          "nonexistentword"
+        ],
+        "primary_types": [
+          "mc"
+        ],
+        "service_match_counts_as_exact": true
+      },
+      "result": {
+        "has_exact": true,
+        "has_related": false,
+        "intent_summary": null,
+        "match_notice": null,
+        "plan": null,
+        "search_mode": "simple",
+        "sections": [],
+        "total_count": 1,
+        "vendors": [
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 200.0,
+            "completed_bookings": 5,
+            "conversion_rate": 0.83,
+            "email": "alaga@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "mc"
+            ],
+            "payload": {
+              "aiBioDraft": "MC host emcee announce",
+              "availableWeekdays": [],
+              "baseCity": "Leeds",
+              "blockedDates": [],
+              "businessName": "MC Alaga",
+              "eventTypes": [
+                "weddings",
+                "naming_ceremonies"
+              ],
+              "hourlyRate": "90",
+              "servicesOffered": [
+                "mc"
+              ]
+            },
+            "review_average": 4.7,
+            "review_count": 6,
+            "status": "active",
+            "updated_at": "2025-02-15T10:00:00Z",
+            "user_id": "vendor-09"
+          }
+        ]
+      }
+    },
+    {
+      "name": "service match does not count as exact",
+      "params": {
+        "keywords": [
+          "nonexistentword"
+        ],
+        "primary_types": [
+          "mc"
+        ],
+        "service_match_counts_as_exact": false
+      },
+      "result": {
+        "has_exact": false,
+        "has_related": true,
+        "intent_summary": null,
+        "match_notice": "No exact matches - showing close options",
+        "plan": null,
+        "search_mode": "simple",
+        "sections": [],
+        "total_count": 1,
+        "vendors": [
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 200.0,
+            "completed_bookings": 5,
+            "conversion_rate": 0.83,
+            "email": "alaga@example.com",
+            "match_tier": "related",
+            "matched_services": [
+              "mc"
+            ],
+            "payload": {
+              "aiBioDraft": "MC host emcee announce",
+              "availableWeekdays": [],
+              "baseCity": "Leeds",
+              "blockedDates": [],
+              "businessName": "MC Alaga",
+              "eventTypes": [
+                "weddings",
+                "naming_ceremonies"
+              ],
+              "hourlyRate": "90",
+              "servicesOffered": [
+                "mc"
+              ]
+            },
+            "review_average": 4.7,
+            "review_count": 6,
+            "status": "active",
+            "updated_at": "2025-02-15T10:00:00Z",
+            "user_id": "vendor-09"
+          }
+        ]
+      }
+    },
+    {
+      "name": "fallback within the searched type",
+      "params": {
+        "keywords": [
+          "zzzznomatch"
+        ],
+        "location_filter": "Nowhereville",
+        "primary_types": [
+          "baking"
+        ]
+      },
+      "result": {
+        "has_exact": false,
+        "has_related": true,
+        "intent_summary": null,
+        "match_notice": "No exact matches - showing close options",
+        "plan": null,
+        "search_mode": "simple",
+        "sections": [],
+        "total_count": 2,
+        "vendors": [
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": null,
+            "completed_bookings": 0,
+            "conversion_rate": null,
+            "email": "sugar@example.com",
+            "match_tier": "related",
+            "matched_services": [
+              "baking"
+            ],
+            "payload": {
+              "aiBioDraft": "Birthday cake baker",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Sugar Rush Cakes",
+              "eventTypes": [
+                "birthdays"
+              ],
+              "hourlyRate": "",
+              "servicesOffered": [
+                "baking"
+              ]
+            },
+            "review_average": null,
+            "review_count": 0,
+            "status": "active",
+            "updated_at": "2025-08-01T10:00:00Z",
+            "user_id": "vendor-11"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 600.0,
+            "completed_bookings": 8,
+            "conversion_rate": 0.5,
+            "email": "ada@example.com",
+            "match_tier": "related",
+            "matched_services": [
+              "baking"
+            ],
+            "payload": {
+              "aiBioDraft": "Delicious jollof cakes for every celebration",
+              "availableWeekdays": [
+                5,
+                6
+              ],
+              "baseCity": "London",
+              "blockedDates": [
+                "2026-12-25"
+              ],
+              "businessName": "Ada's Cakes",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "50",
+              "servicesOffered": [
+                "baking",
+                "catering"
+              ]
+            },
+            "review_average": 4.5,
+            "review_count": 10,
+            "status": "active",
+            "updated_at": "2025-01-10T10:00:00Z",
+            "user_id": "vendor-01"
+          }
+        ]
+      }
+    },
+    {
+      "name": "fallback to every vendor",
+      "params": {
+        "keywords": [
+          "zzzznomatch"
+        ],
+        "location_filter": "Nowhereville"
+      },
+      "result": {
+        "has_exact": false,
+        "has_related": false,
+        "intent_summary": null,
+        "match_notice": "No close matches - showing similar vendors",
+        "plan": null,
+        "search_mode": "simple",
+        "sections": [],
+        "total_count": 12,
+        "vendors": [
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 350.0,
+            "completed_bookings": 11,
+            "conversion_rate": 0.6,
+            "email": "allinone@example.com",
+            "match_tier": "fallback",
+            "matched_services": [
+              "catering",
+              "dj"
+            ],
+            "payload": {
+              "aiBioDraft": "Food and music for your event",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "All-in-One Events",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "150",
+              "servicesOffered": [
+                "catering",
+                "dj"
+              ]
+            },
+            "review_average": 4.6,
+            "review_count": 15,
+            "status": "active",
+            "updated_at": "2025-09-01T10:00:00Z",
+            "user_id": "vendor-12"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 600.0,
+            "completed_bookings": 8,
+            "conversion_rate": 0.5,
+            "email": "ada@example.com",
+            "match_tier": "fallback",
+            "matched_services": [
+              "baking",
+              "catering"
+            ],
+            "payload": {
+              "aiBioDraft": "Delicious jollof cakes for every celebration",
+              "availableWeekdays": [
+                5,
+                6
+              ],
+              "baseCity": "London",
+              "blockedDates": [
+                "2026-12-25"
+              ],
+              "businessName": "Ada's Cakes",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "50",
+              "servicesOffered": [
+                "baking",
+                "catering"
+              ]
+            },
+            "review_average": 4.5,
+            "review_count": 10,
+            "status": "active",
+            "updated_at": "2025-01-10T10:00:00Z",
+            "user_id": "vendor-01"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": null,
+            "completed_bookings": 0,
+            "conversion_rate": null,
+            "email": "sugar@example.com",
+            "match_tier": "fallback",
+            "matched_services": [
+              "baking"
+            ],
+            "payload": {
+              "aiBioDraft": "Birthday cake baker",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Sugar Rush Cakes",
+              "eventTypes": [
+                "birthdays"
+              ],
+              "hourlyRate": "",
+              "servicesOffered": [
+                "baking"
+              ]
+            },
+            "review_average": null,
+            "review_count": 0,
+            "status": "active",
+            "updated_at": "2025-08-01T10:00:00Z",
+            "user_id": "vendor-11"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 400.0,
+            "completed_bookings": 7,
+            "conversion_rate": 0.35,
+            "email": "braids@example.com",
+            "match_tier": "fallback",
+            "matched_services": [
+              "hair_styling"
+            ],
+            "payload": {
+              "aiBioDraft": "Hair braids stylist bridal hair",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Braids & Wigs",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "70",
+              "servicesOffered": [
+                "hair_styling"
+              ]
+            },
+            "review_average": 4.1,
+            "review_count": 9,
+            "status": "active",
+            "updated_at": "2025-07-01T10:00:00Z",
+            "user_id": "vendor-10"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 1500.0,
+            "completed_bookings": 9,
+            "conversion_rate": 0.3,
+            "email": "plan@example.com",
+            "match_tier": "fallback",
+            "matched_services": [
+              "event_planning"
+            ],
+            "payload": {
+              "aiBioDraft": "Wedding planner coordination timeline",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Plan It",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "300",
+              "servicesOffered": [
+                "event_planning"
+              ]
+            },
+            "review_average": 3.5,
+            "review_count": 12,
+            "status": "active",
+            "updated_at": "2025-06-01T10:00:00Z",
+            "user_id": "vendor-08"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 100.0,
+            "completed_bookings": 1,
+            "conversion_rate": 1.0,
+            "email": "balloon@example.com",
+            "match_tier": "fallback",
+            "matched_services": [
+              "decor"
+            ],
+            "payload": {
+              "aiBioDraft": "Balloon backdrop styling",
+              "availableWeekdays": [],
+              "baseCity": "Birmingham",
+              "blockedDates": [],
+              "businessName": "Balloon Bliss",
+              "eventTypes": [
+                "birthdays",
+                "showers"
+              ],
+              "hourlyRate": "120",
+              "servicesOffered": [
+                "decor"
+              ]
+            },
+            "review_average": 5.0,
+            "review_count": 1,
+            "status": "active",
+            "updated_at": "2025-05-01T10:00:00Z",
+            "user_id": "vendor-06"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 900.0,
+            "completed_bookings": 4,
+            "conversion_rate": 0.4,
+            "email": "glam@example.com",
+            "match_tier": "fallback",
+            "matched_services": [
+              "makeup"
+            ],
+            "payload": {
+              "aiBioDraft": "Bridal makeup glam looks",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Glam MUA",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "60",
+              "servicesOffered": [
+                "makeup"
+              ]
+            },
+            "review_average": 4.2,
+            "review_count": 5,
+            "status": "active",
+            "updated_at": "2025-04-01T10:00:00Z",
+            "user_id": "vendor-05"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": null,
+            "completed_bookings": 0,
+            "conversion_rate": null,
+            "email": "snap@example.com",
+            "match_tier": "fallback",
+            "matched_services": [
+              "photography"
+            ],
+            "payload": {
+              "aiBioDraft": "Wedding photography album shots",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Snap Studio",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "200",
+              "servicesOffered": [
+                "photography"
+              ]
+            },
+            "review_average": null,
+            "review_count": 0,
+            "status": "active",
+            "updated_at": "2025-03-01T10:00:00Z",
+            "user_id": "vendor-03"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 200.0,
+            "completed_bookings": 5,
+            "conversion_rate": 0.83,
+            "email": "alaga@example.com",
+            "match_tier": "fallback",
+            "matched_services": [
+              "mc"
+            ],
+            "payload": {
+              "aiBioDraft": "MC host emcee announce",
+              "availableWeekdays": [],
+              "baseCity": "Leeds",
+              "blockedDates": [],
+              "businessName": "MC Alaga",
+              "eventTypes": [
+                "weddings",
+                "naming_ceremonies"
+              ],
+              "hourlyRate": "90",
+              "servicesOffered": [
+                "mc"
+              ]
+            },
+            "review_average": 4.7,
+            "review_count": 6,
+            "status": "active",
+            "updated_at": "2025-02-15T10:00:00Z",
+            "user_id": "vendor-09"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 1200.0,
+            "completed_bookings": 2,
+            "conversion_rate": 0.2,
+            "email": "jollof@example.com",
+            "match_tier": "fallback",
+            "matched_services": [
+              "catering"
+            ],
+            "payload": {
+              "aiBioDraft": "Rice and small chops catering",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Jollof Kings",
+              "eventTypes": [
+                "birthdays"
+              ],
+              "hourlyRate": "30",
+              "servicesOffered": [
+                "catering"
+              ]
+            },
+            "review_average": 4.9,
+            "review_count": 3,
+            "status": "active",
+            "updated_at": "2025-02-01T10:00:00Z",
+            "user_id": "vendor-02"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 300.0,
+            "completed_bookings": 15,
+            "conversion_rate": 0.75,
+            "email": "spinz@example.com",
+            "match_tier": "fallback",
+            "matched_services": [
+              "dj"
+            ],
+            "payload": {
+              "aiBioDraft": "Dancefloor music all night",
+              "availableWeekdays": [],
+              "baseCity": "Leeds",
+              "blockedDates": [],
+              "businessName": "DJ Spinz",
+              "eventTypes": [
+                "weddings",
+                "birthdays"
+              ],
+              "hourlyRate": "80",
+              "servicesOffered": [
+                "dj"
+              ]
+            },
+            "review_average": 3.8,
+            "review_count": 20,
+            "status": "active",
+            "updated_at": "2025-01-15T10:00:00Z",
+            "user_id": "vendor-04"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 500.0,
+            "completed_bookings": 6,
+            "conversion_rate": 0.6,
+            "email": "hire@example.com",
+            "match_tier": "fallback",
+            "matched_services": [
+              "rentals"
+            ],
+            "payload": {
+              "aiBioDraft": "Table chair marquee hire",
+              "availableWeekdays": [],
+              "baseCity": "Manchester",
+              "blockedDates": [],
+              "businessName": "Chair Hire Co",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "40",
+              "servicesOffered": [
+                "rentals"
+              ]
+            },
+            "review_average": 4.0,
+            "review_count": 8,
+            "status": "active",
+            "updated_at": "2025-01-01T10:00:00Z",
+            "user_id": "vendor-07"
+          }
+        ]
+      }
+    },
+    {
+      "name": "event type hits raise score",
+      "params": {
+        "parsed_event_types": [
+          "weddings"
+        ],
+        "primary_types": [
+          "photography",
+          "event_planning"
+        ]
+      },
+      "result": {
+        "has_exact": true,
+        "has_related": false,
+        "intent_summary": null,
+        "match_notice": null,
+        "plan": null,
+        "search_mode": "simple",
+        "sections": [],
+        "total_count": 2,
+        "vendors": [
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 1500.0,
+            "completed_bookings": 9,
+            "conversion_rate": 0.3,
+            "email": "plan@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "event_planning"
+            ],
+            "payload": {
+              "aiBioDraft": "Wedding planner coordination timeline",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Plan It",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "300",
+              "servicesOffered": [
+                "event_planning"
+              ]
+            },
+            "review_average": 3.5,
+            "review_count": 12,
+            "status": "active",
+            "updated_at": "2025-06-01T10:00:00Z",
+            "user_id": "vendor-08"
+          },
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": null,
+            "completed_bookings": 0,
+            "conversion_rate": null,
+            "email": "snap@example.com",
+            "match_tier": "exact",
+            "matched_services": [
+              "photography"
+            ],
+            "payload": {
+              "aiBioDraft": "Wedding photography album shots",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Snap Studio",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "200",
+              "servicesOffered": [
+                "photography"
+              ]
+            },
+            "review_average": null,
+            "review_count": 0,
+            "status": "active",
+            "updated_at": "2025-03-01T10:00:00Z",
+            "user_id": "vendor-03"
+          }
+        ]
+      }
+    },
+    {
+      "name": "match notice carries the intent summary",
+      "params": {
+        "intent_summary": "hair stylist",
+        "keywords": [
+          "zzz"
+        ],
+        "location_filter": "Nowhereville",
+        "primary_types": [
+          "hair_styling"
+        ]
+      },
+      "result": {
+        "has_exact": false,
+        "has_related": true,
+        "intent_summary": null,
+        "match_notice": "No exact matches - showing close options for hair stylist",
+        "plan": null,
+        "search_mode": "simple",
+        "sections": [],
+        "total_count": 1,
+        "vendors": [
+          {
+            "approval_status": "approved",
+            "avg_response_seconds": 400.0,
+            "completed_bookings": 7,
+            "conversion_rate": 0.35,
+            "email": "braids@example.com",
+            "match_tier": "related",
+            "matched_services": [
+              "hair_styling"
+            ],
+            "payload": {
+              "aiBioDraft": "Hair braids stylist bridal hair",
+              "availableWeekdays": [],
+              "baseCity": "London",
+              "blockedDates": [],
+              "businessName": "Braids & Wigs",
+              "eventTypes": [
+                "weddings"
+              ],
+              "hourlyRate": "70",
+              "servicesOffered": [
+                "hair_styling"
+              ]
+            },
+            "review_average": 4.1,
+            "review_count": 9,
+            "status": "active",
+            "updated_at": "2025-07-01T10:00:00Z",
+            "user_id": "vendor-10"
+          }
+        ]
+      }
+    }
+  ],
+  "signals": {
+    "vendor-01": {
+      "avg_response_seconds": 600.0,
+      "completed_bookings": 8,
+      "conversion_rate": 0.5,
+      "review_average": 4.5,
+      "review_count": 10
+    },
+    "vendor-02": {
+      "avg_response_seconds": 1200.0,
+      "completed_bookings": 2,
+      "conversion_rate": 0.2,
+      "review_average": 4.9,
+      "review_count": 3
+    },
+    "vendor-03": {
+      "avg_response_seconds": null,
+      "completed_bookings": 0,
+      "conversion_rate": null,
+      "review_average": null,
+      "review_count": 0
+    },
+    "vendor-04": {
+      "avg_response_seconds": 300.0,
+      "completed_bookings": 15,
+      "conversion_rate": 0.75,
+      "review_average": 3.8,
+      "review_count": 20
+    },
+    "vendor-05": {
+      "avg_response_seconds": 900.0,
+      "completed_bookings": 4,
+      "conversion_rate": 0.4,
+      "review_average": 4.2,
+      "review_count": 5
+    },
+    "vendor-06": {
+      "avg_response_seconds": 100.0,
+      "completed_bookings": 1,
+      "conversion_rate": 1.0,
+      "review_average": 5.0,
+      "review_count": 1
+    },
+    "vendor-07": {
+      "avg_response_seconds": 500.0,
+      "completed_bookings": 6,
+      "conversion_rate": 0.6,
+      "review_average": 4.0,
+      "review_count": 8
+    },
+    "vendor-08": {
+      "avg_response_seconds": 1500.0,
+      "completed_bookings": 9,
+      "conversion_rate": 0.3,
+      "review_average": 3.5,
+      "review_count": 12
+    },
+    "vendor-09": {
+      "avg_response_seconds": 200.0,
+      "completed_bookings": 5,
+      "conversion_rate": 0.83,
+      "review_average": 4.7,
+      "review_count": 6
+    },
+    "vendor-10": {
+      "avg_response_seconds": 400.0,
+      "completed_bookings": 7,
+      "conversion_rate": 0.35,
+      "review_average": 4.1,
+      "review_count": 9
+    },
+    "vendor-11": {
+      "avg_response_seconds": null,
+      "completed_bookings": 0,
+      "conversion_rate": null,
+      "review_average": null,
+      "review_count": 0
+    },
+    "vendor-12": {
+      "avg_response_seconds": 350.0,
+      "completed_bookings": 11,
+      "conversion_rate": 0.6,
+      "review_average": 4.6,
+      "review_count": 15
+    }
+  },
+  "vendor_pool": [
+    {
+      "approval_status": "approved",
+      "email": "ada@example.com",
+      "payload": {
+        "aiBioDraft": "Delicious jollof cakes for every celebration",
+        "availableWeekdays": [
+          5,
+          6
+        ],
+        "baseCity": "London",
+        "blockedDates": [
+          "2026-12-25"
+        ],
+        "businessName": "Ada's Cakes",
+        "eventTypes": [
+          "weddings",
+          "birthdays"
+        ],
+        "hourlyRate": "50",
+        "servicesOffered": [
+          "baking",
+          "catering"
+        ]
+      },
+      "status": "active",
+      "updated_at": "2025-01-10T10:00:00Z",
+      "user_id": "vendor-01"
+    },
+    {
+      "approval_status": "approved",
+      "email": "jollof@example.com",
+      "payload": {
+        "aiBioDraft": "Rice and small chops catering",
+        "availableWeekdays": [],
+        "baseCity": "Manchester",
+        "blockedDates": [],
+        "businessName": "Jollof Kings",
+        "eventTypes": [
+          "birthdays"
+        ],
+        "hourlyRate": "30",
+        "servicesOffered": [
+          "catering"
+        ]
+      },
+      "status": "active",
+      "updated_at": "2025-02-01T10:00:00Z",
+      "user_id": "vendor-02"
+    },
+    {
+      "approval_status": "approved",
+      "email": "snap@example.com",
+      "payload": {
+        "aiBioDraft": "Wedding photography album shots",
+        "availableWeekdays": [],
+        "baseCity": "London",
+        "blockedDates": [],
+        "businessName": "Snap Studio",
+        "eventTypes": [
+          "weddings"
+        ],
+        "hourlyRate": "200",
+        "servicesOffered": [
+          "photography"
+        ]
+      },
+      "status": "active",
+      "updated_at": "2025-03-01T10:00:00Z",
+      "user_id": "vendor-03"
+    },
+    {
+      "approval_status": "approved",
+      "email": "spinz@example.com",
+      "payload": {
+        "aiBioDraft": "Dancefloor music all night",
+        "availableWeekdays": [],
+        "baseCity": "Leeds",
+        "blockedDates": [],
+        "businessName": "DJ Spinz",
+        "eventTypes": [
+          "weddings",
+          "birthdays"
+        ],
+        "hourlyRate": "80",
+        "servicesOffered": [
+          "dj"
+        ]
+      },
+      "status": "active",
+      "updated_at": "2025-01-15T10:00:00Z",
+      "user_id": "vendor-04"
+    },
+    {
+      "approval_status": "approved",
+      "email": "glam@example.com",
+      "payload": {
+        "aiBioDraft": "Bridal makeup glam looks",
+        "availableWeekdays": [],
+        "baseCity": "London",
+        "blockedDates": [],
+        "businessName": "Glam MUA",
+        "eventTypes": [
+          "weddings"
+        ],
+        "hourlyRate": "60",
+        "servicesOffered": [
+          "makeup"
+        ]
+      },
+      "status": "active",
+      "updated_at": "2025-04-01T10:00:00Z",
+      "user_id": "vendor-05"
+    },
+    {
+      "approval_status": "approved",
+      "email": "balloon@example.com",
+      "payload": {
+        "aiBioDraft": "Balloon backdrop styling",
+        "availableWeekdays": [],
+        "baseCity": "Birmingham",
+        "blockedDates": [],
+        "businessName": "Balloon Bliss",
+        "eventTypes": [
+          "birthdays",
+          "showers"
+        ],
+        "hourlyRate": "120",
+        "servicesOffered": [
+          "decor"
+        ]
+      },
+      "status": "active",
+      "updated_at": "2025-05-01T10:00:00Z",
+      "user_id": "vendor-06"
+    },
+    {
+      "approval_status": "approved",
+      "email": "hire@example.com",
+      "payload": {
+        "aiBioDraft": "Table chair marquee hire",
+        "availableWeekdays": [],
+        "baseCity": "Manchester",
+        "blockedDates": [],
+        "businessName": "Chair Hire Co",
+        "eventTypes": [
+          "weddings"
+        ],
+        "hourlyRate": "40",
+        "servicesOffered": [
+          "rentals"
+        ]
+      },
+      "status": "active",
+      "updated_at": "2025-01-01T10:00:00Z",
+      "user_id": "vendor-07"
+    },
+    {
+      "approval_status": "approved",
+      "email": "plan@example.com",
+      "payload": {
+        "aiBioDraft": "Wedding planner coordination timeline",
+        "availableWeekdays": [],
+        "baseCity": "London",
+        "blockedDates": [],
+        "businessName": "Plan It",
+        "eventTypes": [
+          "weddings"
+        ],
+        "hourlyRate": "300",
+        "servicesOffered": [
+          "event_planning"
+        ]
+      },
+      "status": "active",
+      "updated_at": "2025-06-01T10:00:00Z",
+      "user_id": "vendor-08"
+    },
+    {
+      "approval_status": "approved",
+      "email": "alaga@example.com",
+      "payload": {
+        "aiBioDraft": "MC host emcee announce",
+        "availableWeekdays": [],
+        "baseCity": "Leeds",
+        "blockedDates": [],
+        "businessName": "MC Alaga",
+        "eventTypes": [
+          "weddings",
+          "naming_ceremonies"
+        ],
+        "hourlyRate": "90",
+        "servicesOffered": [
+          "mc"
+        ]
+      },
+      "status": "active",
+      "updated_at": "2025-02-15T10:00:00Z",
+      "user_id": "vendor-09"
+    },
+    {
+      "approval_status": "approved",
+      "email": "braids@example.com",
+      "payload": {
+        "aiBioDraft": "Hair braids stylist bridal hair",
+        "availableWeekdays": [],
+        "baseCity": "London",
+        "blockedDates": [],
+        "businessName": "Braids & Wigs",
+        "eventTypes": [
+          "weddings"
+        ],
+        "hourlyRate": "70",
+        "servicesOffered": [
+          "hair_styling"
+        ]
+      },
+      "status": "active",
+      "updated_at": "2025-07-01T10:00:00Z",
+      "user_id": "vendor-10"
+    },
+    {
+      "approval_status": "approved",
+      "email": "sugar@example.com",
+      "payload": {
+        "aiBioDraft": "Birthday cake baker",
+        "availableWeekdays": [],
+        "baseCity": "Manchester",
+        "blockedDates": [],
+        "businessName": "Sugar Rush Cakes",
+        "eventTypes": [
+          "birthdays"
+        ],
+        "hourlyRate": "",
+        "servicesOffered": [
+          "baking"
+        ]
+      },
+      "status": "active",
+      "updated_at": "2025-08-01T10:00:00Z",
+      "user_id": "vendor-11"
+    },
+    {
+      "approval_status": "approved",
+      "email": "allinone@example.com",
+      "payload": {
+        "aiBioDraft": "Food and music for your event",
+        "availableWeekdays": [],
+        "baseCity": "London",
+        "blockedDates": [],
+        "businessName": "All-in-One Events",
+        "eventTypes": [
+          "weddings",
+          "birthdays"
+        ],
+        "hourlyRate": "150",
+        "servicesOffered": [
+          "catering",
+          "dj"
+        ]
+      },
+      "status": "active",
+      "updated_at": "2025-09-01T10:00:00Z",
+      "user_id": "vendor-12"
+    }
+  ]
+}

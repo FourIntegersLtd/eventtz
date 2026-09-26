@@ -199,3 +199,17 @@ class AdminVendorProfileNudgeResponse(BaseModel):
     sent: int = 0
     skipped: int = 0
     failures: list[AdminVendorProfileNudgeFailure] = Field(default_factory=list)
+
+
+# --- the marketplace's view (read by other slices through `service_listing`) ---------------------
+
+
+class ListedVendor(BaseModel):
+    """A vendor as the marketplace shows them: the profile form, approval and the account email."""
+
+    user_id: str
+    email: str | None = None
+    status: str | None = None
+    approval_status: str | None = None
+    payload: dict[str, Any] = Field(default_factory=dict)
+    updated_at: str | None = None

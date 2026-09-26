@@ -32,3 +32,28 @@ class VendorRow(BaseModel):
     def _payload_is_a_form(cls, raw_payload: Any) -> dict[str, Any]:
         """A missing or malformed form reads as an empty one."""
         return raw_payload if isinstance(raw_payload, dict) else {}
+
+
+class ListedVendorRow(BaseModel):
+    """A vendor as the marketplace shows them: the profile form, approval and the account email."""
+
+    user_id: str
+    email: str | None = None
+    status: str | None = None
+    approval_status: str | None = None
+    payload: dict[str, Any] = Field(default_factory=dict)
+    updated_at: str | None = None
+
+    @field_validator("payload", mode="before")
+    @classmethod
+    def _payload_is_a_form(cls, raw_payload: Any) -> dict[str, Any]:
+        """A missing or malformed form reads as an empty one."""
+        return raw_payload if isinstance(raw_payload, dict) else {}
+
+
+class VendorNameRow(BaseModel):
+    """A vendor's form payload and whether the account is closed: enough to name them."""
+
+    user_id: str
+    payload: dict[str, Any] | None = None
+    deleted: bool = False

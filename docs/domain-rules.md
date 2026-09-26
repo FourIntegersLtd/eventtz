@@ -286,3 +286,23 @@ The acceptance files pin each of these; the comments marked `BASELINE BUG/QUIRK`
 - **Completion:** needs `accepted` + `paid` and the event day to be over. Without Stripe Connect, a booking both sides have confirmed stays `accepted` / `paid` / `awaiting_other_party`.
 - **Dormant bug:** `adjustments.py` has a dormant reference to an undefined `total_label`.
 - **Suspension wording:** one message at sign-in ("This account is suspended…") and another mid-session ("Your account has been suspended…").
+
+### Found while freezing notifications, payments, reviews, disputes and the AI helpers (2026-09-26)
+
+Pinned by `acceptance/test_{notifications,payments,reviews,disputes,ai_onboarding}.py`; the `BASELINE QUIRK` comments there hold the detail.
+
+- **Notifications:** marking someone else's notification read answers 200 `{"success": false}`, never 404. A booking notification's title is the booking's event name whenever it has one, so the per-kind titles only appear for unnamed bookings.
+- **Payments:** checkout and the staff recovery tools answer 400 (not 404) for a missing booking. Syncing a booking that is already `paid` never calls Stripe.
+- **Reviews:** only `status = completed` is checked, never `payment_status`. A body of 10 spaces passes the schema but fails the service's stripped-length check (400). Reviewing someone else's booking is 400, unlike the 404 of the booking routes. Non-http(s) image URLs are dropped silently. Hiding a review id that does not exist still answers 200. Without a `vendors` row, the display name falls back to a fixed string.
+- **Disputes:** opening one on another client's booking is 403 (it reveals the booking exists), while listing on it returns an empty list. A staff patch with a money-moving `resolution_action` on a missing dispute is 400 with a full-stop message; without one it is a 404. Resolving needs `status=resolved` and `resolution_action` together. Releasing a payout with no vendor Stripe account succeeds but leaves the booking unchanged.
+- **AI helpers:** without an OpenAI key the routes answer 503 `OPENAI_UNAVAILABLE`, except the daily brief, which always falls back to fixed narration. `copilot/ask` rejects `""` with 422 but `"   "` with 400. `draft-reply` for an unknown booking answers 200 with an empty draft and a "Booking not found." tip. Client onboarding (`/client/onboarding`) is already served by the api's identity slice.
+
+### Found while freezing the planner (2026-09-26)
+
+Pinned by `acceptance/test_planner.py`.
+
+- **Stored text is echoed, not recomputed:** plan list and detail return `why_selected`, `cost_assumption` and `summary` as stored. Only replace-item recomputes, and it always excludes the item's current vendor. The budget bands are recomputed on read, split across the plan's own needs by the event type's weights.
+- **ensure-event is idempotent:** repeat calls return the same `client_events.id`; archived plans are rejected with `PLAN_ARCHIVED`. Archiving hides a plan from the list but keeps its detail readable.
+- **Scalability bug:** the baseline's `list_approved_vendors_for_explore` puts every approved vendor id into one PostgREST query string to fetch emails. Once there are a few hundred vendors the URL is too long and replace-item 500s. The rebuild must read the pool in one SQL query.
+- **Price column gap:** the single-vendor lookup the planner uses does not select `min_list_price_gbp`, so fact cards fall back to `payload.min_list_price_gbp`.
+- **Not frozen:** a successful create (it needs the LLM) and a successful replace (the bug above, on local data). `api/` covers both with the fake language model.

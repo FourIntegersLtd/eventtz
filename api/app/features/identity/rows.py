@@ -19,6 +19,7 @@ class UserSummaryRow(BaseModel):
     email: str | None = None
     preferred_name: str | None = None
     deleted_at: str | None = None
+    user_type: str | None = None
 
 
 class UserProfileRow(BaseModel):

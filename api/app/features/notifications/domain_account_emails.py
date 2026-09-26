@@ -45,6 +45,9 @@ class TransactionalEmail:
     action_label: str | None = None
     secondary_action_url: str | None = None
     secondary_action_label: str | None = None
+    # Rich body under the plain `body`: sanitised HTML for the HTML email, its text for the text one.
+    body_html: str | None = None
+    body_plain: str | None = None
 
 
 def transactional_context(email: TransactionalEmail) -> dict[str, object]:
@@ -58,6 +61,8 @@ def transactional_context(email: TransactionalEmail) -> dict[str, object]:
         action_label=email.action_label,
         secondary_action_url=email.secondary_action_url,
         secondary_action_label=email.secondary_action_label,
+        body_html=email.body_html,
+        body_plain=email.body_plain,
     )
 
 
@@ -152,6 +157,30 @@ def password_changed_email(*, user_type: str | None) -> TransactionalEmail:
         body=body,
         action_url=public_url(login_path),
         action_label="Sign in",
+    )
+
+
+def support_message_email(*, messages_url: str, body_html: str, body_plain: str) -> TransactionalEmail:
+    """Content for "Eventtz Support sent you a message", quoting the message when it has any text.
+
+    `body_html` is already sanitised by messaging; `body_plain` is its visible text.
+    """
+    title = f"New message from {APP_NAME} Support"
+    if body_html or body_plain:
+        body = "Sign in to read this thread and reply in your Messages inbox."
+    else:
+        body = (
+            f"{APP_NAME} Support sent you a message.\n\nSign in to read it and reply in your Messages inbox."
+        )
+    return TransactionalEmail(
+        subject=f"{title} | {APP_NAME}",
+        title=title,
+        headline=None,
+        body=body,
+        body_html=body_html or None,
+        body_plain=body_plain or None,
+        action_url=ensure_public_url(messages_url),
+        action_label="View message",
     )
 
 

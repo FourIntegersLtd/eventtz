@@ -23,6 +23,36 @@ async def emails_by_id(session: AsyncSession, user_ids: list[str]) -> dict[str, 
     return {user.id: user.email for user in await repository.list_user_summaries(session, user_ids)}
 
 
+async def email_labels(session: AsyncSession, user_ids: list[str]) -> dict[str, str]:
+    """Map each existing user id to the email staff screens show for them.
+
+    Baseline labels: a closed account shows "" and an account with no email
+    shows "Client". Unknown ids are left out.
+    """
+    return {
+        user.id: "" if user.deleted_at else ((user.email or "").strip() or "Client")
+        for user in await repository.list_user_summaries(session, user_ids)
+    }
+
+
+async def user_types(session: AsyncSession, user_ids: list[str]) -> dict[str, str]:
+    """Map each existing user id to its account type (client, vendor or admin). Unknown ids are left out."""
+    return {
+        user.id: user.user_type
+        for user in await repository.list_user_summaries(session, user_ids)
+        if user.user_type
+    }
+
+
+async def open_user_ids_of_type(
+    session: AsyncSession, user_type: str, *, include_suspended: bool
+) -> list[str]:
+    """Every open account of `user_type` (closed ones are tombstones), for broadcasts and staff fan-out."""
+    return await repository.open_user_ids_of_type(
+        session, user_type=user_type, include_suspended=include_suspended
+    )
+
+
 async def vendor_ids_with_email_like(session: AsyncSession, pattern: str, *, limit: int) -> list[str]:
     """Vendor accounts whose email matches the ILIKE `pattern` (staff search), at most `limit`."""
     return await repository.user_ids_of_type_with_email_like(

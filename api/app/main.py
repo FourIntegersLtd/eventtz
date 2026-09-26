@@ -29,7 +29,12 @@ from app.features.content import router_admin as content_admin_router
 from app.features.identity import router as identity_router
 from app.features.identity import router_settings as identity_settings_router
 from app.features.identity import service_accounts as identity_accounts
+from app.features.marketplace import router as marketplace_router
+from app.features.marketplace import router_client as marketplace_client_router
+from app.features.marketplace import router_vendor as marketplace_vendor_router
 from app.features.media import router as media_router
+from app.features.messaging import router as messaging_router
+from app.features.messaging import router_admin as messaging_admin_router
 from app.features.referrals import router as referrals_router
 from app.features.referrals import router_admin as referrals_admin_router
 from app.features.vendors import router as vendors_router
@@ -46,7 +51,12 @@ def _routers() -> list[APIRouter]:
         content_admin_router.router,
         identity_router.router,
         identity_settings_router.router,
+        marketplace_router.router,
+        marketplace_client_router.router,
+        marketplace_vendor_router.router,
         media_router.router,
+        messaging_router.router,
+        messaging_admin_router.router,
         referrals_router.router,
         referrals_admin_router.router,
         vendors_router.router,

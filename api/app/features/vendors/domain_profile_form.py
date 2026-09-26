@@ -510,6 +510,21 @@ def business_name_from_payload(payload: dict[str, Any]) -> str | None:
     return normalize_business_name(raw_name) or None
 
 
+# What other people see for a vendor with no business name yet, or whose account is closed.
+VENDOR_DISPLAY_FALLBACK = "Vendor"
+DELETED_VENDOR_DISPLAY = "Deleted vendor"
+
+
+def vendor_display_name(payload: object, *, deleted: bool) -> str:
+    """The name clients and staff see for a vendor: the business name as typed, trimmed."""
+    if deleted:
+        return DELETED_VENDOR_DISPLAY
+    raw_name = payload.get("businessName") if isinstance(payload, dict) else None
+    if isinstance(raw_name, str) and raw_name.strip():
+        return raw_name.strip()
+    return VENDOR_DISPLAY_FALLBACK
+
+
 def explore_search_patch_from_payload(payload: dict[str, Any]) -> dict[str, Any]:
     """The search columns stored beside the form so explore can filter without reading JSON."""
     country_code = normalize_country_code(

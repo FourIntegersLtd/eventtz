@@ -29,6 +29,11 @@ from app.core.redis import get_redis
 PENDING_KEY = "pending_events"
 
 
+def user_topic(user_id: str) -> str:
+    """The topic one person's screens subscribe to (their badges, inbox and bookings)."""
+    return f"user:{user_id}"
+
+
 def publish_after_commit(session: AsyncSession, topic: str, name: str) -> None:
     """Queue an event to go out once this request's transaction commits.
 
