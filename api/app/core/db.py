@@ -70,8 +70,6 @@ class Timestamps:
 # maps its tables and deletes them from this list; when it is empty, delete it.
 UNMAPPED_BASELINE_TABLES = frozenset(
     {
-        "celebration_plan_items",
-        "celebration_plans",
         "job_runs",
         "stripe_webhook_events",
     }

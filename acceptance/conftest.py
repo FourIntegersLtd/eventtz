@@ -61,7 +61,6 @@ NOT_YET_ON_API = {
     "test_disputes.py::test_admin_refund_client_on_paid_booking_without_payment_intent_is_400": (
         "waits for payments merge — ws18 wires the money branch"
     ),
-    "test_planner.py::*": "the planner slice follows disputes",
 }
 LOCAL_HOSTS = ("http://127.0.0.1", "http://localhost", "postgresql://postgres:postgres@127.0.0.1:")
 
