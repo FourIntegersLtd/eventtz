@@ -48,6 +48,7 @@ NOT_YET_ON_API = {
     "test_identity_settings.py::test_account_deletion_*": (
         "account deletion arrives after bookings, disputes and messaging (identity README)"
     ),
+    "test_receipts.py::*": "receipts and restore-Connect arrive in next20 pieces 07-09",
 }
 LOCAL_HOSTS = ("http://127.0.0.1", "http://localhost", "postgresql://postgres:postgres@127.0.0.1:")
 
