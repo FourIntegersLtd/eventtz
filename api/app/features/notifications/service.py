@@ -37,6 +37,19 @@ from app.features.notifications.rendering import render_template
 log = get_logger(__name__)
 
 
+def render_receipt_document(payload: dict[str, object]) -> str:
+    """Server-generated receipt HTML (client receipt, vendor payment record or payout statement)."""
+    from app.features.notifications.domain import COMPANY_LEGAL_NAME, SUPPORT_EMAIL
+    from app.features.notifications.domain_receipt_documents import receipt_document_context
+
+    context: dict[str, object] = {
+        **receipt_document_context(dict(payload)),
+        "company_legal_name": COMPANY_LEGAL_NAME,
+        "support_email": SUPPORT_EMAIL,
+    }
+    return render_template("booking/receipt_document.html", context)
+
+
 def render_admin_alert(alert: AdminAlert) -> OutgoingEmail:
     """Render an alert into an email addressed to the configured staff inboxes."""
     context = admin_alert_context(alert)

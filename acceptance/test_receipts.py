@@ -212,18 +212,22 @@ def _stripe_account_id(admin_db: Client, vendor_user_id: str) -> str | None:
 
 
 def _receipt_url(booking_id: str) -> str:
+    """Client receipt JSON path for a booking."""
     return f"{API}/client/booking-requests/{booking_id}/receipt"
 
 
 def _payment_record_url(booking_id: str) -> str:
+    """Vendor payment record JSON path for a booking."""
     return f"{API}/vendor/booking-requests/{booking_id}/payment-record"
 
 
 def _payout_statement_url(booking_id: str) -> str:
+    """Vendor payout statement JSON path for a booking."""
     return f"{API}/vendor/booking-requests/{booking_id}/payout-statement"
 
 
 def _restore_url(vendor_user_id: str) -> str:
+    """Super-admin restore-Connect path for a vendor."""
     return f"{API}/admin/vendors/{vendor_user_id}/restore-stripe-connect"
 
 

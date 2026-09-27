@@ -65,6 +65,18 @@ class BookingRow(BaseModel):
         return list(raw_value) if isinstance(raw_value, list) else []
 
 
+class ReceiptBookingRow(BookingRow):
+    """A booking with its frozen receipt/payment-record/payout-statement snapshots.
+
+    The three extra columns are write-once JSON: whichever of them a payment step
+    has already frozen wins over building the document afresh (`domain_receipts`).
+    """
+
+    payment_receipt_snapshot: dict[str, Any] | None = None
+    vendor_payment_record_snapshot: dict[str, Any] | None = None
+    vendor_payout_statement_snapshot: dict[str, Any] | None = None
+
+
 class EnquiryReminderRow(BaseModel):
     """A client enquiry the vendor has not answered yet, with which reminders it has had."""
 

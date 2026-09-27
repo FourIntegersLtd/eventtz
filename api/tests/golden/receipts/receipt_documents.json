@@ -1,0 +1,188 @@
+[
+  {
+    "id": "client_paid",
+    "payload": {
+      "document_type": "client_payment_receipt",
+      "receipt_number": "EVT-A1B2C3D4",
+      "booking_request_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "event_name": "Summer party",
+      "event_date": "2026-09-15",
+      "payment_status": "paid",
+      "paid_at": "2026-08-21T12:00:00+00:00",
+      "payout_released_at": null,
+      "counterparty_name": "Ada Events",
+      "line_items": [
+        {
+          "label": "Gold package",
+          "amount_label": "GBP 500"
+        }
+      ],
+      "subtotal_label": "GBP 500",
+      "service_fee_label": "GBP 25",
+      "service_fee_percent": 5.0,
+      "total_label": "GBP 525",
+      "vendor_share_label": null,
+      "platform_fee_label": null,
+      "payment_reference": "…12345678",
+      "transfer_reference": null,
+      "stripe_receipt_url": null,
+      "status_note": null
+    },
+    "html": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <title>Your payment receipt — EVT-A1B2C3D4</title>\n    <style>\n      body {\n        font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;\n        color: #2d2938;\n        margin: 40px;\n        font-size: 14px;\n        line-height: 1.5;\n      }\n      h1 {\n        color: #3e1964;\n        font-size: 22px;\n        margin: 0 0 4px;\n      }\n      .muted {\n        color: #6b6575;\n      }\n      table {\n        width: 100%;\n        border-collapse: collapse;\n        margin: 20px 0;\n      }\n      th,\n      td {\n        padding: 8px 0;\n        border-bottom: 1px solid #e8e4ef;\n        text-align: left;\n      }\n      th:last-child,\n      td:last-child {\n        text-align: right;\n      }\n      .total td {\n        font-weight: 700;\n        color: #3e1964;\n        border-bottom: none;\n        padding-top: 12px;\n      }\n      .note {\n        margin-top: 16px;\n        color: #6b6575;\n        font-size: 13px;\n      }\n    </style>\n  </head>\n  <body>\n    <h1>Your payment receipt</h1>\n    <p class=\"muted\">Receipt EVT-A1B2C3D4</p>\n    <p>\n      <strong>Summer party</strong>\n       · 2026-09-15<br />\n      Vendor:\n      Ada Events\n      <br />Paid: 2026-08-21\n      \n      <br />Payment ref: …12345678\n      \n    </p>\n    <table>\n      <thead>\n        <tr>\n          <th>Description</th>\n          <th>Amount</th>\n        </tr>\n      </thead>\n      <tbody>\n        \n        <tr>\n          <td>Gold package</td>\n          <td>GBP 500</td>\n        </tr>\n        \n        <tr class=\"total\">\n          <td>Total</td>\n          <td>GBP 525</td>\n        </tr>\n      </tbody>\n    </table>\n    \n    <p class=\"note\" style=\"margin-top: 32px; border-top: 1px solid #e8e4ef; padding-top: 16px\">\n      Eventtz Ltd · Questions: hello@eventtz.com\n    </p>\n  </body>\n</html>"
+  },
+  {
+    "id": "client_refunded",
+    "payload": {
+      "document_type": "client_payment_receipt",
+      "receipt_number": "EVT-A1B2C3D4",
+      "booking_request_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "event_name": "Summer party",
+      "event_date": "2026-09-15",
+      "payment_status": "refunded",
+      "paid_at": "2026-08-21T12:00:00+00:00",
+      "payout_released_at": null,
+      "counterparty_name": "Ada Events",
+      "line_items": [
+        {
+          "label": "Gold package",
+          "amount_label": "GBP 500"
+        }
+      ],
+      "subtotal_label": "GBP 500",
+      "service_fee_label": "GBP 25",
+      "service_fee_percent": 5.0,
+      "total_label": "GBP 525",
+      "vendor_share_label": null,
+      "platform_fee_label": null,
+      "payment_reference": "…12345678",
+      "transfer_reference": null,
+      "stripe_receipt_url": null,
+      "status_note": "This payment was refunded in full."
+    },
+    "html": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <title>Your payment receipt — EVT-A1B2C3D4</title>\n    <style>\n      body {\n        font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;\n        color: #2d2938;\n        margin: 40px;\n        font-size: 14px;\n        line-height: 1.5;\n      }\n      h1 {\n        color: #3e1964;\n        font-size: 22px;\n        margin: 0 0 4px;\n      }\n      .muted {\n        color: #6b6575;\n      }\n      table {\n        width: 100%;\n        border-collapse: collapse;\n        margin: 20px 0;\n      }\n      th,\n      td {\n        padding: 8px 0;\n        border-bottom: 1px solid #e8e4ef;\n        text-align: left;\n      }\n      th:last-child,\n      td:last-child {\n        text-align: right;\n      }\n      .total td {\n        font-weight: 700;\n        color: #3e1964;\n        border-bottom: none;\n        padding-top: 12px;\n      }\n      .note {\n        margin-top: 16px;\n        color: #6b6575;\n        font-size: 13px;\n      }\n    </style>\n  </head>\n  <body>\n    <h1>Your payment receipt</h1>\n    <p class=\"muted\">Receipt EVT-A1B2C3D4</p>\n    <p>\n      <strong>Summer party</strong>\n       · 2026-09-15<br />\n      Vendor:\n      Ada Events\n      <br />Paid: 2026-08-21\n      \n      <br />Payment ref: …12345678\n      \n    </p>\n    <table>\n      <thead>\n        <tr>\n          <th>Description</th>\n          <th>Amount</th>\n        </tr>\n      </thead>\n      <tbody>\n        \n        <tr>\n          <td>Gold package</td>\n          <td>GBP 500</td>\n        </tr>\n        \n        <tr class=\"total\">\n          <td>Total</td>\n          <td>GBP 525</td>\n        </tr>\n      </tbody>\n    </table>\n    \n    <p class=\"note\">This payment was refunded in full.</p>\n    \n    <p class=\"note\" style=\"margin-top: 32px; border-top: 1px solid #e8e4ef; padding-top: 16px\">\n      Eventtz Ltd · Questions: hello@eventtz.com\n    </p>\n  </body>\n</html>"
+  },
+  {
+    "id": "vendor_payment_record",
+    "payload": {
+      "document_type": "vendor_payment_record",
+      "receipt_number": "EVT-A1B2C3D4",
+      "booking_request_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "event_name": "Summer party",
+      "event_date": "2026-09-15",
+      "payment_status": "paid",
+      "paid_at": "2026-08-21T12:00:00+00:00",
+      "payout_released_at": null,
+      "counterparty_name": "Jane Client",
+      "line_items": [
+        {
+          "label": "Gold package",
+          "amount_label": "GBP 500"
+        }
+      ],
+      "subtotal_label": "GBP 500",
+      "service_fee_label": null,
+      "service_fee_percent": null,
+      "total_label": "GBP 500",
+      "vendor_share_label": "GBP 500",
+      "platform_fee_label": "GBP 25",
+      "payment_reference": "…12345678",
+      "transfer_reference": null,
+      "stripe_receipt_url": null,
+      "status_note": "Client payment received. Your share is held safely with Eventtz until the event is complete and both sides confirm — or the automatic release date passes."
+    },
+    "html": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <title>Payment received — EVT-A1B2C3D4</title>\n    <style>\n      body {\n        font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;\n        color: #2d2938;\n        margin: 40px;\n        font-size: 14px;\n        line-height: 1.5;\n      }\n      h1 {\n        color: #3e1964;\n        font-size: 22px;\n        margin: 0 0 4px;\n      }\n      .muted {\n        color: #6b6575;\n      }\n      table {\n        width: 100%;\n        border-collapse: collapse;\n        margin: 20px 0;\n      }\n      th,\n      td {\n        padding: 8px 0;\n        border-bottom: 1px solid #e8e4ef;\n        text-align: left;\n      }\n      th:last-child,\n      td:last-child {\n        text-align: right;\n      }\n      .total td {\n        font-weight: 700;\n        color: #3e1964;\n        border-bottom: none;\n        padding-top: 12px;\n      }\n      .note {\n        margin-top: 16px;\n        color: #6b6575;\n        font-size: 13px;\n      }\n    </style>\n  </head>\n  <body>\n    <h1>Payment received</h1>\n    <p class=\"muted\">Record EVT-A1B2C3D4</p>\n    <p>\n      <strong>Summer party</strong>\n       · 2026-09-15<br />\n      Client:\n      Jane Client\n      <br />Paid: 2026-08-21\n      \n      <br />Payment ref: …12345678\n      \n    </p>\n    <table>\n      <thead>\n        <tr>\n          <th>Description</th>\n          <th>Amount</th>\n        </tr>\n      </thead>\n      <tbody>\n        \n        <tr>\n          <td>Gold package</td>\n          <td>GBP 500</td>\n        </tr>\n        \n        <tr class=\"total\">\n          <td>Total</td>\n          <td>GBP 500</td>\n        </tr>\n      </tbody>\n    </table>\n    \n    <p class=\"note\">Client payment received. Your share is held safely with Eventtz until the event is complete and both sides confirm — or the automatic release date passes.</p>\n    \n    <p class=\"note\" style=\"margin-top: 32px; border-top: 1px solid #e8e4ef; padding-top: 16px\">\n      Eventtz Ltd · Questions: hello@eventtz.com\n    </p>\n  </body>\n</html>"
+  },
+  {
+    "id": "vendor_payment_record_released",
+    "payload": {
+      "document_type": "vendor_payment_record",
+      "receipt_number": "EVT-A1B2C3D4",
+      "booking_request_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "event_name": "Summer party",
+      "event_date": "2026-09-15",
+      "payment_status": "payout_released",
+      "paid_at": "2026-08-21T12:00:00+00:00",
+      "payout_released_at": null,
+      "counterparty_name": "Jane Client",
+      "line_items": [
+        {
+          "label": "Gold package",
+          "amount_label": "GBP 500"
+        }
+      ],
+      "subtotal_label": "GBP 500",
+      "service_fee_label": null,
+      "service_fee_percent": null,
+      "total_label": "GBP 500",
+      "vendor_share_label": "GBP 500",
+      "platform_fee_label": "GBP 25",
+      "payment_reference": "…12345678",
+      "transfer_reference": null,
+      "stripe_receipt_url": null,
+      "status_note": "Client payment received. Your share has been released to your connected Stripe account."
+    },
+    "html": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <title>Payment received — EVT-A1B2C3D4</title>\n    <style>\n      body {\n        font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;\n        color: #2d2938;\n        margin: 40px;\n        font-size: 14px;\n        line-height: 1.5;\n      }\n      h1 {\n        color: #3e1964;\n        font-size: 22px;\n        margin: 0 0 4px;\n      }\n      .muted {\n        color: #6b6575;\n      }\n      table {\n        width: 100%;\n        border-collapse: collapse;\n        margin: 20px 0;\n      }\n      th,\n      td {\n        padding: 8px 0;\n        border-bottom: 1px solid #e8e4ef;\n        text-align: left;\n      }\n      th:last-child,\n      td:last-child {\n        text-align: right;\n      }\n      .total td {\n        font-weight: 700;\n        color: #3e1964;\n        border-bottom: none;\n        padding-top: 12px;\n      }\n      .note {\n        margin-top: 16px;\n        color: #6b6575;\n        font-size: 13px;\n      }\n    </style>\n  </head>\n  <body>\n    <h1>Payment received</h1>\n    <p class=\"muted\">Record EVT-A1B2C3D4</p>\n    <p>\n      <strong>Summer party</strong>\n       · 2026-09-15<br />\n      Client:\n      Jane Client\n      <br />Paid: 2026-08-21\n      \n      <br />Payment ref: …12345678\n      \n    </p>\n    <table>\n      <thead>\n        <tr>\n          <th>Description</th>\n          <th>Amount</th>\n        </tr>\n      </thead>\n      <tbody>\n        \n        <tr>\n          <td>Gold package</td>\n          <td>GBP 500</td>\n        </tr>\n        \n        <tr class=\"total\">\n          <td>Total</td>\n          <td>GBP 500</td>\n        </tr>\n      </tbody>\n    </table>\n    \n    <p class=\"note\">Client payment received. Your share has been released to your connected Stripe account.</p>\n    \n    <p class=\"note\" style=\"margin-top: 32px; border-top: 1px solid #e8e4ef; padding-top: 16px\">\n      Eventtz Ltd · Questions: hello@eventtz.com\n    </p>\n  </body>\n</html>"
+  },
+  {
+    "id": "vendor_payout_statement",
+    "payload": {
+      "document_type": "vendor_payout_statement",
+      "receipt_number": "EVT-A1B2C3D4",
+      "booking_request_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "event_name": "Summer party",
+      "event_date": "2026-09-15",
+      "payment_status": "payout_released",
+      "paid_at": "2026-08-21T12:00:00+00:00",
+      "payout_released_at": "2026-09-16T10:00:00+00:00",
+      "counterparty_name": "Jane Client",
+      "line_items": [
+        {
+          "label": "Vendor share",
+          "amount_label": "GBP 500"
+        }
+      ],
+      "subtotal_label": null,
+      "service_fee_label": null,
+      "service_fee_percent": null,
+      "total_label": "GBP 500",
+      "vendor_share_label": "GBP 500",
+      "platform_fee_label": null,
+      "payment_reference": "…12345678",
+      "transfer_reference": "…87654321",
+      "stripe_receipt_url": null,
+      "status_note": "Payout sent to your connected Stripe account. Bank arrival times depend on your bank."
+    },
+    "html": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <title>Payout statement — EVT-A1B2C3D4</title>\n    <style>\n      body {\n        font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;\n        color: #2d2938;\n        margin: 40px;\n        font-size: 14px;\n        line-height: 1.5;\n      }\n      h1 {\n        color: #3e1964;\n        font-size: 22px;\n        margin: 0 0 4px;\n      }\n      .muted {\n        color: #6b6575;\n      }\n      table {\n        width: 100%;\n        border-collapse: collapse;\n        margin: 20px 0;\n      }\n      th,\n      td {\n        padding: 8px 0;\n        border-bottom: 1px solid #e8e4ef;\n        text-align: left;\n      }\n      th:last-child,\n      td:last-child {\n        text-align: right;\n      }\n      .total td {\n        font-weight: 700;\n        color: #3e1964;\n        border-bottom: none;\n        padding-top: 12px;\n      }\n      .note {\n        margin-top: 16px;\n        color: #6b6575;\n        font-size: 13px;\n      }\n    </style>\n  </head>\n  <body>\n    <h1>Payout statement</h1>\n    <p class=\"muted\">Statement EVT-A1B2C3D4</p>\n    <p>\n      <strong>Summer party</strong>\n       · 2026-09-15<br />\n      Client:\n      Jane Client\n      <br />Paid: 2026-08-21\n      <br />Payout: 2026-09-16\n      <br />Payment ref: …12345678\n      <br />Transfer ref: …87654321\n    </p>\n    <table>\n      <thead>\n        <tr>\n          <th>Description</th>\n          <th>Amount</th>\n        </tr>\n      </thead>\n      <tbody>\n        \n        <tr>\n          <td>Vendor share</td>\n          <td>GBP 500</td>\n        </tr>\n        \n        <tr class=\"total\">\n          <td>Total</td>\n          <td>GBP 500</td>\n        </tr>\n      </tbody>\n    </table>\n    \n    <p class=\"note\">Payout sent to your connected Stripe account. Bank arrival times depend on your bank.</p>\n    \n    <p class=\"note\" style=\"margin-top: 32px; border-top: 1px solid #e8e4ef; padding-top: 16px\">\n      Eventtz Ltd · Questions: hello@eventtz.com\n    </p>\n  </body>\n</html>"
+  },
+  {
+    "id": "vendor_payout_statement_alt",
+    "payload": {
+      "document_type": "vendor_payout_statement",
+      "receipt_number": "EVT-DEADBEEF",
+      "booking_request_id": "deadbeef-dead-beef-dead-beefdeadbeef",
+      "event_name": "Winter gala",
+      "event_date": "2026-12-01",
+      "payment_status": "payout_released",
+      "paid_at": "2026-11-20T09:00:00+00:00",
+      "payout_released_at": "2026-12-02T11:30:00+00:00",
+      "counterparty_name": "Sam Planner",
+      "line_items": [
+        {
+          "label": "Vendor share",
+          "amount_label": "GBP 1,200"
+        }
+      ],
+      "subtotal_label": null,
+      "service_fee_label": null,
+      "service_fee_percent": null,
+      "total_label": "GBP 1,200",
+      "vendor_share_label": "GBP 1,200",
+      "platform_fee_label": null,
+      "payment_reference": "…ABCDEF12",
+      "transfer_reference": "…TRANSFER",
+      "stripe_receipt_url": null,
+      "status_note": "Payout sent to your connected Stripe account. Bank arrival times depend on your bank."
+    },
+    "html": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <title>Payout statement — EVT-DEADBEEF</title>\n    <style>\n      body {\n        font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;\n        color: #2d2938;\n        margin: 40px;\n        font-size: 14px;\n        line-height: 1.5;\n      }\n      h1 {\n        color: #3e1964;\n        font-size: 22px;\n        margin: 0 0 4px;\n      }\n      .muted {\n        color: #6b6575;\n      }\n      table {\n        width: 100%;\n        border-collapse: collapse;\n        margin: 20px 0;\n      }\n      th,\n      td {\n        padding: 8px 0;\n        border-bottom: 1px solid #e8e4ef;\n        text-align: left;\n      }\n      th:last-child,\n      td:last-child {\n        text-align: right;\n      }\n      .total td {\n        font-weight: 700;\n        color: #3e1964;\n        border-bottom: none;\n        padding-top: 12px;\n      }\n      .note {\n        margin-top: 16px;\n        color: #6b6575;\n        font-size: 13px;\n      }\n    </style>\n  </head>\n  <body>\n    <h1>Payout statement</h1>\n    <p class=\"muted\">Statement EVT-DEADBEEF</p>\n    <p>\n      <strong>Winter gala</strong>\n       · 2026-12-01<br />\n      Client:\n      Sam Planner\n      <br />Paid: 2026-11-20\n      <br />Payout: 2026-12-02\n      <br />Payment ref: …ABCDEF12\n      <br />Transfer ref: …TRANSFER\n    </p>\n    <table>\n      <thead>\n        <tr>\n          <th>Description</th>\n          <th>Amount</th>\n        </tr>\n      </thead>\n      <tbody>\n        \n        <tr>\n          <td>Vendor share</td>\n          <td>GBP 1,200</td>\n        </tr>\n        \n        <tr class=\"total\">\n          <td>Total</td>\n          <td>GBP 1,200</td>\n        </tr>\n      </tbody>\n    </table>\n    \n    <p class=\"note\">Payout sent to your connected Stripe account. Bank arrival times depend on your bank.</p>\n    \n    <p class=\"note\" style=\"margin-top: 32px; border-top: 1px solid #e8e4ef; padding-top: 16px\">\n      Eventtz Ltd · Questions: hello@eventtz.com\n    </p>\n  </body>\n</html>"
+  }
+]

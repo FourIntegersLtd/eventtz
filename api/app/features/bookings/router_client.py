@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Query
+from fastapi.responses import HTMLResponse
 
 from app.core.auth import ROLE_ERRORS, CurrentClient
 from app.core.db import SessionDep
@@ -19,6 +20,7 @@ from app.features.bookings import (
     service_create,
     service_payments_checkout,
     service_queries,
+    service_receipts,
     service_status,
     service_venue,
 )
@@ -32,6 +34,7 @@ from app.features.bookings.schemas import (
     ClientBookingStatusBody,
     ConfirmCompletionResponse,
     CreateBookingRequestBody,
+    PaymentReceiptResponse,
     UpdateBookingVenueBody,
     VendorBookingStatusResponse,
 )
@@ -47,6 +50,12 @@ _CANCEL_ERRORS = (
     errors.BookingAlreadyRefunded,
     errors.CancelOpenDispute,
     errors.RefundFailed,
+)
+_RECEIPT_ERRORS = (
+    errors.InvalidBookingId,
+    errors.BookingNotFound,
+    errors.ReceiptNotAvailable,
+    errors.ReceiptStripeVerifyFailed,
 )
 
 
@@ -88,6 +97,46 @@ async def get_client_booking(
     """One booking with its price breakdown, the vendor's phone once paid, and the client's review."""
     booking = await service_queries.client_booking_detail(session, client.id, require_booking_id(booking_id))
     return ClientBookingDetailResponse(booking=booking)
+
+
+@router.get(
+    "/booking-requests/{booking_id}/receipt",
+    response_model=PaymentReceiptResponse,
+    responses=error_responses(*ROLE_ERRORS, *_RECEIPT_ERRORS),
+)
+async def get_client_booking_receipt(
+    session: SessionDep,
+    client: CurrentClient,
+    gateway: PaymentGatewayDependency,
+    booking_id: str,
+) -> PaymentReceiptResponse:
+    """The client's payment receipt for a paid booking."""
+    payload = await service_receipts.client_receipt(
+        session, gateway, client_user_id=client.id, booking_id=require_booking_id(booking_id)
+    )
+    return service_receipts.payment_receipt_response(payload)
+
+
+@router.get(
+    "/booking-requests/{booking_id}/receipt.html",
+    response_class=HTMLResponse,
+    responses=error_responses(*ROLE_ERRORS, *_RECEIPT_ERRORS),
+)
+async def get_client_booking_receipt_html(
+    session: SessionDep,
+    client: CurrentClient,
+    gateway: PaymentGatewayDependency,
+    booking_id: str,
+) -> HTMLResponse:
+    """The client's payment receipt as a downloadable HTML file."""
+    payload = await service_receipts.client_receipt(
+        session, gateway, client_user_id=client.id, booking_id=require_booking_id(booking_id)
+    )
+    receipt_number = str(payload.get("receipt_number") or "receipt")
+    return HTMLResponse(
+        content=service_receipts.render_receipt_html(payload),
+        headers={"Content-Disposition": f'attachment; filename="receipt-{receipt_number}.html"'},
+    )
 
 
 @router.patch(

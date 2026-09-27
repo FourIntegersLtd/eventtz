@@ -6,7 +6,7 @@ Writes to `payment_status` go through `repository.update_booking` with a
 
 from __future__ import annotations
 
-from sqlalchemy import exists, select
+from sqlalchemy import desc, exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import as_uuid, plain_row
@@ -44,3 +44,20 @@ async def vendor_has_transfer(session: AsyncSession, vendor_user_id: str) -> boo
         )
     )
     return bool(found)
+
+
+async def latest_transfer_id_for_vendor(session: AsyncSession, vendor_user_id: str) -> str | None:
+    """The vendor's most recently paid Transfer id, for restoring an orphaned Connect account."""
+    vendor_uuid = as_uuid(vendor_user_id)
+    if vendor_uuid is None:
+        return None
+    found = await session.scalar(
+        select(BookingRequest.stripe_transfer_id)
+        .where(
+            BookingRequest.vendor_user_id == vendor_uuid,
+            BookingRequest.stripe_transfer_id.is_not(None),
+        )
+        .order_by(desc(BookingRequest.paid_at))
+        .limit(1)
+    )
+    return str(found).strip() or None if found else None

@@ -32,6 +32,11 @@ slice owns Stripe's side (webhooks, Connect) and calls these, never the reverse.
 - As a **client**, I **pay an accepted booking** through Stripe Checkout; the
   booking is re-priced from the vendor's list first. After Stripe's redirect the
   page **syncs the payment** in case the webhook has not arrived.
+- As a **client**, I **download my payment receipt** (JSON or HTML) once the
+  booking is paid; a frozen snapshot written at payment time is returned as stored,
+  with the live `payment_status` overlaid for refunds.
+- As a **vendor**, I **download my payment record and payout statement** (JSON or
+  HTML) for a paid booking; the payout statement is available only after release.
 - As **staff** (a dispute resolution or recovery), I **refund a paid booking** in
   full or in part, or **release the vendor's payout** without both confirmations.
 - As **Stripe**, I **report a completed Checkout** (webhook); the booking is marked
@@ -88,6 +93,9 @@ slice owns Stripe's side (webhooks, Connect) and calls these, never the reverse.
   stamping `completion_reminder_sent_at` before it is sent, so it goes out once.
 - The first confirmation also runs the post-event step (reminder, then any payout
   already due), as the baseline did.
+- Receipt snapshots (`payment_receipt_snapshot`, `vendor_payment_record_snapshot`,
+  `vendor_payout_statement_snapshot`) are write-once; a frozen snapshot is returned
+  as-is with the live `payment_status` laid over it (`service_receipts.py`).
 
 ## Routes
 
@@ -95,11 +103,14 @@ Client (`/client`): `GET /booking-requests`, `POST /booking-requests`,
 `GET /booking-requests/{id}`, `PATCH /booking-requests/{id}/status`,
 `POST /booking-requests/{id}/cancel`, `PATCH /booking-requests/{id}/venue`,
 `POST /booking-requests/{id}/checkout`, `POST /booking-requests/{id}/checkout/sync`,
-`POST /booking-requests/{id}/confirm-completion`.
+`POST /booking-requests/{id}/confirm-completion`,
+`GET /booking-requests/{id}/receipt`, `GET /booking-requests/{id}/receipt.html`.
 
 Vendor (`/vendor`): `POST /booking-requests/vendor-quote`, `GET /booking-requests`,
 `GET /booking-requests/{id}`, `PUT /booking-requests/{id}/adjustments`,
-`PATCH /booking-requests/{id}/status`, `POST /booking-requests/{id}/confirm-completion`.
+`PATCH /booking-requests/{id}/status`, `POST /booking-requests/{id}/confirm-completion`,
+`GET /booking-requests/{id}/payment-record`, `GET /booking-requests/{id}/payment-record.html`,
+`GET /booking-requests/{id}/payout-statement`, `GET /booking-requests/{id}/payout-statement.html`.
 
 Admin (`/admin`): `GET /bookings`, `GET /bookings/{id}` (any staff member);
 `PATCH /bookings/{id}/payment-fields`, `POST /bookings/{id}/reset-checkout`,
@@ -144,11 +155,11 @@ Differences from the baseline:
 
 These wait for the slices that own them; until then the api answers as noted.
 
-- **Payments:** receipts (the snapshot stored when a payment completes, and the
-  receipt emails, including after an admin payment sync), payout statements and
-  payment records. Checkout and its sync
-  (`service_payments_checkout.py`), refunds and payouts (`service_payments.py`) are
-  built.
+- **Payments:** receipt emails after checkout and admin payment sync (piece 08),
+  and restore-Connect on admin recovery (piece 09). Checkout and its sync
+  (`service_payments_checkout.py`), refunds and payouts (`service_payments.py`), and
+  read routes for receipts, payment records and payout statements
+  (`service_receipts.py`) are built.
 - The vendor payout ledger (`service_payout_ledger.py`, `repository_payments.py`)
   is built; the payments slice serves it at `GET /vendor/payments/history`.
 - **Maintenance:** the client's nudge when a vendor has not answered, and the

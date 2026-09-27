@@ -17,6 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 # The admin console's booking view, re-exported so the recovery routes can answer with it
 # (a router imports only its slice's `schemas`).
 from app.features.bookings.schemas_admin import AdminBookingDetailResponse as AdminBookingDetailResponse
+from app.features.bookings.schemas_receipts import PaymentReceiptResponse as PaymentReceiptResponse
 
 # A client referral code is at most this many digits (as in the referrals slice).
 _REFERRAL_CODE_MAX_DIGITS = 6

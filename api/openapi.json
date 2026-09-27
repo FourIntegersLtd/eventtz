@@ -8610,6 +8610,206 @@
         "title": "PackageCoachTip",
         "type": "object"
       },
+      "PaymentReceiptPayload": {
+        "description": "The receipt body returned to clients and vendors (matches baseline OpenAPI).",
+        "properties": {
+          "booking_request_id": {
+            "title": "Booking Request Id",
+            "type": "string"
+          },
+          "counterparty_name": {
+            "title": "Counterparty Name",
+            "type": "string"
+          },
+          "document_type": {
+            "enum": [
+              "client_payment_receipt",
+              "vendor_payment_record",
+              "vendor_payout_statement"
+            ],
+            "title": "Document Type",
+            "type": "string"
+          },
+          "event_date": {
+            "title": "Event Date",
+            "type": "string"
+          },
+          "event_name": {
+            "title": "Event Name",
+            "type": "string"
+          },
+          "line_items": {
+            "items": {
+              "$ref": "#/components/schemas/ReceiptLineItem"
+            },
+            "title": "Line Items",
+            "type": "array"
+          },
+          "paid_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid At"
+          },
+          "payment_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Reference"
+          },
+          "payment_status": {
+            "title": "Payment Status",
+            "type": "string"
+          },
+          "payout_released_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payout Released At"
+          },
+          "platform_fee_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Platform Fee Label"
+          },
+          "receipt_number": {
+            "title": "Receipt Number",
+            "type": "string"
+          },
+          "service_fee_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Fee Label"
+          },
+          "service_fee_percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Fee Percent"
+          },
+          "status_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status Note"
+          },
+          "stripe_receipt_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stripe Receipt Url"
+          },
+          "subtotal_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subtotal Label"
+          },
+          "total_label": {
+            "title": "Total Label",
+            "type": "string"
+          },
+          "transfer_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transfer Reference"
+          },
+          "vendor_share_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor Share Label"
+          }
+        },
+        "required": [
+          "document_type",
+          "receipt_number",
+          "booking_request_id",
+          "event_name",
+          "event_date",
+          "payment_status",
+          "counterparty_name",
+          "total_label"
+        ],
+        "title": "PaymentReceiptPayload",
+        "type": "object"
+      },
+      "PaymentReceiptResponse": {
+        "description": "Wrapper the baseline's receipt routes return.",
+        "properties": {
+          "receipt": {
+            "$ref": "#/components/schemas/PaymentReceiptPayload"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "receipt"
+        ],
+        "title": "PaymentReceiptResponse",
+        "type": "object"
+      },
       "PlanDetailResponse": {
         "description": "`GET /client/planner/plans/{plan_id}`.",
         "properties": {
@@ -9049,6 +9249,25 @@
           "booking"
         ],
         "title": "PutVendorBookingAdjustmentsResponse",
+        "type": "object"
+      },
+      "ReceiptLineItem": {
+        "description": "One priced line on a receipt document.",
+        "properties": {
+          "amount_label": {
+            "title": "Amount Label",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "amount_label"
+        ],
+        "title": "ReceiptLineItem",
         "type": "object"
       },
       "ReferralFeeTier": {
@@ -19680,6 +19899,210 @@
         ]
       }
     },
+    "/api/v1/client/booking-requests/{booking_id}/receipt": {
+      "get": {
+        "description": "The client's payment receipt for a paid booking.",
+        "operationId": "get_client_booking_receipt_api_v1_client_booking_requests__booking_id__receipt_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentReceiptResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id",
+            "x-codes": [
+              "invalid_booking_id"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_not_found, receipt_not_available, receipt_stripe_verify_failed",
+            "x-codes": [
+              "booking_not_found",
+              "receipt_not_available",
+              "receipt_stripe_verify_failed"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Client Booking Receipt",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/booking-requests/{booking_id}/receipt.html": {
+      "get": {
+        "description": "The client's payment receipt as a downloadable HTML file.",
+        "operationId": "get_client_booking_receipt_html_api_v1_client_booking_requests__booking_id__receipt_html_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id",
+            "x-codes": [
+              "invalid_booking_id"
+            ]
+          },
+          "401": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_not_found, receipt_not_available, receipt_stripe_verify_failed",
+            "x-codes": [
+              "booking_not_found",
+              "receipt_not_available",
+              "receipt_stripe_verify_failed"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Client Booking Receipt Html",
+        "tags": [
+          "client"
+        ]
+      }
+    },
     "/api/v1/client/booking-requests/{booking_id}/review": {
       "post": {
         "description": "Leave a rating and comment on a booking of the caller's own that has completed.",
@@ -23617,6 +24040,410 @@
           }
         ],
         "summary": "Post Vendor Dispute",
+        "tags": [
+          "vendor"
+        ]
+      }
+    },
+    "/api/v1/vendor/booking-requests/{booking_id}/payment-record": {
+      "get": {
+        "description": "The vendor's payment record once the client has paid.",
+        "operationId": "get_vendor_booking_payment_record_api_v1_vendor_booking_requests__booking_id__payment_record_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentReceiptResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id",
+            "x-codes": [
+              "invalid_booking_id"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_not_found, receipt_not_available",
+            "x-codes": [
+              "booking_not_found",
+              "receipt_not_available"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Vendor Booking Payment Record",
+        "tags": [
+          "vendor"
+        ]
+      }
+    },
+    "/api/v1/vendor/booking-requests/{booking_id}/payment-record.html": {
+      "get": {
+        "description": "The vendor's payment record as a downloadable HTML file.",
+        "operationId": "get_vendor_booking_payment_record_html_api_v1_vendor_booking_requests__booking_id__payment_record_html_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id",
+            "x-codes": [
+              "invalid_booking_id"
+            ]
+          },
+          "401": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_not_found, receipt_not_available",
+            "x-codes": [
+              "booking_not_found",
+              "receipt_not_available"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Vendor Booking Payment Record Html",
+        "tags": [
+          "vendor"
+        ]
+      }
+    },
+    "/api/v1/vendor/booking-requests/{booking_id}/payout-statement": {
+      "get": {
+        "description": "The vendor's payout statement once their share has been released.",
+        "operationId": "get_vendor_booking_payout_statement_api_v1_vendor_booking_requests__booking_id__payout_statement_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentReceiptResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id",
+            "x-codes": [
+              "invalid_booking_id"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_not_found, receipt_not_available",
+            "x-codes": [
+              "booking_not_found",
+              "receipt_not_available"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Vendor Booking Payout Statement",
+        "tags": [
+          "vendor"
+        ]
+      }
+    },
+    "/api/v1/vendor/booking-requests/{booking_id}/payout-statement.html": {
+      "get": {
+        "description": "The vendor's payout statement as a downloadable HTML file.",
+        "operationId": "get_vendor_booking_payout_statement_html_api_v1_vendor_booking_requests__booking_id__payout_statement_html_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id",
+            "x-codes": [
+              "invalid_booking_id"
+            ]
+          },
+          "401": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_not_found, receipt_not_available",
+            "x-codes": [
+              "booking_not_found",
+              "receipt_not_available"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Vendor Booking Payout Statement Html",
         "tags": [
           "vendor"
         ]

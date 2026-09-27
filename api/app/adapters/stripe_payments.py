@@ -225,6 +225,10 @@ class StripePaymentGateway:
         """One connected account."""
         return await self._call("GET", f"/accounts/{account_id}")
 
+    async def retrieve_transfer(self, transfer_id: str) -> dict[str, Any]:
+        """One transfer, for its `destination` connected account id."""
+        return await self._call("GET", f"/transfers/{transfer_id}")
+
     async def create_account_link(self, *, account_id: str, refresh_url: str, return_url: str) -> str:
         """A one-time onboarding URL."""
         link = await self._call(

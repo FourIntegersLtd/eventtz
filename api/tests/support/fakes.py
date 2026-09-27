@@ -231,3 +231,8 @@ class FakePaymentGateway:
             "create_account_link", account_id=account_id, refresh_url=refresh_url, return_url=return_url
         )
         return f"https://connect.example/{account_id}"
+
+    async def retrieve_transfer(self, transfer_id: str) -> dict[str, Any]:
+        """The seeded transfer."""
+        self._enter("retrieve_transfer", transfer_id=transfer_id)
+        return self._object(transfer_id)

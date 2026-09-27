@@ -1667,6 +1667,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/client/booking-requests/{booking_id}/receipt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Client Booking Receipt
+         * @description The client's payment receipt for a paid booking.
+         */
+        get: operations["get_client_booking_receipt_api_v1_client_booking_requests__booking_id__receipt_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/client/booking-requests/{booking_id}/receipt.html": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Client Booking Receipt Html
+         * @description The client's payment receipt as a downloadable HTML file.
+         */
+        get: operations["get_client_booking_receipt_html_api_v1_client_booking_requests__booking_id__receipt_html_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/client/booking-requests/{booking_id}/review": {
         parameters: {
             query?: never;
@@ -2525,6 +2565,86 @@ export interface paths {
          * @description Open a dispute on one of the vendor's own bookings.
          */
         post: operations["post_vendor_dispute_api_v1_vendor_booking_requests__booking_id__disputes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/vendor/booking-requests/{booking_id}/payment-record": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Vendor Booking Payment Record
+         * @description The vendor's payment record once the client has paid.
+         */
+        get: operations["get_vendor_booking_payment_record_api_v1_vendor_booking_requests__booking_id__payment_record_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/vendor/booking-requests/{booking_id}/payment-record.html": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Vendor Booking Payment Record Html
+         * @description The vendor's payment record as a downloadable HTML file.
+         */
+        get: operations["get_vendor_booking_payment_record_html_api_v1_vendor_booking_requests__booking_id__payment_record_html_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/vendor/booking-requests/{booking_id}/payout-statement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Vendor Booking Payout Statement
+         * @description The vendor's payout statement once their share has been released.
+         */
+        get: operations["get_vendor_booking_payout_statement_api_v1_vendor_booking_requests__booking_id__payout_statement_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/vendor/booking-requests/{booking_id}/payout-statement.html": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Vendor Booking Payout Statement Html
+         * @description The vendor's payout statement as a downloadable HTML file.
+         */
+        get: operations["get_vendor_booking_payout_statement_html_api_v1_vendor_booking_requests__booking_id__payout_statement_html_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -6914,6 +7034,67 @@ export interface components {
             severity: string;
         };
         /**
+         * PaymentReceiptPayload
+         * @description The receipt body returned to clients and vendors (matches baseline OpenAPI).
+         */
+        PaymentReceiptPayload: {
+            /** Booking Request Id */
+            booking_request_id: string;
+            /** Counterparty Name */
+            counterparty_name: string;
+            /**
+             * Document Type
+             * @enum {string}
+             */
+            document_type: "client_payment_receipt" | "vendor_payment_record" | "vendor_payout_statement";
+            /** Event Date */
+            event_date: string;
+            /** Event Name */
+            event_name: string;
+            /** Line Items */
+            line_items?: components["schemas"]["ReceiptLineItem"][];
+            /** Paid At */
+            paid_at?: string | null;
+            /** Payment Reference */
+            payment_reference?: string | null;
+            /** Payment Status */
+            payment_status: string;
+            /** Payout Released At */
+            payout_released_at?: string | null;
+            /** Platform Fee Label */
+            platform_fee_label?: string | null;
+            /** Receipt Number */
+            receipt_number: string;
+            /** Service Fee Label */
+            service_fee_label?: string | null;
+            /** Service Fee Percent */
+            service_fee_percent?: number | null;
+            /** Status Note */
+            status_note?: string | null;
+            /** Stripe Receipt Url */
+            stripe_receipt_url?: string | null;
+            /** Subtotal Label */
+            subtotal_label?: string | null;
+            /** Total Label */
+            total_label: string;
+            /** Transfer Reference */
+            transfer_reference?: string | null;
+            /** Vendor Share Label */
+            vendor_share_label?: string | null;
+        };
+        /**
+         * PaymentReceiptResponse
+         * @description Wrapper the baseline's receipt routes return.
+         */
+        PaymentReceiptResponse: {
+            receipt: components["schemas"]["PaymentReceiptPayload"];
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+        };
+        /**
          * PlanDetailResponse
          * @description `GET /client/planner/plans/{plan_id}`.
          */
@@ -7097,6 +7278,16 @@ export interface components {
              * @default true
              */
             success: boolean;
+        };
+        /**
+         * ReceiptLineItem
+         * @description One priced line on a receipt document.
+         */
+        ReceiptLineItem: {
+            /** Amount Label */
+            amount_label: string;
+            /** Label */
+            label: string;
         };
         /**
          * ReferralFeeTier
@@ -13395,6 +13586,140 @@ export interface operations {
             };
         };
     };
+    get_client_booking_receipt_api_v1_client_booking_requests__booking_id__receipt_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                booking_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentReceiptResponse"];
+                };
+            };
+            /** @description invalid_booking_id */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description booking_not_found, receipt_not_available, receipt_stripe_verify_failed */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_client_booking_receipt_html_api_v1_client_booking_requests__booking_id__receipt_html_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                booking_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": string;
+                };
+            };
+            /** @description invalid_booking_id */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description booking_not_found, receipt_not_available, receipt_stripe_verify_failed */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     submit_review_api_v1_client_booking_requests__booking_id__review_post: {
         parameters: {
             query?: never;
@@ -15954,6 +16279,274 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_vendor_booking_payment_record_api_v1_vendor_booking_requests__booking_id__payment_record_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                booking_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentReceiptResponse"];
+                };
+            };
+            /** @description invalid_booking_id */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description booking_not_found, receipt_not_available */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_vendor_booking_payment_record_html_api_v1_vendor_booking_requests__booking_id__payment_record_html_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                booking_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": string;
+                };
+            };
+            /** @description invalid_booking_id */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description booking_not_found, receipt_not_available */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_vendor_booking_payout_statement_api_v1_vendor_booking_requests__booking_id__payout_statement_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                booking_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentReceiptResponse"];
+                };
+            };
+            /** @description invalid_booking_id */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description booking_not_found, receipt_not_available */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_vendor_booking_payout_statement_html_api_v1_vendor_booking_requests__booking_id__payout_statement_html_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                booking_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": string;
+                };
+            };
+            /** @description invalid_booking_id */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description booking_not_found, receipt_not_available */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": components["schemas"]["ErrorResponse"];
                 };
             };
             /** @description Validation Error */

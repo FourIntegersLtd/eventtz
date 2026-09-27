@@ -26,6 +26,29 @@ class InvalidBookingId(InvalidInput):
     default_message = "Invalid booking id."
 
 
+class ReceiptNotAvailable(NotFound):
+    """The payment has not reached a state this receipt/record/statement may be read in yet.
+
+    Baseline used this same message for all three documents (a payout-statement-specific
+    message exists in baseline's `messages.py` but is never actually raised anywhere).
+    """
+
+    code = "receipt_not_available"
+    default_message = "No receipt is available for this booking yet."
+
+
+class ReceiptStripeVerifyFailed(NotFound):
+    """The client receipt route could not confirm the payment with Stripe (legacy path only).
+
+    Only reached when a booking is paid but has no frozen receipt snapshot yet and
+    still carries a live `stripe_payment_intent_id` — normal payments freeze their
+    snapshot synchronously, so this should be rare.
+    """
+
+    code = "receipt_stripe_verify_failed"
+    default_message = "Unable to verify payment with Stripe. Please try again later."
+
+
 class InvalidVendorId(InvalidInput):
     """The vendor id in a booking request is not a UUID."""
 

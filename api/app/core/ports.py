@@ -301,6 +301,10 @@ class PaymentGateway(Protocol):
         """One connected account (for `charges_enabled` / `payouts_enabled`)."""
         ...
 
+    async def retrieve_transfer(self, transfer_id: str) -> dict[str, Any]:
+        """One transfer (for its `destination` connected account id), used to recover an orphaned account."""
+        ...
+
     async def create_account_link(self, *, account_id: str, refresh_url: str, return_url: str) -> str:
         """A one-time onboarding URL for a connected account."""
         ...
