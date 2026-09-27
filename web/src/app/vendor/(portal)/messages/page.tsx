@@ -1,6 +1,6 @@
-import { ConversationListView } from "@/domains/vendor-messages/ConversationListView";
+import { MessagesPortalView } from "@/domains/messages/MessagesPortalView";
 
-/** `/vendor/messages` — the vendor's full conversation inbox. */
+/** `/vendor/messages` — the vendor's conversation inbox. */
 export default function VendorMessagesPage() {
-  return <ConversationListView basePath="/vendor/messages" />;
+  return <MessagesPortalView portal="vendor" />;
 }

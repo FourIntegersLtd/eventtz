@@ -2,12 +2,13 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   dayDividerLabel,
+  formatBubbleTime,
   formatConversationActivity,
   formatMessageTime,
   formatUnreadBadge,
   groupMessagesByDay,
   peerInitials,
-} from "@/domains/vendor-messages/messageFormatting";
+} from "@/domains/messages/messageFormatting";
 
 const NOW = new Date("2026-09-26T15:30:00.000Z");
 
@@ -51,6 +52,20 @@ describe("groupMessagesByDay", () => {
   it("returns no groups for no messages", () => {
     assert.deepEqual(groupMessagesByDay([], NOW), []);
   });
+
+  it("keeps messages inside a day in the order given", () => {
+    const groups = groupMessagesByDay(
+      [
+        { created_at: "2026-09-26T09:00:00.000Z", id: "first" },
+        { created_at: "2026-09-26T10:00:00.000Z", id: "second" },
+      ],
+      NOW,
+    );
+    assert.deepEqual(
+      groups[0]?.messages.map((message) => message.id),
+      ["first", "second"],
+    );
+  });
 });
 
 describe("formatMessageTime", () => {
@@ -70,6 +85,24 @@ describe("formatConversationActivity", () => {
 
   it("shows a short date for an earlier activity", () => {
     assert.equal(formatConversationActivity("2026-09-20T08:15:00.000Z", NOW), "20 Sept");
+  });
+
+  it("uses the given time zone's calendar day, not UTC", () => {
+    assert.equal(formatConversationActivity("2026-09-26T23:30:00.000Z", NOW, "Europe/London"), "27 Sept");
+  });
+});
+
+describe("formatBubbleTime", () => {
+  it("formats a medium date and short time in the given zone", () => {
+    assert.equal(formatBubbleTime("2026-09-26T14:05:00.000Z", "UTC"), "26 Sept 2026, 14:05");
+  });
+
+  it("returns a dash for a missing timestamp", () => {
+    assert.equal(formatBubbleTime(null), "-");
+  });
+
+  it("returns the raw string when it is not a date", () => {
+    assert.equal(formatBubbleTime("not-a-date"), "not-a-date");
   });
 });
 

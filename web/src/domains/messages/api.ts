@@ -1,8 +1,7 @@
 /**
- * The vendor-messages domain's requests against the platform API's shared
- * chat namespace (`/api/v1/chat/*` — not `/vendor/*`, because a chat thread
- * has one client party and one vendor party and the same endpoints serve
- * both portals; see `api/openapi.json`).
+ * Chat requests for both portals. The platform API's chat namespace
+ * (`/api/v1/chat/*`) is shared: a thread has one client party and one vendor
+ * party, so these calls are not under `/client` or `/vendor`.
  */
 import { platformRequest, type components } from "@/foundation/platform-client";
 
