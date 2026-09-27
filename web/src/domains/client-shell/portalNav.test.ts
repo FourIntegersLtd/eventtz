@@ -71,13 +71,10 @@ describe("clientPortalPageTitle", () => {
     assert.equal(clientPortalPageTitle("/client/settings/reviews"), "Your reviews");
   });
 
-  it("titles the standalone contact page like the vendor port does", () => {
-    assert.equal(clientPortalPageTitle("/client/contact"), "Contact us");
-  });
-
-  it("titles secondary routes and returns empty for unknown ones", () => {
+  it("titles secondary routes and returns no title for the standalone contact page or unknown routes", () => {
     assert.equal(clientPortalPageTitle("/client/notifications"), "Notifications");
     assert.equal(clientPortalPageTitle("/client/payments"), "Payment history");
+    assert.equal(clientPortalPageTitle("/client/contact"), "");
     assert.equal(clientPortalPageTitle("/client/nope"), "");
   });
 });

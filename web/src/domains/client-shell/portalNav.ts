@@ -46,7 +46,6 @@ const PAGE_TITLE_RULES: readonly { prefix: string; title: string }[] = [
   { prefix: "/client/favorites", title: "Favorites" },
   { prefix: "/client/planner", title: "Plan my celebration" },
   { prefix: "/client/browse", title: "Browse vendors" },
-  { prefix: "/client/contact", title: "Contact us" },
   { prefix: "/client/dashboard", title: "Dashboard" },
 ];
 
