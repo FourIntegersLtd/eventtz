@@ -13,7 +13,19 @@ import { FOOTER_ADDRESS_LINES, FOOTER_CONTACT_EMAIL, FOOTER_LEGAL_LINKS } from "
  * the final report) and belongs to the browse/marketplace workstream. This
  * shell keeps the same links and URLs without that presentation layer.
  */
-export function MarketingShell({ children }: { children: ReactNode }) {
+export function MarketingShell({
+  children,
+  width,
+}: {
+  children: ReactNode;
+  /**
+   * Browse list (`wide`, max-w-7xl) or vendor detail (`detail`, max-w-[90rem]).
+   * Omitted on marketing pages, which keep today's unframed main.
+   * Top padding is smaller than the baseline overlay offset because this header
+   * sits in normal document flow.
+   */
+  width?: "wide" | "detail";
+}) {
   return (
     <div className="flex min-h-dvh flex-col bg-page-bg text-neutral-900">
       <header className="sticky top-0 z-40 border-b border-primary-border/50 bg-white/90 backdrop-blur-md">
@@ -38,7 +50,19 @@ export function MarketingShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="flex-1">{children}</main>
+      <main className="flex-1">
+        {width == null ? (
+          children
+        ) : (
+          <div
+            className={`mx-auto w-full px-4 pb-8 sm:px-6 sm:pb-10 lg:px-8 ${
+              width === "detail" ? "max-w-[90rem] pt-6 sm:pt-8" : "max-w-7xl pt-6 sm:pt-8"
+            }`}
+          >
+            {children}
+          </div>
+        )}
+      </main>
 
       <footer className="border-t border-primary-border/60 bg-primary-soft/40">
         <div className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-10 text-sm text-neutral-600 sm:grid-cols-3 sm:px-6 lg:px-8">

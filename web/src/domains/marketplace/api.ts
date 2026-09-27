@@ -103,3 +103,30 @@ export async function mergeClientFavorites(vendorUserIds: string[]): Promise<num
   );
   return response.merged ?? 0;
 }
+
+// ---- Vendor profile ----------------------------------------------------------
+
+export type VendorReferralPreviewResponse = components["schemas"]["VendorReferralPreviewResponse"];
+export type VendorPublicReviewsResponse = components["schemas"]["VendorPublicReviewsResponse"];
+export type PublicReviewItem = components["schemas"]["PublicReviewItem"];
+
+/** What a referral code would take off the service fee for this spend. */
+export async function fetchVendorReferralPreview(
+  vendorUserId: string,
+  code: string,
+  vendorPortionGbp: number,
+): Promise<VendorReferralPreviewResponse> {
+  return platformRequest<VendorReferralPreviewResponse>(
+    `/api/v1/vendors/explore/vendor/${encodeURIComponent(vendorUserId)}/referral-preview`,
+    { query: { code, vendor_portion_gbp: vendorPortionGbp } },
+  );
+}
+
+/** A vendor's visible reviews, newest first. */
+export async function fetchVendorPublicReviews(
+  vendorUserId: string,
+): Promise<VendorPublicReviewsResponse> {
+  return platformRequest<VendorPublicReviewsResponse>(
+    `/api/v1/vendors/${encodeURIComponent(vendorUserId)}/reviews`,
+  );
+}

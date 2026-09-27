@@ -3,7 +3,6 @@
  * Ported from the baseline `marketplaceVendorMatch.ts`, simplified to the parts
  * of the baseline whose dependencies are already in web/.
  */
-import type { ExploreVendorSearchRow } from "./api";
 import type { MarketplaceSearchState } from "./marketplaceSearchParams";
 
 function servicesOffered(payload: Record<string, unknown>): string[] {
@@ -12,10 +11,16 @@ function servicesOffered(payload: Record<string, unknown>): string[] {
   return raw.map(String).map((s) => s.trim()).filter(Boolean);
 }
 
+type MatchableVendor = {
+  email?: string | null;
+  profile_form_data?: { [key: string]: unknown } | null;
+};
+
 /** Substring match against city, business name, services — mirrors backend search. */
+
 function locationMatchesVendor(
   locationQuery: string,
-  vendor: ExploreVendorSearchRow,
+  vendor: MatchableVendor,
   payload: Record<string, unknown>,
 ): boolean {
   const loc = locationQuery.trim().toLowerCase();
@@ -40,7 +45,7 @@ export type MarketplaceVendorMatchResult = {
  * dependencies (vendorAvailability, vendorDiscountDisplay) land in web/.
  */
 export function vendorMatchesMarketplaceSearch(
-  vendor: ExploreVendorSearchRow,
+  vendor: MatchableVendor,
   state: MarketplaceSearchState,
 ): MarketplaceVendorMatchResult {
   const reasons: string[] = [];
