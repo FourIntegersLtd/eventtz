@@ -5,6 +5,7 @@ import {
   counterpartyFieldLabel,
   counterpartyName,
   disputeDetailHref,
+  disputeMessagesHref,
   disputeResourcePath,
   disputesCollectionPath,
   disputesListHref,
@@ -45,4 +46,11 @@ test("counterpartyName reads the role's field and falls back to a dash", () => {
   );
   assert.equal(counterpartyName("client", { vendor_display_name: "  ", client_label: "Bob" }), "-");
   assert.equal(counterpartyName("vendor", { vendor_display_name: "Ada", client_label: null }), "-");
+});
+
+test("disputeMessagesHref opens the support thread on each portal's help hub, or nothing", () => {
+  assert.equal(disputeMessagesHref("client", "c/1"), "/client/help/messages/c%2F1");
+  assert.equal(disputeMessagesHref("vendor", "c1"), "/vendor/help/messages/c1");
+  assert.equal(disputeMessagesHref("client", null), null);
+  assert.equal(disputeMessagesHref("vendor", ""), null);
 });

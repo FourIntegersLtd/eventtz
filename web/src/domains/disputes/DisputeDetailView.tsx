@@ -17,6 +17,7 @@ import {
   bookingHref,
   counterpartyFieldLabel,
   counterpartyName,
+  disputeMessagesHref,
   disputesListHref,
   type DisputePortalRole,
 } from "@/domains/disputes/role";
@@ -84,6 +85,7 @@ export function DisputeDetailView({ role, disputeId }: { role: DisputePortalRole
 
 /** The loaded dispute: status, who opened it, the report, any outcome, and the booking link. */
 function DisputeDetailBody({ role, dispute }: { role: DisputePortalRole; dispute: DisputePublic }) {
+  const messagesHref = disputeMessagesHref(role, dispute.conversation_id);
   return (
     <div className="overflow-hidden rounded-2xl bg-white text-sm shadow-lg shadow-primary/5 ring-1 ring-primary-border">
       <div className="px-5 py-4">
@@ -128,13 +130,21 @@ function DisputeDetailBody({ role, dispute }: { role: DisputePortalRole; dispute
           </div>
         ) : null}
 
-        <div className="bg-primary/[0.04] px-5 py-4">
+        <div className="flex flex-wrap gap-2 bg-primary/[0.04] px-5 py-4">
           <Link
             href={bookingHref(role, dispute.booking_request_id)}
             className="inline-flex items-center justify-center rounded-xl bg-primary-soft px-4 py-2 text-sm font-semibold text-primary hover:bg-primary-muted"
           >
             Open booking
           </Link>
+          {messagesHref ? (
+            <Link
+              href={messagesHref}
+              className="inline-flex items-center justify-center rounded-xl bg-primary-soft px-4 py-2 text-sm font-semibold text-primary hover:bg-primary-muted"
+            >
+              Open messages
+            </Link>
+          ) : null}
         </div>
       </dl>
     </div>

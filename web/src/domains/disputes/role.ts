@@ -41,6 +41,17 @@ export function bookingHref(role: DisputePortalRole, bookingId: string): string 
 }
 
 /**
+ * The support thread staff opened for this dispute, on this portal's help
+ * hub, or null when there is none yet. Matches the baseline's "Open messages"
+ * button, which is hidden without a `conversation_id`.
+ */
+export function disputeMessagesHref(role: DisputePortalRole, conversationId: string | null | undefined): string | null {
+  if (!conversationId) return null;
+  const encodedId = encodeURIComponent(conversationId);
+  return role === "client" ? `/client/help/messages/${encodedId}` : `/vendor/help/messages/${encodedId}`;
+}
+
+/**
  * The other party on a dispute: a client is looking at the vendor, a vendor
  * at the client. Matches `ParticipantDisputeDetailPanel`.
  */
