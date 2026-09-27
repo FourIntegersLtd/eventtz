@@ -2,7 +2,7 @@
 # activated pyenv venv from hijacking poetry.
 RUN := env -u VIRTUAL_ENV poetry run
 
-.PHONY: install dev worker db-up db-down migrate migrate-down new-migration lint format typecheck arch guards test test-unit ci openapi acceptance parity
+.PHONY: install dev worker db-up db-down migrate migrate-down new-migration seed-admins lint format typecheck arch guards test test-unit ci openapi acceptance parity
 
 install:
 	env -u VIRTUAL_ENV POETRY_VIRTUALENVS_IN_PROJECT=true poetry install --extras dev --no-root
@@ -26,6 +26,10 @@ migrate:
 
 migrate-down:
 	$(RUN) alembic downgrade -1
+
+# Fixed @example.com admin accounts for local browser checks (compose DB only).
+seed-admins:
+	$(RUN) python -m scripts.seed_local_admins
 
 # Autogenerate, then review by hand: constraint and index changes are often missed.
 new-migration:
