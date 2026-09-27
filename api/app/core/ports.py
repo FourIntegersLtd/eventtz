@@ -302,7 +302,7 @@ class PaymentGateway(Protocol):
         ...
 
     async def retrieve_transfer(self, transfer_id: str) -> dict[str, Any]:
-        """One transfer (for its `destination` connected account id), used to recover an orphaned account."""
+        """One transfer (destination account id); used by restore-Connect (next20 piece 09)."""
         ...
 
     async def create_account_link(self, *, account_id: str, refresh_url: str, return_url: str) -> str:

@@ -19988,6 +19988,19 @@
               }
             },
             "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "receipt_stripe_verify_failed",
+            "x-codes": [
+              "receipt_stripe_verify_failed"
+            ]
           }
         },
         "security": [
@@ -20090,6 +20103,19 @@
               }
             },
             "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "receipt_stripe_verify_failed",
+            "x-codes": [
+              "receipt_stripe_verify_failed"
+            ]
           }
         },
         "security": [

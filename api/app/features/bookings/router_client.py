@@ -7,7 +7,7 @@ from fastapi.responses import HTMLResponse
 
 from app.core.auth import ROLE_ERRORS, CurrentClient
 from app.core.db import SessionDep
-from app.core.errors import error_responses
+from app.core.errors import Forbidden, error_responses
 from app.core.ports import (
     MailerDependency,
     PaymentGatewayDependency,
@@ -55,7 +55,9 @@ _RECEIPT_ERRORS = (
     errors.InvalidBookingId,
     errors.BookingNotFound,
     errors.ReceiptNotAvailable,
+    errors.ReceiptStripeVerifyPaymentIntentMissing,
     errors.ReceiptStripeVerifyFailed,
+    Forbidden,
 )
 
 

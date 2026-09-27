@@ -37,12 +37,17 @@ class ReceiptNotAvailable(NotFound):
     default_message = "No receipt is available for this booking yet."
 
 
-class ReceiptStripeVerifyFailed(NotFound):
-    """The client receipt route could not confirm the payment with Stripe (legacy path only).
+class ReceiptStripeVerifyPaymentIntentMissing(NotFound):
+    """No `pi_` on file and no frozen client snapshot yet (acceptance unpaid / legacy rows)."""
 
-    Only reached when a booking is paid but has no frozen receipt snapshot yet and
-    still carries a live `stripe_payment_intent_id` — normal payments freeze their
-    snapshot synchronously, so this should be rare.
+    code = "receipt_stripe_verify_failed"
+    default_message = "Unable to verify payment with Stripe. Please try again later."
+
+
+class ReceiptStripeVerifyFailed(Unavailable):
+    """Stripe could not confirm the payment (transient or amount mismatch); retry later.
+
+    When a frozen client snapshot exists, the route serves it instead of raising this.
     """
 
     code = "receipt_stripe_verify_failed"

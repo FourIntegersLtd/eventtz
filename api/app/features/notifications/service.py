@@ -9,6 +9,8 @@ from app.core.ports import Mailer, OutgoingEmail
 from app.core.settings import get_settings
 from app.features.notifications.domain import (
     APP_NAME,
+    COMPANY_LEGAL_NAME,
+    SUPPORT_EMAIL,
     AdminAlert,
     admin_alert_context,
     contact_submitted_alert,
@@ -37,16 +39,13 @@ from app.features.notifications.rendering import render_template
 log = get_logger(__name__)
 
 
-def render_receipt_document(payload: dict[str, object]) -> str:
-    """Server-generated receipt HTML (client receipt, vendor payment record or payout statement)."""
-    from app.features.notifications.domain import COMPANY_LEGAL_NAME, SUPPORT_EMAIL
-    from app.features.notifications.domain_receipt_documents import receipt_document_context
+def receipt_document_branding() -> dict[str, str]:
+    """Legal footer lines for server-generated receipt HTML."""
+    return {"company_legal_name": COMPANY_LEGAL_NAME, "support_email": SUPPORT_EMAIL}
 
-    context: dict[str, object] = {
-        **receipt_document_context(dict(payload)),
-        "company_legal_name": COMPANY_LEGAL_NAME,
-        "support_email": SUPPORT_EMAIL,
-    }
+
+def render_receipt_document_html(context: dict[str, object]) -> str:
+    """Render a receipt payload context to HTML (templates live in this slice)."""
     return render_template("booking/receipt_document.html", context)
 
 

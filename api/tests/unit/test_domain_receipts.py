@@ -48,7 +48,7 @@ def test_receipt_number_format() -> None:
 def test_client_receipt_uses_payment_snapshot_amounts() -> None:
     booking = _paid_row()
     out = domain_receipts.build_client_payment_receipt(
-        booking, pb=_pricing(booking), vendor_display_name="Ada Events"
+        booking, pricing_breakdown=_pricing(booking), vendor_display_name="Ada Events"
     )
     assert out["document_type"] == "client_payment_receipt"
     assert out["total_label"] == "GBP 525"
@@ -61,14 +61,14 @@ def test_client_receipt_rejects_unpaid() -> None:
     booking = _paid_row(payment_status="unpaid")
     with pytest.raises(ReceiptNotAvailable):
         domain_receipts.build_client_payment_receipt(
-            booking, pb=_pricing(booking), vendor_display_name="Vendor"
+            booking, pricing_breakdown=_pricing(booking), vendor_display_name="Vendor"
         )
 
 
 def test_vendor_payment_record_shows_vendor_share() -> None:
     booking = _paid_row()
     out = domain_receipts.build_vendor_payment_record(
-        booking, pb=_pricing(booking), client_display_name="Jane"
+        booking, pricing_breakdown=_pricing(booking), client_display_name="Jane"
     )
     assert out["document_type"] == "vendor_payment_record"
     assert out["total_label"] == "GBP 500"
@@ -80,7 +80,7 @@ def test_vendor_payout_statement_requires_payout_released() -> None:
     booking = _paid_row(payment_status="paid")
     with pytest.raises(ReceiptNotAvailable):
         domain_receipts.build_vendor_payout_statement(
-            booking, pb=_pricing(booking), client_display_name="Jane"
+            booking, pricing_breakdown=_pricing(booking), client_display_name="Jane"
         )
 
 
@@ -91,7 +91,7 @@ def test_vendor_payout_statement_includes_transfer_ref() -> None:
         stripe_transfer_id="tr_transfer12345678",
     )
     out = domain_receipts.build_vendor_payout_statement(
-        booking, pb=_pricing(booking), client_display_name="Jane"
+        booking, pricing_breakdown=_pricing(booking), client_display_name="Jane"
     )
     assert out["document_type"] == "vendor_payout_statement"
     assert out["transfer_reference"] == "…12345678"
@@ -101,7 +101,7 @@ def test_vendor_payout_statement_includes_transfer_ref() -> None:
 def test_refunded_receipt_has_status_note() -> None:
     booking = _paid_row(payment_status="refunded")
     out = domain_receipts.build_client_payment_receipt(
-        booking, pb=_pricing(booking), vendor_display_name="Vendor"
+        booking, pricing_breakdown=_pricing(booking), vendor_display_name="Vendor"
     )
     assert out["status_note"] == "This payment was refunded in full."
 
@@ -130,7 +130,7 @@ def test_frozen_snapshot_preserves_line_items_when_booking_changes() -> None:
         booking=booking,
         document_type="client_payment_receipt",
         build_live=lambda: domain_receipts.build_client_payment_receipt(
-            booking, pb=_pricing(booking), vendor_display_name="Ada Events"
+            booking, pricing_breakdown=_pricing(booking), vendor_display_name="Ada Events"
         ),
     )
     assert out["total_label"] == "GBP 525"
@@ -140,7 +140,7 @@ def test_frozen_snapshot_preserves_line_items_when_booking_changes() -> None:
 def test_vendor_payment_record_after_payout_shows_released_note() -> None:
     booking = _paid_row(payment_status="payout_released")
     out = domain_receipts.build_vendor_payment_record(
-        booking, pb=_pricing(booking), client_display_name="Jane"
+        booking, pricing_breakdown=_pricing(booking), client_display_name="Jane"
     )
     assert "released" in (out["status_note"] or "").lower()
     assert "held safely" not in (out["status_note"] or "").lower()
@@ -172,7 +172,7 @@ def test_frozen_client_receipt_hides_payout_date_after_vendor_payout() -> None:
         booking=booking,
         document_type="client_payment_receipt",
         build_live=lambda: domain_receipts.build_client_payment_receipt(
-            booking, pb=_pricing(booking), vendor_display_name="Ada Events"
+            booking, pricing_breakdown=_pricing(booking), vendor_display_name="Ada Events"
         ),
     )
     assert out["payout_released_at"] is None
@@ -215,20 +215,17 @@ def test_client_receipt_live_lines_include_referral_discount() -> None:
         payment_amount_gbp=515.0,
         platform_fee_gbp=15.0,
     )
-    owners = {"254106": booking.vendor_user_id}
-    pb = service_pricing.breakdown_for(
-        booking,
-        owners,
-        vendor_adjustments=[],
-    )
-    pb = pricing_domain.build_pricing_breakdown(
+
+    pricing_breakdown = pricing_domain.build_pricing_breakdown(
         line_items=booking.line_items,
         vendor_adjustments=[],
         service_fee_percent=5.0,
         referral_fee_discount_gbp=10.0,
         referral_tier_min_spend_gbp=100.0,
     ).to_dict()
-    out = domain_receipts.build_client_payment_receipt(booking, pb=pb, vendor_display_name="Ada Events")
+    out = domain_receipts.build_client_payment_receipt(
+        booking, pricing_breakdown=pricing_breakdown, vendor_display_name="Ada Events"
+    )
     assert out["total_label"] == "GBP 515"
     assert any(line["label"] == "Referral discount" for line in out["line_items"])
     assert any(

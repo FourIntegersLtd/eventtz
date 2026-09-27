@@ -24,7 +24,7 @@ _UNKNOWN_CLIENT_NAME = "Client"
 
 
 def _format_gbp(amount: float) -> str:
-    """Money label matching the pricing slice (`GBP 12` or `GBP 12.50`)."""
+    """Money label matching `pricing.domain.format_gbp` (duplicated: domain cannot import pricing)."""
     if math.isnan(amount):
         return "GBP 0.00"
     text = f"{amount:.2f}"
@@ -86,7 +86,7 @@ def _line_item_label(line_item: dict[str, Any]) -> str:
 
 
 def _receipt_lines(
-    *, line_items: list[Any], pb: dict[str, Any], include_service_fee: bool
+    *, line_items: list[Any], pricing_breakdown: dict[str, Any], include_service_fee: bool
 ) -> list[dict[str, str]]:
     """The quoted lines, the vendor's extras/discounts, and (for the client) the service fee line(s)."""
     lines: list[dict[str, str]] = []
@@ -104,7 +104,7 @@ def _receipt_lines(
             continue
         lines.append({"label": _line_item_label(raw_item), "amount_label": _format_gbp(amount)})
 
-    for adjustment in pb.get("vendor_adjustments") or []:
+    for adjustment in pricing_breakdown.get("vendor_adjustments") or []:
         if not isinstance(adjustment, dict):
             continue
         label = str(adjustment.get("label") or "Adjustment").strip() or "Adjustment"
@@ -116,19 +116,19 @@ def _receipt_lines(
         lines.append({"label": label, "amount_label": _format_gbp(amount)})
 
     if include_service_fee:
-        fee = pb.get("service_fee_gbp")
+        fee = pricing_breakdown.get("service_fee_gbp")
         if fee is not None:
             try:
                 fee_f = float(fee)
-                percent = pb.get("service_fee_percent")
+                percent = pricing_breakdown.get("service_fee_percent")
                 percent_f = float(percent) if percent is not None else None
                 fee_label = (
                     f"Eventtz service fee ({percent_f:g}%)"
                     if percent_f is not None
                     else "Eventtz service fee"
                 )
-                discount = pb.get("referral_fee_discount_gbp")
-                fee_before = pb.get("service_fee_before_discount_gbp")
+                discount = pricing_breakdown.get("referral_fee_discount_gbp")
+                fee_before = pricing_breakdown.get("service_fee_before_discount_gbp")
                 if discount and float(discount) > 0 and fee_before is not None:
                     lines.append({"label": fee_label, "amount_label": _format_gbp(float(fee_before))})
                     lines.append(
@@ -166,7 +166,10 @@ def _vendor_payment_record_status_note(payment_status: str) -> str | None:
 
 
 def _amount(
-    booking: ReceiptBookingRow, column: str, fallback_pb_key: str | None, pb: dict[str, Any]
+    booking: ReceiptBookingRow,
+    column: str,
+    fallback_breakdown_key: str | None,
+    pricing_breakdown: dict[str, Any],
 ) -> float | None:
     """The amount stored on the booking row, or the freshly priced equivalent when it is missing."""
     raw = getattr(booking, column, None)
@@ -175,9 +178,9 @@ def _amount(
             return float(raw)
         except (TypeError, ValueError):
             pass
-    if fallback_pb_key and pb.get(fallback_pb_key) is not None:
+    if fallback_breakdown_key and pricing_breakdown.get(fallback_breakdown_key) is not None:
         try:
-            return float(pb[fallback_pb_key])
+            return float(pricing_breakdown[fallback_breakdown_key])
         except (TypeError, ValueError):
             pass
     return None
@@ -190,15 +193,17 @@ def require_eligible(payment_status: str, *, allowed: frozenset[str]) -> None:
 
 
 def build_client_payment_receipt(
-    booking: ReceiptBookingRow, *, pb: dict[str, Any], vendor_display_name: str
+    booking: ReceiptBookingRow, *, pricing_breakdown: dict[str, Any], vendor_display_name: str
 ) -> dict[str, Any]:
     """The client's payment receipt, built fresh from the booking's price today."""
     require_eligible(booking.payment_status, allowed=RECEIPT_ELIGIBLE_STATUSES)
-    payment_amount = _amount(booking, "payment_amount_gbp", "client_total_gbp", pb)
+    payment_amount = _amount(booking, "payment_amount_gbp", "client_total_gbp", pricing_breakdown)
     total_label = (
-        _format_gbp(payment_amount) if payment_amount is not None else str(pb.get("client_total_label") or "")
+        _format_gbp(payment_amount)
+        if payment_amount is not None
+        else str(pricing_breakdown.get("client_total_label") or "")
     )
-    percent = pb.get("service_fee_percent")
+    percent = pricing_breakdown.get("service_fee_percent")
     return {
         "document_type": "client_payment_receipt",
         "receipt_number": receipt_number(booking.id),
@@ -209,9 +214,11 @@ def build_client_payment_receipt(
         "paid_at": booking.paid_at,
         "payout_released_at": None,
         "counterparty_name": vendor_display_name,
-        "line_items": _receipt_lines(line_items=booking.line_items, pb=pb, include_service_fee=True),
-        "subtotal_label": str(pb.get("vendor_portion_label") or ""),
-        "service_fee_label": str(pb.get("service_fee_label") or ""),
+        "line_items": _receipt_lines(
+            line_items=booking.line_items, pricing_breakdown=pricing_breakdown, include_service_fee=True
+        ),
+        "subtotal_label": str(pricing_breakdown.get("vendor_portion_label") or ""),
+        "service_fee_label": str(pricing_breakdown.get("service_fee_label") or ""),
         "service_fee_percent": float(percent) if percent is not None else None,
         "total_label": total_label,
         "vendor_share_label": None,
@@ -226,14 +233,16 @@ def build_client_payment_receipt(
 
 
 def build_vendor_payment_record(
-    booking: ReceiptBookingRow, *, pb: dict[str, Any], client_display_name: str
+    booking: ReceiptBookingRow, *, pricing_breakdown: dict[str, Any], client_display_name: str
 ) -> dict[str, Any]:
     """The vendor's payment record, built fresh from the booking's price today."""
     require_eligible(booking.payment_status, allowed=RECEIPT_ELIGIBLE_STATUSES)
-    vendor_amount = _amount(booking, "vendor_amount_gbp", "vendor_portion_gbp", pb)
-    platform_fee = _amount(booking, "platform_fee_gbp", "service_fee_gbp", pb)
+    vendor_amount = _amount(booking, "vendor_amount_gbp", "vendor_portion_gbp", pricing_breakdown)
+    platform_fee = _amount(booking, "platform_fee_gbp", "service_fee_gbp", pricing_breakdown)
     total_label = (
-        _format_gbp(vendor_amount) if vendor_amount is not None else str(pb.get("vendor_portion_label") or "")
+        _format_gbp(vendor_amount)
+        if vendor_amount is not None
+        else str(pricing_breakdown.get("vendor_portion_label") or "")
     )
     return {
         "document_type": "vendor_payment_record",
@@ -245,15 +254,17 @@ def build_vendor_payment_record(
         "paid_at": booking.paid_at,
         "payout_released_at": None,
         "counterparty_name": client_display_name or _UNKNOWN_CLIENT_NAME,
-        "line_items": _receipt_lines(line_items=booking.line_items, pb=pb, include_service_fee=False),
-        "subtotal_label": str(pb.get("vendor_portion_label") or ""),
+        "line_items": _receipt_lines(
+            line_items=booking.line_items, pricing_breakdown=pricing_breakdown, include_service_fee=False
+        ),
+        "subtotal_label": str(pricing_breakdown.get("vendor_portion_label") or ""),
         "service_fee_label": None,
         "service_fee_percent": None,
         "total_label": total_label,
         "vendor_share_label": total_label,
         "platform_fee_label": _format_gbp(platform_fee)
         if platform_fee is not None
-        else str(pb.get("service_fee_label") or ""),
+        else str(pricing_breakdown.get("service_fee_label") or ""),
         "payment_reference": payment_reference(booking.stripe_charge_id),
         "transfer_reference": None,
         "stripe_receipt_url": None,
@@ -262,13 +273,15 @@ def build_vendor_payment_record(
 
 
 def build_vendor_payout_statement(
-    booking: ReceiptBookingRow, *, pb: dict[str, Any], client_display_name: str
+    booking: ReceiptBookingRow, *, pricing_breakdown: dict[str, Any], client_display_name: str
 ) -> dict[str, Any]:
     """The vendor's payout statement, built fresh once the transfer has been made."""
     require_eligible(booking.payment_status, allowed=PAYOUT_STATEMENT_STATUSES)
-    vendor_amount = _amount(booking, "vendor_amount_gbp", "vendor_portion_gbp", pb)
+    vendor_amount = _amount(booking, "vendor_amount_gbp", "vendor_portion_gbp", pricing_breakdown)
     total_label = (
-        _format_gbp(vendor_amount) if vendor_amount is not None else str(pb.get("vendor_portion_label") or "")
+        _format_gbp(vendor_amount)
+        if vendor_amount is not None
+        else str(pricing_breakdown.get("vendor_portion_label") or "")
     )
     return {
         "document_type": "vendor_payout_statement",

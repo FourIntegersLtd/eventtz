@@ -15,6 +15,7 @@ from app.features.bookings.errors import (
     BookingNotFound,
     ReceiptNotAvailable,
     ReceiptStripeVerifyFailed,
+    ReceiptStripeVerifyPaymentIntentMissing,
 )
 from app.features.bookings.rows import ReceiptBookingRow
 from app.features.bookings.schemas_receipts import PaymentReceiptPayload, PaymentReceiptResponse
@@ -24,6 +25,7 @@ from app.features.vendors import service_listing
 log = get_logger(__name__)
 
 _UNKNOWN_VENDOR_NAME = "Vendor"
+_PAYMENT_NOT_COMPLETED = "Payment is not completed"
 
 
 def _has_frozen_client_receipt(booking: ReceiptBookingRow) -> bool:
@@ -37,6 +39,12 @@ def _amount_pence(amount_gbp: float) -> int:
     return int(round(amount_gbp * 100))
 
 
+def _abort_stripe_verify_unless_frozen(has_frozen: bool) -> None:
+    """Raise 503 when verify fails and there is no frozen client snapshot to serve."""
+    if not has_frozen:
+        raise ReceiptStripeVerifyFailed()
+
+
 async def _verify_client_receipt_with_stripe(gateway: PaymentGateway, booking: ReceiptBookingRow) -> None:
     """Re-fetch Stripe for legacy rows that have no frozen client snapshot yet."""
     has_frozen = _has_frozen_client_receipt(booking)
@@ -44,7 +52,7 @@ async def _verify_client_receipt_with_stripe(gateway: PaymentGateway, booking: R
     if not payment_intent_id.startswith("pi_"):
         if has_frozen:
             return
-        raise ReceiptStripeVerifyFailed()
+        raise ReceiptStripeVerifyPaymentIntentMissing()
 
     expected_amount: float | None
     try:
@@ -66,12 +74,12 @@ async def _verify_client_receipt_with_stripe(gateway: PaymentGateway, booking: R
                 payment_intent_id,
             )
             return
-        if has_frozen and error.http_status >= 500:
+        if has_frozen:
             return
         raise ReceiptStripeVerifyFailed() from error
 
     if str(payment_intent.get("status") or "") != "succeeded":
-        raise Forbidden(message="Payment is not completed.")
+        raise Forbidden(message=_PAYMENT_NOT_COMPLETED)
 
     if expected_amount is None:
         return
@@ -79,8 +87,9 @@ async def _verify_client_receipt_with_stripe(gateway: PaymentGateway, booking: R
     try:
         amount_received_pence = int(payment_intent.get("amount_received") or 0)
         expected_pence = _amount_pence(expected_amount)
-    except (TypeError, ValueError) as error:
-        raise ReceiptStripeVerifyFailed() from error
+    except (TypeError, ValueError):
+        _abort_stripe_verify_unless_frozen(has_frozen)
+        return
 
     if amount_received_pence != expected_pence:
         log.warning(
@@ -90,7 +99,7 @@ async def _verify_client_receipt_with_stripe(gateway: PaymentGateway, booking: R
             amount_received_pence,
             expected_pence,
         )
-        raise ReceiptStripeVerifyFailed()
+        _abort_stripe_verify_unless_frozen(has_frozen)
 
 
 def payment_receipt_response(payload: dict[str, Any]) -> PaymentReceiptResponse:
@@ -125,6 +134,47 @@ async def _booking_for_vendor(
     return booking
 
 
+async def _client_receipt_payload(session: AsyncSession, booking: ReceiptBookingRow) -> dict[str, Any]:
+    """Build or return the stored client receipt without pricing when frozen."""
+    frozen = domain_receipts.frozen_payload_from_row(booking, "client_payment_receipt")
+    if frozen is not None:
+        return domain_receipts.overlay_live_payment_status(frozen, booking)
+    vendor_names = await service_listing.display_names(session, [booking.vendor_user_id])
+    vendor_name = vendor_names.get(booking.vendor_user_id, _UNKNOWN_VENDOR_NAME)
+    pricing_breakdown = (await service_pricing.current_breakdown(session, booking)).to_dict()
+    return domain_receipts.build_client_payment_receipt(
+        booking, pricing_breakdown=pricing_breakdown, vendor_display_name=vendor_name
+    )
+
+
+async def _vendor_payment_record_payload(session: AsyncSession, booking: ReceiptBookingRow) -> dict[str, Any]:
+    """Build or return the stored vendor payment record without pricing when frozen."""
+    frozen = domain_receipts.frozen_payload_from_row(booking, "vendor_payment_record")
+    if frozen is not None:
+        return domain_receipts.overlay_live_payment_status(frozen, booking)
+    client_names = await identity.client_display_names(session, [booking.client_user_id])
+    client_name = client_names.get(booking.client_user_id, "Client")
+    pricing_breakdown = (await service_pricing.current_breakdown(session, booking)).to_dict()
+    return domain_receipts.build_vendor_payment_record(
+        booking, pricing_breakdown=pricing_breakdown, client_display_name=client_name
+    )
+
+
+async def _vendor_payout_statement_payload(
+    session: AsyncSession, booking: ReceiptBookingRow
+) -> dict[str, Any]:
+    """Build or return the stored payout statement without pricing when frozen."""
+    frozen = domain_receipts.frozen_payload_from_row(booking, "vendor_payout_statement")
+    if frozen is not None:
+        return domain_receipts.overlay_live_payment_status(frozen, booking)
+    client_names = await identity.client_display_names(session, [booking.client_user_id])
+    client_name = client_names.get(booking.client_user_id, "Client")
+    pricing_breakdown = (await service_pricing.current_breakdown(session, booking)).to_dict()
+    return domain_receipts.build_vendor_payout_statement(
+        booking, pricing_breakdown=pricing_breakdown, client_display_name=client_name
+    )
+
+
 async def client_receipt(
     session: AsyncSession,
     gateway: PaymentGateway,
@@ -135,20 +185,7 @@ async def client_receipt(
     """The client's payment receipt JSON payload."""
     booking = await _booking_for_client(session, client_user_id=client_user_id, booking_id=booking_id)
     await _verify_client_receipt_with_stripe(gateway, booking)
-    vendor_names = await service_listing.display_names(session, [booking.vendor_user_id])
-    vendor_name = vendor_names.get(booking.vendor_user_id, _UNKNOWN_VENDOR_NAME)
-    pricing = (await service_pricing.current_breakdown(session, booking)).to_dict()
-
-    try:
-        return domain_receipts.payload_from_frozen_or_build(
-            booking=booking,
-            document_type="client_payment_receipt",
-            build_live=lambda: domain_receipts.build_client_payment_receipt(
-                booking, pb=pricing, vendor_display_name=vendor_name
-            ),
-        )
-    except ReceiptNotAvailable:
-        raise
+    return await _client_receipt_payload(session, booking)
 
 
 async def vendor_payment_record(
@@ -159,20 +196,7 @@ async def vendor_payment_record(
 ) -> dict[str, Any]:
     """The vendor's payment record JSON payload."""
     booking = await _booking_for_vendor(session, vendor_user_id=vendor_user_id, booking_id=booking_id)
-    client_names = await identity.client_display_names(session, [booking.client_user_id])
-    client_name = client_names.get(booking.client_user_id, "Client")
-    pricing = (await service_pricing.current_breakdown(session, booking)).to_dict()
-
-    try:
-        return domain_receipts.payload_from_frozen_or_build(
-            booking=booking,
-            document_type="vendor_payment_record",
-            build_live=lambda: domain_receipts.build_vendor_payment_record(
-                booking, pb=pricing, client_display_name=client_name
-            ),
-        )
-    except ReceiptNotAvailable:
-        raise
+    return await _vendor_payment_record_payload(session, booking)
 
 
 async def vendor_payout_statement(
@@ -183,24 +207,15 @@ async def vendor_payout_statement(
 ) -> dict[str, Any]:
     """The vendor's payout statement JSON payload."""
     booking = await _booking_for_vendor(session, vendor_user_id=vendor_user_id, booking_id=booking_id)
-    client_names = await identity.client_display_names(session, [booking.client_user_id])
-    client_name = client_names.get(booking.client_user_id, "Client")
-    pricing = (await service_pricing.current_breakdown(session, booking)).to_dict()
-
-    try:
-        return domain_receipts.payload_from_frozen_or_build(
-            booking=booking,
-            document_type="vendor_payout_statement",
-            build_live=lambda: domain_receipts.build_vendor_payout_statement(
-                booking, pb=pricing, client_display_name=client_name
-            ),
-        )
-    except ReceiptNotAvailable:
-        raise
+    return await _vendor_payout_statement_payload(session, booking)
 
 
 def render_receipt_html(payload: dict[str, Any]) -> str:
     """HTML for a receipt document, byte-for-byte like the baseline renderer."""
     from app.features.notifications import service as notifications_service
 
-    return notifications_service.render_receipt_document(payload)
+    context: dict[str, object] = {
+        **domain_receipts.receipt_email_context(payload),
+        **notifications_service.receipt_document_branding(),
+    }
+    return notifications_service.render_receipt_document_html(context)
