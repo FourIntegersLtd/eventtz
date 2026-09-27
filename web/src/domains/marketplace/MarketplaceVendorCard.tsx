@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * One vendor result on browse or favorites.
+ * A signed-in client can add the card to a shared enquiry. Guests only open the profile.
+ */
 import Link from "next/link";
 import type { ExpandedSearchCard } from "./marketplaceSearchModel";
 import { VENDOR_SERVICE_OPTIONS } from "./vendorServiceOptions";
@@ -16,9 +20,28 @@ function labelForService(value: string): string {
 export const marketplaceVendorCardGridClass =
   "grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 sm:gap-7 lg:grid-cols-3 lg:gap-8";
 
-type Props = { card: ExpandedSearchCard; vendorDetailHref?: string; bookmarked?: boolean; onToggleBookmark?: () => void; showBookmark?: boolean };
+type Props = {
+  card: ExpandedSearchCard;
+  vendorDetailHref?: string;
+  bookmarked?: boolean;
+  onToggleBookmark?: () => void;
+  showBookmark?: boolean;
+  selectable?: boolean;
+  selected?: boolean;
+  onToggleSelect?: () => void;
+};
 
-export function MarketplaceVendorCard({ card, vendorDetailHref, bookmarked = false, onToggleBookmark, showBookmark = true }: Props) {
+/** Profile link, save control, and the optional "add to message" toggle. */
+export function MarketplaceVendorCard({
+  card,
+  vendorDetailHref,
+  bookmarked = false,
+  onToggleBookmark,
+  showBookmark = true,
+  selectable = false,
+  selected = false,
+  onToggleSelect,
+}: Props) {
   const vendor = card.vendor;
   const href = vendorDetailHref ?? `/client/browse/${vendor.user_id}`;
   const payload = (vendor.profile_form_data ?? {}) as Record<string, unknown>;
@@ -43,7 +66,7 @@ export function MarketplaceVendorCard({ card, vendorDetailHref, bookmarked = fal
   const replyLabel = avg != null && avg <= REPLY_CHIP_MAX_SECONDS ? formatUsualReplyWithin(avg) : null;
   const coverUrl = listingCoverImageUrlFromPayload(payload);
 return (
-    <Link href={href} className="group flex h-full flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white transition hover:shadow-md">
+    <Link href={href} className={`group flex h-full flex-col overflow-hidden rounded-2xl border bg-white transition hover:shadow-md ${selected ? "border-primary ring-2 ring-primary/35" : "border-neutral-200"}`}>
       {coverUrl ? (
         <div className="relative aspect-[16/10] w-full overflow-hidden bg-neutral-100">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -86,8 +109,29 @@ return (
           <p className="font-heading text-lg font-semibold text-primary">
             {minPrice != null ? (<><span className="text-sm font-medium text-primry/65">From </span>{formatMoney(minPrice, market.currency)}</>) : (<span className="text-sm font-medium text-primry/65">View pricing</span>)}
           </p>
-          <span className="text-[11px] font-semibold tracking-[0.12em] text-primry/80 uppercase">View profile</span>
+          {selectable ? null : (
+            <span className="text-[11px] font-semibold tracking-[0.12em] text-primry/80 uppercase">View profile</span>
+          )}
         </div>
+        {selectable ? (
+          <button
+            type="button"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              onToggleSelect?.();
+            }}
+            className={`mt-2 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
+              selected
+                ? "bg-primary text-white shadow-sm"
+                : "border border-primary/30 bg-white text-primary hover:border-primary"
+            }`}
+            aria-pressed={selected}
+          >
+            {selected ? "Added - message together" : "Add to message"}
+          </button>
+        ) : null}
       </div>
     </Link>
   );

@@ -45,6 +45,8 @@ function searchContextRecord(
   if (context.dateFlexible) record.dateFlexible = context.dateFlexible;
   if (context.source) record.source = context.source;
   if (context.plannerPlanId) record.plannerPlanId = context.plannerPlanId;
+  if (context.batchSize != null) record.batchSize = context.batchSize;
+  if (context.batchIndex != null) record.batchIndex = context.batchIndex;
   return record;
 }
 

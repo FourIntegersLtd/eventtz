@@ -177,8 +177,12 @@ export type ClientSearchContext = {
   country?: string;
   dates?: string[];
   dateFlexible?: boolean;
-  source?: "browse" | "planner";
+  source?: "browse" | "planner" | "multi";
   plannerPlanId?: string;
+  /** How many vendors share this brief. Set only on a multi-vendor send. */
+  batchSize?: number;
+  /** Zero-based place of this vendor in that send. */
+  batchIndex?: number;
 };
 
 function toClientSearchContext(state: MarketplaceSearchState): ClientSearchContext {

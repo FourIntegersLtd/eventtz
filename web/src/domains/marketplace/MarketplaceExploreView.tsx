@@ -17,7 +17,8 @@ import {
 import { expandVendorsForSearchResults } from "./marketplaceSearchModel";
 import { planOptionsLabel } from "./marketplacePlanCopy";
 import type { ExploreSearchSection } from "./api";
-import { Spinner } from "@/foundation/ui";
+import { Button, Spinner } from "@/foundation/ui";
+import { MultiVendorEnquireModal } from "./MultiVendorEnquireModal";
 
 function planSeeMoreHref(
   pathname: string,
@@ -64,6 +65,18 @@ export function MarketplaceExploreView({
     sections,
     matchNotice,
     displayCount,
+    router,
+    isClient,
+    selectedVendors,
+    selectedCount,
+    clearSelection,
+    multiEnquireOpen,
+    setMultiEnquireOpen,
+    searchPrefill,
+    planEventPrefill,
+    multiEnquireContext,
+    openMultiEnquire,
+    cardSelectProps,
   } = explore;
 
   const pagination =
@@ -109,6 +122,7 @@ export function MarketplaceExploreView({
             vendorDetailHref={buildClientBrowseVendorUrl(card.vendor.user_id, state)}
             bookmarked={isSaved(card.vendor.user_id)}
             onToggleBookmark={() => toggle(card.vendor.user_id)}
+            {...cardSelectProps(card.vendor)}
           />
         ))}
       </div>
@@ -176,6 +190,7 @@ export function MarketplaceExploreView({
                     vendorDetailHref={buildClientBrowseVendorUrl(card.vendor.user_id, state)}
                     bookmarked={isSaved(card.vendor.user_id)}
                     onToggleBookmark={() => toggle(card.vendor.user_id)}
+                    {...cardSelectProps(card.vendor)}
                   />
                 ))}
               </div>
@@ -201,6 +216,7 @@ export function MarketplaceExploreView({
               vendorDetailHref={buildClientBrowseVendorUrl(card.vendor.user_id, state)}
               bookmarked={isSaved(card.vendor.user_id)}
               onToggleBookmark={() => toggle(card.vendor.user_id)}
+              {...cardSelectProps(card.vendor)}
             />
           ))}
         </div>
@@ -219,6 +235,7 @@ export function MarketplaceExploreView({
                 vendorDetailHref={buildClientBrowseVendorUrl(card.vendor.user_id, state)}
                 bookmarked={isSaved(card.vendor.user_id)}
                 onToggleBookmark={() => toggle(card.vendor.user_id)}
+                {...cardSelectProps(card.vendor)}
               />
             ))}
           </div>
@@ -245,7 +262,8 @@ export function MarketplaceExploreView({
 
       {state.fromPlannerPlanId && !loading ? (
         <div className="mt-4 rounded-xl border border-primary/15 bg-[#faf8fc] px-4 py-3 text-sm text-neutral-800">
-          From your celebration plan — open a vendor to pick packages.
+          From your celebration plan - open a vendor to pick packages, or select several and
+          message them together.
         </div>
       ) : null}
 
@@ -279,6 +297,40 @@ export function MarketplaceExploreView({
       </div>
 
       {resultsBody}
+
+      {isClient && selectedCount > 0 ? (
+        <div className="sticky bottom-4 z-30 mx-auto mt-6 flex max-w-xl flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/25 bg-white px-4 py-3 shadow-lg ring-1 ring-primary/10">
+          <p className="text-sm font-semibold text-neutral-900">{selectedCount} selected</p>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="secondary" onClick={clearSelection}>
+              Clear
+            </Button>
+            <Button type="button" variant="primary" onClick={openMultiEnquire} disabled={selectedCount < 1}>
+              Message {selectedCount} together
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
+      {multiEnquireOpen && selectedCount > 0 ? (
+        <MultiVendorEnquireModal
+          key={selectedVendors.map((vendor) => vendor.user_id).join("|")}
+          vendors={selectedVendors}
+          clientSearchContext={multiEnquireContext}
+          enquirySource={state.fromPlannerPlanId ? "planner" : "multi"}
+          searchPrefill={searchPrefill}
+          initialPrefill={planEventPrefill}
+          linkedEventId={state.linkedEventId}
+          onClose={() => setMultiEnquireOpen(false)}
+          onSuccess={(createdIds) => {
+            setMultiEnquireOpen(false);
+            clearSelection();
+            router.push(
+              createdIds.length === 1 ? `/client/bookings/${createdIds[0]}` : "/client/bookings",
+            );
+          }}
+        />
+      ) : null}
     </div>
   );
 }

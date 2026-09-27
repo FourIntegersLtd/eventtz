@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSession } from "@/foundation/session";
 import {
   fetchExploreVendorsSearch,
   type ExploreSearchPlan,
@@ -10,11 +11,15 @@ import {
 } from "./api";
 import {
   buildMarketplaceSearchUrl,
+  clientSearchContextFromBrowse,
+  eventEnquirePrefillFromMarketplaceState,
+  marketplaceSearchPrefillFromState,
   marketplaceStateFromSearchParams,
   marketplaceStateToExploreQuery,
   MARKETPLACE_PAGE_SIZE,
   type MarketplaceSearchState,
 } from "./marketplaceSearchParams";
+import { clearSelectedVendors, listSelectedVendors, toggleSelectedVendor } from "./marketplaceSelection";
 import {
   buildMarketplaceResultsHeadline,
   expandVendorsForSearchResults,
@@ -56,6 +61,10 @@ export function useMarketplaceExplore(mode: "browse" | "favorites" = "browse") {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
+  const { session } = useSession();
+  const isClient = session?.user.user_type === "client";
+  const [selectedById, setSelectedById] = useState<Record<string, ExploreVendorSearchRow>>({});
+  const [multiEnquireOpen, setMultiEnquireOpen] = useState(false);
 
   const state = useMemo(() => marketplaceStateFromSearchParams(searchParams), [searchParams]);
   const fetchKey = searchParams.toString();
@@ -196,6 +205,51 @@ export function useMarketplaceExplore(mode: "browse" | "favorites" = "browse") {
     [commit, state],
   );
 
+  const selectedVendors = useMemo(() => listSelectedVendors(selectedById), [selectedById]);
+  const selectedCount = selectedVendors.length;
+
+  const toggleSelect = useCallback((vendor: ExploreVendorSearchRow) => {
+    setSelectedById((previous) => toggleSelectedVendor(previous, vendor));
+  }, []);
+
+  const clearSelection = useCallback(() => {
+    setSelectedById(clearSelectedVendors());
+  }, []);
+
+  const searchPrefill = useMemo(() => marketplaceSearchPrefillFromState(state), [state]);
+
+  const planEventPrefill = useMemo(() => {
+    const fromPlanner = eventEnquirePrefillFromMarketplaceState(state);
+    if (fromPlanner) return fromPlanner;
+    if (searchMode !== "plan" || !plan?.title?.trim()) return null;
+    return {
+      eventName: plan.title.trim(),
+      eventDate: searchPrefill.eventDate || "",
+      eventEndDate: searchPrefill.eventEndDate || "",
+      venueAddress: state.location.trim(),
+      notes: "",
+    };
+  }, [state, searchMode, plan, searchPrefill]);
+
+  const multiEnquireContext = useMemo(() => clientSearchContextFromBrowse(state), [state]);
+
+  const openMultiEnquire = useCallback(() => {
+    setMultiEnquireOpen(true);
+  }, []);
+
+  /** Select control props for a signed-in client. Guests get none. */
+  const cardSelectProps = useCallback(
+    (vendor: ExploreVendorSearchRow) =>
+      isClient
+        ? {
+            selectable: true as const,
+            selected: Boolean(selectedById[vendor.user_id]),
+            onToggleSelect: () => toggleSelect(vendor),
+          }
+        : {},
+    [isClient, selectedById, toggleSelect],
+  );
+
   return {
     pathname,
     router,
@@ -221,5 +275,16 @@ export function useMarketplaceExplore(mode: "browse" | "favorites" = "browse") {
     displayCount,
     exactCards,
     alsoConsiderCards,
+    isClient,
+    selectedVendors,
+    selectedCount,
+    clearSelection,
+    multiEnquireOpen,
+    setMultiEnquireOpen,
+    searchPrefill,
+    planEventPrefill,
+    multiEnquireContext,
+    openMultiEnquire,
+    cardSelectProps,
   };
 }
