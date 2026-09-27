@@ -4,14 +4,35 @@ from __future__ import annotations
 
 from typing import Any
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, text
+from sqlalchemy.ext.asyncio import AsyncSession, AsyncSessionTransaction
 
 from app.core.db import as_uuid, plain_row
 from app.features.bookings import repository
 from app.features.bookings.models import BookingRequest
 from app.features.bookings.repository import BOOKING_COLUMNS
 from app.features.bookings.rows import ReceiptBookingRow
+
+# Tests set this to a booking id to run ``SELECT 1/0`` inside the freeze savepoint.
+savepoint_test_force_sql_error_booking_id: str | None = None
+
+
+def receipt_freeze_savepoint(session: AsyncSession) -> AsyncSessionTransaction:
+    """A savepoint around receipt snapshot writes and their emails.
+
+    Freeze runs in the same transaction as marking a booking paid or releasing a
+    payout. A database error there would abort the whole transaction and undo the
+    money write unless it is confined to this savepoint.
+    """
+    return session.begin_nested()
+
+
+async def _maybe_inject_savepoint_test_db_error(session: AsyncSession, booking_id: str) -> None:
+    """Fail the current statement when a test armed ``savepoint_test_force_sql_error_booking_id``."""
+    if booking_id != savepoint_test_force_sql_error_booking_id:
+        return
+    await session.execute(text("SELECT 1/0"))
+
 
 RECEIPT_COLUMNS = (
     *BOOKING_COLUMNS,

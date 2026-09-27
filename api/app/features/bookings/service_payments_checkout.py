@@ -20,7 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.logging import get_logger
 from app.core.ports import Mailer, PaymentGateway, PaymentGatewayError, PaymentsUnavailable
 from app.core.settings import get_settings
-from app.features.bookings import domain_payments, repository, service_pricing
+from app.features.bookings import domain_payments, repository, service_pricing, service_receipts
 from app.features.bookings.errors import (
     BookingNoLongerPayable,
     CheckoutAlreadyPaid,
@@ -382,8 +382,6 @@ async def finalize_checkout_session(
         booking_value_gbp=payment_amount_gbp,
     )
     try:
-        from app.features.bookings import service_receipts
-
         await service_receipts.freeze_after_checkout(session, mailer, booking_id)
     except Exception:
         log.warning("bookings: receipt freeze after checkout failed booking=%s", booking_id, exc_info=True)

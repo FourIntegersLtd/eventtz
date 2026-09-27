@@ -20,6 +20,7 @@ from app.features.bookings.errors import (
 from app.features.bookings.rows import ReceiptBookingRow
 from app.features.bookings.schemas_receipts import PaymentReceiptPayload, PaymentReceiptResponse
 from app.features.identity import service as identity
+from app.features.notifications import service as notifications_service
 from app.features.vendors import service_listing
 
 log = get_logger(__name__)
@@ -221,12 +222,9 @@ def render_receipt_html(payload: dict[str, Any]) -> str:
     return notifications_service.render_receipt_document_html(context)
 
 
-async def freeze_after_checkout(session: AsyncSession, mailer: Mailer, booking_id: str) -> None:
-    """Write-once client and vendor payment documents, then email both parties (baseline checkout hook)."""
-    from app.features.identity import service as identity
-    from app.features.notifications import service as notifications_service
-    from app.features.vendors import service_listing
-
+async def _freeze_after_checkout_body(session: AsyncSession, mailer: Mailer, booking_id: str) -> None:
+    """Build snapshots, persist them write-once, and email client and vendor."""
+    await repository_receipts._maybe_inject_savepoint_test_db_error(session, booking_id)
     booking = await repository_receipts.get_booking_for_receipt(session, booking_id)
     if booking is None:
         return
@@ -270,11 +268,20 @@ async def freeze_after_checkout(session: AsyncSession, mailer: Mailer, booking_i
             )
 
 
-async def freeze_after_payout(session: AsyncSession, mailer: Mailer, booking_id: str) -> None:
-    """Write-once payout statement and email the vendor (baseline payout release hook)."""
-    from app.features.identity import service as identity
-    from app.features.notifications import service as notifications_service
+async def freeze_after_checkout(
+    session: AsyncSession, mailer: Mailer, booking_id: str, *, _use_savepoint: bool = True
+) -> None:
+    """Write-once client and vendor payment documents, then email both parties (baseline checkout hook)."""
+    if _use_savepoint:
+        async with repository_receipts.receipt_freeze_savepoint(session):
+            await _freeze_after_checkout_body(session, mailer, booking_id)
+    else:
+        await _freeze_after_checkout_body(session, mailer, booking_id)
 
+
+async def _freeze_after_payout_body(session: AsyncSession, mailer: Mailer, booking_id: str) -> None:
+    """Build the payout statement snapshot, persist it write-once, and email the vendor."""
+    await repository_receipts._maybe_inject_savepoint_test_db_error(session, booking_id)
     booking = await repository_receipts.get_booking_for_receipt(session, booking_id)
     if booking is None:
         return
@@ -304,3 +311,14 @@ async def freeze_after_payout(session: AsyncSession, mailer: Mailer, booking_id:
             booking.vendor_user_id,
             exc_info=True,
         )
+
+
+async def freeze_after_payout(
+    session: AsyncSession, mailer: Mailer, booking_id: str, *, _use_savepoint: bool = True
+) -> None:
+    """Write-once payout statement and email the vendor (baseline payout release hook)."""
+    if _use_savepoint:
+        async with repository_receipts.receipt_freeze_savepoint(session):
+            await _freeze_after_payout_body(session, mailer, booking_id)
+    else:
+        await _freeze_after_payout_body(session, mailer, booking_id)

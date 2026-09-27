@@ -10,13 +10,20 @@ from typing import Any
 import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
+from sqlalchemy import text
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import issue_access_token
 from app.core.ports import mailer_port
 from app.core.settings import Settings, get_settings
 from app.features.bookings import repository as bookings_repository
-from app.features.bookings import repository_receipts, service_payments_checkout
+from app.features.bookings import (
+    repository_receipts,
+    service_payments,
+    service_payments_checkout,
+    service_receipts,
+)
 from app.features.bookings.rows import BookingRow
 from app.features.identity import repository as identity_repository
 from app.features.payments import domain as payments_domain
@@ -350,3 +357,93 @@ async def test_receipt_email_failure_does_not_block_checkout_finalize(
     booking = await _receipt_row(db_session, booking_id)
     assert (await _booking(db_session, booking_id)).payment_status == "paid"
     assert isinstance(booking.payment_receipt_snapshot, dict)
+
+
+@pytest.mark.asyncio
+async def test_checkout_finalize_keeps_paid_when_receipt_freeze_hits_db_error(
+    db_session: AsyncSession, payment_gateway: FakePaymentGateway, mailer: FakeMailer
+) -> None:
+    """A database error inside the freeze savepoint must not roll back ``payment_status = paid``."""
+    client_id, _ = await _make_account(db_session, "savepoint-checkout-client@example.com", "client")
+    vendor_id = await _make_vendor(db_session, "savepoint-checkout-vendor@example.com")
+    booking_id = await _make_booking(
+        db_session,
+        client_id=client_id,
+        vendor_id=vendor_id,
+        stripe_checkout_session_id="cs_savepoint_checkout",
+    )
+    checkout_session = _completed_session(
+        "cs_savepoint_checkout", booking_id=booking_id, client_id=client_id, vendor_id=vendor_id
+    )
+    payment_gateway.objects["ch_receipt_freeze"] = {"id": "ch_receipt_freeze", "receipt_url": None}
+    repository_receipts.savepoint_test_force_sql_error_booking_id = booking_id
+    try:
+        marked = await service_payments_checkout.finalize_checkout_session(
+            db_session, mailer, payment_gateway, checkout_session
+        )
+        assert marked is True
+        stored = await _booking(db_session, booking_id)
+        assert stored.payment_status == "paid"
+        assert stored.paid_at is not None
+        await db_session.execute(text("SELECT 1"))
+    finally:
+        repository_receipts.savepoint_test_force_sql_error_booking_id = None
+
+
+@pytest.mark.asyncio
+async def test_payout_release_keeps_payout_released_when_receipt_freeze_hits_db_error(
+    db_session: AsyncSession, payment_gateway: FakePaymentGateway, mailer: FakeMailer
+) -> None:
+    """A database error inside the freeze savepoint must not roll back ``payout_released``."""
+    client_id, _ = await _make_account(db_session, "savepoint-payout-client@example.com", "client")
+    vendor_id = await _make_vendor(db_session, "savepoint-payout-vendor@example.com", stripe_ready=True)
+    booking_id = await _make_booking(
+        db_session,
+        client_id=client_id,
+        vendor_id=vendor_id,
+        payment_status="paid",
+        payment_amount_gbp=157.5,
+        vendor_amount_gbp=150.0,
+        platform_fee_gbp=7.5,
+        stripe_payment_intent_id="pi_savepoint_payout",
+        stripe_charge_id="ch_savepoint_payout",
+        client_completion_confirmed_at=datetime(2020, 6, 2, tzinfo=UTC),
+        vendor_completion_confirmed_at=datetime(2020, 6, 2, tzinfo=UTC),
+    )
+    repository_receipts.savepoint_test_force_sql_error_booking_id = booking_id
+    try:
+        await service_payments.release_vendor_payout(
+            db_session, mailer, payment_gateway, booking_id=booking_id
+        )
+        stored = await _booking(db_session, booking_id)
+        assert stored.payment_status == "payout_released"
+        await db_session.execute(text("SELECT 1"))
+    finally:
+        repository_receipts.savepoint_test_force_sql_error_booking_id = None
+
+
+@pytest.mark.asyncio
+async def test_receipt_freeze_db_error_without_savepoint_aborts_the_transaction(
+    db_session: AsyncSession, mailer: FakeMailer
+) -> None:
+    """Without the savepoint, ``SELECT 1/0`` in the freeze aborts the outer transaction (see report)."""
+    client_id, _ = await _make_account(db_session, "no-savepoint-client@example.com", "client")
+    vendor_id = await _make_vendor(db_session, "no-savepoint-vendor@example.com")
+    booking_id = await _make_booking(
+        db_session,
+        client_id=client_id,
+        vendor_id=vendor_id,
+        payment_status="paid",
+        payment_amount_gbp=157.5,
+        vendor_amount_gbp=150.0,
+        stripe_payment_intent_id="pi_no_savepoint",
+        stripe_charge_id="ch_no_savepoint",
+    )
+    repository_receipts.savepoint_test_force_sql_error_booking_id = booking_id
+    try:
+        with pytest.raises(DBAPIError):
+            await service_receipts.freeze_after_checkout(db_session, mailer, booking_id, _use_savepoint=False)
+        with pytest.raises(DBAPIError):
+            await db_session.execute(text("SELECT 1"))
+    finally:
+        repository_receipts.savepoint_test_force_sql_error_booking_id = None
