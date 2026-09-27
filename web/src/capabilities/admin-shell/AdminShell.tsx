@@ -102,7 +102,7 @@ function ShellChrome({ title, children }: { title: string; children: ReactNode }
   return (
     <div className="min-h-dvh bg-white text-neutral-900">
       <header className="z-30 flex items-center justify-between gap-3 border-b border-primary-border bg-white px-3 py-2 md:hidden">
-        <p className="truncate text-sm font-semibold text-neutral-900">{title}</p>
+        <h1 className="truncate text-sm font-semibold text-neutral-900">{title}</h1>
         <button
           type="button"
           aria-expanded={mobileNavOpen}
@@ -165,7 +165,7 @@ function ShellChrome({ title, children }: { title: string; children: ReactNode }
         </aside>
         <div className="flex flex-col">
           <header className="hidden border-b border-primary-border bg-white px-4 py-4 md:block md:px-8">
-            <h1 className="text-lg font-semibold text-neutral-900">{title}</h1>
+            <h1 className="text-lg font-semibold text-neutral-900 md:block">{title}</h1>
           </header>
           <main className="flex-1 p-4 md:p-8">{children}</main>
         </div>

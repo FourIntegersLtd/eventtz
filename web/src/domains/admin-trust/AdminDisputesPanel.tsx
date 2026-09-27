@@ -82,9 +82,9 @@ export function AdminDisputesPanel() {
   }
 
   async function handleResolveFinancially(disputeId: string) {
-    const validationError = validateDisputeFinancialResolution(resolutionAction, refundAmount);
-    if (validationError) {
-      setError(validationError);
+    const validated = validateDisputeFinancialResolution(resolutionAction, refundAmount, resolutionNote);
+    if ("error" in validated) {
+      setError(validated.error);
       return;
     }
     const action = resolutionAction;
@@ -96,7 +96,7 @@ export function AdminDisputesPanel() {
         status: "resolved",
         resolution_action: action,
         resolution_note: resolutionNote || null,
-        refund_amount_gbp: action === "partial_refund" ? Number(refundAmount) : null,
+        refund_amount_gbp: validated.refundAmountGbp,
       });
       setDisputes((current) => current.map((dispute) => (dispute.id === disputeId ? updated : dispute)));
       setNotice("Dispute resolved.");
