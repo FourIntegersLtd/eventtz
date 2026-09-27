@@ -45,7 +45,7 @@ function ToggleRow({
  * tabbed `SettingsView`: sign-out, referrals and account deletion are other
  * slices' work and are not duplicated here.
  */
-export function SettingsView({ role }: { role: SettingsRole }) {
+export function SettingsView({ role, extraSections }: { role: SettingsRole; extraSections?: ReactNode }) {
   const { session } = useSession();
   const [settings, setSettings] = useState<ContactSharingSettings | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -175,6 +175,8 @@ export function SettingsView({ role }: { role: SettingsRole }) {
         {!saving && saveError ? <p className="mt-3 text-sm text-red-700">{saveError}</p> : null}
         {!saving && saveNote ? <p className="mt-3 text-sm text-emerald-700">{saveNote}</p> : null}
       </Card>
+
+      {extraSections}
     </div>
   );
 }

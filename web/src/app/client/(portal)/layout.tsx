@@ -9,6 +9,8 @@ import {
   isClientNavActive,
 } from "@/domains/client-shell/portalNav";
 import { PortalShell } from "@/surfaces/portal-shell/PortalShell";
+import { ClientOnboardingProvider } from "@/domains/client-onboarding/ClientOnboardingProvider";
+import { ClientWelcomeOnboardingModal } from "@/domains/client-onboarding/ClientWelcomeOnboardingModal";
 
 /**
  * Every authenticated client route shares this shell: sign-in required and
@@ -23,15 +25,18 @@ export default function ClientPortalLayout({ children }: { children: ReactNode }
   return (
     <RequireSession>
       <RequireCapability permission="access_client_portal">
-        <PortalShell
-          homeHref="/client/dashboard"
-          items={clientNavItems()}
-          isNavActive={isClientNavActive}
-          pageTitle={clientPortalPageTitle}
-          hidePageTitleOnMobile={clientHidePageTitleOnMobile}
-        >
-          {children}
-        </PortalShell>
+        <ClientOnboardingProvider>
+          <PortalShell
+            homeHref="/client/dashboard"
+            items={clientNavItems()}
+            isNavActive={isClientNavActive}
+            pageTitle={clientPortalPageTitle}
+            hidePageTitleOnMobile={clientHidePageTitleOnMobile}
+          >
+            {children}
+          </PortalShell>
+          <ClientWelcomeOnboardingModal />
+        </ClientOnboardingProvider>
       </RequireCapability>
     </RequireSession>
   );
