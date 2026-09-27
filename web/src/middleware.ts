@@ -14,9 +14,13 @@ import { NextResponse, type NextRequest } from "next/server";
 const RETIRED_REDIRECTS: Record<string, string> = {};
 
 function contentSecurityPolicy(): string {
+  // `next dev` evaluates its bundles with eval(); without this no client code
+  // runs locally and every page stays on its first server-rendered frame.
+  // Production builds do not eval, so they keep the stricter policy.
+  const devEval = process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : "";
   return [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline'",
+    `script-src 'self' 'unsafe-inline'${devEval}`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https:",
     "font-src 'self' data:",
