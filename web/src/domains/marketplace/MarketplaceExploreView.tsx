@@ -46,7 +46,6 @@ export function MarketplaceExploreView({
   const {
     pathname,
     state,
-    fetchKey,
     loading,
     error,
     totalCount,
@@ -241,13 +240,12 @@ export function MarketplaceExploreView({
       {bookmarkErrorBanner}
 
       {!savedOnly ? (
-        <MarketplaceFiltersBar key={fetchKey} state={state} onCommit={commit} />
+        <MarketplaceFiltersBar state={state} onCommit={commit} />
       ) : null}
 
       {state.fromPlannerPlanId && !loading ? (
         <div className="mt-4 rounded-xl border border-primary/15 bg-[#faf8fc] px-4 py-3 text-sm text-neutral-800">
-          From your celebration plan — open a vendor to pick packages, or select several and message
-          them together.
+          From your celebration plan — open a vendor to pick packages.
         </div>
       ) : null}
 

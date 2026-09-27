@@ -9,6 +9,10 @@ import {
 import { MarketplaceDateFilterFields } from "./MarketplaceDateFilterFields";
 import type { MarketplaceSearchState } from "./marketplaceSearchParams";
 import {
+  buildMarketplaceClearedFilterState,
+  marketplaceActiveFilterCount,
+} from "./marketplaceFilterState";
+import {
   budgetFilterLabel,
   formatCurrencySymbol,
   formatMoney,
@@ -31,32 +35,49 @@ type MarketplaceFiltersBarProps = {
   onCommit: (next: MarketplaceSearchState) => void;
 };
 
-function activeFilterCount(state: MarketplaceSearchState): number {
-  let count = 0;
-  if (state.types.length > 0) count += 1;
-  if (state.location.trim()) count += 1;
-  if (state.budgetMin != null || state.budgetMax != null) count += 1;
-  if (state.dates.length > 0 || state.dateFlexible) count += 1;
-  return count;
+function budgetStringFromState(value: number | null): string {
+  return value != null ? String(value) : "";
 }
 
 /** Browse filters: search, category, location, dates, budget, sort, and clear. */
 export function MarketplaceFiltersBar({ state, onCommit }: MarketplaceFiltersBarProps) {
-  const [queryDraft, setQueryDraft] = useState(state.query);
   const [extraOpen, setExtraOpen] = useState(false);
-  const [minBudget, setMinBudget] = useState(
-    () => (state.budgetMin != null ? String(state.budgetMin) : ""),
-  );
-  const [maxBudget, setMaxBudget] = useState(
-    () => (state.budgetMax != null ? String(state.budgetMax) : ""),
-  );
   const [budgetError, setBudgetError] = useState<string | null>(null);
+
+  const [committedQuery, setCommittedQuery] = useState(state.query);
+  const [queryDraft, setQueryDraft] = useState(state.query);
+  if (state.query !== committedQuery) {
+    setCommittedQuery(state.query);
+    setQueryDraft(state.query);
+  }
+
+  const [committedLocation, setCommittedLocation] = useState(state.location);
   const [locationDraft, setLocationDraft] = useState(state.location);
+  if (state.location !== committedLocation) {
+    setCommittedLocation(state.location);
+    setLocationDraft(state.location);
+  }
+
+  const urlMinBudget = budgetStringFromState(state.budgetMin);
+  const urlMaxBudget = budgetStringFromState(state.budgetMax);
+  const [committedMinBudget, setCommittedMinBudget] = useState(urlMinBudget);
+  const [minBudget, setMinBudget] = useState(urlMinBudget);
+  if (urlMinBudget !== committedMinBudget) {
+    setCommittedMinBudget(urlMinBudget);
+    setMinBudget(urlMinBudget);
+  }
+
+  const [committedMaxBudget, setCommittedMaxBudget] = useState(urlMaxBudget);
+  const [maxBudget, setMaxBudget] = useState(urlMaxBudget);
+  if (urlMaxBudget !== committedMaxBudget) {
+    setCommittedMaxBudget(urlMaxBudget);
+    setMaxBudget(urlMaxBudget);
+  }
 
   const { counts: categoryCounts } = useCategoryVendorCounts();
   const market = getMarket(state.country);
   const currencySymbol = formatCurrencySymbol(market.currency);
-  const filterCount = activeFilterCount(state);
+  const filterCount = marketplaceActiveFilterCount(state);
 
   const commitBudget = () => {
     const validated = validateMarketplaceBudget({ min: minBudget, max: maxBudget });
@@ -65,6 +86,12 @@ export function MarketplaceFiltersBar({ state, onCommit }: MarketplaceFiltersBar
       return;
     }
     setBudgetError(null);
+    if (
+      validated.budgetMin === state.budgetMin &&
+      validated.budgetMax === state.budgetMax
+    ) {
+      return;
+    }
     onCommit({
       ...state,
       budgetMin: validated.budgetMin,
@@ -73,24 +100,22 @@ export function MarketplaceFiltersBar({ state, onCommit }: MarketplaceFiltersBar
     });
   };
 
+  const commitLocation = () => {
+    const trimmed = locationDraft.trim();
+    if (trimmed === state.location.trim()) return;
+    onCommit({ ...state, location: trimmed, page: 1 });
+  };
+
   const clearAllFilters = () => {
-    onCommit({
-      ...state,
-      query: "",
-      types: [],
-      location: "",
-      dates: [],
-      dateFlexible: false,
-      budgetMin: null,
-      budgetMax: null,
-      sort: "relevance",
-      page: 1,
-    });
-    setQueryDraft("");
+    const cleared = buildMarketplaceClearedFilterState(state);
+    onCommit(cleared);
+    setLocationDraft("");
+    setCommittedLocation("");
     setMinBudget("");
     setMaxBudget("");
+    setCommittedMinBudget("");
+    setCommittedMaxBudget("");
     setBudgetError(null);
-    setLocationDraft("");
   };
 
   const hasBudget = state.budgetMin != null || state.budgetMax != null;
@@ -229,9 +254,7 @@ export function MarketplaceFiltersBar({ state, onCommit }: MarketplaceFiltersBar
             value={locationDraft}
             placeholder="City or area"
             onChange={(event) => setLocationDraft(event.target.value)}
-            onBlur={() =>
-              onCommit({ ...state, location: locationDraft.trim(), page: 1 })
-            }
+            onBlur={commitLocation}
           />
         </section>
 

@@ -1,13 +1,13 @@
 "use client";
 
+import { marketplacePaginationWindow } from "./marketplacePaginationWindow";
+
 type MarketplacePaginationProps = {
   page: number;
   totalCount: number;
   pageSize: number;
   onPageChange: (page: number) => void;
 };
-
-import { marketplacePaginationWindow } from "./marketplacePaginationWindow";
 
 const squareBtn = "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-40";
 
