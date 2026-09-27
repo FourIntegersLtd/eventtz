@@ -65,8 +65,11 @@ HELD_UNTIL_RELEASE_NOTE = (
 PAYOUT_SENT_NOTE = "Payout sent to your connected Stripe account. Bank arrival times depend on your bank."
 FROZEN_STRIPE_ACCOUNT_ID = "acct_acceptancefrozen01"
 CHARGE_ID = "ch_acceptancecharge12345678"
-TRANSFER_ID = "tr_acceptance12345678"
+TRANSFER_ID = "tr_acceptance87654321"
 PAYMENT_REFERENCE = "…12345678"
+TRANSFER_REFERENCE = "…87654321"
+REFUNDED_IN_FULL_NOTE = "This payment was refunded in full."
+PARTIALLY_REFUNDED_NOTE = "This payment was partially refunded."
 
 
 def _assert_error(response: httpx.Response, status: int, detail: str, api_code: str) -> None:
@@ -295,7 +298,6 @@ def test_client_receipt_returns_the_frozen_snapshot(admin_db: Client) -> None:
         client_user_id=client_account.user_id,
         vendor_user_id=vendor_account.user_id,
         payment_status="paid",
-        extra_fields={"payment_receipt_snapshot": _frozen_client_receipt("pending")},
     )
     admin_db.table("booking_requests").update(
         {"payment_receipt_snapshot": _frozen_client_receipt(booking_id)}
@@ -426,6 +428,44 @@ def test_vendor_payment_record_returns_the_vendor_share(admin_db: Client) -> Non
     assert receipt["status_note"] == HELD_UNTIL_RELEASE_NOTE
 
 
+def test_vendor_payment_record_for_a_full_refund_notes_the_refund(admin_db: Client) -> None:
+    """`refunded` is eligible and says the payment was refunded in full."""
+    client_account = _seed_named_client(admin_db, "prec-refunded-client")
+    vendor_account = _seed_bookable_vendor(admin_db, "prec-refunded")
+    booking_id = _seed_booking_row(
+        admin_db,
+        client_user_id=client_account.user_id,
+        vendor_user_id=vendor_account.user_id,
+        payment_status="refunded",
+        extra_fields=_vendor_money_fields(),
+    )
+    browser = sign_in(vendor_account)
+    response = browser.get(_payment_record_url(booking_id))
+    assert response.status_code == 200
+    receipt = response.json()["receipt"]
+    assert receipt["payment_status"] == "refunded"
+    assert receipt["status_note"] == REFUNDED_IN_FULL_NOTE
+
+
+def test_vendor_payment_record_for_a_partial_refund_notes_the_refund(admin_db: Client) -> None:
+    """`partially_refunded` is eligible and says the payment was partially refunded."""
+    client_account = _seed_named_client(admin_db, "prec-partial-client")
+    vendor_account = _seed_bookable_vendor(admin_db, "prec-partial")
+    booking_id = _seed_booking_row(
+        admin_db,
+        client_user_id=client_account.user_id,
+        vendor_user_id=vendor_account.user_id,
+        payment_status="partially_refunded",
+        extra_fields=_vendor_money_fields(),
+    )
+    browser = sign_in(vendor_account)
+    response = browser.get(_payment_record_url(booking_id))
+    assert response.status_code == 200
+    receipt = response.json()["receipt"]
+    assert receipt["payment_status"] == "partially_refunded"
+    assert receipt["status_note"] == PARTIALLY_REFUNDED_NOTE
+
+
 def test_vendor_payment_record_html_is_an_attachment(admin_db: Client) -> None:
     """The HTML download is named `payment-record-{receipt_number}.html`."""
     client_account = _seed_named_client(admin_db, "prec-html-client")
@@ -495,7 +535,8 @@ def test_vendor_payout_statement_returns_the_released_share(admin_db: Client) ->
     assert receipt["vendor_share_label"] == VENDOR_SHARE_LABEL
     assert receipt["platform_fee_label"] is None
     assert receipt["line_items"] == [{"label": "Vendor share", "amount_label": VENDOR_SHARE_LABEL}]
-    assert receipt["transfer_reference"] == PAYMENT_REFERENCE
+    assert receipt["payment_reference"] == PAYMENT_REFERENCE
+    assert receipt["transfer_reference"] == TRANSFER_REFERENCE
     assert receipt["payout_released_at"] == PAYOUT_RELEASED_AT
     assert receipt["status_note"] == PAYOUT_SENT_NOTE
 
