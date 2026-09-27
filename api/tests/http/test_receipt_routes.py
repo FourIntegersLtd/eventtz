@@ -237,6 +237,10 @@ async def test_unfrozen_client_receipt_amount_mismatch_is_unavailable(
 async def test_frozen_client_receipt_skips_live_pricing(
     client: AsyncClient, db_session: AsyncSession, payment_gateway: FakePaymentGateway
 ) -> None:
+    """Frozen snapshot is served without Stripe verify.
+
+    Control without a snapshot: `test_unfrozen_client_receipt_stripe_500_is_unavailable`.
+    """
     client_id, token = await _account(db_session, "frozen-price@example.com", "client")
     vendor_id, _ = await _vendor(db_session, "frozen-price-vendor@example.com")
     booking_id = await _paid_booking(
@@ -246,10 +250,11 @@ async def test_frozen_client_receipt_skips_live_pricing(
         stripe_payment_intent_id="pi_frozen_price",
         line_items=[{"heading": "Broken", "unit_price_gbp": "not-a-number"}],
     )
+    receipt_number = domain_receipts.receipt_number(booking_id)
     await bookings_repository.update_booking(
         db_session,
         booking_id,
-        {"payment_receipt_snapshot": _client_snapshot(booking_id)},
+        {"payment_receipt_snapshot": _client_snapshot(booking_id, receipt_number=receipt_number)},
         payment_status_in={"paid"},
     )
     payment_gateway.error = PaymentGatewayError("down", http_status=500)
@@ -258,6 +263,9 @@ async def test_frozen_client_receipt_skips_live_pricing(
         headers={"Authorization": f"Bearer {token}"},
     )
     assert response.status_code == 200
+    body = response.json()["receipt"]
+    assert body["receipt_number"] == receipt_number
+    assert body["total_label"] == "GBP 157.50"
 
 
 @pytest.mark.asyncio

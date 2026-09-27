@@ -450,6 +450,24 @@ def booking_portal_path(portal: Portal, booking_id: str) -> str:
     return f"/{portal}/bookings/{booking_id}"
 
 
+def receipt_email_headlines(document_type: str, receipt_number: str) -> tuple[str, str]:
+    """The headline and subtitle for a receipt email (matches baseline `receipt_context_for_email`)."""
+    if document_type == "client_payment_receipt":
+        return "Your payment receipt", f"Receipt {receipt_number}"
+    if document_type == "vendor_payment_record":
+        return "Payment received", f"Record {receipt_number}"
+    return "Payout statement", f"Statement {receipt_number}"
+
+
+def receipt_action_path(document_type: str, booking_id: str) -> str:
+    """Where the receipt email's button opens in the web app."""
+    if document_type == "client_payment_receipt":
+        return f"/client/bookings/{booking_id}/receipt"
+    if document_type == "vendor_payment_record":
+        return f"/vendor/bookings/{booking_id}/payment-record"
+    return f"/vendor/bookings/{booking_id}/payout-statement"
+
+
 def booking_email_template_id(kind: str) -> str:
     """The `email_delivery_log.template_id` for a booking email of this kind."""
     return f"booking.{kind}"

@@ -1,0 +1,110 @@
+[
+  {
+    "id": "client_payment_receipt",
+    "payload": {
+      "document_type": "client_payment_receipt",
+      "receipt_number": "EVT-A1B2C3D4",
+      "booking_request_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "event_name": "Summer party",
+      "event_date": "2026-09-15",
+      "payment_status": "paid",
+      "paid_at": "2026-08-21T12:00:00+00:00",
+      "payout_released_at": null,
+      "counterparty_name": "Ada Events",
+      "line_items": [
+        {
+          "label": "Gold package",
+          "amount_label": "GBP 500"
+        }
+      ],
+      "subtotal_label": "GBP 500",
+      "service_fee_label": "GBP 25",
+      "service_fee_percent": 5.0,
+      "total_label": "GBP 525",
+      "vendor_share_label": null,
+      "platform_fee_label": null,
+      "payment_reference": "\u202612345678",
+      "transfer_reference": null,
+      "stripe_receipt_url": null,
+      "status_note": null
+    },
+    "to": [
+      "client@example.com"
+    ],
+    "subject": "Your payment receipt | Eventtz",
+    "html": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <title>Your payment receipt</title>\n  </head>\n  <body\n    style=\"\n      margin: 0;\n      padding: 0;\n      width: 100%;\n      background-color: #ffffff;\n      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,\n        sans-serif;\n      color: #1d1d1f;\n      -webkit-font-smoothing: antialiased;\n    \"\n  >\n    <table\n      role=\"presentation\"\n      cellpadding=\"0\"\n      cellspacing=\"0\"\n      border=\"0\"\n      width=\"100%\"\n      style=\"width: 100%; background-color: #ffffff\"\n    >\n      <tr>\n        <td align=\"center\" style=\"padding: 0; margin: 0\">\n          <table\n            role=\"presentation\"\n            cellpadding=\"0\"\n            cellspacing=\"0\"\n            border=\"0\"\n            width=\"100%\"\n            style=\"max-width: 600px; width: 100%; background-color: #ffffff\"\n          >\n            <tr>\n              <td style=\"background-color: #ffffff; padding: 16px 20px; text-align: center\">\n                \n                <img\n                  src=\"https://eventtz.s3.eu-west-2.amazonaws.com/email/eventtz-logo.png\"\n                  alt=\"Eventtz\"\n                  width=\"160\"\n                  style=\"display: block; margin: 0 auto; max-width: 160px; height: auto; border: 0\"\n                />\n                \n                \n              </td>\n            </tr>\n            <tr>\n              <td style=\"padding: 8px 20px 24px; background-color: #ffffff\">\n                \n<h1 style=\"margin: 0 0 8px; color: #1d1d1f; font-size: 26px; line-height: 1.25; font-weight: 600\">\n  Your payment receipt\n</h1>\n\n<p style=\"margin: 0 0 20px; color: #6e6e73; font-size: 15px; line-height: 1.6\">Receipt EVT-A1B2C3D4</p>\n\n<p style=\"margin: 0 0 8px; color: #1d1d1f; font-size: 15px; line-height: 1.65\">\n  <strong>Summer party</strong>\n   \u00b7 2026-09-15\n</p>\n<p style=\"margin: 0 0 16px; color: #6e6e73; font-size: 14px; line-height: 1.6\">\n  \n  Vendor: Ada Events\n  \n  <br />Paid: 2026-08-21\n  <br />Payment ref: \u202612345678\n  \n</p>\n<table\n  role=\"presentation\"\n  cellpadding=\"0\"\n  cellspacing=\"0\"\n  border=\"0\"\n  width=\"100%\"\n  style=\"width: 100%; margin: 16px 0; border-collapse: collapse\"\n>\n  <tr>\n    <th\n      align=\"left\"\n      style=\"\n        padding: 10px 0;\n        border-bottom: 1px solid #e8e4ef;\n        color: #6b6575;\n        font-size: 12px;\n        font-weight: 600;\n        text-transform: uppercase;\n        letter-spacing: 0.04em;\n      \"\n    >\n      Description\n    </th>\n    <th\n      align=\"right\"\n      style=\"\n        padding: 10px 0;\n        border-bottom: 1px solid #e8e4ef;\n        color: #6b6575;\n        font-size: 12px;\n        font-weight: 600;\n        text-transform: uppercase;\n        letter-spacing: 0.04em;\n      \"\n    >\n      Amount\n    </th>\n  </tr>\n  \n  <tr>\n    <td style=\"padding: 10px 0; border-bottom: 1px solid #f3f0f8; color: #2d2938; font-size: 14px\">\n      Gold package\n    </td>\n    <td\n      align=\"right\"\n      style=\"\n        padding: 10px 0;\n        border-bottom: 1px solid #f3f0f8;\n        color: #2d2938;\n        font-size: 14px;\n        white-space: nowrap;\n      \"\n    >\n      GBP 500\n    </td>\n  </tr>\n  \n  <tr>\n    <td style=\"padding: 14px 0 0; color: #3e1964; font-size: 15px; font-weight: 700\">Total</td>\n    <td\n      align=\"right\"\n      style=\"padding: 14px 0 0; color: #3e1964; font-size: 15px; font-weight: 700; white-space: nowrap\"\n    >\n      GBP 525\n    </td>\n  </tr>\n</table>\n\n\n<p style=\"margin: 24px 0 0\">\n  <a\n    href=\"https://www.eventtz.com/client/bookings/a1b2c3d4-e5f6-7890-abcd-ef1234567890/receipt\"\n    style=\"\n      display: inline-block;\n      background: #3e1964;\n      color: #ffffff;\n      text-decoration: none;\n      padding: 14px 28px;\n      border-radius: 980px;\n      font-size: 15px;\n      font-weight: 600;\n    \"\n    >View receipt</a\n  >\n</p>\n\n\n\n              </td>\n            </tr>\n            <tr>\n              <td style=\"padding: 4px 20px 40px; text-align: center; background-color: #ffffff\">\n                <p style=\"margin: 0 0 10px; font-size: 13px; line-height: 1.5; color: #8a8199\">\n  You're receiving this because you have an Eventtz account.\n</p>\n<p style=\"margin: 0 0 12px\">\n  <a\n    href=\"https://www.eventtz.com\"\n    style=\"font-size: 14px; color: #3e1964; text-decoration: none; font-weight: 600\"\n    >eventtz.com</a\n  >\n</p>\n<p style=\"margin: 0; font-size: 12px; color: #8a8199\">\n  <a href=\"https://eventtz.com/compliances/privacy-policy\" style=\"color: #6b6575; text-decoration: underline\">Privacy</a>\n  &nbsp;\u00b7&nbsp;\n  <a href=\"https://eventtz.com/compliances/terms-of-service\" style=\"color: #6b6575; text-decoration: underline\">Terms</a>\n</p>\n<p style=\"margin: 8px 0 0; font-size: 11px; line-height: 1.5; color: #8a8199\">Eventtz Ltd</p>\n              </td>\n            </tr>\n            <tr>\n  <td\n    style=\"\n      height: 32px;\n      line-height: 32px;\n      font-size: 1px;\n      background-color: #ffffff;\n    \"\n  >\n    &nbsp;\n  </td>\n</tr>\n          </table>\n        </td>\n      </tr>\n    </table>\n  </body>\n</html>",
+    "text": "Payment receipt \u2014 EVT-A1B2C3D4\n\nYour payment receipt\nReceipt EVT-A1B2C3D4\n\nSummer party \u00b7 2026-09-15\nVendor: Ada Events\nPaid: 2026-08-21\nPayment ref: \u202612345678\n\n\nGold package: GBP 500\n\nTotal: GBP 525\n\n\n\nView receipt: https://www.eventtz.com/client/bookings/a1b2c3d4-e5f6-7890-abcd-ef1234567890/receipt\n"
+  },
+  {
+    "id": "vendor_payment_record",
+    "payload": {
+      "document_type": "vendor_payment_record",
+      "receipt_number": "EVT-A1B2C3D4",
+      "booking_request_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "event_name": "Summer party",
+      "event_date": "2026-09-15",
+      "payment_status": "paid",
+      "paid_at": "2026-08-21T12:00:00+00:00",
+      "payout_released_at": null,
+      "counterparty_name": "Jane Client",
+      "line_items": [
+        {
+          "label": "Gold package",
+          "amount_label": "GBP 500"
+        }
+      ],
+      "subtotal_label": "GBP 500",
+      "service_fee_label": null,
+      "service_fee_percent": null,
+      "total_label": "GBP 500",
+      "vendor_share_label": "GBP 500",
+      "platform_fee_label": "GBP 25",
+      "payment_reference": "\u202612345678",
+      "transfer_reference": null,
+      "stripe_receipt_url": null,
+      "status_note": "Client payment received. Your share is held safely with Eventtz until the event is complete and both sides confirm \u2014 or the automatic release date passes."
+    },
+    "to": [
+      "client@example.com"
+    ],
+    "subject": "Payment received | Eventtz",
+    "html": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <title>Payment received</title>\n  </head>\n  <body\n    style=\"\n      margin: 0;\n      padding: 0;\n      width: 100%;\n      background-color: #ffffff;\n      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,\n        sans-serif;\n      color: #1d1d1f;\n      -webkit-font-smoothing: antialiased;\n    \"\n  >\n    <table\n      role=\"presentation\"\n      cellpadding=\"0\"\n      cellspacing=\"0\"\n      border=\"0\"\n      width=\"100%\"\n      style=\"width: 100%; background-color: #ffffff\"\n    >\n      <tr>\n        <td align=\"center\" style=\"padding: 0; margin: 0\">\n          <table\n            role=\"presentation\"\n            cellpadding=\"0\"\n            cellspacing=\"0\"\n            border=\"0\"\n            width=\"100%\"\n            style=\"max-width: 600px; width: 100%; background-color: #ffffff\"\n          >\n            <tr>\n              <td style=\"background-color: #ffffff; padding: 16px 20px; text-align: center\">\n                \n                <img\n                  src=\"https://eventtz.s3.eu-west-2.amazonaws.com/email/eventtz-logo.png\"\n                  alt=\"Eventtz\"\n                  width=\"160\"\n                  style=\"display: block; margin: 0 auto; max-width: 160px; height: auto; border: 0\"\n                />\n                \n                \n              </td>\n            </tr>\n            <tr>\n              <td style=\"padding: 8px 20px 24px; background-color: #ffffff\">\n                \n<h1 style=\"margin: 0 0 8px; color: #1d1d1f; font-size: 26px; line-height: 1.25; font-weight: 600\">\n  Payment received\n</h1>\n\n<p style=\"margin: 0 0 20px; color: #6e6e73; font-size: 15px; line-height: 1.6\">Record EVT-A1B2C3D4</p>\n\n<p style=\"margin: 0 0 8px; color: #1d1d1f; font-size: 15px; line-height: 1.65\">\n  <strong>Summer party</strong>\n   \u00b7 2026-09-15\n</p>\n<p style=\"margin: 0 0 16px; color: #6e6e73; font-size: 14px; line-height: 1.6\">\n  \n  Client: Jane Client\n  \n  <br />Paid: 2026-08-21\n  <br />Payment ref: \u202612345678\n  \n</p>\n<table\n  role=\"presentation\"\n  cellpadding=\"0\"\n  cellspacing=\"0\"\n  border=\"0\"\n  width=\"100%\"\n  style=\"width: 100%; margin: 16px 0; border-collapse: collapse\"\n>\n  <tr>\n    <th\n      align=\"left\"\n      style=\"\n        padding: 10px 0;\n        border-bottom: 1px solid #e8e4ef;\n        color: #6b6575;\n        font-size: 12px;\n        font-weight: 600;\n        text-transform: uppercase;\n        letter-spacing: 0.04em;\n      \"\n    >\n      Description\n    </th>\n    <th\n      align=\"right\"\n      style=\"\n        padding: 10px 0;\n        border-bottom: 1px solid #e8e4ef;\n        color: #6b6575;\n        font-size: 12px;\n        font-weight: 600;\n        text-transform: uppercase;\n        letter-spacing: 0.04em;\n      \"\n    >\n      Amount\n    </th>\n  </tr>\n  \n  <tr>\n    <td style=\"padding: 10px 0; border-bottom: 1px solid #f3f0f8; color: #2d2938; font-size: 14px\">\n      Gold package\n    </td>\n    <td\n      align=\"right\"\n      style=\"\n        padding: 10px 0;\n        border-bottom: 1px solid #f3f0f8;\n        color: #2d2938;\n        font-size: 14px;\n        white-space: nowrap;\n      \"\n    >\n      GBP 500\n    </td>\n  </tr>\n  \n  <tr>\n    <td style=\"padding: 14px 0 0; color: #3e1964; font-size: 15px; font-weight: 700\">Total</td>\n    <td\n      align=\"right\"\n      style=\"padding: 14px 0 0; color: #3e1964; font-size: 15px; font-weight: 700; white-space: nowrap\"\n    >\n      GBP 500\n    </td>\n  </tr>\n</table>\n\n<p style=\"margin: 16px 0 0; color: #6e6e73; font-size: 14px; line-height: 1.6\">Client payment received. Your share is held safely with Eventtz until the event is complete and both sides confirm \u2014 or the automatic release date passes.</p>\n\n\n<p style=\"margin: 24px 0 0\">\n  <a\n    href=\"https://www.eventtz.com/vendor/bookings/a1b2c3d4-e5f6-7890-abcd-ef1234567890/payment-record\"\n    style=\"\n      display: inline-block;\n      background: #3e1964;\n      color: #ffffff;\n      text-decoration: none;\n      padding: 14px 28px;\n      border-radius: 980px;\n      font-size: 15px;\n      font-weight: 600;\n    \"\n    >View receipt</a\n  >\n</p>\n\n\n\n              </td>\n            </tr>\n            <tr>\n              <td style=\"padding: 4px 20px 40px; text-align: center; background-color: #ffffff\">\n                <p style=\"margin: 0 0 10px; font-size: 13px; line-height: 1.5; color: #8a8199\">\n  You're receiving this because you have an Eventtz account.\n</p>\n<p style=\"margin: 0 0 12px\">\n  <a\n    href=\"https://www.eventtz.com\"\n    style=\"font-size: 14px; color: #3e1964; text-decoration: none; font-weight: 600\"\n    >eventtz.com</a\n  >\n</p>\n<p style=\"margin: 0; font-size: 12px; color: #8a8199\">\n  <a href=\"https://eventtz.com/compliances/privacy-policy\" style=\"color: #6b6575; text-decoration: underline\">Privacy</a>\n  &nbsp;\u00b7&nbsp;\n  <a href=\"https://eventtz.com/compliances/terms-of-service\" style=\"color: #6b6575; text-decoration: underline\">Terms</a>\n</p>\n<p style=\"margin: 8px 0 0; font-size: 11px; line-height: 1.5; color: #8a8199\">Eventtz Ltd</p>\n              </td>\n            </tr>\n            <tr>\n  <td\n    style=\"\n      height: 32px;\n      line-height: 32px;\n      font-size: 1px;\n      background-color: #ffffff;\n    \"\n  >\n    &nbsp;\n  </td>\n</tr>\n          </table>\n        </td>\n      </tr>\n    </table>\n  </body>\n</html>",
+    "text": "Payment record \u2014 EVT-A1B2C3D4\n\nPayment received\nRecord EVT-A1B2C3D4\n\nSummer party \u00b7 2026-09-15\nClient: Jane Client\nPaid: 2026-08-21\nPayment ref: \u202612345678\n\n\nGold package: GBP 500\n\nTotal: GBP 500\n\nPlatform fee: GBP 25\n\n\nClient payment received. Your share is held safely with Eventtz until the event is complete and both sides confirm \u2014 or the automatic release date passes.\n\nView receipt: https://www.eventtz.com/vendor/bookings/a1b2c3d4-e5f6-7890-abcd-ef1234567890/payment-record"
+  },
+  {
+    "id": "vendor_payout_statement",
+    "payload": {
+      "document_type": "vendor_payout_statement",
+      "receipt_number": "EVT-A1B2C3D4",
+      "booking_request_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "event_name": "Summer party",
+      "event_date": "2026-09-15",
+      "payment_status": "payout_released",
+      "paid_at": "2026-08-21T12:00:00+00:00",
+      "payout_released_at": "2026-09-20T10:00:00+00:00",
+      "counterparty_name": "Jane Client",
+      "line_items": [
+        {
+          "label": "Gold package",
+          "amount_label": "GBP 500"
+        }
+      ],
+      "subtotal_label": "GBP 500",
+      "service_fee_label": null,
+      "service_fee_percent": null,
+      "total_label": "GBP 500",
+      "vendor_share_label": "GBP 500",
+      "platform_fee_label": null,
+      "payment_reference": "\u202612345678",
+      "transfer_reference": "\u2026ABCDEF12",
+      "stripe_receipt_url": null,
+      "status_note": "Payout sent to your connected Stripe account. Bank arrival times depend on your bank."
+    },
+    "to": [
+      "client@example.com"
+    ],
+    "subject": "Payout statement | Eventtz",
+    "html": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <title>Payout statement</title>\n  </head>\n  <body\n    style=\"\n      margin: 0;\n      padding: 0;\n      width: 100%;\n      background-color: #ffffff;\n      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,\n        sans-serif;\n      color: #1d1d1f;\n      -webkit-font-smoothing: antialiased;\n    \"\n  >\n    <table\n      role=\"presentation\"\n      cellpadding=\"0\"\n      cellspacing=\"0\"\n      border=\"0\"\n      width=\"100%\"\n      style=\"width: 100%; background-color: #ffffff\"\n    >\n      <tr>\n        <td align=\"center\" style=\"padding: 0; margin: 0\">\n          <table\n            role=\"presentation\"\n            cellpadding=\"0\"\n            cellspacing=\"0\"\n            border=\"0\"\n            width=\"100%\"\n            style=\"max-width: 600px; width: 100%; background-color: #ffffff\"\n          >\n            <tr>\n              <td style=\"background-color: #ffffff; padding: 16px 20px; text-align: center\">\n                \n                <img\n                  src=\"https://eventtz.s3.eu-west-2.amazonaws.com/email/eventtz-logo.png\"\n                  alt=\"Eventtz\"\n                  width=\"160\"\n                  style=\"display: block; margin: 0 auto; max-width: 160px; height: auto; border: 0\"\n                />\n                \n                \n              </td>\n            </tr>\n            <tr>\n              <td style=\"padding: 8px 20px 24px; background-color: #ffffff\">\n                \n<h1 style=\"margin: 0 0 8px; color: #1d1d1f; font-size: 26px; line-height: 1.25; font-weight: 600\">\n  Payout statement\n</h1>\n\n<p style=\"margin: 0 0 20px; color: #6e6e73; font-size: 15px; line-height: 1.6\">Statement EVT-A1B2C3D4</p>\n\n<p style=\"margin: 0 0 8px; color: #1d1d1f; font-size: 15px; line-height: 1.65\">\n  <strong>Summer party</strong>\n   \u00b7 2026-09-15\n</p>\n<p style=\"margin: 0 0 16px; color: #6e6e73; font-size: 14px; line-height: 1.6\">\n  \n  Client: Jane Client\n  \n  <br />Paid: 2026-08-21\n  <br />Payment ref: \u202612345678\n  <br />Transfer ref: \u2026ABCDEF12\n</p>\n<table\n  role=\"presentation\"\n  cellpadding=\"0\"\n  cellspacing=\"0\"\n  border=\"0\"\n  width=\"100%\"\n  style=\"width: 100%; margin: 16px 0; border-collapse: collapse\"\n>\n  <tr>\n    <th\n      align=\"left\"\n      style=\"\n        padding: 10px 0;\n        border-bottom: 1px solid #e8e4ef;\n        color: #6b6575;\n        font-size: 12px;\n        font-weight: 600;\n        text-transform: uppercase;\n        letter-spacing: 0.04em;\n      \"\n    >\n      Description\n    </th>\n    <th\n      align=\"right\"\n      style=\"\n        padding: 10px 0;\n        border-bottom: 1px solid #e8e4ef;\n        color: #6b6575;\n        font-size: 12px;\n        font-weight: 600;\n        text-transform: uppercase;\n        letter-spacing: 0.04em;\n      \"\n    >\n      Amount\n    </th>\n  </tr>\n  \n  <tr>\n    <td style=\"padding: 10px 0; border-bottom: 1px solid #f3f0f8; color: #2d2938; font-size: 14px\">\n      Gold package\n    </td>\n    <td\n      align=\"right\"\n      style=\"\n        padding: 10px 0;\n        border-bottom: 1px solid #f3f0f8;\n        color: #2d2938;\n        font-size: 14px;\n        white-space: nowrap;\n      \"\n    >\n      GBP 500\n    </td>\n  </tr>\n  \n  <tr>\n    <td style=\"padding: 14px 0 0; color: #3e1964; font-size: 15px; font-weight: 700\">Total</td>\n    <td\n      align=\"right\"\n      style=\"padding: 14px 0 0; color: #3e1964; font-size: 15px; font-weight: 700; white-space: nowrap\"\n    >\n      GBP 500\n    </td>\n  </tr>\n</table>\n\n<p style=\"margin: 16px 0 0; color: #6e6e73; font-size: 14px; line-height: 1.6\">Payout sent to your connected Stripe account. Bank arrival times depend on your bank.</p>\n\n\n<p style=\"margin: 24px 0 0\">\n  <a\n    href=\"https://www.eventtz.com/vendor/bookings/a1b2c3d4-e5f6-7890-abcd-ef1234567890/payout-statement\"\n    style=\"\n      display: inline-block;\n      background: #3e1964;\n      color: #ffffff;\n      text-decoration: none;\n      padding: 14px 28px;\n      border-radius: 980px;\n      font-size: 15px;\n      font-weight: 600;\n    \"\n    >View receipt</a\n  >\n</p>\n\n\n\n              </td>\n            </tr>\n            <tr>\n              <td style=\"padding: 4px 20px 40px; text-align: center; background-color: #ffffff\">\n                <p style=\"margin: 0 0 10px; font-size: 13px; line-height: 1.5; color: #8a8199\">\n  You're receiving this because you have an Eventtz account.\n</p>\n<p style=\"margin: 0 0 12px\">\n  <a\n    href=\"https://www.eventtz.com\"\n    style=\"font-size: 14px; color: #3e1964; text-decoration: none; font-weight: 600\"\n    >eventtz.com</a\n  >\n</p>\n<p style=\"margin: 0; font-size: 12px; color: #8a8199\">\n  <a href=\"https://eventtz.com/compliances/privacy-policy\" style=\"color: #6b6575; text-decoration: underline\">Privacy</a>\n  &nbsp;\u00b7&nbsp;\n  <a href=\"https://eventtz.com/compliances/terms-of-service\" style=\"color: #6b6575; text-decoration: underline\">Terms</a>\n</p>\n<p style=\"margin: 8px 0 0; font-size: 11px; line-height: 1.5; color: #8a8199\">Eventtz Ltd</p>\n              </td>\n            </tr>\n            <tr>\n  <td\n    style=\"\n      height: 32px;\n      line-height: 32px;\n      font-size: 1px;\n      background-color: #ffffff;\n    \"\n  >\n    &nbsp;\n  </td>\n</tr>\n          </table>\n        </td>\n      </tr>\n    </table>\n  </body>\n</html>",
+    "text": "Payout statement \u2014 EVT-A1B2C3D4\n\nPayout statement\nStatement EVT-A1B2C3D4\n\nSummer party \u00b7 2026-09-15\nClient: Jane Client\nPaid: 2026-08-21\nPayout: 2026-09-20\nPayment ref: \u202612345678\nTransfer ref: \u2026ABCDEF12\n\n\nGold package: GBP 500\n\nTotal: GBP 500\n\nPayout sent to your connected Stripe account. Bank arrival times depend on your bank.\n\nView receipt: https://www.eventtz.com/vendor/bookings/a1b2c3d4-e5f6-7890-abcd-ef1234567890/payout-statement"
+  }
+]

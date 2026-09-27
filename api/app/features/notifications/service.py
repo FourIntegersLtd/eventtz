@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
+
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.core.ports import Mailer, OutgoingEmail
 from app.core.settings import get_settings
+from app.core.site import public_url
+from app.features.identity import service as identity_service
+from app.features.notifications import repository as notifications_repository
 from app.features.notifications.domain import (
     APP_NAME,
     COMPANY_LEGAL_NAME,
@@ -14,6 +19,7 @@ from app.features.notifications.domain import (
     AdminAlert,
     admin_alert_context,
     contact_submitted_alert,
+    email_context,
 )
 from app.features.notifications.domain_account_emails import (
     TransactionalEmail,
@@ -26,6 +32,11 @@ from app.features.notifications.domain_account_emails import (
     transactional_context,
     welcome_context,
     welcome_email,
+)
+from app.features.notifications.domain_booking_copy import (
+    booking_email_template_id,
+    receipt_action_path,
+    receipt_email_headlines,
 )
 from app.features.notifications.domain_vendor_emails import (
     vendor_approval_status_email,
@@ -47,6 +58,92 @@ def receipt_document_branding() -> dict[str, str]:
 def render_receipt_document_html(context: dict[str, object]) -> str:
     """Render a receipt payload context to HTML (templates live in this slice)."""
     return render_template("booking/receipt_document.html", context)
+
+
+_RECEIPT_HTML_TEMPLATES = {
+    "payment_receipt": "booking/payment_receipt.html",
+    "vendor_payment_record": "booking/vendor_payment_record.html",
+    "vendor_payout_statement": "booking/vendor_payout_statement.html",
+}
+_RECEIPT_TEXT_TEMPLATES = {
+    "payment_receipt": "booking/payment_receipt.txt",
+    "vendor_payment_record": "booking/vendor_payment_record.txt",
+    "vendor_payout_statement": "booking/vendor_payout_statement.txt",
+}
+_RECEIPT_KIND_BY_DOCUMENT = {
+    "client_payment_receipt": "payment_receipt",
+    "vendor_payment_record": "vendor_payment_record",
+    "vendor_payout_statement": "vendor_payout_statement",
+}
+
+
+def render_receipt_email(
+    receipt_payload: dict[str, Any], *, to_email: str, booking_id: str
+) -> OutgoingEmail | None:
+    """Render a receipt email for `receipt_payload`; None when the document type is unknown."""
+    document_type = str(receipt_payload.get("document_type") or "")
+    kind = _RECEIPT_KIND_BY_DOCUMENT.get(document_type)
+    if kind is None:
+        return None
+    receipt_number = str(receipt_payload.get("receipt_number") or "")
+    headline, subtitle = receipt_email_headlines(document_type, receipt_number)
+    context: dict[str, object] = {
+        "headline": headline,
+        "subtitle": subtitle,
+        "receipt": receipt_payload,
+        **email_context(
+            subject=headline,
+            headline=headline,
+            subtitle=subtitle,
+            body=None,
+            action_url=public_url(receipt_action_path(document_type, booking_id)),
+            action_label="View receipt",
+        ),
+    }
+    return OutgoingEmail(
+        to=(to_email,),
+        subject=f"{headline} | {APP_NAME}",
+        html=render_template(_RECEIPT_HTML_TEMPLATES[kind], context),
+        text=render_template(_RECEIPT_TEXT_TEMPLATES[kind], context),
+    )
+
+
+async def send_receipt_email(
+    session: AsyncSession,
+    mailer: Mailer,
+    *,
+    user_id: str,
+    booking_id: str,
+    receipt_payload: dict[str, Any],
+) -> None:
+    """Email one party their receipt; skipped when deduped or the address is missing. Never raises."""
+    document_type = str(receipt_payload.get("document_type") or "")
+    kind = _RECEIPT_KIND_BY_DOCUMENT.get(document_type)
+    if kind is None:
+        return
+    email = ((await identity_service.emails_by_id(session, [user_id])).get(user_id) or "").strip()
+    if "@" not in email:
+        log.info("receipt email skipped, no address user=%s booking=%s kind=%s", user_id, booking_id, kind)
+        return
+    if not await notifications_repository.claim_email_delivery(
+        session,
+        template_id=booking_email_template_id(kind),
+        recipient_email=email,
+        recipient_user_id=user_id,
+        booking_id=booking_id,
+    ):
+        return
+    try:
+        outgoing = render_receipt_email(receipt_payload, to_email=email, booking_id=booking_id)
+    except Exception:
+        log.exception(
+            "receipt email could not be rendered kind=%s booking=%s user=%s", kind, booking_id, user_id
+        )
+        return
+    if outgoing is None:
+        return
+    if not mailer.send(outgoing):
+        log.warning("receipt email failed kind=%s booking=%s user=%s", kind, booking_id, user_id)
 
 
 def render_admin_alert(alert: AdminAlert) -> OutgoingEmail:

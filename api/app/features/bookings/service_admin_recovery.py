@@ -29,6 +29,7 @@ from app.features.bookings import (
     service_maintenance,
     service_payments,
     service_payments_checkout,
+    service_receipts,
 )
 from app.features.bookings.errors import (
     CancelOnlyPendingOrAccepted,
@@ -192,7 +193,10 @@ async def _sync_unsettled(
     payment_intent = await gateway.retrieve_payment_intent(payment_intent_id)
     if not await _mark_paid_from_payment_intent(session, gateway, booking, payment_intent):
         raise RecoveryMarkPaidFailed()
-    # Payment receipts are not rebuilt yet (as for checkout); both screens refresh.
+    try:
+        await service_receipts.freeze_after_checkout(session, mailer, booking.id)
+    except Exception:
+        log.warning("bookings: receipt freeze after admin sync failed booking=%s", booking.id, exc_info=True)
     announce_change(session, booking)
 
 

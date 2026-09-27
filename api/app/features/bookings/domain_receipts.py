@@ -1,7 +1,7 @@
 """Pure rules for payment receipts, vendor payment records and payout statements.
 
-Mirrors the baseline's `receipts.py`. A frozen snapshot (written once at payment
-time by `service_receipts`, from `build_client_payment_receipt` and friends below)
+Mirrors the baseline's `receipts.py`. A frozen snapshot (written once at checkout,
+payout release or admin sync in `service_receipts.py`, from the builders below)
 always wins over building the document afresh; building afresh happens exactly
 once, right when the snapshot is first written.
 """

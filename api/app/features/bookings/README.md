@@ -94,8 +94,10 @@ slice owns Stripe's side (webhooks, Connect) and calls these, never the reverse.
 - The first confirmation also runs the post-event step (reminder, then any payout
   already due), as the baseline did.
 - Receipt snapshots (`payment_receipt_snapshot`, `vendor_payment_record_snapshot`,
-  `vendor_payout_statement_snapshot`) are write-once; a frozen snapshot is returned
-  as-is with the live `payment_status` laid over it (`service_receipts.py`).
+  `vendor_payout_statement_snapshot`) are frozen write-once at checkout finalize,
+  payout release and admin payment sync; a frozen snapshot is returned as-is with
+  the live `payment_status` laid over it (`service_receipts.py`). Matching receipt
+  emails go out at those same moments.
 
 ## Routes
 
@@ -155,8 +157,7 @@ Differences from the baseline:
 
 These wait for the slices that own them; until then the api answers as noted.
 
-- **Payments:** receipt emails after checkout and admin payment sync (piece 08),
-  and restore-Connect on admin recovery (piece 09). Checkout and its sync
+- **Payments:** restore-Connect on admin recovery (piece 09). Checkout and its sync
   (`service_payments_checkout.py`), refunds and payouts (`service_payments.py`), and
   read routes for receipts, payment records and payout statements
   (`service_receipts.py`) are built.

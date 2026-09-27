@@ -381,6 +381,12 @@ async def finalize_checkout_session(
         booking_request_id=booking_id,
         booking_value_gbp=payment_amount_gbp,
     )
+    try:
+        from app.features.bookings import service_receipts
+
+        await service_receipts.freeze_after_checkout(session, mailer, booking_id)
+    except Exception:
+        log.warning("bookings: receipt freeze after checkout failed booking=%s", booking_id, exc_info=True)
     return True
 
 

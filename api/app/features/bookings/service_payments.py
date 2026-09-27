@@ -380,6 +380,12 @@ async def release_vendor_payout(
             )
         return _completion_state(stored)
     await _announce_payout(session, mailer, stored, amount_pence=amount_pence)
+    try:
+        from app.features.bookings import service_receipts
+
+        await service_receipts.freeze_after_payout(session, mailer, booking.id)
+    except Exception:
+        log.warning("bookings: receipt freeze after payout failed booking=%s", booking.id, exc_info=True)
     return _completion_state(stored)
 
 

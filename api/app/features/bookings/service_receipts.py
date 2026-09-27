@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import Forbidden
 from app.core.logging import get_logger
-from app.core.ports import PaymentGateway, PaymentGatewayError, PaymentsUnavailable
+from app.core.ports import Mailer, PaymentGateway, PaymentGatewayError, PaymentsUnavailable
 from app.features.bookings import domain_receipts, repository_receipts, service_pricing
 from app.features.bookings.errors import (
     BookingNotFound,
@@ -219,3 +219,88 @@ def render_receipt_html(payload: dict[str, Any]) -> str:
         **notifications_service.receipt_document_branding(),
     }
     return notifications_service.render_receipt_document_html(context)
+
+
+async def freeze_after_checkout(session: AsyncSession, mailer: Mailer, booking_id: str) -> None:
+    """Write-once client and vendor payment documents, then email both parties (baseline checkout hook)."""
+    from app.features.identity import service as identity
+    from app.features.notifications import service as notifications_service
+    from app.features.vendors import service_listing
+
+    booking = await repository_receipts.get_booking_for_receipt(session, booking_id)
+    if booking is None:
+        return
+    vendor_names = await service_listing.display_names(session, [booking.vendor_user_id])
+    vendor_name = vendor_names.get(booking.vendor_user_id, _UNKNOWN_VENDOR_NAME)
+    client_names = await identity.client_display_names(session, [booking.client_user_id])
+    client_name = client_names.get(booking.client_user_id, "Client")
+    pricing_breakdown = (await service_pricing.current_breakdown(session, booking)).to_dict()
+    client_snapshot = domain_receipts.build_client_payment_receipt(
+        booking, pricing_breakdown=pricing_breakdown, vendor_display_name=vendor_name
+    )
+    vendor_snapshot = domain_receipts.build_vendor_payment_record(
+        booking, pricing_breakdown=pricing_breakdown, client_display_name=client_name
+    )
+    await repository_receipts.freeze_receipt_snapshots(
+        session,
+        booking_id,
+        client_snapshot=client_snapshot,
+        vendor_record_snapshot=vendor_snapshot,
+    )
+    for user_id, payload in (
+        (booking.client_user_id, client_snapshot),
+        (booking.vendor_user_id, vendor_snapshot),
+    ):
+        if not user_id:
+            continue
+        try:
+            await notifications_service.send_receipt_email(
+                session,
+                mailer,
+                user_id=user_id,
+                booking_id=booking_id,
+                receipt_payload=payload,
+            )
+        except Exception:
+            log.warning(
+                "bookings: payment receipt email failed booking=%s user=%s",
+                booking_id,
+                user_id,
+                exc_info=True,
+            )
+
+
+async def freeze_after_payout(session: AsyncSession, mailer: Mailer, booking_id: str) -> None:
+    """Write-once payout statement and email the vendor (baseline payout release hook)."""
+    from app.features.identity import service as identity
+    from app.features.notifications import service as notifications_service
+
+    booking = await repository_receipts.get_booking_for_receipt(session, booking_id)
+    if booking is None:
+        return
+    client_names = await identity.client_display_names(session, [booking.client_user_id])
+    client_name = client_names.get(booking.client_user_id, "Client")
+    pricing_breakdown = (await service_pricing.current_breakdown(session, booking)).to_dict()
+    statement = domain_receipts.build_vendor_payout_statement(
+        booking, pricing_breakdown=pricing_breakdown, client_display_name=client_name
+    )
+    await repository_receipts.freeze_payout_statement_snapshot(
+        session, booking_id, statement_snapshot=statement
+    )
+    if not booking.vendor_user_id:
+        return
+    try:
+        await notifications_service.send_receipt_email(
+            session,
+            mailer,
+            user_id=booking.vendor_user_id,
+            booking_id=booking_id,
+            receipt_payload=statement,
+        )
+    except Exception:
+        log.warning(
+            "bookings: payout statement email failed booking=%s vendor=%s",
+            booking_id,
+            booking.vendor_user_id,
+            exc_info=True,
+        )

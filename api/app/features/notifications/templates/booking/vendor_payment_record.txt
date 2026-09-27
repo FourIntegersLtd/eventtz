@@ -1,0 +1,21 @@
+Payment record — {{ receipt.receipt_number }}
+
+{{ headline }}
+{{ subtitle }}
+
+{{ receipt.event_name }}{% if receipt.event_date %} · {{ receipt.event_date }}{% endif %}
+Client: {{ receipt.counterparty_name }}
+{% if receipt.paid_at %}Paid: {{ receipt.paid_at[:10] }}{% endif %}
+{% if receipt.payment_reference %}Payment ref: {{ receipt.payment_reference }}{% endif %}
+
+{% for line in receipt.line_items %}
+{{ line.label }}: {{ line.amount_label }}
+{% endfor %}
+Total: {{ receipt.total_label }}
+{% if receipt.platform_fee_label %}
+Platform fee: {{ receipt.platform_fee_label }}
+{% endif %}
+
+{% if receipt.status_note %}{{ receipt.status_note }}{% endif %}
+
+{% if action_url %}{{ action_label }}: {{ action_url }}{% endif %}
