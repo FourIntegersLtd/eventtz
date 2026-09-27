@@ -40,6 +40,7 @@ def _database_host(database_url: str) -> str | None:
 
 
 def _require_local_database() -> None:
+    """Refuse to run unless ``DATABASE_URL`` points at local compose Postgres."""
     host = _database_host(get_settings().database_url)
     if host not in LOCAL_HOSTS:
         sys.stderr.write(
@@ -49,6 +50,7 @@ def _require_local_database() -> None:
 
 
 async def _upsert_admin(email: str, admin_role: str) -> None:
+    """Create or refresh one local admin login; never restore a closed account."""
     normalised = normalise_email(email)
     now = datetime.now(UTC)
     async with job_session() as session:
@@ -65,6 +67,9 @@ async def _upsert_admin(email: str, admin_role: str) -> None:
             if user_id is None:
                 raise RuntimeError(f"Could not create {email}: address already taken.")
             return
+        if profile.deleted_at:
+            sys.stderr.write(f"{email} is a closed account; remove it from the local DB first\n")
+            raise SystemExit(1)
         await repository.update_profile(
             session,
             profile.id,
@@ -73,13 +78,13 @@ async def _upsert_admin(email: str, admin_role: str) -> None:
                 "admin_role": admin_role,
                 "email_verified_at": now,
                 "account_suspended": False,
-                "deleted_at": None,
             },
         )
         await set_account_password(session, profile.id, PASSWORD)
 
 
 async def _main() -> None:
+    """Seed every configured admin when run as ``python -m scripts.seed_local_admins``."""
     _require_local_database()
     for email, role in ADMINS:
         await _upsert_admin(email, role)
