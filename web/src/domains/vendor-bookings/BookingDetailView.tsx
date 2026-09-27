@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Card, Spinner } from "@/foundation/ui";
 import { useVendorBookingDetail } from "@/domains/vendor-bookings/useVendorBookingDetail";
 import { bookingStatusLabel, formatEventDate, formatGbp, initiatorLabel, paymentStatusLabel } from "@/domains/vendor-bookings/format";
@@ -8,6 +7,8 @@ import { toDisplayLineItem } from "@/domains/vendor-bookings/lineItems";
 import { BookingStatusActions } from "@/domains/vendor-bookings/BookingStatusActions";
 import { AdjustmentsForm } from "@/domains/vendor-bookings/AdjustmentsForm";
 import { BookingDisputesPanel } from "@/domains/vendor-bookings/BookingDisputesPanel";
+import { hasPaymentReceipt } from "@/capabilities/receipt-links/receiptLinks";
+import { ReceiptLink } from "@/capabilities/receipt-links/ReceiptLink";
 
 /** `/vendor/bookings/[bookingId]` — one booking's full detail, with its status and pricing actions. */
 export function BookingDetailView({ bookingId }: { bookingId: string }) {
@@ -78,14 +79,12 @@ export function BookingDetailView({ bookingId }: { bookingId: string }) {
           <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-red-200/60">{actionError}</p>
         ) : null}
 
-        {booking.payment_status === "paid" ? (
-          <div className="mt-4 flex flex-wrap gap-3 text-sm">
-            <Link href={`/vendor/bookings/${bookingId}/payment-record`} className="font-medium text-primary hover:underline">
-              Payment record
-            </Link>
-            <Link href={`/vendor/bookings/${bookingId}/payout-statement`} className="font-medium text-primary hover:underline">
-              Payout statement
-            </Link>
+        {hasPaymentReceipt(booking.payment_status) ? (
+          <div className="mt-4 flex flex-wrap gap-2">
+            <ReceiptLink bookingId={bookingId} documentType="vendor_payment_record" />
+            {booking.payment_status === "payout_released" ? (
+              <ReceiptLink bookingId={bookingId} documentType="vendor_payout_statement" />
+            ) : null}
           </div>
         ) : null}
       </Card>
