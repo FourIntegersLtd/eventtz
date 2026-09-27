@@ -19,7 +19,12 @@ import {
   MARKETPLACE_PAGE_SIZE,
   type MarketplaceSearchState,
 } from "./marketplaceSearchParams";
-import { clearSelectedVendors, listSelectedVendors, toggleSelectedVendor } from "./marketplaceSelection";
+import {
+  clearSelectedVendors,
+  listSelectedVendors,
+  plannerPreselection,
+  toggleSelectedVendor,
+} from "./marketplaceSelection";
 import {
   buildMarketplaceResultsHeadline,
   expandVendorsForSearchResults,
@@ -112,16 +117,27 @@ export function useMarketplaceExplore(mode: "browse" | "favorites" = "browse") {
     fetchExploreVendorsSearch(queryState)
       .then((response) => {
         if (cancelled) return;
+        const vendors = response.vendors ?? [];
+        const sections = response.sections ?? [];
         setFetchResult({
           key: currentKey,
-          vendors: response.vendors ?? [],
+          vendors,
           totalCount: response.total_count ?? 0,
           matchNotice: response.match_notice ?? null,
           searchMode: response.search_mode === "plan" ? "plan" : "simple",
           plan: response.plan ?? null,
-          sections: response.sections ?? [],
+          sections,
           error: null,
         });
+        // Once per fetch, when these results arrive. A later deselect is left alone
+        // because nothing here re-runs until the URL (and so this fetch) changes.
+        const openedFromPlanner = Boolean(state.fromPlannerPlanId) && state.vendorIds.length > 0;
+        if (isClient && mode === "browse" && openedFromPlanner) {
+          const preselected = plannerPreselection(state.vendorIds, vendors, sections);
+          if (Object.keys(preselected).length > 0) {
+            setSelectedById((previous) => ({ ...previous, ...preselected }));
+          }
+        }
       })
       .catch(() => {
         if (cancelled) return;
@@ -134,7 +150,7 @@ export function useMarketplaceExplore(mode: "browse" | "favorites" = "browse") {
     return () => {
       cancelled = true;
     };
-  }, [currentKey, fetchDecision, state]);
+  }, [currentKey, fetchDecision, isClient, mode, state]);
 
   const settledResult = useMemo(
     () => skipFetchResult ?? (fetchResult?.key === currentKey ? fetchResult : null),
