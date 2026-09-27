@@ -152,6 +152,17 @@ export function BookingDetailView({ bookingId }: { bookingId: string }) {
           <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-red-200/60">{actionError}</p>
         ) : null}
 
+        {CLIENT_RECEIPT_PAYMENT_STATUSES.has(booking.payment_status) ? (
+          <div className="mt-4">
+            <Link
+              href={`/client/bookings/${bookingId}/receipt`}
+              className="inline-flex items-center justify-center rounded-xl bg-primary-soft px-4 py-2.5 text-sm font-semibold text-primary hover:bg-primary-muted"
+            >
+              View receipt
+            </Link>
+          </div>
+        ) : null}
+
         {actions.showUpdatedPriceBanner ? (
           <PriceUpdateBanner
             booking={booking}
@@ -268,6 +279,9 @@ export function BookingDetailView({ bookingId }: { bookingId: string }) {
     </div>
   );
 }
+
+/** Payment states where the baseline shows the client receipt link (`hasPaymentReceipt`). */
+const CLIENT_RECEIPT_PAYMENT_STATUSES = new Set(["paid", "payout_released", "refunded", "partially_refunded"]);
 
 const CHECKOUT_RETURN_TONE_CLASS: Record<CheckoutReturnTone, string> = {
   amber: "border-amber-200 bg-amber-50 text-amber-950",

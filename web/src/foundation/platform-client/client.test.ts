@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { afterEach, describe, it } from "node:test";
-import { platformRequest, setPlatformTokenSource } from "@/foundation/platform-client/client";
+import { platformRequest, platformRequestText, setPlatformTokenSource } from "@/foundation/platform-client/client";
 import { PlatformError, PlatformTransportError } from "@/foundation/platform-client/errors";
 
 /** Restores the real `fetch` and drops any token source a test installed. */
@@ -94,6 +94,22 @@ describe("platformRequest()", () => {
         return true;
       },
     );
+  });
+
+  it("returns plain text and headers from platformRequestText()", async () => {
+    stubFetch(async () =>
+      new Response("<html>receipt</html>", {
+        status: 200,
+        headers: {
+          "Content-Type": "text/html",
+          "Content-Disposition": 'attachment; filename="receipt-EVT-ABC.html"',
+        },
+      }),
+    );
+
+    const result = await platformRequestText("/api/v1/client/booking-requests/x/receipt.html");
+    assert.equal(result.text, "<html>receipt</html>");
+    assert.equal(result.headers.get("Content-Disposition"), 'attachment; filename="receipt-EVT-ABC.html"');
   });
 
   it("wraps a network failure in a PlatformTransportError", async () => {

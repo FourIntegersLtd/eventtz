@@ -1,9 +1,11 @@
 /** Barrel for the platform client. Pages and `api.ts` files import from here. */
 export {
   platformRequest,
+  platformRequestText,
   platformApiUrl,
   setPlatformTokenSource,
   type RequestOptions,
+  type PlatformTextResponse,
 } from "@/foundation/platform-client/client";
 export {
   PlatformError,

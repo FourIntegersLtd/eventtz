@@ -111,3 +111,55 @@ export async function platformRequest<T>(path: string, options: RequestOptions =
   if (!response.ok) throw new PlatformError(response.status, asErrorBody(response.status, payload));
   return payload as T;
 }
+
+/** A successful platform response whose body was read as plain text (HTML, CSV, …). */
+export interface PlatformTextResponse {
+  text: string;
+  headers: Headers;
+}
+
+/**
+ * Like `platformRequest`, but returns the raw response body and headers instead
+ * of parsing JSON. Used for receipt `.html` downloads and other non-JSON GETs.
+ */
+export async function platformRequestText(
+  path: string,
+  options: RequestOptions = {},
+): Promise<PlatformTextResponse> {
+  const { method = "GET", body, formData, query, signal, idempotencyKey } = options;
+
+  const headers: Record<string, string> = { Accept: "*/*", ...options.headers };
+  const token = await readToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+  if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
+  if (body !== undefined && !formData) headers["Content-Type"] = "application/json";
+
+  let response: Response;
+  try {
+    response = await fetch(`${platformApiUrl()}${withQuery(path, query)}`, {
+      method,
+      headers,
+      signal,
+      credentials: "omit",
+      body: formData ?? (body === undefined ? undefined : JSON.stringify(body)),
+    });
+  } catch (cause) {
+    if (cause instanceof DOMException && cause.name === "AbortError") throw cause;
+    throw new PlatformTransportError("Could not reach the server", cause);
+  }
+
+  const text = await response.text();
+  if (!response.ok) {
+    let payload: unknown = null;
+    if (text) {
+      try {
+        payload = JSON.parse(text);
+      } catch {
+        payload = text;
+      }
+    }
+    throw new PlatformError(response.status, asErrorBody(response.status, payload));
+  }
+
+  return { text, headers: response.headers };
+}
