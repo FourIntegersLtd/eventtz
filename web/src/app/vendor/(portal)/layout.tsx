@@ -3,9 +3,15 @@
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { RequireCapability, RequireSession } from "@/foundation/session";
-import { PortalShell } from "@/domains/vendor-shell/PortalShell";
 import { RequireVendorApproved } from "@/domains/vendor-shell/RequireVendorApproved";
-import { isVendorPreApprovalRoute } from "@/domains/vendor-shell/portalNav";
+import {
+  isVendorNavActive,
+  isVendorPreApprovalRoute,
+  vendorHidePageTitleOnMobile,
+  vendorNavItems,
+  vendorPortalPageTitle,
+} from "@/domains/vendor-shell/portalNav";
+import { PortalShell } from "@/surfaces/portal-shell/PortalShell";
 
 /**
  * Every authenticated vendor route shares this shell: sign-in required, the
@@ -16,17 +22,23 @@ import { isVendorPreApprovalRoute } from "@/domains/vendor-shell/portalNav";
 export default function VendorPortalLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname() ?? "";
   const preApproval = isVendorPreApprovalRoute(pathname);
+  // The shared surface shell, configured with the vendor portal's own rules.
+  const shell = (
+    <PortalShell
+      homeHref="/vendor/dashboard"
+      items={vendorNavItems({ preApproval })}
+      isNavActive={isVendorNavActive}
+      pageTitle={vendorPortalPageTitle}
+      hidePageTitleOnMobile={vendorHidePageTitleOnMobile}
+    >
+      {children}
+    </PortalShell>
+  );
 
   return (
     <RequireSession>
       <RequireCapability permission="access_vendor_portal">
-        {preApproval ? (
-          <PortalShell preApproval>{children}</PortalShell>
-        ) : (
-          <RequireVendorApproved>
-            <PortalShell>{children}</PortalShell>
-          </RequireVendorApproved>
-        )}
+        {preApproval ? shell : <RequireVendorApproved>{shell}</RequireVendorApproved>}
       </RequireCapability>
     </RequireSession>
   );

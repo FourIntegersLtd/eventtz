@@ -2,7 +2,13 @@
 
 import type { ReactNode } from "react";
 import { RequireCapability, RequireSession } from "@/foundation/session";
-import { PortalShell } from "@/domains/client-shell/PortalShell";
+import {
+  clientHidePageTitleOnMobile,
+  clientNavItems,
+  clientPortalPageTitle,
+  isClientNavActive,
+} from "@/domains/client-shell/portalNav";
+import { PortalShell } from "@/surfaces/portal-shell/PortalShell";
 
 /**
  * Every authenticated client route shares this shell: sign-in required and
@@ -17,7 +23,15 @@ export default function ClientPortalLayout({ children }: { children: ReactNode }
   return (
     <RequireSession>
       <RequireCapability permission="access_client_portal">
-        <PortalShell>{children}</PortalShell>
+        <PortalShell
+          homeHref="/client/dashboard"
+          items={clientNavItems()}
+          isNavActive={isClientNavActive}
+          pageTitle={clientPortalPageTitle}
+          hidePageTitleOnMobile={clientHidePageTitleOnMobile}
+        >
+          {children}
+        </PortalShell>
       </RequireCapability>
     </RequireSession>
   );

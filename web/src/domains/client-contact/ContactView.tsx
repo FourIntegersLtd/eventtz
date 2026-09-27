@@ -1,15 +1,22 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { platformErrorDetail } from "@/foundation/platform-client";
 import { useSession } from "@/foundation/session";
 import { Button, Card } from "@/foundation/ui";
 import { submitClientContact } from "@/domains/client-contact/api";
+import {
+  buildContactRequestBody,
+  contactErrorMessage,
+  validateContactMessage,
+} from "@/domains/client-contact/contactForm";
 
 /**
  * `/client/contact` — a message to the Eventtz team, optionally tied to a
  * booking. Ported (simplified) from the baseline's `ContactFormView`,
  * mirroring the vendor portal's `ContactView`.
+ *
+ * Validation, the request body and the failure copy live in `contactForm.ts`,
+ * which `node --test` can import; this file is rendering and form state only.
  */
 export function ContactView() {
   const { session } = useSession();
@@ -21,21 +28,21 @@ export function ContactView() {
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const trimmedMessage = message.trim();
-    if (!trimmedMessage) {
-      setError("Enter a message before sending.");
+    const messageError = validateContactMessage(message);
+    if (messageError) {
+      setError(messageError);
       return;
     }
     setSending(true);
     setError(null);
     setSent(false);
     try {
-      await submitClientContact({ message: trimmedMessage, booking_id: bookingId.trim() || null });
+      await submitClientContact(buildContactRequestBody(message, bookingId));
       setMessage("");
       setBookingId("");
       setSent(true);
     } catch (cause: unknown) {
-      setError(platformErrorDetail(cause) ?? "Could not send your message. Try again.");
+      setError(contactErrorMessage(cause));
     } finally {
       setSending(false);
     }
