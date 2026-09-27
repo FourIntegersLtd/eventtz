@@ -5,6 +5,7 @@ import { Button } from "@/foundation/ui";
 import { AdminErrorBanner, AdminSuccessBanner } from "@/capabilities/admin-shell";
 import { isPlatformError } from "@/foundation/platform-client";
 import { submitAdminBugReport } from "@/domains/admin-report-bug/api";
+import { validateBugReportMessage } from "@/domains/admin-report-bug/bugReportValidation";
 
 /** `/admin/report-bug` — a free-text form any admin can use to flag a problem. */
 export function AdminReportBugView() {
@@ -14,7 +15,11 @@ export function AdminReportBugView() {
   const [sent, setSent] = useState(false);
 
   async function handleSubmit() {
-    if (!message.trim()) return;
+    const validationError = validateBugReportMessage(message);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
     setSending(true);
     setError(null);
     try {

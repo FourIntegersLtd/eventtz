@@ -6,6 +6,7 @@ import { Button, TextField } from "@/foundation/ui";
 import { useSession } from "@/foundation/session";
 import { loginHref } from "@/foundation/session/loginHref";
 import { AdminErrorBanner, isSuperAdmin } from "@/capabilities/admin-shell";
+import { validatePasswordChange } from "@/domains/admin-settings/passwordChangeValidation";
 import { isPlatformError } from "@/foundation/platform-client";
 import { changeAdminPassword } from "@/domains/admin-settings/api";
 
@@ -21,8 +22,9 @@ export function AdminSettingsView() {
 
   async function handleChangePassword() {
     setError(null);
-    if (newPassword !== confirmPassword) {
-      setError("The new password and confirmation don't match.");
+    const validationError = validatePasswordChange(newPassword, confirmPassword);
+    if (validationError) {
+      setError(validationError);
       return;
     }
     setSaving(true);

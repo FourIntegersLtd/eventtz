@@ -5,6 +5,7 @@ import { AdminErrorBanner, AdminSuccessBanner, adminCapabilities } from "@/capab
 import { useSession } from "@/foundation/session";
 import { isPlatformError } from "@/foundation/platform-client";
 import { sendAdminMessage } from "@/domains/admin-messages/api";
+import { parseRecipientUserIds, validateComposeMessage } from "@/domains/admin-messages/composeMessageValidation";
 
 type RecipientMode = "selected" | "clients" | "vendors" | "users";
 
@@ -27,19 +28,17 @@ export function AdminMessagesComposeView() {
   const [notice, setNotice] = useState<string | null>(null);
 
   async function handleSend() {
-    if (!body.trim() || sending) return;
+    if (sending) return;
+    const recipientUserIds = parseRecipientUserIds(recipientIdsText);
+    const validationError = validateComposeMessage({ body, audience: mode, recipientUserIds });
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
     setSending(true);
     setError(null);
     setNotice(null);
     try {
-      const recipientUserIds = recipientIdsText
-        .split(",")
-        .map((value) => value.trim())
-        .filter((value) => value.length > 0);
-      if (mode === "selected" && recipientUserIds.length === 0) {
-        setError("Enter at least one recipient user ID.");
-        return;
-      }
       const result = await sendAdminMessage({
         body: body.trim(),
         ...(mode === "selected" ? { recipient_user_ids: recipientUserIds } : { audience: mode }),

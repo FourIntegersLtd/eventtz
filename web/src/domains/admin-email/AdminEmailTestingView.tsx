@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { Button, TextField } from "@/foundation/ui";
 import { useSession } from "@/foundation/session";
-import { AdminErrorBanner, AdminSuccessBanner, isSuperAdmin } from "@/capabilities/admin-shell";
+import { AdminErrorBanner, AdminSuccessBanner, adminCapabilities } from "@/capabilities/admin-shell";
+import { validateEmailTestSend } from "@/domains/admin-email/emailTestValidation";
 import { isPlatformError } from "@/foundation/platform-client";
 import { fetchAdminEmailTemplates, sendAdminEmailTest, type AdminEmailTemplate } from "@/domains/admin-email/api";
 
@@ -17,7 +18,7 @@ const DEFAULT_BODY = "This is a test email from Eventtz. If you received this, R
  */
 export function AdminEmailTestingView() {
   const { session } = useSession();
-  if (!isSuperAdmin(session)) {
+  if (!adminCapabilities.canSendTestEmails(session)) {
     return (
       <p className="text-sm text-neutral-600">
         Only super admins can send test emails. Contact a super admin if you need access.
@@ -46,6 +47,11 @@ function EmailTestingForm({ defaultTo }: { defaultTo: string }) {
   }, []);
 
   async function handleSend() {
+    const validationError = validateEmailTestSend({ templateId, toEmail, messageBody: body });
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
     setBusy(true);
     setError(null);
     setResult(null);

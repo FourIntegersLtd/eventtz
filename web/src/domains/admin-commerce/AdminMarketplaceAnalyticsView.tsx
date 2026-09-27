@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AdminErrorBanner, AdminLoadingState } from "@/capabilities/admin-shell";
 import { isPlatformError } from "@/foundation/platform-client";
 import { fetchAdminMarketplaceAnalytics, type AdminMarketplaceAnalytics } from "@/domains/admin-commerce/api";
@@ -16,16 +16,19 @@ export function AdminMarketplaceAnalyticsView() {
   const [data, setData] = useState<AdminMarketplaceAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const requestSeq = useRef(0);
 
   const load = useCallback(async () => {
-    // Initial loading/error state already covers mount; a later manual
-    // refresh (via this same function) just swaps data in place, since
-    // synchronous setState in the mount effect trips set-state-in-effect.
+    const mySeq = ++requestSeq.current;
     try {
-      setData(await fetchAdminMarketplaceAnalytics());
+      const loaded = await fetchAdminMarketplaceAnalytics();
+      if (mySeq !== requestSeq.current) return;
+      setData(loaded);
     } catch (cause) {
+      if (mySeq !== requestSeq.current) return;
       setError(isPlatformError(cause) ? cause.detail : "Could not load marketplace analytics.");
     } finally {
+      if (mySeq !== requestSeq.current) return;
       setLoading(false);
     }
   }, []);

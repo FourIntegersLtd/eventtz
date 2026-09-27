@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { AdminBookingsListView } from "@/domains/admin-commerce/AdminBookingsListView";
 import { AdminFinancialsView } from "@/domains/admin-commerce/AdminFinancialsView";
 import { AdminMarketplaceAnalyticsView } from "@/domains/admin-commerce/AdminMarketplaceAnalyticsView";
+import { parseCommerceTab } from "@/domains/admin-commerce/commerceTab";
 
 const TABS = [
   { value: "bookings", label: "Bookings" },
@@ -26,7 +27,7 @@ export function AdminCommerceView() {
 function CommerceTabs() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const tab = (searchParams.get("tab") as Tab | null) ?? "bookings";
+  const tab = parseCommerceTab(searchParams.get("tab")) as Tab;
 
   return (
     <div className="space-y-4">

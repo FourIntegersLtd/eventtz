@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { validateBlogSaveFields } from "@/domains/admin-blog/blogSaveValidation";
 import { useRouter } from "next/navigation";
 import { Button, TextField } from "@/foundation/ui";
 import { AdminErrorBanner, AdminLoadingState, AdminSuccessBanner } from "@/capabilities/admin-shell";
@@ -36,13 +37,13 @@ export function AdminBlogEditorView({ postId }: { postId: string }) {
   const [excerpt, setExcerpt] = useState("");
   const [coverImageUrl, setCoverImageUrl] = useState("");
   const [bodyHtml, setBodyHtml] = useState("");
+  const requestSeq = useRef(0);
 
   const load = useCallback(async () => {
-    // Initial loading/error state already covers mount; a later manual
-    // refresh (via this same function) just swaps data in place, since
-    // synchronous setState in the mount effect trips set-state-in-effect.
+    const mySeq = ++requestSeq.current;
     try {
       const loaded = await fetchAdminBlogPost(postId);
+      if (mySeq !== requestSeq.current) return;
       setPost(loaded);
       setTitle(loaded.title);
       setSubtitle(loaded.subtitle ?? "");
@@ -51,8 +52,10 @@ export function AdminBlogEditorView({ postId }: { postId: string }) {
       setCoverImageUrl(loaded.cover_image_url ?? "");
       setBodyHtml(loaded.body_html);
     } catch (cause) {
+      if (mySeq !== requestSeq.current) return;
       setError(isPlatformError(cause) ? cause.detail : "Not found.");
     } finally {
+      if (mySeq !== requestSeq.current) return;
       setLoading(false);
     }
   }, [postId]);
@@ -68,6 +71,11 @@ export function AdminBlogEditorView({ postId }: { postId: string }) {
   }, [load]);
 
   async function handleSave() {
+    const validationError = validateBlogSaveFields({ title, subtitle, slug });
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
     setSaving(true);
     setNotice(null);
     try {

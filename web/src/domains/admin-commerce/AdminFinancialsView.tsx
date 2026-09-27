@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/foundation/ui";
 import { useSession } from "@/foundation/session";
-import { AdminErrorBanner, AdminKpiCard, AdminLoadingState, formatGbp, isSuperAdmin } from "@/capabilities/admin-shell";
+import { AdminErrorBanner, AdminKpiCard, AdminLoadingState, adminCapabilities, formatGbp } from "@/capabilities/admin-shell";
 import { isPlatformError } from "@/foundation/platform-client";
 import { downloadAdminFinancialsCsv, fetchAdminFinancials, type AdminFinancialsSummary } from "@/domains/admin-commerce/api";
 
@@ -15,16 +15,20 @@ export function AdminFinancialsView() {
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
+  const requestSeq = useRef(0);
+  const canExport = adminCapabilities.canExportFinancials(session);
 
   const load = useCallback(async () => {
-    // Initial loading/error state already covers mount; a later manual
-    // refresh (via this same function) just swaps data in place, since
-    // synchronous setState in the mount effect trips set-state-in-effect.
+    const mySeq = ++requestSeq.current;
     try {
-      setSummary(await fetchAdminFinancials());
+      const loaded = await fetchAdminFinancials();
+      if (mySeq !== requestSeq.current) return;
+      setSummary(loaded);
     } catch (cause) {
+      if (mySeq !== requestSeq.current) return;
       setError(isPlatformError(cause) ? cause.detail : "Could not load financials.");
     } finally {
+      if (mySeq !== requestSeq.current) return;
       setLoading(false);
     }
   }, []);
@@ -56,7 +60,7 @@ export function AdminFinancialsView() {
 
   return (
     <div className="space-y-4">
-      {isSuperAdmin(session) ? (
+      {canExport ? (
         <div className="flex justify-end">
           <Button variant="secondary" loading={exporting} onClick={() => void handleExport()}>
             Export CSV

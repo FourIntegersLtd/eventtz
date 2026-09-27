@@ -1,6 +1,7 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { buildVendorListParams } from "@/domains/admin-directory/vendorListParams";
 import {
   AdminEmptyState,
   AdminErrorBanner,
@@ -36,23 +37,22 @@ export function AdminVendorsPanel() {
   const [error, setError] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [insights, setInsights] = useState<AdminVendorInsights | null>(null);
+  const requestSeq = useRef(0);
 
   const load = useCallback(async () => {
-    // Initial loading/error state already covers mount; a later manual
-    // refresh (via this same function) just swaps data in place, since
-    // synchronous setState in the mount effect trips set-state-in-effect.
+    const mySeq = ++requestSeq.current;
     try {
-      const result = await fetchAdminVendors({
-        offset,
-        limit: PAGE_SIZE,
-        q: search || undefined,
-        approval_status: approvalStatus || undefined,
-      });
+      const result = await fetchAdminVendors(
+        buildVendorListParams({ offset, limit: PAGE_SIZE, search, approvalStatus }),
+      );
+      if (mySeq !== requestSeq.current) return;
       setVendors(result.vendors);
       setTotal(result.total);
     } catch (cause) {
+      if (mySeq !== requestSeq.current) return;
       setError(isPlatformError(cause) ? cause.detail : "Could not load vendors.");
     } finally {
+      if (mySeq !== requestSeq.current) return;
       setLoading(false);
     }
   }, [offset, search, approvalStatus]);

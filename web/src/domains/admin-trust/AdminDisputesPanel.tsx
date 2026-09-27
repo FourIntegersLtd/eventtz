@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { validateDisputeFinancialResolution } from "@/domains/admin-trust/disputeResolutionValidation";
 import { Button } from "@/foundation/ui";
 import { useSession } from "@/foundation/session";
 import {
@@ -11,7 +12,7 @@ import {
   formatDate,
   formatGbp,
   humanize,
-  isSuperAdmin,
+  adminCapabilities,
 } from "@/capabilities/admin-shell";
 import { isPlatformError } from "@/foundation/platform-client";
 import { fetchAdminDisputes, patchAdminDispute, type AdminDisputeCase } from "@/domains/admin-trust/api";
@@ -25,7 +26,7 @@ const STATUS_FILTERS = ["open", "under_review", "resolved", "closed", "all"] as 
  */
 export function AdminDisputesPanel() {
   const { session } = useSession();
-  const canResolveFinancially = isSuperAdmin(session);
+  const canResolveFinancially = adminCapabilities.canResolveDisputesFinancially(session);
 
   const [status, setStatus] = useState<(typeof STATUS_FILTERS)[number]>("open");
   const [disputes, setDisputes] = useState<AdminDisputeCase[]>([]);
@@ -37,16 +38,19 @@ export function AdminDisputesPanel() {
   const [resolutionAction, setResolutionAction] = useState<"release_to_vendor" | "refund_client" | "partial_refund" | "">("");
   const [refundAmount, setRefundAmount] = useState("");
   const [resolutionNote, setResolutionNote] = useState("");
+  const requestSeq = useRef(0);
 
   const load = useCallback(async () => {
-    // Initial loading/error state already covers mount; a later manual
-    // refresh (via this same function) just swaps data in place, since
-    // synchronous setState in the mount effect trips set-state-in-effect.
+    const mySeq = ++requestSeq.current;
     try {
-      setDisputes(await fetchAdminDisputes(status));
+      const rows = await fetchAdminDisputes(status);
+      if (mySeq !== requestSeq.current) return;
+      setDisputes(rows);
     } catch (cause) {
+      if (mySeq !== requestSeq.current) return;
       setError(isPlatformError(cause) ? cause.detail : "Could not load disputes.");
     } finally {
+      if (mySeq !== requestSeq.current) return;
       setLoading(false);
     }
   }, [status]);
@@ -78,15 +82,21 @@ export function AdminDisputesPanel() {
   }
 
   async function handleResolveFinancially(disputeId: string) {
-    if (!resolutionAction) return;
+    const validationError = validateDisputeFinancialResolution(resolutionAction, refundAmount);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    const action = resolutionAction;
+    if (!action) return;
     setSaving(true);
     setNotice(null);
     try {
       const updated = await patchAdminDispute(disputeId, {
         status: "resolved",
-        resolution_action: resolutionAction,
+        resolution_action: action,
         resolution_note: resolutionNote || null,
-        refund_amount_gbp: resolutionAction === "partial_refund" ? Number(refundAmount) : null,
+        refund_amount_gbp: action === "partial_refund" ? Number(refundAmount) : null,
       });
       setDisputes((current) => current.map((dispute) => (dispute.id === disputeId ? updated : dispute)));
       setNotice("Dispute resolved.");

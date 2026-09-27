@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AdminEmptyState,
   AdminErrorBanner,
@@ -22,18 +22,20 @@ export function AdminReferralPartnerDetailView({ partnerId }: { partnerId: strin
   const [signups, setSignups] = useState<ReferralVendorSignupRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const requestSeq = useRef(0);
 
   const load = useCallback(async () => {
-    // Initial loading/error state already covers mount; a later manual
-    // refresh (via this same function) just swaps data in place, since
-    // synchronous setState in the mount effect trips set-state-in-effect.
+    const mySeq = ++requestSeq.current;
     try {
       const result = await fetchReferralSignups(partnerId);
+      if (mySeq !== requestSeq.current) return;
       setPartner(result.partner);
       setSignups(result.signups);
     } catch (cause) {
+      if (mySeq !== requestSeq.current) return;
       setError(isPlatformError(cause) ? cause.detail : "Not found.");
     } finally {
+      if (mySeq !== requestSeq.current) return;
       setLoading(false);
     }
   }, [partnerId]);

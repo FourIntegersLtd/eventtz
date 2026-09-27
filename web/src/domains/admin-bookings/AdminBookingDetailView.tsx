@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { validateCancelOnBehalfReason } from "@/domains/admin-bookings/cancelOnBehalfValidation";
 import { Button } from "@/foundation/ui";
 import { useSession } from "@/foundation/session";
 import {
@@ -10,7 +11,7 @@ import {
   formatDateTime,
   formatGbp,
   humanize,
-  isSuperAdmin,
+  adminCapabilities,
 } from "@/capabilities/admin-shell";
 import { isPlatformError } from "@/foundation/platform-client";
 import {
@@ -41,7 +42,7 @@ import {
  */
 export function AdminBookingDetailView({ bookingId }: { bookingId: string }) {
   const { session } = useSession();
-  const canActOnMoney = isSuperAdmin(session);
+  const canActOnMoney = adminCapabilities.canRunBookingSupportActions(session);
 
   const [booking, setBooking] = useState<AdminBookingDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -51,16 +52,19 @@ export function AdminBookingDetailView({ bookingId }: { bookingId: string }) {
   const [showCancelOnBehalf, setShowCancelOnBehalf] = useState(false);
   const [cancelParty, setCancelParty] = useState<"client" | "vendor">("client");
   const [cancelReason, setCancelReason] = useState("");
+  const requestSeq = useRef(0);
 
   const load = useCallback(async () => {
-    // Initial loading/error state already covers mount; a later manual
-    // refresh (via this same function) just swaps data in place, since
-    // synchronous setState in the mount effect trips set-state-in-effect.
+    const mySeq = ++requestSeq.current;
     try {
-      setBooking(await fetchAdminBookingDetail(bookingId));
+      const detail = await fetchAdminBookingDetail(bookingId);
+      if (mySeq !== requestSeq.current) return;
+      setBooking(detail);
     } catch (cause) {
+      if (mySeq !== requestSeq.current) return;
       setError(isPlatformError(cause) ? cause.detail : "Not found.");
     } finally {
+      if (mySeq !== requestSeq.current) return;
       setLoading(false);
     }
   }, [bookingId]);
@@ -129,7 +133,11 @@ export function AdminBookingDetailView({ bookingId }: { bookingId: string }) {
   }
 
   async function handleCancelOnBehalf() {
-    if (!cancelReason.trim()) return;
+    const validationError = validateCancelOnBehalfReason(cancelReason);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
     setActionBusy("cancel");
     setNotice(null);
     try {

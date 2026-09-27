@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { adminMemberRoleLabel } from "@/domains/admin-team/adminMemberRoleLabel";
 import { Button, TextField } from "@/foundation/ui";
 import { useSession } from "@/foundation/session";
 import {
@@ -14,7 +15,7 @@ import {
   AdminTableHead,
   AdminTableHeaderCell,
   AdminTableRow,
-  isSuperAdmin,
+  adminCapabilities,
 } from "@/capabilities/admin-shell";
 import { isPlatformError } from "@/foundation/platform-client";
 import {
@@ -34,7 +35,7 @@ import {
  */
 export function AdminTeamView() {
   const { session } = useSession();
-  const superAdmin = isSuperAdmin(session);
+  const superAdmin = adminCapabilities.canManageAdminTeam(session);
   const selfUserId = session?.user.id;
 
   const [members, setMembers] = useState<AdminTeamMember[]>([]);
@@ -45,16 +46,19 @@ export function AdminTeamView() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteBusy, setInviteBusy] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
+  const requestSeq = useRef(0);
 
   const load = useCallback(async () => {
-    // Initial loading/error state already covers mount; a later manual
-    // refresh (via this same function) just swaps data in place, since
-    // synchronous setState in the mount effect trips set-state-in-effect.
+    const mySeq = ++requestSeq.current;
     try {
-      setMembers(await fetchAdminTeam());
+      const rows = await fetchAdminTeam();
+      if (mySeq !== requestSeq.current) return;
+      setMembers(rows);
     } catch (cause) {
+      if (mySeq !== requestSeq.current) return;
       setError(isPlatformError(cause) ? cause.detail : "Could not load the admin team.");
     } finally {
+      if (mySeq !== requestSeq.current) return;
       setLoading(false);
     }
   }, []);
@@ -192,10 +196,8 @@ export function AdminTeamView() {
                         <option value="admin">Admin</option>
                         <option value="super_admin">Super admin</option>
                       </select>
-                    ) : member.admin_role === "super_admin" ? (
-                      "Super admin"
                     ) : (
-                      "Admin"
+                      adminMemberRoleLabel(member.admin_role)
                     )}
                   </AdminTableCell>
                   <AdminTableCell>{member.account_suspended ? "Suspended" : "Active"}</AdminTableCell>

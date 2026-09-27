@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { formatDashboardGmvGbp } from "@/domains/admin-dashboard/dashboardTableFormat";
 import { AdminErrorBanner, AdminKpiCard, AdminLoadingState } from "@/capabilities/admin-shell";
 import { isPlatformError } from "@/foundation/platform-client";
 import {
@@ -21,21 +22,24 @@ export function AdminDashboardView() {
   const [metrics, setMetrics] = useState<AdminDashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const requestSeq = useRef(0);
 
   const load = useCallback(async () => {
-    // Initial loading/error state already covers mount; a later manual
-    // refresh (via this same function) just swaps data in place, since
-    // synchronous setState in the mount effect trips set-state-in-effect.
+    // Drop stale responses when a newer load starts before the previous fetch finishes (requestSeq).
+    const mySeq = ++requestSeq.current;
     try {
       const [loadedSummary, loadedMetrics] = await Promise.all([
         fetchAdminDashboardSummary(),
         fetchAdminDashboardMetrics(30),
       ]);
+      if (mySeq !== requestSeq.current) return;
       setSummary(loadedSummary);
       setMetrics(loadedMetrics);
     } catch (cause) {
+      if (mySeq !== requestSeq.current) return;
       setError(isPlatformError(cause) ? cause.detail : "Could not load the dashboard.");
     } finally {
+      if (mySeq !== requestSeq.current) return;
       setLoading(false);
     }
   }, []);
@@ -89,7 +93,7 @@ export function AdminDashboardView() {
                     <td className="py-2 pr-4">{bucket.date}</td>
                     <td className="py-2 pr-4">{bucket.count}</td>
                     <td className="py-2 pr-4">{paidBucket?.count ?? 0}</td>
-                    <td className="py-2 pr-4">£{(paidBucket?.gmv_gbp ?? 0).toFixed(2)}</td>
+                    <td className="py-2 pr-4">{formatDashboardGmvGbp(paidBucket?.gmv_gbp ?? 0)}</td>
                     <td className="py-2 pr-4">{signupBucket?.clients ?? 0}</td>
                     <td className="py-2">{signupBucket?.vendors ?? 0}</td>
                   </tr>
