@@ -1,18 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { helpHubPath, helpHubTabHref, helpMessagesPath, parseHelpHubTab } from "@/domains/help/helpHub";
+import { helpHubPath, helpHubTabHref, parseHelpHubTab } from "@/domains/help/helpHub";
 
 describe("helpHubPath", () => {
   it("points each portal at its own help hub", () => {
     assert.equal(helpHubPath("client"), "/client/help");
     assert.equal(helpHubPath("vendor"), "/vendor/help");
-  });
-});
-
-describe("helpMessagesPath", () => {
-  it("nests the messages path under the hub", () => {
-    assert.equal(helpMessagesPath("client"), "/client/help/messages");
-    assert.equal(helpMessagesPath("vendor"), "/vendor/help/messages");
   });
 });
 

@@ -34,6 +34,14 @@ const nextConfig: NextConfig = {
       ],
     };
   },
+  async redirects() {
+    // An open help-hub thread's back link targets `{portal}/help/messages`,
+    // which has no page of its own; the inbox lives on the hub root.
+    return [
+      { source: "/client/help/messages", destination: "/client/help", permanent: false },
+      { source: "/vendor/help/messages", destination: "/vendor/help", permanent: false },
+    ];
+  },
   async headers() {
     return [
       {

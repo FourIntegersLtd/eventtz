@@ -23,11 +23,6 @@ export function helpHubPath(portal: HelpPortal): string {
   return portal === "client" ? "/client/help" : "/vendor/help";
 }
 
-/** The messages sub-path under the help hub: `/{portal}/help/messages`. */
-export function helpMessagesPath(portal: HelpPortal): string {
-  return `${helpHubPath(portal)}/messages`;
-}
-
 /** The href for a given tab. Messages is the default (no query param). */
 export function helpHubTabHref(portal: HelpPortal, tab: HelpHubTab): string {
   if (tab === "messages") return helpHubPath(portal);
