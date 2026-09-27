@@ -479,6 +479,17 @@ async def get_plan_detail(session: AsyncSession, client_user_id: str, plan_id: s
         confidence=Confidence(score=confidence_score, reasons=confidence_reasons),
         budget=budget,
         recommendations=recommendations,
+        next_steps=domain.suggested_next_steps(
+            [
+                domain.NeedOutcome(
+                    label=recommendation.label,
+                    has_primary=recommendation.primary is not None,
+                    optional=recommendation.optional,
+                )
+                for recommendation in recommendations
+            ],
+            budget_stated=plan.brief.get("budget_gbp") is not None,
+        ),
         created_at=plan.created_at or "",
         updated_at=plan.updated_at or "",
     )

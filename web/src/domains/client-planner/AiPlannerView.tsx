@@ -21,6 +21,7 @@ import {
   recentPlanSubtitle,
 } from "@/domains/client-planner/plannerModel";
 import { BudgetBreakdown } from "@/domains/client-planner/BudgetBreakdown";
+import { PlannerNextSteps } from "@/domains/client-planner/PlannerNextSteps";
 import { CelebrationSummary } from "@/domains/client-planner/CelebrationSummary";
 import { ConfidenceBadge } from "@/domains/client-planner/ConfidenceBadge";
 import { PlannerPromptHero } from "@/domains/client-planner/PlannerPromptHero";
@@ -172,6 +173,7 @@ export function AiPlannerView({ initialPlanId }: { initialPlanId?: string }) {
             </div>
             <div className="space-y-5 lg:sticky lg:top-20">
               <BudgetBreakdown budget={plan.budget} />
+              <PlannerNextSteps steps={plan.next_steps} />
             </div>
           </div>
         </div>

@@ -73,6 +73,7 @@ const weddingPlan = {
     },
   ],
   created_at: "2026-09-01T00:00:00Z",
+  next_steps: [],
   updated_at: "2026-09-01T00:00:00Z",
 } satisfies PlanDetail;
 

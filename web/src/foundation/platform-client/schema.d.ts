@@ -6926,6 +6926,8 @@ export interface components {
             confidence: components["schemas"]["Confidence"];
             /** Created At */
             created_at: string;
+            /** Next Steps */
+            next_steps: string[];
             /** Plan Id */
             plan_id: string;
             /** Recommendations */

@@ -127,6 +127,11 @@ async def test_generate_plan_recommends_a_listed_vendor_for_a_need(
     assert primary is not None
     assert primary["business_name"] == VENDOR_BUSINESS_NAME
     assert primary["unavailable"] is False
+    # A budget was stated, so the list ends with the profile step then the budget step.
+    assert body["next_steps"][-2:] == [
+        "Open a vendor profile to request a booking - nothing is booked until you confirm.",
+        "Compare estimated costs against your budget before enquiring.",
+    ]
     assert fake_language_model.calls, "the planner must go through the LanguageModel port, not skip it"
 
 

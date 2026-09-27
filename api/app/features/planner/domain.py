@@ -279,6 +279,38 @@ def compute_confidence(
     return score, reasons[:3]
 
 
+# --- what the client should do next -----------------------------------------------------------------
+
+MAX_NEXT_STEPS = 4
+
+
+@dataclass(frozen=True)
+class NeedOutcome:
+    """What the next-steps list needs to know about one need on a finished plan."""
+
+    label: str
+    has_primary: bool
+    optional: bool
+
+
+def suggested_next_steps(needs: list[NeedOutcome], *, budget_stated: bool) -> list[str]:
+    """Up to four plain-English next steps for the plan, in the baseline's order and wording.
+
+    The first required need with a pick is named because the baseline treats it as the one
+    most likely to book out; a need with no pick asks the client to widen the search.
+    """
+    steps: list[str] = []
+    required_with_pick = [need for need in needs if need.has_primary and not need.optional]
+    if required_with_pick:
+        steps.append(f"Review {required_with_pick[0].label.lower()} first - it often books out earliest.")
+    if any(not need.has_primary for need in needs):
+        steps.append("Widen location or budget for categories with no matches, then Replace.")
+    steps.append("Open a vendor profile to request a booking - nothing is booked until you confirm.")
+    if budget_stated:
+        steps.append("Compare estimated costs against your budget before enquiring.")
+    return steps[:MAX_NEXT_STEPS]
+
+
 # --- estimating and allocating money --------------------------------------------------------------
 
 

@@ -8640,6 +8640,13 @@
             "title": "Created At",
             "type": "string"
           },
+          "next_steps": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Next Steps",
+            "type": "array"
+          },
           "plan_id": {
             "title": "Plan Id",
             "type": "string"
@@ -8674,6 +8681,7 @@
           "confidence",
           "budget",
           "recommendations",
+          "next_steps",
           "created_at",
           "updated_at"
         ],

@@ -136,6 +136,8 @@ class PlanDetailResponse(BaseModel):
     confidence: Confidence
     budget: BudgetBreakdown
     recommendations: list[PlanRecommendation]
+    # Suggested next steps, worked out from the recommendations on every read (never stored).
+    next_steps: list[str]
     created_at: str
     updated_at: str
 
