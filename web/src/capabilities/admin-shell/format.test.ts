@@ -4,14 +4,18 @@ import { formatDate, formatDateTime, formatGbp, humanize } from "@/capabilities/
 
 test("formatDate renders a UK-style date and handles missing values", () => {
   assert.equal(formatDate("2026-09-26T10:00:00Z"), "26 Sep 2026");
+  assert.equal(formatDate("2026-01-01T00:00:00Z"), "1 Jan 2026");
   assert.equal(formatDate(null), "-");
   assert.equal(formatDate(undefined), "-");
   assert.equal(formatDate("not-a-date"), "-");
+  assert.equal(formatDate(""), "-");
 });
 
 test("formatDateTime includes the time", () => {
   assert.equal(formatDateTime("2026-09-26T10:05:00Z"), "26 Sep 2026, 10:05");
+  assert.equal(formatDateTime("2026-12-31T23:59:00Z"), "31 Dec 2026, 23:59");
   assert.equal(formatDateTime(null), "-");
+  assert.equal(formatDateTime("invalid"), "-");
 });
 
 test("formatGbp renders a currency string and handles missing values", () => {

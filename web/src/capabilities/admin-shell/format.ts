@@ -6,6 +6,13 @@
  * helpers only handle display formatting, never unit conversion.
  */
 
+/** Three-letter month labels in UTC — avoids ICU differences (`Sep` vs `Sept`). */
+const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function padTwoDigits(value: number): string {
+  return value < 10 ? `0${value}` : String(value);
+}
+
 /**
  * `2026-09-26T10:00:00Z` -> `26 Sep 2026`. Returns a placeholder for a missing value.
  *
@@ -17,12 +24,7 @@ export function formatDate(value: string | null | undefined): string {
   if (!value) return "-";
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return "-";
-  return parsed.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  });
+  return `${parsed.getUTCDate()} ${MONTH_SHORT[parsed.getUTCMonth()]} ${parsed.getUTCFullYear()}`;
 }
 
 /** `2026-09-26T10:00:00Z` -> `26 Sep 2026, 10:00`. Returns a placeholder for a missing value. UTC, see `formatDate`. */
@@ -30,14 +32,9 @@ export function formatDateTime(value: string | null | undefined): string {
   if (!value) return "-";
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return "-";
-  return parsed.toLocaleString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "UTC",
-  });
+  const hours = padTwoDigits(parsed.getUTCHours());
+  const minutes = padTwoDigits(parsed.getUTCMinutes());
+  return `${formatDate(value)}, ${hours}:${minutes}`;
 }
 
 /** `1234.5` -> `£1,234.50`. Returns a placeholder for a missing value. */
