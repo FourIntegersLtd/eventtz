@@ -227,7 +227,8 @@ export function clientSearchContextFromBrowse(
     state.fromPlannerPlanId?.trim() ||
     searchParams?.get("fromPlanner")?.trim() ||
     null;
-  if (!planId) return { ...base, source: "browse" };
+  // The baseline stores no `source` for a plain browse; only a planner handoff is tagged.
+  if (!planId) return base;
   return { ...base, source: "planner", plannerPlanId: planId };
 }
 
