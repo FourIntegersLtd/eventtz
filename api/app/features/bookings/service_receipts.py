@@ -222,103 +222,81 @@ def render_receipt_html(payload: dict[str, Any]) -> str:
     return notifications_service.render_receipt_document_html(context)
 
 
-async def _freeze_after_checkout_body(session: AsyncSession, mailer: Mailer, booking_id: str) -> None:
-    """Build snapshots, persist them write-once, and email client and vendor."""
-    await repository_receipts._maybe_inject_savepoint_test_db_error(session, booking_id)
-    booking = await repository_receipts.get_booking_for_receipt(session, booking_id)
-    if booking is None:
-        return
-    vendor_names = await service_listing.display_names(session, [booking.vendor_user_id])
-    vendor_name = vendor_names.get(booking.vendor_user_id, _UNKNOWN_VENDOR_NAME)
-    client_names = await identity.client_display_names(session, [booking.client_user_id])
-    client_name = client_names.get(booking.client_user_id, "Client")
-    pricing_breakdown = (await service_pricing.current_breakdown(session, booking)).to_dict()
-    client_snapshot = domain_receipts.build_client_payment_receipt(
-        booking, pricing_breakdown=pricing_breakdown, vendor_display_name=vendor_name
-    )
-    vendor_snapshot = domain_receipts.build_vendor_payment_record(
-        booking, pricing_breakdown=pricing_breakdown, client_display_name=client_name
-    )
-    await repository_receipts.freeze_receipt_snapshots(
-        session,
-        booking_id,
-        client_snapshot=client_snapshot,
-        vendor_record_snapshot=vendor_snapshot,
-    )
-    for user_id, payload in (
-        (booking.client_user_id, client_snapshot),
-        (booking.vendor_user_id, vendor_snapshot),
-    ):
-        if not user_id:
-            continue
+async def freeze_after_checkout(session: AsyncSession, mailer: Mailer, booking_id: str) -> None:
+    """Write-once client and vendor payment documents, then email both parties (baseline checkout hook)."""
+    async with repository_receipts.receipt_freeze_savepoint(session):
+        booking = await repository_receipts.get_booking_for_receipt(session, booking_id)
+        if booking is None:
+            return
+        vendor_names = await service_listing.display_names(session, [booking.vendor_user_id])
+        vendor_name = vendor_names.get(booking.vendor_user_id, _UNKNOWN_VENDOR_NAME)
+        client_names = await identity.client_display_names(session, [booking.client_user_id])
+        client_name = client_names.get(booking.client_user_id, "Client")
+        pricing_breakdown = (await service_pricing.current_breakdown(session, booking)).to_dict()
+        client_snapshot = domain_receipts.build_client_payment_receipt(
+            booking, pricing_breakdown=pricing_breakdown, vendor_display_name=vendor_name
+        )
+        vendor_snapshot = domain_receipts.build_vendor_payment_record(
+            booking, pricing_breakdown=pricing_breakdown, client_display_name=client_name
+        )
+        await repository_receipts.freeze_receipt_snapshots(
+            session,
+            booking_id,
+            client_snapshot=client_snapshot,
+            vendor_record_snapshot=vendor_snapshot,
+        )
+        for user_id, payload in (
+            (booking.client_user_id, client_snapshot),
+            (booking.vendor_user_id, vendor_snapshot),
+        ):
+            if not user_id:
+                continue
+            try:
+                await notifications_service.send_receipt_email(
+                    session,
+                    mailer,
+                    user_id=user_id,
+                    booking_id=booking_id,
+                    receipt_payload=payload,
+                )
+            except Exception:
+                log.warning(
+                    "bookings: payment receipt email failed booking=%s user=%s",
+                    booking_id,
+                    user_id,
+                    exc_info=True,
+                )
+
+
+async def freeze_after_payout(session: AsyncSession, mailer: Mailer, booking_id: str) -> None:
+    """Write-once payout statement and email the vendor (baseline payout release hook)."""
+    async with repository_receipts.receipt_freeze_savepoint(session):
+        booking = await repository_receipts.get_booking_for_receipt(session, booking_id)
+        if booking is None:
+            return
+        client_names = await identity.client_display_names(session, [booking.client_user_id])
+        client_name = client_names.get(booking.client_user_id, "Client")
+        pricing_breakdown = (await service_pricing.current_breakdown(session, booking)).to_dict()
+        statement = domain_receipts.build_vendor_payout_statement(
+            booking, pricing_breakdown=pricing_breakdown, client_display_name=client_name
+        )
+        await repository_receipts.freeze_payout_statement_snapshot(
+            session, booking_id, statement_snapshot=statement
+        )
+        if not booking.vendor_user_id:
+            return
         try:
             await notifications_service.send_receipt_email(
                 session,
                 mailer,
-                user_id=user_id,
+                user_id=booking.vendor_user_id,
                 booking_id=booking_id,
-                receipt_payload=payload,
+                receipt_payload=statement,
             )
         except Exception:
             log.warning(
-                "bookings: payment receipt email failed booking=%s user=%s",
+                "bookings: payout statement email failed booking=%s vendor=%s",
                 booking_id,
-                user_id,
+                booking.vendor_user_id,
                 exc_info=True,
             )
-
-
-async def freeze_after_checkout(
-    session: AsyncSession, mailer: Mailer, booking_id: str, *, _use_savepoint: bool = True
-) -> None:
-    """Write-once client and vendor payment documents, then email both parties (baseline checkout hook)."""
-    if _use_savepoint:
-        async with repository_receipts.receipt_freeze_savepoint(session):
-            await _freeze_after_checkout_body(session, mailer, booking_id)
-    else:
-        await _freeze_after_checkout_body(session, mailer, booking_id)
-
-
-async def _freeze_after_payout_body(session: AsyncSession, mailer: Mailer, booking_id: str) -> None:
-    """Build the payout statement snapshot, persist it write-once, and email the vendor."""
-    await repository_receipts._maybe_inject_savepoint_test_db_error(session, booking_id)
-    booking = await repository_receipts.get_booking_for_receipt(session, booking_id)
-    if booking is None:
-        return
-    client_names = await identity.client_display_names(session, [booking.client_user_id])
-    client_name = client_names.get(booking.client_user_id, "Client")
-    pricing_breakdown = (await service_pricing.current_breakdown(session, booking)).to_dict()
-    statement = domain_receipts.build_vendor_payout_statement(
-        booking, pricing_breakdown=pricing_breakdown, client_display_name=client_name
-    )
-    await repository_receipts.freeze_payout_statement_snapshot(
-        session, booking_id, statement_snapshot=statement
-    )
-    if not booking.vendor_user_id:
-        return
-    try:
-        await notifications_service.send_receipt_email(
-            session,
-            mailer,
-            user_id=booking.vendor_user_id,
-            booking_id=booking_id,
-            receipt_payload=statement,
-        )
-    except Exception:
-        log.warning(
-            "bookings: payout statement email failed booking=%s vendor=%s",
-            booking_id,
-            booking.vendor_user_id,
-            exc_info=True,
-        )
-
-
-async def freeze_after_payout(
-    session: AsyncSession, mailer: Mailer, booking_id: str, *, _use_savepoint: bool = True
-) -> None:
-    """Write-once payout statement and email the vendor (baseline payout release hook)."""
-    if _use_savepoint:
-        async with repository_receipts.receipt_freeze_savepoint(session):
-            await _freeze_after_payout_body(session, mailer, booking_id)
-    else:
-        await _freeze_after_payout_body(session, mailer, booking_id)
