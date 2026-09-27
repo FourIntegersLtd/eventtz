@@ -14,6 +14,7 @@ import {
 import { bookingStatusLabel, formatGbp, paymentStatusLabel } from "@/domains/client-bookings/format";
 import { BookingStatusActions } from "@/domains/client-bookings/BookingStatusActions";
 import { PriceUpdateBanner } from "@/domains/client-bookings/PriceUpdateBanner";
+import { BookingDisputeSection } from "@/domains/client-bookings/BookingDisputeSection";
 import { ClientReviewForm } from "@/domains/client-bookings/ClientReviewForm";
 import { ReviewSummaryCard } from "@/domains/client-bookings/ReviewSummaryCard";
 import { clientBookingHref, type CheckoutReturnTone } from "@/domains/client-bookings/checkoutReturn";
@@ -122,6 +123,8 @@ export function BookingDetailView({ bookingId }: { bookingId: string }) {
             <p className="mt-1 text-xs text-neutral-500">{paymentStatusLabel(booking.payment_status)}</p>
           </div>
         </div>
+
+        <BookingDisputeSection bookingId={bookingId} bookingStatus={booking.booking_status} />
 
         {model.venueAddress || model.venuePostcode ? (
           <p className="mt-3 text-sm text-neutral-600">{[model.venueAddress, model.venuePostcode].filter(Boolean).join(", ")}</p>

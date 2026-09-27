@@ -1,4 +1,4 @@
-import { DisputeDetailView } from "@/domains/vendor-disputes/DisputeDetailView";
+import { DisputeDetailView } from "@/domains/disputes/DisputeDetailView";
 
 type PageProps = {
   params: Promise<{ disputeId: string }>;
@@ -7,5 +7,5 @@ type PageProps = {
 /** `/vendor/disputes/[disputeId]` — one dispute's full detail. */
 export default async function VendorDisputeDetailPage({ params }: PageProps) {
   const { disputeId } = await params;
-  return <DisputeDetailView key={disputeId} disputeId={disputeId} />;
+  return <DisputeDetailView key={disputeId} role="vendor" disputeId={disputeId} />;
 }

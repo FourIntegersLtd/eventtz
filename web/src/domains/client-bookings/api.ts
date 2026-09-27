@@ -142,3 +142,21 @@ export async function postClientBookingReview(
 export function markAllClientBookingNotificationsRead(): Promise<void> {
   return platformRequest<void>("/api/v1/client/notifications/bookings/mark-all-read", { method: "POST" });
 }
+
+/** A dispute on one of the client's bookings, as the client is allowed to see it. */
+export type ClientBookingDispute = components["schemas"]["DisputePublic"];
+
+/** Disputes on this booking; an empty list if the client isn't a party to it. */
+export function fetchClientBookingDisputes(bookingId: string): Promise<ClientBookingDispute[]> {
+  return platformRequest<components["schemas"]["DisputesListResponse"]>(
+    `/api/v1/client/booking-requests/${encodeURIComponent(bookingId)}/disputes`,
+  ).then((response) => response.disputes);
+}
+
+/** Open a dispute on one of the client's own bookings. The summary is the client's own words. */
+export function postClientBookingDispute(bookingId: string, summary: string): Promise<ClientBookingDispute> {
+  return platformRequest<components["schemas"]["CreateDisputeResponse"]>(
+    `/api/v1/client/booking-requests/${encodeURIComponent(bookingId)}/disputes`,
+    { method: "POST", body: { summary } },
+  ).then((response) => response.dispute);
+}
