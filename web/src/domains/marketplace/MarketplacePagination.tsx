@@ -7,26 +7,14 @@ type MarketplacePaginationProps = {
   onPageChange: (page: number) => void;
 };
 
-function pageItems(page: number, totalPages: number): (number | "ellipsis")[] {
-  if (totalPages <= 7) {
-    return Array.from({ length: totalPages }, (_, idx) => idx + 1);
-  }
-  const items: (number | "ellipsis")[] = [1];
-  const start = Math.max(2, page - 1);
-  const end = Math.min(totalPages - 1, page + 1);
-  if (start > 2) items.push("ellipsis");
-  for (let n = start; n <= end; n++) items.push(n);
-  if (end < totalPages - 1) items.push("ellipsis");
-  items.push(totalPages);
-  return items;
-}
+import { marketplacePaginationWindow } from "./marketplacePaginationWindow";
 
 const squareBtn = "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-40";
 
 export function MarketplacePagination({ page, totalCount, pageSize, onPageChange }: MarketplacePaginationProps) {
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   if (totalCount <= pageSize) return null;
-  const list = pageItems(page, totalPages);
+  const list = marketplacePaginationWindow(page, totalPages);
 
   return (
     <nav aria-label="Browse pages" className="mt-8 flex flex-wrap items-center justify-center gap-2.5">

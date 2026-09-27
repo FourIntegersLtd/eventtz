@@ -147,6 +147,65 @@ export function buildClientBrowseVendorUrl(
   return buildMarketplaceSearchUrl(`/client/browse/${vendorUserId}`, state);
 }
 
+/** Dates from browse filters for booking modal prefill. */
+export type MarketplaceBookingSearchPrefill = {
+  eventDate: string;
+  eventEndDate?: string;
+  datesFlexible: boolean;
+};
+
+export function marketplaceSearchPrefillFromState(
+  state: MarketplaceSearchState,
+): MarketplaceBookingSearchPrefill {
+  const dates = state.dates;
+  const first = dates[0];
+  let eventEndDate: string | undefined;
+  if (dates.length === 2 && first && dates[1] && dates[1] >= first) {
+    eventEndDate = dates[1];
+  }
+  return {
+    eventDate: first ?? "",
+    eventEndDate,
+    datesFlexible: state.dateFlexible,
+  };
+}
+
+export type ClientSearchContext = {
+  q?: string;
+  types?: string[];
+  location?: string;
+  country?: string;
+  dates?: string[];
+  dateFlexible?: boolean;
+  source?: "planner";
+  plannerPlanId?: string;
+};
+
+function toClientSearchContext(state: MarketplaceSearchState): ClientSearchContext {
+  return {
+    q: state.query.trim() || undefined,
+    types: state.types.length ? state.types : undefined,
+    location: state.location.trim() || undefined,
+    country: state.country || undefined,
+    dates: state.dates.length ? state.dates : undefined,
+    dateFlexible: state.dateFlexible || undefined,
+  };
+}
+
+/** Browse filters plus optional planner handoff for booking analytics context. */
+export function clientSearchContextFromBrowse(
+  state: MarketplaceSearchState,
+  searchParams?: URLSearchParams | null,
+): ClientSearchContext {
+  const base = toClientSearchContext(state);
+  const planId =
+    state.fromPlannerPlanId?.trim() ||
+    searchParams?.get("fromPlanner")?.trim() ||
+    null;
+  if (!planId) return base;
+  return { ...base, source: "planner", plannerPlanId: planId };
+}
+
 /** Map URL marketplace state to the explore search API query params. */
 export function marketplaceStateToExploreQuery(
   state: MarketplaceSearchState,

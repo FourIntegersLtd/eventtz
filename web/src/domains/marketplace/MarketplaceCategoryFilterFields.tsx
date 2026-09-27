@@ -15,12 +15,15 @@ export function categoryChipLabel(types: string[]): string {
 type MarketplaceCategoryFilterFieldsProps = {
   types: string[];
   onToggleType: (value: string) => void;
+  /** Approved vendor counts per category (from explore listing). */
+  categoryCounts?: Record<string, number>;
 };
 
 /** Checkbox list of vendor service categories for the filters drawer. */
 export function MarketplaceCategoryFilterFields({
   types,
   onToggleType,
+  categoryCounts,
 }: MarketplaceCategoryFilterFieldsProps) {
   return (
     <div className="space-y-1">
@@ -35,7 +38,12 @@ export function MarketplaceCategoryFilterFields({
             onChange={() => onToggleType(option.value)}
             className="rounded border-neutral-300 text-primary focus:ring-primary"
           />
-          <span className="text-sm text-neutral-800">{option.label}</span>
+          <span className="text-sm text-neutral-800">
+            {option.label}
+            {categoryCounts && categoryCounts[option.value] != null
+              ? ` (${categoryCounts[option.value]})`
+              : null}
+          </span>
         </label>
       ))}
     </div>

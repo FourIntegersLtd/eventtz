@@ -8,6 +8,7 @@ import {
   mergeClientFavorites,
   removeClientFavorite,
 } from "./api";
+import { shouldMergeGuestFavorites } from "./marketplaceBookmarkMerge";
 
 const STORAGE_KEY = "eventtz_saved_vendor_ids";
 const MERGED_KEY = "eventtz_favorites_merged";
@@ -59,7 +60,10 @@ export function useMarketplaceBookmarks() {
         try {
           const localIds = [...readLocalIds()];
           const mergeFlag = window.localStorage.getItem(MERGED_KEY);
-          if (localIds.length > 0 && mergeFlag !== clientId && !mergeAttempted.current) {
+          if (
+            shouldMergeGuestFavorites(localIds, mergeFlag, clientId) &&
+            !mergeAttempted.current
+          ) {
             mergeAttempted.current = true;
             await mergeClientFavorites(localIds);
             window.localStorage.setItem(MERGED_KEY, clientId);

@@ -6,6 +6,8 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import {
   buildMarketplaceSearchUrl,
+  clientSearchContextFromBrowse,
+  marketplaceSearchPrefillFromState,
   marketplaceStateFromSearchParams,
   marketplaceStateToExploreQuery,
 } from "./marketplaceSearchParams";
@@ -27,6 +29,42 @@ describe("marketplaceSearchParams helpers", () => {
     assert.strictEqual(roundTrip.dateFlexible, true);
     assert.strictEqual(roundTrip.fromPlannerPlanId, "plan-123");
     assert.strictEqual(roundTrip.linkedEventId, "evt-1");
+  });
+
+  it("builds booking search prefill from marketplace dates", () => {
+    const prefill = marketplaceSearchPrefillFromState({
+      query: "",
+      types: [],
+      location: "",
+      country: "GB",
+      dates: ["2026-09-20", "2026-09-22"],
+      dateFlexible: false,
+      budgetMin: null,
+      budgetMax: null,
+      sort: "relevance",
+      page: 1,
+      vendorIds: [],
+      fromPlannerPlanId: null,
+      eventName: "",
+      venue: "",
+      planNotes: "",
+      linkedEventId: null,
+    });
+    assert.deepStrictEqual(prefill, {
+      eventDate: "2026-09-20",
+      eventEndDate: "2026-09-22",
+      datesFlexible: false,
+    });
+  });
+
+  it("adds planner attribution to client search context", () => {
+    const state = marketplaceStateFromSearchParams(
+      new URLSearchParams("fromPlanner=plan-abc&location=Leeds"),
+    );
+    const context = clientSearchContextFromBrowse(state);
+    assert.strictEqual(context.source, "planner");
+    assert.strictEqual(context.plannerPlanId, "plan-abc");
+    assert.strictEqual(context.location, "Leeds");
   });
 
   it("maps marketplace state to explore API query", () => {
