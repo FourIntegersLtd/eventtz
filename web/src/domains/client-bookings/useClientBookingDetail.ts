@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { GENERIC_ERROR_MESSAGE, platformErrorDetail } from "@/foundation/platform-client";
 import {
   fetchClientBookingDetail,
@@ -35,6 +35,8 @@ interface LoadResult {
  * accept/decline a vendor's quote or updated price, cancel, confirm
  * completion, and submit a review. The venue is set on the pay page. Each
  * mutation re-syncs from the server rather than guessing the new state.
+ * `replaceBooking` is how the Stripe return drops a freshly fetched booking
+ * in without waiting for another round trip.
  *
  * `loading` is derived from whether the latest result answers the current
  * `bookingId`, and every `setState` happens inside the fetch's `.then`/`.catch`
@@ -45,11 +47,26 @@ export function useClientBookingDetail(bookingId: string) {
   const [result, setResult] = useState<LoadResult | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<ClientBookingAction | null>(null);
+  // Bumped when a checkout sync replaces the detail, so an older in-flight
+  // load cannot overwrite a payment status the server just verified.
+  const loadGeneration = useRef(0);
+
+  const replaceBooking = useCallback((booking: ClientBookingDetail) => {
+    loadGeneration.current += 1;
+    setResult({ bookingId, booking, error: null });
+  }, [bookingId]);
 
   const load = useCallback(() => {
+    const generation = loadGeneration.current;
     fetchClientBookingDetail(bookingId)
-      .then((booking) => setResult({ bookingId, booking, error: null }))
-      .catch((cause: unknown) => setResult({ bookingId, booking: null, error: platformErrorDetail(cause) ?? GENERIC_ERROR_MESSAGE }));
+      .then((booking) => {
+        if (generation !== loadGeneration.current) return;
+        setResult({ bookingId, booking, error: null });
+      })
+      .catch((cause: unknown) => {
+        if (generation !== loadGeneration.current) return;
+        setResult({ bookingId, booking: null, error: platformErrorDetail(cause) ?? GENERIC_ERROR_MESSAGE });
+      });
   }, [bookingId]);
 
   useEffect(() => {
@@ -122,6 +139,7 @@ export function useClientBookingDetail(bookingId: string) {
     actionError,
     pendingAction,
     reload: load,
+    replaceBooking,
     cancel,
     respondToQuote,
     respondToPriceUpdate,

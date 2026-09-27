@@ -76,12 +76,15 @@ test("bookingCanBePaid requires an accepted status and an unpaid/pending payment
   assert.equal(bookingCanBePaid({ booking_status: "accepted", payment_status: "pending" }), true);
   assert.equal(bookingCanBePaid({ booking_status: "accepted", payment_status: "paid" }), false);
   assert.equal(bookingCanBePaid({ booking_status: "pending", payment_status: "unpaid" }), false);
+  assert.equal(bookingCanBePaid({ booking_status: "declined", payment_status: "unpaid" }), false);
 });
 
 test("bookingNeedsVenue is true when the address is blank", () => {
+  assert.equal(bookingNeedsVenue(undefined), true);
   assert.equal(bookingNeedsVenue(null), true);
   assert.equal(bookingNeedsVenue(""), true);
   assert.equal(bookingNeedsVenue("   "), true);
+  assert.equal(bookingNeedsVenue("12 Park Lane"), false);
   assert.equal(bookingNeedsVenue("12 High Street"), false);
 });
 

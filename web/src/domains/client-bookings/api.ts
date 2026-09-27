@@ -7,6 +7,7 @@
  * hand-typed, so a change to `api/openapi.json` shows up at compile time.
  */
 import { platformRequest, type components } from "@/foundation/platform-client";
+import { checkoutSyncBody } from "@/domains/client-bookings/checkoutReturn";
 
 export type ClientBookingListItem = components["schemas"]["ClientBookingListItem"];
 export type ClientBookingDetail = components["schemas"]["ClientBookingDetail"];
@@ -71,6 +72,33 @@ export async function patchClientBookingStatus(
   return platformRequest<components["schemas"]["VendorBookingStatusResponse"]>(
     `/api/v1/client/booking-requests/${encodeURIComponent(bookingId)}/status`,
     { method: "PATCH", body: { status } },
+  );
+}
+
+/**
+ * Starts Stripe Checkout for an accepted, unpaid booking. No request body:
+ * the server prices the booking. Returns the hosted Checkout URL unchanged.
+ */
+export async function postClientBookingCheckout(bookingId: string): Promise<string> {
+  const response = await platformRequest<components["schemas"]["BookingCheckoutResponse"]>(
+    `/api/v1/client/booking-requests/${encodeURIComponent(bookingId)}/checkout`,
+    { method: "POST" },
+  );
+  return response.checkout_url;
+}
+
+/**
+ * Asks the server to check the Checkout session with Stripe and report the
+ * booking's payment status. A return URL includes `session_id`; a silent
+ * sync of a still-pending booking sends `{}`.
+ */
+export async function postClientBookingCheckoutSync(
+  bookingId: string,
+  sessionId?: string | null,
+): Promise<components["schemas"]["BookingCheckoutSyncResponse"]> {
+  return platformRequest<components["schemas"]["BookingCheckoutSyncResponse"]>(
+    `/api/v1/client/booking-requests/${encodeURIComponent(bookingId)}/checkout/sync`,
+    { method: "POST", body: checkoutSyncBody(sessionId) },
   );
 }
 

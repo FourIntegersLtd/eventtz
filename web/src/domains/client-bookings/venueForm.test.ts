@@ -23,20 +23,17 @@ test("an address over 500 characters is rejected", () => {
   assert.equal(result.fieldErrors.eventAddress, "Address is too long.");
 });
 
-test("a valid venue trims the address and postcode, then builds the body", () => {
-  const result = parseVenueForm({ eventAddress: "  12 High Street  ", eventPostcode: "  SW1A 1AA  " });
+test("a valid venue trims the address and builds the venue body", () => {
+  const result = parseVenueForm({ eventAddress: "  12 High Street  " });
   assert.equal(result.ok, true);
   if (!result.ok) assert.fail();
   assert.equal(result.data.eventAddress, "12 High Street");
-  assert.equal(result.data.eventPostcode, "SW1A 1AA");
-
-  const body = toUpdateVenueBody(result.data);
-  assert.deepEqual(body, { event_address: "12 High Street", event_postcode: "SW1A 1AA" });
+  assert.deepEqual(toUpdateVenueBody(result.data), { event_address: "12 High Street" });
 });
 
-test("a blank postcode is omitted from the body", () => {
-  const body = toUpdateVenueBody({ eventAddress: "12 High Street", eventPostcode: "   " });
-  assert.equal(body.event_address, "12 High Street");
-  assert.equal(body.event_postcode, undefined);
-  assert.deepEqual(Object.keys(body).sort(), ["event_address"]);
+test("the pay-page venue example is accepted", () => {
+  const result = parseVenueForm({ eventAddress: "The Grand Hall, 12 Park Lane, London" });
+  assert.equal(result.ok, true);
+  if (!result.ok) assert.fail();
+  assert.equal(result.data.eventAddress.includes("Park Lane"), true);
 });

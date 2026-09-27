@@ -71,6 +71,47 @@ export const PAYMENT_FLOW_COPY = {
     title: "Paying your vendor",
     body: "You've both confirmed the event went well. We're releasing the vendor's payout now — this usually takes a moment.",
   },
+  /** Payment success banner (client), from the baseline `bookingConfirmCopy.ts`. */
+  paymentSuccess:
+    "Thank you, your payment is received. We are holding it safely until your event is complete. After your event, please confirm everything went well so your vendor can be paid. If anything was not right, you have 48 hours to report a problem and we will help.",
+  /** Stripe return URL landed with payment=cancelled. */
+  paymentCancelledReturn: "Payment cancelled. Try again when you're ready.",
+  /** Stripe return URL while webhook/sync is still catching up. */
+  paymentConfirming: "Confirming your payment…",
+  /** Sync failed after a successful Checkout; webhook may still complete. */
+  paymentSyncPending: "Payment went through. Refresh in a moment if it doesn't update.",
+  /** Deep-link to /pay when the booking is not accepted + unpaid/pending. */
+  payNotReady: "This booking isn't ready for payment. Go back to the booking for the current status.",
+} as const;
+
+/** Copy for `/client/bookings/[bookingId]/pay`, from the baseline `CLIENT_PAY_PAGE_COPY`. */
+export const CLIENT_PAY_PAGE_COPY = {
+  venueTitle: "Event location",
+  venueIntro:
+    "We need your event address before you pay. You will see how we protect your payment on the next step.",
+  safetyIntro: "Review how we protect your payment, then continue.",
+} as const;
+
+/** Pre-checkout modal: how client funds are protected. From the baseline `PAYMENT_SAFETY_COPY`. */
+export const PAYMENT_SAFETY_COPY = {
+  modalTitle: "Your payment is in safe hands",
+  intro: "Before you continue, here is how we look after you and your money:",
+  points: [
+    "Your payment stays safely with Eventtz until your event is complete.",
+    "After your event, please confirm everything went well so we can pay your vendor with confidence.",
+    "If anything did not go to plan, you have 48 hours after the event to report a problem and we will be here to help.",
+    "When all is well, we will release payment to your vendor automatically after 48 hours.",
+  ],
+  confirmLabel: "Continue to secure payment",
+  cancelLabel: "Go back",
+} as const;
+
+/** Fallbacks when the API's `detail` is missing on the pay and payment-history screens. */
+export const PAYMENT_ERROR_COPY = {
+  bookingNotFound: "Booking not found.",
+  checkoutFailed: "Could not start checkout. Try again shortly.",
+  venueSaveFailed: "We couldn't save your venue address. Please try again.",
+  paymentHistoryFailed: "Could not load payment history.",
 } as const;
 
 export const BOOKING_OUTCOME_COPY = {

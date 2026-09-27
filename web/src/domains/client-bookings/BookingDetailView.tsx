@@ -16,6 +16,8 @@ import { BookingStatusActions } from "@/domains/client-bookings/BookingStatusAct
 import { PriceUpdateBanner } from "@/domains/client-bookings/PriceUpdateBanner";
 import { ClientReviewForm } from "@/domains/client-bookings/ClientReviewForm";
 import { ReviewSummaryCard } from "@/domains/client-bookings/ReviewSummaryCard";
+import { clientBookingHref, type CheckoutReturnTone } from "@/domains/client-bookings/checkoutReturn";
+import { useCheckoutReturn } from "@/domains/client-bookings/useCheckoutReturn";
 import {
   BOOKING_CONFIRM_COPY,
   BOOKING_OUTCOME_COPY,
@@ -43,7 +45,9 @@ export function BookingDetailView({ bookingId }: { bookingId: string }) {
     respondToPriceUpdate,
     confirmCompletion,
     submitReview,
+    replaceBooking,
   } = useClientBookingDetail(bookingId);
+  const { banner, paymentDueRef } = useCheckoutReturn(bookingId, booking, replaceBooking);
   const [openDialog, setOpenDialog] = useState<OpenDialog>(null);
 
   /** Runs a confirmed action and closes its dialog only if it succeeded, so a failure stays visible. */
@@ -167,6 +171,8 @@ export function BookingDetailView({ bookingId }: { bookingId: string }) {
           </div>
         ) : null}
 
+        {banner.show ? <CheckoutReturnBanner tone={banner.tone} message={banner.message} /> : null}
+
         {completionBanner ? (
           <CompletionWaitingBanner
             waitingOn={completionBanner.waitingOn}
@@ -184,12 +190,12 @@ export function BookingDetailView({ bookingId }: { bookingId: string }) {
         ) : null}
 
         {actions.paymentDue ? (
-          <div className="mt-4 rounded-xl bg-primary-soft px-4 py-3 ring-1 ring-primary-border">
+          <div ref={paymentDueRef} className="mt-4 rounded-xl bg-primary-soft px-4 py-3 ring-1 ring-primary-border">
             <p className="font-semibold text-primary">{PAYMENT_FLOW_COPY.paymentDueTitle}</p>
             <p className="mt-1 text-sm text-primary">{PAYMENT_FLOW_COPY.paymentDueSubtitle}</p>
             <p className="mt-2 text-sm text-neutral-700">{PAYMENT_FLOW_COPY.beforePay}</p>
             <Link
-              href={`/client/bookings/${bookingId}/pay`}
+              href={`${clientBookingHref(bookingId)}/pay`}
               className="mt-3 inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90"
             >
               {PAYMENT_FLOW_COPY.payNowLabel}
@@ -257,6 +263,19 @@ export function BookingDetailView({ bookingId }: { bookingId: string }) {
         </Card>
       ) : null}
     </div>
+  );
+}
+
+const CHECKOUT_RETURN_TONE_CLASS: Record<CheckoutReturnTone, string> = {
+  amber: "border-amber-200 bg-amber-50 text-amber-950",
+  red: "border-red-200 bg-red-50 text-red-800",
+  green: "border-emerald-100 bg-emerald-50/60 text-neutral-800",
+};
+
+/** Stripe return banner: cancelled, confirming, paid, or a sync that failed. */
+function CheckoutReturnBanner({ tone, message }: { tone: CheckoutReturnTone; message: string }) {
+  return (
+    <div className={`mt-4 rounded-2xl border px-5 py-4 text-sm ${CHECKOUT_RETURN_TONE_CLASS[tone]}`}>{message}</div>
   );
 }
 
