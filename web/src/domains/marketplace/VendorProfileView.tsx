@@ -8,7 +8,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
-import { Spinner } from "@/foundation/ui";
+import { LoadingState } from "@/foundation/ui";
 import { useSession } from "@/foundation/session";
 import { vendorBrowseCategoryLabel } from "./browseLabels";
 import { payloadStringField } from "./browseVendorFacts";
@@ -174,7 +174,7 @@ export function VendorProfileView({
 
       {loading ? (
         <div className="py-12">
-          <Spinner label="Loading vendor…" />
+          <LoadingState variant="inline" label="Loading vendor…" />
         </div>
       ) : error ? (
         <p className="text-sm text-red-700">{error}</p>

@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Spinner } from "@/foundation/ui";
+import { LoadingState } from "@/foundation/ui";
 import { BookingsListView } from "@/domains/client-bookings/BookingsListView";
 
 /**
@@ -8,7 +8,7 @@ import { BookingsListView } from "@/domains/client-bookings/BookingsListView";
  */
 export default function ClientBookingsPage() {
   return (
-    <Suspense fallback={<Spinner label="Loading bookings…" />}>
+    <Suspense fallback={<LoadingState variant="inline" label="Loading bookings…" />}>
       <BookingsListView />
     </Suspense>
   );

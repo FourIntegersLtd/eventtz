@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Spinner } from "@/foundation/ui";
+import { LoadingState } from "@/foundation/ui";
 import type { ConversationRow } from "@/domains/messages/api";
 import { formatConversationActivity, formatUnreadBadge, peerInitials } from "@/domains/messages/messageFormatting";
 import {
@@ -46,7 +46,7 @@ export function ConversationListView({
       <div className="min-h-0 flex-1 overflow-y-auto">
         {loading ? (
           <div className="flex justify-center p-5">
-            <Spinner label={LOADING_CONVERSATIONS} />
+            <LoadingState variant="inline" label={LOADING_CONVERSATIONS} />
           </div>
         ) : error ? (
           <p className="m-5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>

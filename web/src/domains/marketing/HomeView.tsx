@@ -42,19 +42,19 @@ export function HomeView() {
       </section>
 
       <section className="mt-16 grid gap-6 sm:grid-cols-3">
-        <Card>
+        <Card padding="lg">
           <h2 className="font-heading text-lg font-semibold text-neutral-900">Browse vendors</h2>
           <p className="mt-2 text-sm text-neutral-600">
             Search caterers, DJs, venues and more, and message vendors directly about your event.
           </p>
         </Card>
-        <Card>
+        <Card padding="lg">
           <h2 className="font-heading text-lg font-semibold text-neutral-900">Pay with confidence</h2>
           <p className="mt-2 text-sm text-neutral-600">
             Payments are held by Eventtz until the event is confirmed complete, then released to the vendor.
           </p>
         </Card>
-        <Card>
+        <Card padding="lg">
           <h2 className="font-heading text-lg font-semibold text-neutral-900">For vendors</h2>
           <p className="mt-2 text-sm text-neutral-600">
             List your services, respond to enquiries, and get paid out through Stripe Connect.

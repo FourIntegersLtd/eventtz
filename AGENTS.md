@@ -139,6 +139,10 @@ The Cloud Agent environment is self-contained via scripts in **`.cursor/`**:
 
 Local Supabase Studio is at `http://127.0.0.1:54323`.
 
+## Web screen ports
+
+Screens in `web/` are copied from `frontend/`, not redrawn. The legacy component is the source: JSX, class names, text, icons, animations and responsive behaviour stay. Change only the file's tier (`domains/<area>/`), the data source (that domain's `api.ts` on `platform-client`), and imports, names and docstrings. Styling is Tailwind 4 with the same `globals.css` as the baseline.
+
 ## Updating this file
 
 Update it when a slice is rebuilt (repo map), when a trap is learned the hard

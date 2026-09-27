@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, Spinner } from "@/foundation/ui";
+import { Card, LoadingState } from "@/foundation/ui";
 import { useVendorBookingDetail } from "@/domains/vendor-bookings/useVendorBookingDetail";
 import { bookingStatusLabel, formatEventDate, formatGbp, initiatorLabel, paymentStatusLabel } from "@/domains/vendor-bookings/format";
 import { toDisplayLineItem } from "@/domains/vendor-bookings/lineItems";
@@ -26,7 +26,7 @@ export function BookingDetailView({ bookingId }: { bookingId: string }) {
     saveAdjustments,
   } = useVendorBookingDetail(bookingId);
 
-  if (loading) return <Spinner label="Loading booking…" />;
+  if (loading) return <LoadingState variant="inline" label="Loading booking…" />;
 
   if (loadError || !booking) {
     return <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-red-200/60">{loadError ?? "Booking not found."}</p>;
@@ -36,7 +36,7 @@ export function BookingDetailView({ bookingId }: { bookingId: string }) {
 
   return (
     <div className="space-y-4">
-      <Card>
+      <Card padding="lg">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold text-neutral-900">{booking.event_name}</h2>
@@ -89,7 +89,7 @@ export function BookingDetailView({ bookingId }: { bookingId: string }) {
         ) : null}
       </Card>
 
-      <Card>
+      <Card padding="lg">
         <h3 className="font-semibold text-neutral-900">Line items</h3>
         <ul className="mt-3 space-y-2">
           {booking.line_items.map((rawItem, index) => {
@@ -136,7 +136,7 @@ export function BookingDetailView({ bookingId }: { bookingId: string }) {
       </Card>
 
       {canEditAdjustments ? (
-        <Card>
+        <Card padding="lg">
           <h3 className="font-semibold text-neutral-900">Add an extra cost or discount</h3>
           <p className="mt-1 text-sm text-neutral-500">The client will need to confirm the new price before paying.</p>
           <div className="mt-3">
@@ -145,7 +145,7 @@ export function BookingDetailView({ bookingId }: { bookingId: string }) {
         </Card>
       ) : null}
 
-      <Card>
+      <Card padding="lg">
         <h3 className="font-semibold text-neutral-900">Disputes</h3>
         <div className="mt-3">
           <BookingDisputesPanel bookingId={bookingId} />

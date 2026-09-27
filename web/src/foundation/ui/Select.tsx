@@ -1,0 +1,47 @@
+"use client";
+
+/** Labelled select with the shared form-control styles. */
+
+import { ChevronDown } from "lucide-react";
+import { forwardRef, useId, type SelectHTMLAttributes } from "react";
+import { FORM_CONTROL, FORM_CONTROL_FOCUS, FOCUS_RING } from "@/foundation/ui/tokens";
+
+/** Labelled native select. Remaining props are passed to the element. */
+export type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
+  label: string;
+  error?: string;
+};
+
+/** Labelled select using the shared form-control classes. */
+export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
+  { label, error, id, className = "", children, ...rest },
+  ref,
+) {
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
+  return (
+    <div className="min-w-0 space-y-1.5">
+      <label htmlFor={inputId} className="block text-sm font-medium text-neutral-800">
+        {label}
+      </label>
+      <div className="relative">
+        <select
+          ref={ref}
+          id={inputId}
+          aria-invalid={Boolean(error)}
+          className={`${FORM_CONTROL} ${FORM_CONTROL_FOCUS} appearance-none pr-9 ${FOCUS_RING} ${
+            error ? "border-red-300" : ""
+          } ${className}`.trim()}
+          {...rest}
+        >
+          {children}
+        </select>
+        <ChevronDown
+          className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500"
+          aria-hidden
+        />
+      </div>
+      {error ? <p className="text-xs font-medium text-red-600">{error}</p> : null}
+    </div>
+  );
+});

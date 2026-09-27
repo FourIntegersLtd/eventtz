@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { platformErrorDetail } from "@/foundation/platform-client";
-import { Button, Card, Spinner, TextField } from "@/foundation/ui";
+import { Button, Card, LoadingState, TextField } from "@/foundation/ui";
 import {
   fetchVendorProfile,
   generateVendorBio,
@@ -120,7 +120,7 @@ export function ProfileView() {
     }
   }
 
-  if (loading) return <Spinner label="Loading your profile…" />;
+  if (loading) return <LoadingState variant="inline" label="Loading your profile…" />;
 
   if (loadError) {
     return <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800 ring-1 ring-red-200/50">{loadError}</p>;
@@ -144,7 +144,7 @@ export function ProfileView() {
         <p className={`rounded-xl px-4 py-3 text-sm ring-1 ${BANNER_CLASS[banner.tone]}`}>{banner.message}</p>
       ) : null}
 
-      <Card className="space-y-4">
+      <Card padding="lg" className="space-y-4">
         <TextField
           label="Business name"
           value={formData.businessName ?? ""}
@@ -186,7 +186,7 @@ export function ProfileView() {
 
       <PortfolioSection imageUrls={portfolioUrls} onChange={(urls) => updateField("portfolioFileNames", urls)} />
 
-      <Card className="space-y-3">
+      <Card padding="lg" className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="font-heading text-lg font-semibold text-neutral-900">Package coach</h2>
           <Button type="button" variant="secondary" loading={reviewingPackages} onClick={() => void onReviewPackages()}>

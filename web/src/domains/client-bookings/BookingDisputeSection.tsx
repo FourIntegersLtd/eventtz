@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { ConfirmDialog, Spinner } from "@/foundation/ui";
+import { ConfirmDialog, LoadingState } from "@/foundation/ui";
 import { hasCode, platformErrorDetail } from "@/foundation/platform-client";
 import {
   fetchClientBookingDisputes,
@@ -162,7 +162,7 @@ export function BookingDisputeSection({
         cancelLabel={OPEN_DISPUTE_CONFIRM.cancelLabel}
         confirmLabel={OPEN_DISPUTE_CONFIRM.confirmLabel}
         confirmLoadingLabel={OPEN_DISPUTE_CONFIRM.confirmLoadingLabel}
-        destructive
+        confirmVariant="destructive"
         loading={submitting}
         onCancel={() => {
           if (!submitting) setConfirmOpen(false);
@@ -173,7 +173,7 @@ export function BookingDisputeSection({
 
       {loading ? (
         <div className="mt-3">
-          <Spinner label="Loading…" />
+          <LoadingState variant="inline" label="Loading…" />
         </div>
       ) : (
         <>

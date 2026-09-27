@@ -58,7 +58,7 @@ export function ContactView({ embedded = false }: ContactViewProps = {}) {
     <div className="w-full max-w-2xl space-y-6">
       <h1 className="font-heading text-2xl font-semibold text-neutral-900">Contact us</h1>
 
-      <Card>
+      <Card padding="lg">
         <p className="text-sm text-neutral-500">
           We usually reply by email within two working days.
           {embedded ? (

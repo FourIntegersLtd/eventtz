@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Spinner } from "@/foundation/ui";
+import { LoadingState } from "@/foundation/ui";
 import { platformErrorDetail } from "@/foundation/platform-client";
 import { useSession } from "@/foundation/session";
 import { useRealtimeStream } from "@/capabilities/realtime-stream/useRealtimeStream";
@@ -148,7 +148,7 @@ export function ConversationThreadView({ portal, conversationId, basePath }: Con
   if (loading) {
     return (
       <div className="flex h-full min-h-0 flex-1 items-center justify-center rounded-2xl border border-neutral-100 bg-white px-5 py-8">
-        <Spinner label={LOADING_CONVERSATION} />
+        <LoadingState variant="inline" label={LOADING_CONVERSATION} />
       </div>
     );
   }

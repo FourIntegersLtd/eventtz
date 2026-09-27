@@ -15,7 +15,7 @@ export function SettingsClientOnboardingSection() {
   const { openReplay } = useClientOnboarding();
 
   return (
-    <Card>
+    <Card padding="lg">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <h2 className="font-heading text-lg font-semibold text-neutral-900">Tour</h2>

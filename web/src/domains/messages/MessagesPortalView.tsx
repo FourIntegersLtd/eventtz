@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Spinner } from "@/foundation/ui";
+import { LoadingState } from "@/foundation/ui";
 import { platformErrorDetail } from "@/foundation/platform-client";
 import { useRealtimeStream } from "@/capabilities/realtime-stream/useRealtimeStream";
 import { fetchConversations, type ConversationRow } from "@/domains/messages/api";
@@ -84,7 +84,7 @@ export function MessagesPortalView({ portal, selectedConversationId, basePath }:
         ) : (
           <div className="flex h-full min-h-0 flex-1 items-center justify-center overflow-hidden rounded-2xl border border-neutral-100 bg-white px-6 text-center">
             {loading ? (
-              <Spinner label={LOADING_CONVERSATIONS} />
+              <LoadingState variant="inline" label={LOADING_CONVERSATIONS} />
             ) : (
               <p className="text-sm font-medium text-neutral-900">
                 {conversations.length === 0 ? EMPTY_INBOX_TITLE : SELECT_CONVERSATION_TITLE}

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AuthShell } from "@/domains/auth/AuthShell";
+import { AuthPageShell } from "@/foundation/ui/AuthPageShell";
 import { useResetPassword } from "@/domains/auth/useResetPassword";
 import { Button, Card, TextField } from "@/foundation/ui";
 
@@ -10,8 +10,8 @@ export function ResetPasswordView() {
   const { token, password, setPassword, error, submitting, onSubmit } = useResetPassword();
 
   return (
-    <AuthShell>
-      <Card className="w-full max-w-md">
+    <AuthPageShell logoHref="/">
+      <Card padding="lg" className="w-full max-w-md">
         <h1 className="font-heading text-2xl font-semibold text-neutral-900">Choose a new password</h1>
 
         {!token ? (
@@ -44,6 +44,6 @@ export function ResetPasswordView() {
           </form>
         )}
       </Card>
-    </AuthShell>
+    </AuthPageShell>
   );
 }

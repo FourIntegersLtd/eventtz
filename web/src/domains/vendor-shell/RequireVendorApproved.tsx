@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { Spinner } from "@/foundation/ui";
+import { LoadingState } from "@/foundation/ui";
 import { fetchVendorProfile } from "@/domains/vendor-shell/api";
 import { vendorIsLiveApproved } from "@/domains/vendor-shell/vendorAccess";
 
@@ -46,7 +46,7 @@ export function RequireVendorApproved({ children }: { children: ReactNode }) {
   if (state !== "approved") {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <Spinner label="Checking your vendor profile" />
+        <LoadingState variant="inline" label="Checking your vendor profile" />
       </div>
     );
   }

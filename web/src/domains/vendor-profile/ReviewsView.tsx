@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { platformErrorDetail } from "@/foundation/platform-client";
-import { Card, Spinner } from "@/foundation/ui";
+import { Card, LoadingState } from "@/foundation/ui";
 import { fetchOwnReviews, type VendorOwnerReviewItem, type VendorOwnerReviewsResponse } from "@/domains/vendor-profile/api";
 
 /** One review row: reviewer, event, star rating, and the review body. */
@@ -68,13 +68,13 @@ export function ReviewsView() {
       </Link>
       <h1 className="font-heading text-2xl font-semibold text-neutral-900">Client reviews</h1>
 
-      {loading ? <Spinner label="Loading reviews…" /> : null}
+      {loading ? <LoadingState variant="inline" label="Loading reviews…" /> : null}
       {error ? <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800 ring-1 ring-red-200/50">{error}</p> : null}
 
       {data ? (
         <>
           <ReviewSummary response={data} />
-          <Card>
+          <Card padding="lg">
             {data.reviews && data.reviews.length > 0 ? (
               <ul className="divide-y divide-neutral-100">
                 {data.reviews.map((review) => (

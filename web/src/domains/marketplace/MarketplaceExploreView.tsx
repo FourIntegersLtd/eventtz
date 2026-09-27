@@ -17,7 +17,7 @@ import {
 import { expandVendorsForSearchResults } from "./marketplaceSearchModel";
 import { planOptionsLabel } from "./marketplacePlanCopy";
 import type { ExploreSearchSection } from "./api";
-import { Button, Spinner } from "@/foundation/ui";
+import { Button, LoadingState } from "@/foundation/ui";
 import { MultiVendorEnquireModal } from "./MultiVendorEnquireModal";
 
 function planSeeMoreHref(
@@ -97,7 +97,7 @@ export function MarketplaceExploreView({
 
   const resultsBody = loading ? (
     <div className="mt-6 py-12">
-      <Spinner label="Loading vendors…" />
+      <LoadingState variant="inline" label="Loading vendors…" />
     </div>
   ) : error ? (
     <p className="mt-6 text-sm text-red-700">{error}</p>

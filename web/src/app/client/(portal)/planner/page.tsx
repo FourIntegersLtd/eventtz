@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Spinner } from "@/foundation/ui";
+import { LoadingState } from "@/foundation/ui";
 import { AiPlannerView } from "@/domains/client-planner/AiPlannerView";
 
 /**
@@ -11,7 +11,7 @@ export default function ClientPlannerPage() {
     <Suspense
       fallback={
         <div className="flex justify-center py-16">
-          <Spinner label="Loading planner…" />
+          <LoadingState variant="inline" label="Loading planner…" />
         </div>
       }
     >

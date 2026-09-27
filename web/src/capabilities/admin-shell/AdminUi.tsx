@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
-import { Spinner } from "@/foundation/ui";
+import { LoadingState } from "@/foundation/ui";
 
 /** Shared loading row for admin list/detail screens, matching `AdminLoadingState`. */
 export function AdminLoadingState({ label = "Loading…" }: { label?: string }) {
   return (
     <div className="flex items-center justify-center rounded-2xl border border-primary-border bg-white p-10">
-      <Spinner label={label} />
+      <LoadingState variant="inline" label={label} />
     </div>
   );
 }

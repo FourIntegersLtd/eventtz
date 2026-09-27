@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Spinner } from "@/foundation/ui";
+import { LoadingState } from "@/foundation/ui";
 import { BookingDetailView } from "@/domains/client-bookings/BookingDetailView";
 
 type PageProps = {
@@ -13,7 +13,7 @@ type PageProps = {
 export default async function ClientBookingDetailPage({ params }: PageProps) {
   const { bookingId } = await params;
   return (
-    <Suspense fallback={<Spinner label="Loading booking…" />}>
+    <Suspense fallback={<LoadingState variant="inline" label="Loading booking…" />}>
       <BookingDetailView key={bookingId} bookingId={bookingId} />
     </Suspense>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Card, Spinner } from "@/foundation/ui";
+import { Card, LoadingState } from "@/foundation/ui";
 import { useClientBookingsList } from "@/domains/client-bookings/useClientBookingsList";
 import { toClientBookingRowViewModel } from "@/domains/client-bookings/viewModel";
 import { bookingStatusLabel, paymentStatusLabel } from "@/domains/client-bookings/format";
@@ -35,14 +35,14 @@ export function BookingsListView() {
         ))}
       </div>
 
-      {loading ? <Spinner label="Loading bookings…" /> : null}
+      {loading ? <LoadingState variant="inline" label="Loading bookings…" /> : null}
 
       {error ? (
         <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-red-200/60">{error}</p>
       ) : null}
 
       {!loading && !error && bookings.length === 0 ? (
-        <Card>
+        <Card padding="lg">
           <p className="text-sm text-neutral-600">{BOOKING_EMPTY_LIST_TITLE[tab]}</p>
         </Card>
       ) : null}
@@ -53,7 +53,7 @@ export function BookingsListView() {
           return (
             <li key={row.id}>
               <Link href={`/client/bookings/${row.id}`} className="block">
-                <Card className="transition hover:ring-primary/40">
+                <Card padding="lg" className="transition hover:ring-primary/40">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="truncate font-semibold text-neutral-900">{row.eventName}</p>

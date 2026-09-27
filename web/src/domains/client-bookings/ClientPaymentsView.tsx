@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Card, Spinner } from "@/foundation/ui";
+import { Card, LoadingState } from "@/foundation/ui";
 import { clientBookingHref } from "@/domains/client-bookings/checkoutReturn";
 import { formatEventDate, paymentStatusLabel } from "@/domains/client-bookings/format";
 import { useClientPayments } from "@/domains/client-bookings/useClientPayments";
@@ -15,7 +15,7 @@ export function ClientPaymentsView() {
   if (loading) {
     return (
       <div className="flex justify-center py-12">
-        <Spinner label="Loading payment history…" />
+        <LoadingState variant="inline" label="Loading payment history…" />
       </div>
     );
   }
@@ -26,7 +26,7 @@ export function ClientPaymentsView() {
 
   if (bookings.length === 0) {
     return (
-      <Card>
+      <Card padding="lg">
         <p className="font-semibold text-neutral-900">No paid bookings yet</p>
         <p className="mt-1 text-sm text-neutral-600">When you pay for a booking, it will show up here.</p>
       </Card>

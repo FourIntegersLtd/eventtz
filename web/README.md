@@ -36,6 +36,16 @@ Copy `.env.example` to `.env.local` and fill in values for your machine.
 `api/` on `:8001` when unset. Sentry and Mixpanel are off (no requests, no
 SDK init) when their env vars are empty.
 
+## Porting a screen
+
+The legacy component in `frontend/` is the source. Copy its JSX, class names, text, icons, animations and responsive behaviour. Change only:
+
+- where the file lives (`domains/<area>/`, or `foundation/ui` / `capabilities/` for shared pieces);
+- where data comes from: that domain's `api.ts` on `platform-client`, instead of axios inside the component;
+- imports, names and docstrings, as the repo rules require.
+
+Do not redraw a screen with new markup. Styling is Tailwind 4 with the same `globals.css` as `frontend/app/globals.css`, plus Fraunces, Plus Jakarta Sans, `lucide-react` and Lottie files in `public/animations/`. A side-by-side check against the baseline on `:3000` is how a port is finished. Playwright screenshot baselines are the guard for that; they are not wired into `npm run ci` yet.
+
 ## Session model
 
 The platform API issues a bare access/refresh token pair. `web` wraps that in

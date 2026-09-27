@@ -1,9 +1,11 @@
 "use client";
 
+/** Route guards that redirect from the session status and permissions. */
+
 import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Spinner } from "@/foundation/ui";
+import { LoadingState } from "@/foundation/ui";
 import { loginHref } from "@/foundation/session/loginHref";
 import { useSession } from "@/foundation/session/SessionProvider";
 import { can } from "@/foundation/session/types";
@@ -12,7 +14,7 @@ import type { Permission } from "@/foundation/session/types";
 function Resolving() {
   return (
     <div className="flex min-h-[40vh] items-center justify-center">
-      <Spinner label="Checking your session" />
+      <LoadingState variant="inline" label="Checking your session" />
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Spinner } from "@/foundation/ui";
+import { LoadingState } from "@/foundation/ui";
 import { platformErrorDetail } from "@/foundation/platform-client";
 import { fetchDispute, type DisputePublic } from "@/domains/disputes/api";
 import { DisputeStatusBadge } from "@/domains/disputes/DisputeStatusBadge";
@@ -70,7 +70,7 @@ export function DisputeDetailView({ role, disputeId }: { role: DisputePortalRole
         ← Back to disputes
       </Link>
 
-      {loading ? <Spinner label="Loading dispute…" /> : null}
+      {loading ? <LoadingState variant="inline" label="Loading dispute…" /> : null}
 
       {!loading && (error || !dispute) ? (
         <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-red-200/60">

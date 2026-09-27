@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Spinner } from "@/foundation/ui";
+import { LoadingState } from "@/foundation/ui";
 import { MarketplaceExploreView } from "@/domains/marketplace/MarketplaceExploreView";
 
 /**
@@ -9,7 +9,7 @@ import { MarketplaceExploreView } from "@/domains/marketplace/MarketplaceExplore
  */
 export default function ClientFavoritesPage() {
   return (
-    <Suspense fallback={<Spinner label="Loading favorites…" />}>
+    <Suspense fallback={<LoadingState variant="inline" label="Loading favorites…" />}>
       <MarketplaceExploreView mode="favorites" />
     </Suspense>
   );

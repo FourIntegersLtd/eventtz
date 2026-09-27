@@ -1,11 +1,53 @@
-import { clsx } from "clsx";
-import type { ReactNode } from "react";
+/** Portal, inset, and admin card surfaces. */
 
-/** A rounded, shadowed content panel — the shared shell for auth forms and marketing cards. */
-export function Card({ children, className }: { children: ReactNode; className?: string }) {
+import type { ElementType, ReactNode } from "react";
+import {
+  portalCard,
+  portalCardPadding,
+  portalCardPaddingLg,
+  portalInsetCard,
+} from "@/foundation/ui/portalTheme";
+import { panelCardSurface } from "@/foundation/ui/sectionBlockTokens";
+
+export type CardVariant = "portal" | "portal-inset" | "admin";
+export type CardPadding = "none" | "md" | "lg";
+
+type CardProps<T extends ElementType = "div"> = {
+  as?: T;
+  variant?: CardVariant;
+  padding?: CardPadding;
+  className?: string;
+  children: ReactNode;
+};
+
+const VARIANT_CLASSES: Record<CardVariant, string> = {
+  portal: portalCard,
+  "portal-inset": portalInsetCard,
+  admin: panelCardSurface,
+};
+
+const PADDING_CLASSES: Record<CardPadding, string> = {
+  none: "",
+  md: portalCardPadding,
+  lg: portalCardPaddingLg,
+};
+
+/**
+ * Shared surface container - portal cards, admin cards, and nested inset panels.
+ */
+export function Card<T extends ElementType = "div">({
+  as,
+  variant = "portal",
+  padding = "none",
+  className = "",
+  children,
+}: CardProps<T>) {
+  const Component = as ?? "div";
   return (
-    <div className={clsx("rounded-2xl bg-white p-6 shadow-lg shadow-primary/5 ring-1 ring-primary-border", className)}>
+    <Component
+      className={`${VARIANT_CLASSES[variant]} ${PADDING_CLASSES[padding]} ${className}`.trim()}
+    >
       {children}
-    </div>
+    </Component>
   );
 }

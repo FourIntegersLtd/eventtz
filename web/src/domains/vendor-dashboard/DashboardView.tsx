@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { platformErrorDetail } from "@/foundation/platform-client";
-import { Card, Spinner } from "@/foundation/ui";
+import { Card, LoadingState } from "@/foundation/ui";
 import { CopilotPanel } from "@/capabilities/vendor-copilot-panel/CopilotPanel";
 import { fetchActiveBookings, type VendorBookingListItem } from "@/domains/vendor-dashboard/api";
 import { activeBookingsCount, pendingBookingsCount, upcomingAgenda } from "@/domains/vendor-dashboard/dashboardStats";
@@ -66,7 +66,7 @@ export function DashboardView() {
   }, []);
 
   if (loading) {
-    return <Spinner label="Loading your dashboard…" />;
+    return <LoadingState variant="inline" label="Loading your dashboard…" />;
   }
 
   const activeBookings = bookings ?? [];
@@ -79,13 +79,13 @@ export function DashboardView() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Link href="/vendor/bookings?tab=active" className="block transition hover:shadow-md">
-          <Card>
+          <Card padding="lg">
             <p className="text-sm font-medium text-neutral-500">Active bookings</p>
             <p className="mt-3 text-3xl font-semibold text-neutral-900">{activeBookingsCount(activeBookings)}</p>
           </Card>
         </Link>
         <Link href="/vendor/bookings?tab=active&status=pending" className="block transition hover:shadow-md">
-          <Card>
+          <Card padding="lg">
             <p className="text-sm font-medium text-neutral-500">Pending response</p>
             <p className={`mt-3 text-3xl font-semibold ${pendingBookingsCount(activeBookings) > 0 ? "text-amber-600" : "text-neutral-900"}`}>
               {pendingBookingsCount(activeBookings)}
@@ -96,7 +96,7 @@ export function DashboardView() {
 
       <div className="grid gap-6 lg:grid-cols-3 lg:items-start">
         <div className="space-y-4 lg:col-span-2">
-          <Card>
+          <Card padding="lg">
             <h2 className="font-heading text-lg font-semibold text-neutral-900">Needs your attention</h2>
             {needsResponse.length === 0 ? (
               <p className="mt-3 text-sm text-neutral-500">Nothing waiting on you right now.</p>
@@ -109,7 +109,7 @@ export function DashboardView() {
             )}
           </Card>
 
-          <Card>
+          <Card padding="lg">
             <h2 className="font-heading text-lg font-semibold text-neutral-900">Upcoming events</h2>
             {agenda.length === 0 ? (
               <p className="mt-3 text-sm text-neutral-500">No upcoming events booked yet.</p>

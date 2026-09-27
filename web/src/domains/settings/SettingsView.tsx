@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { platformErrorDetail } from "@/foundation/platform-client";
-import { Card, Spinner } from "@/foundation/ui";
+import { Card, LoadingState } from "@/foundation/ui";
 import { useSession } from "@/foundation/session";
 import { fetchContactSettings, saveContactSettings, type ContactSharingSettings } from "@/domains/settings/api";
 import { contactSharingCopy, type SettingsRole } from "@/domains/settings/contactSharingCopy";
@@ -123,18 +123,18 @@ export function SettingsView({ role, extraSections }: { role: SettingsRole; extr
     <div className="w-full max-w-2xl space-y-6">
       <h1 className="font-heading text-2xl font-semibold text-neutral-900">Settings</h1>
 
-      <Card className="space-y-1">
+      <Card padding="lg" className="space-y-1">
         <h2 className="font-heading text-lg font-semibold text-neutral-900">Account</h2>
         <p className="text-sm text-neutral-600">{session?.user.email}</p>
       </Card>
 
-      <Card>
+      <Card padding="lg">
         <h2 className="font-heading text-lg font-semibold text-neutral-900">{copy.title}</h2>
         <p className="mt-1 text-sm text-neutral-500">{copy.description}</p>
 
         {loading ? (
           <div className="mt-4">
-            <Spinner label="Loading settings…" />
+            <LoadingState variant="inline" label="Loading settings…" />
           </div>
         ) : loadError ? (
           <p className="mt-4 text-sm text-red-700">{loadError}</p>

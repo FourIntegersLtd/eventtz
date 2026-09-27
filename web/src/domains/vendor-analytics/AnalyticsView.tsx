@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { platformErrorDetail } from "@/foundation/platform-client";
-import { Card, Spinner } from "@/foundation/ui";
+import { Card, LoadingState } from "@/foundation/ui";
 import { CopilotPanel } from "@/capabilities/vendor-copilot-panel/CopilotPanel";
 import { fetchVendorAnalytics, type VendorAnalytics } from "@/domains/vendor-analytics/api";
 import { formatMoneyGbp, formatPercent, formatSecondsDuration, toMonthSeries } from "@/domains/vendor-analytics/analyticsFormat";
@@ -11,7 +11,7 @@ import { BarChart } from "@/domains/vendor-analytics/BarChart";
 /** One headline KPI tile: a label and a big value. */
 function StatTile({ label, value }: { label: string; value: string }) {
   return (
-    <Card>
+    <Card padding="lg">
       <p className="text-sm font-medium text-neutral-500">{label}</p>
       <p className="mt-3 text-3xl font-semibold text-neutral-900">{value}</p>
     </Card>
@@ -64,7 +64,7 @@ export function AnalyticsView() {
   }, []);
 
   if (loading) {
-    return <Spinner label="Loading your analytics…" />;
+    return <LoadingState variant="inline" label="Loading your analytics…" />;
   }
 
   if (error || !analytics) {
@@ -84,21 +84,21 @@ export function AnalyticsView() {
 
       <div className="grid gap-6 lg:grid-cols-3 lg:items-start">
         <div className="space-y-4 lg:col-span-2">
-          <Card>
+          <Card padding="lg">
             <h2 className="font-heading text-lg font-semibold text-neutral-900">Enquiries by month</h2>
             <div className="mt-4">
               <BarChart bars={toMonthSeries(analytics.enquiries_by_month, "count")} valueLabel="Enquiries" />
             </div>
           </Card>
 
-          <Card>
+          <Card padding="lg">
             <h2 className="font-heading text-lg font-semibold text-neutral-900">Revenue by month</h2>
             <div className="mt-4">
               <BarChart bars={toMonthSeries(analytics.revenue_by_month, "revenue_gbp")} valueLabel="Revenue" formatValue={formatMoneyGbp} />
             </div>
           </Card>
 
-          <Card>
+          <Card padding="lg">
             <h2 className="font-heading text-lg font-semibold text-neutral-900">Average response time</h2>
             <p className="mt-1 text-sm text-neutral-500">Typical time from {"an enquiry landing to your first reply."}</p>
             <div className="mt-4">
@@ -111,7 +111,7 @@ export function AnalyticsView() {
             <p className="mt-2 text-sm text-neutral-600">Overall: {formatSecondsDuration(overview.avg_response_seconds)}</p>
           </Card>
 
-          <Card>
+          <Card padding="lg">
             <h2 className="font-heading text-lg font-semibold text-neutral-900">Enquiry-to-booking funnel</h2>
             <ul className="mt-2 divide-y divide-neutral-100">
               <FunnelRow label="Profile views" count={funnel.profile_views} />

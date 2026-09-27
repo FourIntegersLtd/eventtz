@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { clsx } from "clsx";
-import { AuthShell } from "@/domains/auth/AuthShell";
+import { AuthPageShell } from "@/foundation/ui/AuthPageShell";
 import { useRegister, type RegisterAccountType } from "@/domains/auth/useRegister";
 import { Button, Card, TextField } from "@/foundation/ui";
 
@@ -50,8 +50,8 @@ export function RegisterView() {
   } = useRegister();
 
   return (
-    <AuthShell>
-      <Card className="w-full max-w-md">
+    <AuthPageShell logoHref="/">
+      <Card padding="lg" className="w-full max-w-md">
         <h1 className="font-heading text-2xl font-semibold text-neutral-900">Create your account</h1>
         <p className="mt-1 text-sm text-neutral-500">Join Eventtz as a client or a vendor.</p>
 
@@ -101,6 +101,6 @@ export function RegisterView() {
           </Link>
         </p>
       </Card>
-    </AuthShell>
+    </AuthPageShell>
   );
 }

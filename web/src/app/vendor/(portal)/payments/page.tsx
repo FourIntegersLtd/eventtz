@@ -10,7 +10,7 @@ import { Card } from "@/foundation/ui";
  */
 export default function VendorPaymentsPage() {
   return (
-    <Card>
+    <Card padding="lg">
       <h1 className="font-heading text-lg font-semibold text-neutral-900">Payments</h1>
       <p className="mt-2 text-sm text-neutral-600">Payments setup is not available yet. Check back soon.</p>
     </Card>

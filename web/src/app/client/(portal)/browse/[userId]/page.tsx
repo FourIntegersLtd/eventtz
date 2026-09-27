@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Spinner } from "@/foundation/ui";
+import { LoadingState } from "@/foundation/ui";
 import { VendorProfileRoute } from "./VendorProfileRoute";
 
 type PageProps = {
@@ -13,7 +13,7 @@ type PageProps = {
 export default async function ClientVendorProfilePage({ params }: PageProps) {
   const { userId } = await params;
   return (
-    <Suspense fallback={<Spinner label="Loading vendor…" />}>
+    <Suspense fallback={<LoadingState variant="inline" label="Loading vendor…" />}>
       <VendorProfileRoute vendorUserId={userId} />
     </Suspense>
   );

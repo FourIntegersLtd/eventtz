@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { platformErrorDetail } from "@/foundation/platform-client";
-import { Card, Spinner } from "@/foundation/ui";
+import { Card, LoadingState } from "@/foundation/ui";
 import { fetchClientOwnReviews, type ClientOwnerReviewItem } from "@/domains/client-reviews/api";
 import { formatReviewSubtitle, formatReviewTimestamp, starRating } from "@/domains/client-reviews/reviewFormatting";
 
@@ -91,14 +91,14 @@ export function ClientOwnReviewsView() {
         <p className="mt-1 text-sm text-neutral-600">Reviews from completed bookings.</p>
       </header>
 
-      {loading ? <Spinner label="Loading reviews…" /> : null}
+      {loading ? <LoadingState variant="inline" label="Loading reviews…" /> : null}
       {error ? <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800 ring-1 ring-red-200/50">{error}</p> : null}
 
       {reviews ? (
         reviews.length === 0 ? (
           <p className="text-sm text-neutral-600">You haven&apos;t left any reviews yet.</p>
         ) : (
-          <Card>
+          <Card padding="lg">
             <ul className="divide-y divide-neutral-100">
               {reviews.map((review) => (
                 <ClientReviewRow key={review.id} review={review} />

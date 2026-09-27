@@ -2,7 +2,7 @@
 
 import { clsx } from "clsx";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Button, Card, Spinner } from "@/foundation/ui";
+import { Button, Card, LoadingState } from "@/foundation/ui";
 import { PlatformError } from "@/foundation/platform-client";
 import {
   fetchVendorPaymentsStatus,
@@ -125,9 +125,9 @@ export function VendorPaymentsView() {
 
       {tab === "account" ? (
         loadingStatus ? (
-          <Spinner label="Loading payout status" />
+          <LoadingState variant="inline" label="Loading payout status" />
         ) : (
-          <Card className="space-y-4">
+          <Card padding="lg" className="space-y-4">
             <h2 className="text-lg font-semibold text-neutral-900">{payoutSetupHeadline(stage)}</h2>
             <dl className="grid grid-cols-2 gap-3 text-sm text-neutral-700 sm:grid-cols-3">
               <div>
@@ -150,9 +150,9 @@ export function VendorPaymentsView() {
           </Card>
         )
       ) : loadingHistory ? (
-        <Spinner label="Loading payout history" />
+        <LoadingState variant="inline" label="Loading payout history" />
       ) : (
-        <Card className="space-y-4">
+        <Card padding="lg" className="space-y-4">
           <div className="flex flex-wrap gap-6 text-sm">
             <div>
               <p className="text-neutral-500">Paid out</p>

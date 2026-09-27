@@ -55,7 +55,7 @@ export function PortfolioSection({ imageUrls, onChange }: PortfolioSectionProps)
   }
 
   return (
-    <Card className="space-y-4">
+    <Card padding="lg" className="space-y-4">
       <div>
         <h2 className="font-heading text-lg font-semibold text-neutral-900">Portfolio photos</h2>
         <p className="mt-1 text-sm text-neutral-500">Add public photo URLs — clients see these on your listing.</p>

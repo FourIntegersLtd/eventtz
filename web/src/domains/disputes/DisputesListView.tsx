@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Spinner } from "@/foundation/ui";
+import { LoadingState } from "@/foundation/ui";
 import { platformErrorDetail } from "@/foundation/platform-client";
 import { fetchDisputes, type DisputePublic } from "@/domains/disputes/api";
 import { DisputeStatusBadge } from "@/domains/disputes/DisputeStatusBadge";
@@ -53,7 +53,7 @@ export function DisputesListView({ role }: { role: DisputePortalRole }) {
     <div className="space-y-4">
       <p className="text-sm text-neutral-600">{DISPUTES_LIST_INTRO}</p>
 
-      {loading ? <Spinner label="Loading disputes…" /> : null}
+      {loading ? <LoadingState variant="inline" label="Loading disputes…" /> : null}
 
       {!loading && error ? (
         <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-red-200/60">{error}</p>

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Spinner } from "@/foundation/ui";
+import { LoadingState } from "@/foundation/ui";
 import { platformErrorDetail } from "@/foundation/platform-client";
 import type { PaymentReceipt } from "@/domains/receipts/api";
 import { fetchReceiptHtmlBlob } from "@/domains/receipts/receiptHtml";
@@ -131,7 +131,7 @@ export function ReceiptPageShell({ bookingId, backHref, backLabel, load }: Recei
 
       {loading ? (
         <div className="flex justify-center py-16">
-          <Spinner label="Loading…" />
+          <LoadingState variant="inline" label="Loading…" />
         </div>
       ) : error ? (
         <div className="mt-6 rounded-2xl border border-neutral-200 bg-white px-6 py-10 text-center shadow-sm">

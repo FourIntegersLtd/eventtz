@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
-import { Button, Card, Spinner } from "@/foundation/ui";
+import { Button, Card, LoadingState } from "@/foundation/ui";
 import { CLIENT_PAY_PAGE_COPY, PAYMENT_ERROR_COPY } from "@/domains/client-bookings/bookingCopy";
 import { clientBookingHref } from "@/domains/client-bookings/checkoutReturn";
 import { PaymentSafetyModal } from "@/domains/client-bookings/PaymentSafetyModal";
@@ -24,12 +24,12 @@ export function BookingPayView({ bookingId }: { bookingId: string }) {
     <PayFrame bookingHref={bookingHref}>
       {phase === "loading" ? (
         <div className="flex justify-center py-16">
-          <Spinner label="Preparing secure checkout…" />
+          <LoadingState variant="inline" label="Preparing secure checkout…" />
         </div>
       ) : null}
 
       {phase === "error" ? (
-        <Card>
+        <Card padding="lg">
           <h1 className="font-heading text-lg font-semibold text-neutral-900">Payment couldn&apos;t be started</h1>
           <p className="mt-2 text-sm text-neutral-600">{error ?? PAYMENT_ERROR_COPY.bookingNotFound}</p>
           <div className="mt-4">
@@ -84,7 +84,7 @@ export function BookingPayView({ bookingId }: { bookingId: string }) {
         <>
           {phase === "redirecting" ? (
             <div className="flex justify-center py-16">
-              <Spinner label="Redirecting you to secure checkout…" />
+              <LoadingState variant="inline" label="Redirecting you to secure checkout…" />
             </div>
           ) : (
             <p className="text-sm text-neutral-600">{CLIENT_PAY_PAGE_COPY.safetyIntro}</p>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Suspense, useState } from "react";
-import { Button, Card, ConfirmDialog, Spinner } from "@/foundation/ui";
+import { Button, Card, ConfirmDialog, LoadingState } from "@/foundation/ui";
 import { useClientBookingDetail } from "@/domains/client-bookings/useClientBookingDetail";
 import { toClientBookingDetailViewModel } from "@/domains/client-bookings/viewModel";
 import {
@@ -58,7 +58,7 @@ export function BookingDetailView({ bookingId }: { bookingId: string }) {
     if (await action()) setOpenDialog(null);
   }
 
-  if (loading) return <Spinner label="Loading booking…" />;
+  if (loading) return <LoadingState variant="inline" label="Loading booking…" />;
 
   if (loadError || !booking) {
     return <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-red-200/60">{loadError ?? "Booking not found."}</p>;
@@ -78,7 +78,7 @@ export function BookingDetailView({ bookingId }: { bookingId: string }) {
       <ConfirmDialog
         isOpen={openDialog === "cancel"}
         {...cancelCopy}
-        destructive
+        confirmVariant="destructive"
         loading={pendingAction === "cancel"}
         onCancel={() => setOpenDialog(null)}
         onConfirm={() => void runConfirmed(cancel)}
@@ -86,7 +86,7 @@ export function BookingDetailView({ bookingId }: { bookingId: string }) {
       <ConfirmDialog
         isOpen={openDialog === "declineQuote"}
         {...BOOKING_CONFIRM_COPY.declineQuote}
-        destructive
+        confirmVariant="destructive"
         loading={pendingAction === "declineQuote"}
         onCancel={() => setOpenDialog(null)}
         onConfirm={() => void runConfirmed(() => respondToQuote("declined"))}
@@ -94,7 +94,7 @@ export function BookingDetailView({ bookingId }: { bookingId: string }) {
       <ConfirmDialog
         isOpen={openDialog === "declinePriceUpdate"}
         {...BOOKING_CONFIRM_COPY.declineUpdatedPrice}
-        destructive
+        confirmVariant="destructive"
         loading={pendingAction === "declinePriceUpdate"}
         onCancel={() => setOpenDialog(null)}
         onConfirm={() => void runConfirmed(() => respondToPriceUpdate("declined"))}
@@ -102,12 +102,13 @@ export function BookingDetailView({ bookingId }: { bookingId: string }) {
       <ConfirmDialog
         isOpen={openDialog === "confirmCompletion"}
         {...BOOKING_CONFIRM_COPY.confirmComplete}
+        confirmVariant="primary"
         loading={pendingAction === "confirmCompletion"}
         onCancel={() => setOpenDialog(null)}
         onConfirm={() => void runConfirmed(confirmCompletion)}
       />
 
-      <Card>
+      <Card padding="lg">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold text-neutral-900">{model.eventName}</h2>
@@ -215,7 +216,7 @@ export function BookingDetailView({ bookingId }: { bookingId: string }) {
         ) : null}
       </Card>
 
-      <Card>
+      <Card padding="lg">
         <h3 className="font-semibold text-neutral-900">Line items</h3>
         <ul className="mt-3 space-y-2">
           {model.lineItems.map((item) => (
@@ -263,11 +264,11 @@ export function BookingDetailView({ bookingId }: { bookingId: string }) {
       {booking.review ? (
         <ReviewSummaryCard review={booking.review} />
       ) : booking.booking_status === "completed" ? (
-        <Card>
+        <Card padding="lg">
           <h3 className="font-semibold text-neutral-900">Leave a review</h3>
           <p className="mt-1 text-sm text-neutral-500">How was your experience with {model.counterpartyName}?</p>
           <div className="mt-3">
-            <Suspense fallback={<Spinner label="Loading review form…" />}>
+            <Suspense fallback={<LoadingState variant="inline" label="Loading review form…" />}>
               <ClientReviewForm saving={pendingAction === "submitReview"} onSubmit={(body) => void submitReview(body)} />
             </Suspense>
           </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AuthShell } from "@/domains/auth/AuthShell";
+import { AuthPageShell } from "@/foundation/ui/AuthPageShell";
 import { useForgotPassword } from "@/domains/auth/useForgotPassword";
 import { Button, Card, TextField } from "@/foundation/ui";
 
@@ -10,8 +10,8 @@ export function ForgotPasswordView() {
   const { email, setEmail, error, message, submitting, onSubmit } = useForgotPassword();
 
   return (
-    <AuthShell>
-      <Card className="w-full max-w-md">
+    <AuthPageShell logoHref="/">
+      <Card padding="lg" className="w-full max-w-md">
         <h1 className="font-heading text-2xl font-semibold text-neutral-900">Reset your password</h1>
         <p className="mt-1 text-sm text-neutral-500">
           Enter the email on your account and we&apos;ll send you a link to reset your password.
@@ -48,6 +48,6 @@ export function ForgotPasswordView() {
           </Link>
         </p>
       </Card>
-    </AuthShell>
+    </AuthPageShell>
   );
 }

@@ -11,7 +11,7 @@
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Button, Spinner } from "@/foundation/ui";
+import { Button, LoadingState } from "@/foundation/ui";
 import { platformErrorDetail } from "@/foundation/platform-client";
 import { ensurePlanClientEvent } from "@/domains/client-planner/api";
 import { BROWSE_HANDOFF_FAILED, PLANNER_COPY } from "@/domains/client-planner/plannerCopy";
@@ -40,7 +40,7 @@ function PlannerLoadingStatus() {
   const label = PLANNER_COPY.loadingLabels[tick] ?? PLANNER_COPY.loadingLabels[0];
   return (
     <div className="flex justify-center py-16">
-      <Spinner label={label} />
+      <LoadingState variant="inline" label={label} />
     </div>
   );
 }

@@ -7,7 +7,7 @@ import type { ClientReviewSummary } from "@/domains/client-bookings/api";
 /** The review this client already left on a completed booking, shown read-only. */
 export function ReviewSummaryCard({ review }: { review: ClientReviewSummary }) {
   return (
-    <Card>
+    <Card padding="lg">
       <h3 className="font-semibold text-neutral-900">Your review</h3>
       <div className="mt-2 space-y-2">
         <p className="text-sm text-neutral-600">

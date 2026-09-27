@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { platformErrorDetail, type components } from "@/foundation/platform-client";
-import { Button, Card, Spinner } from "@/foundation/ui";
+import { Button, Card, LoadingState } from "@/foundation/ui";
 import {
   askCopilot,
   fetchCopilotBrief,
@@ -100,22 +100,22 @@ export function CopilotPanel() {
 
   if (loading) {
     return (
-      <Card>
-        <Spinner label="Loading your growth co-pilot…" />
+      <Card padding="lg">
+        <LoadingState variant="inline" label="Loading your growth co-pilot…" />
       </Card>
     );
   }
 
   if (loadError) {
     return (
-      <Card>
+      <Card padding="lg">
         <p className="text-sm text-red-700">{loadError}</p>
       </Card>
     );
   }
 
   return (
-    <Card className="space-y-5">
+    <Card padding="lg" className="space-y-5">
       <div>
         <div className="flex items-baseline justify-between">
           <h2 className="font-heading text-lg font-semibold text-neutral-900">Growth co-pilot</h2>

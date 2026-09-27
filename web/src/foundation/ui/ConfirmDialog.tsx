@@ -1,89 +1,71 @@
 "use client";
 
-import { useEffect, useId } from "react";
-import { Button } from "@/foundation/ui/Button";
+/** Confirmation modal for an action that is hard to undo. */
 
-export interface ConfirmDialogProps {
+import { Modal } from "@/foundation/ui/Modal";
+import { Button, type ButtonVariant } from "@/foundation/ui/Button";
+import { LottieIllustration } from "@/foundation/ui/LottieIllustration";
+import type { LottieAssetKey } from "@/foundation/ui/lottieAssets";
+
+export type ConfirmDialogProps = {
   isOpen: boolean;
   title: string;
-  description: string;
-  confirmLabel: string;
-  /** Shown on the confirm button while `loading`. */
+  /** Plain-language explanation of what confirming will do. */
+  description?: string;
+  confirmLabel?: string;
   confirmLoadingLabel?: string;
   cancelLabel?: string;
-  /** A destructive confirm (cancel, decline) is drawn in red. */
-  destructive?: boolean;
+  /** Matches the destructive/primary tone of the action being confirmed. */
+  confirmVariant?: ButtonVariant;
+  /** Optional illustration above the description. */
+  lottie?: LottieAssetKey;
   loading?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
-}
+};
 
 /**
- * A modal "are you sure?" step in front of an action that is hard to undo,
- * such as cancelling a paid booking (which refunds it). Escape and the
- * backdrop cancel, except while the action is in flight.
+ * Shared "are you sure?" dialog for destructive/irreversible portal actions
+ * (withdraw quote, cancel booking, mark complete, sign out) - built on the
+ * base `Modal` primitive so every confirmation looks and behaves the same.
  */
 export function ConfirmDialog({
   isOpen,
   title,
   description,
-  confirmLabel,
+  confirmLabel = "Confirm",
   confirmLoadingLabel,
   cancelLabel = "Cancel",
-  destructive = false,
+  confirmVariant = "destructive",
+  lottie,
   loading = false,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
-  const titleId = useId();
-  const descriptionId = useId();
-
-  useEffect(() => {
-    if (!isOpen) return;
-    /** Escape closes the dialog, like the backdrop, unless the action is running. */
-    function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape" && !loading) onCancel();
-    }
-    window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [isOpen, loading, onCancel]);
-
-  if (!isOpen) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-neutral-900/40 p-4 sm:items-center"
-      onClick={() => {
+    <Modal
+      isOpen={isOpen}
+      onClose={() => {
         if (!loading) onCancel();
       }}
-    >
-      <div
-        role="alertdialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        aria-describedby={descriptionId}
-        className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <h2 id={titleId} className="text-base font-semibold text-neutral-900">
-          {title}
-        </h2>
-        <p id={descriptionId} className="mt-2 text-sm text-neutral-600">
-          {description}
-        </p>
-        <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button variant="secondary" disabled={loading} onClick={onCancel} autoFocus>
+      zIndexClassName="z-[70]"
+      maxWidthClassName="max-w-md"
+      title={title}
+      footer={
+        <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+          <Button variant="secondary" disabled={loading} onClick={onCancel}>
             {cancelLabel}
           </Button>
-          <Button
-            loading={loading}
-            onClick={onConfirm}
-            className={destructive ? "bg-red-600 hover:bg-red-700 hover:opacity-100" : undefined}
-          >
+          <Button variant={confirmVariant} loading={loading} onClick={onConfirm}>
             {loading && confirmLoadingLabel ? confirmLoadingLabel : confirmLabel}
           </Button>
         </div>
-      </div>
-    </div>
+      }
+    >
+      {lottie ? (
+        <LottieIllustration asset={lottie} size="status" className="mb-3" />
+      ) : null}
+      {description ? <p className="text-sm text-neutral-700">{description}</p> : null}
+    </Modal>
   );
 }

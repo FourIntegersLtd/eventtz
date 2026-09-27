@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Spinner } from "@/foundation/ui";
+import { LoadingState } from "@/foundation/ui";
 import { useRealtimeStream } from "@/capabilities/realtime-stream/useRealtimeStream";
 import { fetchNotificationFeed, markAllBookingNotificationsRead, type NotificationFeedItem, type NotificationPortal } from "@/domains/notifications/api";
 import { formatNotificationTimestamp, notificationKindLabel } from "@/domains/notifications/notificationFormatting";
@@ -52,7 +52,7 @@ export function NotificationsListView({ portal }: { portal: NotificationPortal }
   if (items === null && !error) {
     return (
       <div className="flex justify-center py-12">
-        <Spinner label="Loading notifications…" />
+        <LoadingState variant="inline" label="Loading notifications…" />
       </div>
     );
   }

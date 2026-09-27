@@ -1,20 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { AuthShell } from "@/domains/auth/AuthShell";
+import { AuthPageShell } from "@/foundation/ui/AuthPageShell";
 import { useVerifyEmail } from "@/domains/auth/useVerifyEmail";
-import { Card, Spinner } from "@/foundation/ui";
+import { Card, LoadingState } from "@/foundation/ui";
 
 /** The email-verification landing page's content. Verifies the token on mount. Ported (simplified) from the baseline's `VerifyEmailView`. */
 export function VerifyEmailView() {
   const { status, message } = useVerifyEmail();
 
   return (
-    <AuthShell>
-      <Card className="w-full max-w-md text-center">
+    <AuthPageShell logoHref="/">
+      <Card padding="lg" className="w-full max-w-md text-center">
         {status === "verifying" ? (
           <div className="flex justify-center">
-            <Spinner label="Verifying your email…" />
+            <LoadingState variant="inline" label="Verifying your email…" />
           </div>
         ) : (
           <>
@@ -38,6 +38,6 @@ export function VerifyEmailView() {
           </>
         )}
       </Card>
-    </AuthShell>
+    </AuthPageShell>
   );
 }

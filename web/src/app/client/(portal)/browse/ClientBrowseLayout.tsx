@@ -8,7 +8,7 @@
 import type { ComponentType, ReactNode } from "react";
 import { MarketingShell } from "@/domains/marketing/MarketingShell";
 import { useSession } from "@/foundation/session";
-import { Spinner } from "@/foundation/ui";
+import { LoadingState } from "@/foundation/ui";
 
 type ClientBrowseLayoutProps = {
   pathname: string;
@@ -28,7 +28,7 @@ export function ClientBrowseLayout({
   if (status === "loading") {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-page-bg">
-        <Spinner label="Loading browse…" />
+        <LoadingState variant="inline" label="Loading browse…" />
       </div>
     );
   }

@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Spinner } from "@/foundation/ui";
+import { LoadingState } from "@/foundation/ui";
 import { AiPlannerView } from "@/domains/client-planner/AiPlannerView";
 
 type PageProps = {
@@ -16,7 +16,7 @@ export default async function ClientPlannerDetailPage({ params }: PageProps) {
     <Suspense
       fallback={
         <div className="flex justify-center py-16">
-          <Spinner label="Loading plan…" />
+          <LoadingState variant="inline" label="Loading plan…" />
         </div>
       }
     >
