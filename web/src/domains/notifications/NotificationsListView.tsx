@@ -4,30 +4,31 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Spinner } from "@/foundation/ui";
 import { useRealtimeStream } from "@/capabilities/realtime-stream/useRealtimeStream";
-import { fetchNotificationFeed, markAllBookingNotificationsRead, type NotificationFeedItem } from "@/domains/vendor-notifications/api";
-import { formatNotificationTimestamp, notificationKindLabel } from "@/domains/vendor-notifications/notificationFormatting";
+import { fetchNotificationFeed, markAllBookingNotificationsRead, type NotificationFeedItem, type NotificationPortal } from "@/domains/notifications/api";
+import { formatNotificationTimestamp, notificationKindLabel } from "@/domains/notifications/notificationFormatting";
 
 /**
- * Full notification history for the vendor portal — booking updates,
- * dispute updates and the unread-chat summary, newest first.
+ * Full notification history for one portal — booking updates, dispute
+ * updates and the unread-chat summary, newest first. Shared by the client and
+ * vendor portals; only the API path prefix (`portal`) differs.
  *
  * Marks booking notifications read on mount (mirroring the baseline's
  * `NotificationsPageView`) and refetches live over the realtime stream so a
  * new notice appears without a manual reload.
  */
-export function NotificationsListView() {
+export function NotificationsListView({ portal }: { portal: NotificationPortal }) {
   const [items, setItems] = useState<NotificationFeedItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const loadFeed = useCallback(async () => {
     try {
-      const feed = await fetchNotificationFeed();
+      const feed = await fetchNotificationFeed(portal);
       setItems(feed);
       setError(null);
     } catch {
       setError("Could not load notifications.");
     }
-  }, []);
+  }, [portal]);
 
   // Dedupe concurrent callers (mount + a realtime refresh landing at once)
   // behind one in-flight promise — the same shape as `VendorPaymentsView`'s
@@ -43,8 +44,8 @@ export function NotificationsListView() {
   useEffect(() => {
     void load();
     // Best-effort: the feed still renders whether or not this succeeds.
-    void markAllBookingNotificationsRead().catch(() => undefined);
-  }, [load]);
+    void markAllBookingNotificationsRead(portal).catch(() => undefined);
+  }, [load, portal]);
 
   useRealtimeStream(["booking_notifications_changed", "dispute_changed", "chat_unread_changed"], () => void load());
 

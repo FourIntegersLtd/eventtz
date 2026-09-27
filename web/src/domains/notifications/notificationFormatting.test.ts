@@ -4,7 +4,7 @@ import {
   formatNotificationTimestamp,
   formatUnreadCount,
   notificationKindLabel,
-} from "@/domains/vendor-notifications/notificationFormatting";
+} from "@/domains/notifications/notificationFormatting";
 
 describe("notificationKindLabel", () => {
   it("labels a booking update", () => {

@@ -2,7 +2,7 @@
  * Pure formatting helpers for the notifications domain: label mapping for a
  * feed item's `kind`, and the timestamp shown under each row.
  */
-import type { NotificationFeedItem } from "@/domains/vendor-notifications/api";
+import type { NotificationFeedItem } from "@/domains/notifications/api";
 
 /** A short, human label for a feed item's kind, used as a text badge (no icon library — AGENTS.md). */
 export function notificationKindLabel(kind: NotificationFeedItem["kind"]): string {
