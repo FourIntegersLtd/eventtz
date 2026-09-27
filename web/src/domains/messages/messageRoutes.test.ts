@@ -4,6 +4,7 @@ import {
   contactTeamPath,
   conversationPath,
   conversationPreview,
+  helpMessagesPath,
   inboxCountLabel,
   messagesPath,
   peerProfilePath,
@@ -22,9 +23,19 @@ describe("messages paths", () => {
     assert.equal(conversationPath("vendor", "a/b"), "/vendor/messages/a%2Fb");
   });
 
+  it("builds a thread link under a custom base path, still encoding the id", () => {
+    assert.equal(conversationPath("client", "conv-1", "/client/help/messages"), "/client/help/messages/conv-1");
+    assert.equal(conversationPath("vendor", "a/b", "/vendor/help/messages"), "/vendor/help/messages/a%2Fb");
+  });
+
   it("links an empty inbox to that portal's contact tab", () => {
     assert.equal(contactTeamPath("client"), "/client/help?tab=contact");
     assert.equal(contactTeamPath("vendor"), "/vendor/help?tab=contact");
+  });
+
+  it("nests the Help hub's messages tab under each portal's help path", () => {
+    assert.equal(helpMessagesPath("client"), "/client/help/messages");
+    assert.equal(helpMessagesPath("vendor"), "/vendor/help/messages");
   });
 });
 

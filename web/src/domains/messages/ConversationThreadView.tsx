@@ -35,6 +35,8 @@ import {
 interface ConversationThreadViewProps {
   portal: MessagePortal;
   conversationId: string;
+  /** The inbox this thread's back link returns to; defaults to the standalone inbox. */
+  basePath?: string;
 }
 
 interface LoadedThread {
@@ -50,7 +52,7 @@ interface LoadedThread {
  * messages in while it stays open. A failed send keeps the draft and shows
  * the error. `loading` is derived from the loaded conversation id.
  */
-export function ConversationThreadView({ portal, conversationId }: ConversationThreadViewProps) {
+export function ConversationThreadView({ portal, conversationId, basePath }: ConversationThreadViewProps) {
   const { session } = useSession();
   const myUserId = session?.user.id ?? "";
   const [loaded, setLoaded] = useState<LoadedThread | null>(null);
@@ -64,7 +66,7 @@ export function ConversationThreadView({ portal, conversationId }: ConversationT
   // changes after the thread is already open — marking read itself publishes
   // `chat_unread_changed`, so marking on every refresh would loop.
   const seenSignatureRef = useRef<string | null>(null);
-  const backHref = messagesPath(portal);
+  const backHref = basePath ?? messagesPath(portal);
 
   useEffect(() => {
     let cancelled = false;

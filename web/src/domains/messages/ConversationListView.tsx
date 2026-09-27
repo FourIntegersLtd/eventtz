@@ -20,6 +20,8 @@ interface ConversationListViewProps {
   conversations: readonly ConversationRow[];
   loading: boolean;
   error: string | null;
+  /** Row links resolve under this path; defaults to the standalone inbox. */
+  basePath?: string;
 }
 
 /**
@@ -32,6 +34,7 @@ export function ConversationListView({
   conversations,
   loading,
   error,
+  basePath,
 }: ConversationListViewProps) {
   const viewerTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
@@ -68,7 +71,7 @@ export function ConversationListView({
               return (
                 <li key={conversation.id}>
                   <Link
-                    href={conversationPath(portal, conversation.id)}
+                    href={conversationPath(portal, conversation.id, basePath)}
                     aria-current={selected ? "true" : undefined}
                     className={`relative flex w-full items-start gap-3.5 px-5 py-5 text-left transition duration-150 ease-out sm:px-6 ${
                       selected

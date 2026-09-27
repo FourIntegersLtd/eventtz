@@ -27,9 +27,26 @@ export function messagesPath(portal: MessagePortal): string {
   return portal === "client" ? "/client/messages" : "/vendor/messages";
 }
 
-/** One thread. The id is encoded so a slash in it cannot change the route. */
-export function conversationPath(portal: MessagePortal, conversationId: string): string {
-  return `${messagesPath(portal)}/${encodeURIComponent(conversationId)}`;
+/**
+ * The Messages tab of the Help hub — the same inbox, nested under
+ * `/{portal}/help` instead of the standalone `/{portal}/messages` route.
+ */
+export function helpMessagesPath(portal: MessagePortal): string {
+  const helpPath = portal === "client" ? "/client/help" : "/vendor/help";
+  return `${helpPath}/messages`;
+}
+
+/**
+ * One thread. The id is encoded so a slash in it cannot change the route.
+ * `basePath` overrides the inbox root — the Help hub passes its own
+ * messages path so a row opens `{hub}/messages/{id}` instead.
+ */
+export function conversationPath(
+  portal: MessagePortal,
+  conversationId: string,
+  basePath: string = messagesPath(portal),
+): string {
+  return `${basePath}/${encodeURIComponent(conversationId)}`;
 }
 
 /**

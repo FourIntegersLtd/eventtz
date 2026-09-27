@@ -1,16 +1,22 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { platformErrorDetail } from "@/foundation/platform-client";
 import { useSession } from "@/foundation/session";
 import { Button, Card } from "@/foundation/ui";
 import { submitVendorContact } from "@/domains/vendor-contact/api";
 
+interface ContactViewProps {
+  /** True when rendered inside the Help hub's Contact tab, rather than the standalone `/vendor/contact` route. */
+  embedded?: boolean;
+}
+
 /**
  * `/vendor/contact` — a message to the Eventtz team, optionally tied to a
  * booking. Ported (simplified) from the baseline's `ContactFormView`.
  */
-export function ContactView() {
+export function ContactView({ embedded = false }: ContactViewProps = {}) {
   const { session } = useSession();
   const [message, setMessage] = useState("");
   const [bookingId, setBookingId] = useState("");
@@ -45,7 +51,19 @@ export function ContactView() {
       <h1 className="font-heading text-2xl font-semibold text-neutral-900">Contact us</h1>
 
       <Card>
-        <p className="text-sm text-neutral-500">We usually reply by email within two working days.</p>
+        <p className="text-sm text-neutral-500">
+          We usually reply by email within two working days.
+          {embedded ? (
+            <>
+              {" "}
+              For ongoing chats with Eventtz, use the{" "}
+              <Link href="/vendor/help" className="font-medium text-primary hover:underline">
+                Messages
+              </Link>{" "}
+              tab.
+            </>
+          ) : null}
+        </p>
 
         <form onSubmit={(event) => void onSubmit(event)} className="mt-4 space-y-4">
           <label className="block">

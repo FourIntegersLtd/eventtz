@@ -23,6 +23,8 @@ interface InboxResult {
 interface MessagesPortalViewProps {
   portal: MessagePortal;
   selectedConversationId?: string;
+  /** Overrides the inbox root for row links and the thread's back link — the Help hub nests this under itself. */
+  basePath?: string;
 }
 
 /**
@@ -34,7 +36,7 @@ interface MessagesPortalViewProps {
  * conversation" once rows exist, and "No conversations yet" when they don't.
  * `loading` is derived from the result, so the effect never calls setState itself.
  */
-export function MessagesPortalView({ portal, selectedConversationId }: MessagesPortalViewProps) {
+export function MessagesPortalView({ portal, selectedConversationId, basePath }: MessagesPortalViewProps) {
   const [result, setResult] = useState<InboxResult | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const hasSelection = Boolean(selectedConversationId);
@@ -68,11 +70,17 @@ export function MessagesPortalView({ portal, selectedConversationId }: MessagesP
           conversations={conversations}
           loading={loading}
           error={result?.error ?? null}
+          basePath={basePath}
         />
       </div>
       <div className={`flex h-full min-h-0 min-w-0 flex-1 flex-col ${paneChildFill} ${hasSelection ? "" : "hidden lg:flex"}`}>
         {selectedConversationId ? (
-          <ConversationThreadView key={selectedConversationId} portal={portal} conversationId={selectedConversationId} />
+          <ConversationThreadView
+            key={selectedConversationId}
+            portal={portal}
+            conversationId={selectedConversationId}
+            basePath={basePath}
+          />
         ) : (
           <div className="flex h-full min-h-0 flex-1 items-center justify-center overflow-hidden rounded-2xl border border-neutral-100 bg-white px-6 text-center">
             {loading ? (
