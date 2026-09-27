@@ -177,7 +177,7 @@ export type ClientSearchContext = {
   country?: string;
   dates?: string[];
   dateFlexible?: boolean;
-  source?: "planner";
+  source?: "browse" | "planner";
   plannerPlanId?: string;
 };
 
@@ -192,6 +192,31 @@ function toClientSearchContext(state: MarketplaceSearchState): ClientSearchConte
   };
 }
 
+/**
+ * Event fields a planner (or other deep link) left on the browse URL.
+ * Empty when the URL has none of them.
+ */
+export type EventEnquirePrefill = {
+  eventName: string;
+  eventDate: string;
+  eventEndDate: string;
+  venueAddress: string;
+  notes: string;
+};
+
+/** Planner query params (`eventName`, `venue`, `planNotes`, `dates`) as form defaults. */
+export function eventEnquirePrefillFromMarketplaceState(
+  state: MarketplaceSearchState,
+): EventEnquirePrefill | null {
+  const eventName = state.eventName.trim();
+  const venueAddress = state.venue.trim();
+  const notes = state.planNotes.trim();
+  const eventDate = state.dates[0]?.trim() ?? "";
+  const eventEndDate = state.dates[1]?.trim() ?? "";
+  if (!eventName && !eventDate && !venueAddress && !notes) return null;
+  return { eventName, eventDate, eventEndDate, venueAddress, notes };
+}
+
 /** Browse filters plus optional planner handoff for booking analytics context. */
 export function clientSearchContextFromBrowse(
   state: MarketplaceSearchState,
@@ -202,7 +227,7 @@ export function clientSearchContextFromBrowse(
     state.fromPlannerPlanId?.trim() ||
     searchParams?.get("fromPlanner")?.trim() ||
     null;
-  if (!planId) return base;
+  if (!planId) return { ...base, source: "browse" };
   return { ...base, source: "planner", plannerPlanId: planId };
 }
 

@@ -15,6 +15,9 @@ import { payloadStringField } from "./browseVendorFacts";
 import { vendorMatchesMarketplaceSearch } from "./marketplaceVendorMatch";
 import {
   buildMarketplaceSearchUrl,
+  clientSearchContextFromBrowse,
+  eventEnquirePrefillFromMarketplaceState,
+  marketplaceSearchPrefillFromState,
   marketplaceStateFromSearchParams,
 } from "./marketplaceSearchParams";
 import { useExploreVendor } from "./useExploreVendor";
@@ -34,13 +37,20 @@ import {
   readVendorReferralFromUrl,
 } from "./vendorReferralAttribution";
 
-/** Arguments piece 02 receives when the booking panel should open. */
+/** Arguments the booking modal receives when the panel is open. */
 export type VendorProfileBookingSlotArgs = {
   open: boolean;
   close: () => void;
   pricingOptions: BrowsePricingOption[];
   selectedIds: string[];
   quantities: Record<string, number>;
+  vendorDisplayName: string;
+  vendorPayload: Record<string, unknown>;
+  searchPrefill: ReturnType<typeof marketplaceSearchPrefillFromState>;
+  initialPrefill: ReturnType<typeof eventEnquirePrefillFromMarketplaceState>;
+  linkedEventId: string | null;
+  clientSearchContext: ReturnType<typeof clientSearchContextFromBrowse>;
+  initialReferralCode: string | null;
 };
 
 type VendorProfileViewProps = {
@@ -217,6 +227,16 @@ export function VendorProfileView({
                 pricingOptions,
                 selectedIds: selection.selectedIdList,
                 quantities: selection.quantities,
+                vendorDisplayName: businessName,
+                vendorPayload: payload,
+                searchPrefill: marketplaceSearchPrefillFromState(marketplaceSearch),
+                initialPrefill: eventEnquirePrefillFromMarketplaceState(marketplaceSearch),
+                linkedEventId: marketplaceSearch.linkedEventId,
+                clientSearchContext: clientSearchContextFromBrowse(
+                  marketplaceSearch,
+                  new URLSearchParams(searchKey),
+                ),
+                initialReferralCode: referralCode,
               })
             : null}
         </>

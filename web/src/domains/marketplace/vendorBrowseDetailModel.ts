@@ -79,10 +79,17 @@ export function buildBookingLineItems(
     });
 }
 
+/** The fields a quantity payload needs. Prices are not among them. */
+export type BookingQuantityOption = {
+  id: string;
+  pricingMode: PackagePricingMode;
+  minQuantity: number;
+};
+
 /** Quantities to send with a booking request. Fixed packages are omitted. */
 export function bookingQuantitiesPayload(
   selectedIds: string[],
-  options: BrowsePricingOption[],
+  options: readonly BookingQuantityOption[],
   quantities: Record<string, number>,
 ): Record<string, number> | undefined {
   const byId = new Map(options.map((option) => [option.id, option]));

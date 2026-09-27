@@ -57,6 +57,14 @@ describe("marketplaceSearchParams helpers", () => {
     });
   });
 
+  it("marks a browse search context with source browse", () => {
+    const state = marketplaceStateFromSearchParams(new URLSearchParams("location=Leeds"));
+    const context = clientSearchContextFromBrowse(state);
+    assert.equal(context.location, "Leeds");
+    assert.equal(context.country, "GB");
+    assert.equal(context.source, "browse");
+  });
+
   it("adds planner attribution to client search context", () => {
     const state = marketplaceStateFromSearchParams(
       new URLSearchParams("fromPlanner=plan-abc&location=Leeds"),

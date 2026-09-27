@@ -122,6 +122,47 @@ export async function fetchVendorReferralPreview(
   );
 }
 
+export type CreateBookingRequestBody = components["schemas"]["CreateBookingRequestBody"];
+export type BookingRequestCreated = components["schemas"]["BookingRequestCreated"];
+export type ClientEventSummary = components["schemas"]["ClientEventSummary"];
+export type ClientEventDetail = components["schemas"]["ClientEventDetail"];
+
+/**
+ * Ask a vendor for the selected packages.
+ * The body is `CreateBookingRequestBody`: ids and quantities only. The API sets the price.
+ */
+export async function createClientBookingRequest(
+  body: CreateBookingRequestBody,
+): Promise<BookingRequestCreated> {
+  return platformRequest<BookingRequestCreated>("/api/v1/client/booking-requests", {
+    method: "POST",
+    body,
+  });
+}
+
+/** The signed-in client's events in one status bucket. */
+export async function fetchClientEvents(
+  status: "active" | "archived" | "all" = "active",
+): Promise<ClientEventSummary[]> {
+  const response = await platformRequest<components["schemas"]["ClientEventListResponse"]>(
+    "/api/v1/client/events",
+    { query: { status } },
+  );
+  return response.events ?? [];
+}
+
+/** One of the client's events, or null when it is missing or the request fails. */
+export async function fetchClientEventById(eventId: string): Promise<ClientEventDetail | null> {
+  try {
+    const response = await platformRequest<components["schemas"]["ClientEventDetailResponse"]>(
+      `/api/v1/client/events/${encodeURIComponent(eventId)}`,
+    );
+    return response.event ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** A vendor's visible reviews, newest first. */
 export async function fetchVendorPublicReviews(
   vendorUserId: string,
