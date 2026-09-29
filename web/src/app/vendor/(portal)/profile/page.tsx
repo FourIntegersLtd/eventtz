@@ -1,8 +1,11 @@
-"use client";
+import { ToastProvider } from "@/foundation/ui/Toast";
+import { VendorOnboarding } from "@/domains/vendor-onboarding/VendorOnboarding";
 
-import { ProfileView } from "@/domains/vendor-profile/ProfileView";
-
-/** `/vendor/profile` — onboarding form and, post-approval, the listing editor. */
+/** `/vendor/profile` is the vendor onboarding wizard. */
 export default function VendorProfilePage() {
-  return <ProfileView />;
+  return (
+    <ToastProvider>
+      <VendorOnboarding />
+    </ToastProvider>
+  );
 }

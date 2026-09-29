@@ -40,6 +40,7 @@ const nextConfig: NextConfig = {
     return [
       { source: "/client/help/messages", destination: "/client/help", permanent: false },
       { source: "/vendor/help/messages", destination: "/vendor/help", permanent: false },
+      { source: "/vendor/onboarding", destination: "/vendor/profile", permanent: false },
     ];
   },
   async headers() {
