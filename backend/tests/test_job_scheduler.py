@@ -131,3 +131,26 @@ def test_locked_run_treats_read_timeout_as_unavailable(
     assert "booking maintenance unavailable period=" in caplog.text
     assert "duration_ms=" in caplog.text
     assert "booking maintenance failed period=" not in caplog.text
+
+
+@patch("app.jobs.scheduler.run_booking_maintenance_main")
+@patch("app.jobs.scheduler.try_claim_job_period", return_value=True)
+def test_locked_run_treats_gateway_timeout_as_unavailable(
+    _mock_claim: MagicMock,
+    mock_main: MagicMock,
+    caplog,
+) -> None:
+    mock_main.side_effect = APIError(
+        {
+            "message": "JSON could not be generated",
+            "code": 504,
+            "hint": "Refer to full message for details",
+            "details": "{'message': 'Gateway Timeout'}",
+        }
+    )
+    with caplog.at_level("WARNING"):
+        run_locked_maintenance()
+    mock_main.assert_called_once()
+    assert "booking maintenance unavailable period=" in caplog.text
+    assert "duration_ms=" in caplog.text
+    assert "booking maintenance failed period=" not in caplog.text

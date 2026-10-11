@@ -12,9 +12,8 @@ import sys
 from collections.abc import Callable
 from typing import TypeVar
 
-import httpx
-
 from app.core.config import get_settings
+from app.core.db import is_upstream_unavailable
 from app.core.logging import get_logger
 from app.features.bookings.payments import (
     process_due_payout_auto_releases,
@@ -29,17 +28,12 @@ logger = get_logger(__name__)
 T = TypeVar("T")
 
 
-def _is_upstream_unavailable(exc: BaseException) -> bool:
-    """True when PostgREST/Supabase did not answer (timeout / network)."""
-    return isinstance(exc, (httpx.TimeoutException, httpx.NetworkError))
-
-
 def _run_step(name: str, fn: Callable[[], T], default: T) -> T:
     """Run one maintenance step; skip it when the database does not answer."""
     try:
         return fn()
     except Exception as exc:
-        if _is_upstream_unavailable(exc):
+        if is_upstream_unavailable(exc):
             logger.warning("booking maintenance step unavailable name=%s", name)
             return default
         raise

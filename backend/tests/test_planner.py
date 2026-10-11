@@ -13,6 +13,8 @@ from app.features.planner.category_planner import needs_for_event
 from app.features.planner.plan_service import generate_plan
 from app.features.planner.prompt_parser import parse_celebration_prompt
 
+TEST_CLIENT_USER_ID = "00000000-0000-4000-8000-000000000001"
+
 
 def test_baking_in_leeds_is_simple_intent():
     with patch(
@@ -231,9 +233,10 @@ def test_generate_birthday_plan_end_to_end():
             return_value=pool,
         ),
         patch("app.features.planner.plan_service.planner_db.insert_plan", side_effect=_fake_insert_plan),
+        patch("app.features.analytics.events.record_marketplace_event"),
     ):
         plan = generate_plan(
-            "client-1",
+            TEST_CLIENT_USER_ID,
             "Help me plan my birthday in London for 80 guests, budget £2000",
         )
 

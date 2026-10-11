@@ -22,7 +22,7 @@ from app.features.bookings.queries import (
     _row_initiator,
     get_booking_request_for_vendor,
 )
-from app.features.bookings.booking_funnel_timestamps import mark_customer_cancelled_failure
+from app.features.bookings.booking_funnel_timestamps import client_cancel_funnel_fields
 from app.features.bookings.status_shared import (
     assert_booking_may_be_cancelled,
     cancel_audit_fields,
@@ -62,7 +62,13 @@ def cancel_booking_request_for_client(
 
     upd = (
         db.table("booking_requests")
-        .update({"status": "cancelled", **cancel_audit_fields("client")})
+        .update(
+            {
+                "status": "cancelled",
+                **cancel_audit_fields("client"),
+                **client_cancel_funnel_fields(),
+            },
+        )
         .eq("id", booking_id)
         .eq("client_user_id", client_user_id)
         .in_("status", ["pending", "accepted"])
@@ -86,7 +92,6 @@ def cancel_booking_request_for_client(
             ),
         )
     _notify_booking_changed(client_user_id=client_user_id, vendor_user_id=vendor_uid)
-    mark_customer_cancelled_failure(booking_id)
     try:
         from app.features.analytics.events import record_marketplace_event
 
