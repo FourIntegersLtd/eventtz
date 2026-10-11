@@ -9,12 +9,14 @@
 # environment (see `acceptance/Makefile`), so there is nothing separate for
 # Dependabot to version there — bumping `api/`'s `pip` entry below covers it.
 #
-# Each ecosystem groups patch and minor bumps into one weekly PR so the
-# auto-merge workflow (`.github/workflows/dependabot-automerge.yml`) has one
-# PR per ecosystem to wave through once CI is green. Major bumps are left
-# ungrouped and unmerged automatically — they need a human to read the
-# changelog, since a major version can change behaviour CI won't catch
-# (e.g. a Stripe SDK major version changing a response shape).
+# Each ecosystem groups patch and minor bumps into one weekly PR, so there is
+# one PR per ecosystem to review. Every PR is merged by hand: `ci.yml` does not
+# test `api/` or `web/` yet, and a private repo on the free plan has no branch
+# protection to hold an auto-merge back until checks pass (see
+# docs/runbooks/github-security-settings.md). Major bumps are left ungrouped —
+# they need a human to read the changelog, since a major version can change
+# behaviour CI won't catch (e.g. a Stripe SDK major version changing a response
+# shape).
 version: 2
 updates:
   # api/: FastAPI + SQLAlchemy on Poetry. Dependabot's "pip" ecosystem reads
