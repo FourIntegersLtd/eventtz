@@ -1,0 +1,45 @@
+# Keep secrets, local state and cruft out of the build context: the Dockerfile does `COPY . .`.
+# The image needs app/ only (email templates live under app/features/email/templates).
+# sql/ is applied to Supabase by hand, never read by the app.
+
+# Secrets
+.env
+.env.*
+!.env.example
+**/*serviceAccount*.json
+**/*service-account*.json
+**/*.pem
+**/*.key
+
+# Build and deploy files themselves
+Dockerfile
+.dockerignore
+.railwayignore
+
+# Local tooling, tests, docs and artefacts not needed at runtime
+.git
+.gitignore
+.venv
+venv
+env
+**/__pycache__
+.pycache_tmp
+**/*.pyc
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.python-version
+Makefile
+poetry.lock
+pyproject.toml
+**/*.md
+docs
+sql
+scripts
+tests
+evals
+htmlcov
+.coverage
+logs
+**/*.log
+**/.DS_Store

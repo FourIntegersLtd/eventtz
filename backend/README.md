@@ -145,18 +145,30 @@ stripe trigger account.updated
 
 In production, configure the webhook endpoint (`https://<your-api-domain>/api/v1/webhooks/stripe`) in the Stripe Dashboard and use its signing secret for `STRIPE_WEBHOOK_SECRET`.
 
-## Deploy to Railway (CLI)
+## Deploy to Railway
 
-Deploy from your machine with the **Railway CLI** - no GitHub connection required. All deploy config lives in **`backend/`**; run every command from that folder.
+Railway service `backend` (project `eventtz`), built from `backend/Dockerfile`, the same standard as
+ClinicalBuddy and OSCE Guide `platform-api`. The Dockerfile owns build and start (its `CMD` runs uvicorn
+on `$PORT`, one worker, 110 s graceful shutdown); the dashboard owns the rest. No Procfile, no
+`runtime.txt`, no `nixpacks.toml`, no `railway.toml` (Config as Code stops being read on 2026-12-01),
+no `.railway/` IaC.
 
-| File | Purpose |
-|------|---------|
-| `requirements.txt` | Pinned deps (export from Poetry - see below) |
-| `Procfile` | `web` process: uvicorn on `$PORT` |
-| `railway.toml` | Health check `/health`, start command |
-| `nixpacks.toml` | Python 3.13 + pip install |
-| `.railwayignore` | Excludes `.env`, venv, logs from upload |
-| `runtime.txt` / `.python-version` | Python 3.13.7 |
+| Dashboard setting | Value |
+|---|---|
+| Builder / Root Directory | Dockerfile / `/backend` |
+| Custom start command | none (the Dockerfile `CMD` runs) |
+| Watch Paths | `/backend/**` |
+| Healthcheck path / timeout | `/health` / 120 s |
+| Restart policy | on failure, 10 retries |
+| Draining | 120 s |
+| Pre-deploy command | none (the Supabase schema is migrated by hand from `sql/`) |
+| Variables | names in `backend/.env.example` (Railway sets `RAILWAY_ENVIRONMENT` itself) |
+
+The healthcheck and restart values are what `railway.toml` held before it was deleted. Changing one of
+these is a dashboard change and a row edit here (and in `../docs/runbooks/railway.md`).
+
+`client_ip` (`app/core/http.py`) trusts the edge's `X-Real-IP` only when `RAILWAY_ENVIRONMENT` is set,
+so sign-in and reset limits count per visitor on Railway and cannot be dodged with a forged header elsewhere.
 
 **Regenerate `requirements.txt` after dependency changes:**
 
@@ -165,25 +177,13 @@ cd backend
 make requirements
 ```
 
-### 1. Install and log in
-
-```bash
-brew install railway
-# or: npm install -g @railway/cli
-
-railway login
-```
-
-### 2. Create / link project (once)
+### Build the image locally
 
 ```bash
 cd backend
-railway init          # new project + service
-# - or -
-railway link          # attach to an existing Railway project
+docker build -t eventtz-backend .
+docker run --rm -p 8000:8000 --env-file .env eventtz-backend
 ```
-
-This creates a local `.railway/` folder (gitignored).
 
 ### 3. Set environment variables
 
@@ -207,11 +207,8 @@ List what’s set: `railway variable list`
 
 ### 4. Deploy
 
-```bash
-cd backend
-make deploy
-# or: railway up --detach
-```
+Push to `main`. For a one-off deploy of the working tree without a commit: `cd backend && railway up --detach`
+(the CLI must be linked with `railway link -p eventtz -s backend`).
 
 Watch logs: `make deploy-logs` or `railway logs`
 

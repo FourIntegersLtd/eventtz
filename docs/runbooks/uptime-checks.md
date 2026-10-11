@@ -15,8 +15,8 @@ checks assume it, but any HTTP uptime tool works the same way).
 - **Alert after:** 2 consecutive failures (avoids paging on a single dropped
   packet).
 - **Note:** this only proves the process is up and can respond — it does not
-  touch the database. Railway's own `railway.toml` `healthcheckPath =
-  "/health"` already uses this route to gate a deploy; this uptime check is
+  touch the database. Railway's own health check (`/health`, a dashboard
+  setting) already uses this route to gate a deploy; this uptime check is
   the same probe watched continuously *after* a deploy, not just during one.
 
 ## `web`
@@ -31,8 +31,8 @@ checks assume it, but any HTTP uptime tool works the same way).
 ## `worker` — proposed heartbeat (not built; flagged per §11)
 
 The worker has no HTTP surface at all (`api/app/worker/main.py` just runs
-`jobs_app.run_worker(...)` — see `api/railway.worker.toml`: `startCommand =
-"python -m app.worker.main"`, no server). An uptime tool can only poll HTTP,
+`jobs_app.run_worker(...)`; the service's start command is
+`python -m app.worker.main`, no server). An uptime tool can only poll HTTP,
 so there is nothing today it can check for "is the worker actually draining
 jobs" versus "the worker process is technically running but stuck."
 

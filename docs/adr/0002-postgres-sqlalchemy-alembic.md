@@ -22,8 +22,8 @@ psycopg 3; one stack across both projects was the deciding constraint.
   `auth.users` foreign key, role grants, RLS). Triggers and functions stay SQL.
 - `alembic check` runs in `make arch`, so the models and the schema cannot drift.
   (OSCE's ADR promises this but its CI does not run it yet.)
-- Railway runs `alembic upgrade head` as the pre-deploy command, committed in
-  `railway.toml`.
+- Railway runs `alembic upgrade head` as the `api` service's pre-deploy command
+  (a dashboard setting; `docs/runbooks/railway.md`).
 
 ## Consequences
 - Queries are ~1 ms on the private network, and real transactions and

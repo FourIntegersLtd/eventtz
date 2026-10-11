@@ -27,6 +27,7 @@ from app.contracts.auth import (
 )
 from app.features.auth.http.dependencies import get_supabase_auth_service
 from app.features.auth.http.guards import require_user
+from app.core.http import client_ip
 from app.core.logging import get_logger
 from app.features.auth import messages as auth_messages
 from app.features.auth.session import (
@@ -61,7 +62,7 @@ async def signup(
         body.email,
         body.user_type,
     )
-    client_ip = _client_ip(request)
+    visitor_ip = client_ip(request)
 
     service = get_supabase_auth_service()
     result = service.sign_up(body.email, body.password, body.user_type)
@@ -86,7 +87,7 @@ async def signup(
                     user_id=str(uid),
                     email=body.email,
                     user_type=body.user_type,
-                    client_ip=client_ip,
+                    client_ip=visitor_ip,
                 )
             except ValueError as e:
                 raise HTTPException(status_code=429, detail=str(e)) from e
@@ -121,9 +122,9 @@ async def sign_in(
     from app.features.auth.email_verification import is_email_verified
     from app.features.auth.rate_limit import assert_sign_in_rate
 
-    client_ip = _client_ip(request)
+    visitor_ip = client_ip(request)
     try:
-        assert_sign_in_rate(body.email, client_ip)
+        assert_sign_in_rate(body.email, visitor_ip)
     except ValueError as e:
         raise HTTPException(status_code=429, detail=str(e)) from e
 
@@ -236,22 +237,13 @@ async def me(
     return MeResponse(user=require_user(request, response))
 
 
-def _client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("x-forwarded-for")
-    if forwarded:
-        return forwarded.split(",")[0].strip() or None
-    if request.client:
-        return request.client.host
-    return None
-
-
 @router.post("/forgot-password", response_model=ForgotPasswordResponse)
 async def forgot_password(body: ForgotPasswordRequest, request: Request):
     """Send a one-click reset link when the email exists. Always returns the same message."""
     from app.features.auth.password_reset import request_password_reset
 
     try:
-        message = request_password_reset(email=body.email, client_ip=_client_ip(request))
+        message = request_password_reset(email=body.email, client_ip=client_ip(request))
     except ValueError as e:
         raise HTTPException(status_code=429, detail=str(e)) from e
     return ForgotPasswordResponse(message=message)
@@ -271,7 +263,7 @@ async def reset_password(
         result = reset_password_with_token(
             token=body.token,
             password=body.password,
-            client_ip=_client_ip(request),
+            client_ip=client_ip(request),
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -291,7 +283,7 @@ async def resend_verification(body: ResendVerificationRequest, request: Request)
     from app.features.auth.email_verification import resend_email_verification
 
     try:
-        message = resend_email_verification(email=body.email, client_ip=_client_ip(request))
+        message = resend_email_verification(email=body.email, client_ip=client_ip(request))
     except ValueError as e:
         raise HTTPException(status_code=429, detail=str(e)) from e
     return ResendVerificationResponse(message=message)
@@ -307,7 +299,7 @@ async def verify_email(
     from app.features.auth.email_verification import verify_email_with_token
 
     try:
-        result = verify_email_with_token(token=body.token, client_ip=_client_ip(request))
+        result = verify_email_with_token(token=body.token, client_ip=client_ip(request))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
@@ -348,7 +340,7 @@ async def change_password_route(
             email=email,
             current_password=body.current_password,
             new_password=body.new_password,
-            client_ip=_client_ip(request),
+            client_ip=client_ip(request),
         )
     except ValueError as e:
         status = 503 if str(e) == auth_messages.AUTH_SERVICE_UNAVAILABLE else 400

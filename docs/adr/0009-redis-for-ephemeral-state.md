@@ -9,9 +9,9 @@ Source: OSCE Guide `platform-api` `core/redis.py`, `core/rate_limit.py`.
 - `get_redis()` returns `None` when `REDIS_URL` is unset or `REDIS_DISABLED` is
   true. Rate limits then fail open; sign-in and password reset fail closed if
   Redis is configured but erroring.
-- Limits are fixed windows (`INCR` + `EXPIRE`) keyed by the caller, taken from
-  `X-Forwarded-For` according to `TRUSTED_PROXY_HOPS`. Eventtz keeps its existing
-  allowances.
+- Limits are fixed windows (`INCR` + `EXPIRE`) keyed by the caller: the
+  Railway edge's `X-Real-IP` when `RAILWAY_ENVIRONMENT` is set, else the socket
+  peer (`rate_limit.client_ip`). Eventtz keeps its existing allowances.
 
 ## Consequences
 - Local development and tests need no Redis.

@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     #: True on the live server: shorter log lines. False on a laptop: easier-to-read blocks.
     is_production: bool = False
+    #: Set by Railway itself on every deployed service, never by us. When present, the
+    #: visitor's address comes from the edge's ``X-Real-IP`` (``app.core.http.client_ip``).
+    railway_environment: str = ""
     log_dir: str = "logs"
     log_file_name: str = "eventtz.log"
     #: Start a new log file after this many bytes (keeps disk use under control).

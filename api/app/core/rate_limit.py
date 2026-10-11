@@ -17,6 +17,7 @@ a great deal less state to keep.
 
 from __future__ import annotations
 
+import ipaddress
 from dataclasses import dataclass
 from typing import Annotated, Protocol
 
@@ -47,29 +48,31 @@ class Limit:
     fail_closed: bool = False
 
 
-def caller_key(request: Request) -> str:
-    """Who is being counted: the caller's address as our own proxy saw it.
+def client_ip(request: Request) -> str:
+    """The visitor's address, which every per-caller limit counts by.
 
-    `X-Forwarded-For` is `client, proxy1, …, ourproxy`, each hop appending the
-    address it saw. The leftmost entry is written by the caller and can say
-    anything, so counting by it lets an attacker mint a fresh bucket per forged
-    address. We count instead by the entry `trusted_proxy_hops` from the right.
-    With no proxy in front (the header absent) this is the socket peer.
+    On Railway every request reaches us through its edge proxy, so the socket peer
+    is always the proxy. The edge overwrites `X-Real-IP` and `X-Forwarded-For` on
+    every request (a caller's own copies are replaced, not appended), so they
+    cannot be forged from outside: `X-Real-IP` first, then the first
+    `X-Forwarded-For` entry. Railway publishes no proxy ranges, which is why this
+    keys on `RAILWAY_ENVIRONMENT` rather than uvicorn's `--forwarded-allow-ips`.
+    Off Railway the headers are ignored, since anyone could send them.
     """
-    forwarded = request.headers.get("x-forwarded-for", "")
-    if forwarded:
-        addresses = [address.strip() for address in forwarded.split(",") if address.strip()]
-        if addresses:
-            hops = max(get_settings().trusted_proxy_hops, 1)
-            # `addresses[-hops]` when the chain is long enough; otherwise the
-            # leftmost, which is as far back as the header reaches.
-            position = -hops if hops <= len(addresses) else 0
-            return addresses[position]
-    return request.client.host if request.client else "unknown"
+    peer = request.client.host if request.client else "unknown"
+    if not get_settings().railway_environment:
+        return peer
+    first_forwarded = request.headers.get("x-forwarded-for", "").split(",")[0]
+    for candidate in (request.headers.get("x-real-ip", ""), first_forwarded):
+        try:
+            return str(ipaddress.ip_address(candidate.strip()))
+        except ValueError:
+            continue
+    return peer
 
 
 # What routers declare as a parameter type: `def sign_in(body: ..., caller: CallerKey)`.
-CallerKey = Annotated[str, Depends(caller_key)]
+CallerKey = Annotated[str, Depends(client_ip)]
 
 
 class CounterStore(Protocol):

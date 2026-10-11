@@ -6,14 +6,20 @@ lock the product; a `fail_closed` limit (the credential routes) refuses when
 Redis errors mid-check, since that is when a password spray would run. A
 switched-off Redis allows every call. The store is passed in as a fake, so
 nothing in `app` is patched.
+
+The caller is the visitor's address: on Railway the edge's `X-Real-IP`, anywhere
+else the socket peer, so a forged header never buys a fresh allowance.
 """
 
 from __future__ import annotations
 
-from types import SimpleNamespace
-from typing import Any
+from collections.abc import Iterator
 
-from app.core.rate_limit import Limit, caller_key, count_call
+import pytest
+from starlette.requests import Request
+
+from app.core.rate_limit import Limit, client_ip, count_call
+from app.core.settings import get_settings
 
 TWO_PER_MINUTE = Limit(name="test", allowance=2, window_seconds=60)
 STRICT_TWO_PER_MINUTE = Limit(name="sign-in", allowance=2, window_seconds=60, fail_closed=True)
@@ -39,14 +45,6 @@ class FakeCounterStore:
         """Record the expiry the limiter asked for."""
         self.expiries.append((name, time))
         return True
-
-
-def fake_request(host: str | None = "203.0.113.1", forwarded: str | None = None) -> Any:
-    """The two request attributes `caller_key` reads."""
-    return SimpleNamespace(
-        headers={"x-forwarded-for": forwarded} if forwarded else {},
-        client=SimpleNamespace(host=host) if host else None,
-    )
 
 
 async def test_calls_inside_the_allowance_pass_and_the_next_is_refused() -> None:
@@ -87,20 +85,87 @@ async def test_no_store_at_all_allows_even_a_fail_closed_limit() -> None:
     assert outcomes == {False}
 
 
-def test_the_caller_is_the_client_address() -> None:
-    assert caller_key(fake_request(host="203.0.113.7")) == "203.0.113.7"
+@pytest.fixture
+def on_railway(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    """Run as Railway does: it sets `RAILWAY_ENVIRONMENT` on every deployed service."""
+    monkeypatch.setenv("RAILWAY_ENVIRONMENT", "production")
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
 
 
-def test_a_proxied_caller_is_the_address_our_proxy_saw() -> None:
-    """With one trusted hop the caller is the rightmost entry, not the leftmost the caller wrote."""
-    assert caller_key(fake_request(host="10.0.0.1", forwarded="203.0.113.9, 198.51.100.5")) == "198.51.100.5"
+@pytest.fixture
+def off_railway(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    """Run as a laptop or any host without Railway's edge in front."""
+    monkeypatch.delenv("RAILWAY_ENVIRONMENT", raising=False)
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
 
 
-def test_a_spoofed_leading_address_does_not_mint_a_fresh_bucket() -> None:
-    first = fake_request(host="10.0.0.1", forwarded="1.1.1.1, 198.51.100.5")
-    second = fake_request(host="10.0.0.1", forwarded="2.2.2.2, 198.51.100.5")
-    assert caller_key(first) == caller_key(second) == "198.51.100.5"
+def http_request(peer: str | None = "10.0.0.1", **headers: str) -> Request:
+    """A real Starlette request from `peer`; header names use underscores (`x_real_ip`)."""
+    return Request(
+        {
+            "type": "http",
+            "headers": [(name.replace("_", "-").encode(), value.encode()) for name, value in headers.items()],
+            "client": (peer, 40000) if peer else None,
+        }
+    )
 
 
+@pytest.mark.usefixtures("on_railway")
+def test_on_railway_the_visitor_is_the_edges_x_real_ip() -> None:
+    request = http_request(x_real_ip="203.0.113.9", x_forwarded_for="198.51.100.5")
+    assert client_ip(request) == "203.0.113.9"
+
+
+@pytest.mark.usefixtures("on_railway")
+def test_on_railway_without_x_real_ip_the_visitor_is_the_first_forwarded_entry() -> None:
+    assert client_ip(http_request(x_forwarded_for="198.51.100.5, 10.0.0.2")) == "198.51.100.5"
+
+
+@pytest.mark.usefixtures("on_railway")
+def test_on_railway_a_malformed_header_is_skipped() -> None:
+    assert client_ip(http_request(x_real_ip="not-an-ip", x_forwarded_for="2001:db8::1")) == "2001:db8::1"
+    assert client_ip(http_request(x_real_ip="", x_forwarded_for="garbage")) == "10.0.0.1"
+
+
+@pytest.mark.usefixtures("on_railway")
+def test_on_railway_with_no_headers_the_visitor_is_the_peer() -> None:
+    assert client_ip(http_request(peer="10.0.0.1")) == "10.0.0.1"
+
+
+@pytest.mark.usefixtures("off_railway")
+def test_off_railway_the_headers_are_ignored() -> None:
+    request = http_request(peer="192.0.2.10", x_real_ip="203.0.113.9", x_forwarded_for="198.51.100.5")
+    assert client_ip(request) == "192.0.2.10"
+
+
+@pytest.mark.usefixtures("off_railway")
 def test_a_caller_with_no_address_still_gets_a_bucket() -> None:
-    assert caller_key(fake_request(host=None)) == "unknown"
+    assert client_ip(http_request(peer=None)) == "unknown"
+
+
+@pytest.mark.usefixtures("on_railway")
+async def test_two_visitors_behind_the_edge_get_separate_limits() -> None:
+    """Every request arrives from the same edge peer; the limit must still be per visitor."""
+    store = FakeCounterStore()
+    noisy = http_request(peer="10.0.0.1", x_real_ip="203.0.113.1")
+    quiet = http_request(peer="10.0.0.1", x_real_ip="203.0.113.2")
+    outcomes = [await count_call(store, TWO_PER_MINUTE, client_ip(noisy)) for _attempt in range(3)]
+    assert outcomes == [False, False, True]
+    assert await count_call(store, TWO_PER_MINUTE, client_ip(quiet)) is False
+
+
+@pytest.mark.usefixtures("off_railway")
+async def test_a_forged_header_does_not_dodge_a_limit_off_railway() -> None:
+    store = FakeCounterStore()
+    forged = [
+        http_request(
+            peer="192.0.2.10", x_real_ip=f"203.0.113.{attempt}", x_forwarded_for=f"198.51.100.{attempt}"
+        )
+        for attempt in range(3)
+    ]
+    outcomes = [await count_call(store, TWO_PER_MINUTE, client_ip(request)) for request in forged]
+    assert outcomes == [False, False, True]

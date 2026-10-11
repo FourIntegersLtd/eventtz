@@ -105,8 +105,9 @@ Traps in this machine's shell:
 - **The session commits before the response.** Ask for it as `core.db.SessionDep` only
   (`scope="function"`). FastAPI's default runs the commit after the body is sent, so a
   failed commit would follow a 200; a guard and `tests/unit/test_session_scope.py` hold this.
-- **The worker has its own Railway config** (`api/railway.worker.toml`, no pre-deploy step),
-  so only the `api` service runs `alembic upgrade head`.
+- **Only the `api` service migrates.** Its Railway pre-deploy command is `alembic upgrade head`; the
+  `worker` service has none and its start command is `python -m app.worker.main`. Both are dashboard
+  settings, not files: see `docs/runbooks/railway.md`.
 - **Two schemas until cutover.** A live fix added to `backend/sql/` must also land as an Alembic revision in `api/`.
 - **Imported passwords are bcrypt.** Sign-in rehashes them to argon2; delete the bcrypt path once none remain (ADR 0003).
 - **Daily capacity** is enforced by a Postgres trigger (migration 033, kept in Alembic `0002`); the Python check is only for friendly errors.

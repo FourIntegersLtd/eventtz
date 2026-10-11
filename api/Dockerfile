@@ -1,7 +1,8 @@
 # One image, two Railway services (copied from OSCE `platform-api`, minus its
 # private marking engine):
-#   api      default CMD; `railway.toml` migrates the schema before each deploy
-#   worker   `railway.worker.toml` overrides the start command to the job worker
+#   api      default CMD; its Railway pre-deploy command is `alembic upgrade head`
+#   worker   its Railway start command is `python -m app.worker.main` (no pre-deploy)
+# Both are dashboard settings (docs/runbooks/railway.md); there is no railway.toml.
 #
 # Two stages. `dependencies` holds the build tools and installs every package
 # into /opt/venv. The final stage starts again from a clean base and copies only
@@ -53,5 +54,9 @@ RUN useradd --system --uid 10001 --shell /usr/sbin/nologin appuser \
 USER appuser
 
 EXPOSE 8000
-# The schema is migrated before deploy (`preDeployCommand` in railway.toml).
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# The schema is migrated by the api service's pre-deploy command, never here.
+# One worker per replica (scale with replicas; SSE fans out over Redis, ADR 0005).
+# Graceful shutdown (110 s) fits inside Railway's 120 s draining. No --proxy-headers:
+# Railway publishes no proxy addresses to trust, so the app reads the visitor's
+# address from the edge's X-Real-IP itself (core/rate_limit.py, client_ip).
+CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 --timeout-keep-alive 75 --timeout-graceful-shutdown 110"]

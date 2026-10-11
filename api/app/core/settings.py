@@ -72,10 +72,9 @@ class Settings(BaseSettings):
     # are not enforced and live updates stay inside one process.
     redis_url: str = "redis://localhost:6381/0"
     redis_disabled: bool = False
-    # How many proxies of ours sit in front of the app. Rate limits count by the
-    # address this many hops from the right of `X-Forwarded-For` — the one our own
-    # proxy saw — rather than the leftmost, which the caller writes and can forge.
-    trusted_proxy_hops: int = 1
+    # Set by Railway itself on every deployed service, never by us. When present,
+    # the visitor's address comes from the edge's `X-Real-IP` (`rate_limit.client_ip`).
+    railway_environment: str = ""
 
     # --- Sign-in tokens (ADR 0003) ---
     jwt_secret: str = ""
