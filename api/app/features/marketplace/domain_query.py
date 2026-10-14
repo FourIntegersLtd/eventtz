@@ -27,7 +27,7 @@ from app.features.vendors.service_catalogue import (
     get_market,
 )
 
-SEARCH_MODEL = "gpt-4o-mini"
+SEARCH_MODEL = "gpt-6-luna"
 # Keep in sync with `domain_search.PLAN_MAX_NEEDS` and the prompt below.
 PLAN_MAX_NEEDS = 6
 

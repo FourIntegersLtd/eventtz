@@ -20,7 +20,7 @@ Audience = Literal["client", "vendor", "admin"]
 _AUDIENCES: tuple[Audience, ...] = ("client", "vendor", "admin")
 
 # The model used for help answers.
-HELP_MODEL = "gpt-4o-mini"
+HELP_MODEL = "gpt-6-luna"
 # How many articles go into the prompt, and how many to fall back to when nothing matches.
 RETRIEVAL_LIMIT = 6
 FALLBACK_ARTICLE_COUNT = 4

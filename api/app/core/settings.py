@@ -130,6 +130,12 @@ class Settings(BaseSettings):
     # --- Providers ---
     # OpenAI key for the help assistant and contact classifier. Empty switches AI features off.
     openai_api_key: str = ""
+    # Model for every AI call when set, overriding each feature's constant: the no-deploy switch
+    # (change it on Railway and restart). Empty = each feature's own constant (gpt-6-luna).
+    openai_chat_model: str = ""
+    # Reasoning effort sent to reasoning-family models (gpt-5*, gpt-6*, o*). "none" answers without
+    # thinking first, which keeps the interactive paths (help, copilot, search) fast.
+    openai_reasoning_effort: str = "none"
     # Resend key for outgoing email. Empty logs and skips every send.
     resend_api_key: str = ""
     # Cursor automation endpoint that triages bug/booking/payment contact messages. Empty = off.

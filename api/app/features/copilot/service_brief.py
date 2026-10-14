@@ -29,7 +29,7 @@ from app.features.vendors.service_profile import get_profile_state
 logger = get_logger(__name__)
 
 # Same underlying model as the rest of the co-pilot's LLM calls.
-COPILOT_MODEL = "gpt-4o-mini"
+COPILOT_MODEL = "gpt-6-luna"
 
 
 class _BriefNarration(BaseModel):

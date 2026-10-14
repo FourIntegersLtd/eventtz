@@ -58,7 +58,7 @@ log = get_logger(__name__)
 
 # The model asked for our own brief-extraction and "why this vendor" calls (the
 # classification call reuses `marketplace.service_search`'s own model choice).
-PLANNER_MODEL = "gpt-4o-mini"
+PLANNER_MODEL = "gpt-6-luna"
 
 
 class _BriefReply(BaseModel):

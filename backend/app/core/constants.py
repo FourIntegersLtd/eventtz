@@ -10,11 +10,12 @@ BOOKING_SERVICE_FEE_PERCENT = 5.0
 # Vendor client referral codes (?vref=): numeric, 1–6 digits.
 CLIENT_REFERRAL_CODE_MAX_LEN = 6
 
-# Which AI models we use by default (change here when upgrading).
-OPENAI_BIO_MODEL = "gpt-4o-mini"
-OPENAI_VISION_MODEL = "gpt-4o-mini"
-OPENAI_SEARCH_MODEL = "gpt-4o-mini"
-OPENAI_HELP_MODEL = "gpt-4o-mini"
-OPENAI_PLANNER_MODEL = "gpt-4o-mini"
-OPENAI_COPILOT_MODEL = "gpt-4o-mini"
-OPENAI_CONTACT_MODEL = "gpt-4o-mini"
+# Which AI models we use by default (change here when upgrading). OPENAI_CHAT_MODEL overrides all
+# of them without a deploy; see `features/ai/openai_helpers.resolve_model`.
+OPENAI_BIO_MODEL = "gpt-6-luna"
+OPENAI_VISION_MODEL = "gpt-6-luna"
+OPENAI_SEARCH_MODEL = "gpt-6-luna"
+OPENAI_HELP_MODEL = "gpt-6-luna"
+OPENAI_PLANNER_MODEL = "gpt-6-luna"
+OPENAI_COPILOT_MODEL = "gpt-6-luna"
+OPENAI_CONTACT_MODEL = "gpt-6-luna"

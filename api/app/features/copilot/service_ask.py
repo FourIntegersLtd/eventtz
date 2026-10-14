@@ -25,6 +25,7 @@ from app.features.copilot.schemas import (
     CopilotAskMessage,
     CopilotAskResponse,
 )
+from app.features.copilot.service_brief import COPILOT_MODEL
 from app.features.reviews.service_vendor import list_own_reviews
 from app.features.vendors.service_profile import get_profile_state
 
@@ -147,7 +148,7 @@ async def ask_copilot(
 
     reply = await asyncio.to_thread(
         language_model.parse,
-        model="gpt-4o-mini",
+        model=COPILOT_MODEL,
         messages=messages,
         reply_model=_AskReply,
         purpose="vendor_copilot_ask",

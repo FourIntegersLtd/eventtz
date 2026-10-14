@@ -12,7 +12,12 @@ from fastapi import HTTPException
 
 from app.core.constants import OPENAI_BIO_MODEL, OPENAI_VISION_MODEL
 from app.core.logging import get_logger
-from app.features.ai.openai_helpers import extract_json_object, require_openai_client
+from app.features.ai.openai_helpers import (
+    extract_json_object,
+    reasoning_kwargs_responses,
+    require_openai_client,
+    resolve_model,
+)
 from app.features.vendors import messages as vendor_messages
 
 logger = get_logger(__name__)
@@ -115,7 +120,7 @@ def _sanitize_payload_for_bio(payload: dict[str, Any]) -> dict[str, Any]:
 def generate_vendor_public_bio(*, payload: dict[str, Any]) -> str:
     client = require_openai_client(log_context="vendor_onboarding_ai")
     safe = _sanitize_payload_for_bio(payload)
-    model = OPENAI_BIO_MODEL
+    model = resolve_model(OPENAI_BIO_MODEL)
     blob = json.dumps(safe, ensure_ascii=False, indent=2)
     logger.info(
         "vendor_onboarding_ai generate-bio: start model=%s incoming_payload_keys=%s "
@@ -158,8 +163,8 @@ def generate_vendor_public_bio(*, payload: dict[str, Any]) -> str:
             model=model,
             instructions=instructions,
             input=user_text,
-            temperature=0.78,
             max_output_tokens=220,
+            **reasoning_kwargs_responses(model),
         )
     except Exception as e:
         logger.exception(
@@ -213,11 +218,12 @@ def analyze_portfolio_image(*, image_bytes: bytes, content_type: str) -> tuple[b
             ],
         }
     ]
+    model = resolve_model(OPENAI_VISION_MODEL)
     resp = client.responses.create(
-        model=OPENAI_VISION_MODEL,
+        model=model,
         input=input_msg,
-        temperature=0.2,
         max_output_tokens=300,
+        **reasoning_kwargs_responses(model),
     )
     raw = (resp.output_text or "").strip()
     if not raw:
@@ -463,7 +469,7 @@ def review_vendor_packages(*, payload: dict[str, Any]) -> dict[str, Any]:
     """AI coaching for package clarity — suggestions only, never blocks submission."""
     client = require_openai_client(log_context="vendor_onboarding_ai")
     safe = _sanitize_payload_for_package_review(payload)
-    model = OPENAI_BIO_MODEL
+    model = resolve_model(OPENAI_BIO_MODEL)
     blob = json.dumps(safe, ensure_ascii=False, indent=2)
     instructions = (
         "You are a friendly UK events marketplace coach helping vendors write bookable packages "
@@ -526,8 +532,8 @@ def review_vendor_packages(*, payload: dict[str, Any]) -> dict[str, Any]:
             model=model,
             instructions=instructions,
             input=user_text,
-            temperature=0.6,
             max_output_tokens=1400,
+            **reasoning_kwargs_responses(model),
         )
     except Exception as e:
         logger.exception("vendor_onboarding_ai review-packages failed model=%s", model)

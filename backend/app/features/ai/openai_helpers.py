@@ -18,6 +18,33 @@ logger = get_logger(__name__)
 
 TModel = TypeVar("TModel", bound=BaseModel)
 
+# Model families that take a reasoning effort. Without one they think before answering at the
+# provider's default effort; older chat models (gpt-4o, gpt-4.1) reject the parameter.
+REASONING_MODEL_PREFIXES = ("gpt-5", "gpt-6", "o1", "o3", "o4")
+
+
+def resolve_model(default: str) -> str:
+    """``OPENAI_CHAT_MODEL`` when set (switch the model without a deploy), else ``default``."""
+    return (get_settings().openai_chat_model or "").strip() or default
+
+
+def _reasoning_effort(model: str) -> str | None:
+    if not model.startswith(REASONING_MODEL_PREFIXES):
+        return None
+    return get_settings().openai_reasoning_effort
+
+
+def reasoning_kwargs_chat(model: str) -> dict[str, Any]:
+    """Extra kwargs for ``chat.completions`` calls: ``reasoning_effort`` for reasoning models only."""
+    effort = _reasoning_effort(model)
+    return {} if effort is None else {"reasoning_effort": effort}
+
+
+def reasoning_kwargs_responses(model: str) -> dict[str, Any]:
+    """Extra kwargs for ``responses.create``, which spells it ``reasoning={"effort": ...}``."""
+    effort = _reasoning_effort(model)
+    return {} if effort is None else {"reasoning": {"effort": effort}}
+
 
 def is_openai_configured() -> bool:
     return bool((get_settings().openai_api_key or "").strip())
@@ -66,18 +93,22 @@ def parse_completion(
     Structured output via OpenAI chat.completions.parse (Pydantic schema).
     Prefer this over extract_json_object for new features.
     """
+    model = resolve_model(model)
+    extra = reasoning_kwargs_chat(model)
     try:
         try:
             completion = client.chat.completions.parse(
                 model=model,
                 messages=messages,
                 response_format=response_format,
+                **extra,
             )
         except AttributeError:
             completion = client.beta.chat.completions.parse(
                 model=model,
                 messages=messages,
                 response_format=response_format,
+                **extra,
             )
     except HTTPException:
         raise

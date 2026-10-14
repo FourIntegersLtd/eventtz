@@ -118,7 +118,7 @@
       "escalate_reason": "billing"
     },
     "pool_audience": "client",
-    "model": "gpt-4o-mini",
+    "model": "gpt-6-luna",
     "messages": [
       {
         "role": "system",
@@ -245,7 +245,7 @@
       "escalate_reason": "payments"
     },
     "pool_audience": "admin",
-    "model": "gpt-4o-mini",
+    "model": "gpt-6-luna",
     "messages": [
       {
         "role": "system",
@@ -355,7 +355,7 @@
       "escalate_reason": null
     },
     "pool_audience": "vendor",
-    "model": "gpt-4o-mini",
+    "model": "gpt-6-luna",
     "messages": [
       {
         "role": "system",
@@ -466,7 +466,7 @@
       "escalate_reason": "dispute"
     },
     "pool_audience": "client",
-    "model": "gpt-4o-mini",
+    "model": "gpt-6-luna",
     "messages": [
       {
         "role": "system",
@@ -507,7 +507,7 @@
       "escalate_reason": null
     },
     "pool_audience": "client",
-    "model": "gpt-4o-mini",
+    "model": "gpt-6-luna",
     "messages": [
       {
         "role": "system",

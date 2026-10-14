@@ -60,6 +60,10 @@ class Settings(BaseSettings):
 
     #: Key for AI helpers (vendor bio, search). Which AI models we use lives in ``constants.py``.
     openai_api_key: str = ""
+    #: Model for every AI call when set, overriding ``constants.py`` (the no-deploy switch).
+    openai_chat_model: str = ""
+    #: Reasoning effort sent to reasoning-family models (gpt-5*, gpt-6*, o*); "none" answers without thinking.
+    openai_reasoning_effort: str = "none"
     #: How long (seconds) to reuse a marketplace search AI result before asking again.
     marketplace_search_ai_cache_ttl_seconds: int = 3600
     #: Max number of those search results to keep in memory.

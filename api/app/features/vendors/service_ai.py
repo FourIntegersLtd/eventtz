@@ -47,7 +47,7 @@ __all__ = [
 ]
 
 # Both the baseline's OPENAI_BIO_MODEL and OPENAI_VISION_MODEL are this same model.
-ONBOARDING_AI_MODEL = "gpt-4o-mini"
+ONBOARDING_AI_MODEL = "gpt-6-luna"
 
 # Profile fields safe to hand to the model: nothing that identifies a real person or account.
 _BIO_SAFE_KEYS = frozenset(

@@ -48,7 +48,7 @@ AUTOMATION_SUBJECTS = frozenset({"feedback_bug", "booking_problem", "payments"})
 MINIMUM_MESSAGE_LENGTH = 10
 # The classifier reads at most this much of a message.
 CLASSIFIED_MESSAGE_LENGTH = 4000
-CLASSIFIER_MODEL = "gpt-4o-mini"
+CLASSIFIER_MODEL = "gpt-6-luna"
 
 CLASSIFIER_SYSTEM_PROMPT = (
     "You classify Eventtz support messages into exactly one subject key. "

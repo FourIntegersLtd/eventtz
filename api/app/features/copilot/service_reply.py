@@ -19,6 +19,7 @@ from app.core.ports import ChatMessage, LanguageModel
 from app.features.bookings.errors import BookingNotFound
 from app.features.bookings.service_queries import vendor_booking_detail
 from app.features.copilot.schemas import CopilotDraftReplyResponse
+from app.features.copilot.service_brief import COPILOT_MODEL
 from app.features.vendors.service_profile import get_profile_state
 
 # A booking this vendor does not own, or that does not exist at all.
@@ -93,7 +94,7 @@ async def draft_enquiry_reply(
     ]
     reply = await asyncio.to_thread(
         language_model.parse,
-        model="gpt-4o-mini",
+        model=COPILOT_MODEL,
         messages=messages,
         reply_model=_DraftReplyReply,
         purpose="vendor_copilot_reply",
