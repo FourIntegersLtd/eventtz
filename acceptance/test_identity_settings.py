@@ -452,6 +452,7 @@ def test_account_deletion_vendor_listing_is_wiped(admin_db: Client) -> None:
     ).execute()
 
     def listed_names() -> list[str]:
+        """Business names currently shown on the public explore page."""
         with new_browser() as browser:
             vendors = browser.get(f"{API}/vendors/explore").json()["vendors"]
         return [
