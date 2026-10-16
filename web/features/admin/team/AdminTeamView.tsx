@@ -1,0 +1,252 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { UserPlus } from "lucide-react";
+import { useToast } from "@/components/ui/Toast";
+import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
+import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
+import { AdminPageHeader } from "@/features/admin/components/AdminPageHeader";
+import {
+  AdminTable,
+  AdminTableBody,
+  AdminTableCell,
+  AdminTableElement,
+  AdminTableHead,
+  AdminTableHeaderCell,
+  AdminTableRow,
+} from "@/features/admin/components/AdminTable";
+import { AdminCreateAdminModal } from "@/features/admin/team/AdminCreateAdminModal";
+import { AdminTeamMemberActionsMenu } from "@/features/admin/team/AdminTeamMemberActionsMenu";
+import {
+  fetchAdminTeam,
+  isSuperAdmin,
+  patchAdminTeamMember,
+  sendAdminPasswordResetLink,
+  deleteAdminTeamMember,
+  type AdminTeamMember,
+} from "@/lib/adminTeamApi";
+import { getApiErrorDetail } from "@/lib/api-errors";
+import { formControlClass } from "@/components/ui/tokens";
+
+function roleLabel(role: AdminTeamMember["admin_role"]): string {
+  return role === "super_admin" ? "Super admin" : "Admin";
+}
+
+export function AdminTeamView() {
+  const { user } = useAuth();
+  const { showToast } = useToast();
+  const [members, setMembers] = useState<AdminTeamMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [rowBusy, setRowBusy] = useState<string | null>(null);
+
+  const canManage = isSuperAdmin(user);
+
+  const load = useCallback(async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      const list = await fetchAdminTeam();
+      setMembers(list);
+    } catch {
+      setError("Could not load admin team.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  if (loading) {
+    return <AdminLoadingState label="Loading team…" />;
+  }
+
+  return (
+    <div className="space-y-6">
+      {error ? <AdminErrorBanner message={error} /> : null}
+      {successMessage ? (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          {successMessage}
+        </div>
+      ) : null}
+
+      <AdminPageHeader
+        subtitle={
+          canManage
+            ? "Admin colleagues who can access the console. Super admins can create accounts and manage roles."
+            : "Colleagues on the admin team. Contact a super admin to add admins or change roles."
+        }
+        actions={
+          canManage ? (
+            <Button
+              icon={<UserPlus className="h-4 w-4" aria-hidden />}
+              onClick={() => setCreateOpen(true)}
+            >
+              Create admin account
+            </Button>
+          ) : null
+        }
+      />
+
+      <AdminCreateAdminModal
+        isOpen={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreated={(message) => {
+          setSuccessMessage(message);
+          showToast({ title: "Admin created", description: message, tone: "success" });
+          void load();
+        }}
+      />
+
+      {members.length === 0 ? (
+        <EmptyState title="No admins yet" variant="team" />
+      ) : (
+        <AdminTable>
+          <AdminTableElement className="min-w-[36rem]">
+            <AdminTableHead>
+              <AdminTableHeaderCell>Email</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Role</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Status</AdminTableHeaderCell>
+              {canManage ? (
+                <AdminTableHeaderCell className="text-right">Actions</AdminTableHeaderCell>
+              ) : null}
+            </AdminTableHead>
+            <AdminTableBody>
+              {members.map((m) => {
+                const isSelf = user?.id === m.user_id;
+                return (
+                  <AdminTableRow key={m.user_id}>
+                    <AdminTableCell className="font-medium text-neutral-900">
+                      {m.email ?? "-"}
+                      {isSelf ? (
+                        <span className="ml-2 text-xs font-normal text-neutral-500">(you)</span>
+                      ) : null}
+                    </AdminTableCell>
+                    <AdminTableCell>
+                      {canManage && !isSelf ? (
+                        <select
+                          value={m.admin_role}
+                          disabled={rowBusy === m.user_id}
+                          onChange={(e) => {
+                            const next = e.target.value as AdminTeamMember["admin_role"];
+                            void (async () => {
+                              setRowBusy(m.user_id);
+                              try {
+                                await patchAdminTeamMember(m.user_id, { admin_role: next });
+                                await load();
+                                showToast({
+                                  title: "Role updated",
+                                  description: roleLabel(next),
+                                  tone: "success",
+                                });
+                              } catch (err: unknown) {
+                                const message = getApiErrorDetail(err) ?? "Could not update role.";
+                                setError(message);
+                                showToast({ title: "Role update failed", description: message, tone: "error" });
+                              } finally {
+                                setRowBusy(null);
+                              }
+                            })();
+                          }}
+                          className={formControlClass("px-2 py-1.5")}
+                        >
+                          <option value="admin">Admin</option>
+                          <option value="super_admin">Super admin</option>
+                        </select>
+                      ) : (
+                        <span className="text-sm text-neutral-800">{roleLabel(m.admin_role)}</span>
+                      )}
+                    </AdminTableCell>
+                    <AdminTableCell>
+                      {m.account_suspended ? (
+                        <span className="text-sm text-amber-800">Suspended</span>
+                      ) : (
+                        <span className="text-sm text-emerald-700">Active</span>
+                      )}
+                    </AdminTableCell>
+                    {canManage ? (
+                      <AdminTableCell className="text-right">
+                        {!isSelf ? (
+                          <AdminTeamMemberActionsMenu
+                            memberEmail={m.email}
+                            suspended={m.account_suspended}
+                            busy={Boolean(rowBusy?.startsWith(m.user_id))}
+                            onSendResetLink={async () => {
+                              setRowBusy(`${m.user_id}:reset`);
+                              try {
+                                const result = await sendAdminPasswordResetLink(m.user_id);
+                                setSuccessMessage(result.message);
+                                showToast({
+                                  title: "Reset link sent",
+                                  description: result.message,
+                                  tone: "success",
+                                });
+                              } catch (err: unknown) {
+                                const message = getApiErrorDetail(err) ?? "Could not send reset link.";
+                                setError(message);
+                                showToast({ title: "Reset link failed", description: message, tone: "error" });
+                              } finally {
+                                setRowBusy(null);
+                              }
+                            }}
+                            onToggleSuspend={async () => {
+                              setRowBusy(m.user_id);
+                              try {
+                                await patchAdminTeamMember(m.user_id, {
+                                  account_suspended: !m.account_suspended,
+                                });
+                                await load();
+                                showToast({
+                                  title: m.account_suspended ? "Admin reactivated" : "Admin suspended",
+                                  tone: "success",
+                                });
+                              } catch (err: unknown) {
+                                const message = getApiErrorDetail(err) ?? "Could not update status.";
+                                setError(message);
+                                showToast({ title: "Status update failed", description: message, tone: "error" });
+                              } finally {
+                                setRowBusy(null);
+                              }
+                            }}
+                            onDelete={async () => {
+                              setRowBusy(`${m.user_id}:delete`);
+                              try {
+                                const result = await deleteAdminTeamMember(m.user_id);
+                                setSuccessMessage(result.message);
+                                showToast({
+                                  title: "Admin removed",
+                                  description: result.message,
+                                  tone: "success",
+                                });
+                                await load();
+                              } catch (err: unknown) {
+                                const message = getApiErrorDetail(err) ?? "Could not delete admin.";
+                                setError(message);
+                                showToast({ title: "Delete failed", description: message, tone: "error" });
+                              } finally {
+                                setRowBusy(null);
+                              }
+                            }}
+                          />
+                        ) : (
+                          <span className="text-xs text-neutral-400">-</span>
+                        )}
+                      </AdminTableCell>
+                    ) : null}
+                  </AdminTableRow>
+                );
+              })}
+            </AdminTableBody>
+          </AdminTableElement>
+        </AdminTable>
+      )}
+    </div>
+  );
+}

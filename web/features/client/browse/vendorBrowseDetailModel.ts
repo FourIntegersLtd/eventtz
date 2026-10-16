@@ -1,0 +1,377 @@
+import type { ExploreVendor } from "@/lib/clientExploreApi";
+import { displayServicesOffered } from "@/features/client/browse/browseLabels";
+import {
+  buildDiscountPromoLines,
+  listPriceDisplay,
+  parseVendorDiscountConfig,
+} from "@/lib/vendorDiscountDisplay";
+import { parseSingleMoneyNumber } from "@/lib/validation/money";
+import {
+  defaultMinQuantity,
+  isPerUnitPricing,
+  lineTotalGbp,
+  parsePackagePricingMode,
+  parsePackageQuantity,
+  perUnitPriceSuffix,
+  type PackagePricingMode,
+} from "@/lib/packagePricing";
+import { formatBookingEstimateLabel } from "@/lib/vendorDiscountDisplay";
+
+/** One selectable pricing block - mirrors onboarding packages and/or fixed hourly & daily rates. */
+export type BrowsePricingOption = {
+  id: string;
+  /** Short label for tab buttons */
+  tabLabel: string;
+  /** Main title (package name, or “Hourly rate” / “Daily rate”) */
+  heading: string;
+  priceDisplay: string | null;
+  compareAtDisplay: string | null;
+  /** Parsed GBP amount for sums (null = custom quote / TBC). For per-unit, this is the rate. */
+  unitPriceGbp: number | null;
+  pricingMode: PackagePricingMode;
+  unitLabel: string | null;
+  minQuantity: number;
+  maxQuantity: number | null;
+  /** e.g. "/ chair" or "each" — appended to the displayed price. */
+  priceSuffix: string | null;
+  /** e.g. "10% off - Easter discount" */
+  discountBadge: string | null;
+  /** Travel/delivery policy for this package or default vendor rule. */
+  travelLine: string | null;
+  /** Bulk / off-peak promos (informational). */
+  promoLines: string[];
+  description: string;
+  /** Shown with clock icon - package duration text or inferred line for fixed rates */
+  timelineLine: string | null;
+  /** Extra bullets (details lines, services, etc.) */
+  featureLines: string[];
+};
+
+/** Vendor-level lines duplicated on every package — show once in the pricing panel. */
+export type BrowsePricingSharedContext = {
+  travelLine: string | null;
+  serviceLines: string[];
+  promoLines: string[];
+};
+
+export type BookingLineItem = {
+  id: string;
+  heading: string;
+  unitPriceGbp: number | null;
+  quantity?: number;
+  unitRateGbp?: number | null;
+  unitLabel?: string | null;
+};
+
+/** Sum selected options for booking UI; handles mixed priced + TBC lines. */
+export function buildBookingLineItems(
+  options: BrowsePricingOption[],
+  selectedIds: string[],
+  quantities?: Record<string, number>,
+): BookingLineItem[] {
+  const set = new Set(selectedIds);
+  return options
+    .filter((o) => set.has(o.id))
+    .map((o) => {
+      const perUnit = o.pricingMode === "per_unit";
+      const qty = perUnit
+        ? Math.max(quantities?.[o.id] ?? o.minQuantity, o.minQuantity)
+        : 1;
+      return {
+        id: o.id,
+        heading: o.heading,
+        unitPriceGbp: lineTotalGbp(o.unitPriceGbp, qty),
+        quantity: perUnit ? qty : undefined,
+        unitRateGbp: perUnit ? o.unitPriceGbp : undefined,
+        unitLabel: perUnit ? o.unitLabel : undefined,
+      };
+    });
+}
+
+/** Quantities to send with a booking request (per-unit options only). */
+export function bookingQuantitiesPayload(
+  selectedIds: string[],
+  options: BrowsePricingOption[],
+  quantities: Record<string, number>,
+): Record<string, number> | undefined {
+  const byId = new Map(options.map((o) => [o.id, o]));
+  const out: Record<string, number> = {};
+  for (const id of selectedIds) {
+    const opt = byId.get(id);
+    if (!opt || opt.pricingMode !== "per_unit") continue;
+    out[id] = Math.max(quantities[id] ?? opt.minQuantity, opt.minQuantity);
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
+export function formatBookingTotalGbp(lines: BookingLineItem[]): {
+  label: string;
+  sumNumeric: number;
+  hasTbc: boolean;
+} {
+  let sum = 0;
+  let hasTbc = false;
+  for (const l of lines) {
+    if (l.unitPriceGbp == null) hasTbc = true;
+    else sum += l.unitPriceGbp;
+  }
+  if (lines.length === 0) {
+    return { label: "GBP 0.00", sumNumeric: 0, hasTbc: false };
+  }
+  return {
+    label: formatBookingEstimateLabel(sum, hasTbc),
+    sumNumeric: sum,
+    hasTbc,
+  };
+}
+
+function coerceStr(p: Record<string, unknown>, k: string): string {
+  const v = p[k];
+  if (v == null) return "";
+  if (typeof v === "string") return v;
+  if (typeof v === "number" || typeof v === "boolean") return String(v);
+  return "";
+}
+
+type RawPkg = {
+  id: string;
+  title: string;
+  details: string;
+  price: string;
+  duration: string;
+  useDefaultTravelPackage: boolean;
+  pricingMode: PackagePricingMode;
+  unitLabel: string;
+  minQuantity: string;
+  maxQuantity: string;
+};
+
+const TRAVEL_POLICY_LABELS: Record<string, string> = {
+  fee_included: "Travel or delivery fee is included",
+  free_within_base_city:
+    "Free within their base city (extra may apply outside)",
+  fee_after_booking_request: "Travel or delivery fee confirmed after you enquire",
+  not_applicable: "Travel or delivery not needed for this service",
+};
+
+function packageTravelLine(
+  payload: Record<string, unknown>,
+  useDefaultTravelPackage: boolean,
+): string | null {
+  if (!useDefaultTravelPackage) {
+    return "Custom travel or delivery terms for this package";
+  }
+  const policyRaw = coerceStr(payload, "travelDeliveryPolicy");
+  if (policyRaw === "custom") {
+    const custom = coerceStr(payload, "travelDeliveryPolicyCustomText");
+    return custom || "Custom travel or delivery terms";
+  }
+  if (!policyRaw) return null;
+  return TRAVEL_POLICY_LABELS[policyRaw] ?? null;
+}
+
+function normalizePackages(payload: Record<string, unknown>): RawPkg[] {
+  const raw = payload.packages;
+  if (!Array.isArray(raw)) return [];
+  return raw.map((item, index) => {
+    const o = item as Record<string, unknown>;
+    const id = coerceStr(o, "id").trim();
+    return {
+      id: id || `package-${index}`,
+      title: coerceStr(o, "title").trim(),
+      details: coerceStr(o, "details").trim(),
+      price: coerceStr(o, "price").trim(),
+      duration: coerceStr(o, "duration").trim(),
+      useDefaultTravelPackage: o.useDefaultTravelPackage !== false,
+      pricingMode: parsePackagePricingMode(o.pricingMode),
+      unitLabel: coerceStr(o, "unitLabel").trim(),
+      minQuantity: coerceStr(o, "minQuantity").trim(),
+      maxQuantity: coerceStr(o, "maxQuantity").trim(),
+    };
+  });
+}
+
+/** Onboarding: name + strictly valid price required for a package to count as complete. */
+function isCompletePackage(p: RawPkg): boolean {
+  if (!p.title || parseSingleMoneyNumber(p.price) === null) return false;
+  if (isPerUnitPricing(p.pricingMode) && !p.unitLabel) return false;
+  return true;
+}
+
+function tabLabelFromTitle(title: string, fallback: string): string {
+  const t = title.trim();
+  if (!t) return fallback;
+  if (t.length <= 18) return t;
+  return `${t.slice(0, 17)}…`;
+}
+
+function servicesFeatureLines(
+  payload: Record<string, unknown>,
+): string[] {
+  const services = Array.isArray(payload.servicesOffered)
+    ? (payload.servicesOffered as unknown[]).map((s) => String(s).trim()).filter(Boolean)
+    : [];
+  return displayServicesOffered(services).slice(0, 6);
+}
+
+/**
+ * Vendor-wide pricing context from onboarding (Step 2 services, Step 3 travel, discounts).
+ * Package cards should only show per-package duration, details, and custom travel overrides.
+ */
+export function extractBrowsePricingSharedContext(
+  payload: Record<string, unknown>,
+  options: BrowsePricingOption[],
+): BrowsePricingSharedContext {
+  const defaultTravel = packageTravelLine(payload, true);
+  const travelLines = [...new Set(options.map((o) => o.travelLine).filter(Boolean))];
+  const travelLine =
+    travelLines.length === 1
+      ? travelLines[0]!
+      : travelLines.length === 0
+        ? defaultTravel
+        : defaultTravel;
+
+  return {
+    travelLine: travelLine ?? defaultTravel,
+    serviceLines: servicesFeatureLines(payload),
+    promoLines: options[0]?.promoLines ?? [],
+  };
+}
+
+/** Per-package travel when it differs from the vendor default shown once above the list. */
+export function packageSpecificTravelLine(
+  opt: BrowsePricingOption,
+  shared: BrowsePricingSharedContext,
+): string | null {
+  if (!opt.travelLine) return null;
+  if (shared.travelLine && opt.travelLine === shared.travelLine) return null;
+  return opt.travelLine;
+}
+
+/**
+ * Builds pricing options from the same JSON the vendor saves in onboarding:
+ * completed packages first; otherwise fixed hourly and/or daily rates.
+ */
+export function buildBrowsePricingOptions(vendor: ExploreVendor): BrowsePricingOption[] {
+  const p = vendor.profile_form_data ?? {};
+  const hourly = parseSingleMoneyNumber(coerceStr(p, "hourlyRate"));
+  const daily = parseSingleMoneyNumber(coerceStr(p, "dailyRate"));
+
+  const discountConfig = parseVendorDiscountConfig(p);
+  const promoLines = buildDiscountPromoLines(discountConfig);
+
+  const serviceLines = servicesFeatureLines(p);
+
+  const completePkgs = normalizePackages(p).filter(isCompletePackage);
+
+  if (completePkgs.length > 0) {
+    return completePkgs.map((pkg, index) => {
+      const listPrice = parseSingleMoneyNumber(pkg.price);
+      const priced = listPriceDisplay(listPrice, discountConfig);
+      const perUnit = isPerUnitPricing(pkg.pricingMode);
+      const minQty = defaultMinQuantity(pkg.minQuantity);
+      const maxQty = parsePackageQuantity(pkg.maxQuantity);
+
+      const timelineLine = pkg.duration.trim()
+        ? pkg.duration.trim()
+        : null;
+      const travelLine = packageTravelLine(p, pkg.useDefaultTravelPackage);
+
+      return {
+        id: pkg.id,
+        tabLabel: tabLabelFromTitle(pkg.title, `Package ${index + 1}`),
+        heading: pkg.title,
+        priceDisplay: priced.priceDisplay,
+        compareAtDisplay: priced.compareAtDisplay,
+        unitPriceGbp: priced.unitPriceGbp,
+        pricingMode: pkg.pricingMode,
+        unitLabel: perUnit ? pkg.unitLabel || null : null,
+        minQuantity: minQty,
+        maxQuantity: maxQty,
+        priceSuffix: perUnit ? perUnitPriceSuffix(pkg.unitLabel) : null,
+        discountBadge: priced.discountBadge,
+        travelLine,
+        promoLines,
+        description:
+          pkg.details.trim() ||
+          "Ask the vendor what's included.",
+        timelineLine,
+        featureLines: serviceLines,
+      };
+    });
+  }
+
+  const options: BrowsePricingOption[] = [];
+
+  if (hourly != null) {
+    const priced = listPriceDisplay(hourly, discountConfig);
+    options.push({
+      id: "fixed-hourly",
+      tabLabel: "Hourly",
+      heading: "Hourly rate",
+      priceDisplay: priced.priceDisplay,
+      compareAtDisplay: priced.compareAtDisplay,
+      unitPriceGbp: priced.unitPriceGbp,
+      pricingMode: "fixed",
+      unitLabel: null,
+      minQuantity: 1,
+      maxQuantity: null,
+      priceSuffix: null,
+      discountBadge: priced.discountBadge,
+      travelLine: packageTravelLine(p, p.useDefaultTravelHourly !== false),
+      promoLines,
+      description: "Hourly rate. Confirm hours and travel with the vendor.",
+      timelineLine: null,
+      featureLines: serviceLines,
+    });
+  }
+
+  if (daily != null) {
+    const priced = listPriceDisplay(daily, discountConfig);
+    options.push({
+      id: "fixed-daily",
+      tabLabel: "Daily",
+      heading: "Daily rate",
+      priceDisplay: priced.priceDisplay,
+      compareAtDisplay: priced.compareAtDisplay,
+      unitPriceGbp: priced.unitPriceGbp,
+      pricingMode: "fixed",
+      unitLabel: null,
+      minQuantity: 1,
+      maxQuantity: null,
+      priceSuffix: null,
+      discountBadge: priced.discountBadge,
+      travelLine: packageTravelLine(p, p.useDefaultTravelDaily !== false),
+      promoLines,
+      description: "Daily rate. Confirm coverage and travel with the vendor.",
+      timelineLine: null,
+      featureLines: serviceLines,
+    });
+  }
+
+  if (options.length > 0) {
+    return options;
+  }
+
+  return [
+    {
+      id: "quote",
+      tabLabel: "Quote",
+      heading: "Request a quote",
+      priceDisplay: null,
+      compareAtDisplay: null,
+      unitPriceGbp: null,
+      pricingMode: "fixed",
+      unitLabel: null,
+      minQuantity: 1,
+      maxQuantity: null,
+      priceSuffix: null,
+      discountBadge: null,
+      travelLine: null,
+      promoLines: [],
+      description: "Prices aren't listed yet. Ask for a quote.",
+      timelineLine: null,
+      featureLines: serviceLines.length > 0 ? serviceLines : [],
+    },
+  ];
+}

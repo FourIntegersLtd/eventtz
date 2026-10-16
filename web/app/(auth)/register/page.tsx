@@ -1,0 +1,21 @@
+"use client";
+
+import { Suspense } from "react";
+import { LoadingState } from "@/components/ui/LoadingState";
+import { UnifiedRegisterView } from "@/features/auth/UnifiedRegisterView";
+
+function AuthSearchParamsFallback() {
+  return (
+    <main className="min-h-dvh bg-auth-bg px-4 py-10">
+      <LoadingState label="Loading…" variant="page" branded />
+    </main>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<AuthSearchParamsFallback />}>
+      <UnifiedRegisterView />
+    </Suspense>
+  );
+}

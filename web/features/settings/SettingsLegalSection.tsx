@@ -1,0 +1,36 @@
+"use client";
+
+import Link from "next/link";
+import { ChevronRight, FileText } from "lucide-react";
+import { SettingsSection } from "./SettingsSection";
+
+const LEGAL_LINKS = [
+  { href: "/compliances/privacy-policy", label: "Privacy policy" },
+  { href: "/compliances/terms-of-service", label: "Terms of service" },
+  { href: "/compliances/cookies-policy", label: "Cookies policy" },
+] as const;
+
+export function SettingsLegalSection() {
+  return (
+    <SettingsSection title="Legal">
+      <ul className="divide-y divide-neutral-100 border-t border-neutral-100">
+        {LEGAL_LINKS.map((item) => (
+          <li key={item.href}>
+            <Link
+              href={item.href}
+              className="flex items-center gap-3 px-5 py-3.5 transition hover:bg-neutral-50/80 sm:px-6"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-600">
+                <FileText className="h-4 w-4" aria-hidden />
+              </span>
+              <span className="min-w-0 flex-1 text-sm font-medium text-neutral-900">
+                {item.label}
+              </span>
+              <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" aria-hidden />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </SettingsSection>
+  );
+}

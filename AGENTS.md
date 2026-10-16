@@ -35,8 +35,7 @@ live site: do not edit them (only critical live fixes, and only when asked). Whe
 | `api/tests/golden/` | Byte-exact fixtures of money maths captured from the baseline code |
 | `api/alembic/` | Schema for `api/`. `0002` is a snapshot of `backend/sql/`; later changes are revisions |
 | `backend/sql/NNN_*.sql` | Baseline migrations for the live Supabase DB, until cutover |
-| `web/app/` | Routes only. URLs are public contracts |
-| `web/{surfaces,domains,capabilities,foundation}/` | Frontend tiers, imports downwards only |
+| `web/` | `frontend/` copied whole; its Next server proxies `/api/*` to `api/` (`BACKEND_URL`) and keeps the session in httpOnly cookies. URLs are public contracts |
 | `backend/`, `frontend/` | **Baseline** (live). Reference for behaviour; do not edit |
 | `docs/adr/` | Architecture decisions. Read before changing structure |
 | `docs/domain-rules.md` | Business invariants not yet moved into slice READMEs |
@@ -62,7 +61,7 @@ make test TARGET=api    # unbuilt behaviour is listed in conftest.NOT_YET_ON_API
 
 # web (from web/)
 npm run dev             # :3001 (baseline frontend keeps :3000)
-npm run ci              # types + lint + tests + build
+npm test && npm run build  # web has no ci script; lint has 45 errors inherited from frontend/
 ```
 
 Traps in this machine's shell:
@@ -140,9 +139,10 @@ The Cloud Agent environment is self-contained via scripts in **`.cursor/`**:
 
 Local Supabase Studio is at `http://127.0.0.1:54323`.
 
-## Web screen ports
+## Web
 
-Screens in `web/` are copied from `frontend/`, not redrawn. The legacy component is the source: JSX, class names, text, icons, animations and responsive behaviour stay. Change only the file's tier (`domains/<area>/`), the data source (that domain's `api.ts` on `platform-client`), and imports, names and docstrings. Styling is Tailwind 4 with the same `globals.css` as the baseline.
+`web/` is `frontend/` copied whole (2026-10-16), not redrawn: change a screen only to fix it. It talks
+to `api/` only through its Next proxy (`BACKEND_URL`); the browser never sees a token.
 
 ## Updating this file
 

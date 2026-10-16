@@ -36,7 +36,8 @@ case "$target" in
     python_bin="$(cd "$REPO_ROOT/backend" && env -u VIRTUAL_ENV poetry env info -p)/bin/python"
     export LOG_DIR="$run_dir/logs"
     cd "$run_dir"
-    exec "$python_bin" -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+    # BASELINE_PORT: another project may hold :8000; then serve here and run tests with BASE_URL.
+    exec "$python_bin" -m uvicorn app.main:app --host 127.0.0.1 --port "${BASELINE_PORT:-8000}"
     ;;
   api)
     cd "$REPO_ROOT/api"

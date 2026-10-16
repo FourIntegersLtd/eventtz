@@ -1,0 +1,130 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { postBookingReview } from "@/lib/reviewsApi";
+import { getApiErrorDetail } from "@/lib/api-errors";
+import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
+import { parseForm, reviewSchema } from "@/lib/validation";
+import type { BookingReviewDisplay } from "@/lib/reviewTypes";
+import { StarRating } from "@/components/ui/StarRating";
+import { Button } from "@/components/ui/Button";
+import { useToast } from "@/components/ui/Toast";
+import { TextArea } from "@/components/ui/TextArea";
+import { ReviewPhotoPicker } from "@/features/reviews/ReviewPhotoPicker";
+import {
+  CLIENT_BOOKING_ERROR_COPY,
+  CLIENT_BOOKING_TOAST_COPY,
+} from "@/features/bookings/bookingConfirmCopy";
+import { withMutationFeedback } from "@/lib/mutationFeedback";
+
+type ClientBookingReviewFormProps = {
+  bookingId: string;
+  vendorName: string;
+  /** Pre-selects a star rating (e.g. arriving from the dashboard nudge) and auto-focuses the write-up. */
+  initialRating?: number;
+  onSubmitted: (review: BookingReviewDisplay) => void;
+};
+
+/**
+ * One-tap nudge: tapping a star sets the rating and reveals the (required)
+ * write-up immediately, auto-focused - the client never has to hunt for a
+ * separate "leave a review" action after a booking completes.
+ */
+export function ClientBookingReviewForm({
+  bookingId,
+  vendorName,
+  initialRating = 0,
+  onSubmitted,
+}: ClientBookingReviewFormProps) {
+  const { showToast } = useToast();
+  const [rating, setRating] = useState(initialRating);
+  const [body, setBody] = useState("");
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (initialRating > 0) {
+      requestAnimationFrame(() => textareaRef.current?.focus());
+    }
+    // Only meant to run once on mount for the initial deep-link rating.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const submit = async () => {
+    setError(null);
+    const parsed = parseForm(reviewSchema, { rating, body, image_urls: imageUrls });
+    if (!parsed.ok) {
+      setError(parsed.formError);
+      return;
+    }
+    setBusy(true);
+    let caught: unknown = null;
+    const res = await withMutationFeedback(showToast, {
+      successTitle: CLIENT_BOOKING_TOAST_COPY.reviewSubmitted,
+      showErrorToast: false,
+      run: async () => {
+        try {
+          return await postBookingReview(bookingId, parsed.data);
+        } catch (e) {
+          caught = e;
+          throw e;
+        }
+      },
+    });
+    if (res) {
+      track(MixpanelEvents.review_submitted, {
+        booking_id: bookingId,
+        rating: parsed.data.rating,
+        photo_count: parsed.data.image_urls.length,
+      });
+      onSubmitted(res.review);
+      setBody("");
+      setImageUrls([]);
+    } else if (caught) {
+      setError(getApiErrorDetail(caught) ?? CLIENT_BOOKING_ERROR_COPY.reviewFailed);
+    }
+    setBusy(false);
+  };
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white px-5 py-4">
+      <p className="text-sm font-semibold text-neutral-900">
+        How was your experience with {vendorName}?
+      </p>
+      <p className="mt-1 text-xs text-neutral-500">Tap a star to leave a review.</p>
+      <div className="mt-3">
+        <StarRating
+          rating={rating}
+          size="lg"
+          onRate={(value) => {
+            setRating(value);
+            setError(null);
+            requestAnimationFrame(() => textareaRef.current?.focus());
+          }}
+        />
+      </div>
+      {rating > 0 ? (
+        <div className="mt-3 animate-ui-fade-in space-y-3">
+          <TextArea
+            ref={textareaRef}
+            label="Your review"
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            rows={4}
+            maxLength={4000}
+            placeholder="What went well? (min 10 characters)"
+          />
+          <ReviewPhotoPicker urls={imageUrls} onChange={setImageUrls} disabled={busy} />
+          {error ? <p className="text-xs text-red-700">{error}</p> : null}
+          <Button variant="primary" loading={busy} onClick={() => void submit()}>
+            Submit review
+          </Button>
+        </div>
+      ) : error ? (
+        <p className="mt-2 text-xs text-red-700">{error}</p>
+      ) : null}
+    </div>
+  );
+}
