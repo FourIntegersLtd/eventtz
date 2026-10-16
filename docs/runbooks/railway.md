@@ -21,11 +21,41 @@ dashboard table (`backend/README.md`, `api/README.md`); this page keeps them sid
 | Service | Root dir | Start (Dockerfile `CMD` unless overridden) | Dashboard settings |
 |---|---|---|---|
 | `backend` (live, project `eventtz`) | `/backend` | Dockerfile `CMD` | Healthcheck `/health`, 120 s · Restart on failure, 10 retries · Draining 120 s · Watch paths `/backend/**` |
-| `api` (planned, ADR 0002) | `/api` | Dockerfile `CMD` | Pre-deploy `alembic upgrade head` · Healthcheck `/health`, 120 s · Restart on failure, 10 retries · Draining 120 s · Watch paths `/api/**` |
+| `api` (planned, ADR 0002; DB = Supabase session pooler, see "Database") | `/api` | Dockerfile `CMD` | Pre-deploy `alembic upgrade head` (point it at the live DB only on cut-over day) · Healthcheck `/health`, 120 s · Restart on failure, 10 retries · Draining 120 s · Watch paths `/api/**` |
 | `worker` (planned, ADR 0008) | `/api` | override: `python -m app.worker.main` | No pre-deploy, no healthcheck (no HTTP) · Restart on failure, 10 retries · Draining 120 s · Watch paths `/api/**` |
 
 The `backend` values above are what `backend/railway.toml` held until 2026-10-11, moved to the
 dashboard when the file was removed. Changing one of them is a dashboard change and a row edit here.
+
+## Database
+
+There is no Railway Postgres: `api` and `worker` use the Supabase project's Postgres (ADR 0002)
+through its **session pooler**. Both services set `DATABASE_URL` (Supabase dashboard → Connect →
+Session pooler; placeholders only here, the password URL-encoded):
+
+```
+postgresql://postgres.<project-ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres?sslmode=require
+```
+
+- Not the direct `db.<project-ref>.supabase.co` host: it is IPv6-only and Railway has no outbound IPv6.
+- Not the transaction pooler (port 6543): procrastinate needs a real session (LISTEN/NOTIFY, advisory
+  locks) and psycopg prepares statements.
+- `sslmode=require`: the pooler only takes TLS; the parameter reaches both SQLAlchemy and
+  procrastinate's libpq connection unchanged.
+
+**Connection budget.** In session mode every client holds a server connection, and the pooler caps
+clients at the plan's pool size (Supabase → Database → Settings → Connection pooling). Each process
+opens up to `DATABASE_POOL_SIZE + DATABASE_MAX_OVERFLOW`; the worker adds procrastinate's 4. Keep
+
+```
+api replicas × (POOL_SIZE + MAX_OVERFLOW) + worker × (POOL_SIZE + MAX_OVERFLOW + 4) + 2 (migrations, admin)
+```
+
+under that pool size, with the baseline's own usage counted until it is switched off. For example,
+one `api` at 5 + 5 and one `worker` at 2 + 2 is 10 + 8 + 2 = 20.
+
+Railway's only EU region is Amsterdam (`europe-west4`); Supabase has no Amsterdam region, so expect
+~6–10 ms per round trip to a London project. The live `backend` makes the same trip to PostgREST.
 
 ## Checks after changing a service
 

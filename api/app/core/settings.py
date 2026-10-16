@@ -63,7 +63,10 @@ class Settings(BaseSettings):
 
     # --- Persistence (ADR 0002) ---
     database_url: str = ""
+    # Per process: up to pool_size + max_overflow connections. In production every one of them is
+    # a client of Supabase's session pooler, which caps clients at the plan's pool size (ADR 0002).
     database_pool_size: int = 10
+    database_max_overflow: int = 10
     # Logs every SQL statement. Local debugging only.
     database_echo: bool = False
 

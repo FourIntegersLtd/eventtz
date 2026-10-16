@@ -1,6 +1,11 @@
 """`python -m app.migration <command> --source-url ... --target-url ...`
 
-Four commands, run in this order for a rehearsal or a real cut-over:
+`adopt-auth --target-url ...` is the one the cut-over runs (`docs/runbooks/cutover.md`):
+production stays on Supabase, so it copies Supabase Auth's password hashes into
+`users` inside that one database (`adopt_auth.py`).
+
+The other four move data between two databases, a path kept for leaving
+Supabase later; run them in this order:
 
 - `export --source-url ... --out-dir ...` — read the source, write files to `--out-dir`.
 - `load --target-url ... --out-dir ...` — read those files, write the target.
@@ -19,6 +24,7 @@ import sys
 from pathlib import Path
 
 from app.migration import db
+from app.migration.adopt_auth import run_adopt_auth
 from app.migration.export import run_export
 from app.migration.load import run_load
 from app.migration.report import (
@@ -51,7 +57,7 @@ def _add_common_flags(parser: argparse.ArgumentParser) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    """The `argparse` parser for `export` / `load` / `verify` / `report`."""
+    """The `argparse` parser for `export` / `load` / `adopt-auth` / `verify` / `report`."""
     parser = argparse.ArgumentParser(prog="python -m app.migration", description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -70,6 +76,14 @@ def build_parser() -> argparse.ArgumentParser:
         "--random-seed", type=int, default=None, help="Seed the spot check's row sample (tests only)."
     )
     _add_common_flags(verify_parser)
+
+    adopt_parser = subparsers.add_parser(
+        "adopt-auth", help="Copy auth.users' bcrypt hashes into users.password_hash, in one database."
+    )
+    adopt_parser.add_argument(
+        "--target-url", required=True, help="postgresql:// URL of the Supabase database."
+    )
+    _add_common_flags(adopt_parser)
 
     report_parser = subparsers.add_parser("report", help="Reprint --out-dir's last verify_report.json.")
     _add_common_flags(report_parser)
@@ -93,6 +107,16 @@ def _run_load(args: argparse.Namespace) -> int:
         rows_loaded, auth_report = run_load(connection, args.out_dir)
         connection.commit()
     print(render_load_report(rows_loaded, auth_report))  # noqa: T201
+    return 0
+
+
+def _run_adopt_auth(args: argparse.Namespace) -> int:
+    """`adopt-auth`: copy password hashes from `auth.users` into `users`, in one transaction."""
+    assert_local_only(args.target_url, approved_for_hosted=args.i_have_approval_for_hosted)
+    with db.connect(args.target_url) as connection:
+        report = run_adopt_auth(connection)
+        connection.commit()
+    print(report.render())  # noqa: T201 - CLI output, not a log line
     return 0
 
 
@@ -121,7 +145,13 @@ def _run_report(args: argparse.Namespace) -> int:
     return 0 if report.is_clean() else 1
 
 
-_HANDLERS = {"export": _run_export, "load": _run_load, "verify": _run_verify, "report": _run_report}
+_HANDLERS = {
+    "export": _run_export,
+    "load": _run_load,
+    "adopt-auth": _run_adopt_auth,
+    "verify": _run_verify,
+    "report": _run_report,
+}
 
 
 def main(argv: list[str] | None = None) -> int:

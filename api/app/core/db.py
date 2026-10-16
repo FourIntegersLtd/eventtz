@@ -112,8 +112,9 @@ AUTOGENERATE_FILTERS: dict[str, object] = {
 def sqlalchemy_url(url: str) -> str:
     """Normalise any Postgres URL to the async psycopg driver.
 
-    Railway hands out `postgres://` or `postgresql://`; SQLAlchemy needs the
-    driver spelled out.
+    Providers hand out `postgres://` or `postgresql://`; SQLAlchemy needs the
+    driver spelled out. The query string (`?sslmode=require` for Supabase's
+    pooler) is kept, and psycopg passes it to libpq unchanged.
     """
     for prefix in ("postgresql+psycopg://", "postgresql+asyncpg://", "postgresql://", "postgres://"):
         if url.startswith(prefix):
@@ -138,6 +139,7 @@ def get_engine() -> AsyncEngine:
         _engine = create_async_engine(
             sqlalchemy_url(settings.database_url),
             pool_size=settings.database_pool_size,
+            max_overflow=settings.database_max_overflow,
             pool_pre_ping=True,
             echo=settings.database_echo,
             # Timestamps come back in UTC whatever the server's default zone, so the

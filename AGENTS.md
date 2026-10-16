@@ -13,14 +13,14 @@ Real vendors and clients use the live site.
 Baseline stack (live): FastAPI + supabase-py + Supabase Auth, raw numbered SQL
 migrations, Next.js + axios. Rebuild stack (`api/`, `web/`), copied from OSCE Guide
 so both projects share one stack: FastAPI + SQLAlchemy 2.0 async on psycopg 3 +
-Alembic, on Railway Postgres; platform-issued JWTs with argon2 passwords;
+Alembic, on the same Supabase Postgres as plain Postgres (session pooler); platform-issued JWTs with argon2 passwords;
 procrastinate jobs; structlog; optional Redis; Next.js with a fetch client and
 generated types. Both: Stripe Connect, Resend, OpenAI, S3, Sentry, Mixpanel.
 
 The code is being rebuilt to the architecture in `docs/adr/` (borrowed from OSCE
 Guide `platform-api` / `platform-web`) in **new folders**: `api/` replaces
-`backend/`, `web/` replaces `frontend/`, serving the same URLs. At cutover the
-Supabase data (and bcrypt password hashes) move to Railway Postgres. `backend/` and `frontend/` are the **baseline** that runs the
+`backend/`, `web/` replaces `frontend/`, serving the same URLs. The data stays in Supabase Postgres: at cutover
+Alembic adopts it and `adopt-auth` copies the bcrypt hashes from `auth.users` (`docs/runbooks/cutover.md`). `backend/` and `frontend/` are the **baseline** that runs the
 live site: do not edit them (only critical live fixes, and only when asked). When
 `api/`/`web/` reach parity they are deployed in place of the baseline, which is then deleted.
 

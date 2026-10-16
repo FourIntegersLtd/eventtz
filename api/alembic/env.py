@@ -17,7 +17,8 @@ from app.core.db import AUTOGENERATE_FILTERS, Base, import_all_models, sqlalchem
 from app.core.settings import get_settings
 
 config = context.config
-config.set_main_option("sqlalchemy.url", sqlalchemy_url(get_settings().database_url))
+# configparser reads `%` as interpolation; a URL-encoded password (Supabase's often has one) must be escaped.
+config.set_main_option("sqlalchemy.url", sqlalchemy_url(get_settings().database_url).replace("%", "%%"))
 
 import_all_models()
 target_metadata = Base.metadata
