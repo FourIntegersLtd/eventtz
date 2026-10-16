@@ -29,3 +29,15 @@ def configure_sentry(settings: Settings) -> bool:
         max_request_body_size="never",
     )
     return True
+
+
+def bind_sentry_user(*, user_id: str, user_type: str | None = None) -> None:
+    """Tag this request's error reports with the signed-in user's id (never their email), like the baseline.
+
+    A no-op while Sentry is not initialised, so tests and local runs stay silent.
+    """
+    if not user_id or not sentry_sdk.is_initialized():
+        return
+    sentry_sdk.set_user({"id": user_id})
+    if user_type:
+        sentry_sdk.set_tag("user_type", user_type)

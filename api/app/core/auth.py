@@ -35,6 +35,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db import SessionDep
 from app.core.errors import Forbidden, Unauthenticated
 from app.core.logging import get_logger
+from app.core.observability import bind_sentry_user
 from app.core.settings import Settings, get_settings
 
 log = get_logger(__name__)
@@ -336,6 +337,7 @@ def require_user(principal: Annotated[Principal, Depends(resolve_principal)]) ->
     """Any signed-in account; suspended clients and vendors are refused."""
     if principal.account_suspended and principal.user_type in ("client", "vendor"):
         raise AccountSuspended()
+    bind_sentry_user(user_id=principal.id, user_type=principal.user_type)
     return principal
 
 

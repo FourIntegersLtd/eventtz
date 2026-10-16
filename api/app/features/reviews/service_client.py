@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.features.marketplace import service_events as events
 from app.features.reviews import repository
 from app.features.reviews.errors import (
     ReviewAlreadySubmitted,
@@ -57,6 +58,14 @@ async def submit_review(
             "body": stripped_body,
             "image_urls": body.image_urls,
         },
+    )
+    await events.record_marketplace_event(
+        session,
+        "review_submitted",
+        actor_user_id=client_user_id,
+        vendor_user_id=booking.vendor_user_id,
+        booking_request_id=booking_id,
+        payload={"rating": body.rating, "photo_count": len(body.image_urls)},
     )
     return PostBookingReviewResponse(
         review=SubmittedReview(
