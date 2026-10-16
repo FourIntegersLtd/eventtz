@@ -22,6 +22,10 @@ from app.features.disputes.rows import DisputeBookingRow, DisputeRow
 
 ViewerRole = Literal["client", "vendor"]
 
+# The realtime event name. The frontend's SSE listener (`web-new/lib/useRealtimeSse.ts`) refreshes
+# dispute screens and badges when it arrives; it carries no data, only "re-read".
+DISPUTE_CHANGED = "dispute_changed"
+
 # A booking may only ever have one dispute open or under review at a time.
 ACTIVE_STATUSES: frozenset[str] = frozenset({"open", "under_review"})
 
@@ -126,3 +130,27 @@ def check_partial_refund_amount(*, refund_amount_gbp: float | None, booking: Dis
 def recent_first(disputes: list[DisputeRow]) -> list[DisputeRow]:
     """Disputes ordered newest-created first (the ordering every listing route uses)."""
     return sorted(disputes, key=lambda dispute: dispute.created_at or "", reverse=True)
+
+
+def change_recipients(patch_fields: dict[str, object], booking: DisputeBookingRow) -> list[str]:
+    """Who hears `dispute_changed` after a staff patch, exactly as the baseline picks them.
+
+    A patch that only sets resolution notes (no status, no resolution action) wakes just the
+    party whose note was set, so one party's private note never nudges the other. Every other
+    patch (status, assignee, money, internal notes...) wakes both parties.
+    """
+    sets_client_note = "client_resolution_note" in patch_fields
+    sets_vendor_note = "vendor_resolution_note" in patch_fields
+    is_note_only = (
+        (sets_client_note or sets_vendor_note)
+        and not patch_fields.get("status")
+        and patch_fields.get("resolution_action") is None
+    )
+    if not is_note_only:
+        return [booking.client_user_id, booking.vendor_user_id]
+    recipients = []
+    if sets_client_note:
+        recipients.append(booking.client_user_id)
+    if sets_vendor_note:
+        recipients.append(booking.vendor_user_id)
+    return recipients

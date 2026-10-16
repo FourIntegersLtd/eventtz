@@ -7,6 +7,9 @@ from typing import Literal
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import as_uuid
+from app.core.events import publish_after_commit, user_topic
+from app.core.logging import get_logger
+from app.core.ports import Mailer
 from app.features.disputes import domain, repository
 from app.features.disputes.errors import (
     BookingNotFound,
@@ -19,9 +22,12 @@ from app.features.disputes.errors import (
 from app.features.disputes.rows import DisputeBookingRow, DisputeRow
 from app.features.disputes.schemas import DisputePublic
 from app.features.identity import service as identity
+from app.features.notifications import service as notifications
 from app.features.vendors import service_listing as vendor_listing
 
 Party = Literal["client", "vendor"]
+
+log = get_logger(__name__)
 
 
 async def _require_booking(session: AsyncSession, booking_id: str) -> DisputeBookingRow:
@@ -35,7 +41,7 @@ async def _require_booking(session: AsyncSession, booking_id: str) -> DisputeBoo
 
 
 async def open_dispute(
-    session: AsyncSession, *, user_id: str, booking_id: str, summary: str
+    session: AsyncSession, mailer: Mailer, *, user_id: str, booking_id: str, summary: str
 ) -> DisputePublic:
     """A party opens a dispute on their own booking, in an allowed status, with none already active.
 
@@ -61,6 +67,20 @@ async def open_dispute(
         summary=summary,
         conversation_id=conversation_id,
     )
+    # Both parties' screens refresh; the event is sent only if the request commits.
+    for party_user_id in (booking.client_user_id, booking.vendor_user_id):
+        publish_after_commit(session, user_topic(party_user_id), domain.DISPUTE_CHANGED)
+    try:
+        opener_emails = await identity.emails_by_id(session, [user_id])
+        notifications.send_dispute_opened_alert(
+            mailer,
+            booking_id=booking_id,
+            dispute_id=dispute.id,
+            summary=summary,
+            opened_by_email=opener_emails.get(user_id),
+        )
+    except Exception:
+        log.warning("admin dispute email failed booking=%s", booking_id, exc_info=True)
     return await _to_public(session, dispute, booking=booking, viewer_user_id=user_id)
 
 

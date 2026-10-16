@@ -15,6 +15,14 @@ payout, refunding the client in full, or a partial refund).
   note, or assign it to another active admin.
 - As a **super admin**, I **resolve a dispute with a financial outcome**
   (`release_to_vendor` / `refund_client` / `partial_refund`); a plain admin may not.
+- As **staff**, I **get an ops alert email when a dispute is opened** (booking, dispute, who opened
+  it, their summary); a send failure is only logged.
+
+## Realtime
+Opening a dispute publishes `dispute_changed` to both booking parties; a staff patch publishes it
+to the baseline's recipients (a note-only patch wakes only the party whose note was set, every
+other patch wakes both). Sent after commit via `publish_after_commit`, so a rejected request
+sends nothing. The frontend listener is `web-new/lib/useRealtimeSse.ts`.
 
 ## Invariants
 - Only one dispute may be `open` or `under_review` on a booking at a time (the database's

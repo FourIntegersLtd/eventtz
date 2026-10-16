@@ -19,11 +19,13 @@ from app.features.notifications.domain import (
     AdminAlert,
     admin_alert_context,
     contact_submitted_alert,
+    dispute_opened_alert,
     email_context,
 )
 from app.features.notifications.domain_account_emails import (
     TransactionalEmail,
     admin_welcome_email,
+    client_suspended_email,
     email_verification_email,
     password_changed_email,
     password_reset_email,
@@ -187,6 +189,16 @@ def send_contact_submitted_alert(
     return send_admin_alert(mailer, alert)
 
 
+def send_dispute_opened_alert(
+    mailer: Mailer, *, booking_id: str, dispute_id: str, summary: str, opened_by_email: str | None
+) -> bool:
+    """Tell staff a dispute was opened (which booking, which dispute, who, and their summary)."""
+    alert = dispute_opened_alert(
+        booking_id=booking_id, dispute_id=dispute_id, summary=summary, opened_by_email=opened_by_email
+    )
+    return send_admin_alert(mailer, alert)
+
+
 def _render_transactional(email: str, content: TransactionalEmail) -> OutgoingEmail:
     """Render a `TransactionalEmail` with the shared auth layout (`auth/password_reset.html`).
 
@@ -215,6 +227,22 @@ def render_booking_notification(email: str, content: TransactionalEmail) -> Outg
         html=render_template("booking/notification.html", context),
         text=render_template("booking/notification.txt", context),
     )
+
+
+def render_client_suspended(*, email: str) -> OutgoingEmail:
+    """Render the "account suspended" notice for a client, without sending it."""
+    return render_booking_notification(email, client_suspended_email(support_url=public_url("/contact")))
+
+
+def send_client_suspended_email(mailer: Mailer, *, to: str | None) -> bool:
+    """Email a client that an admin suspended them. False for a missing/invalid address, never raises."""
+    if not to or "@" not in to:
+        return False
+    try:
+        return mailer.send(render_client_suspended(email=to))
+    except Exception:
+        log.exception("client suspended email could not be sent")
+        return False
 
 
 def render_email_verification(

@@ -1,17 +1,20 @@
 """Use cases behind `/admin/clients*`: the client directory and suspend/unsuspend toggle.
 
-Mirrors `backend/app/features/admin/client_admin_commands.py`. The baseline also
-emails the client when they are suspended; the acceptance freeze does not
-exercise that email, so it is left for a follow-up rather than guessed at here
-(Laziness protocol: no code without a caller that needs it).
+Mirrors `backend/app/features/admin/client_admin_commands.py`, including the
+"account suspended" email sent when (and only when) a client is suspended.
 """
 
 from __future__ import annotations
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.logging import get_logger
+from app.core.ports import Mailer
+from app.features.notifications import service as notifications
 from app.features.staff import repository
 from app.features.staff.schemas import AdminClientRow, AdminClientsListResponse, SuccessResponse
+
+log = get_logger(__name__)
 
 
 async def list_clients(
@@ -34,7 +37,18 @@ async def list_clients(
     return AdminClientsListResponse(clients=clients, total=total, offset=offset, limit=limit)
 
 
-async def set_suspended(session: AsyncSession, user_id: str, *, suspended: bool) -> SuccessResponse:
-    """Suspend or restore one client account."""
+async def set_suspended(
+    session: AsyncSession, mailer: Mailer, user_id: str, *, suspended: bool
+) -> SuccessResponse:
+    """Suspend or restore one client account; suspending also emails them (restoring does not).
+
+    A failed email is only logged: the suspension itself must still succeed.
+    """
+    email = await repository.get_client_email(session, user_id)
     await repository.set_client_suspended(session, user_id, suspended=suspended)
+    if suspended:
+        try:
+            notifications.send_client_suspended_email(mailer, to=email)
+        except Exception:
+            log.warning("client suspended email failed user=%s", user_id, exc_info=True)
     return SuccessResponse()

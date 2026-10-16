@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import Principal
 from app.core.db import as_uuid
+from app.core.events import publish_after_commit, user_topic
 from app.core.ports import Mailer, PaymentGateway
 from app.features.bookings import service_payments
 from app.features.disputes import domain, repository
@@ -174,6 +175,10 @@ async def patch_dispute(
         entity_id=dispute_id,
         details=patch_fields,
     )
+    booking = await repository.get_booking(session, updated.booking_request_id)
+    if booking is not None:
+        for recipient_user_id in domain.change_recipients(patch_fields, booking):
+            publish_after_commit(session, user_topic(recipient_user_id), domain.DISPUTE_CHANGED)
     return await _to_admin_case(session, updated)
 
 

@@ -51,8 +51,8 @@ test-send screen for checking email templates render. Mirrors
   (bookings, reviews, conversations, disputes — demote to client), then a hard
   delete. This mirrors the baseline's `_hard_delete_admin_user` precedence.
 - `PATCH /admin/clients/{user_id}/suspended` writes no audit entry, matching
-  the baseline (`client_admin_commands.py`); only the email side effect is
-  deferred (no caller in this rebuild yet).
+  the baseline (`client_admin_commands.py`). Suspending (not restoring) emails
+  the client "Account suspended"; a send failure is only logged.
 - An unrecognised audit-log `category` answers an empty page, like the
   baseline, rather than erroring.
 - The staff slice may only call other slices through their `service*`

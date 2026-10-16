@@ -112,6 +112,25 @@ def admin_alert_context(alert: AdminAlert) -> dict[str, object]:
     )
 
 
+def dispute_opened_alert(
+    *, booking_id: str, dispute_id: str, summary: str, opened_by_email: str | None
+) -> AdminAlert:
+    """The alert staff get when a client or vendor opens a dispute."""
+    return AdminAlert(
+        template_id="admin.dispute_opened",
+        subject=f"[Eventtz ops] Dispute opened | booking {booking_id[:8]}",
+        headline="Dispute opened",
+        fields=[
+            ("Booking", booking_id),
+            ("Dispute", dispute_id),
+            ("Opened by", opened_by_email or "unknown"),
+        ],
+        body=summary,
+        action_url=public_url("/admin/disputes"),
+        action_label="Open in admin",
+    )
+
+
 def contact_submitted_alert(
     *, portal: str, user_email: str | None, subject_label: str, message: str, booking_id: str | None
 ) -> AdminAlert:

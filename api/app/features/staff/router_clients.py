@@ -11,6 +11,7 @@ from fastapi import APIRouter, Query
 from app.core.auth import ROLE_ERRORS, CurrentStaff
 from app.core.db import SessionDep
 from app.core.errors import error_responses
+from app.core.ports import MailerDependency
 from app.features.staff import service_clients
 from app.features.staff.schemas import AdminClientsListResponse, AdminClientSuspendedBody, SuccessResponse
 
@@ -36,7 +37,11 @@ async def list_clients(
     "/clients/{user_id}/suspended", response_model=SuccessResponse, responses=error_responses(*ROLE_ERRORS)
 )
 async def set_client_suspended(
-    user_id: str, body: AdminClientSuspendedBody, session: SessionDep, principal: CurrentStaff
+    user_id: str,
+    body: AdminClientSuspendedBody,
+    session: SessionDep,
+    principal: CurrentStaff,
+    mailer: MailerDependency,
 ) -> SuccessResponse:
     """Suspend or restore one client account."""
-    return await service_clients.set_suspended(session, user_id, suspended=body.suspended)
+    return await service_clients.set_suspended(session, mailer, user_id, suspended=body.suspended)

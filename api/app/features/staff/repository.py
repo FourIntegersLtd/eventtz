@@ -213,6 +213,18 @@ async def list_clients(
     ], total
 
 
+async def get_client_email(session: AsyncSession, user_id: str) -> str | None:
+    """The client's email address, or `None` when no client account has this id."""
+    account_id = as_uuid(user_id)
+    if account_id is None:
+        return None
+    result = await session.execute(
+        select(_users.c.email).where(_users.c.id == account_id, _users.c.user_type == "client")
+    )
+    email = result.scalar_one_or_none()
+    return str(email).strip() if email else None
+
+
 async def set_client_suspended(session: AsyncSession, user_id: str, *, suspended: bool) -> bool:
     """Suspend or unsuspend one client account. Returns whether a row matched."""
     account_id = as_uuid(user_id)

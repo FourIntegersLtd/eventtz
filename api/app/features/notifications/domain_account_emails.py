@@ -160,6 +160,26 @@ def password_changed_email(*, user_type: str | None) -> TransactionalEmail:
     )
 
 
+def client_suspended_email(*, support_url: str) -> TransactionalEmail:
+    """Content for "your account was suspended", sent to a client when an admin suspends them."""
+    headline = "Account suspended"
+    body = (
+        "You cannot book or message on Eventtz until this is resolved.\n\n"
+        "If you need help or believe this was a mistake, please contact support "
+        "and we will look into it carefully."
+    )
+    return TransactionalEmail(
+        subject=f"{headline} | {APP_NAME}",
+        # The baseline's `<title>` differs from its subject line here.
+        title=f"Your {APP_NAME} account was suspended",
+        headline=headline,
+        subtitle="Your account access has been limited for now.",
+        body=body,
+        action_url=support_url,
+        action_label="Contact support",
+    )
+
+
 def support_message_email(*, messages_url: str, body_html: str, body_plain: str) -> TransactionalEmail:
     """Content for "Eventtz Support sent you a message", quoting the message when it has any text.
 

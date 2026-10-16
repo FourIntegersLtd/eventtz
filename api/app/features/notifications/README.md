@@ -13,6 +13,8 @@ move here as their slices are rebuilt.
   so that I can reply the same day.
 - As **staff**, I **get an alert email when a vendor submits their profile for
   review** so that I can moderate it.
+- As a **client**, I **get an "Account suspended" email when an admin suspends me** (not when
+  restored); a send failure never blocks the suspension.
 - As a **vendor**, I **get an email when an admin changes my approval status**
   (live, payouts pending, listing paused, suspended or still under review) so
   that I know what to do next.

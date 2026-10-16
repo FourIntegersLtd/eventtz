@@ -17,7 +17,9 @@ from fastapi import FastAPI
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.auth import decode_access_token
 from app.core.ports import mailer_port
+from app.core.settings import get_settings
 from app.features.identity import repository as identity_repository
 from tests.conftest import MakeActor
 from tests.support.fakes import FakeMailer
@@ -226,3 +228,45 @@ async def test_an_unknown_template_id_is_refused(
         headers=headers,
     )
     assert (refused.status_code, refused.json()["code"]) == (400, "unknown_email_template")
+
+
+async def test_suspending_a_client_emails_them_once_and_restoring_sends_nothing(
+    client: AsyncClient, make_actor: MakeActor, mailer: FakeMailer
+) -> None:
+    headers = await auth(make_actor, email="staff@example.com", user_type="admin", admin_role="admin")
+    client_token = await make_actor("suspendme@example.com")
+    client_id = decode_access_token(client_token, settings=get_settings()).user_id  # type: ignore[union-attr]
+    path = f"/api/v1/admin/clients/{client_id}/suspended"
+
+    suspended = await client.patch(path, json={"suspended": True}, headers=headers)
+    assert suspended.status_code == 200, suspended.text
+    assert [(email.to, email.subject) for email in mailer.sent] == [
+        (("suspendme@example.com",), "Account suspended | Eventtz")
+    ]
+
+    restored = await client.patch(path, json={"suspended": False}, headers=headers)
+    assert restored.status_code == 200, restored.text
+    assert len(mailer.sent) == 1  # restoring sends nothing
+
+
+async def test_a_failing_mailer_does_not_stop_a_suspension(
+    client: AsyncClient, make_actor: MakeActor, app: FastAPI
+) -> None:
+    class ExplodingMailer:
+        """A provider that raises instead of answering."""
+
+        def send(self, email: object) -> bool:
+            """Always fail."""
+            raise RuntimeError("provider down")
+
+    app.dependency_overrides[mailer_port] = lambda: ExplodingMailer()
+    headers = await auth(make_actor, email="staff@example.com", user_type="admin", admin_role="admin")
+    client_token = await make_actor("suspendme@example.com")
+    client_id = decode_access_token(client_token, settings=get_settings()).user_id  # type: ignore[union-attr]
+
+    suspended = await client.patch(
+        f"/api/v1/admin/clients/{client_id}/suspended", json={"suspended": True}, headers=headers
+    )
+    assert suspended.status_code == 200, suspended.text
+    listed = await client.get("/api/v1/admin/clients", headers=headers)
+    assert listed.json()["clients"][0]["account_suspended"] is True

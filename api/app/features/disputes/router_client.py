@@ -7,6 +7,7 @@ from fastapi import APIRouter
 from app.core.auth import ROLE_ERRORS, CurrentClient
 from app.core.db import SessionDep
 from app.core.errors import error_responses
+from app.core.ports import MailerDependency
 from app.features.disputes import errors, service_participant
 from app.features.disputes.schemas import (
     CreateDisputeBody,
@@ -31,11 +32,15 @@ router = APIRouter(prefix="/client", tags=["client"])
     ),
 )
 async def post_client_dispute(
-    session: SessionDep, client: CurrentClient, booking_id: str, body: CreateDisputeBody
+    session: SessionDep,
+    mailer: MailerDependency,
+    client: CurrentClient,
+    booking_id: str,
+    body: CreateDisputeBody,
 ) -> CreateDisputeResponse:
     """Open a dispute on one of the client's own bookings."""
     dispute = await service_participant.open_dispute(
-        session, user_id=client.id, booking_id=booking_id, summary=body.summary
+        session, mailer, user_id=client.id, booking_id=booking_id, summary=body.summary
     )
     return CreateDisputeResponse(dispute=dispute)
 
