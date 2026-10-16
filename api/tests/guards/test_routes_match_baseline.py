@@ -66,7 +66,9 @@ def test_the_guard_would_catch_an_invented_route(tmp_path: Path) -> None:
     baseline_file.write_text(
         json.dumps({"paths": {"/api/v1/blog/posts/{slug}": {"get": {}}}}), encoding="utf-8"
     )
-    rebuilt = {"paths": {"/api/v1/blog/posts/{post_slug}": {"get": {}}, "/api/v1/blog/feed": {"get": {}}}}
+    rebuilt: dict[str, Any] = {
+        "paths": {"/api/v1/blog/posts/{post_slug}": {"get": {}}, "/api/v1/blog/feed": {"get": {}}}
+    }
     assert operations(rebuilt) - baseline_operations(baseline_file) == {("GET", "/api/v1/blog/feed")}
 
 
@@ -74,7 +76,7 @@ def test_the_guard_only_exempts_the_realtime_prefix(tmp_path: Path) -> None:
     """An invented route outside `/api/v1/realtime/` still fails, even alongside an exempt one."""
     baseline_file = tmp_path / "baseline.json"
     baseline_file.write_text(json.dumps({"paths": {}}), encoding="utf-8")
-    rebuilt = {
+    rebuilt: dict[str, Any] = {
         "paths": {
             "/api/v1/realtime/stream-ticket": {"post": {}},
             "/api/v1/blog/feed": {"get": {}},

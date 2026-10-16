@@ -49,7 +49,7 @@ format:
 	$(RUN) ruff format .
 
 typecheck:
-	$(RUN) mypy app
+	$(RUN) mypy app tests/guards
 
 # Import rules, then proof the mapped models match the migrated schema (needs `make db-up migrate`).
 arch:

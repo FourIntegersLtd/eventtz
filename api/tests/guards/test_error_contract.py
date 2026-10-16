@@ -48,7 +48,7 @@ def test_every_route_declares_its_response_and_errors(route: APIRoute) -> None:
     # Routes that return no JSON body (204, streams, redirects) have nothing to model.
     # A route without its own `response_class` holds FastAPI's default wrapped in a placeholder.
     response_class = getattr(route.response_class, "value", route.response_class)
-    no_body = route.status_code == 204 or response_class.__name__ in {
+    no_body = route.status_code == 204 or getattr(response_class, "__name__", "") in {
         "Response",
         "StreamingResponse",
         "RedirectResponse",
