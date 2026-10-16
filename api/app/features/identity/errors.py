@@ -54,8 +54,8 @@ class WrongCredentials(Unauthenticated):
 class SuspendedAtSignIn(Forbidden):
     """A suspended account tried to sign in.
 
-    Baseline quirk, kept on purpose until the web app is rebuilt: every account type sees
-    the staff wording here (it is frozen by the acceptance suite).
+    Baseline quirk, kept on purpose: the acceptance freeze pins it, so every account type
+    sees the staff wording here.
     """
 
     code = "account_suspended"

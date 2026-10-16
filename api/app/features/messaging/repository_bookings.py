@@ -1,7 +1,8 @@
 """The two booking-request facts chat needs, read and written through a lightweight table handle.
 
-`booking_requests` belongs to bookings, which is not rebuilt yet. These move
-behind the bookings service when it is. Every function takes the request's
+`booking_requests` belongs to bookings. The handle stays here on purpose: both facts are
+single conditional statements run on every chat message, and the first-response update must
+be one atomic write that a bookings service call would only wrap. Every function takes the request's
 session and never commits (ADR 0002).
 """
 

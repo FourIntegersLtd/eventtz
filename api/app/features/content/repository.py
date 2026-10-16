@@ -9,14 +9,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from sqlalchemy import Uuid, column, delete, insert, select, table, update
+from sqlalchemy import delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import as_uuid, plain_row
 from app.features.content.models import BlogPost, ContactSubmission, HelpArticle, HelpCategory
 from app.features.content.rows import (
     BlogPostRow,
-    BookingParties,
     HelpArticleRow,
     HelpArticleText,
     HelpCategoryName,
@@ -266,31 +265,6 @@ async def list_article_texts(session: AsyncSession, audiences: list[str]) -> lis
 
 
 # --- contact ----------------------------------------------------------------------------------------
-
-# `booking_requests` belongs to the bookings slice; only the columns read here are declared.
-_booking_requests = table(
-    "booking_requests", column("id", Uuid), column("client_user_id", Uuid), column("vendor_user_id", Uuid)
-)
-
-
-async def find_booking_parties(session: AsyncSession, booking_id: str) -> BookingParties | None:
-    """The client and vendor on a booking.
-
-    Reads `booking_requests` directly until the bookings slice is rebuilt; then
-    this moves behind `bookings.service`.
-    """
-    parsed_id = as_uuid(booking_id)
-    if parsed_id is None:
-        return None
-    bookings = _booking_requests.c
-    row = (
-        await session.execute(
-            select(bookings.id, bookings.client_user_id, bookings.vendor_user_id).where(
-                bookings.id == parsed_id
-            )
-        )
-    ).first()
-    return BookingParties.model_validate(plain_row(row)) if row else None
 
 
 async def insert_contact_submission(

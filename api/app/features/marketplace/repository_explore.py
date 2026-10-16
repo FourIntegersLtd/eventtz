@@ -1,9 +1,9 @@
 """Read-only queries over other slices' tables for explore cards, public reviews and analytics.
 
 `booking_requests`, `booking_reviews` and the `vendor_review_stats` view belong to
-bookings and reviews, which are not rebuilt yet. They are read here through
-lightweight table handles (typed, so ids bind as uuid) and move behind those
-slices' services when they are rebuilt.
+bookings and reviews. They are read here through lightweight table handles (typed,
+so ids bind as uuid) on purpose: explore is a hot read path and the cards join them
+in SQL, which a per-vendor service call would turn into many queries.
 
 Every function takes the request's session and never commits (ADR 0002).
 """

@@ -72,11 +72,3 @@ class HelpArticleText(BaseModel):
     body_md: str
     audience: str
     related_slugs: list[str] = Field(default_factory=list)
-
-
-class BookingParties(BaseModel):
-    """Who is on a booking: enough to check a contact message's booking reference."""
-
-    id: str
-    client_user_id: str | None = None
-    vendor_user_id: str | None = None

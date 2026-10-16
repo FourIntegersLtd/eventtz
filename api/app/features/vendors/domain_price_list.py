@@ -8,7 +8,7 @@ this module differently:
   web app can show it next to the step that needs fixing.
 - **Booking line items** (`resolve_line_items` and its private helpers): raises `ValueError`,
   the same as the baseline, because these run inside a booking request rather than a profile
-  save and the caller (bookings slice, not yet rebuilt) expects that type. This is a baseline
+  save and the caller (the bookings slice) expects that type. This is a baseline
   quirk kept on purpose — see `AGENTS.md` "Fix root causes", but this is behaviour parity, not
   a bug.
 

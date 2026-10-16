@@ -16,6 +16,7 @@ from app.core.auth import Principal
 from app.core.logging import get_logger
 from app.core.ports import LanguageModel, Mailer, WebhookCall, Webhooks
 from app.core.settings import get_settings
+from app.features.bookings import service_parties as bookings_service
 from app.features.content import repository
 from app.features.content.domain_contact import (
     ADMIN_BUG_REPORT_SUBJECT,
@@ -58,7 +59,7 @@ async def _check_booking_belongs_to(
     session: AsyncSession, principal: Principal, portal: str, booking_id: str
 ) -> None:
     """Refuse a booking reference that does not exist or is not the caller's on this portal."""
-    booking = await repository.find_booking_parties(session, booking_id)
+    booking = await bookings_service.get_booking_parties(session, booking_id)
     if booking is None:
         raise BookingNotFound()
     if portal == "client" and booking.client_user_id != principal.id:

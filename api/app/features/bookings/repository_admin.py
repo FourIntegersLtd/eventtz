@@ -80,8 +80,8 @@ _BOOKING_COLUMNS = (
     BookingRequest.support_hold,
 )
 
-# Disputes are a slice not rebuilt yet; this handle reads its table (same handle
-# `bookings/repository.py` keeps privately, for the same active-dispute check).
+# Disputes are their own slice; this handle reads its table inside the admin booking query (same
+# handle `bookings/repository.py` keeps privately, for the same active-dispute check).
 _dispute_cases = table("dispute_cases", column("booking_request_id", Uuid), column("status", Text))
 _ACTIVE_DISPUTE_STATUSES = ("open", "under_review")
 

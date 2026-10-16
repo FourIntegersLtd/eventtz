@@ -77,7 +77,8 @@ BOOKING_COLUMNS = (
     BookingRequest.support_hold,
 )
 
-# Reviews and disputes belong to slices not rebuilt yet; these handles read their tables.
+# Reviews and disputes are separate slices; these handles read their tables directly so the booking
+# list and detail stay one query (no per-booking service call).
 _booking_reviews = table(
     "booking_reviews",
     column("id", Uuid),
