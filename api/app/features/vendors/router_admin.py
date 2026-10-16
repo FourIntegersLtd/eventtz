@@ -9,7 +9,7 @@ from fastapi import APIRouter, Query
 from app.core.auth import ROLE_ERRORS, CurrentStaff
 from app.core.db import SessionDep
 from app.core.errors import error_responses
-from app.core.ports import MailerDependency, StorageDependency
+from app.core.ports import ImmediateMailerDependency, MailerDependency, StorageDependency
 from app.features.vendors import service_moderation
 from app.features.vendors.errors import (
     ListingMediaUrlInvalid,
@@ -106,9 +106,13 @@ async def return_for_edits(
     principal: CurrentStaff,
     user_id: str,
     body: AdminVendorUnsubmitBody,
-    mailer: MailerDependency,
+    mailer: ImmediateMailerDependency,
 ) -> AdminVendorUnsubmitResponse:
-    """Send a submitted profile back to the vendor for edits."""
+    """Send a submitted profile back to the vendor for edits.
+
+    Emails during the request, not after commit: the response's `email_sent` is
+    the provider's answer, which the console shows (baseline contract).
+    """
     return await service_moderation.return_for_edits(
         session, principal, user_id, send_email=body.send_email, message=body.message, mailer=mailer
     )
@@ -120,9 +124,16 @@ async def return_for_edits(
     responses=error_responses(*ROLE_ERRORS),
 )
 async def nudge_to_complete_profile(
-    session: SessionDep, principal: CurrentStaff, body: AdminVendorProfileNudgeBody, mailer: MailerDependency
+    session: SessionDep,
+    principal: CurrentStaff,
+    body: AdminVendorProfileNudgeBody,
+    mailer: ImmediateMailerDependency,
 ) -> AdminVendorProfileNudgeResponse:
-    """Email draft vendors to finish their profile."""
+    """Email draft vendors to finish their profile.
+
+    Emails during the request: the response counts each provider's answer
+    (`sent`/`failures`), and a nudge changes no row besides the audit entry.
+    """
     return await service_moderation.nudge_to_complete_profile(
         session, principal, body.user_ids, mailer=mailer
     )
@@ -134,9 +145,16 @@ async def nudge_to_complete_profile(
     responses=error_responses(*ROLE_ERRORS),
 )
 async def nudge_to_set_up_payouts(
-    session: SessionDep, principal: CurrentStaff, body: AdminVendorPayoutNudgeBody, mailer: MailerDependency
+    session: SessionDep,
+    principal: CurrentStaff,
+    body: AdminVendorPayoutNudgeBody,
+    mailer: ImmediateMailerDependency,
 ) -> AdminVendorProfileNudgeResponse:
-    """Email approved vendors to finish Stripe payout setup."""
+    """Email approved vendors to finish Stripe payout setup.
+
+    Emails during the request for the same reason as the profile nudge: the
+    response reports each provider's answer.
+    """
     return await service_moderation.nudge_to_set_up_payouts(session, principal, body.user_ids, mailer=mailer)
 
 

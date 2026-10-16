@@ -40,6 +40,13 @@ move here as their slices are rebuilt.
 - Alert recipients come from the `ADMIN_ALERT_EMAILS` setting, never from code.
 - Sending never raises into the caller: a failed or skipped email is logged and
   reported as `False`.
+- Email leaves only after the transaction commits (`core/mail.py`): routes and jobs
+  hand services an `AfterCommitMailer`, which queues on the session; a rollback
+  sends nothing, and `send` returns True for "queued". Dedupe/marker claims commit
+  first, then the mail goes. A post-commit failure is logged, never a 500. Only
+  routes whose response reports the provider's answer take
+  `ImmediateMailerDependency`: admin test-send, vendor unsubmit (`email_sent`) and
+  the two vendor nudges (`sent`/`failures`).
 - A booking notice's wording comes from `domain_booking_copy`, copied verbatim;
   the golden `tests/golden/notifications/booking_copy.json` pins every kind and
   portal. The stored body is shown only for kinds that carry booking-specific text.

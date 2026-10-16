@@ -11,7 +11,7 @@ from fastapi import APIRouter
 from app.core.auth import ROLE_ERRORS, CurrentSuperAdmin
 from app.core.db import SessionDep
 from app.core.errors import error_responses
-from app.core.ports import MailerDependency
+from app.core.ports import ImmediateMailerDependency
 from app.features.staff import service as staff
 from app.features.staff import service_email
 from app.features.staff.errors import InvalidEmailAddress, UnknownEmailTemplate
@@ -38,9 +38,16 @@ async def list_templates(principal: CurrentSuperAdmin) -> AdminEmailTemplatesLis
     responses=error_responses(*ROLE_ERRORS, UnknownEmailTemplate, InvalidEmailAddress),
 )
 async def send_test(
-    body: AdminEmailTestSendBody, session: SessionDep, principal: CurrentSuperAdmin, mailer: MailerDependency
+    body: AdminEmailTestSendBody,
+    session: SessionDep,
+    principal: CurrentSuperAdmin,
+    mailer: ImmediateMailerDependency,
 ) -> AdminEmailTestSendResponse:
-    """Send one fixed test email, and log the attempt to the audit trail."""
+    """Send one fixed test email, and log the attempt to the audit trail.
+
+    The only send that does not wait for the commit: the response reports the
+    provider's answer (`delivered`), and a test email describes no change to undo.
+    """
     result = service_email.send_test(
         mailer,
         template_id=body.template_id,

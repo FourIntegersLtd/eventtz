@@ -23,6 +23,7 @@ from app.adapters.stripe_payments import StripePaymentGateway
 from app.core.db import job_session
 from app.core.jobs import get_jobs_app
 from app.core.logging import get_logger
+from app.core.mail import AfterCommitMailer
 from app.core.ports import LanguageModel, Mailer, PaymentGateway
 from app.features.bookings import service_maintenance, service_reminders
 
@@ -58,15 +59,21 @@ async def run_booking_maintenance_once(
     """One maintenance pass; returns how many reminders, payouts and marks each step made.
 
     `language_model` reads the client's search text when choosing alternative vendors.
+    Each step gets `mailer` wrapped in an `AfterCommitMailer` on its own session, so
+    a reminder's email goes out only once its claimed marker has committed.
     """
 
     async def remind(session: AsyncSession, booking_id: str) -> bool:
         """Completion reminder step for one booking."""
-        return await service_maintenance.remind_completion(session, mailer, booking_id)
+        return await service_maintenance.remind_completion(
+            session, AfterCommitMailer(session, mailer), booking_id
+        )
 
     async def release(session: AsyncSession, booking_id: str) -> bool:
         """Automatic payout step for one booking."""
-        return await service_maintenance.auto_release_booking(session, mailer, gateway, booking_id)
+        return await service_maintenance.auto_release_booking(
+            session, AfterCommitMailer(session, mailer), gateway, booking_id
+        )
 
     summary = {
         "completion_reminders": await _for_each_booking(
@@ -88,29 +95,37 @@ async def run_booking_maintenance_once(
         (
             "enquiry_reminders",
             "vendor enquiry reminders",
-            lambda session: service_maintenance.send_enquiry_reminders(session, mailer),
+            lambda session: service_maintenance.send_enquiry_reminders(
+                session, AfterCommitMailer(session, mailer)
+            ),
         ),
         (
             "client_nudges",
             "client no-response nudges",
             lambda session: service_reminders.send_client_no_response_nudges(
-                session, mailer, language_model, now=now
+                session, AfterCommitMailer(session, mailer), language_model, now=now
             ),
         ),
         (
             "event_tomorrow",
             "event-tomorrow reminders",
-            lambda session: service_reminders.send_event_tomorrow_reminders(session, mailer, now=now),
+            lambda session: service_reminders.send_event_tomorrow_reminders(
+                session, AfterCommitMailer(session, mailer), now=now
+            ),
         ),
         (
             "pay_to_confirm",
             "pay-to-confirm reminders",
-            lambda session: service_reminders.send_pay_to_confirm_reminders(session, mailer, now=now),
+            lambda session: service_reminders.send_pay_to_confirm_reminders(
+                session, AfterCommitMailer(session, mailer), now=now
+            ),
         ),
         (
             "payouts_setup",
             "payouts-setup nudges",
-            lambda session: service_reminders.send_payouts_setup_nudges(session, mailer, now=now),
+            lambda session: service_reminders.send_payouts_setup_nudges(
+                session, AfterCommitMailer(session, mailer), now=now
+            ),
         ),
     ]
     for summary_key, step_name, run_step in steps:

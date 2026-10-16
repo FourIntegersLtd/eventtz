@@ -20,6 +20,7 @@ from typing import Annotated, Any, Literal, Protocol, TypedDict, TypeVar
 from fastapi import Depends
 from pydantic import BaseModel
 
+from app.core.db import SessionDep
 from app.core.errors import InvalidInput, Unavailable
 
 # The reply model a structured language-model call is parsed into.
@@ -350,9 +351,19 @@ def payment_gateway_port() -> PaymentGateway:
     raise NotImplementedError("payment_gateway_port is wired in app.main.create_app")
 
 
+def after_commit_mailer(session: SessionDep, delivery: Annotated[Mailer, Depends(mailer_port)]) -> Mailer:
+    """The request's mailer: queues on the request session and delivers through the adapter after commit."""
+    from app.core.mail import AfterCommitMailer  # noqa: PLC0415 - core.mail imports this module
+
+    return AfterCommitMailer(session, delivery)
+
+
 # What routers declare as a parameter type, e.g. `def ask(language_model: LanguageModelDependency)`.
 LanguageModelDependency = Annotated[LanguageModel, Depends(language_model_port)]
-MailerDependency = Annotated[Mailer, Depends(mailer_port)]
+# Emails a service sends go out only after the request commits (`core.mail`).
+MailerDependency = Annotated[Mailer, Depends(after_commit_mailer)]
+# Sends during the request; only for a response that must report the provider's answer.
+ImmediateMailerDependency = Annotated[Mailer, Depends(mailer_port)]
 WebhooksDependency = Annotated[Webhooks, Depends(webhooks_port)]
 StorageDependency = Annotated[Storage, Depends(storage_port)]
 PaymentGatewayDependency = Annotated[PaymentGateway, Depends(payment_gateway_port)]

@@ -142,21 +142,27 @@ async def app(db_session: AsyncSession, payment_gateway: FakePaymentGateway) -> 
         """
         from app.core.errors import AppError  # noqa: PLC0415
         from app.core.events import flush_pending  # noqa: PLC0415
+        from app.core.mail import discard_pending_emails, flush_pending_emails  # noqa: PLC0415
 
         try:
             yield db_session
         except AppError as error:
             if error.persist_effects:
                 await db_session.commit()
+                await flush_pending_emails(db_session)
                 await flush_pending(db_session)
             else:
                 await db_session.rollback()
+                # The test's session outlives the request, so drop its queue as production's close does.
+                discard_pending_emails(db_session)
             raise
         except Exception:
             await db_session.rollback()
+            discard_pending_emails(db_session)
             raise
         else:
             await db_session.commit()  # releases the savepoint; the outer transaction stays open
+            await flush_pending_emails(db_session)
             await flush_pending(db_session)
 
     @asynccontextmanager

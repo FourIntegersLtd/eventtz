@@ -172,6 +172,7 @@ async def get_session() -> AsyncIterator[AsyncSession]:
     """
     from app.core.errors import AppError  # noqa: PLC0415 - avoids an import cycle
     from app.core.events import flush_pending  # noqa: PLC0415 - avoids an import cycle
+    from app.core.mail import flush_pending_emails  # noqa: PLC0415 - avoids an import cycle
 
     factory = get_session_factory()
     async with factory() as session:
@@ -181,6 +182,7 @@ async def get_session() -> AsyncIterator[AsyncSession]:
         except AppError as error:
             if error.persist_effects:
                 await transaction.commit()
+                await flush_pending_emails(session)
                 await flush_pending(session)
             else:
                 await transaction.rollback()
@@ -193,7 +195,10 @@ async def get_session() -> AsyncIterator[AsyncSession]:
             # Live updates go out here and nowhere else. Publishing inside a
             # service would wake a subscriber before the rows it is about to
             # read exist, and a rolled-back request would announce work that
-            # never happened.
+            # never happened. Emails likewise (`core.mail`): one sent before the
+            # commit could describe a change that then failed to commit. A rollback
+            # closes the session, and its queue with it, unsent.
+            await flush_pending_emails(session)
             await flush_pending(session)
 
 
@@ -214,10 +219,13 @@ async def job_session() -> AsyncIterator[AsyncSession]:
     The request dependency cannot serve here: a task has no request.
     """
     from app.core.events import flush_pending  # noqa: PLC0415 - avoids an import cycle
+    from app.core.mail import flush_pending_emails  # noqa: PLC0415 - avoids an import cycle
 
     factory = get_session_factory()
     async with factory() as session, session.begin():
         yield session
+    # Reached only when the block committed; an exception skips both flushes.
+    await flush_pending_emails(session)
     await flush_pending(session)
 
 
