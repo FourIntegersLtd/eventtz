@@ -32,7 +32,7 @@ Run them against the baseline (`cd acceptance && make test`, which targets `:800
 
 Where output must not change byte for byte (pricing breakdowns, service fees, referral discounts, receipts, ranking order), use goldens:
 
-- Capture the output from baseline functions with a script in `acceptance/capture/`. It runs inside `backend/` and only reads it.
+- The existing goldens were captured from the old `backend/` (now deleted). For new maths, work the expected values out by hand and have them reviewed.
 - Write the result to `tests/golden/<slice>/*.json`.
 
 ## 1. Write the use cases
@@ -70,7 +70,7 @@ Write unit tests for the invariants, then write `domain.py` as plain Python: enu
 `models.py` holds Pydantic row models, so rows are typed rather than `dict[str, Any]`. `repository.py` is the only file that calls `.table()`, `.rpc()` or `.storage`, and it returns row models.
 
 - An atomic multi-row write becomes a Postgres function called with `.rpc()`.
-- That function goes in the next `../backend/sql/NNN_<name>.sql`, which is the single migration folder until cutover.
+- That function goes in a new Alembic revision.
 
 ## 5. Service and router, to green
 
@@ -108,5 +108,4 @@ Green means `make ci` passes **and** `cd ../acceptance && TARGET=api make test` 
 
 - `poetry run pytest -q | tail -2` shows only the last lines, **not** the exit code, so a failing suite can look green. Use `make test`, or check `$?`.
 - A globally set `VIRTUAL_ENV` makes poetry use the wrong interpreter. The Makefile runs `env -u VIRTUAL_ENV`.
-- Never run `.cursor/start.sh` on this machine: it overwrites `backend/.env`.
 - A green suite is not evidence that a feature works. Ask what would fail if the feature were deleted, then check the running app.

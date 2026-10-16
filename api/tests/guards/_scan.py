@@ -9,14 +9,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 APP_ROOT = PROJECT_ROOT / "app"
 FEATURES_ROOT = APP_ROOT / "features"
 CORE_ROOT = APP_ROOT / "core"
-# The cut-over tool (`app/migration/`): a standalone offline script over raw
-# `psycopg` connections, never the request/session lifecycle the slice guards
-# assume. `test_migration_is_contained.py` holds its own boundary (nothing in
-# `app/` may import it); the slice-shaped guards name it here instead of
-# treating every one of its files as a "repository".
-MIGRATION_ROOT = APP_ROOT / "migration"
 TESTS_ROOT = PROJECT_ROOT / "tests"
-SQL_ROOT = PROJECT_ROOT.parent / "backend" / "sql"
 # The repo-root freeze suite; held to the same naming and documentation rules as tests/.
 ACCEPTANCE_ROOT = PROJECT_ROOT.parent / "acceptance"
 
@@ -24,8 +17,7 @@ ACCEPTANCE_ROOT = PROJECT_ROOT.parent / "acceptance"
 def python_files(root: Path = APP_ROOT) -> list[Path]:
     """Every `.py` file under `root`, sorted so parametrized test ids are stable.
 
-    Skips caches and hidden folders (`.venv`, and `acceptance/.run/`, which holds a
-    throwaway copy of the baseline backend).
+    Skips caches and hidden folders (`.venv`).
     """
     return sorted(
         path

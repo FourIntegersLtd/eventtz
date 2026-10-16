@@ -1,7 +1,7 @@
 [project]
 name = "eventtz-api"
 version = "0.1.0"
-description = "Eventtz API (rebuild; replaces backend/ at cutover)"
+description = "Eventtz API"
 authors = [{ name = "Eventtz Ltd", email = "hello@eventtz.com" }]
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
@@ -35,8 +35,6 @@ dev = [
     "import-linter (>=2.0,<3.0)",
     "boto3-stubs[s3] (>=1.43.111,<2.0.0)",
     "testcontainers[postgres] (>=4.8,<5)",
-    # The acceptance harness seeds the baseline (backend/ on local Supabase) with it.
-    "supabase (>=2.32.0,<3.0.0)",
 ]
 
 [tool.poetry]

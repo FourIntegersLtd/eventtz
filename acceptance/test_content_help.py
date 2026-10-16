@@ -13,7 +13,7 @@ from typing import Any
 
 import httpx
 import pytest
-from supabase import Client
+from support.database import LocalDatabase
 
 from conftest import API
 
@@ -53,7 +53,7 @@ def _slug(label: str, run_token: str) -> str:
 
 
 @pytest.fixture(scope="module")
-def help_seed(admin_db: Client) -> Iterator[HelpSeed]:
+def help_seed(admin_db: LocalDatabase) -> Iterator[HelpSeed]:
     """One category per audience, one article in each, plus a `both` and an unpublished article.
 
     The `both` article lives in the client category so client and vendor both

@@ -15,7 +15,7 @@ from typing import Any
 
 import httpx
 import pytest
-from supabase import Client
+from support.database import LocalDatabase
 
 from conftest import API
 from support.accounts import SeededAccount, seed_account, unique_email
@@ -44,7 +44,7 @@ def unique_label() -> str:
 
 
 @pytest.fixture(scope="module")
-def created_partner_ids(admin_db: Client) -> Iterator[list[str]]:
+def created_partner_ids(admin_db: LocalDatabase) -> Iterator[list[str]]:
     """Collects the id of every partner a test creates, and deletes them (and their sign-ups) afterwards."""
     partner_ids: list[str] = []
     yield partner_ids
@@ -105,7 +105,7 @@ def test_create_partner_derives_the_slug_and_link(
     as_staff: httpx.Client,
     staff_account: SeededAccount,
     created_partner_ids: list[str],
-    admin_db: Client,
+    admin_db: LocalDatabase,
 ) -> None:
     """The slug comes from the display name; handles and notes are trimmed; the link is on the public site."""
     label = unique_label()
@@ -270,7 +270,7 @@ def test_public_lookup_hides_inactive_and_unknown_partners(
 
 @pytest.fixture(scope="module")
 def partner_with_signups(
-    admin_db: Client, as_staff: httpx.Client, created_partner_ids: list[str]
+    admin_db: LocalDatabase, as_staff: httpx.Client, created_partner_ids: list[str]
 ) -> Iterator[dict[str, Any]]:
     """A partner with three attributed vendors (oldest first), one with a finished shout-out.
 

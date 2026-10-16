@@ -13,7 +13,7 @@ before any Stripe call would be attempted.
 
 from __future__ import annotations
 
-from supabase import Client
+from support.database import LocalDatabase
 
 from conftest import API, new_browser, sign_in
 from support.accounts import SeededAccount, seed_account, unique_email
@@ -58,7 +58,7 @@ def _partial_refund_range_detail(paid_pounds: int) -> str:
     return f"Partial refund must be between 0 and GBP {paid_pounds:.2f}."
 
 
-def _seed_pair(admin_db: Client, label: str) -> tuple[SeededAccount, SeededAccount]:
+def _seed_pair(admin_db: LocalDatabase, label: str) -> tuple[SeededAccount, SeededAccount]:
     """A fresh client and vendor account. No `vendors` row, so payout release stays a no-op."""
     client_account = seed_account(admin_db, unique_email(f"{label}-client"), "client")
     vendor_account = seed_account(admin_db, unique_email(f"{label}-vendor"), "vendor")
@@ -66,7 +66,7 @@ def _seed_pair(admin_db: Client, label: str) -> tuple[SeededAccount, SeededAccou
 
 
 def _seed_booking(
-    admin_db: Client,
+    admin_db: LocalDatabase,
     *,
     client_user_id: str,
     vendor_user_id: str,
@@ -96,7 +96,7 @@ def _seed_booking(
 
 
 def _seed_dispute(
-    admin_db: Client,
+    admin_db: LocalDatabase,
     *,
     booking_id: str,
     opened_by_user_id: str,
@@ -120,7 +120,7 @@ def _seed_dispute(
     return str(inserted[0]["id"])
 
 
-def _latest_audit_row(admin_db: Client, *, action: str, entity_id: str) -> dict[str, object]:
+def _latest_audit_row(admin_db: LocalDatabase, *, action: str, entity_id: str) -> dict[str, object]:
     """The newest `admin_audit_log` row for this action/entity, asserting one exists."""
     rows = (
         admin_db.table("admin_audit_log")
@@ -139,7 +139,7 @@ def _latest_audit_row(admin_db: Client, *, action: str, entity_id: str) -> dict[
 # --- creation: POST client/vendor booking-requests/{id}/disputes -------------------------
 
 
-def test_client_can_open_dispute_on_own_booking(admin_db: Client) -> None:
+def test_client_can_open_dispute_on_own_booking(admin_db: LocalDatabase) -> None:
     """A client can open a dispute on their own booking; it starts "open"."""
     client_account, vendor_account = _seed_pair(admin_db, "create-client")
     booking_id = _seed_booking(
@@ -165,7 +165,7 @@ def test_client_can_open_dispute_on_own_booking(admin_db: Client) -> None:
     assert stored["opened_by_user_id"] == client_account.user_id
 
 
-def test_vendor_can_open_dispute_on_own_booking(admin_db: Client) -> None:
+def test_vendor_can_open_dispute_on_own_booking(admin_db: LocalDatabase) -> None:
     """A vendor can open a dispute on their own booking."""
     client_account, vendor_account = _seed_pair(admin_db, "create-vendor")
     booking_id = _seed_booking(
@@ -191,7 +191,7 @@ def test_open_dispute_requires_sign_in() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_open_dispute_on_someone_elses_booking_leaks_existence_via_403(admin_db: Client) -> None:
+def test_open_dispute_on_someone_elses_booking_leaks_existence_via_403(admin_db: LocalDatabase) -> None:
     """BASELINE QUIRK: opening a dispute on a real booking that isn't yours reveals the
     booking exists via 403, unlike listing/detail routes below which hide it behind an
     empty list or a 404.
@@ -210,7 +210,7 @@ def test_open_dispute_on_someone_elses_booking_leaks_existence_via_403(admin_db:
     assert response.json()["detail"] == CANNOT_OPEN_DISPUTE
 
 
-def test_open_dispute_on_missing_booking_is_404(admin_db: Client) -> None:
+def test_open_dispute_on_missing_booking_is_404(admin_db: LocalDatabase) -> None:
     """A booking id that doesn't exist at all is a 404, not a 403."""
     client_account = seed_account(admin_db, unique_email("create-missing"), "client")
     browser = sign_in(client_account)
@@ -222,7 +222,7 @@ def test_open_dispute_on_missing_booking_is_404(admin_db: Client) -> None:
     assert response.json()["detail"] == BOOKING_NOT_FOUND
 
 
-def test_open_dispute_on_malformed_booking_id_is_400(admin_db: Client) -> None:
+def test_open_dispute_on_malformed_booking_id_is_400(admin_db: LocalDatabase) -> None:
     """A booking id that isn't a UUID is rejected before any lookup."""
     client_account = seed_account(admin_db, unique_email("create-malformed"), "client")
     browser = sign_in(client_account)
@@ -234,7 +234,7 @@ def test_open_dispute_on_malformed_booking_id_is_400(admin_db: Client) -> None:
     assert response.json()["detail"] == INVALID_BOOKING_ID
 
 
-def test_open_dispute_rejects_short_summary(admin_db: Client) -> None:
+def test_open_dispute_rejects_short_summary(admin_db: LocalDatabase) -> None:
     """A summary under 10 characters fails request validation."""
     client_account, vendor_account = _seed_pair(admin_db, "create-shortsummary")
     booking_id = _seed_booking(
@@ -247,7 +247,7 @@ def test_open_dispute_rejects_short_summary(admin_db: Client) -> None:
     assert response.status_code == 422
 
 
-def test_open_dispute_rejects_booking_in_disallowed_status(admin_db: Client) -> None:
+def test_open_dispute_rejects_booking_in_disallowed_status(admin_db: LocalDatabase) -> None:
     """A cancelled booking cannot have a dispute opened on it."""
     client_account, vendor_account = _seed_pair(admin_db, "create-cancelled")
     booking_id = _seed_booking(
@@ -265,7 +265,7 @@ def test_open_dispute_rejects_booking_in_disallowed_status(admin_db: Client) -> 
     assert response.json()["detail"] == DISPUTE_INVALID_STATUS
 
 
-def test_open_dispute_rejects_duplicate_active_dispute(admin_db: Client) -> None:
+def test_open_dispute_rejects_duplicate_active_dispute(admin_db: LocalDatabase) -> None:
     """A second dispute cannot be opened while one is already open or under review."""
     client_account, vendor_account = _seed_pair(admin_db, "create-duplicate")
     booking_id = _seed_booking(
@@ -288,7 +288,7 @@ def test_open_dispute_rejects_duplicate_active_dispute(admin_db: Client) -> None
 # --- listing: GET client/vendor booking-requests/{id}/disputes, /disputes, /disputes/{id} --
 
 
-def test_list_disputes_on_own_booking(admin_db: Client) -> None:
+def test_list_disputes_on_own_booking(admin_db: LocalDatabase) -> None:
     """A party to the booking can list disputes on it."""
     client_account, vendor_account = _seed_pair(admin_db, "list-onbooking")
     booking_id = _seed_booking(
@@ -302,7 +302,7 @@ def test_list_disputes_on_own_booking(admin_db: Client) -> None:
     assert [dispute["id"] for dispute in disputes] == [dispute_id]
 
 
-def test_list_disputes_on_someone_elses_booking_is_an_empty_list(admin_db: Client) -> None:
+def test_list_disputes_on_someone_elses_booking_is_an_empty_list(admin_db: LocalDatabase) -> None:
     """BASELINE QUIRK: unlike opening a dispute (403), listing disputes on a booking that
     isn't yours quietly returns an empty list rather than leaking that the booking exists.
     """
@@ -326,7 +326,7 @@ def test_list_own_disputes_requires_sign_in() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_list_own_disputes_for_client_and_vendor(admin_db: Client) -> None:
+def test_list_own_disputes_for_client_and_vendor(admin_db: LocalDatabase) -> None:
     """Each side's `/disputes` list surfaces the same dispute they are a party to."""
     client_account, vendor_account = _seed_pair(admin_db, "list-own")
     booking_id = _seed_booking(
@@ -345,7 +345,7 @@ def test_list_own_disputes_for_client_and_vendor(admin_db: Client) -> None:
     assert [dispute["id"] for dispute in vendor_response.json()["disputes"]] == [dispute_id]
 
 
-def test_get_dispute_detail_success(admin_db: Client) -> None:
+def test_get_dispute_detail_success(admin_db: LocalDatabase) -> None:
     """A party to the dispute can fetch its detail."""
     client_account, vendor_account = _seed_pair(admin_db, "detail-ok")
     booking_id = _seed_booking(
@@ -358,7 +358,7 @@ def test_get_dispute_detail_success(admin_db: Client) -> None:
     assert response.json()["dispute"]["id"] == dispute_id
 
 
-def test_get_dispute_detail_malformed_id_is_400(admin_db: Client) -> None:
+def test_get_dispute_detail_malformed_id_is_400(admin_db: LocalDatabase) -> None:
     """A dispute id that isn't a UUID is rejected before any lookup."""
     client_account = seed_account(admin_db, unique_email("detail-malformed"), "client")
     browser = sign_in(client_account)
@@ -367,7 +367,7 @@ def test_get_dispute_detail_malformed_id_is_400(admin_db: Client) -> None:
     assert response.json()["detail"] == INVALID_DISPUTE_ID
 
 
-def test_get_dispute_detail_for_non_party_hides_existence_via_404(admin_db: Client) -> None:
+def test_get_dispute_detail_for_non_party_hides_existence_via_404(admin_db: LocalDatabase) -> None:
     """A non-party fetching a real dispute's detail gets a plain 404, correctly hiding
     that the dispute exists (unlike dispute creation, which leaks existence via 403).
     """
@@ -396,7 +396,7 @@ def test_admin_list_disputes_requires_sign_in() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_admin_list_disputes_forbidden_for_client_account(admin_db: Client) -> None:
+def test_admin_list_disputes_forbidden_for_client_account(admin_db: LocalDatabase) -> None:
     """A client account cannot use the admin disputes route."""
     account = seed_account(admin_db, unique_email("admin-list-client"), "client")
     browser = sign_in(account)
@@ -405,7 +405,7 @@ def test_admin_list_disputes_forbidden_for_client_account(admin_db: Client) -> N
     assert response.json()["detail"] == ADMIN_PORTAL_FORBIDDEN
 
 
-def test_admin_list_disputes_status_open_includes_under_review(admin_db: Client, as_staff) -> None:
+def test_admin_list_disputes_status_open_includes_under_review(admin_db: LocalDatabase, as_staff) -> None:
     """The "open" status filter is a bucket that also includes "under_review" disputes."""
     client_account, vendor_account = _seed_pair(admin_db, "admin-status-open")
     booking_id = _seed_booking(
@@ -438,7 +438,7 @@ def test_admin_list_disputes_invalid_status_is_400(as_staff) -> None:
     assert response.json()["detail"] == DISPUTE_STATUS_INVALID
 
 
-def test_admin_patch_dispute_empty_body_is_400(admin_db: Client, as_staff) -> None:
+def test_admin_patch_dispute_empty_body_is_400(admin_db: LocalDatabase, as_staff) -> None:
     """A patch with no fields set is rejected."""
     client_account, vendor_account = _seed_pair(admin_db, "admin-patch-empty")
     booking_id = _seed_booking(
@@ -473,7 +473,7 @@ def test_admin_patch_dispute_with_resolution_action_missing_id_is_400(as_super_a
     assert response.json()["detail"] == DISPUTE_NOT_FOUND_DOT
 
 
-def test_admin_patch_dispute_plain_status_transition_writes_audit_log(admin_db: Client, as_staff) -> None:
+def test_admin_patch_dispute_plain_status_transition_writes_audit_log(admin_db: LocalDatabase, as_staff) -> None:
     """A plain admin can move a dispute to "under_review"; this writes an audit row."""
     client_account, vendor_account = _seed_pair(admin_db, "admin-patch-status")
     booking_id = _seed_booking(
@@ -489,7 +489,7 @@ def test_admin_patch_dispute_plain_status_transition_writes_audit_log(admin_db: 
     assert audit_row["entity_type"] == "dispute_case"
 
 
-def test_admin_patch_dispute_resolution_action_forbidden_for_plain_admin(admin_db: Client, as_staff) -> None:
+def test_admin_patch_dispute_resolution_action_forbidden_for_plain_admin(admin_db: LocalDatabase, as_staff) -> None:
     """Only super admins may set a financial `resolution_action`."""
     client_account, vendor_account = _seed_pair(admin_db, "admin-patch-resolution-forbidden")
     booking_id = _seed_booking(
@@ -503,7 +503,7 @@ def test_admin_patch_dispute_resolution_action_forbidden_for_plain_admin(admin_d
     assert response.json()["detail"] == DISPUTE_FINANCIAL_RESOLUTION_SUPER_ADMIN_ONLY
 
 
-def test_admin_patch_dispute_refund_amount_forbidden_for_plain_admin(admin_db: Client, as_staff) -> None:
+def test_admin_patch_dispute_refund_amount_forbidden_for_plain_admin(admin_db: LocalDatabase, as_staff) -> None:
     """Only super admins may set a refund amount, even without a `resolution_action`."""
     client_account, vendor_account = _seed_pair(admin_db, "admin-patch-refund-forbidden")
     booking_id = _seed_booking(
@@ -515,7 +515,7 @@ def test_admin_patch_dispute_refund_amount_forbidden_for_plain_admin(admin_db: C
     assert response.json()["detail"] == DISPUTE_REFUND_AMOUNT_SUPER_ADMIN_ONLY
 
 
-def test_admin_release_to_vendor_on_unpaid_booking_is_400(admin_db: Client, as_super_admin) -> None:
+def test_admin_release_to_vendor_on_unpaid_booking_is_400(admin_db: LocalDatabase, as_super_admin) -> None:
     """A payout cannot be released for a booking that was never paid."""
     client_account, vendor_account = _seed_pair(admin_db, "release-unpaid")
     booking_id = _seed_booking(
@@ -535,7 +535,7 @@ def test_admin_release_to_vendor_on_unpaid_booking_is_400(admin_db: Client, as_s
 
 
 def test_admin_release_to_vendor_on_paid_booking_is_a_stripe_off_noop(
-    admin_db: Client, as_super_admin
+    admin_db: LocalDatabase, as_super_admin
 ) -> None:
     """BASELINE QUIRK / Stripe-off no-op: with no vendor Stripe Connect setup, releasing a
     payout on a paid booking succeeds at the HTTP layer but leaves the booking row
@@ -562,7 +562,7 @@ def test_admin_release_to_vendor_on_paid_booking_is_a_stripe_off_noop(
     assert stored["payment_status"] == "paid"
 
 
-def test_admin_refund_client_on_unpaid_booking_is_400(admin_db: Client, as_super_admin) -> None:
+def test_admin_refund_client_on_unpaid_booking_is_400(admin_db: LocalDatabase, as_super_admin) -> None:
     """A refund cannot be issued for a booking that was never paid."""
     client_account, vendor_account = _seed_pair(admin_db, "refund-unpaid")
     booking_id = _seed_booking(
@@ -581,7 +581,7 @@ def test_admin_refund_client_on_unpaid_booking_is_400(admin_db: Client, as_super
 
 
 def test_admin_refund_client_on_paid_booking_without_payment_intent_is_400(
-    admin_db: Client, as_super_admin
+    admin_db: LocalDatabase, as_super_admin
 ) -> None:
     """A paid booking with no `stripe_payment_intent_id` on record fails before any Stripe
     call is attempted - this is how the refund path is exercised safely with Stripe off.
@@ -602,7 +602,7 @@ def test_admin_refund_client_on_paid_booking_without_payment_intent_is_400(
     assert response.json()["detail"] == NO_PAYMENT_ON_RECORD
 
 
-def test_admin_partial_refund_missing_amount_is_400(admin_db: Client, as_super_admin) -> None:
+def test_admin_partial_refund_missing_amount_is_400(admin_db: LocalDatabase, as_super_admin) -> None:
     """A partial refund requires `refund_amount_gbp` to be set."""
     client_account, vendor_account = _seed_pair(admin_db, "partial-noamount")
     booking_id = _seed_booking(
@@ -620,7 +620,7 @@ def test_admin_partial_refund_missing_amount_is_400(admin_db: Client, as_super_a
     assert response.json()["detail"] == REFUND_AMOUNT_REQUIRED_PARTIAL
 
 
-def test_admin_partial_refund_on_unpaid_booking_is_400(admin_db: Client, as_super_admin) -> None:
+def test_admin_partial_refund_on_unpaid_booking_is_400(admin_db: LocalDatabase, as_super_admin) -> None:
     """A partial refund cannot be issued for a booking that was never paid."""
     client_account, vendor_account = _seed_pair(admin_db, "partial-unpaid")
     booking_id = _seed_booking(
@@ -638,7 +638,7 @@ def test_admin_partial_refund_on_unpaid_booking_is_400(admin_db: Client, as_supe
     assert response.json()["detail"] == ONLY_PAID_PARTIAL_REFUND
 
 
-def test_admin_partial_refund_amount_out_of_range_is_400(admin_db: Client, as_super_admin) -> None:
+def test_admin_partial_refund_amount_out_of_range_is_400(admin_db: LocalDatabase, as_super_admin) -> None:
     """A partial refund above the amount actually paid is rejected with the paid ceiling
     named in the message.
     """
@@ -660,7 +660,7 @@ def test_admin_partial_refund_amount_out_of_range_is_400(admin_db: Client, as_su
     assert response.json()["detail"] == _partial_refund_range_detail(100)
 
 
-def test_admin_patch_dispute_assignee_must_be_admin(admin_db: Client, as_super_admin) -> None:
+def test_admin_patch_dispute_assignee_must_be_admin(admin_db: LocalDatabase, as_super_admin) -> None:
     """Assigning a dispute to a non-admin account is rejected."""
     client_account, vendor_account = _seed_pair(admin_db, "assignee-notadmin")
     booking_id = _seed_booking(

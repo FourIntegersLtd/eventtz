@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from supabase import Client
+from support.database import LocalDatabase
 
 from conftest import API
 from support.accounts import SeededAccount, seed_account, unique_email
@@ -97,7 +97,7 @@ def test_dashboard_summary_ok_for_super_admin(as_super_admin) -> None:
     assert response.status_code == 200
 
 
-def test_dashboard_summary_counts_a_freshly_seeded_client(admin_db: Client, as_staff) -> None:
+def test_dashboard_summary_counts_a_freshly_seeded_client(admin_db: LocalDatabase, as_staff) -> None:
     """Seeding one more client can only ever raise `users_client`, never lower it."""
     before = as_staff.get(DASHBOARD_SUMMARY_URL).json()["users_client"]
     seed_account(admin_db, unique_email("dashboard-summary-client"), "client")
@@ -159,7 +159,7 @@ def test_dashboard_metrics_off_allowed_set_falls_back_to_30(as_staff) -> None:
 
 
 def test_dashboard_metrics_prices_a_paid_booking_with_no_payment_amount_snapshot(
-    admin_db: Client, as_staff
+    admin_db: LocalDatabase, as_staff
 ) -> None:
     """`bookings_paid`'s takings for a paid booking that never got a `payment_amount_gbp`
     snapshot fall back to pricing its stored line items and vendor adjustments, same as
@@ -254,7 +254,7 @@ def test_marketplace_analytics_accepts_a_date_range(as_staff) -> None:
 
 
 def test_marketplace_analytics_buckets_enquiries_and_completions_by_month(
-    admin_db: Client, as_staff
+    admin_db: LocalDatabase, as_staff
 ) -> None:
     """`enquiries_by_month` counts by when a booking was made; `completed_by_month` by when
     it finished, falling back to `updated_at` and then `created_at` for a completed booking
@@ -345,7 +345,7 @@ def test_directory_search_missing_query_is_422(as_staff) -> None:
     assert response.status_code == 422
 
 
-def test_directory_search_finds_a_seeded_client_by_email(admin_db: Client, as_staff) -> None:
+def test_directory_search_finds_a_seeded_client_by_email(admin_db: LocalDatabase, as_staff) -> None:
     account = seed_account(admin_db, unique_email("directory-search-client"), "client")
     response = as_staff.get(DIRECTORY_SEARCH_URL, params={"q": account.email, "kinds": "client"})
     assert response.status_code == 200
@@ -355,7 +355,7 @@ def test_directory_search_finds_a_seeded_client_by_email(admin_db: Client, as_st
     ]
 
 
-def test_directory_search_kinds_filter_excludes_the_other_kind(admin_db: Client, as_staff) -> None:
+def test_directory_search_kinds_filter_excludes_the_other_kind(admin_db: LocalDatabase, as_staff) -> None:
     account = seed_account(admin_db, unique_email("directory-search-vendor-only"), "vendor")
     response = as_staff.get(DIRECTORY_SEARCH_URL, params={"q": account.email, "kinds": "client"})
     assert response.status_code == 200
@@ -408,7 +408,7 @@ def test_vendor_insights_malformed_id_is_also_all_zero(as_staff) -> None:
     assert body["review_count"] == 0
 
 
-def test_vendor_insights_ok_for_a_freshly_seeded_vendor(admin_db: Client, as_staff) -> None:
+def test_vendor_insights_ok_for_a_freshly_seeded_vendor(admin_db: LocalDatabase, as_staff) -> None:
     account: SeededAccount = seed_account(admin_db, unique_email("vendor-insights"), "vendor")
     response = as_staff.get(_vendor_insights_url(account.user_id))
     assert response.status_code == 200

@@ -1,5 +1,9 @@
 # Cut-over: pointing traffic at `api/` + `web/` on the same Supabase database
 
+> **Done 2026-10-16.** `api/` + `web/` are live and `backend/`, `frontend/`, `supabase/`
+> and the cut-over tool (`api/app/migration/`, `adopt-auth`) are deleted. Kept as the record
+> of how the live database was adopted; paths below name folders that no longer exist.
+
 This is the human-run procedure for the real cut-over: replacing `backend/` +
 `frontend/` (the live baseline) with `api/` + `web/`, keeping the same URLs.
 **The data does not move** (ADR 0002): `api/` uses the same Supabase Postgres

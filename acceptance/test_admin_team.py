@@ -14,7 +14,7 @@ deleting accounts other agents' runs may still be relying on.
 
 from __future__ import annotations
 
-from supabase import Client
+from support.database import LocalDatabase
 
 from conftest import API, new_browser, sign_in
 from support.accounts import SeededAccount, seed_account, unique_email
@@ -66,7 +66,7 @@ def _clients_suspended_url(user_id: str) -> str:
     return f"{CLIENTS_URL}/{user_id}/suspended"
 
 
-def _seed_plain_admin(admin_db: Client, label: str) -> SeededAccount:
+def _seed_plain_admin(admin_db: LocalDatabase, label: str) -> SeededAccount:
     """A fresh plain-`admin` account with no vendor/client rows, so deleting it hard-deletes it."""
     return seed_account(admin_db, unique_email(label), "admin", admin_role="admin")
 
@@ -92,7 +92,7 @@ def test_list_team_forbidden_for_vendor_account(as_vendor) -> None:
     assert response.json()["detail"] == ADMIN_PORTAL_FORBIDDEN
 
 
-def test_list_team_ok_for_plain_admin(admin_db: Client, as_staff, staff_account: SeededAccount) -> None:
+def test_list_team_ok_for_plain_admin(admin_db: LocalDatabase, as_staff, staff_account: SeededAccount) -> None:
     """A plain admin may view the team (only mutating it is super-admin-only)."""
     response = as_staff.get(TEAM_URL)
     assert response.status_code == 200
@@ -129,7 +129,7 @@ def test_invite_invalid_email_is_400(as_super_admin) -> None:
     assert response.json()["detail"] == INVALID_EMAIL_ADDRESS
 
 
-def test_invite_new_email_with_password_creates_admin(admin_db: Client, as_super_admin) -> None:
+def test_invite_new_email_with_password_creates_admin(admin_db: LocalDatabase, as_super_admin) -> None:
     email = unique_email("invite-new")
     response = as_super_admin.post(INVITE_URL, json={"email": email, "password": "Str0ngPassw0rd!"})
     assert response.status_code == 200
@@ -153,7 +153,7 @@ def test_invite_new_email_without_password_sends_link(as_super_admin) -> None:
     assert body["message"] == ADMIN_CREATED_PASSWORD_LINK
 
 
-def test_invite_existing_client_is_promoted(admin_db: Client, as_super_admin) -> None:
+def test_invite_existing_client_is_promoted(admin_db: LocalDatabase, as_super_admin) -> None:
     account = seed_account(admin_db, unique_email("invite-promote"), "client")
     response = as_super_admin.post(
         INVITE_URL, json={"email": account.email, "password": "Str0ngPassw0rd!"}
@@ -168,7 +168,7 @@ def test_invite_existing_client_is_promoted(admin_db: Client, as_super_admin) ->
     assert row[0]["user_type"] == "admin"
 
 
-def test_invite_existing_admin_with_password_updates_password(admin_db: Client, as_super_admin) -> None:
+def test_invite_existing_admin_with_password_updates_password(admin_db: LocalDatabase, as_super_admin) -> None:
     account = _seed_plain_admin(admin_db, "invite-existing-admin")
     response = as_super_admin.post(INVITE_URL, json={"email": account.email, "password": "Str0ngPassw0rd!"})
     assert response.status_code == 200
@@ -187,7 +187,7 @@ def test_patch_team_member_requires_sign_in(anonymous) -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_patch_team_member_forbidden_for_plain_admin(admin_db: Client, as_staff) -> None:
+def test_patch_team_member_forbidden_for_plain_admin(admin_db: LocalDatabase, as_staff) -> None:
     account = _seed_plain_admin(admin_db, "patch-forbidden")
     response = as_staff.patch(_team_url(account.user_id), json={"account_suspended": True})
     assert response.status_code == 403
@@ -218,7 +218,7 @@ def test_patch_team_member_cannot_suspend_self(as_super_admin, super_admin_accou
     assert response.json()["detail"] == CANNOT_SUSPEND_SELF
 
 
-def test_patch_team_member_promotes_and_suspends(admin_db: Client, as_super_admin) -> None:
+def test_patch_team_member_promotes_and_suspends(admin_db: LocalDatabase, as_super_admin) -> None:
     account = _seed_plain_admin(admin_db, "patch-happy")
     promoted = as_super_admin.patch(_team_url(account.user_id), json={"admin_role": "super_admin"})
     assert promoted.status_code == 200
@@ -241,7 +241,7 @@ def test_delete_team_member_requires_sign_in(anonymous) -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_delete_team_member_forbidden_for_plain_admin(admin_db: Client, as_staff) -> None:
+def test_delete_team_member_forbidden_for_plain_admin(admin_db: LocalDatabase, as_staff) -> None:
     account = _seed_plain_admin(admin_db, "delete-forbidden")
     response = as_staff.delete(_team_url(account.user_id))
     assert response.status_code == 403
@@ -260,7 +260,7 @@ def test_delete_team_member_missing_id_is_400(as_super_admin) -> None:
     assert response.json()["detail"] == ADMIN_USER_NOT_FOUND
 
 
-def test_delete_team_member_hard_deletes_plain_account(admin_db: Client, as_super_admin) -> None:
+def test_delete_team_member_hard_deletes_plain_account(admin_db: LocalDatabase, as_super_admin) -> None:
     account = _seed_plain_admin(admin_db, "delete-happy")
     response = as_super_admin.delete(_team_url(account.user_id))
     assert response.status_code == 200
@@ -281,7 +281,7 @@ def test_send_reset_link_requires_sign_in(anonymous) -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_send_reset_link_forbidden_for_plain_admin(admin_db: Client, as_staff) -> None:
+def test_send_reset_link_forbidden_for_plain_admin(admin_db: LocalDatabase, as_staff) -> None:
     account = _seed_plain_admin(admin_db, "reset-forbidden")
     response = as_staff.post(_reset_link_url(account.user_id))
     assert response.status_code == 403
@@ -294,7 +294,7 @@ def test_send_reset_link_missing_id_is_400(as_super_admin) -> None:
     assert response.json()["detail"] == ADMIN_USER_NOT_FOUND
 
 
-def test_send_reset_link_happy_path(admin_db: Client, as_super_admin) -> None:
+def test_send_reset_link_happy_path(admin_db: LocalDatabase, as_super_admin) -> None:
     account = _seed_plain_admin(admin_db, "reset-happy")
     response = as_super_admin.post(_reset_link_url(account.user_id))
     assert response.status_code == 200
@@ -319,7 +319,7 @@ def test_list_clients_forbidden_for_client_account(as_client) -> None:
     assert response.json()["detail"] == ADMIN_PORTAL_FORBIDDEN
 
 
-def test_list_clients_ok_for_plain_admin(admin_db: Client, as_staff) -> None:
+def test_list_clients_ok_for_plain_admin(admin_db: LocalDatabase, as_staff) -> None:
     account = seed_account(admin_db, unique_email("directory-client"), "client")
     response = as_staff.get(CLIENTS_URL, params={"q": account.email})
     assert response.status_code == 200
@@ -340,7 +340,7 @@ def test_patch_client_suspended_forbidden_for_vendor_account(as_vendor) -> None:
     assert response.json()["detail"] == ADMIN_PORTAL_FORBIDDEN
 
 
-def test_patch_client_suspended_ok_for_plain_admin_writes_audit_log(admin_db: Client, as_staff) -> None:
+def test_patch_client_suspended_ok_for_plain_admin_writes_audit_log(admin_db: LocalDatabase, as_staff) -> None:
     account = seed_account(admin_db, unique_email("suspend-client"), "client")
 
     suspend = as_staff.patch(_clients_suspended_url(account.user_id), json={"suspended": True})
@@ -370,7 +370,7 @@ def test_audit_log_forbidden_for_vendor_account(as_vendor) -> None:
     assert response.json()["detail"] == ADMIN_PORTAL_FORBIDDEN
 
 
-def test_audit_log_lists_a_recorded_team_action(admin_db: Client, as_super_admin) -> None:
+def test_audit_log_lists_a_recorded_team_action(admin_db: LocalDatabase, as_super_admin) -> None:
     account = _seed_plain_admin(admin_db, "audit-team-patch")
     patch = as_super_admin.patch(_team_url(account.user_id), json={"account_suspended": True})
     assert patch.status_code == 200
@@ -382,7 +382,7 @@ def test_audit_log_lists_a_recorded_team_action(admin_db: Client, as_super_admin
     assert account.user_id in entity_ids
 
 
-def test_audit_log_detail_ok_for_plain_admin(admin_db: Client, as_super_admin, as_staff) -> None:
+def test_audit_log_detail_ok_for_plain_admin(admin_db: LocalDatabase, as_super_admin, as_staff) -> None:
     account = _seed_plain_admin(admin_db, "audit-detail")
     patch = as_super_admin.patch(_team_url(account.user_id), json={"account_suspended": True})
     assert patch.status_code == 200
@@ -459,7 +459,7 @@ def test_email_test_send_invalid_email_is_400(as_super_admin) -> None:
     assert response.json()["detail"] == INVALID_EMAIL_ADDRESS
 
 
-def test_email_test_send_writes_audit_log(admin_db: Client, as_super_admin) -> None:
+def test_email_test_send_writes_audit_log(admin_db: LocalDatabase, as_super_admin) -> None:
     to_email = unique_email("email-test-send")
     response = as_super_admin.post(EMAIL_TEST_SEND_URL, json={"template_id": "health", "to_email": to_email})
     assert response.status_code == 200

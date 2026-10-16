@@ -49,9 +49,9 @@ import secrets
 import uuid
 from datetime import date
 
-from supabase import Client
+from support.database import LocalDatabase
 
-from conftest import API, TARGET, new_browser, sign_in
+from conftest import API, new_browser, sign_in
 from support.accounts import seed_account, unique_email
 
 PLANNER_URL = f"{API}/client/planner"
@@ -84,11 +84,8 @@ OVER_BUDGET_ASSUMPTION_LINE = (
 
 
 def _assert_error_code(body: dict[str, object], api_code: str) -> None:
-    """The baseline sends these errors without a `code`; api/ gives every error one (ADR 0004)."""
-    if TARGET == "api":
-        assert body["code"] == api_code
-    else:
-        assert "code" not in body
+    """api/ gives every error a stable `code` (ADR 0004); the old backend sent none."""
+    assert body["code"] == api_code
 
 
 def _unique_city(label: str) -> str:
@@ -98,7 +95,7 @@ def _unique_city(label: str) -> str:
 
 
 def _seed_hair_stylist(
-    admin_db: Client,
+    admin_db: LocalDatabase,
     label: str,
     *,
     city: str,
@@ -160,7 +157,7 @@ def _expected_brief(*, title: str, location: str, budget_gbp: float) -> dict:
 
 
 def _seed_hair_plan(
-    admin_db: Client,
+    admin_db: LocalDatabase,
     client_user_id: str,
     *,
     title: str,
@@ -222,7 +219,7 @@ def test_create_plan_without_a_session_is_401() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_create_plan_is_forbidden_for_a_vendor(admin_db: Client) -> None:
+def test_create_plan_is_forbidden_for_a_vendor(admin_db: LocalDatabase) -> None:
     """A vendor account cannot use the client planner: the client-portal message, not a generic 403."""
     account = seed_account(admin_db, unique_email("planner-vendor"), "vendor")
     browser = sign_in(account)
@@ -231,7 +228,7 @@ def test_create_plan_is_forbidden_for_a_vendor(admin_db: Client) -> None:
     assert response.json()["detail"] == CLIENT_PORTAL_FORBIDDEN
 
 
-def test_create_plan_rejects_a_blank_prompt(admin_db: Client) -> None:
+def test_create_plan_rejects_a_blank_prompt(admin_db: LocalDatabase) -> None:
     """A prompt that is only whitespace is rejected before any parsing happens."""
     account = seed_account(admin_db, unique_email("planner-blank"), "client")
     browser = sign_in(account)
@@ -242,7 +239,7 @@ def test_create_plan_rejects_a_blank_prompt(admin_db: Client) -> None:
     _assert_error_code(body, "describe_celebration")
 
 
-def test_create_plan_rejects_a_nonsense_prompt(admin_db: Client) -> None:
+def test_create_plan_rejects_a_nonsense_prompt(admin_db: LocalDatabase) -> None:
     """A prompt with no letters is rejected as nonsense, with its own error code."""
     account = seed_account(admin_db, unique_email("planner-nonsense"), "client")
     browser = sign_in(account)
@@ -251,7 +248,7 @@ def test_create_plan_rejects_a_nonsense_prompt(admin_db: Client) -> None:
     assert response.json() == {"detail": INVALID_PROMPT, "code": "invalid_prompt"}
 
 
-def test_create_plan_rejects_a_single_service_browse_query(admin_db: Client) -> None:
+def test_create_plan_rejects_a_single_service_browse_query(admin_db: LocalDatabase) -> None:
     """A plain "vendor + city" search is redirected to Browse, not turned into a plan."""
     account = seed_account(admin_db, unique_email("planner-simple"), "client")
     browser = sign_in(account)
@@ -260,7 +257,7 @@ def test_create_plan_rejects_a_single_service_browse_query(admin_db: Client) -> 
     assert response.json() == {"detail": SIMPLE_INTENT, "code": "simple_intent"}
 
 
-def test_list_plans_returns_only_this_clients_active_plans(admin_db: Client) -> None:
+def test_list_plans_returns_only_this_clients_active_plans(admin_db: LocalDatabase) -> None:
     """GET /plans lists the caller's own non-archived plans, in the list-item shape."""
     label = uuid.uuid4().hex[:8]
     city = _unique_city(f"list{label}")
@@ -323,7 +320,7 @@ def test_list_plans_without_a_session_is_401() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_get_plan_detail_matches_the_seeded_plan_and_recomputes_its_budget(admin_db: Client) -> None:
+def test_get_plan_detail_matches_the_seeded_plan_and_recomputes_its_budget(admin_db: LocalDatabase) -> None:
     """GET /plans/{plan_id} echoes the stored brief/summary/confidence and recomputes the budget line."""
     label = uuid.uuid4().hex[:8]
     city = _unique_city(f"detail{label}")
@@ -402,7 +399,7 @@ def test_get_plan_detail_matches_the_seeded_plan_and_recomputes_its_budget(admin
     assert body["updated_at"] == plan_row["updated_at"]
 
 
-def test_get_plan_detail_is_not_found_for_another_clients_plan(admin_db: Client) -> None:
+def test_get_plan_detail_is_not_found_for_another_clients_plan(admin_db: LocalDatabase) -> None:
     """A plan_id that exists but belongs to a different client reads as not-found, not forbidden."""
     label = uuid.uuid4().hex[:8]
     city = _unique_city(f"cross{label}")
@@ -430,7 +427,7 @@ def test_get_plan_detail_is_not_found_for_another_clients_plan(admin_db: Client)
     _assert_error_code(body, "plan_not_found")
 
 
-def test_get_plan_detail_is_not_found_for_an_unknown_plan_id(admin_db: Client) -> None:
+def test_get_plan_detail_is_not_found_for_an_unknown_plan_id(admin_db: LocalDatabase) -> None:
     """A syntactically fine but nonexistent plan_id is a plain 404, no id-format check first."""
     account = seed_account(admin_db, unique_email("planner-missing"), "client")
     browser = sign_in(account)
@@ -441,7 +438,7 @@ def test_get_plan_detail_is_not_found_for_an_unknown_plan_id(admin_db: Client) -
     _assert_error_code(body, "plan_not_found")
 
 
-def test_replace_plan_item_for_an_unknown_need_id_is_not_found(admin_db: Client) -> None:
+def test_replace_plan_item_for_an_unknown_need_id_is_not_found(admin_db: LocalDatabase) -> None:
     """A need_id that is not on the plan (typo, or already replaced away) is a plain 404."""
     label = uuid.uuid4().hex[:8]
     city = _unique_city(f"needmiss{label}")
@@ -468,7 +465,7 @@ def test_replace_plan_item_for_an_unknown_need_id_is_not_found(admin_db: Client)
     _assert_error_code(body, "plan_item_not_found")
 
 
-def test_ensure_plan_event_creates_and_links_a_client_event(admin_db: Client) -> None:
+def test_ensure_plan_event_creates_and_links_a_client_event(admin_db: LocalDatabase) -> None:
     """ensure-event creates a `client_events` row from the plan's title/location and links it back."""
     label = uuid.uuid4().hex[:8]
     city = _unique_city(f"ensure{label}")
@@ -524,7 +521,7 @@ def test_ensure_plan_event_creates_and_links_a_client_event(admin_db: Client) ->
     assert len(all_events) == 1
 
 
-def test_ensure_plan_event_on_an_archived_plan_is_rejected(admin_db: Client) -> None:
+def test_ensure_plan_event_on_an_archived_plan_is_rejected(admin_db: LocalDatabase) -> None:
     """An archived plan cannot be turned into an event without starting a fresh plan."""
     label = uuid.uuid4().hex[:8]
     city = _unique_city(f"archevent{label}")
@@ -553,7 +550,7 @@ def test_ensure_plan_event_on_an_archived_plan_is_rejected(admin_db: Client) -> 
     _assert_error_code(body, "plan_archived")
 
 
-def test_archive_plan_hides_it_from_the_list_but_not_from_detail(admin_db: Client) -> None:
+def test_archive_plan_hides_it_from_the_list_but_not_from_detail(admin_db: LocalDatabase) -> None:
     """Archiving a plan flips its status and removes it from the (always-active) list."""
     label = uuid.uuid4().hex[:8]
     city = _unique_city(f"archive{label}")
@@ -590,7 +587,7 @@ def test_archive_plan_hides_it_from_the_list_but_not_from_detail(admin_db: Clien
     assert detail_response.json()["status"] == "archived"
 
 
-def test_archive_plan_for_an_unknown_plan_id_is_not_found(admin_db: Client) -> None:
+def test_archive_plan_for_an_unknown_plan_id_is_not_found(admin_db: LocalDatabase) -> None:
     """Archiving a plan_id that does not exist (or isn't the caller's) is a plain 404."""
     account = seed_account(admin_db, unique_email("planner-archive-missing"), "client")
     browser = sign_in(account)
@@ -609,7 +606,7 @@ def test_list_client_events_without_a_session_is_401() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_list_client_events_is_forbidden_for_a_vendor(admin_db: Client) -> None:
+def test_list_client_events_is_forbidden_for_a_vendor(admin_db: LocalDatabase) -> None:
     """A vendor account cannot list client events."""
     account = seed_account(admin_db, unique_email("events-vendor"), "vendor")
     browser = sign_in(account)
@@ -618,7 +615,7 @@ def test_list_client_events_is_forbidden_for_a_vendor(admin_db: Client) -> None:
     assert response.json()["detail"] == CLIENT_PORTAL_FORBIDDEN
 
 
-def test_list_client_events_rejects_an_invalid_status_filter(admin_db: Client) -> None:
+def test_list_client_events_rejects_an_invalid_status_filter(admin_db: LocalDatabase) -> None:
     """A `status` query value outside active/archived/all is a 400, not a silent fallback."""
     account = seed_account(admin_db, unique_email("events-badstatus"), "client")
     browser = sign_in(account)
@@ -629,7 +626,7 @@ def test_list_client_events_rejects_an_invalid_status_filter(admin_db: Client) -
     _assert_error_code(body, "invalid_status_filter")
 
 
-def test_list_client_events_filters_by_status(admin_db: Client) -> None:
+def test_list_client_events_filters_by_status(admin_db: LocalDatabase) -> None:
     """`status=active` (the default), `archived` and `all` each scope the list correctly."""
     label = uuid.uuid4().hex[:8]
     account = seed_account(admin_db, unique_email(f"events-status-{label}"), "client")
@@ -688,7 +685,7 @@ def test_list_client_events_filters_by_status(admin_db: Client) -> None:
     }
 
 
-def test_get_client_event_detail_happy_path(admin_db: Client) -> None:
+def test_get_client_event_detail_happy_path(admin_db: LocalDatabase) -> None:
     """GET /client/events/{event_id} returns the full detail shape for the caller's own event."""
     label = uuid.uuid4().hex[:8]
     account = seed_account(admin_db, unique_email(f"events-detail-{label}"), "client")
@@ -725,7 +722,7 @@ def test_get_client_event_detail_happy_path(admin_db: Client) -> None:
     assert event["created_at"] is not None
 
 
-def test_get_client_event_detail_rejects_a_malformed_event_id(admin_db: Client) -> None:
+def test_get_client_event_detail_rejects_a_malformed_event_id(admin_db: LocalDatabase) -> None:
     """A non-UUID event_id is rejected before any database lookup."""
     account = seed_account(admin_db, unique_email("events-badid"), "client")
     browser = sign_in(account)
@@ -736,7 +733,7 @@ def test_get_client_event_detail_rejects_a_malformed_event_id(admin_db: Client) 
     _assert_error_code(body, "invalid_event_id")
 
 
-def test_get_client_event_detail_is_not_found_for_an_unknown_event_id(admin_db: Client) -> None:
+def test_get_client_event_detail_is_not_found_for_an_unknown_event_id(admin_db: LocalDatabase) -> None:
     """A syntactically fine but nonexistent event_id is a plain 404."""
     account = seed_account(admin_db, unique_email("events-missing"), "client")
     browser = sign_in(account)
@@ -747,7 +744,7 @@ def test_get_client_event_detail_is_not_found_for_an_unknown_event_id(admin_db: 
     _assert_error_code(body, "event_not_found")
 
 
-def test_get_client_event_detail_is_not_found_for_another_clients_event(admin_db: Client) -> None:
+def test_get_client_event_detail_is_not_found_for_another_clients_event(admin_db: LocalDatabase) -> None:
     """An event that exists but belongs to a different client reads as not-found."""
     label = uuid.uuid4().hex[:8]
     owner_account = seed_account(admin_db, unique_email(f"events-cross-owner-{label}"), "client")

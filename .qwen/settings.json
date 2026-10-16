@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/yahayakenny/Documents/Projects/eventtz-qwen-ws14/**)"
+    ]
+  },
+  "$version": 4
+}

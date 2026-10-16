@@ -12,7 +12,7 @@ from typing import Any
 
 import httpx
 import pytest
-from supabase import Client
+from support.database import LocalDatabase
 
 from conftest import API
 
@@ -56,14 +56,14 @@ def create_post(browser: httpx.Client, **body: Any) -> dict[str, Any]:
 
 
 @pytest.fixture
-def draft_post(as_staff: httpx.Client, admin_db: Client) -> Iterator[dict[str, Any]]:
+def draft_post(as_staff: httpx.Client, admin_db: LocalDatabase) -> Iterator[dict[str, Any]]:
     """A fresh draft post, deleted from the database after the test."""
     post = create_post(as_staff, title=unique_title("draft"))
     yield post
     admin_db.table("blog_posts").delete().eq("id", post["id"]).execute()
 
 
-def audit_actions(admin_db: Client, post_id: str) -> list[str]:
+def audit_actions(admin_db: LocalDatabase, post_id: str) -> list[str]:
     """The `admin_audit_log.action` values recorded against one post, oldest first."""
     result = (
         admin_db.table("admin_audit_log")
@@ -96,7 +96,7 @@ def test_admin_blog_refuses_clients_and_vendors(portal_fixture: str, request: py
 # --- create ---------------------------------------------------------------------
 
 
-def test_create_makes_an_empty_draft(as_staff: httpx.Client, staff_account: Any, admin_db: Client) -> None:
+def test_create_makes_an_empty_draft(as_staff: httpx.Client, staff_account: Any, admin_db: LocalDatabase) -> None:
     title = unique_title("Create Me!")
     post = create_post(as_staff, title=f"  {title}  ", subtitle="  A subtitle  ", author_name="Ignored")
     try:
@@ -117,7 +117,7 @@ def test_create_makes_an_empty_draft(as_staff: httpx.Client, staff_account: Any,
         admin_db.table("blog_posts").delete().eq("id", post["id"]).execute()
 
 
-def test_create_with_no_body_uses_untitled(as_staff: httpx.Client, admin_db: Client) -> None:
+def test_create_with_no_body_uses_untitled(as_staff: httpx.Client, admin_db: LocalDatabase) -> None:
     post = create_post(as_staff)
     try:
         assert post["title"] == "Untitled"
@@ -126,7 +126,7 @@ def test_create_with_no_body_uses_untitled(as_staff: httpx.Client, admin_db: Cli
         admin_db.table("blog_posts").delete().eq("id", post["id"]).execute()
 
 
-def test_a_taken_slug_gets_a_numeric_suffix(as_staff: httpx.Client, admin_db: Client) -> None:
+def test_a_taken_slug_gets_a_numeric_suffix(as_staff: httpx.Client, admin_db: LocalDatabase) -> None:
     title = unique_title("twin")
     first = create_post(as_staff, title=title)
     second = create_post(as_staff, title=title)
@@ -139,7 +139,7 @@ def test_a_taken_slug_gets_a_numeric_suffix(as_staff: httpx.Client, admin_db: Cl
             admin_db.table("blog_posts").delete().eq("id", post["id"]).execute()
 
 
-def test_a_slug_with_no_letters_or_digits_becomes_post(as_staff: httpx.Client, admin_db: Client) -> None:
+def test_a_slug_with_no_letters_or_digits_becomes_post(as_staff: httpx.Client, admin_db: LocalDatabase) -> None:
     post = create_post(as_staff, title="!!!", slug="***")
     try:
         assert post["slug"] == "post" or post["slug"].startswith("post-")
@@ -177,7 +177,7 @@ def test_admin_list_includes_drafts_as_list_items(as_staff: httpx.Client, draft_
 
 
 def test_update_trims_blanks_and_sanitizes_html(
-    as_staff: httpx.Client, draft_post: dict[str, Any], admin_db: Client
+    as_staff: httpx.Client, draft_post: dict[str, Any], admin_db: LocalDatabase
 ) -> None:
     new_slug = unique_title("Renamed Slug").lower().replace(" ", "-")
     body_json = {
@@ -229,7 +229,7 @@ def test_update_unknown_post_is_404(as_staff: httpx.Client) -> None:
 
 
 def test_publish_unpublish_and_the_public_feed(
-    as_staff: httpx.Client, anonymous: httpx.Client, draft_post: dict[str, Any], admin_db: Client
+    as_staff: httpx.Client, anonymous: httpx.Client, draft_post: dict[str, Any], admin_db: LocalDatabase
 ) -> None:
     slug = draft_post["slug"]
     # A draft is invisible to the public.
@@ -297,7 +297,7 @@ def test_public_feed_limit_is_bounded(anonymous: httpx.Client, limit: int) -> No
 # --- delete ------------------------------------------------------------------------
 
 
-def test_delete_removes_the_post(as_staff: httpx.Client, admin_db: Client) -> None:
+def test_delete_removes_the_post(as_staff: httpx.Client, admin_db: LocalDatabase) -> None:
     post = create_post(as_staff, title=unique_title("delete"))
     response = as_staff.delete(f"{API}/admin/blog/posts/{post['id']}")
     assert response.status_code == 200

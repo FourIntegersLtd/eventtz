@@ -1,4 +1,3 @@
 docs/
-frontend/public/animations/
-backend/sql/
+web/public/animations/
 *.lock

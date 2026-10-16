@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import re
 
-from supabase import Client
+from support.database import LocalDatabase
 
 from conftest import API, new_browser, sign_in
 from support.accounts import SeededAccount, seed_account, unique_email
@@ -50,7 +50,7 @@ ADMIN_REVIEWS_URL = f"{API}/admin/reviews"
 MISSING_ID = "00000000-0000-4000-8000-000000000000"
 
 
-def _seed_pair(admin_db: Client, label: str) -> tuple[SeededAccount, SeededAccount]:
+def _seed_pair(admin_db: LocalDatabase, label: str) -> tuple[SeededAccount, SeededAccount]:
     """A fresh client and vendor account, with no `vendors` row (reviews don't need one)."""
     client_account = seed_account(admin_db, unique_email(f"{label}-client"), "client")
     vendor_account = seed_account(admin_db, unique_email(f"{label}-vendor"), "vendor")
@@ -58,7 +58,7 @@ def _seed_pair(admin_db: Client, label: str) -> tuple[SeededAccount, SeededAccou
 
 
 def _seed_booking(
-    admin_db: Client,
+    admin_db: LocalDatabase,
     *,
     client_user_id: str,
     vendor_user_id: str,
@@ -86,7 +86,7 @@ def _seed_booking(
 
 
 def _seed_review(
-    admin_db: Client,
+    admin_db: LocalDatabase,
     *,
     booking_id: str,
     client_user_id: str,
@@ -118,7 +118,7 @@ def _expected_reviewer_display(email: str) -> str:
 # --- POST /client/booking-requests/{id}/review ----------------------------------------
 
 
-def test_post_booking_review_success_on_completed_unpaid_booking(admin_db: Client) -> None:
+def test_post_booking_review_success_on_completed_unpaid_booking(admin_db: LocalDatabase) -> None:
     """A completed booking can be reviewed even when it was never paid through the platform.
 
     BASELINE QUIRK: `create_booking_review` only checks `booking_requests.status ==
@@ -140,7 +140,7 @@ def test_post_booking_review_success_on_completed_unpaid_booking(admin_db: Clien
     assert review["image_urls"] == []
 
 
-def test_post_booking_review_rejects_not_completed_booking(admin_db: Client) -> None:
+def test_post_booking_review_rejects_not_completed_booking(admin_db: LocalDatabase) -> None:
     """A pending booking cannot be reviewed yet."""
     client_account, vendor_account = _seed_pair(admin_db, "post-pending")
     booking_id = _seed_booking(
@@ -158,7 +158,7 @@ def test_post_booking_review_rejects_not_completed_booking(admin_db: Client) -> 
     assert response.json()["detail"] == REVIEW_AFTER_COMPLETE
 
 
-def test_post_booking_review_rejects_duplicate_submission(admin_db: Client) -> None:
+def test_post_booking_review_rejects_duplicate_submission(admin_db: LocalDatabase) -> None:
     """A second review on the same booking is refused."""
     client_account, vendor_account = _seed_pair(admin_db, "post-dup")
     booking_id = _seed_booking(
@@ -178,7 +178,7 @@ def test_post_booking_review_rejects_duplicate_submission(admin_db: Client) -> N
     assert second.json()["detail"] == REVIEW_ALREADY_SUBMITTED
 
 
-def test_post_booking_review_rejects_whitespace_only_body_after_strip(admin_db: Client) -> None:
+def test_post_booking_review_rejects_whitespace_only_body_after_strip(admin_db: LocalDatabase) -> None:
     """BASELINE QUIRK: a body of 10 spaces passes Pydantic's `min_length=10` (it counts raw
     characters) but fails the service's own length check, which runs on the stripped text.
     """
@@ -195,7 +195,7 @@ def test_post_booking_review_rejects_whitespace_only_body_after_strip(admin_db: 
     assert response.json()["detail"] == REVIEW_MIN_LENGTH
 
 
-def test_post_booking_review_owned_by_another_client_is_a_400_not_a_404(admin_db: Client) -> None:
+def test_post_booking_review_owned_by_another_client_is_a_400_not_a_404(admin_db: LocalDatabase) -> None:
     """BASELINE QUIRK: unlike the booking-status/cancel routes, a review on someone else's
     booking comes back as a 400 "Booking not found.", not a 404 - `create_booking_review`
     raises a plain `ValueError` that the route always maps to 400.
@@ -212,7 +212,7 @@ def test_post_booking_review_owned_by_another_client_is_a_400_not_a_404(admin_db
     assert response.json()["detail"] == BOOKING_NOT_FOUND
 
 
-def test_post_booking_review_requires_sign_in(admin_db: Client) -> None:
+def test_post_booking_review_requires_sign_in(admin_db: LocalDatabase) -> None:
     """Anonymous review submission is rejected."""
     client_account, vendor_account = _seed_pair(admin_db, "post-anon")
     booking_id = _seed_booking(
@@ -227,7 +227,7 @@ def test_post_booking_review_requires_sign_in(admin_db: Client) -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_post_booking_review_forbidden_for_vendor_account(admin_db: Client) -> None:
+def test_post_booking_review_forbidden_for_vendor_account(admin_db: LocalDatabase) -> None:
     """A vendor account cannot use the client review route."""
     client_account, vendor_account = _seed_pair(admin_db, "post-vendor-role")
     booking_id = _seed_booking(
@@ -242,7 +242,7 @@ def test_post_booking_review_forbidden_for_vendor_account(admin_db: Client) -> N
     assert response.json()["detail"] == CLIENT_PORTAL_FORBIDDEN
 
 
-def test_post_booking_review_rejects_too_many_photos(admin_db: Client) -> None:
+def test_post_booking_review_rejects_too_many_photos(admin_db: LocalDatabase) -> None:
     """More than 5 image URLs fails request validation, not the service layer."""
     client_account, vendor_account = _seed_pair(admin_db, "post-photos")
     booking_id = _seed_booking(
@@ -260,7 +260,7 @@ def test_post_booking_review_rejects_too_many_photos(admin_db: Client) -> None:
     assert response.status_code == 422
 
 
-def test_post_booking_review_silently_drops_non_http_image_urls(admin_db: Client) -> None:
+def test_post_booking_review_silently_drops_non_http_image_urls(admin_db: LocalDatabase) -> None:
     """BASELINE QUIRK: a non-http(s) URL is dropped from `image_urls` without an error,
     rather than being rejected.
     """
@@ -284,7 +284,7 @@ def test_post_booking_review_silently_drops_non_http_image_urls(admin_db: Client
 # --- GET /client/reviews ----------------------------------------------------------------
 
 
-def test_get_client_own_reviews_lists_a_submitted_review(admin_db: Client) -> None:
+def test_get_client_own_reviews_lists_a_submitted_review(admin_db: LocalDatabase) -> None:
     """A client's own reviews list includes the vendor id and event context."""
     client_account, vendor_account = _seed_pair(admin_db, "client-list")
     booking_id = _seed_booking(
@@ -322,7 +322,7 @@ def test_get_client_own_reviews_requires_sign_in() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_get_client_own_reviews_forbidden_for_vendor_account(admin_db: Client) -> None:
+def test_get_client_own_reviews_forbidden_for_vendor_account(admin_db: LocalDatabase) -> None:
     """A vendor account cannot use the client reviews route."""
     account = seed_account(admin_db, unique_email("client-list-vendor"), "vendor")
     browser = sign_in(account)
@@ -334,7 +334,7 @@ def test_get_client_own_reviews_forbidden_for_vendor_account(admin_db: Client) -
 # --- GET /vendor/reviews -----------------------------------------------------------------
 
 
-def test_get_vendor_own_reviews_lists_a_visible_review(admin_db: Client) -> None:
+def test_get_vendor_own_reviews_lists_a_visible_review(admin_db: LocalDatabase) -> None:
     """The vendor's own reviews list matches their public profile: visible reviews only."""
     client_account, vendor_account = _seed_pair(admin_db, "vendor-list")
     booking_id = _seed_booking(
@@ -361,7 +361,7 @@ def test_get_vendor_own_reviews_lists_a_visible_review(admin_db: Client) -> None
     assert review["reviewer_display"] == _expected_reviewer_display(client_account.email)
 
 
-def test_get_vendor_own_reviews_excludes_a_hidden_review(admin_db: Client) -> None:
+def test_get_vendor_own_reviews_excludes_a_hidden_review(admin_db: LocalDatabase) -> None:
     """A review an admin has hidden does not appear on the vendor's own list."""
     client_account, vendor_account = _seed_pair(admin_db, "vendor-hidden")
     booking_id = _seed_booking(
@@ -390,7 +390,7 @@ def test_get_vendor_own_reviews_requires_sign_in() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_get_vendor_own_reviews_forbidden_for_client_account(admin_db: Client) -> None:
+def test_get_vendor_own_reviews_forbidden_for_client_account(admin_db: LocalDatabase) -> None:
     """A client account cannot use the vendor reviews route."""
     account = seed_account(admin_db, unique_email("vendor-list-client"), "client")
     browser = sign_in(account)
@@ -410,7 +410,7 @@ def test_admin_list_reviews_requires_sign_in() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_admin_list_reviews_forbidden_for_client_account(admin_db: Client) -> None:
+def test_admin_list_reviews_forbidden_for_client_account(admin_db: LocalDatabase) -> None:
     """A client account cannot use the admin reviews route."""
     account = seed_account(admin_db, unique_email("admin-list-client"), "client")
     browser = sign_in(account)
@@ -419,7 +419,7 @@ def test_admin_list_reviews_forbidden_for_client_account(admin_db: Client) -> No
     assert response.json()["detail"] == ADMIN_PORTAL_FORBIDDEN
 
 
-def test_admin_list_reviews_includes_hidden_reviews_and_filters_by_vendor(admin_db: Client, as_staff) -> None:
+def test_admin_list_reviews_includes_hidden_reviews_and_filters_by_vendor(admin_db: LocalDatabase, as_staff) -> None:
     """Admins see hidden reviews too (unlike the public/vendor lists), and can filter by vendor."""
     client_account, vendor_account = _seed_pair(admin_db, "admin-list")
     other_client, other_vendor = _seed_pair(admin_db, "admin-list-other")
@@ -450,7 +450,7 @@ def test_admin_list_reviews_includes_hidden_reviews_and_filters_by_vendor(admin_
     assert body["reviews"][0]["hidden_at"] is not None
 
 
-def test_admin_get_review_detail_includes_booking_context(admin_db: Client, as_staff) -> None:
+def test_admin_get_review_detail_includes_booking_context(admin_db: LocalDatabase, as_staff) -> None:
     """The admin review detail includes the booking's event name, date and status."""
     client_account, vendor_account = _seed_pair(admin_db, "admin-detail")
     booking_id = _seed_booking(
@@ -476,7 +476,7 @@ def test_admin_get_review_detail_not_found(as_staff) -> None:
     assert response.json()["detail"] == REVIEW_NOT_FOUND
 
 
-def test_admin_review_visibility_hides_and_writes_audit_log(admin_db: Client, as_staff) -> None:
+def test_admin_review_visibility_hides_and_writes_audit_log(admin_db: LocalDatabase, as_staff) -> None:
     """Hiding a review sets `hidden_at` and writes an `admin_audit_log` row."""
     client_account, vendor_account = _seed_pair(admin_db, "admin-hide")
     booking_id = _seed_booking(
@@ -505,7 +505,7 @@ def test_admin_review_visibility_hides_and_writes_audit_log(admin_db: Client, as
     assert audit_rows[0]["entity_type"] == "booking_review"
 
 
-def test_admin_review_visibility_unhides(admin_db: Client, as_staff) -> None:
+def test_admin_review_visibility_unhides(admin_db: LocalDatabase, as_staff) -> None:
     """Setting `hidden: false` clears `hidden_at` and logs a `review.unhide` action."""
     client_account, vendor_account = _seed_pair(admin_db, "admin-unhide")
     booking_id = _seed_booking(

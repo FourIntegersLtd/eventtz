@@ -1,13 +1,13 @@
-"""The browser's session for `TARGET=api`: Bearer tokens instead of cookies.
+"""The browser's session: Bearer tokens instead of cookies.
 
-The baseline keeps the session in `eventtz_access_token`/`eventtz_refresh_token`
-cookies that it sets and clears itself. api/ sets no cookies (ADR 0003): the web
+The old backend kept the session in `eventtz_access_token`/`eventtz_refresh_token`
+cookies that it set and cleared itself. api/ sets no cookies (ADR 0003): the web
 app holds the access token and sends it as `Authorization: Bearer`, and its own
 `/api/session` routes keep the refresh token and put it in the body of
 `/auth/refresh` and `/auth/signout`.
 
-`BearerSession` plays that web app, following the baseline's cookie rules so
-every freeze test reads the same on both targets:
+`BearerSession` plays that web app, following the old backend's cookie rules so
+the frozen tests keep their meaning:
 
 - a response carrying a `session` stores its tokens (sign-in, refresh, reset, verify)
 - sign-out, any 401, and a successful password change or account deletion drop them

@@ -1,10 +1,9 @@
-"""Seed and inspect api/'s local Postgres with the same calls the tests make on Supabase.
+"""Seed and inspect api/'s local Postgres with a small supabase-py-shaped query builder.
 
-The freeze tests reach the database through supabase-py's query builder
-(`admin_db.table("users").select("email").eq("id", user_id).execute().data`).
-Against `TARGET=api` there is no PostgREST, so `LocalDatabase` answers the same
-small subset of that builder with SQL over psycopg. The tests stay byte-identical
-across targets, which is the point of a freeze suite.
+The freeze tests were written against the old backend's Supabase, through supabase-py's
+query builder (`admin_db.table("users").select("email").eq("id", user_id).execute().data`).
+`LocalDatabase` answers the same small subset of that builder with SQL over psycopg, so
+the tests kept their exact text when they moved to api/.
 
 Only what the tests use is supported: `select`/`insert`/`update`/`delete` with
 `eq`, `in_`, `is_` (null only), `order` and `limit`, plus `auth.admin.delete_user`. Rows come back

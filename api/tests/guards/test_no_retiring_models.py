@@ -5,8 +5,7 @@ gpt-4o-2024-08-06) stop answering on that date, so a default left on one of them
 turns into a 503 overnight. Only runtime string literals count: comments never
 parse and docstrings are skipped, so prose may still mention the old names. The
 match is on the full ID, so the audio models gpt-4o-transcribe and gpt-4o-mini-tts,
-which are not retiring, pass. The live baseline `backend/app/` is scanned too until
-it is deleted at cutover.
+which are not retiring, pass.
 """
 
 from __future__ import annotations
@@ -17,14 +16,11 @@ from pathlib import Path
 
 import pytest
 
-from tests.guards._scan import APP_ROOT, PROJECT_ROOT, docstring_nodes, parse, python_files, rel
+from tests.guards._scan import APP_ROOT, docstring_nodes, parse, python_files, rel
 
 REPLACEMENT_MODEL = "gpt-6-luna"
 RETIRING_MODEL_ID = re.compile(r"(gpt-4o|gpt-4o-mini|gpt-4\.1|gpt-4\.1-mini)(-\d{4}-\d{2}-\d{2})?")
-BASELINE_APP_ROOT = PROJECT_ROOT.parent / "backend" / "app"
-SCANNED_FILES = [
-    path for root in (APP_ROOT, BASELINE_APP_ROOT) if root.is_dir() for path in python_files(root)
-]
+SCANNED_FILES = python_files(APP_ROOT)
 
 
 def violations(path: Path) -> list[str]:

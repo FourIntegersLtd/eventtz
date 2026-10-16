@@ -1,9 +1,9 @@
 """Seed one-click email tokens directly in the database, standing in for the email link.
 
-The baseline never reveals the raw token over HTTP (it only appears in an outgoing email,
+The api never reveals the raw token over HTTP (it only appears in an outgoing email,
 which `RESEND_API_KEY=""` suppresses in this environment). Both `email_verification_tokens`
 and `password_reset_tokens` store only a SHA-256 hash of the token, so we can mint a raw
-token here, insert its hash the same way the baseline does, and hand the raw value to a
+token here, insert its hash the same way the api does, and hand the raw value to a
 test as if it had arrived by email.
 """
 
@@ -13,18 +13,17 @@ import hashlib
 import secrets
 from datetime import UTC, datetime, timedelta
 
-from supabase import Client
 
 from support.database import LocalDatabase
 
 
 def _hash_token(raw_token: str) -> str:
-    """The same SHA-256 hex digest the baseline stores for a raw one-click token."""
+    """The same SHA-256 hex digest the api stores for a raw one-click token."""
     return hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
 
 
 def seed_email_verification_token(
-    admin_db: Client | LocalDatabase,
+    admin_db: LocalDatabase,
     user_id: str,
     *,
     expires_in_minutes: float = 60,
@@ -45,7 +44,7 @@ def seed_email_verification_token(
 
 
 def seed_password_reset_token(
-    admin_db: Client | LocalDatabase,
+    admin_db: LocalDatabase,
     user_id: str,
     *,
     expires_in_minutes: float = 60,

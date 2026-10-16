@@ -12,7 +12,7 @@ from typing import Any
 
 import httpx
 import pytest
-from supabase import Client
+from support.database import LocalDatabase
 
 from conftest import API, sign_in
 from support.accounts import SeededAccount, seed_account, unique_email
@@ -44,7 +44,7 @@ def unique_message(label: str) -> str:
     return f"Acceptance {label} message {secrets.token_hex(6)}"
 
 
-def stored_submission(admin_db: Client, message: str) -> dict[str, Any]:
+def stored_submission(admin_db: LocalDatabase, message: str) -> dict[str, Any]:
     """The one `contact_submissions` row holding `message`."""
     result = admin_db.table("contact_submissions").select("*").eq("message", message).execute()
     assert len(result.data) == 1, f"expected one submission for {message!r}, found {len(result.data)}"
@@ -53,7 +53,7 @@ def stored_submission(admin_db: Client, message: str) -> dict[str, Any]:
 
 @pytest.fixture(scope="module")
 def booking_id(
-    admin_db: Client, client_account: SeededAccount, vendor_account: SeededAccount
+    admin_db: LocalDatabase, client_account: SeededAccount, vendor_account: SeededAccount
 ) -> Iterator[str]:
     """A pending booking between the session client and vendor, removed afterwards."""
     inserted = (
@@ -128,7 +128,7 @@ def test_more_than_5000_characters_fails_validation(as_client: httpx.Client) -> 
 def test_portal_submission_is_stored_under_other(
     portal: str,
     request: pytest.FixtureRequest,
-    admin_db: Client,
+    admin_db: LocalDatabase,
 ) -> None:
     browser: httpx.Client = request.getfixturevalue(f"as_{portal}")
     account: SeededAccount = request.getfixturevalue(f"{portal}_account")
@@ -147,7 +147,7 @@ def test_portal_submission_is_stored_under_other(
 
 
 def test_admin_bug_report_is_always_a_bug_report(
-    as_staff: httpx.Client, staff_account: SeededAccount, admin_db: Client
+    as_staff: httpx.Client, staff_account: SeededAccount, admin_db: LocalDatabase
 ) -> None:
     message = unique_message("admin bug")
     response = as_staff.post(
@@ -185,7 +185,7 @@ def test_an_unknown_booking_is_rejected(as_client: httpx.Client) -> None:
 
 @pytest.mark.parametrize("portal", ["client", "vendor"])
 def test_a_party_to_the_booking_may_reference_it(
-    portal: str, booking_id: str, request: pytest.FixtureRequest, admin_db: Client
+    portal: str, booking_id: str, request: pytest.FixtureRequest, admin_db: LocalDatabase
 ) -> None:
     browser: httpx.Client = request.getfixturevalue(f"as_{portal}")
     message = unique_message(f"{portal} booking")
@@ -196,7 +196,7 @@ def test_a_party_to_the_booking_may_reference_it(
     assert stored_submission(admin_db, message)["booking_id"] == booking_id
 
 
-def test_someone_elses_booking_is_rejected(booking_id: str, admin_db: Client) -> None:
+def test_someone_elses_booking_is_rejected(booking_id: str, admin_db: LocalDatabase) -> None:
     stranger = seed_account(admin_db, unique_email("contact-stranger"), "client")
     browser = sign_in(stranger)
     try:

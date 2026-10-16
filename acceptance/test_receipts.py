@@ -12,9 +12,9 @@ from __future__ import annotations
 import uuid
 
 import httpx
-from supabase import Client
+from support.database import LocalDatabase
 
-from conftest import API, TARGET, new_browser, sign_in
+from conftest import API, new_browser, sign_in
 from support.accounts import SeededAccount, seed_account, unique_email
 
 SIGN_IN_REQUIRED = "Please sign in to continue."
@@ -77,10 +77,7 @@ def _assert_error(response: httpx.Response, status: int, detail: str, api_code: 
     assert response.status_code == status
     body = response.json()
     assert body["detail"] == detail
-    if TARGET == "api":
-        assert body["code"] == api_code
-    else:
-        assert "code" not in body
+    assert body["code"] == api_code
 
 
 def _receipt_number(booking_id: str) -> str:
@@ -90,7 +87,7 @@ def _receipt_number(booking_id: str) -> str:
 
 
 def _seed_bookable_vendor(
-    admin_db: Client, label: str, *, stripe_account_id: str | None = None
+    admin_db: LocalDatabase, label: str, *, stripe_account_id: str | None = None
 ) -> SeededAccount:
     """A vendor whose payload prices a fixed GBP 150 package.
 
@@ -123,7 +120,7 @@ def _seed_bookable_vendor(
     return account
 
 
-def _seed_named_client(admin_db: Client, label: str) -> SeededAccount:
+def _seed_named_client(admin_db: LocalDatabase, label: str) -> SeededAccount:
     """A client with a stable display name, so vendor documents can assert it literally."""
     account = seed_account(admin_db, unique_email(label), "client")
     admin_db.table("users").update({"preferred_name": CLIENT_PREFERRED_NAME}).eq(
@@ -133,7 +130,7 @@ def _seed_named_client(admin_db: Client, label: str) -> SeededAccount:
 
 
 def _seed_booking_row(
-    admin_db: Client,
+    admin_db: LocalDatabase,
     *,
     client_user_id: str,
     vendor_user_id: str,
@@ -205,7 +202,7 @@ def _vendor_money_fields() -> dict[str, object]:
     }
 
 
-def _stripe_account_id(admin_db: Client, vendor_user_id: str) -> str | None:
+def _stripe_account_id(admin_db: LocalDatabase, vendor_user_id: str) -> str | None:
     """The Connect account id currently stored on the vendor row."""
     rows = admin_db.table("vendors").select("stripe_account_id").eq("user_id", vendor_user_id).execute().data
     return rows[0]["stripe_account_id"]
@@ -241,7 +238,7 @@ def test_client_receipt_requires_sign_in() -> None:
     _assert_error(response, 401, SIGN_IN_REQUIRED, "unauthenticated")
 
 
-def test_client_receipt_is_forbidden_for_a_vendor(admin_db: Client) -> None:
+def test_client_receipt_is_forbidden_for_a_vendor(admin_db: LocalDatabase) -> None:
     """A vendor account cannot read a client receipt."""
     vendor_account = _seed_bookable_vendor(admin_db, "rcpt-vendor-role")
     browser = sign_in(vendor_account)
@@ -249,7 +246,7 @@ def test_client_receipt_is_forbidden_for_a_vendor(admin_db: Client) -> None:
     _assert_error(response, 403, CLIENT_PORTAL_FORBIDDEN, "wrong_portal")
 
 
-def test_client_receipt_for_another_clients_booking_is_not_found(admin_db: Client) -> None:
+def test_client_receipt_for_another_clients_booking_is_not_found(admin_db: LocalDatabase) -> None:
     """A client who does not own the booking gets the same 404 as a missing id."""
     owner = _seed_named_client(admin_db, "rcpt-owner")
     other = _seed_named_client(admin_db, "rcpt-other")
@@ -265,7 +262,7 @@ def test_client_receipt_for_another_clients_booking_is_not_found(admin_db: Clien
     _assert_error(response, 404, BOOKING_NOT_FOUND, "booking_not_found")
 
 
-def test_client_receipt_for_an_unknown_booking_is_not_found(admin_db: Client) -> None:
+def test_client_receipt_for_an_unknown_booking_is_not_found(admin_db: LocalDatabase) -> None:
     """An id that is not a booking is 404, not an empty receipt."""
     client_account = _seed_named_client(admin_db, "rcpt-missing")
     browser = sign_in(client_account)
@@ -273,7 +270,7 @@ def test_client_receipt_for_an_unknown_booking_is_not_found(admin_db: Client) ->
     _assert_error(response, 404, BOOKING_NOT_FOUND, "booking_not_found")
 
 
-def test_client_receipt_for_an_unpaid_booking_without_a_payment_intent_is_not_found(admin_db: Client) -> None:
+def test_client_receipt_for_an_unpaid_booking_without_a_payment_intent_is_not_found(admin_db: LocalDatabase) -> None:
     """No frozen snapshot and no `pi_` id fails Stripe verification before the eligibility check.
 
     `verify_client_receipt_with_stripe` raises when the intent id is missing and the
@@ -293,7 +290,7 @@ def test_client_receipt_for_an_unpaid_booking_without_a_payment_intent_is_not_fo
     _assert_error(response, 404, RECEIPT_STRIPE_VERIFY_FAILED, "receipt_stripe_verify_failed")
 
 
-def test_client_receipt_returns_the_frozen_snapshot(admin_db: Client) -> None:
+def test_client_receipt_returns_the_frozen_snapshot(admin_db: LocalDatabase) -> None:
     """A paid booking with a frozen snapshot is returned as stored, with the live status overlaid."""
     client_account = _seed_named_client(admin_db, "rcpt-happy")
     vendor_account = _seed_bookable_vendor(admin_db, "rcpt-happy-vendor")
@@ -328,7 +325,7 @@ def test_client_receipt_returns_the_frozen_snapshot(admin_db: Client) -> None:
     assert receipt["status_note"] is None
 
 
-def test_client_receipt_html_is_an_attachment(admin_db: Client) -> None:
+def test_client_receipt_html_is_an_attachment(admin_db: LocalDatabase) -> None:
     """The HTML download names the receipt and includes the number and vendor."""
     client_account = _seed_named_client(admin_db, "rcpt-html")
     vendor_account = _seed_bookable_vendor(admin_db, "rcpt-html-vendor")
@@ -355,7 +352,7 @@ def test_client_receipt_html_is_an_attachment(admin_db: Client) -> None:
 # --- vendor payment record ----------------------------------------------------------
 
 
-def test_vendor_payment_record_is_forbidden_for_a_client(admin_db: Client) -> None:
+def test_vendor_payment_record_is_forbidden_for_a_client(admin_db: LocalDatabase) -> None:
     """A client cannot read the vendor payment record, even for their own booking."""
     client_account = _seed_named_client(admin_db, "prec-client-role")
     vendor_account = _seed_bookable_vendor(admin_db, "prec-client-role-vendor")
@@ -370,7 +367,7 @@ def test_vendor_payment_record_is_forbidden_for_a_client(admin_db: Client) -> No
     _assert_error(response, 403, VENDOR_PORTAL_FORBIDDEN, "wrong_portal")
 
 
-def test_vendor_payment_record_for_another_vendors_booking_is_not_found(admin_db: Client) -> None:
+def test_vendor_payment_record_for_another_vendors_booking_is_not_found(admin_db: LocalDatabase) -> None:
     """A vendor who is not on the booking gets 404."""
     client_account = _seed_named_client(admin_db, "prec-other-client")
     owner = _seed_bookable_vendor(admin_db, "prec-owner")
@@ -386,7 +383,7 @@ def test_vendor_payment_record_for_another_vendors_booking_is_not_found(admin_db
     _assert_error(response, 404, BOOKING_NOT_FOUND, "booking_not_found")
 
 
-def test_vendor_payment_record_for_an_unpaid_booking_is_not_found(admin_db: Client) -> None:
+def test_vendor_payment_record_for_an_unpaid_booking_is_not_found(admin_db: LocalDatabase) -> None:
     """`unpaid` is outside the payment-record statuses."""
     client_account = _seed_named_client(admin_db, "prec-unpaid-client")
     vendor_account = _seed_bookable_vendor(admin_db, "prec-unpaid")
@@ -401,7 +398,7 @@ def test_vendor_payment_record_for_an_unpaid_booking_is_not_found(admin_db: Clie
     _assert_error(response, 404, RECEIPT_NOT_AVAILABLE, "receipt_not_available")
 
 
-def test_vendor_payment_record_returns_the_vendor_share(admin_db: Client) -> None:
+def test_vendor_payment_record_returns_the_vendor_share(admin_db: LocalDatabase) -> None:
     """A paid booking builds a payment record from the row, with no Stripe call."""
     client_account = _seed_named_client(admin_db, "prec-happy-client")
     vendor_account = _seed_bookable_vendor(admin_db, "prec-happy")
@@ -432,7 +429,7 @@ def test_vendor_payment_record_returns_the_vendor_share(admin_db: Client) -> Non
     assert receipt["status_note"] == HELD_UNTIL_RELEASE_NOTE
 
 
-def test_vendor_payment_record_for_a_full_refund_notes_the_refund(admin_db: Client) -> None:
+def test_vendor_payment_record_for_a_full_refund_notes_the_refund(admin_db: LocalDatabase) -> None:
     """`refunded` is eligible and says the payment was refunded in full."""
     client_account = _seed_named_client(admin_db, "prec-refunded-client")
     vendor_account = _seed_bookable_vendor(admin_db, "prec-refunded")
@@ -451,7 +448,7 @@ def test_vendor_payment_record_for_a_full_refund_notes_the_refund(admin_db: Clie
     assert receipt["status_note"] == REFUNDED_IN_FULL_NOTE
 
 
-def test_vendor_payment_record_for_a_partial_refund_notes_the_refund(admin_db: Client) -> None:
+def test_vendor_payment_record_for_a_partial_refund_notes_the_refund(admin_db: LocalDatabase) -> None:
     """`partially_refunded` is eligible and says the payment was partially refunded."""
     client_account = _seed_named_client(admin_db, "prec-partial-client")
     vendor_account = _seed_bookable_vendor(admin_db, "prec-partial")
@@ -470,7 +467,7 @@ def test_vendor_payment_record_for_a_partial_refund_notes_the_refund(admin_db: C
     assert receipt["status_note"] == PARTIALLY_REFUNDED_NOTE
 
 
-def test_vendor_payment_record_html_is_an_attachment(admin_db: Client) -> None:
+def test_vendor_payment_record_html_is_an_attachment(admin_db: LocalDatabase) -> None:
     """The HTML download is named `payment-record-{receipt_number}.html`."""
     client_account = _seed_named_client(admin_db, "prec-html-client")
     vendor_account = _seed_bookable_vendor(admin_db, "prec-html")
@@ -495,7 +492,7 @@ def test_vendor_payment_record_html_is_an_attachment(admin_db: Client) -> None:
 # --- vendor payout statement --------------------------------------------------------
 
 
-def test_vendor_payout_statement_before_release_is_not_found(admin_db: Client) -> None:
+def test_vendor_payout_statement_before_release_is_not_found(admin_db: LocalDatabase) -> None:
     """`paid` is not yet a payout, so the statement is refused."""
     client_account = _seed_named_client(admin_db, "payout-paid-client")
     vendor_account = _seed_bookable_vendor(admin_db, "payout-paid")
@@ -511,7 +508,7 @@ def test_vendor_payout_statement_before_release_is_not_found(admin_db: Client) -
     _assert_error(response, 404, RECEIPT_NOT_AVAILABLE, "receipt_not_available")
 
 
-def test_vendor_payout_statement_returns_the_released_share(admin_db: Client) -> None:
+def test_vendor_payout_statement_returns_the_released_share(admin_db: LocalDatabase) -> None:
     """`payout_released` builds a statement from the vendor share and the transfer id."""
     client_account = _seed_named_client(admin_db, "payout-happy-client")
     vendor_account = _seed_bookable_vendor(admin_db, "payout-happy")
@@ -545,7 +542,7 @@ def test_vendor_payout_statement_returns_the_released_share(admin_db: Client) ->
     assert receipt["status_note"] == PAYOUT_SENT_NOTE
 
 
-def test_vendor_payout_statement_html_is_an_attachment(admin_db: Client) -> None:
+def test_vendor_payout_statement_html_is_an_attachment(admin_db: LocalDatabase) -> None:
     """The HTML download is named `payout-statement-{receipt_number}.html`."""
     client_account = _seed_named_client(admin_db, "payout-html-client")
     vendor_account = _seed_bookable_vendor(admin_db, "payout-html")
@@ -581,7 +578,7 @@ def test_restore_stripe_connect_requires_sign_in() -> None:
     _assert_error(response, 401, SIGN_IN_REQUIRED, "unauthenticated")
 
 
-def test_restore_stripe_connect_is_forbidden_for_a_client(admin_db: Client) -> None:
+def test_restore_stripe_connect_is_forbidden_for_a_client(admin_db: LocalDatabase) -> None:
     """A client is refused by the admin gate, before the super-admin check, and the row stays as seeded."""
     client_account = _seed_named_client(admin_db, "restore-client")
     vendor_account = _seed_bookable_vendor(
@@ -594,7 +591,7 @@ def test_restore_stripe_connect_is_forbidden_for_a_client(admin_db: Client) -> N
 
 
 def test_restore_stripe_connect_is_forbidden_for_a_plain_admin(
-    admin_db: Client, as_staff: httpx.Client
+    admin_db: LocalDatabase, as_staff: httpx.Client
 ) -> None:
     """A plain admin is refused; only a super admin may restore Connect."""
     vendor_account = _seed_bookable_vendor(
@@ -606,7 +603,7 @@ def test_restore_stripe_connect_is_forbidden_for_a_plain_admin(
 
 
 def test_restore_stripe_connect_without_stripe_configured_is_rejected(
-    admin_db: Client, as_super_admin: httpx.Client
+    admin_db: LocalDatabase, as_super_admin: httpx.Client
 ) -> None:
     """With no Stripe key the handler rejects before looking up a payout transfer."""
     vendor_account = _seed_bookable_vendor(

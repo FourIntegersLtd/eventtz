@@ -73,7 +73,7 @@ openapi:
 
 # Black-box freeze suite (repo-root acceptance/) against this API on :8001.
 acceptance:
-	cd ../acceptance && TARGET=api $(MAKE) test
+	cd ../acceptance && $(MAKE) test
 
 # Baseline routes api/ does not serve yet (compares against openapi.baseline.json).
 parity:

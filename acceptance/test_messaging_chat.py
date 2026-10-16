@@ -14,7 +14,7 @@ import uuid
 
 import httpx
 import pytest
-from supabase import Client
+from support.database import LocalDatabase
 
 from conftest import API, sign_in
 from support.accounts import SeededAccount, seed_account, unique_email
@@ -41,7 +41,7 @@ def _friendly_name_from_email(email: str) -> str:
     return cleaned or "Client"
 
 
-def _seed_bookable_vendor(admin_db: Client, label: str) -> SeededAccount:
+def _seed_bookable_vendor(admin_db: LocalDatabase, label: str) -> SeededAccount:
     """A fresh vendor account, approved and listing-waived so a client may message it."""
     account = seed_account(admin_db, unique_email(label), "vendor")
     admin_db.table("vendors").insert(
@@ -56,7 +56,7 @@ def _seed_bookable_vendor(admin_db: Client, label: str) -> SeededAccount:
     return account
 
 
-def _seed_booking(admin_db: Client, client_user_id: str, vendor_user_id: str) -> str:
+def _seed_booking(admin_db: LocalDatabase, client_user_id: str, vendor_user_id: str) -> str:
     """A booking request linking `client_user_id` and `vendor_user_id`. Returns its id."""
     inserted = (
         admin_db.table("booking_requests")
@@ -109,7 +109,7 @@ def test_every_chat_route_needs_a_session(
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_staff_cannot_list_conversations(admin_db: Client) -> None:
+def test_staff_cannot_list_conversations(admin_db: LocalDatabase) -> None:
     """An admin account is not a chat portal: listing conversations is 403, not empty."""
     account = seed_account(admin_db, unique_email("chat-staff-list"), "admin", admin_role="admin")
     browser = sign_in(account)
@@ -118,7 +118,7 @@ def test_staff_cannot_list_conversations(admin_db: Client) -> None:
     assert response.json()["detail"] == CHAT_PORTAL_ONLY
 
 
-def test_staff_cannot_open_a_dm_conversation_by_creating_one(admin_db: Client) -> None:
+def test_staff_cannot_open_a_dm_conversation_by_creating_one(admin_db: LocalDatabase) -> None:
     """An admin account cannot create a DM either - same portal-only message."""
     account = seed_account(admin_db, unique_email("chat-staff-create"), "admin", admin_role="admin")
     browser = sign_in(account)
@@ -127,7 +127,7 @@ def test_staff_cannot_open_a_dm_conversation_by_creating_one(admin_db: Client) -
     assert response.json()["detail"] == CHAT_PORTAL_ONLY
 
 
-def test_staff_viewing_someone_elses_conversation_is_404_not_403(admin_db: Client) -> None:
+def test_staff_viewing_someone_elses_conversation_is_404_not_403(admin_db: LocalDatabase) -> None:
     """Staff are not chat participants, so GET .../{id} is a plain 404, not a portal 403.
 
     # BASELINE QUIRK: `get_conversation`/`get_messages`/`mark_read` only check whether the
@@ -164,7 +164,7 @@ def test_client_cannot_message_an_unknown_vendor_id(as_client: httpx.Client) -> 
 
 
 def test_client_cannot_message_another_client_as_if_it_were_a_vendor(
-    admin_db: Client, as_client: httpx.Client
+    admin_db: LocalDatabase, as_client: httpx.Client
 ) -> None:
     """A peer id that is a real user but not a vendor account is rejected."""
     other_client = seed_account(admin_db, unique_email("chat-peer-client"), "client")
@@ -174,7 +174,7 @@ def test_client_cannot_message_another_client_as_if_it_were_a_vendor(
 
 
 def test_client_cannot_message_a_vendor_not_publicly_bookable(
-    admin_db: Client, as_client: httpx.Client
+    admin_db: LocalDatabase, as_client: httpx.Client
 ) -> None:
     """A vendor with no approved, bookable listing cannot be messaged by a client."""
     vendor = seed_account(admin_db, unique_email("chat-unbookable"), "vendor")
@@ -191,7 +191,7 @@ def test_client_cannot_message_a_vendor_not_publicly_bookable(
     assert response.json()["detail"] == VENDOR_UNAVAILABLE
 
 
-def test_client_can_open_a_dm_with_a_bookable_vendor(admin_db: Client) -> None:
+def test_client_can_open_a_dm_with_a_bookable_vendor(admin_db: LocalDatabase) -> None:
     """A fresh client opens a DM with an approved, listing-waived vendor."""
     client_account = seed_account(admin_db, unique_email("chat-open-client"), "client")
     vendor_account = _seed_bookable_vendor(admin_db, "chat-open-vendor")
@@ -207,7 +207,7 @@ def test_client_can_open_a_dm_with_a_bookable_vendor(admin_db: Client) -> None:
     assert conversation["unread_count"] == 0
 
 
-def test_opening_the_same_dm_twice_returns_the_same_conversation(admin_db: Client) -> None:
+def test_opening_the_same_dm_twice_returns_the_same_conversation(admin_db: LocalDatabase) -> None:
     """A second POST for the same client/vendor pair is idempotent, not a duplicate row."""
     client_account = seed_account(admin_db, unique_email("chat-idem-client"), "client")
     vendor_account = _seed_bookable_vendor(admin_db, "chat-idem-vendor")
@@ -218,7 +218,7 @@ def test_opening_the_same_dm_twice_returns_the_same_conversation(admin_db: Clien
     assert first["id"] == second["id"]
 
 
-def test_vendor_cannot_message_a_client_with_no_booking(admin_db: Client) -> None:
+def test_vendor_cannot_message_a_client_with_no_booking(admin_db: LocalDatabase) -> None:
     """A vendor may only open a DM with a client they have a booking relationship with."""
     vendor_account = seed_account(admin_db, unique_email("chat-vendor-nobooking"), "vendor")
     client_account = seed_account(admin_db, unique_email("chat-client-nobooking"), "client")
@@ -228,7 +228,7 @@ def test_vendor_cannot_message_a_client_with_no_booking(admin_db: Client) -> Non
     assert response.json()["detail"] == CLIENT_BOOKINGS_ONLY
 
 
-def test_vendor_can_message_a_client_with_a_booking(admin_db: Client) -> None:
+def test_vendor_can_message_a_client_with_a_booking(admin_db: LocalDatabase) -> None:
     """A vendor with a real booking may open a DM with that client, even while unapproved.
 
     # BASELINE BUG: `get_or_create_conversation` always builds the *creation* response
@@ -252,7 +252,7 @@ def test_vendor_can_message_a_client_with_a_booking(admin_db: Client) -> None:
     assert conversation["peer_display_name"] == "Vendor"
 
 
-def test_vendor_sees_the_client_as_peer_after_a_fresh_get(admin_db: Client) -> None:
+def test_vendor_sees_the_client_as_peer_after_a_fresh_get(admin_db: LocalDatabase) -> None:
     """Once loaded back via GET, the vendor correctly sees the client as their peer."""
     vendor_account = seed_account(admin_db, unique_email("chat-vendor-getpeer"), "vendor")
     client_account = seed_account(admin_db, unique_email("chat-client-getpeer"), "client")
@@ -270,7 +270,7 @@ def test_vendor_sees_the_client_as_peer_after_a_fresh_get(admin_db: Client) -> N
 # --- participants-only access -------------------------------------------------------------------
 
 
-def test_a_stranger_client_gets_404_on_someone_elses_conversation(admin_db: Client) -> None:
+def test_a_stranger_client_gets_404_on_someone_elses_conversation(admin_db: LocalDatabase) -> None:
     """A signed-in client who is not on the conversation gets 404, not the peer's data."""
     client_account = seed_account(admin_db, unique_email("chat-owner-client"), "client")
     vendor_account = _seed_bookable_vendor(admin_db, "chat-owner-vendor")
@@ -289,7 +289,7 @@ def test_getting_an_unknown_conversation_id_is_404(as_client: httpx.Client) -> N
     assert response.json()["detail"] == CONVERSATION_NOT_FOUND
 
 
-def test_listing_messages_on_someone_elses_conversation_is_404(admin_db: Client) -> None:
+def test_listing_messages_on_someone_elses_conversation_is_404(admin_db: LocalDatabase) -> None:
     """Reading messages on a conversation you are not part of is also a 404."""
     client_account = seed_account(admin_db, unique_email("chat-msg-owner"), "client")
     vendor_account = _seed_bookable_vendor(admin_db, "chat-msg-vendor")
@@ -301,7 +301,7 @@ def test_listing_messages_on_someone_elses_conversation_is_404(admin_db: Client)
     assert response.json()["detail"] == CONVERSATION_NOT_FOUND
 
 
-def test_sending_a_message_on_someone_elses_conversation_is_400_not_404(admin_db: Client) -> None:
+def test_sending_a_message_on_someone_elses_conversation_is_400_not_404(admin_db: LocalDatabase) -> None:
     """# BASELINE QUIRK: posting to a conversation you're not part of is 400 ("not part of
     this conversation"), unlike GET on the same id which is 404 ("Conversation not found").
     `send_message` raises `ValueError` (mapped to 400 by the route) instead of the
@@ -326,7 +326,7 @@ def test_sending_a_message_to_an_unknown_conversation_is_400(as_client: httpx.Cl
     assert response.json()["detail"] == CONVERSATION_NOT_FOUND
 
 
-def test_marking_someone_elses_conversation_read_is_403(admin_db: Client) -> None:
+def test_marking_someone_elses_conversation_read_is_403(admin_db: LocalDatabase) -> None:
     """Marking read on a conversation you're not part of is 403 (ForbiddenError), not 400/404."""
     client_account = seed_account(admin_db, unique_email("chat-read-owner"), "client")
     vendor_account = _seed_bookable_vendor(admin_db, "chat-read-vendor")
@@ -348,7 +348,7 @@ def test_marking_an_unknown_conversation_read_is_404(as_client: httpx.Client) ->
 # --- message validation ------------------------------------------------------------------------
 
 
-def test_an_empty_message_body_fails_validation(admin_db: Client) -> None:
+def test_an_empty_message_body_fails_validation(admin_db: LocalDatabase) -> None:
     """The request model itself rejects a zero-length body."""
     client_account = seed_account(admin_db, unique_email("chat-empty-client"), "client")
     vendor_account = _seed_bookable_vendor(admin_db, "chat-empty-vendor")
@@ -358,7 +358,7 @@ def test_an_empty_message_body_fails_validation(admin_db: Client) -> None:
     assert response.status_code == 422
 
 
-def test_a_whitespace_only_message_is_rejected_after_stripping(admin_db: Client) -> None:
+def test_a_whitespace_only_message_is_rejected_after_stripping(admin_db: LocalDatabase) -> None:
     """A body of only whitespace passes the model but fails the service-level check."""
     client_account = seed_account(admin_db, unique_email("chat-blank-client"), "client")
     vendor_account = _seed_bookable_vendor(admin_db, "chat-blank-vendor")
@@ -369,7 +369,7 @@ def test_a_whitespace_only_message_is_rejected_after_stripping(admin_db: Client)
     assert response.json()["detail"] == MESSAGE_EMPTY
 
 
-def test_a_message_over_5000_characters_fails_validation(admin_db: Client) -> None:
+def test_a_message_over_5000_characters_fails_validation(admin_db: LocalDatabase) -> None:
     """The request model caps a chat message body at 5000 characters."""
     client_account = seed_account(admin_db, unique_email("chat-long-client"), "client")
     vendor_account = _seed_bookable_vendor(admin_db, "chat-long-vendor")
@@ -384,7 +384,7 @@ def test_a_message_over_5000_characters_fails_validation(admin_db: Client) -> No
 # --- sending, reading, unread counts -------------------------------------------------------------
 
 
-def test_sending_and_reading_a_message_round_trip(admin_db: Client) -> None:
+def test_sending_and_reading_a_message_round_trip(admin_db: LocalDatabase) -> None:
     """A message sent by the client appears to the vendor, with the client as sender."""
     client_account = seed_account(admin_db, unique_email("chat-roundtrip-client"), "client")
     vendor_account = _seed_bookable_vendor(admin_db, "chat-roundtrip-vendor")
@@ -408,7 +408,7 @@ def test_sending_and_reading_a_message_round_trip(admin_db: Client) -> None:
     assert body_text in bodies
 
 
-def test_unread_count_rises_on_receipt_and_clears_on_read(admin_db: Client) -> None:
+def test_unread_count_rises_on_receipt_and_clears_on_read(admin_db: LocalDatabase) -> None:
     """The recipient's unread count reflects the peer's unsent-read messages, then clears."""
     client_account = seed_account(admin_db, unique_email("chat-unread-client"), "client")
     vendor_account = _seed_bookable_vendor(admin_db, "chat-unread-vendor")
@@ -442,7 +442,7 @@ def test_unread_count_rises_on_receipt_and_clears_on_read(admin_db: Client) -> N
     assert detail_after_read["unread_count"] == 0
 
 
-def test_sending_a_message_does_not_mark_it_unread_for_the_sender(admin_db: Client) -> None:
+def test_sending_a_message_does_not_mark_it_unread_for_the_sender(admin_db: LocalDatabase) -> None:
     """The sender's own unread count is unaffected by the message they just sent."""
     client_account = seed_account(admin_db, unique_email("chat-selfread-client"), "client")
     vendor_account = _seed_bookable_vendor(admin_db, "chat-selfread-vendor")
@@ -458,7 +458,7 @@ def test_sending_a_message_does_not_mark_it_unread_for_the_sender(admin_db: Clie
     assert after == before
 
 
-def test_conversations_list_includes_a_newly_opened_dm(admin_db: Client) -> None:
+def test_conversations_list_includes_a_newly_opened_dm(admin_db: LocalDatabase) -> None:
     """A freshly opened DM appears in the client's conversation list."""
     client_account = seed_account(admin_db, unique_email("chat-list-client"), "client")
     vendor_account = _seed_bookable_vendor(admin_db, "chat-list-vendor")

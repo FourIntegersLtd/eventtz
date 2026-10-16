@@ -23,7 +23,7 @@ independent of each other and of other freeze files run in the same suite.
 
 from __future__ import annotations
 
-from supabase import Client
+from support.database import LocalDatabase
 
 from conftest import API, new_browser, sign_in
 from support.accounts import SeededAccount, seed_account, unique_email
@@ -61,7 +61,7 @@ MISSING_BOOKING_ID = "00000000-0000-4000-8000-000000000000"
 PACKAGE_DETAILS = "A full package covering setup, service and clearup on the day."
 
 
-def _seed_vendor(admin_db: Client, label: str, *, payload: dict[str, object] | None = None) -> SeededAccount:
+def _seed_vendor(admin_db: LocalDatabase, label: str, *, payload: dict[str, object] | None = None) -> SeededAccount:
     """A fresh vendor account with a `vendors` row inserted directly (profile "found")."""
     account = seed_account(admin_db, unique_email(label), "vendor")
     admin_db.table("vendors").insert(
@@ -76,7 +76,7 @@ def _seed_vendor(admin_db: Client, label: str, *, payload: dict[str, object] | N
 
 
 def _seed_booking_request(
-    admin_db: Client,
+    admin_db: LocalDatabase,
     *,
     client_user_id: str,
     vendor_user_id: str,
@@ -120,7 +120,7 @@ def test_get_client_onboarding_without_a_session_is_401() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_get_client_onboarding_is_forbidden_for_a_vendor(admin_db: Client) -> None:
+def test_get_client_onboarding_is_forbidden_for_a_vendor(admin_db: LocalDatabase) -> None:
     """A vendor account gets the client-portal message, not the vendor one."""
     account = seed_account(admin_db, unique_email("onb-get-vendor"), "vendor")
     browser = sign_in(account)
@@ -129,7 +129,7 @@ def test_get_client_onboarding_is_forbidden_for_a_vendor(admin_db: Client) -> No
     assert response.json()["detail"] == CLIENT_PORTAL_FORBIDDEN
 
 
-def test_get_client_onboarding_default_state_for_a_fresh_client(admin_db: Client) -> None:
+def test_get_client_onboarding_default_state_for_a_fresh_client(admin_db: LocalDatabase) -> None:
     """A brand-new client has not completed onboarding and has no preferred name yet."""
     account = seed_account(admin_db, unique_email("onb-get-fresh"), "client")
     browser = sign_in(account)
@@ -149,7 +149,7 @@ def test_patch_client_onboarding_without_a_session_is_401() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_patch_client_onboarding_is_forbidden_for_a_vendor(admin_db: Client) -> None:
+def test_patch_client_onboarding_is_forbidden_for_a_vendor(admin_db: LocalDatabase) -> None:
     """A vendor account cannot patch client onboarding state."""
     account = seed_account(admin_db, unique_email("onb-patch-vendor"), "vendor")
     browser = sign_in(account)
@@ -158,7 +158,7 @@ def test_patch_client_onboarding_is_forbidden_for_a_vendor(admin_db: Client) -> 
     assert response.json()["detail"] == CLIENT_PORTAL_FORBIDDEN
 
 
-def test_patch_client_onboarding_sets_preferred_name_and_marks_completed(admin_db: Client) -> None:
+def test_patch_client_onboarding_sets_preferred_name_and_marks_completed(admin_db: LocalDatabase) -> None:
     """A valid patch persists both fields and echoes them back."""
     account = seed_account(admin_db, unique_email("onb-patch-ok"), "client")
     browser = sign_in(account)
@@ -180,7 +180,7 @@ def test_patch_client_onboarding_sets_preferred_name_and_marks_completed(admin_d
     assert row["client_onboarding_completed_at"] is not None
 
 
-def test_patch_client_onboarding_preferred_name_too_long_is_422(admin_db: Client) -> None:
+def test_patch_client_onboarding_preferred_name_too_long_is_422(admin_db: LocalDatabase) -> None:
     """`preferred_name` over 80 characters is rejected by the request model."""
     account = seed_account(admin_db, unique_email("onb-patch-long"), "client")
     browser = sign_in(account)
@@ -188,7 +188,7 @@ def test_patch_client_onboarding_preferred_name_too_long_is_422(admin_db: Client
     assert response.status_code == 422
 
 
-def test_patch_client_onboarding_blank_preferred_name_clears_it(admin_db: Client) -> None:
+def test_patch_client_onboarding_blank_preferred_name_clears_it(admin_db: LocalDatabase) -> None:
     """A blank/whitespace preferred_name is stored as null, not the literal blank string."""
     account = seed_account(admin_db, unique_email("onb-patch-blank"), "client")
     browser = sign_in(account)
@@ -213,7 +213,7 @@ def test_generate_bio_without_a_session_is_401() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_generate_bio_is_forbidden_for_a_client(admin_db: Client) -> None:
+def test_generate_bio_is_forbidden_for_a_client(admin_db: LocalDatabase) -> None:
     """A client account cannot use vendor bio generation: the vendor-portal message."""
     account = seed_account(admin_db, unique_email("bio-client"), "client")
     browser = sign_in(account)
@@ -222,7 +222,7 @@ def test_generate_bio_is_forbidden_for_a_client(admin_db: Client) -> None:
     assert response.json()["detail"] == VENDOR_PORTAL_FORBIDDEN
 
 
-def test_generate_bio_without_openai_key_is_503(admin_db: Client) -> None:
+def test_generate_bio_without_openai_key_is_503(admin_db: LocalDatabase) -> None:
     """A signed-in vendor's bio request reaches OpenAI and fails immediately: no key configured.
 
     `generate_vendor_public_bio` calls `require_openai_client` before doing anything else,
@@ -247,7 +247,7 @@ def test_review_packages_ai_without_a_session_is_401() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_review_packages_ai_is_forbidden_for_a_client(admin_db: Client) -> None:
+def test_review_packages_ai_is_forbidden_for_a_client(admin_db: LocalDatabase) -> None:
     """A client account cannot use the onboarding package coach."""
     account = seed_account(admin_db, unique_email("pkgai-client"), "client")
     browser = sign_in(account)
@@ -256,7 +256,7 @@ def test_review_packages_ai_is_forbidden_for_a_client(admin_db: Client) -> None:
     assert response.json()["detail"] == VENDOR_PORTAL_FORBIDDEN
 
 
-def test_review_packages_ai_without_openai_key_is_503(admin_db: Client) -> None:
+def test_review_packages_ai_without_openai_key_is_503(admin_db: LocalDatabase) -> None:
     """`review_vendor_packages` also calls `require_openai_client` first: same 503 shape."""
     account = seed_account(admin_db, unique_email("pkgai-vendor"), "vendor")
     browser = sign_in(account)
@@ -278,7 +278,7 @@ def test_analyze_portfolio_image_without_a_session_is_401() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_analyze_portfolio_image_is_forbidden_for_a_client(admin_db: Client) -> None:
+def test_analyze_portfolio_image_is_forbidden_for_a_client(admin_db: LocalDatabase) -> None:
     """A client account cannot use the portfolio photo QA tool."""
     account = seed_account(admin_db, unique_email("img-client"), "client")
     browser = sign_in(account)
@@ -289,7 +289,7 @@ def test_analyze_portfolio_image_is_forbidden_for_a_client(admin_db: Client) -> 
     assert response.json()["detail"] == VENDOR_PORTAL_FORBIDDEN
 
 
-def test_analyze_portfolio_image_empty_file_is_400(admin_db: Client) -> None:
+def test_analyze_portfolio_image_empty_file_is_400(admin_db: LocalDatabase) -> None:
     """An empty upload is rejected before OpenAI is ever reached, regardless of content type."""
     account = seed_account(admin_db, unique_email("img-empty"), "vendor")
     browser = sign_in(account)
@@ -298,7 +298,7 @@ def test_analyze_portfolio_image_empty_file_is_400(admin_db: Client) -> None:
     assert response.json()["detail"] == CHOOSE_IMAGE_TO_UPLOAD
 
 
-def test_analyze_portfolio_image_non_image_content_type_is_400(admin_db: Client) -> None:
+def test_analyze_portfolio_image_non_image_content_type_is_400(admin_db: LocalDatabase) -> None:
     """A non-empty upload whose content type is not image/* is rejected before OpenAI."""
     account = seed_account(admin_db, unique_email("img-wrongtype"), "vendor")
     browser = sign_in(account)
@@ -307,7 +307,7 @@ def test_analyze_portfolio_image_non_image_content_type_is_400(admin_db: Client)
     assert response.json()["detail"] == ONLY_IMAGE_UPLOADS
 
 
-def test_analyze_portfolio_image_without_openai_key_is_503(admin_db: Client) -> None:
+def test_analyze_portfolio_image_without_openai_key_is_503(admin_db: LocalDatabase) -> None:
     """A valid non-empty image upload passes validation and then fails at OpenAI: 503."""
     account = seed_account(admin_db, unique_email("img-vendor"), "vendor")
     browser = sign_in(account)
@@ -331,7 +331,7 @@ def test_copilot_ask_without_a_session_is_401() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_copilot_ask_is_forbidden_for_a_client(admin_db: Client) -> None:
+def test_copilot_ask_is_forbidden_for_a_client(admin_db: LocalDatabase) -> None:
     """A client account cannot ask the vendor Growth Co-pilot anything."""
     account = seed_account(admin_db, unique_email("ask-client"), "client")
     browser = sign_in(account)
@@ -340,7 +340,7 @@ def test_copilot_ask_is_forbidden_for_a_client(admin_db: Client) -> None:
     assert response.json()["detail"] == VENDOR_PORTAL_FORBIDDEN
 
 
-def test_copilot_ask_empty_string_question_is_422(admin_db: Client) -> None:
+def test_copilot_ask_empty_string_question_is_422(admin_db: LocalDatabase) -> None:
     """`question` has `min_length=1`, so the literal empty string fails request validation."""
     account = seed_account(admin_db, unique_email("ask-empty"), "vendor")
     browser = sign_in(account)
@@ -348,7 +348,7 @@ def test_copilot_ask_empty_string_question_is_422(admin_db: Client) -> None:
     assert response.status_code == 422
 
 
-def test_copilot_ask_blank_question_is_400(admin_db: Client) -> None:
+def test_copilot_ask_blank_question_is_400(admin_db: LocalDatabase) -> None:
     """A whitespace-only question passes the schema's min_length but fails the route's own check.
 
     BASELINE QUIRK: `CopilotAskRequest.question` only rejects the literal empty string
@@ -362,7 +362,7 @@ def test_copilot_ask_blank_question_is_400(admin_db: Client) -> None:
     assert response.json()["detail"] == QUESTION_REQUIRED
 
 
-def test_copilot_ask_without_openai_key_is_503(admin_db: Client) -> None:
+def test_copilot_ask_without_openai_key_is_503(admin_db: LocalDatabase) -> None:
     """A real question reaches `ask_copilot`, which fails at `require_openai_client`: 503."""
     account = seed_account(admin_db, unique_email("ask-vendor"), "vendor")
     browser = sign_in(account)
@@ -384,7 +384,7 @@ def test_copilot_brief_without_a_session_is_401() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_copilot_brief_is_forbidden_for_a_client(admin_db: Client) -> None:
+def test_copilot_brief_is_forbidden_for_a_client(admin_db: LocalDatabase) -> None:
     """A client account cannot fetch the vendor daily brief."""
     account = seed_account(admin_db, unique_email("brief-client"), "client")
     browser = sign_in(account)
@@ -393,7 +393,7 @@ def test_copilot_brief_is_forbidden_for_a_client(admin_db: Client) -> None:
     assert response.json()["detail"] == VENDOR_PORTAL_FORBIDDEN
 
 
-def test_copilot_brief_without_a_vendor_profile_returns_welcome_fallback(admin_db: Client) -> None:
+def test_copilot_brief_without_a_vendor_profile_returns_welcome_fallback(admin_db: LocalDatabase) -> None:
     """No `vendors` row at all: a fixed "complete your profile" brief, never touching OpenAI."""
     account = seed_account(admin_db, unique_email("brief-noprofile"), "vendor")
     browser = sign_in(account)
@@ -417,7 +417,7 @@ def test_copilot_brief_without_a_vendor_profile_returns_welcome_fallback(admin_d
     assert body["narration_cached"] is False
 
 
-def test_copilot_brief_with_a_profile_returns_fallback_narration_without_openai(admin_db: Client) -> None:
+def test_copilot_brief_with_a_profile_returns_fallback_narration_without_openai(admin_db: LocalDatabase) -> None:
     """A minimal, empty-payload vendor profile: deterministic actions plus the fixed fallback copy.
 
     BASELINE QUIRK: `build_daily_brief` swallows any OpenAI failure inside
@@ -465,7 +465,7 @@ def test_copilot_draft_reply_without_a_session_is_401() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_copilot_draft_reply_is_forbidden_for_a_client(admin_db: Client) -> None:
+def test_copilot_draft_reply_is_forbidden_for_a_client(admin_db: LocalDatabase) -> None:
     """A client account cannot draft vendor enquiry replies."""
     account = seed_account(admin_db, unique_email("draft-client"), "client")
     browser = sign_in(account)
@@ -474,7 +474,7 @@ def test_copilot_draft_reply_is_forbidden_for_a_client(admin_db: Client) -> None
     assert response.json()["detail"] == VENDOR_PORTAL_FORBIDDEN
 
 
-def test_copilot_draft_reply_missing_booking_id_is_422(admin_db: Client) -> None:
+def test_copilot_draft_reply_missing_booking_id_is_422(admin_db: LocalDatabase) -> None:
     """`booking_request_id` has `min_length=1`, so the literal empty string fails validation."""
     account = seed_account(admin_db, unique_email("draft-empty-id"), "vendor")
     browser = sign_in(account)
@@ -482,7 +482,7 @@ def test_copilot_draft_reply_missing_booking_id_is_422(admin_db: Client) -> None
     assert response.status_code == 422
 
 
-def test_copilot_draft_reply_booking_not_found_returns_placeholder(admin_db: Client) -> None:
+def test_copilot_draft_reply_booking_not_found_returns_placeholder(admin_db: LocalDatabase) -> None:
     """A syntactically valid but unknown booking id never reaches OpenAI: a fixed placeholder, 200.
 
     BASELINE QUIRK: this looks like it should be a 404, but `draft_enquiry_reply` returns
@@ -495,7 +495,7 @@ def test_copilot_draft_reply_booking_not_found_returns_placeholder(admin_db: Cli
     assert response.json() == {"draft_message": "", "tips": [BOOKING_NOT_FOUND_TIP]}
 
 
-def test_copilot_draft_reply_existing_booking_without_openai_key_is_503(admin_db: Client) -> None:
+def test_copilot_draft_reply_existing_booking_without_openai_key_is_503(admin_db: LocalDatabase) -> None:
     """A real booking this vendor owns reaches `require_openai_client` and fails: 503.
 
     The route's own `except Exception` fallback (`DRAFT_REPLY_UNAVAILABLE`) never fires
@@ -513,7 +513,7 @@ def test_copilot_draft_reply_existing_booking_without_openai_key_is_503(admin_db
     assert response.json()["detail"] == OPENAI_UNAVAILABLE
 
 
-def test_copilot_draft_reply_another_vendors_booking_is_treated_as_not_found(admin_db: Client) -> None:
+def test_copilot_draft_reply_another_vendors_booking_is_treated_as_not_found(admin_db: LocalDatabase) -> None:
     """`get_booking_request_for_vendor` scopes by `vendor_user_id`: another vendor's booking
 
     is indistinguishable from an unknown id, so this is the same 200 placeholder, not a
@@ -544,7 +544,7 @@ def test_copilot_review_packages_without_a_session_is_401() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_copilot_review_packages_is_forbidden_for_a_client(admin_db: Client) -> None:
+def test_copilot_review_packages_is_forbidden_for_a_client(admin_db: LocalDatabase) -> None:
     """A client account cannot use the post-launch package coach."""
     account = seed_account(admin_db, unique_email("copkg-client"), "client")
     browser = sign_in(account)
@@ -553,7 +553,7 @@ def test_copilot_review_packages_is_forbidden_for_a_client(admin_db: Client) -> 
     assert response.json()["detail"] == VENDOR_PORTAL_FORBIDDEN
 
 
-def test_copilot_review_packages_without_openai_key_is_503(admin_db: Client) -> None:
+def test_copilot_review_packages_without_openai_key_is_503(admin_db: LocalDatabase) -> None:
     """The copilot's package review is the same engine as onboarding's: 503, unwrapped.
 
     BASELINE QUIRK: unlike `draft-reply`, this route has no try/except of its own, so
@@ -583,7 +583,7 @@ def test_copilot_score_without_a_session_is_401() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_copilot_score_is_forbidden_for_a_client(admin_db: Client) -> None:
+def test_copilot_score_is_forbidden_for_a_client(admin_db: LocalDatabase) -> None:
     """A client account cannot fetch a vendor Growth Score."""
     account = seed_account(admin_db, unique_email("score-client"), "client")
     browser = sign_in(account)
@@ -592,7 +592,7 @@ def test_copilot_score_is_forbidden_for_a_client(admin_db: Client) -> None:
     assert response.json()["detail"] == VENDOR_PORTAL_FORBIDDEN
 
 
-def test_copilot_score_without_a_vendor_profile_returns_zero(admin_db: Client) -> None:
+def test_copilot_score_without_a_vendor_profile_returns_zero(admin_db: LocalDatabase) -> None:
     """No `vendors` row at all: a fixed zero score, no levers - deterministic, no OpenAI."""
     account = seed_account(admin_db, unique_email("score-noprofile"), "vendor")
     browser = sign_in(account)
@@ -606,7 +606,7 @@ def test_copilot_score_without_a_vendor_profile_returns_zero(admin_db: Client) -
     }
 
 
-def test_copilot_score_computes_deterministic_growth_score_from_profile(admin_db: Client) -> None:
+def test_copilot_score_computes_deterministic_growth_score_from_profile(admin_db: LocalDatabase) -> None:
     """`compute_growth_score` is pure Python: an empty-payload profile scores exactly 34/100.
 
     Every lever is at its "nothing filled in yet" floor (no profile photo/bio/packages,

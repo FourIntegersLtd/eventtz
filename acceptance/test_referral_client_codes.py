@@ -16,7 +16,7 @@ from typing import Any
 
 import httpx
 import pytest
-from supabase import Client
+from support.database import LocalDatabase
 
 from conftest import API, sign_in
 from support.accounts import SeededAccount, close_account, seed_account, unique_email
@@ -61,7 +61,7 @@ def dashed(code: str) -> str:
 
 
 @pytest.fixture(scope="module")
-def unused_code(admin_db: Client) -> Callable[[], str]:
+def unused_code(admin_db: LocalDatabase) -> Callable[[], str]:
     """Returns a function that picks a random six-digit code no vendor holds yet."""
     handed_out: set[str] = set()
 
@@ -82,7 +82,7 @@ def unused_code(admin_db: Client) -> Callable[[], str]:
 
 
 @pytest.fixture(scope="module")
-def make_vendor(admin_db: Client) -> Iterator[Callable[..., SeededAccount]]:
+def make_vendor(admin_db: LocalDatabase) -> Iterator[Callable[..., SeededAccount]]:
     """Returns a factory for vendors with a `vendors` row; deletes them and their bookings afterwards."""
     created: list[SeededAccount] = []
 
@@ -490,7 +490,7 @@ def test_preview_portion_bounds(anonymous: httpx.Client, portion: str) -> None:
 
 @pytest.fixture(scope="module")
 def referral_bookings(
-    admin_db: Client,
+    admin_db: LocalDatabase,
     make_vendor: Callable[..., SeededAccount],
     unused_code: Callable[[], str],
 ) -> Iterator[dict[str, Any]]:

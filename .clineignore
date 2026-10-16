@@ -1,0 +1,26 @@
+# Files Cline never reads: large, generated or secret. Same skip list as the token rules.
+node_modules/
+**/node_modules/
+.next/
+**/.next/
+.venv/
+**/.venv/
+__pycache__/
+dist/
+build/
+coverage/
+package-lock.json
+poetry.lock
+api/openapi.json
+openapi.baseline.json
+web/src/foundation/platform-client/schema.d.ts
+acceptance/.run/
+supabase/.branches/
+supabase/.temp/
+.claude/
+.qwen/
+.env
+.env.*
+**/.env
+**/.env.*
+!**/.env.example

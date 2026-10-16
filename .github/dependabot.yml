@@ -1,10 +1,5 @@
 # Dependabot: automated dependency update PRs for the rebuild stack only.
 #
-# Deliberately excludes `backend/` and `frontend/` (the baseline that runs the
-# live site, per AGENTS.md: "do not edit them"). A Dependabot PR is an edit —
-# bumping the baseline's lockfiles is exactly the kind of change that section
-# reserves for critical live fixes made on purpose, not for a bot to open weekly.
-#
 # `acceptance/` has no manifest of its own: its tests run under `api/`'s Poetry
 # environment (see `acceptance/Makefile`), so there is nothing separate for
 # Dependabot to version there — bumping `api/`'s `pip` entry below covers it.
@@ -38,9 +33,7 @@ updates:
     commit-message:
       prefix: "api"
 
-  # web/: Next.js + npm. Landing soon from another workstream; Dependabot simply
-  # has nothing to do here until web/package.json exists, so this entry is
-  # forward-configured rather than added later.
+  # web/: Next.js + npm.
   - package-ecosystem: "npm"
     directory: "/web"
     schedule:

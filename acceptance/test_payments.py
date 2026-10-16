@@ -18,7 +18,7 @@ import secrets
 import uuid
 from datetime import date, timedelta
 
-from supabase import Client
+from support.database import LocalDatabase
 
 from conftest import API, new_browser, sign_in
 from support.accounts import SeededAccount, seed_account, unique_email
@@ -58,7 +58,7 @@ PACKAGE_DETAILS = "A full package covering setup, service and clearup on the day
 MISSING_BOOKING_ID = "00000000-0000-4000-8000-000000000000"
 
 
-def _seed_bookable_vendor(admin_db: Client, label: str, *, waived: bool = False) -> SeededAccount:
+def _seed_bookable_vendor(admin_db: LocalDatabase, label: str, *, waived: bool = False) -> SeededAccount:
     """A vendor account whose `payload` prices a fixed GBP 150 package.
 
     `waived=True` sets `listing_override="visible"`, which the visibility helpers treat
@@ -92,7 +92,7 @@ def _seed_bookable_vendor(admin_db: Client, label: str, *, waived: bool = False)
 
 
 def _seed_booking_row(
-    admin_db: Client,
+    admin_db: LocalDatabase,
     *,
     client_user_id: str,
     vendor_user_id: str,
@@ -141,7 +141,7 @@ def test_vendor_payments_status_requires_sign_in() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_vendor_payments_status_is_forbidden_for_a_client(admin_db: Client) -> None:
+def test_vendor_payments_status_is_forbidden_for_a_client(admin_db: LocalDatabase) -> None:
     """A client account cannot use the vendor payments routes."""
     account = seed_account(admin_db, unique_email("pay-status-wrong-role"), "client")
     browser = sign_in(account)
@@ -150,7 +150,7 @@ def test_vendor_payments_status_is_forbidden_for_a_client(admin_db: Client) -> N
     assert response.json()["detail"] == VENDOR_PORTAL_FORBIDDEN
 
 
-def test_vendor_payments_status_defaults_for_a_vendor_with_no_profile(admin_db: Client) -> None:
+def test_vendor_payments_status_defaults_for_a_vendor_with_no_profile(admin_db: LocalDatabase) -> None:
     """A vendor with no `vendors` row yet gets an all-false status, read straight from the database."""
     account = seed_account(admin_db, unique_email("pay-status-fresh"), "vendor")
     browser = sign_in(account)
@@ -166,7 +166,7 @@ def test_vendor_payments_status_defaults_for_a_vendor_with_no_profile(admin_db: 
     }
 
 
-def test_vendor_payments_status_reflects_an_admin_listing_waiver(admin_db: Client) -> None:
+def test_vendor_payments_status_reflects_an_admin_listing_waiver(admin_db: LocalDatabase) -> None:
     """A `listing_override="visible"` vendor reads as payout-gate-waived and bookable."""
     vendor_account = _seed_bookable_vendor(admin_db, "pay-status-waived", waived=True)
     browser = sign_in(vendor_account)
@@ -178,7 +178,7 @@ def test_vendor_payments_status_reflects_an_admin_listing_waiver(admin_db: Clien
     assert body["stripe_account_id"] is None
 
 
-def test_vendor_payments_history_is_empty_for_a_vendor_with_no_paid_bookings(admin_db: Client) -> None:
+def test_vendor_payments_history_is_empty_for_a_vendor_with_no_paid_bookings(admin_db: LocalDatabase) -> None:
     """A vendor with no paid or released bookings gets the empty ledger shape."""
     account = seed_account(admin_db, unique_email("pay-history-empty"), "vendor")
     browser = sign_in(account)
@@ -194,7 +194,7 @@ def test_vendor_payments_history_is_empty_for_a_vendor_with_no_paid_bookings(adm
     }
 
 
-def test_vendor_payments_history_splits_paid_out_from_awaiting(admin_db: Client) -> None:
+def test_vendor_payments_history_splits_paid_out_from_awaiting(admin_db: LocalDatabase) -> None:
     """`payout_released` bookings count as paid out; plain `paid` bookings as still awaiting."""
     vendor_account = _seed_bookable_vendor(admin_db, "pay-history-split")
     client_account = seed_account(admin_db, unique_email("pay-history-client"), "client")
@@ -243,7 +243,7 @@ def test_checkout_requires_sign_in() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_checkout_unknown_booking_is_a_400_not_a_404(admin_db: Client) -> None:
+def test_checkout_unknown_booking_is_a_400_not_a_404(admin_db: LocalDatabase) -> None:
     """BASELINE QUIRK: unlike the read routes, checkout maps 'not found' to 400, not 404.
 
     `create_checkout_session_for_booking` raises a plain `ValueError`, and
@@ -256,7 +256,7 @@ def test_checkout_unknown_booking_is_a_400_not_a_404(admin_db: Client) -> None:
     assert response.json()["detail"] == BOOKING_NOT_FOUND_PERIOD
 
 
-def test_checkout_rejects_a_pending_booking(admin_db: Client) -> None:
+def test_checkout_rejects_a_pending_booking(admin_db: LocalDatabase) -> None:
     """Only an accepted booking can be paid; a pending one is refused before any Stripe call."""
     client_account = seed_account(admin_db, unique_email("checkout-pending-client"), "client")
     vendor_user_id = _seed_bookable_vendor(admin_db, "checkout-pending-vendor").user_id
@@ -269,7 +269,7 @@ def test_checkout_rejects_a_pending_booking(admin_db: Client) -> None:
     assert response.json()["detail"] == ONLY_ACCEPTED_CAN_BE_PAID
 
 
-def test_checkout_rejects_an_already_paid_booking(admin_db: Client) -> None:
+def test_checkout_rejects_an_already_paid_booking(admin_db: LocalDatabase) -> None:
     """A booking already paid cannot be checked out again."""
     client_account = seed_account(admin_db, unique_email("checkout-paid-client"), "client")
     vendor_user_id = _seed_bookable_vendor(admin_db, "checkout-paid-vendor").user_id
@@ -286,7 +286,7 @@ def test_checkout_rejects_an_already_paid_booking(admin_db: Client) -> None:
     assert response.json()["detail"] == BOOKING_ALREADY_PAID
 
 
-def test_checkout_rejects_a_vendor_not_ready_for_payouts(admin_db: Client) -> None:
+def test_checkout_rejects_a_vendor_not_ready_for_payouts(admin_db: LocalDatabase) -> None:
     """A vendor with no Stripe Connect account and no admin waiver blocks checkout."""
     client_account = seed_account(admin_db, unique_email("checkout-notready-client"), "client")
     vendor_user_id = _seed_bookable_vendor(admin_db, "checkout-notready-vendor").user_id
@@ -302,7 +302,7 @@ def test_checkout_rejects_a_vendor_not_ready_for_payouts(admin_db: Client) -> No
     assert response.json()["detail"] == VENDOR_PAYOUTS_NOT_READY
 
 
-def test_checkout_requires_an_event_address_even_for_a_waived_vendor(admin_db: Client) -> None:
+def test_checkout_requires_an_event_address_even_for_a_waived_vendor(admin_db: LocalDatabase) -> None:
     """With the payout gate waived, the next check reached is the event address, still before Stripe."""
     client_account = seed_account(admin_db, unique_email("checkout-noaddr-client"), "client")
     vendor_user_id = _seed_bookable_vendor(admin_db, "checkout-noaddr-vendor", waived=True).user_id
@@ -323,7 +323,7 @@ def test_checkout_sync_requires_sign_in() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_checkout_sync_unknown_booking_is_a_400_not_a_404(admin_db: Client) -> None:
+def test_checkout_sync_unknown_booking_is_a_400_not_a_404(admin_db: LocalDatabase) -> None:
     """Same `ValueError`-to-400 mapping as `/checkout` applies to `/checkout/sync`."""
     account = seed_account(admin_db, unique_email("checkout-sync-missing"), "client")
     browser = sign_in(account)
@@ -332,7 +332,7 @@ def test_checkout_sync_unknown_booking_is_a_400_not_a_404(admin_db: Client) -> N
     assert response.json()["detail"] == BOOKING_NOT_FOUND_PERIOD
 
 
-def test_checkout_sync_rejects_a_booking_that_is_not_accepted(admin_db: Client) -> None:
+def test_checkout_sync_rejects_a_booking_that_is_not_accepted(admin_db: LocalDatabase) -> None:
     """A pending booking cannot be synced: it was never eligible for checkout."""
     client_account = seed_account(admin_db, unique_email("checkout-sync-pending-client"), "client")
     vendor_user_id = _seed_bookable_vendor(admin_db, "checkout-sync-pending-vendor").user_id
@@ -345,7 +345,7 @@ def test_checkout_sync_rejects_a_booking_that_is_not_accepted(admin_db: Client) 
     assert response.json()["detail"] == BOOKING_NO_LONGER_PAID
 
 
-def test_checkout_sync_already_paid_booking_short_circuits_without_calling_stripe(admin_db: Client) -> None:
+def test_checkout_sync_already_paid_booking_short_circuits_without_calling_stripe(admin_db: LocalDatabase) -> None:
     """A booking already `paid` returns its current status directly - no Stripe call needed."""
     client_account = seed_account(admin_db, unique_email("checkout-sync-paid-client"), "client")
     vendor_user_id = _seed_bookable_vendor(admin_db, "checkout-sync-paid-vendor").user_id
@@ -362,7 +362,7 @@ def test_checkout_sync_already_paid_booking_short_circuits_without_calling_strip
     assert response.json() == {"success": True, "payment_status": "paid"}
 
 
-def test_checkout_sync_with_no_session_on_file_reports_the_expected_error(admin_db: Client) -> None:
+def test_checkout_sync_with_no_session_on_file_reports_the_expected_error(admin_db: LocalDatabase) -> None:
     """An accepted, unpaid booking with no stored or supplied checkout session cannot be synced."""
     client_account = seed_account(admin_db, unique_email("checkout-sync-nosession-client"), "client")
     vendor_user_id = _seed_bookable_vendor(admin_db, "checkout-sync-nosession-vendor").user_id
@@ -413,7 +413,7 @@ def test_admin_list_bookings_requires_sign_in() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_admin_list_bookings_is_forbidden_for_a_vendor(admin_db: Client) -> None:
+def test_admin_list_bookings_is_forbidden_for_a_vendor(admin_db: LocalDatabase) -> None:
     """A vendor account cannot list bookings from the admin console."""
     account = seed_account(admin_db, unique_email("admin-list-wrong-role"), "vendor")
     browser = sign_in(account)
@@ -422,7 +422,7 @@ def test_admin_list_bookings_is_forbidden_for_a_vendor(admin_db: Client) -> None
     assert response.json()["detail"] == ADMIN_PORTAL_FORBIDDEN
 
 
-def test_admin_list_bookings_filters_by_status_and_search(admin_db: Client, as_staff) -> None:
+def test_admin_list_bookings_filters_by_status_and_search(admin_db: LocalDatabase, as_staff) -> None:
     """`status` and `search` (event name substring) both narrow the admin booking list."""
     label = uuid.uuid4().hex[:8]
     client_account = seed_account(admin_db, unique_email("admin-list-client"), "client")
@@ -458,7 +458,7 @@ def test_admin_get_booking_detail_not_found_for_missing_id(as_staff) -> None:
     assert response.json()["detail"] == BOOKING_NOT_FOUND_NO_PERIOD
 
 
-def test_admin_get_booking_detail_writes_a_view_audit_log_row(admin_db: Client, as_staff) -> None:
+def test_admin_get_booking_detail_writes_a_view_audit_log_row(admin_db: LocalDatabase, as_staff) -> None:
     """Viewing a booking's admin detail writes a `booking.view` audit log row."""
     client_account = seed_account(admin_db, unique_email("admin-view-client"), "client")
     vendor_user_id = _seed_bookable_vendor(admin_db, "admin-view-vendor").user_id
@@ -479,7 +479,7 @@ def test_admin_get_booking_detail_writes_a_view_audit_log_row(admin_db: Client, 
     assert audit_rows
 
 
-def test_admin_patch_payment_fields_requires_super_admin(admin_db: Client, as_staff) -> None:
+def test_admin_patch_payment_fields_requires_super_admin(admin_db: LocalDatabase, as_staff) -> None:
     """A plain admin cannot patch a booking's Stripe/payment fields; only a super admin can."""
     client_account = seed_account(admin_db, unique_email("admin-patch-client"), "client")
     vendor_user_id = _seed_bookable_vendor(admin_db, "admin-patch-vendor").user_id
@@ -493,7 +493,7 @@ def test_admin_patch_payment_fields_requires_super_admin(admin_db: Client, as_st
     assert response.json()["detail"] == SUPER_ADMIN_ONLY
 
 
-def test_admin_patch_payment_fields_with_no_body_fields_is_400(admin_db: Client, as_super_admin) -> None:
+def test_admin_patch_payment_fields_with_no_body_fields_is_400(admin_db: LocalDatabase, as_super_admin) -> None:
     """An empty patch body is rejected before touching the booking."""
     client_account = seed_account(admin_db, unique_email("admin-patch-empty-client"), "client")
     vendor_user_id = _seed_bookable_vendor(admin_db, "admin-patch-empty-vendor").user_id
@@ -506,7 +506,7 @@ def test_admin_patch_payment_fields_with_no_body_fields_is_400(admin_db: Client,
 
 
 def test_admin_patch_payment_fields_amount_without_a_payment_intent_is_400(
-    admin_db: Client, as_super_admin
+    admin_db: LocalDatabase, as_super_admin
 ) -> None:
     """Setting `payment_amount_gbp` needs a Stripe payment intent to verify it against."""
     client_account = seed_account(admin_db, unique_email("admin-patch-noamt-client"), "client")
@@ -521,7 +521,7 @@ def test_admin_patch_payment_fields_amount_without_a_payment_intent_is_400(
     assert response.json()["detail"] == STRIPE_PI_REQUIRED_FOR_AMOUNT
 
 
-def test_admin_sync_payment_requires_super_admin(admin_db: Client, as_staff) -> None:
+def test_admin_sync_payment_requires_super_admin(admin_db: LocalDatabase, as_staff) -> None:
     """A plain admin cannot trigger a Stripe payment sync."""
     client_account = seed_account(admin_db, unique_email("admin-sync-client"), "client")
     vendor_user_id = _seed_bookable_vendor(admin_db, "admin-sync-vendor").user_id
@@ -533,7 +533,7 @@ def test_admin_sync_payment_requires_super_admin(admin_db: Client, as_staff) -> 
     assert response.json()["detail"] == SUPER_ADMIN_ONLY
 
 
-def test_admin_sync_payment_rejects_a_booking_that_is_not_accepted(admin_db: Client, as_super_admin) -> None:
+def test_admin_sync_payment_rejects_a_booking_that_is_not_accepted(admin_db: LocalDatabase, as_super_admin) -> None:
     """A pending booking cannot be synced for payment."""
     client_account = seed_account(admin_db, unique_email("admin-sync-pending-client"), "client")
     vendor_user_id = _seed_bookable_vendor(admin_db, "admin-sync-pending-vendor").user_id
@@ -556,7 +556,7 @@ def test_admin_sync_payment_missing_booking_is_a_400_not_a_404(as_super_admin) -
     assert response.json()["detail"] == BOOKING_NOT_FOUND_PERIOD
 
 
-def test_admin_release_payout_requires_super_admin(admin_db: Client, as_staff) -> None:
+def test_admin_release_payout_requires_super_admin(admin_db: LocalDatabase, as_staff) -> None:
     """A plain admin cannot release a vendor payout."""
     client_account = seed_account(admin_db, unique_email("admin-release-client"), "client")
     vendor_user_id = _seed_bookable_vendor(admin_db, "admin-release-vendor").user_id
@@ -568,7 +568,7 @@ def test_admin_release_payout_requires_super_admin(admin_db: Client, as_staff) -
     assert response.json()["detail"] == SUPER_ADMIN_ONLY
 
 
-def test_admin_release_payout_rejects_an_unpaid_booking(admin_db: Client, as_super_admin) -> None:
+def test_admin_release_payout_rejects_an_unpaid_booking(admin_db: LocalDatabase, as_super_admin) -> None:
     """Only a paid booking is eligible for payout release."""
     client_account = seed_account(admin_db, unique_email("admin-release-unpaid-client"), "client")
     vendor_user_id = _seed_bookable_vendor(admin_db, "admin-release-unpaid-vendor").user_id
@@ -581,7 +581,7 @@ def test_admin_release_payout_rejects_an_unpaid_booking(admin_db: Client, as_sup
 
 
 def test_admin_retry_payout_shares_the_same_eligibility_rule_as_release(
-    admin_db: Client, as_super_admin
+    admin_db: LocalDatabase, as_super_admin
 ) -> None:
     """`retry-payout` is the same underlying command as `release-payout`, so the same guard applies."""
     client_account = seed_account(admin_db, unique_email("admin-retry-client"), "client")
@@ -594,7 +594,7 @@ def test_admin_retry_payout_shares_the_same_eligibility_rule_as_release(
     assert response.json()["detail"] == ONLY_PAID_PAYOUT_RELEASE
 
 
-def test_admin_reset_checkout_requires_super_admin(admin_db: Client, as_staff) -> None:
+def test_admin_reset_checkout_requires_super_admin(admin_db: LocalDatabase, as_staff) -> None:
     """A plain admin cannot reset a booking's stale checkout session."""
     client_account = seed_account(admin_db, unique_email("admin-reset-client"), "client")
     vendor_user_id = _seed_bookable_vendor(admin_db, "admin-reset-vendor").user_id
@@ -606,7 +606,7 @@ def test_admin_reset_checkout_requires_super_admin(admin_db: Client, as_staff) -
     assert response.json()["detail"] == SUPER_ADMIN_ONLY
 
 
-def test_admin_reset_checkout_rejects_an_already_paid_booking(admin_db: Client, as_super_admin) -> None:
+def test_admin_reset_checkout_rejects_an_already_paid_booking(admin_db: LocalDatabase, as_super_admin) -> None:
     """A paid booking's checkout session cannot be reset."""
     client_account = seed_account(admin_db, unique_email("admin-reset-paid-client"), "client")
     vendor_user_id = _seed_bookable_vendor(admin_db, "admin-reset-paid-vendor").user_id
@@ -623,7 +623,7 @@ def test_admin_reset_checkout_rejects_an_already_paid_booking(admin_db: Client, 
 
 
 def test_admin_reset_checkout_clears_a_stale_session_and_returns_to_unpaid(
-    admin_db: Client, as_super_admin
+    admin_db: LocalDatabase, as_super_admin
 ) -> None:
     """A pending checkout session is cleared and `payment_status` returns to unpaid."""
     client_account = seed_account(admin_db, unique_email("admin-reset-ok-client"), "client")
@@ -643,7 +643,7 @@ def test_admin_reset_checkout_clears_a_stale_session_and_returns_to_unpaid(
     assert booking["stripe_checkout_session_id"] is None
 
 
-def test_admin_complete_cancellation_requires_super_admin(admin_db: Client, as_staff) -> None:
+def test_admin_complete_cancellation_requires_super_admin(admin_db: LocalDatabase, as_staff) -> None:
     """A plain admin cannot complete a booking's cancellation."""
     client_account = seed_account(admin_db, unique_email("admin-complete-cancel-client"), "client")
     vendor_user_id = _seed_bookable_vendor(admin_db, "admin-complete-cancel-vendor").user_id
@@ -656,7 +656,7 @@ def test_admin_complete_cancellation_requires_super_admin(admin_db: Client, as_s
 
 
 def test_admin_complete_cancellation_requires_a_refunded_payment_status(
-    admin_db: Client, as_super_admin
+    admin_db: LocalDatabase, as_super_admin
 ) -> None:
     """Only a refunded booking can be completed as cancelled."""
     client_account = seed_account(admin_db, unique_email("admin-complete-cancel-unpaid-client"), "client")
@@ -669,7 +669,7 @@ def test_admin_complete_cancellation_requires_a_refunded_payment_status(
     assert response.json()["detail"] == ONLY_REFUNDED_COMPLETE_CANCEL
 
 
-def test_admin_cancel_on_behalf_requires_super_admin(admin_db: Client, as_staff) -> None:
+def test_admin_cancel_on_behalf_requires_super_admin(admin_db: LocalDatabase, as_staff) -> None:
     """A plain admin cannot cancel a booking on a party's behalf."""
     client_account = seed_account(admin_db, unique_email("admin-cancel-behalf-client"), "client")
     vendor_user_id = _seed_bookable_vendor(admin_db, "admin-cancel-behalf-vendor").user_id
@@ -685,7 +685,7 @@ def test_admin_cancel_on_behalf_requires_super_admin(admin_db: Client, as_staff)
 
 
 def test_admin_cancel_on_behalf_requires_a_reason_of_at_least_3_characters(
-    admin_db: Client, as_super_admin
+    admin_db: LocalDatabase, as_super_admin
 ) -> None:
     """`reason` has its own min-length validation, rejected as a 422 before the service runs."""
     client_account = seed_account(admin_db, unique_email("admin-cancel-behalf-short-client"), "client")
@@ -700,7 +700,7 @@ def test_admin_cancel_on_behalf_requires_a_reason_of_at_least_3_characters(
 
 
 def test_admin_cancel_on_behalf_cancels_a_pending_unpaid_booking_and_logs_the_reason(
-    admin_db: Client, as_super_admin
+    admin_db: LocalDatabase, as_super_admin
 ) -> None:
     """A super admin can cancel a pending, unpaid booking on behalf of a party, with an audit trail."""
     client_account = seed_account(admin_db, unique_email("admin-cancel-behalf-ok-client"), "client")
@@ -727,7 +727,7 @@ def test_admin_cancel_on_behalf_cancels_a_pending_unpaid_booking_and_logs_the_re
     assert audit_rows[-1]["payload"] == {"party": "vendor", "reason": "vendor asked support to cancel"}
 
 
-def test_admin_confirm_completion_requires_super_admin(admin_db: Client, as_staff) -> None:
+def test_admin_confirm_completion_requires_super_admin(admin_db: LocalDatabase, as_staff) -> None:
     """A plain admin cannot confirm completion on a party's behalf."""
     client_account = seed_account(admin_db, unique_email("admin-confirm-client"), "client")
     vendor_user_id = _seed_bookable_vendor(admin_db, "admin-confirm-vendor").user_id
@@ -742,7 +742,7 @@ def test_admin_confirm_completion_requires_super_admin(admin_db: Client, as_staf
 
 
 def test_admin_confirm_completion_rejects_a_booking_that_is_not_accepted(
-    admin_db: Client, as_super_admin
+    admin_db: LocalDatabase, as_super_admin
 ) -> None:
     """Only an accepted booking can have completion confirmed on a party's behalf."""
     client_account = seed_account(admin_db, unique_email("admin-confirm-pending-client"), "client")
@@ -757,7 +757,7 @@ def test_admin_confirm_completion_rejects_a_booking_that_is_not_accepted(
     assert response.json()["detail"] == ONLY_ACCEPTED_MARK_COMPLETE
 
 
-def test_admin_run_maintenance_requires_super_admin(admin_db: Client, as_staff) -> None:
+def test_admin_run_maintenance_requires_super_admin(admin_db: LocalDatabase, as_staff) -> None:
     """A plain admin cannot trigger the maintenance sweep for one booking."""
     client_account = seed_account(admin_db, unique_email("admin-maint-client"), "client")
     vendor_user_id = _seed_bookable_vendor(admin_db, "admin-maint-vendor").user_id
@@ -776,7 +776,7 @@ def test_admin_run_maintenance_on_a_missing_booking_is_a_400(as_super_admin) -> 
     assert response.json()["detail"] == BOOKING_NOT_FOUND_PERIOD
 
 
-def test_admin_support_hold_requires_super_admin(admin_db: Client, as_staff) -> None:
+def test_admin_support_hold_requires_super_admin(admin_db: LocalDatabase, as_staff) -> None:
     """A plain admin cannot toggle a booking's support hold."""
     client_account = seed_account(admin_db, unique_email("admin-hold-client"), "client")
     vendor_user_id = _seed_bookable_vendor(admin_db, "admin-hold-vendor").user_id
@@ -788,7 +788,7 @@ def test_admin_support_hold_requires_super_admin(admin_db: Client, as_staff) -> 
     assert response.json()["detail"] == SUPER_ADMIN_ONLY
 
 
-def test_admin_support_hold_toggles_and_persists(admin_db: Client, as_super_admin) -> None:
+def test_admin_support_hold_toggles_and_persists(admin_db: LocalDatabase, as_super_admin) -> None:
     """Setting the support hold on then off persists both states."""
     client_account = seed_account(admin_db, unique_email("admin-hold-ok-client"), "client")
     vendor_user_id = _seed_bookable_vendor(admin_db, "admin-hold-ok-vendor").user_id
@@ -815,7 +815,7 @@ def test_admin_financials_summary_requires_sign_in() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_admin_financials_summary_is_forbidden_for_a_vendor(admin_db: Client) -> None:
+def test_admin_financials_summary_is_forbidden_for_a_vendor(admin_db: LocalDatabase) -> None:
     """A vendor account cannot see platform financials."""
     account = seed_account(admin_db, unique_email("admin-fin-wrong-role"), "vendor")
     browser = sign_in(account)
@@ -824,7 +824,7 @@ def test_admin_financials_summary_is_forbidden_for_a_vendor(admin_db: Client) ->
     assert response.json()["detail"] == ADMIN_PORTAL_FORBIDDEN
 
 
-def test_admin_financials_summary_totals_a_paid_booking(admin_db: Client, as_staff) -> None:
+def test_admin_financials_summary_totals_a_paid_booking(admin_db: LocalDatabase, as_staff) -> None:
     """GMV, platform fee, and vendor portion are summed from paid/released bookings in the date range.
 
     Scoped to a `paid_at` on a randomly chosen far-future day, and a date range tight around
@@ -861,7 +861,7 @@ def test_admin_financials_summary_totals_a_paid_booking(admin_db: Client, as_sta
     assert body["payout_released_gbp"] == 0.0
 
 
-def test_admin_financials_export_requires_super_admin(admin_db: Client, as_staff) -> None:
+def test_admin_financials_export_requires_super_admin(admin_db: LocalDatabase, as_staff) -> None:
     """A plain admin cannot export the financials CSV; only a super admin can."""
     response = as_staff.get(f"{API}/admin/financials/export.csv")
     assert response.status_code == 403
@@ -869,7 +869,7 @@ def test_admin_financials_export_requires_super_admin(admin_db: Client, as_staff
 
 
 def test_admin_financials_export_returns_a_csv_attachment_and_logs_the_export(
-    admin_db: Client, as_super_admin
+    admin_db: LocalDatabase, as_super_admin
 ) -> None:
     """The export is a CSV attachment with the frozen column headers, and writes an audit log row."""
     response = as_super_admin.get(

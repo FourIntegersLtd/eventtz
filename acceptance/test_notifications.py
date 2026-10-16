@@ -16,7 +16,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime
 
-from supabase import Client
+from support.database import LocalDatabase
 
 from conftest import API, new_browser, sign_in
 from support.accounts import seed_account, unique_email
@@ -41,7 +41,7 @@ BOOKING_REQUEST_RECEIVED_VENDOR_BODY = (
 )
 
 
-def _seed_booking_row(admin_db: Client, *, client_user_id: str, vendor_user_id: str, event_name: str) -> str:
+def _seed_booking_row(admin_db: LocalDatabase, *, client_user_id: str, vendor_user_id: str, event_name: str) -> str:
     """A minimal `booking_requests` row, just enough for the feed's event-name lookup."""
     row = {
         "client_user_id": client_user_id,
@@ -61,7 +61,7 @@ def _seed_booking_row(admin_db: Client, *, client_user_id: str, vendor_user_id: 
 
 
 def _seed_notification(
-    admin_db: Client,
+    admin_db: LocalDatabase,
     *,
     user_id: str,
     booking_id: str,
@@ -77,7 +77,7 @@ def _seed_notification(
     return str(inserted[0]["id"])
 
 
-def _seed_client_and_vendor(admin_db: Client, label: str):
+def _seed_client_and_vendor(admin_db: LocalDatabase, label: str):
     """A fresh client/vendor account pair and the booking id linking them."""
     client_account = seed_account(admin_db, unique_email(f"{label}-client"), "client")
     vendor_account = seed_account(admin_db, unique_email(f"{label}-vendor"), "vendor")
@@ -98,7 +98,7 @@ def test_client_unread_count_requires_sign_in() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_vendor_unread_count_is_forbidden_for_a_client(admin_db: Client) -> None:
+def test_vendor_unread_count_is_forbidden_for_a_client(admin_db: LocalDatabase) -> None:
     """A client account cannot use the vendor notifications routes."""
     client_account = seed_account(admin_db, unique_email("notif-wrong-role"), "client")
     browser = sign_in(client_account)
@@ -107,7 +107,7 @@ def test_vendor_unread_count_is_forbidden_for_a_client(admin_db: Client) -> None
     assert response.json()["detail"] == VENDOR_PORTAL_FORBIDDEN
 
 
-def test_client_notifications_feed_is_forbidden_for_a_vendor(admin_db: Client) -> None:
+def test_client_notifications_feed_is_forbidden_for_a_vendor(admin_db: LocalDatabase) -> None:
     """A vendor account cannot use the client notifications routes."""
     vendor_account = seed_account(admin_db, unique_email("notif-wrong-role-2"), "vendor")
     browser = sign_in(vendor_account)
@@ -116,7 +116,7 @@ def test_client_notifications_feed_is_forbidden_for_a_vendor(admin_db: Client) -
     assert response.json()["detail"] == CLIENT_PORTAL_FORBIDDEN
 
 
-def test_client_unread_count_counts_only_unread_rows_for_that_user(admin_db: Client) -> None:
+def test_client_unread_count_counts_only_unread_rows_for_that_user(admin_db: LocalDatabase) -> None:
     """The unread count is a per-user count of `booking_notifications` rows with no `read_at`."""
     client_account, vendor_account, booking_id = _seed_client_and_vendor(admin_db, "unread-count")
     _seed_notification(
@@ -134,7 +134,7 @@ def test_client_unread_count_counts_only_unread_rows_for_that_user(admin_db: Cli
     assert response.json() == {"success": True, "unread_count": 2}
 
 
-def test_vendor_unread_count_does_not_see_the_clients_notifications(admin_db: Client) -> None:
+def test_vendor_unread_count_does_not_see_the_clients_notifications(admin_db: LocalDatabase) -> None:
     """Counts are scoped to the caller: the vendor's unread count ignores the client's rows."""
     client_account, vendor_account, booking_id = _seed_client_and_vendor(admin_db, "unread-scope")
     _seed_notification(
@@ -146,7 +146,7 @@ def test_vendor_unread_count_does_not_see_the_clients_notifications(admin_db: Cl
     assert response.json() == {"success": True, "unread_count": 0}
 
 
-def test_client_mark_all_read_clears_the_unread_count(admin_db: Client) -> None:
+def test_client_mark_all_read_clears_the_unread_count(admin_db: LocalDatabase) -> None:
     """Marking all read sets `read_at` on every unread row for that user."""
     client_account, vendor_account, booking_id = _seed_client_and_vendor(admin_db, "mark-all")
     _seed_notification(
@@ -174,7 +174,7 @@ def test_client_mark_all_read_clears_the_unread_count(admin_db: Client) -> None:
     assert all(row["read_at"] is not None for row in rows)
 
 
-def test_vendor_mark_single_notification_read_only_affects_that_row(admin_db: Client) -> None:
+def test_vendor_mark_single_notification_read_only_affects_that_row(admin_db: LocalDatabase) -> None:
     """Marking one notification read leaves the other unread for that user."""
     client_account, vendor_account, booking_id = _seed_client_and_vendor(admin_db, "mark-one")
     marked_id = _seed_notification(
@@ -192,7 +192,7 @@ def test_vendor_mark_single_notification_read_only_affects_that_row(admin_db: Cl
     assert unread_after.json()["unread_count"] == 1
 
 
-def test_mark_notification_read_for_someone_elses_row_reports_failure(admin_db: Client) -> None:
+def test_mark_notification_read_for_someone_elses_row_reports_failure(admin_db: LocalDatabase) -> None:
     """Marking a notification id that belongs to another user reports `success: False`, not 404.
 
     BASELINE QUIRK: the route always answers 200; ownership is enforced only inside the
@@ -210,7 +210,7 @@ def test_mark_notification_read_for_someone_elses_row_reports_failure(admin_db: 
     assert response.json() == {"success": False}
 
 
-def test_mark_notification_read_for_unknown_id_reports_failure(admin_db: Client) -> None:
+def test_mark_notification_read_for_unknown_id_reports_failure(admin_db: LocalDatabase) -> None:
     """Marking a notification id that does not exist at all also reports `success: False`."""
     client_account = seed_account(admin_db, unique_email("mark-unknown-id"), "client")
     browser = sign_in(client_account)
@@ -221,7 +221,7 @@ def test_mark_notification_read_for_unknown_id_reports_failure(admin_db: Client)
     assert response.json() == {"success": False}
 
 
-def test_feed_titles_the_booking_update_with_the_events_name_not_the_generic_copy(admin_db: Client) -> None:
+def test_feed_titles_the_booking_update_with_the_events_name_not_the_generic_copy(admin_db: LocalDatabase) -> None:
     """A feed item's title is the booking's own event name whenever one is on file.
 
     BASELINE QUIRK: `format_booking_notification` only falls back to a generic title
@@ -252,7 +252,7 @@ def test_feed_titles_the_booking_update_with_the_events_name_not_the_generic_cop
     assert items[0]["href"] == f"/vendor/bookings/{booking_id}"
 
 
-def test_feed_uses_the_stored_body_for_kinds_that_carry_booking_specific_text(admin_db: Client) -> None:
+def test_feed_uses_the_stored_body_for_kinds_that_carry_booking_specific_text(admin_db: LocalDatabase) -> None:
     """For kinds in `_USE_STORED_BODY` (e.g. a payment notice), the stored body wins over the fallback."""
     client_account, vendor_account, booking_id = _seed_client_and_vendor(admin_db, "feed-stored-body")
     custom_body = "Acceptance test: your custom payment notice."
@@ -271,7 +271,7 @@ def test_feed_uses_the_stored_body_for_kinds_that_carry_booking_specific_text(ad
     assert items[0]["body"] == custom_body
 
 
-def test_feed_marks_read_rows_as_not_unread(admin_db: Client) -> None:
+def test_feed_marks_read_rows_as_not_unread(admin_db: LocalDatabase) -> None:
     """A read `booking_notifications` row surfaces in the feed with `unread: false`."""
     client_account, vendor_account, booking_id = _seed_client_and_vendor(admin_db, "feed-read")
     _seed_notification(

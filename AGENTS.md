@@ -10,19 +10,15 @@ enquiries, pay through Stripe Checkout; vendors quote, accept and get paid out
 via Stripe Connect after the event. Staff moderate vendors and resolve disputes.
 Real vendors and clients use the live site.
 
-Baseline stack (live): FastAPI + supabase-py + Supabase Auth, raw numbered SQL
-migrations, Next.js + axios. Rebuild stack (`api/`, `web/`), copied from OSCE Guide
-so both projects share one stack: FastAPI + SQLAlchemy 2.0 async on psycopg 3 +
-Alembic, on the same Supabase Postgres as plain Postgres (session pooler); platform-issued JWTs with argon2 passwords;
-procrastinate jobs; structlog; optional Redis; Next.js with a fetch client and
-generated types. Both: Stripe Connect, Resend, OpenAI, S3, Sentry, Mixpanel.
+Stack (`api/`, `web/`), shared with OSCE Guide so both projects use one stack:
+FastAPI + SQLAlchemy 2.0 async on psycopg 3 + Alembic, on Supabase Postgres used as
+plain Postgres (session pooler); platform-issued JWTs with argon2 passwords;
+procrastinate jobs; structlog; optional Redis; Next.js. Stripe Connect, Resend,
+OpenAI, S3, Sentry, Mixpanel. Architecture decisions are in `docs/adr/`.
 
-The code is being rebuilt to the architecture in `docs/adr/` (borrowed from OSCE
-Guide `platform-api` / `platform-web`) in **new folders**: `api/` replaces
-`backend/`, `web/` replaces `frontend/`, serving the same URLs. The data stays in Supabase Postgres: at cutover
-Alembic adopts it and `adopt-auth` copies the bcrypt hashes from `auth.users` (`docs/runbooks/cutover.md`). `backend/` and `frontend/` are the **baseline** that runs the
-live site: do not edit them (only critical live fixes, and only when asked). When
-`api/`/`web/` reach parity they are deployed in place of the baseline, which is then deleted.
+`api/` and `web/` went live on 2026-10-16, replacing the old `backend/` (FastAPI +
+supabase-py) and `frontend/`, which were then deleted. Their behaviour is frozen in
+`acceptance/` and `api/openapi.baseline.json` (`docs/runbooks/cutover.md`).
 
 ## Repo map
 
@@ -32,14 +28,12 @@ live site: do not edit them (only critical live fixes, and only when asked). Whe
 | `api/app/adapters/` | Real Stripe / Resend / OpenAI / S3 / Mixpanel / address clients behind `core/ports.py` |
 | `api/app/features/<slice>/` | One product area. Template in `api/CONTRIBUTING.md` |
 | `api/tests/guards/` | AST architecture guards (each with a meta-test) |
-| `api/tests/golden/` | Byte-exact fixtures of money maths captured from the baseline code |
-| `api/alembic/` | Schema for `api/`. `0002` is a snapshot of `backend/sql/`; later changes are revisions |
-| `backend/sql/NNN_*.sql` | Baseline migrations for the live Supabase DB, until cutover |
-| `web/` | `frontend/` copied whole; its Next server proxies `/api/*` to `api/` (`BACKEND_URL`) and keeps the session in httpOnly cookies. URLs are public contracts |
-| `backend/`, `frontend/` | **Baseline** (live). Reference for behaviour; do not edit |
+| `api/tests/golden/` | Byte-exact fixtures of money maths captured from the old backend |
+| `api/alembic/` | Schema for `api/`. `0002` is a snapshot of the old `backend/sql/`; later changes are revisions |
+| `web/` | The old `frontend/` copied whole; its Next server proxies `/api/*` to `api/` (`BACKEND_URL`) and keeps the session in httpOnly cookies. URLs are public contracts |
 | `docs/adr/` | Architecture decisions. Read before changing structure |
 | `docs/domain-rules.md` | Business invariants not yet moved into slice READMEs |
-| `frontend/UI-CONVENTIONS.md` | Feedback, mobile, motion and Lottie rules |
+| `web/UI-CONVENTIONS.md` | Feedback, mobile, motion and Lottie rules |
 
 ## Commands
 
@@ -48,20 +42,18 @@ live site: do not edit them (only critical live fixes, and only when asked). Whe
 make db-up              # Postgres :5434 + Redis :6381 (docker compose)
 make migrate            # alembic upgrade head
 make new-migration M=x  # autogenerate, then review by hand
-make dev                # uvicorn :8001 (baseline backend keeps :8000)
+make dev                # uvicorn :8001
 make worker             # procrastinate worker
 make ci                 # lint + typecheck + arch (incl. alembic check) + tests
 make openapi            # regenerate openapi.json (then web: npm run api:types)
 
-# acceptance (from acceptance/): the freeze suite, same tests on both targets
-make serve              # baseline on :8000 over local Supabase (leave running)
-make test               # must stay green on the baseline
-make serve TARGET=api   # api/ on :8001 over its compose Postgres (db-up + migrate first)
-make test TARGET=api    # unbuilt behaviour is listed in conftest.NOT_YET_ON_API (strict xfail)
+# acceptance (from acceptance/): the freeze suite, black-box over HTTP
+make serve              # api/ on :8001 over its compose Postgres (leave running)
+make test
 
 # web (from web/)
-npm run dev             # :3001 (baseline frontend keeps :3000)
-npm test && npm run build  # web has no ci script; lint has 45 errors inherited from frontend/
+npm run dev             # :3001
+npm test && npm run build  # web has no ci script; lint has 45 errors inherited from the old frontend/
 ```
 
 Traps in this machine's shell:
@@ -107,7 +99,6 @@ Traps in this machine's shell:
 - **Only the `api` service migrates.** Its Railway pre-deploy command is `alembic upgrade head`; the
   `worker` service has none and its start command is `python -m app.worker.main`. Both are dashboard
   settings, not files: see `docs/runbooks/railway.md`.
-- **Two schemas until cutover.** A live fix added to `backend/sql/` must also land as an Alembic revision in `api/`.
 - **Imported passwords are bcrypt.** Sign-in rehashes them to argon2; delete the bcrypt path once none remain (ADR 0003).
 - **Daily capacity** is enforced by a Postgres trigger (migration 033, kept in Alembic `0002`); the Python check is only for friendly errors.
 - **Closed accounts are tombstones** (`users.deleted_at`); never restore one on upsert.
@@ -129,19 +120,9 @@ When you apply one, say which decision it changed.
 - `Explore` agents for read-only sweeps, always with `model` set (`haiku`/`sonnet`); cap at 3–4 concurrent.
 - Batch related greps/reads into one shell call; send long output to a file and read the tail.
 
-## Cursor Cloud specific instructions
-
-The Cloud Agent environment is self-contained via scripts in **`.cursor/`**:
-
-- **`install.sh`** — `poetry install --extras dev` (backend) + `npm ci` (frontend).
-- **`start.sh`** — starts Docker, brings up a **local Supabase stack** (`supabase start`, config in **`supabase/`**), applies **`backend/sql/*.sql`** on first boot (+ `supabase-grants.sql`), and writes **`backend/.env`**. If `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` are provided as secrets, it uses that hosted project instead.
-- **`run-backend.sh` / `run-frontend.sh`** — dev servers (FastAPI `:8000`, Next.js `:3000`).
-
-Local Supabase Studio is at `http://127.0.0.1:54323`.
-
 ## Web
 
-`web/` is `frontend/` copied whole (2026-10-16), not redrawn: change a screen only to fix it. It talks
+`web/` is the old `frontend/` copied whole (2026-10-16), not redrawn: change a screen only to fix it. It talks
 to `api/` only through its Next proxy (`BACKEND_URL`); the browser never sees a token.
 
 ## Updating this file

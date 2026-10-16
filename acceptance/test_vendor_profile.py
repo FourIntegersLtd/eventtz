@@ -9,9 +9,9 @@ from __future__ import annotations
 import uuid
 
 import httpx
-from supabase import Client
+from support.database import LocalDatabase
 
-from conftest import API, TARGET, new_browser, sign_in
+from conftest import API, new_browser, sign_in
 from support.accounts import seed_account, unique_email
 
 SIGN_IN_REQUIRED = "Please sign in to continue."
@@ -27,8 +27,7 @@ STEP_LOCATION_BASE_CITY_REQUIRED = "Step location: base city is required."
 PROFILE_URL = f"{API}/vendor/profile"
 BUSINESS_NAME_AVAILABLE_URL = f"{API}/vendor/profile/business-name-available"
 
-# The bucket/region `make serve TARGET=baseline` starts with (backend/app/core/config.py
-# defaults, unmodified by acceptance/scripts/serve.sh, which only blanks the AWS keys).
+# The bucket/region api/'s settings default to (acceptance/scripts/serve.sh only blanks the AWS keys).
 S3_HOST = "eventtz.s3.eu-west-2.amazonaws.com"
 
 
@@ -38,11 +37,8 @@ def _s3_url(user_id: str, name: str) -> str:
 
 
 def _assert_error_code(body: dict[str, object], api_code: str) -> None:
-    """The baseline sends these errors without a `code`; api/ gives every error one (ADR 0004)."""
-    if TARGET == "api":
-        assert body["code"] == api_code
-    else:
-        assert "code" not in body
+    """api/ gives every error a stable `code` (ADR 0004); the old backend sent none."""
+    assert body["code"] == api_code
 
 
 def _unique_business_name(label: str) -> str:
@@ -50,7 +46,7 @@ def _unique_business_name(label: str) -> str:
     return f"Acceptance {label} {uuid.uuid4().hex[:8]}"
 
 
-def _fresh_vendor(admin_db: Client, label: str) -> tuple[httpx.Client, str]:
+def _fresh_vendor(admin_db: LocalDatabase, label: str) -> tuple[httpx.Client, str]:
     """A brand-new vendor account, signed in, and its user id."""
     account = seed_account(admin_db, unique_email(label), "vendor")
     return sign_in(account), account.user_id
@@ -85,7 +81,7 @@ def test_get_profile_without_a_session_is_401() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_get_profile_defaults_when_there_is_no_vendor_row(admin_db: Client) -> None:
+def test_get_profile_defaults_when_there_is_no_vendor_row(admin_db: LocalDatabase) -> None:
     """A brand-new vendor with no `vendors` row yet gets the step-1 draft default."""
     browser, _user_id = _fresh_vendor(admin_db, "profile-get-default")
     response = browser.get(PROFILE_URL)
@@ -99,7 +95,7 @@ def test_get_profile_defaults_when_there_is_no_vendor_row(admin_db: Client) -> N
     assert body["listing_visible"] is False
 
 
-def test_get_profile_is_reachable_by_a_signed_in_client(admin_db: Client) -> None:
+def test_get_profile_is_reachable_by_a_signed_in_client(admin_db: LocalDatabase) -> None:
     """BASELINE QUIRK: GET/PUT /vendor/profile are guarded with `require_user`, not
     `require_vendor` (unlike /vendor/profile/business-name-available below), so any
     signed-in account - including a client - can read the vendor-profile default.
@@ -111,7 +107,7 @@ def test_get_profile_is_reachable_by_a_signed_in_client(admin_db: Client) -> Non
     assert response.json()["current_step"] == 1
 
 
-def test_put_profile_by_a_client_flips_their_user_type_to_vendor(admin_db: Client) -> None:
+def test_put_profile_by_a_client_flips_their_user_type_to_vendor(admin_db: LocalDatabase) -> None:
     """BASELINE QUIRK: because PUT /vendor/profile only requires `require_user`, a client
     who calls it gets a `vendors` row created for them, and `upsert_vendor_profile`
     unconditionally upserts `public.users.user_type` to "vendor" for the caller - silently
@@ -139,7 +135,7 @@ def test_business_name_available_without_a_session_is_401() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_business_name_available_is_forbidden_for_a_client(admin_db: Client) -> None:
+def test_business_name_available_is_forbidden_for_a_client(admin_db: LocalDatabase) -> None:
     """Unlike GET/PUT /vendor/profile, the business-name check is `require_vendor`-gated."""
     account = seed_account(admin_db, unique_email("bn-client"), "client")
     browser = sign_in(account)
@@ -148,7 +144,7 @@ def test_business_name_available_is_forbidden_for_a_client(admin_db: Client) -> 
     assert response.json()["detail"] == VENDOR_PORTAL_FORBIDDEN
 
 
-def test_business_name_available_true_for_an_unused_name(admin_db: Client) -> None:
+def test_business_name_available_true_for_an_unused_name(admin_db: LocalDatabase) -> None:
     """A name nobody has registered is reported available."""
     browser, _user_id = _fresh_vendor(admin_db, "bn-available")
     name = _unique_business_name("Available")
@@ -157,7 +153,7 @@ def test_business_name_available_true_for_an_unused_name(admin_db: Client) -> No
     assert response.json() == {"success": True, "available": True}
 
 
-def test_business_name_available_false_case_and_whitespace_insensitive(admin_db: Client) -> None:
+def test_business_name_available_false_case_and_whitespace_insensitive(admin_db: LocalDatabase) -> None:
     """The uniqueness check normalizes case and repeated whitespace before comparing."""
     owner, owner_id = _fresh_vendor(admin_db, "bn-owner")
     name = _unique_business_name("Taken")
@@ -183,7 +179,7 @@ def test_put_profile_without_a_session_is_401() -> None:
     assert response.status_code == 401
 
 
-def test_put_profile_saves_a_draft_step_one(admin_db: Client) -> None:
+def test_put_profile_saves_a_draft_step_one(admin_db: LocalDatabase) -> None:
     """Saving step 1 as a draft persists the step, status and payload fields given."""
     browser, _user_id = _fresh_vendor(admin_db, "put-draft")
     response = browser.put(
@@ -202,7 +198,7 @@ def test_put_profile_saves_a_draft_step_one(admin_db: Client) -> None:
     assert body["profile_form_data"]["lastName"] == "Lovelace"
 
 
-def test_put_profile_merges_the_payload_over_the_existing_one(admin_db: Client) -> None:
+def test_put_profile_merges_the_payload_over_the_existing_one(admin_db: LocalDatabase) -> None:
     """A later PUT with only some fields keeps the fields from the earlier save."""
     browser, _user_id = _fresh_vendor(admin_db, "put-merge")
     first = browser.put(
@@ -221,7 +217,7 @@ def test_put_profile_merges_the_payload_over_the_existing_one(admin_db: Client) 
     assert merged["lastName"] == "King"
 
 
-def test_put_profile_clamps_the_bio_to_one_hundred_words(admin_db: Client) -> None:
+def test_put_profile_clamps_the_bio_to_one_hundred_words(admin_db: LocalDatabase) -> None:
     """A bio draft over 100 words is clamped to 100 words plus an ellipsis on save."""
     browser, _user_id = _fresh_vendor(admin_db, "put-bio")
     long_bio = " ".join(f"word{index}" for index in range(150))
@@ -237,7 +233,7 @@ def test_put_profile_clamps_the_bio_to_one_hundred_words(admin_db: Client) -> No
 
 
 def test_put_profile_advancing_a_step_with_missing_fields_is_a_validation_error(
-    admin_db: Client,
+    admin_db: LocalDatabase,
 ) -> None:
     """Advancing past step 3 (location) without its required fields is rejected with the
     first missing field's message (and, on api/ only, a stable `code`).
@@ -259,7 +255,7 @@ def test_put_profile_advancing_a_step_with_missing_fields_is_a_validation_error(
     _assert_error_code(body, "vendor_profile_invalid")
 
 
-def test_put_profile_business_name_conflict_is_409(admin_db: Client) -> None:
+def test_put_profile_business_name_conflict_is_409(admin_db: LocalDatabase) -> None:
     """Saving a business name already taken by another vendor is refused as a conflict."""
     owner, _owner_id = _fresh_vendor(admin_db, "bn-conflict-owner")
     name = _unique_business_name("Conflict")
@@ -277,7 +273,7 @@ def test_put_profile_business_name_conflict_is_409(admin_db: Client) -> None:
     _assert_error_code(body, "business_name_taken")
 
 
-def test_put_profile_submit_with_a_complete_payload_marks_it_submitted(admin_db: Client) -> None:
+def test_put_profile_submit_with_a_complete_payload_marks_it_submitted(admin_db: LocalDatabase) -> None:
     """A payload that satisfies every onboarding step can be submitted for review."""
     browser, user_id = _fresh_vendor(admin_db, "put-submit")
     business_name = _unique_business_name("Submit")
@@ -301,7 +297,7 @@ def test_put_profile_submit_with_a_complete_payload_marks_it_submitted(admin_db:
 
 
 def test_put_profile_current_step_out_of_range_is_a_pydantic_validation_error(
-    admin_db: Client,
+    admin_db: LocalDatabase,
 ) -> None:
     """`current_step` is bounded 1-20 by the request model, checked before any handler code."""
     browser, _user_id = _fresh_vendor(admin_db, "put-step-range")

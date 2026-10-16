@@ -1,5 +1,8 @@
 # Railway: how every service is configured
 
+> **2026-10-16:** `api` and `worker` serve production; the `backend` service below no longer
+> gets traffic and its source folder is deleted. Delete the service once nothing needs a rollback.
+
 One standard, shared with ClinicalBuddy and OSCE Guide's `platform-api`. Each service's README has its
 dashboard table (`backend/README.md`, `api/README.md`); this page keeps them side by side.
 

@@ -16,7 +16,7 @@ for the empty-payload calendar quirk this avoids).
 
 from __future__ import annotations
 
-from supabase import Client
+from support.database import LocalDatabase
 
 from conftest import API, new_browser, sign_in
 from support.accounts import SeededAccount, seed_account, unique_email
@@ -53,7 +53,7 @@ PACKAGE_DETAILS = "A full package covering setup, service and clearup on the day
 MISSING_BOOKING_ID = "00000000-0000-4000-8000-000000000000"
 
 
-def _seed_bookable_vendor(admin_db: Client, label: str) -> SeededAccount:
+def _seed_bookable_vendor(admin_db: LocalDatabase, label: str) -> SeededAccount:
     """A vendor approved, listing-override-visible and payout-gate-waived, with a non-empty payload."""
     account = seed_account(admin_db, unique_email(label), "vendor")
     admin_db.table("vendors").insert(
@@ -69,7 +69,7 @@ def _seed_bookable_vendor(admin_db: Client, label: str) -> SeededAccount:
     return account
 
 
-def _seed_unwaived_vendor(admin_db: Client, label: str) -> SeededAccount:
+def _seed_unwaived_vendor(admin_db: LocalDatabase, label: str) -> SeededAccount:
     """A vendor approved but WITHOUT the payout-gate waiver or real Stripe fields.
 
     Not publicly bookable (no `listing_override`, no Stripe), so its bookings must be
@@ -89,7 +89,7 @@ def _seed_unwaived_vendor(admin_db: Client, label: str) -> SeededAccount:
 
 
 def _seed_booking_row(
-    admin_db: Client,
+    admin_db: LocalDatabase,
     *,
     client_user_id: str,
     vendor_user_id: str,
@@ -125,7 +125,7 @@ def _seed_booking_row(
     return str(inserted[0]["id"])
 
 
-def test_create_vendor_quote_success_returns_pending_booking(admin_db: Client) -> None:
+def test_create_vendor_quote_success_returns_pending_booking(admin_db: LocalDatabase) -> None:
     """A valid vendor-initiated quote returns 200 with a pending booking."""
     vendor_account = _seed_bookable_vendor(admin_db, "quote-ok-vendor")
     client_account = seed_account(admin_db, unique_email("quote-ok-client"), "client")
@@ -145,7 +145,7 @@ def test_create_vendor_quote_success_returns_pending_booking(admin_db: Client) -
     assert body["booking_status"] == "pending"
 
 
-def test_create_vendor_quote_pricing_breakdown_matches_line_items(admin_db: Client) -> None:
+def test_create_vendor_quote_pricing_breakdown_matches_line_items(admin_db: LocalDatabase) -> None:
     """Detail after creating a quote shows the literal pricing figures for a known £200 line."""
     vendor_account = _seed_bookable_vendor(admin_db, "quote-pricing-vendor")
     client_account = seed_account(admin_db, unique_email("quote-pricing-client"), "client")
@@ -168,7 +168,7 @@ def test_create_vendor_quote_pricing_breakdown_matches_line_items(admin_db: Clie
     assert pricing["client_total_label"] == "GBP 210"
 
 
-def test_create_vendor_quote_rejects_self(admin_db: Client) -> None:
+def test_create_vendor_quote_rejects_self(admin_db: LocalDatabase) -> None:
     """A vendor cannot send a quote to their own account."""
     vendor_account = _seed_bookable_vendor(admin_db, "quote-self-vendor")
     browser = sign_in(vendor_account)
@@ -185,7 +185,7 @@ def test_create_vendor_quote_rejects_self(admin_db: Client) -> None:
     assert response.json()["detail"] == CANNOT_QUOTE_SELF
 
 
-def test_create_vendor_quote_rejects_malformed_client_id(admin_db: Client) -> None:
+def test_create_vendor_quote_rejects_malformed_client_id(admin_db: LocalDatabase) -> None:
     """A non-UUID client id is rejected before any client lookup happens."""
     vendor_account = _seed_bookable_vendor(admin_db, "quote-badclient-vendor")
     browser = sign_in(vendor_account)
@@ -202,7 +202,7 @@ def test_create_vendor_quote_rejects_malformed_client_id(admin_db: Client) -> No
     assert response.json()["detail"] == INVALID_CLIENT_ID
 
 
-def test_create_vendor_quote_rejects_vendor_as_target(admin_db: Client) -> None:
+def test_create_vendor_quote_rejects_vendor_as_target(admin_db: LocalDatabase) -> None:
     """A quote can only be sent to a client account, not another vendor."""
     vendor_account = _seed_bookable_vendor(admin_db, "quote-wrongtarget-vendor")
     other_vendor = seed_account(admin_db, unique_email("quote-wrongtarget-target"), "vendor")
@@ -220,7 +220,7 @@ def test_create_vendor_quote_rejects_vendor_as_target(admin_db: Client) -> None:
     assert response.json()["detail"] == QUOTES_CLIENT_ONLY
 
 
-def test_create_vendor_quote_rejects_empty_line_items(admin_db: Client) -> None:
+def test_create_vendor_quote_rejects_empty_line_items(admin_db: LocalDatabase) -> None:
     """An empty `line_items` list fails request validation (`min_length=1`)."""
     vendor_account = _seed_bookable_vendor(admin_db, "quote-emptylines-vendor")
     client_account = seed_account(admin_db, unique_email("quote-emptylines-client"), "client")
@@ -237,7 +237,7 @@ def test_create_vendor_quote_rejects_empty_line_items(admin_db: Client) -> None:
     assert response.status_code == 422
 
 
-def test_create_vendor_quote_rejects_line_without_price(admin_db: Client) -> None:
+def test_create_vendor_quote_rejects_line_without_price(admin_db: LocalDatabase) -> None:
     """A line item with no `unit_price_gbp` is refused by the service layer."""
     vendor_account = _seed_bookable_vendor(admin_db, "quote-noprice-vendor")
     client_account = seed_account(admin_db, unique_email("quote-noprice-client"), "client")
@@ -255,7 +255,7 @@ def test_create_vendor_quote_rejects_line_without_price(admin_db: Client) -> Non
     assert response.json()["detail"] == QUOTE_LINE_NEEDS_PRICE
 
 
-def test_create_vendor_quote_rejects_price_below_minimum(admin_db: Client) -> None:
+def test_create_vendor_quote_rejects_price_below_minimum(admin_db: LocalDatabase) -> None:
     """A line item priced at £0 fails the £0.01 minimum."""
     vendor_account = _seed_bookable_vendor(admin_db, "quote-minprice-vendor")
     client_account = seed_account(admin_db, unique_email("quote-minprice-client"), "client")
@@ -273,7 +273,7 @@ def test_create_vendor_quote_rejects_price_below_minimum(admin_db: Client) -> No
     assert response.json()["detail"] == QUOTE_LINE_MIN_PRICE
 
 
-def test_create_vendor_quote_rejects_more_than_twenty_five_lines(admin_db: Client) -> None:
+def test_create_vendor_quote_rejects_more_than_twenty_five_lines(admin_db: LocalDatabase) -> None:
     """A quote with 26 line items is refused: the cap is 25."""
     vendor_account = _seed_bookable_vendor(admin_db, "quote-maxlines-vendor")
     client_account = seed_account(admin_db, unique_email("quote-maxlines-client"), "client")
@@ -294,7 +294,7 @@ def test_create_vendor_quote_rejects_more_than_twenty_five_lines(admin_db: Clien
     assert response.json()["detail"] == QUOTE_MAX_LINES
 
 
-def test_create_vendor_quote_requires_sign_in(admin_db: Client) -> None:
+def test_create_vendor_quote_requires_sign_in(admin_db: LocalDatabase) -> None:
     """Anonymous quote-create is rejected."""
     client_account = seed_account(admin_db, unique_email("quote-anon-client"), "client")
     browser = new_browser()
@@ -311,7 +311,7 @@ def test_create_vendor_quote_requires_sign_in(admin_db: Client) -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_create_vendor_quote_forbidden_for_client_accounts(admin_db: Client) -> None:
+def test_create_vendor_quote_forbidden_for_client_accounts(admin_db: LocalDatabase) -> None:
     """A client account cannot use the vendor quote-create route."""
     client_account = seed_account(admin_db, unique_email("quote-wrongrole-client"), "client")
     other_client = seed_account(admin_db, unique_email("quote-wrongrole-target"), "client")
@@ -329,7 +329,7 @@ def test_create_vendor_quote_forbidden_for_client_accounts(admin_db: Client) -> 
     assert response.json()["detail"] == VENDOR_PORTAL_FORBIDDEN
 
 
-def test_list_vendor_booking_requests_returns_own_active_bookings(admin_db: Client) -> None:
+def test_list_vendor_booking_requests_returns_own_active_bookings(admin_db: LocalDatabase) -> None:
     """The active group lists a vendor's own pending/accepted bookings."""
     vendor_account = _seed_bookable_vendor(admin_db, "list-vendor")
     client_account = seed_account(admin_db, unique_email("list-vendor-client"), "client")
@@ -343,7 +343,7 @@ def test_list_vendor_booking_requests_returns_own_active_bookings(admin_db: Clie
     assert booking_id in booking_ids
 
 
-def test_list_vendor_booking_requests_rejects_unknown_group(admin_db: Client) -> None:
+def test_list_vendor_booking_requests_rejects_unknown_group(admin_db: LocalDatabase) -> None:
     """An invalid `group` query parameter is rejected with the allowed values listed."""
     vendor_account = _seed_bookable_vendor(admin_db, "bad-group-vendor")
     browser = sign_in(vendor_account)
@@ -360,7 +360,7 @@ def test_list_vendor_booking_requests_requires_sign_in() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_get_vendor_booking_detail_hidden_from_non_owner_vendor(admin_db: Client) -> None:
+def test_get_vendor_booking_detail_hidden_from_non_owner_vendor(admin_db: LocalDatabase) -> None:
     """Another vendor cannot see this booking: it is a 404, not a 403."""
     owner = _seed_bookable_vendor(admin_db, "detail-owner-vendor")
     other_vendor = seed_account(admin_db, unique_email("detail-other-vendor"), "vendor")
@@ -374,7 +374,7 @@ def test_get_vendor_booking_detail_hidden_from_non_owner_vendor(admin_db: Client
     assert response.json()["detail"] == BOOKING_NOT_FOUND
 
 
-def test_get_vendor_booking_detail_not_found_for_missing_id(admin_db: Client) -> None:
+def test_get_vendor_booking_detail_not_found_for_missing_id(admin_db: LocalDatabase) -> None:
     """A booking id that does not exist is a 404 for a signed-in vendor."""
     vendor_account = _seed_bookable_vendor(admin_db, "detail-404-vendor")
     browser = sign_in(vendor_account)
@@ -383,7 +383,7 @@ def test_get_vendor_booking_detail_not_found_for_missing_id(admin_db: Client) ->
     assert response.json()["detail"] == BOOKING_NOT_FOUND
 
 
-def test_get_vendor_booking_detail_rejects_malformed_id(admin_db: Client) -> None:
+def test_get_vendor_booking_detail_rejects_malformed_id(admin_db: LocalDatabase) -> None:
     """A non-UUID path segment is a 400, not a 404."""
     vendor_account = _seed_bookable_vendor(admin_db, "detail-badid-vendor")
     browser = sign_in(vendor_account)
@@ -392,7 +392,7 @@ def test_get_vendor_booking_detail_rejects_malformed_id(admin_db: Client) -> Non
     assert response.json()["detail"] == INVALID_BOOKING_ID
 
 
-def test_vendor_withdraws_own_quote_via_cancelled_status(admin_db: Client) -> None:
+def test_vendor_withdraws_own_quote_via_cancelled_status(admin_db: LocalDatabase) -> None:
     """There is no vendor `/cancel` route: withdrawing a sent quote uses `status=cancelled`."""
     vendor_account = _seed_bookable_vendor(admin_db, "withdraw-vendor")
     client_account = seed_account(admin_db, unique_email("withdraw-client"), "client")
@@ -411,7 +411,7 @@ def test_vendor_withdraws_own_quote_via_cancelled_status(admin_db: Client) -> No
     assert response.json()["booking_status"] == "cancelled"
 
 
-def test_vendor_declining_own_quote_is_refused(admin_db: Client) -> None:
+def test_vendor_declining_own_quote_is_refused(admin_db: LocalDatabase) -> None:
     """A vendor cannot decline a quote they sent; the message points at cancel instead."""
     vendor_account = _seed_bookable_vendor(admin_db, "decline-own-vendor")
     client_account = seed_account(admin_db, unique_email("decline-own-client"), "client")
@@ -430,7 +430,7 @@ def test_vendor_declining_own_quote_is_refused(admin_db: Client) -> None:
     assert response.json()["detail"] == WITHDRAW_QUOTE_USE_CANCEL
 
 
-def test_vendor_accepting_own_quote_is_refused(admin_db: Client) -> None:
+def test_vendor_accepting_own_quote_is_refused(admin_db: LocalDatabase) -> None:
     """A vendor cannot accept their own vendor-initiated quote; the client must accept it."""
     vendor_account = _seed_bookable_vendor(admin_db, "accept-own-vendor")
     client_account = seed_account(admin_db, unique_email("accept-own-client"), "client")
@@ -449,7 +449,7 @@ def test_vendor_accepting_own_quote_is_refused(admin_db: Client) -> None:
     assert response.json()["detail"] == CLIENT_MUST_ACCEPT_QUOTE
 
 
-def test_vendor_accept_requires_payout_setup(admin_db: Client) -> None:
+def test_vendor_accept_requires_payout_setup(admin_db: LocalDatabase) -> None:
     """A vendor without a Stripe Connect payout route (and no listing override) cannot accept."""
     vendor_account = _seed_unwaived_vendor(admin_db, "payout-gate-vendor")
     client_account = seed_account(admin_db, unique_email("payout-gate-client"), "client")
@@ -467,7 +467,7 @@ def test_vendor_accept_requires_payout_setup(admin_db: Client) -> None:
     assert response.json()["detail"] == COMPLETE_PAYOUT_SETUP
 
 
-def test_vendor_accept_requires_client_to_confirm_updated_price(admin_db: Client) -> None:
+def test_vendor_accept_requires_client_to_confirm_updated_price(admin_db: LocalDatabase) -> None:
     """A client-initiated booking with a pending vendor price adjustment blocks vendor accept."""
     vendor_account = _seed_bookable_vendor(admin_db, "price-confirm-vendor")
     client_account = seed_account(admin_db, unique_email("price-confirm-client"), "client")
@@ -489,7 +489,7 @@ def test_vendor_accept_requires_client_to_confirm_updated_price(admin_db: Client
     assert response.json()["detail"] == CLIENT_MUST_CONFIRM_PRICE
 
 
-def test_vendor_accept_succeeds_when_waived_and_price_confirmed(admin_db: Client) -> None:
+def test_vendor_accept_succeeds_when_waived_and_price_confirmed(admin_db: LocalDatabase) -> None:
     """A bookable vendor (payout gate waived) can accept a plain pending client booking."""
     vendor_account = _seed_bookable_vendor(admin_db, "accept-ok-vendor")
     client_account = seed_account(admin_db, unique_email("accept-ok-client"), "client")
@@ -507,7 +507,7 @@ def test_vendor_accept_succeeds_when_waived_and_price_confirmed(admin_db: Client
     assert response.json()["booking_status"] == "accepted"
 
 
-def test_vendor_decline_only_allowed_while_pending(admin_db: Client) -> None:
+def test_vendor_decline_only_allowed_while_pending(admin_db: LocalDatabase) -> None:
     """A vendor cannot decline a booking that has already moved past pending."""
     vendor_account = _seed_bookable_vendor(admin_db, "decline-late-vendor")
     client_account = seed_account(admin_db, unique_email("decline-late-client"), "client")
@@ -524,7 +524,7 @@ def test_vendor_decline_only_allowed_while_pending(admin_db: Client) -> None:
     assert response.status_code == 400
 
 
-def test_status_update_owned_by_another_vendor_is_not_found(admin_db: Client) -> None:
+def test_status_update_owned_by_another_vendor_is_not_found(admin_db: LocalDatabase) -> None:
     """A vendor cannot accept or decline a booking that belongs to another vendor."""
     owner = _seed_bookable_vendor(admin_db, "status-owner-vendor")
     other_vendor = seed_account(admin_db, unique_email("status-other-vendor"), "vendor")
@@ -540,7 +540,7 @@ def test_status_update_owned_by_another_vendor_is_not_found(admin_db: Client) ->
     assert response.json()["detail"] == BOOKING_NOT_FOUND
 
 
-def test_status_update_requires_sign_in(admin_db: Client) -> None:
+def test_status_update_requires_sign_in(admin_db: LocalDatabase) -> None:
     """Anonymous status update is rejected."""
     vendor_account = _seed_bookable_vendor(admin_db, "status-anon-vendor")
     client_account = seed_account(admin_db, unique_email("status-anon-client"), "client")
@@ -555,7 +555,7 @@ def test_status_update_requires_sign_in(admin_db: Client) -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_put_adjustments_succeeds_on_pending_client_booking(admin_db: Client) -> None:
+def test_put_adjustments_succeeds_on_pending_client_booking(admin_db: LocalDatabase) -> None:
     """Adding a £50 surcharge to a £100 booking gives the confirmed £157.50 total."""
     vendor_account = _seed_bookable_vendor(admin_db, "adjustments-ok-vendor")
     client_account = seed_account(admin_db, unique_email("adjustments-ok-client"), "client")
@@ -582,7 +582,7 @@ def test_put_adjustments_succeeds_on_pending_client_booking(admin_db: Client) ->
     assert pricing["client_total_label"] == "GBP 157.50"
 
 
-def test_put_adjustments_rejected_on_vendor_initiated_quote(admin_db: Client) -> None:
+def test_put_adjustments_rejected_on_vendor_initiated_quote(admin_db: LocalDatabase) -> None:
     """Adjustments can only be added to client-initiated bookings, not vendor quotes."""
     vendor_account = _seed_bookable_vendor(admin_db, "adjustments-quote-vendor")
     client_account = seed_account(admin_db, unique_email("adjustments-quote-client"), "client")
@@ -602,7 +602,7 @@ def test_put_adjustments_rejected_on_vendor_initiated_quote(admin_db: Client) ->
     assert response.json()["detail"] == ADJUSTMENTS_NOT_ON_VENDOR_QUOTE
 
 
-def test_put_adjustments_rejected_once_no_longer_pending(admin_db: Client) -> None:
+def test_put_adjustments_rejected_once_no_longer_pending(admin_db: LocalDatabase) -> None:
     """Adjustments can only be edited while the booking is still pending."""
     vendor_account = _seed_bookable_vendor(admin_db, "adjustments-late-vendor")
     client_account = seed_account(admin_db, unique_email("adjustments-late-client"), "client")
@@ -621,7 +621,7 @@ def test_put_adjustments_rejected_once_no_longer_pending(admin_db: Client) -> No
     assert response.json()["detail"] == ADDITIONAL_COSTS_PENDING_ONLY
 
 
-def test_put_adjustments_rejects_single_surcharge_over_five_thousand(admin_db: Client) -> None:
+def test_put_adjustments_rejects_single_surcharge_over_five_thousand(admin_db: LocalDatabase) -> None:
     """A single surcharge over £5,000 is capped regardless of the booking's subtotal."""
     vendor_account = _seed_bookable_vendor(admin_db, "adjustments-cap-vendor")
     client_account = seed_account(admin_db, unique_email("adjustments-cap-client"), "client")
@@ -640,7 +640,7 @@ def test_put_adjustments_rejects_single_surcharge_over_five_thousand(admin_db: C
     assert response.json()["detail"] == SURCHARGE_MAX
 
 
-def test_put_adjustments_rejects_surcharges_over_full_subtotal(admin_db: Client) -> None:
+def test_put_adjustments_rejects_surcharges_over_full_subtotal(admin_db: LocalDatabase) -> None:
     """Total surcharges cannot exceed 100% of the line items' subtotal (£150 here)."""
     vendor_account = _seed_bookable_vendor(admin_db, "adjustments-pct-vendor")
     client_account = seed_account(admin_db, unique_email("adjustments-pct-client"), "client")
@@ -659,7 +659,7 @@ def test_put_adjustments_rejects_surcharges_over_full_subtotal(admin_db: Client)
     assert response.json()["detail"] == SURCHARGES_PCT
 
 
-def test_put_adjustments_rejects_discount_that_zeroes_out_total(admin_db: Client) -> None:
+def test_put_adjustments_rejects_discount_that_zeroes_out_total(admin_db: LocalDatabase) -> None:
     """A discount that would reduce the vendor's portion to zero or below is refused."""
     vendor_account = _seed_bookable_vendor(admin_db, "adjustments-discount-vendor")
     client_account = seed_account(admin_db, unique_email("adjustments-discount-client"), "client")
@@ -678,7 +678,7 @@ def test_put_adjustments_rejects_discount_that_zeroes_out_total(admin_db: Client
     assert response.json()["detail"] == DISCOUNTS_TOO_HIGH
 
 
-def test_put_adjustments_rejects_amount_outside_pydantic_bounds(admin_db: Client) -> None:
+def test_put_adjustments_rejects_amount_outside_pydantic_bounds(admin_db: LocalDatabase) -> None:
     """An amount past ±£1,000,000 fails request validation before the service's own cap runs."""
     vendor_account = _seed_bookable_vendor(admin_db, "adjustments-pydbound-vendor")
     client_account = seed_account(admin_db, unique_email("adjustments-pydbound-client"), "client")
@@ -696,7 +696,7 @@ def test_put_adjustments_rejects_amount_outside_pydantic_bounds(admin_db: Client
     assert response.status_code == 422
 
 
-def test_confirm_completion_requires_paid_booking(admin_db: Client) -> None:
+def test_confirm_completion_requires_paid_booking(admin_db: LocalDatabase) -> None:
     """A vendor cannot confirm completion on an unpaid booking, even once accepted."""
     vendor_account = _seed_bookable_vendor(admin_db, "confirm-unpaid-vendor")
     client_account = seed_account(admin_db, unique_email("confirm-unpaid-client"), "client")
@@ -713,7 +713,7 @@ def test_confirm_completion_requires_paid_booking(admin_db: Client) -> None:
     assert response.status_code == 400
 
 
-def test_confirm_completion_before_event_day_is_refused(admin_db: Client) -> None:
+def test_confirm_completion_before_event_day_is_refused(admin_db: LocalDatabase) -> None:
     """A vendor cannot confirm completion before the event's day is over."""
     vendor_account = _seed_bookable_vendor(admin_db, "confirm-early-vendor")
     client_account = seed_account(admin_db, unique_email("confirm-early-client"), "client")
@@ -730,7 +730,7 @@ def test_confirm_completion_before_event_day_is_refused(admin_db: Client) -> Non
     assert response.status_code == 400
 
 
-def test_confirm_completion_first_party_awaits_the_other(admin_db: Client) -> None:
+def test_confirm_completion_first_party_awaits_the_other(admin_db: LocalDatabase) -> None:
     """A vendor confirming first is told the client still needs to confirm."""
     vendor_account = _seed_bookable_vendor(admin_db, "confirm-first-vendor")
     client_account = seed_account(admin_db, unique_email("confirm-first-client"), "client")
@@ -751,7 +751,7 @@ def test_confirm_completion_first_party_awaits_the_other(admin_db: Client) -> No
     assert body["awaiting_other_party"] is True
 
 
-def test_confirm_completion_owned_by_another_vendor_is_not_found(admin_db: Client) -> None:
+def test_confirm_completion_owned_by_another_vendor_is_not_found(admin_db: LocalDatabase) -> None:
     """A vendor cannot confirm completion on a booking belonging to another vendor."""
     owner = _seed_bookable_vendor(admin_db, "confirm-owner-vendor")
     other_vendor = seed_account(admin_db, unique_email("confirm-other-vendor"), "vendor")
@@ -770,7 +770,7 @@ def test_confirm_completion_owned_by_another_vendor_is_not_found(admin_db: Clien
     assert response.json()["detail"] == BOOKING_NOT_FOUND
 
 
-def test_vendor_accepting_client_booking_notifies_the_client(admin_db: Client) -> None:
+def test_vendor_accepting_client_booking_notifies_the_client(admin_db: LocalDatabase) -> None:
     """A vendor accepting a client's booking writes a `booking_accepted` notification row."""
     vendor_account = _seed_bookable_vendor(admin_db, "accept-notify-vendor")
     client_account = seed_account(admin_db, unique_email("accept-notify-client"), "client")

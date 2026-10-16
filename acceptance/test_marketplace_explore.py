@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import uuid
 
-from supabase import Client
+from support.database import LocalDatabase
 
 from conftest import API, new_browser
 from support.accounts import seed_account, unique_email
@@ -33,7 +33,7 @@ MISSING_VENDOR_ID = "00000000-0000-4000-8000-000000000000"
 
 
 def _seed_listable_vendor(
-    admin_db: Client,
+    admin_db: LocalDatabase,
     label: str,
     *,
     business_name: str | None = None,
@@ -77,7 +77,7 @@ def _seed_listable_vendor(
     return account.user_id, name
 
 
-def _explore_names(admin_db: Client, *, country: str | None = None) -> dict[str, dict[str, object]]:
+def _explore_names(admin_db: LocalDatabase, *, country: str | None = None) -> dict[str, dict[str, object]]:
     """`{business_name: vendor_row}` from a fresh GET /vendors/explore."""
     with new_browser() as browser:
         params = {"country": country} if country else {}
@@ -94,7 +94,7 @@ def _explore_names(admin_db: Client, *, country: str | None = None) -> dict[str,
 # --- GET /vendors/explore --------------------------------------------------------------------
 
 
-def test_explore_lists_an_approved_and_payout_verified_vendor(admin_db: Client) -> None:
+def test_explore_lists_an_approved_and_payout_verified_vendor(admin_db: LocalDatabase) -> None:
     """A fresh approved vendor with verified payouts appears with the expected shape."""
     user_id, name = _seed_listable_vendor(admin_db, "explore-listed")
     rows = _explore_names(admin_db)
@@ -110,35 +110,35 @@ def test_explore_lists_an_approved_and_payout_verified_vendor(admin_db: Client) 
     assert row["conversion_rate"] is None
 
 
-def test_explore_excludes_a_pending_vendor(admin_db: Client) -> None:
+def test_explore_excludes_a_pending_vendor(admin_db: LocalDatabase) -> None:
     """A vendor still awaiting admin approval never appears on explore."""
     _user_id, name = _seed_listable_vendor(admin_db, "explore-pending", approval_status="pending")
     rows = _explore_names(admin_db)
     assert name not in rows
 
 
-def test_explore_excludes_an_approved_vendor_without_verified_payouts(admin_db: Client) -> None:
+def test_explore_excludes_an_approved_vendor_without_verified_payouts(admin_db: LocalDatabase) -> None:
     """Approval alone is not enough - Stripe must report both charges and payouts enabled."""
     _user_id, name = _seed_listable_vendor(admin_db, "explore-nopayout", payouts_verified=False)
     rows = _explore_names(admin_db)
     assert name not in rows
 
 
-def test_explore_excludes_a_banned_vendor_even_with_verified_payouts(admin_db: Client) -> None:
+def test_explore_excludes_a_banned_vendor_even_with_verified_payouts(admin_db: LocalDatabase) -> None:
     """`approval_status` always wins: a banned vendor is never listed."""
     _user_id, name = _seed_listable_vendor(admin_db, "explore-banned", approval_status="banned")
     rows = _explore_names(admin_db)
     assert name not in rows
 
 
-def test_explore_listing_override_hidden_takes_down_an_otherwise_listable_vendor(admin_db: Client) -> None:
+def test_explore_listing_override_hidden_takes_down_an_otherwise_listable_vendor(admin_db: LocalDatabase) -> None:
     """`listing_override=hidden` removes an approved, payout-verified vendor from explore."""
     _user_id, name = _seed_listable_vendor(admin_db, "explore-override-hidden", listing_override="hidden")
     rows = _explore_names(admin_db)
     assert name not in rows
 
 
-def test_explore_listing_override_visible_waives_the_payout_gate(admin_db: Client) -> None:
+def test_explore_listing_override_visible_waives_the_payout_gate(admin_db: LocalDatabase) -> None:
     """`listing_override=visible` lists an approved vendor even without verified Stripe payouts."""
     _user_id, name = _seed_listable_vendor(
         admin_db,
@@ -150,7 +150,7 @@ def test_explore_listing_override_visible_waives_the_payout_gate(admin_db: Clien
     assert name in rows
 
 
-def test_explore_defaults_to_the_gb_market_for_an_unsupported_country(admin_db: Client) -> None:
+def test_explore_defaults_to_the_gb_market_for_an_unsupported_country(admin_db: LocalDatabase) -> None:
     """`country=US` is not a supported market, so it silently falls back to GB.
 
     BASELINE QUIRK: an unsupported country code is not rejected; it is normalized
@@ -180,7 +180,7 @@ def test_explore_vendor_detail_unknown_id_is_404() -> None:
     assert response.json()["detail"] == VENDOR_NOT_FOUND_OR_NOT_LISTED
 
 
-def test_explore_vendor_detail_not_publicly_listed_is_404(admin_db: Client) -> None:
+def test_explore_vendor_detail_not_publicly_listed_is_404(admin_db: LocalDatabase) -> None:
     """A pending vendor's detail page 404s the same as an unknown vendor - no leak."""
     user_id, _name = _seed_listable_vendor(admin_db, "explore-detail-pending", approval_status="pending")
     with new_browser() as browser:
@@ -189,7 +189,7 @@ def test_explore_vendor_detail_not_publicly_listed_is_404(admin_db: Client) -> N
     assert response.json()["detail"] == VENDOR_NOT_FOUND_OR_NOT_LISTED
 
 
-def test_explore_vendor_detail_returns_the_listed_vendor(admin_db: Client) -> None:
+def test_explore_vendor_detail_returns_the_listed_vendor(admin_db: LocalDatabase) -> None:
     """A listable vendor's detail page returns its profile data."""
     user_id, name = _seed_listable_vendor(admin_db, "explore-detail-ok")
     with new_browser() as browser:
@@ -205,7 +205,7 @@ def test_explore_vendor_detail_returns_the_listed_vendor(admin_db: Client) -> No
 # --- GET /vendors/explore/search ---------------------------------------------------------------
 
 
-def test_explore_search_finds_a_vendor_by_free_text_business_name(admin_db: Client) -> None:
+def test_explore_search_finds_a_vendor_by_free_text_business_name(admin_db: LocalDatabase) -> None:
     """`q` matches on business name (via the token-only fallback: OpenAI is unconfigured)."""
     unique_word = f"acceptancesearch{uuid.uuid4().hex[:10]}"
     user_id, name = _seed_listable_vendor(admin_db, "search-q", business_name=f"{unique_word} Catering Co")
@@ -220,7 +220,7 @@ def test_explore_search_finds_a_vendor_by_free_text_business_name(admin_db: Clie
     assert matched["profile_form_data"]["businessName"] == name
 
 
-def test_explore_search_filters_by_service_type_chip(admin_db: Client) -> None:
+def test_explore_search_filters_by_service_type_chip(admin_db: LocalDatabase) -> None:
     """`types` narrows results to vendors offering that exact service."""
     label = uuid.uuid4().hex[:8]
     catering_id, _catering_name = _seed_listable_vendor(
@@ -238,7 +238,7 @@ def test_explore_search_filters_by_service_type_chip(admin_db: Client) -> None:
     assert dj_id not in ids
 
 
-def test_explore_search_budget_max_excludes_a_pricier_vendor(admin_db: Client) -> None:
+def test_explore_search_budget_max_excludes_a_pricier_vendor(admin_db: LocalDatabase) -> None:
     """`budget_max` excludes vendors whose lowest listed price is above it."""
     unique_word = f"acceptancebudget{uuid.uuid4().hex[:10]}"
     cheap_id, _cheap_name = _seed_listable_vendor(
@@ -258,7 +258,7 @@ def test_explore_search_budget_max_excludes_a_pricier_vendor(admin_db: Client) -
     assert pricey_id not in ids
 
 
-def test_explore_search_vendor_ids_restricts_to_the_given_ids(admin_db: Client) -> None:
+def test_explore_search_vendor_ids_restricts_to_the_given_ids(admin_db: LocalDatabase) -> None:
     """`vendor_ids` (used by the favorites view) restricts the pool to those ids only."""
     label = uuid.uuid4().hex[:8]
     kept_id, _kept_name = _seed_listable_vendor(admin_db, f"search-vids-keep-{label}")
@@ -274,7 +274,7 @@ def test_explore_search_vendor_ids_restricts_to_the_given_ids(admin_db: Client) 
     assert other_id not in ids
 
 
-def test_explore_search_with_no_query_returns_all_listable_vendors(admin_db: Client) -> None:
+def test_explore_search_with_no_query_returns_all_listable_vendors(admin_db: LocalDatabase) -> None:
     """An empty `q` runs the plain ranked-list mode, still scoped to listable vendors."""
     user_id, _name = _seed_listable_vendor(admin_db, "search-no-query")
     with new_browser() as browser:
@@ -286,7 +286,7 @@ def test_explore_search_with_no_query_returns_all_listable_vendors(admin_db: Cli
     assert user_id in ids
 
 
-def test_explore_search_excludes_a_non_listable_vendor(admin_db: Client) -> None:
+def test_explore_search_excludes_a_non_listable_vendor(admin_db: LocalDatabase) -> None:
     """Search only ever draws from the same publicly listable pool as explore."""
     label = uuid.uuid4().hex[:8]
     _user_id, name = _seed_listable_vendor(admin_db, f"search-nonlisted-{label}", approval_status="pending")
@@ -297,7 +297,7 @@ def test_explore_search_excludes_a_non_listable_vendor(admin_db: Client) -> None
     assert name not in names
 
 
-def test_explore_search_invalid_sort_falls_back_to_relevance(admin_db: Client) -> None:
+def test_explore_search_invalid_sort_falls_back_to_relevance(admin_db: LocalDatabase) -> None:
     """An unrecognized `sort` value is not a validation error - it silently becomes relevance."""
     label = uuid.uuid4().hex[:8]
     user_id, _name = _seed_listable_vendor(admin_db, f"search-badsort-{label}")
@@ -328,7 +328,7 @@ def test_public_reviews_unknown_vendor_returns_an_empty_summary() -> None:
     assert body == {"success": True, "average_rating": None, "review_count": 0, "reviews": []}
 
 
-def test_public_reviews_returns_a_visible_review_for_a_completed_booking(admin_db: Client) -> None:
+def test_public_reviews_returns_a_visible_review_for_a_completed_booking(admin_db: LocalDatabase) -> None:
     """A review on a completed booking shows up with the expected public shape."""
     vendor_id, _name = _seed_listable_vendor(admin_db, "reviews-visible")
     client_account = seed_account(admin_db, unique_email("reviews-client"), "client")

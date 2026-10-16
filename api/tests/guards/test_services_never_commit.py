@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.guards._scan import CORE_ROOT, MIGRATION_ROOT, attribute_names, python_files, rel
+from tests.guards._scan import CORE_ROOT, attribute_names, python_files, rel
 
 # Ending or restarting the transaction is core's job alone.
 TRANSACTION_CONTROL = {"commit", "rollback", "transaction", "begin", "begin_nested"}
@@ -33,8 +33,8 @@ def is_repository(path: Path) -> bool:
 
 
 def is_exempt(path: Path) -> bool:
-    """`ALLOWED` core files, plus the standalone migration tool (its own connections, own transactions)."""
-    return path in ALLOWED or MIGRATION_ROOT in path.parents
+    """The `ALLOWED` core files."""
+    return path in ALLOWED
 
 
 def transaction_calls(path: Path) -> list[str]:

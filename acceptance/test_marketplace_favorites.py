@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import uuid
 
-from supabase import Client
+from support.database import LocalDatabase
 
 from conftest import API, new_browser, sign_in
 from support.accounts import seed_account, unique_email
@@ -29,13 +29,13 @@ FAVORITES_URL = f"{API}/client/favorites"
 MISSING_USER_ID = "00000000-0000-4000-8000-000000000000"
 
 
-def _fresh_client_browser(admin_db: Client, label: str):
+def _fresh_client_browser(admin_db: LocalDatabase, label: str):
     """A browser signed in as a brand-new client account."""
     account = seed_account(admin_db, unique_email(label), "client")
     return sign_in(account)
 
 
-def _seed_vendor_user_id(admin_db: Client, label: str) -> str:
+def _seed_vendor_user_id(admin_db: LocalDatabase, label: str) -> str:
     """A user id that exists in `users` (a plain vendor account, no `vendors` row needed)."""
     account = seed_account(admin_db, unique_email(label), "vendor")
     return account.user_id
@@ -52,7 +52,7 @@ def test_list_favorites_without_a_session_is_401() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_list_favorites_is_forbidden_for_a_vendor(admin_db: Client) -> None:
+def test_list_favorites_is_forbidden_for_a_vendor(admin_db: LocalDatabase) -> None:
     """A vendor account gets the client-portal message, not a generic 403."""
     account = seed_account(admin_db, unique_email("fav-list-vendor"), "vendor")
     browser = sign_in(account)
@@ -85,7 +85,7 @@ def test_merge_favorites_without_a_session_is_401() -> None:
     assert response.json()["detail"] == SIGN_IN_REQUIRED
 
 
-def test_merge_favorites_is_forbidden_for_a_vendor(admin_db: Client) -> None:
+def test_merge_favorites_is_forbidden_for_a_vendor(admin_db: LocalDatabase) -> None:
     """A vendor account cannot call the client favorites-merge endpoint."""
     account = seed_account(admin_db, unique_email("fav-merge-vendor"), "vendor")
     browser = sign_in(account)
@@ -97,7 +97,7 @@ def test_merge_favorites_is_forbidden_for_a_vendor(admin_db: Client) -> None:
 # --- happy path --------------------------------------------------------------------------------
 
 
-def test_list_favorites_starts_empty_for_a_fresh_client(admin_db: Client) -> None:
+def test_list_favorites_starts_empty_for_a_fresh_client(admin_db: LocalDatabase) -> None:
     """A brand-new client has no saved vendors."""
     browser = _fresh_client_browser(admin_db, "fav-empty")
     response = browser.get(FAVORITES_URL)
@@ -105,7 +105,7 @@ def test_list_favorites_starts_empty_for_a_fresh_client(admin_db: Client) -> Non
     assert response.json() == {"success": True, "vendor_user_ids": []}
 
 
-def test_put_favorite_adds_a_vendor_and_list_reflects_it(admin_db: Client) -> None:
+def test_put_favorite_adds_a_vendor_and_list_reflects_it(admin_db: LocalDatabase) -> None:
     """PUT adds the vendor id; a subsequent GET returns it."""
     browser = _fresh_client_browser(admin_db, "fav-put")
     vendor_id = _seed_vendor_user_id(admin_db, "fav-put-vendor")
@@ -119,7 +119,7 @@ def test_put_favorite_adds_a_vendor_and_list_reflects_it(admin_db: Client) -> No
     assert list_response.json()["vendor_user_ids"] == [vendor_id]
 
 
-def test_put_favorite_is_idempotent(admin_db: Client) -> None:
+def test_put_favorite_is_idempotent(admin_db: LocalDatabase) -> None:
     """Adding the same vendor twice does not duplicate it in the list."""
     browser = _fresh_client_browser(admin_db, "fav-idempotent")
     vendor_id = _seed_vendor_user_id(admin_db, "fav-idempotent-vendor")
@@ -131,7 +131,7 @@ def test_put_favorite_is_idempotent(admin_db: Client) -> None:
     assert response.json()["vendor_user_ids"] == [vendor_id]
 
 
-def test_put_favorite_with_an_unknown_user_id_reports_failure(admin_db: Client) -> None:
+def test_put_favorite_with_an_unknown_user_id_reports_failure(admin_db: LocalDatabase) -> None:
     """A `vendor_user_id` with no matching `users` row fails the foreign key, so success is false.
 
     BASELINE QUIRK: this is a 200 with `{"success": false}`, not a 404 - the route never
@@ -143,7 +143,7 @@ def test_put_favorite_with_an_unknown_user_id_reports_failure(admin_db: Client) 
     assert response.json() == {"success": False}
 
 
-def test_delete_favorite_removes_it(admin_db: Client) -> None:
+def test_delete_favorite_removes_it(admin_db: LocalDatabase) -> None:
     """DELETE removes a saved vendor; the list no longer contains it."""
     browser = _fresh_client_browser(admin_db, "fav-delete")
     vendor_id = _seed_vendor_user_id(admin_db, "fav-delete-vendor")
@@ -157,7 +157,7 @@ def test_delete_favorite_removes_it(admin_db: Client) -> None:
     assert response.json()["vendor_user_ids"] == []
 
 
-def test_delete_favorite_never_saved_is_still_success(admin_db: Client) -> None:
+def test_delete_favorite_never_saved_is_still_success(admin_db: LocalDatabase) -> None:
     """Deleting a vendor id that was never favorited is a no-op success (DELETE is idempotent)."""
     browser = _fresh_client_browser(admin_db, "fav-delete-noop")
     vendor_id = _seed_vendor_user_id(admin_db, "fav-delete-noop-vendor")
@@ -166,7 +166,7 @@ def test_delete_favorite_never_saved_is_still_success(admin_db: Client) -> None:
     assert response.json() == {"success": True}
 
 
-def test_favorites_are_scoped_to_the_signed_in_client(admin_db: Client) -> None:
+def test_favorites_are_scoped_to_the_signed_in_client(admin_db: LocalDatabase) -> None:
     """One client's favorites never appear in another client's list."""
     browser_one = _fresh_client_browser(admin_db, "fav-scope-a")
     browser_two = _fresh_client_browser(admin_db, "fav-scope-b")
@@ -178,7 +178,7 @@ def test_favorites_are_scoped_to_the_signed_in_client(admin_db: Client) -> None:
     assert browser_two.get(FAVORITES_URL).json()["vendor_user_ids"] == []
 
 
-def test_merge_favorites_adds_every_given_vendor_and_counts_them(admin_db: Client) -> None:
+def test_merge_favorites_adds_every_given_vendor_and_counts_them(admin_db: LocalDatabase) -> None:
     """Merge is used to fold locally-saved (pre-login) ids into the server list on sign-in."""
     browser = _fresh_client_browser(admin_db, "fav-merge")
     label = uuid.uuid4().hex[:8]
@@ -193,7 +193,7 @@ def test_merge_favorites_adds_every_given_vendor_and_counts_them(admin_db: Clien
     assert ids == {vendor_one, vendor_two}
 
 
-def test_merge_favorites_with_an_empty_list_merges_nothing(admin_db: Client) -> None:
+def test_merge_favorites_with_an_empty_list_merges_nothing(admin_db: LocalDatabase) -> None:
     """Merging an empty list is a no-op that still reports success."""
     browser = _fresh_client_browser(admin_db, "fav-merge-empty")
     response = browser.post(f"{FAVORITES_URL}/merge", json={"vendor_user_ids": []})
@@ -201,7 +201,7 @@ def test_merge_favorites_with_an_empty_list_merges_nothing(admin_db: Client) -> 
     assert response.json() == {"success": True, "merged": 0}
 
 
-def test_merge_favorites_skips_an_unknown_vendor_id_but_still_adds_the_rest(admin_db: Client) -> None:
+def test_merge_favorites_skips_an_unknown_vendor_id_but_still_adds_the_rest(admin_db: LocalDatabase) -> None:
     """Merge reports how many actually saved - an unknown id in the batch does not count."""
     browser = _fresh_client_browser(admin_db, "fav-merge-partial")
     vendor_id = _seed_vendor_user_id(admin_db, "fav-merge-partial-vendor")
@@ -216,7 +216,7 @@ def test_merge_favorites_skips_an_unknown_vendor_id_but_still_adds_the_rest(admi
     assert browser.get(FAVORITES_URL).json()["vendor_user_ids"] == [vendor_id]
 
 
-def test_merge_favorites_body_over_500_ids_is_a_validation_error(admin_db: Client) -> None:
+def test_merge_favorites_body_over_500_ids_is_a_validation_error(admin_db: LocalDatabase) -> None:
     """`vendor_user_ids` is capped at 500 entries by the request model."""
     browser = _fresh_client_browser(admin_db, "fav-merge-toolong")
     response = browser.post(

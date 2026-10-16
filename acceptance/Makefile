@@ -1,27 +1,15 @@
-# The freeze suite: black-box HTTP tests that must pass against the baseline
-# backend first, then against the rebuilt api/ (TARGET=api).
-TARGET ?= baseline
+# The acceptance suite: black-box HTTP tests of api/, frozen from the old backend's
+# behaviour before it was retired.
 PYTHON := ../api/.venv/bin/python
 
-.PHONY: env serve test lint capture reset-data
-
-env:
-	scripts/local_env.sh
+.PHONY: serve test lint
 
 serve:
-	scripts/serve.sh $(TARGET)
-
-# Clear the seeded @example.com accounts from local Supabase (they pile up run after run).
-reset-data:
-	scripts/reset_data.sh
+	scripts/serve.sh
 
 test:
-	TARGET=$(TARGET) $(PYTHON) -m pytest -q $(ARGS)
+	$(PYTHON) -m pytest -q $(ARGS)
 
 lint:
 	../api/.venv/bin/ruff check --config ../api/pyproject.toml .
 	../api/.venv/bin/ruff format --config ../api/pyproject.toml --check .
-
-# Re-capture goldens from the baseline code into api/tests/golden/ (e.g. make capture SCRIPT=capture/content_goldens.py).
-capture:
-	scripts/capture.sh $(SCRIPT)

@@ -7,7 +7,7 @@ app shows them to users as-is.
 from __future__ import annotations
 
 import httpx
-from supabase import Client
+from support.database import LocalDatabase
 
 from conftest import API, assert_session_cookies_touched, new_browser, present_access_token
 from support.accounts import SeededAccount, close_account, seed_account, unique_email
@@ -47,7 +47,7 @@ def test_me_with_a_garbage_cookie_is_401(anonymous: httpx.Client) -> None:
     assert response.status_code == 401
 
 
-def test_signin_sets_both_session_cookies(admin_db: Client) -> None:
+def test_signin_sets_both_session_cookies(admin_db: LocalDatabase) -> None:
     client_account = seed_account(admin_db, unique_email("cookies"), "client")
     response = sign_in_response(client_account)
     assert response.status_code == 200
@@ -58,7 +58,7 @@ def test_signin_sets_both_session_cookies(admin_db: Client) -> None:
     assert body["user"]["user_type"] == "client"
 
 
-def test_signin_with_wrong_password_is_401(admin_db: Client) -> None:
+def test_signin_with_wrong_password_is_401(admin_db: LocalDatabase) -> None:
     client_account = seed_account(admin_db, unique_email("wrong-password"), "client")
     response = sign_in_response(client_account, password="definitely-wrong-1")
     assert response.status_code == 401
@@ -90,7 +90,7 @@ def test_super_admin_role_from_the_users_row(as_super_admin: httpx.Client) -> No
     assert (user["user_type"], user["admin_role"]) == ("admin", "super_admin")
 
 
-def test_super_admin_role_falls_back_to_the_email_list(admin_db: Client) -> None:
+def test_super_admin_role_falls_back_to_the_email_list(admin_db: LocalDatabase) -> None:
     # Fixed address: scripts/serve.sh puts it in SUPER_ADMIN_EMAILS. The row has no admin_role.
     account = seed_account(admin_db, "acceptance-super-admin@example.com", "admin")
     with new_browser() as browser:
@@ -99,28 +99,28 @@ def test_super_admin_role_falls_back_to_the_email_list(admin_db: Client) -> None
     assert (user["user_type"], user["admin_role"]) == ("admin", "super_admin")
 
 
-def test_unverified_client_cannot_sign_in(admin_db: Client) -> None:
+def test_unverified_client_cannot_sign_in(admin_db: LocalDatabase) -> None:
     account = seed_account(admin_db, unique_email("unverified"), "client", verified=False)
     response = sign_in_response(account)
     assert response.status_code == 403
     assert response.json()["detail"] == UNVERIFIED
 
 
-def test_suspended_client_cannot_sign_in(admin_db: Client) -> None:
+def test_suspended_client_cannot_sign_in(admin_db: LocalDatabase) -> None:
     account = seed_account(admin_db, unique_email("suspended"), "client", suspended=True)
     response = sign_in_response(account)
     assert response.status_code == 403
     assert response.json()["detail"] == SUSPENDED_AT_SIGNIN
 
 
-def test_deleted_account_cannot_sign_in(admin_db: Client) -> None:
+def test_deleted_account_cannot_sign_in(admin_db: LocalDatabase) -> None:
     account = seed_account(admin_db, unique_email("deleted"), "client", deleted=True)
     response = sign_in_response(account)
     assert response.status_code == 401
     assert response.json()["detail"] == DELETED_SIGNIN
 
 
-def test_account_deleted_after_sign_in_gets_401(admin_db: Client) -> None:
+def test_account_deleted_after_sign_in_gets_401(admin_db: LocalDatabase) -> None:
     account = seed_account(admin_db, unique_email("closing"), "client")
     with new_browser() as browser:
         signed_in = browser.post(
@@ -136,7 +136,7 @@ def test_account_deleted_after_sign_in_gets_401(admin_db: Client) -> None:
     assert "set-cookie" not in response.headers
 
 
-def test_signout_clears_the_session(admin_db: Client) -> None:
+def test_signout_clears_the_session(admin_db: LocalDatabase) -> None:
     client_account = seed_account(admin_db, unique_email("signout"), "client")
     with new_browser() as browser:
         browser.post(

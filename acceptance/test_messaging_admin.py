@@ -16,7 +16,7 @@ import uuid
 
 import httpx
 import pytest
-from supabase import Client
+from support.database import LocalDatabase
 
 from conftest import API, sign_in
 from support.accounts import seed_account, unique_email
@@ -41,13 +41,13 @@ MISSING_ID = "00000000-0000-4000-8000-000000000000"
 MESSAGES_URL = f"{API}/admin/messages"
 
 
-def _fresh_staff(admin_db: Client, label: str) -> httpx.Client:
+def _fresh_staff(admin_db: LocalDatabase, label: str) -> httpx.Client:
     """A signed-in browser for a brand-new plain admin account."""
     account = seed_account(admin_db, unique_email(label), "admin", admin_role="admin")
     return sign_in(account)
 
 
-def _fresh_super_admin(admin_db: Client, label: str) -> httpx.Client:
+def _fresh_super_admin(admin_db: LocalDatabase, label: str) -> httpx.Client:
     """A signed-in browser for a brand-new super admin account."""
     account = seed_account(admin_db, unique_email(label), "admin", admin_role="super_admin")
     return sign_in(account)
@@ -65,7 +65,7 @@ def _open_support_thread(browser: httpx.Client, recipient_user_id: str, body: st
     return conversation_ids[0]
 
 
-def _latest_audit_row(admin_db: Client, *, action: str, entity_id: str | None) -> dict:
+def _latest_audit_row(admin_db: LocalDatabase, *, action: str, entity_id: str | None) -> dict:
     """The newest `admin_audit_log` row for this action/entity, asserting one exists."""
     query = admin_db.table("admin_audit_log").select("*").eq("action", action)
     query = query.is_("entity_id", "null") if entity_id is None else query.eq("entity_id", entity_id)
@@ -108,7 +108,7 @@ def test_every_admin_message_route_needs_a_session(
     ],
 )
 def test_a_client_account_is_forbidden_from_admin_messaging(
-    admin_db: Client, method: str, path: str, body: dict | None
+    admin_db: LocalDatabase, method: str, path: str, body: dict | None
 ) -> None:
     """A client (non-admin) account gets the admin-portal-only message, not a 404/400."""
     account = seed_account(admin_db, unique_email("admin-msg-client"), "client")
@@ -121,7 +121,7 @@ def test_a_client_account_is_forbidden_from_admin_messaging(
 # --- sending targeted support messages -----------------------------------------------------------
 
 
-def test_send_requires_at_least_one_recipient_or_audience(admin_db: Client) -> None:
+def test_send_requires_at_least_one_recipient_or_audience(admin_db: LocalDatabase) -> None:
     """No recipients and no audience is rejected before anything is sent."""
     browser = _fresh_staff(admin_db, "admin-msg-norecip")
     response = browser.post(f"{MESSAGES_URL}/send", json={"body": "hello there"})
@@ -129,14 +129,14 @@ def test_send_requires_at_least_one_recipient_or_audience(admin_db: Client) -> N
     assert response.json()["detail"] == RECIPIENTS_OR_AUDIENCE_REQUIRED
 
 
-def test_send_body_may_not_be_empty(admin_db: Client) -> None:
+def test_send_body_may_not_be_empty(admin_db: LocalDatabase) -> None:
     """The request model rejects a zero-length message body."""
     browser = _fresh_staff(admin_db, "admin-msg-empty")
     response = browser.post(f"{MESSAGES_URL}/send", json={"body": "", "recipient_user_ids": [MISSING_ID]})
     assert response.status_code == 422
 
 
-def test_send_body_over_15000_characters_fails_validation(admin_db: Client) -> None:
+def test_send_body_over_15000_characters_fails_validation(admin_db: LocalDatabase) -> None:
     """The request model caps an admin support message body at 15000 characters."""
     browser = _fresh_staff(admin_db, "admin-msg-toolong")
     response = browser.post(
@@ -146,7 +146,7 @@ def test_send_body_over_15000_characters_fails_validation(admin_db: Client) -> N
     assert response.status_code == 422
 
 
-def test_a_plain_admin_can_send_a_targeted_message(admin_db: Client) -> None:
+def test_a_plain_admin_can_send_a_targeted_message(admin_db: LocalDatabase) -> None:
     """A plain admin (support role) may message specific recipients without an audience."""
     staff_browser = _fresh_staff(admin_db, "admin-msg-plain-staff")
     recipient = seed_account(admin_db, unique_email("admin-msg-plain-recipient"), "client")
@@ -178,7 +178,7 @@ def test_a_plain_admin_can_send_a_targeted_message(admin_db: Client) -> None:
     assert audit_row["payload"]["recipient_count"] == 1
 
 
-def test_sending_to_the_same_recipient_twice_reuses_the_conversation(admin_db: Client) -> None:
+def test_sending_to_the_same_recipient_twice_reuses_the_conversation(admin_db: LocalDatabase) -> None:
     """Support threads are one per end user, so a second send lands in the same thread."""
     staff_browser = _fresh_staff(admin_db, "admin-msg-reuse-staff")
     recipient = seed_account(admin_db, unique_email("admin-msg-reuse-recipient"), "client")
@@ -188,7 +188,7 @@ def test_sending_to_the_same_recipient_twice_reuses_the_conversation(admin_db: C
     assert first == second
 
 
-def test_send_with_an_audience_is_forbidden_for_a_plain_admin(admin_db: Client) -> None:
+def test_send_with_an_audience_is_forbidden_for_a_plain_admin(admin_db: LocalDatabase) -> None:
     """Broadcasting to a whole audience of users is super-admin only, not for support staff."""
     staff_browser = _fresh_staff(admin_db, "admin-msg-audience-staff")
     response = staff_browser.post(
@@ -202,7 +202,7 @@ def test_send_with_an_audience_is_forbidden_for_a_plain_admin(admin_db: Client) 
 # --- support conversations: listing, detail, messages, read ---------------------------------------
 
 
-def test_conversation_detail_for_an_unknown_id_is_404(admin_db: Client) -> None:
+def test_conversation_detail_for_an_unknown_id_is_404(admin_db: LocalDatabase) -> None:
     """GET on a support conversation id that doesn't exist is a 404."""
     browser = _fresh_staff(admin_db, "admin-msg-detail-missing")
     response = browser.get(f"{MESSAGES_URL}/conversations/{MISSING_ID}")
@@ -210,7 +210,7 @@ def test_conversation_detail_for_an_unknown_id_is_404(admin_db: Client) -> None:
     assert response.json()["detail"] == SUPPORT_CONVERSATION_NOT_FOUND
 
 
-def test_listing_messages_on_an_unknown_conversation_is_404(admin_db: Client) -> None:
+def test_listing_messages_on_an_unknown_conversation_is_404(admin_db: LocalDatabase) -> None:
     """GET .../messages on an unknown support conversation id is a 404."""
     browser = _fresh_staff(admin_db, "admin-msg-list-missing")
     response = browser.get(f"{MESSAGES_URL}/conversations/{MISSING_ID}/messages")
@@ -218,7 +218,7 @@ def test_listing_messages_on_an_unknown_conversation_is_404(admin_db: Client) ->
     assert response.json()["detail"] == SUPPORT_CONVERSATION_NOT_FOUND
 
 
-def test_replying_to_an_unknown_conversation_is_404(admin_db: Client) -> None:
+def test_replying_to_an_unknown_conversation_is_404(admin_db: LocalDatabase) -> None:
     """POST .../messages on an unknown support conversation id is a 404."""
     browser = _fresh_staff(admin_db, "admin-msg-reply-missing")
     response = browser.post(f"{MESSAGES_URL}/conversations/{MISSING_ID}/messages", json={"body": "hello"})
@@ -226,7 +226,7 @@ def test_replying_to_an_unknown_conversation_is_404(admin_db: Client) -> None:
     assert response.json()["detail"] == SUPPORT_CONVERSATION_NOT_FOUND
 
 
-def test_marking_an_unknown_conversation_read_is_404(admin_db: Client) -> None:
+def test_marking_an_unknown_conversation_read_is_404(admin_db: LocalDatabase) -> None:
     """POST .../read on an unknown support conversation id is a 404."""
     browser = _fresh_staff(admin_db, "admin-msg-read-missing")
     response = browser.post(f"{MESSAGES_URL}/conversations/{MISSING_ID}/read")
@@ -234,7 +234,7 @@ def test_marking_an_unknown_conversation_read_is_404(admin_db: Client) -> None:
     assert response.json()["detail"] == SUPPORT_CONVERSATION_NOT_FOUND
 
 
-def test_conversation_appears_in_the_admin_list_and_detail_after_a_send(admin_db: Client) -> None:
+def test_conversation_appears_in_the_admin_list_and_detail_after_a_send(admin_db: LocalDatabase) -> None:
     """A support thread just opened by a send is visible via list and detail."""
     staff_browser = _fresh_staff(admin_db, "admin-msg-visible-staff")
     recipient = seed_account(admin_db, unique_email("admin-msg-visible-recipient"), "client")
@@ -254,7 +254,7 @@ def test_conversation_appears_in_the_admin_list_and_detail_after_a_send(admin_db
     assert conversation["support_user_id"] == recipient.user_id
 
 
-def test_admin_reply_is_stored_and_notifies_the_recipient(admin_db: Client) -> None:
+def test_admin_reply_is_stored_and_notifies_the_recipient(admin_db: LocalDatabase) -> None:
     """A follow-up admin reply lands in the same thread and writes its own audit row."""
     staff_browser = _fresh_staff(admin_db, "admin-msg-reply-staff")
     recipient = seed_account(admin_db, unique_email("admin-msg-reply-recipient"), "client")
@@ -274,7 +274,7 @@ def test_admin_reply_is_stored_and_notifies_the_recipient(admin_db: Client) -> N
     assert audit_row["payload"] == {}
 
 
-def test_reply_body_may_not_be_empty(admin_db: Client) -> None:
+def test_reply_body_may_not_be_empty(admin_db: LocalDatabase) -> None:
     """A reply body with no visible text (after sanitizing) is a 400, not stored."""
     staff_browser = _fresh_staff(admin_db, "admin-msg-reply-empty-staff")
     recipient = seed_account(admin_db, unique_email("admin-msg-reply-empty-recipient"), "client")
@@ -289,7 +289,7 @@ def test_reply_body_may_not_be_empty(admin_db: Client) -> None:
     assert response.json()["detail"] == MESSAGE_EMPTY
 
 
-def test_marking_a_support_conversation_read_succeeds(admin_db: Client) -> None:
+def test_marking_a_support_conversation_read_succeeds(admin_db: LocalDatabase) -> None:
     """A plain admin can mark a support conversation as read."""
     staff_browser = _fresh_staff(admin_db, "admin-msg-markread-staff")
     recipient = seed_account(admin_db, unique_email("admin-msg-markread-recipient"), "client")
@@ -314,7 +314,7 @@ def test_marking_a_support_conversation_read_succeeds(admin_db: Client) -> None:
 # --- editing/hiding a staff message ----------------------------------------------------------------
 
 
-def test_editing_an_unknown_conversation_is_404(admin_db: Client) -> None:
+def test_editing_an_unknown_conversation_is_404(admin_db: LocalDatabase) -> None:
     """PATCH on an unknown conversation id is 404 before the message is even looked up."""
     browser = _fresh_staff(admin_db, "admin-msg-edit-noconv")
     response = browser.patch(
@@ -324,7 +324,7 @@ def test_editing_an_unknown_conversation_is_404(admin_db: Client) -> None:
     assert response.json()["detail"] == SUPPORT_CONVERSATION_NOT_FOUND
 
 
-def test_editing_an_unknown_message_is_404(admin_db: Client) -> None:
+def test_editing_an_unknown_message_is_404(admin_db: LocalDatabase) -> None:
     """PATCH with a real conversation but an unknown message id is 404."""
     staff_browser = _fresh_staff(admin_db, "admin-msg-edit-nomsg-staff")
     recipient = seed_account(admin_db, unique_email("admin-msg-edit-nomsg-recipient"), "client")
@@ -339,7 +339,7 @@ def test_editing_an_unknown_message_is_404(admin_db: Client) -> None:
     assert response.json()["detail"] == MESSAGE_NOT_FOUND
 
 
-def test_a_message_from_the_end_user_cannot_be_edited_by_staff(admin_db: Client) -> None:
+def test_a_message_from_the_end_user_cannot_be_edited_by_staff(admin_db: LocalDatabase) -> None:
     """Staff cannot edit the recipient's own reply - only staff-authored messages."""
     staff_browser = _fresh_staff(admin_db, "admin-msg-edit-staffonly-staff")
     recipient_account = seed_account(admin_db, unique_email("admin-msg-edit-staffonly-recipient"), "client")
@@ -364,7 +364,7 @@ def test_a_message_from_the_end_user_cannot_be_edited_by_staff(admin_db: Client)
     assert response.json()["detail"] == STAFF_MESSAGES_ONLY
 
 
-def test_one_admin_cannot_edit_another_admins_message(admin_db: Client) -> None:
+def test_one_admin_cannot_edit_another_admins_message(admin_db: LocalDatabase) -> None:
     """Editing is limited to the message's own sender, even among staff."""
     first_staff = _fresh_staff(admin_db, "admin-msg-edit-own-first")
     second_staff = _fresh_staff(admin_db, "admin-msg-edit-own-second")
@@ -382,7 +382,7 @@ def test_one_admin_cannot_edit_another_admins_message(admin_db: Client) -> None:
     assert response.json()["detail"] == EDIT_OWN_MESSAGES_ONLY
 
 
-def test_an_admin_can_edit_their_own_message(admin_db: Client) -> None:
+def test_an_admin_can_edit_their_own_message(admin_db: LocalDatabase) -> None:
     """An admin editing their own message updates its body and stamps `edited_at`."""
     staff_browser = _fresh_staff(admin_db, "admin-msg-edit-self-staff")
     recipient = seed_account(admin_db, unique_email("admin-msg-edit-self-recipient"), "client")
@@ -407,7 +407,7 @@ def test_an_admin_can_edit_their_own_message(admin_db: Client) -> None:
     assert audit_row["payload"] == {"conversation_id": conversation_id}
 
 
-def test_editing_with_only_whitespace_is_rejected(admin_db: Client) -> None:
+def test_editing_with_only_whitespace_is_rejected(admin_db: LocalDatabase) -> None:
     """Editing to a body with no visible text is a 400, and the stored message is untouched."""
     staff_browser = _fresh_staff(admin_db, "admin-msg-edit-blank-staff")
     recipient = seed_account(admin_db, unique_email("admin-msg-edit-blank-recipient"), "client")
@@ -431,7 +431,7 @@ def test_editing_with_only_whitespace_is_rejected(admin_db: Client) -> None:
 # --- the older admin chat viewer (arbitrary DM transcripts) -----------------------------------------
 
 
-def test_admin_chat_viewer_reads_a_dm_conversation_with_no_participant_check(admin_db: Client) -> None:
+def test_admin_chat_viewer_reads_a_dm_conversation_with_no_participant_check(admin_db: LocalDatabase) -> None:
     """Any admin can read any client-vendor DM transcript here, unlike the /messages inbox.
 
     This is the separate `/admin/chat/...` route (`platform_trust.py`), used by staff to
@@ -484,7 +484,7 @@ def test_admin_chat_viewer_reads_a_dm_conversation_with_no_participant_check(adm
     assert audit_row["payload"] == {}
 
 
-def test_admin_chat_viewer_returns_empty_shape_for_an_unknown_conversation(admin_db: Client) -> None:
+def test_admin_chat_viewer_returns_empty_shape_for_an_unknown_conversation(admin_db: LocalDatabase) -> None:
     """# BASELINE QUIRK: an unknown (but valid-looking) conversation id is still a 200 with
     empty/null fields, never a 404 - `get_conversation_admin_meta`/`get_conversation_messages_admin`
     swallow "not found" into empty results rather than raising.
@@ -498,7 +498,7 @@ def test_admin_chat_viewer_returns_empty_shape_for_an_unknown_conversation(admin
     assert body["vendor_user_id"] is None
 
 
-def test_admin_chat_viewer_returns_empty_shape_for_a_malformed_conversation_id(admin_db: Client) -> None:
+def test_admin_chat_viewer_returns_empty_shape_for_a_malformed_conversation_id(admin_db: LocalDatabase) -> None:
     """A conversation id that isn't even a UUID is also a 200 with empty results."""
     staff_browser = _fresh_staff(admin_db, "admin-chatview-malformed-staff")
     response = staff_browser.get(f"{API}/admin/chat/conversations/not-a-uuid/messages")

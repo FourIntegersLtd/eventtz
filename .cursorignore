@@ -26,4 +26,4 @@
 **/.vercel/
 
 # Large media (not useful as code context)
-frontend/public/videos/
+web/public/videos/

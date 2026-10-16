@@ -1,5 +1,4 @@
-# Throwaway copy of the baseline backend the harness runs (never edited, never committed).
-.run/
-# Local Supabase URL and keys written by scripts/local_env.sh.
+# Old local env files may still sit on disk; never commit them.
 .env.local
+.run/
 __pycache__/

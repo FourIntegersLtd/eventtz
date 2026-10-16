@@ -12,7 +12,7 @@ import contextlib
 from collections.abc import Iterator
 
 import httpx
-from supabase import Client
+from support.database import LocalDatabase
 
 from conftest import API, assert_session_cookies_touched, new_browser
 from support.accounts import SeededAccount, seed_account, unique_email
@@ -42,7 +42,7 @@ PASSWORD_UPDATED_REAUTH = "Password updated. Sign in again with your new passwor
 SIGN_IN_REQUIRED = "Please sign in to continue."
 
 
-def test_signup_creates_an_unverified_account_and_returns_the_verify_message(admin_db: Client) -> None:
+def test_signup_creates_an_unverified_account_and_returns_the_verify_message(admin_db: LocalDatabase) -> None:
     """POST /auth/signup pins the 200 body shape and leaves the new user unverified in the DB."""
     email = unique_email("signup")
     with new_browser() as browser:
@@ -64,7 +64,7 @@ def test_signup_creates_an_unverified_account_and_returns_the_verify_message(adm
     assert rows[0]["user_type"] == "client"
 
 
-def test_signup_can_register_a_vendor(admin_db: Client) -> None:
+def test_signup_can_register_a_vendor(admin_db: LocalDatabase) -> None:
     """POST /auth/signup with user_type=vendor stores a vendor-typed profile row."""
     email = unique_email("signup-vendor")
     with new_browser() as browser:
@@ -78,7 +78,7 @@ def test_signup_can_register_a_vendor(admin_db: Client) -> None:
     assert row["user_type"] == "vendor"
 
 
-def test_signup_with_an_already_registered_email_is_400(admin_db: Client) -> None:
+def test_signup_with_an_already_registered_email_is_400(admin_db: LocalDatabase) -> None:
     """A second signup with the same email is refused with the enumeration-revealing message."""
     email = unique_email("signup-dup")
     seed_account(admin_db, email, "client")
@@ -116,7 +116,7 @@ def test_refresh_with_a_garbage_token_is_401() -> None:
     assert response.status_code == 401
 
 
-def test_refresh_with_the_session_cookie_issues_a_new_session(admin_db: Client) -> None:
+def test_refresh_with_the_session_cookie_issues_a_new_session(admin_db: LocalDatabase) -> None:
     """The refresh cookie set by sign-in is enough to mint a fresh access/refresh pair."""
     account = seed_account(admin_db, unique_email("refresh"), "client")
     with new_browser() as browser:
@@ -134,7 +134,7 @@ def test_refresh_with_the_session_cookie_issues_a_new_session(admin_db: Client) 
 
 
 def test_forgot_password_returns_the_same_generic_message_for_a_real_or_unknown_email(
-    admin_db: Client,
+    admin_db: LocalDatabase,
 ) -> None:
     """Enumeration-safe: an existing account and a made-up address get identical responses."""
     account = seed_account(admin_db, unique_email("forgot"), "client")
@@ -148,7 +148,7 @@ def test_forgot_password_returns_the_same_generic_message_for_a_real_or_unknown_
 
 
 def test_reset_password_with_a_seeded_token_signs_the_user_in_with_the_new_password(
-    admin_db: Client,
+    admin_db: LocalDatabase,
 ) -> None:
     """Happy path built from a token seeded straight into `password_reset_tokens` (no email is sent
     in this environment, so the raw token from the link can only be recreated, not observed over HTTP).
@@ -193,7 +193,7 @@ def test_reset_password_with_an_unknown_token_is_400() -> None:
     assert response.json()["detail"] == RESET_LINK_INVALID
 
 
-def test_reset_password_with_an_already_used_token_is_400(admin_db: Client) -> None:
+def test_reset_password_with_an_already_used_token_is_400(admin_db: LocalDatabase) -> None:
     """A token marked used_at is refused with the distinct already-used message."""
     account = seed_account(admin_db, unique_email("reset-used"), "client")
     raw_token = seed_password_reset_token(admin_db, account.user_id, used=True)
@@ -206,7 +206,7 @@ def test_reset_password_with_an_already_used_token_is_400(admin_db: Client) -> N
     assert response.json()["detail"] == RESET_LINK_USED
 
 
-def test_reset_password_with_an_expired_token_is_400(admin_db: Client) -> None:
+def test_reset_password_with_an_expired_token_is_400(admin_db: LocalDatabase) -> None:
     """A token past its expiry falls back to the generic invalid-link message, not "used"."""
     account = seed_account(admin_db, unique_email("reset-expired"), "client")
     raw_token = seed_password_reset_token(admin_db, account.user_id, expires_in_minutes=-5)
@@ -219,7 +219,7 @@ def test_reset_password_with_an_expired_token_is_400(admin_db: Client) -> None:
     assert response.json()["detail"] == RESET_LINK_INVALID
 
 
-def test_reset_password_with_a_password_under_the_pydantic_minimum_is_422(admin_db: Client) -> None:
+def test_reset_password_with_a_password_under_the_pydantic_minimum_is_422(admin_db: LocalDatabase) -> None:
     """`ResetPasswordRequest.password` has `min_length=6`, the same floor as the domain password
     policy, so a too-short password never reaches `validate_password_for_user` - FastAPI's request
     validation rejects it first with a 422, before the token is even looked up.
@@ -232,7 +232,7 @@ def test_reset_password_with_a_password_under_the_pydantic_minimum_is_422(admin_
 
 
 def test_resend_verification_returns_the_same_generic_message_for_verified_and_unknown_emails(
-    admin_db: Client,
+    admin_db: LocalDatabase,
 ) -> None:
     """Enumeration-safe: already-verified and unknown addresses both get the generic copy."""
     verified_account = seed_account(admin_db, unique_email("resend-verified"), "client")
@@ -243,7 +243,7 @@ def test_resend_verification_returns_the_same_generic_message_for_verified_and_u
             assert response.json()["message"] == GENERIC_RESEND_MESSAGE
 
 
-def test_verify_email_with_a_seeded_token_marks_the_account_verified(admin_db: Client) -> None:
+def test_verify_email_with_a_seeded_token_marks_the_account_verified(admin_db: LocalDatabase) -> None:
     """Happy path built from a seeded `email_verification_tokens` row (see reset-password docstring
     for why the raw token cannot come from an actual email in this environment).
 
@@ -268,7 +268,7 @@ def test_verify_email_with_a_seeded_token_marks_the_account_verified(admin_db: C
 
 
 def test_verify_email_with_an_already_consumed_token_is_idempotent_once_verified(
-    admin_db: Client,
+    admin_db: LocalDatabase,
 ) -> None:
     """Replaying the same verify link after success still succeeds, because the account is
     already verified (the route treats a used token as a retry, not an error, in that case).
@@ -291,7 +291,7 @@ def test_verify_email_with_an_unknown_token_is_400() -> None:
     assert response.json()["detail"] == VERIFICATION_LINK_INVALID
 
 
-def test_verify_email_with_an_expired_token_is_400(admin_db: Client) -> None:
+def test_verify_email_with_an_expired_token_is_400(admin_db: LocalDatabase) -> None:
     """A token past its expiry is refused with the generic invalid-link message."""
     account = seed_account(admin_db, unique_email("verify-expired"), "client", verified=False)
     raw_token = seed_email_verification_token(admin_db, account.user_id, expires_in_minutes=-5)
@@ -313,7 +313,7 @@ def test_change_password_without_a_session_is_401() -> None:
 
 
 @contextlib.contextmanager
-def _fresh_signed_in_browser(admin_db: Client, label: str) -> Iterator[tuple[httpx.Client, SeededAccount]]:
+def _fresh_signed_in_browser(admin_db: LocalDatabase, label: str) -> Iterator[tuple[httpx.Client, SeededAccount]]:
     """A brand-new client account, signed in on its own browser, closed on exit.
 
     Yields rather than being used as an `httpx.Client` context manager itself, because
@@ -332,7 +332,7 @@ def _fresh_signed_in_browser(admin_db: Client, label: str) -> Iterator[tuple[htt
         browser.close()
 
 
-def test_change_password_happy_path_requires_sign_in_again(admin_db: Client) -> None:
+def test_change_password_happy_path_requires_sign_in_again(admin_db: LocalDatabase) -> None:
     """Changing to a new password clears cookies and the old session can no longer sign in with
     the old password, but can with the new one.
     """
@@ -359,7 +359,7 @@ def test_change_password_happy_path_requires_sign_in_again(admin_db: Client) -> 
         assert new_password.status_code == 200
 
 
-def test_change_password_with_wrong_current_password_is_400(admin_db: Client) -> None:
+def test_change_password_with_wrong_current_password_is_400(admin_db: LocalDatabase) -> None:
     """The current password is checked with a real sign-in attempt before anything is changed."""
     with _fresh_signed_in_browser(admin_db, "change-wrong-current") as (browser, _account):
         response = browser.post(
@@ -370,7 +370,7 @@ def test_change_password_with_wrong_current_password_is_400(admin_db: Client) ->
         assert response.json()["detail"] == CURRENT_PASSWORD_INCORRECT
 
 
-def test_change_password_to_the_same_password_is_400(admin_db: Client) -> None:
+def test_change_password_to_the_same_password_is_400(admin_db: LocalDatabase) -> None:
     """The new password must differ from the current one."""
     with _fresh_signed_in_browser(admin_db, "change-same") as (browser, account):
         response = browser.post(
@@ -381,7 +381,7 @@ def test_change_password_to_the_same_password_is_400(admin_db: Client) -> None:
         assert response.json()["detail"] == PASSWORD_MUST_DIFFER
 
 
-def test_change_password_with_a_new_password_under_the_pydantic_minimum_is_422(admin_db: Client) -> None:
+def test_change_password_with_a_new_password_under_the_pydantic_minimum_is_422(admin_db: LocalDatabase) -> None:
     """`ChangePasswordRequest.new_password` also has `min_length=6`, so (as with reset-password)
     a too-short password is rejected by FastAPI's request validation before the handler runs,
     and the wrong current_password given here is never even checked.
