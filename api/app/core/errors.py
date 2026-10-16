@@ -105,6 +105,14 @@ class Unavailable(AppError):
     default_message = "A service we depend on is unavailable. Please try again."
 
 
+class BadGateway(AppError):
+    """502: a service we depend on answered, but not with something we could use."""
+
+    status = 502
+    code = "bad_gateway"
+    default_message = "A service we depend on returned an unusable answer."
+
+
 def error_codes() -> list[str]:
     """Every `code` an `AppError` can carry, walked from the class tree."""
     found = {AppError.code}

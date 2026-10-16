@@ -16,6 +16,9 @@ bookings slice (`service_payments*.py`); this slice calls them, never the revers
   flags are refreshed from Stripe, afterwards `account.updated` keeps them current.
 - As a **vendor**, I **read my payout ledger**: what was paid out and what is still
   held, in my share only.
+- As a **super admin**, I **restore a vendor's lost Connect account**: the destination
+  of their latest payout Transfer becomes their `stripe_account_id`, with the charge and
+  payout flags Stripe reports, and the restore is audited (`vendor.stripe_connect_restored`).
 
 ## Invariants
 - A webhook is verified with HMAC-SHA256 over `"{t}.{raw body}"` against
@@ -39,6 +42,9 @@ bookings slice (`service_payments*.py`); this slice calls them, never the revers
 - `POST /vendor/payments/connect-account?return_path=` (vendor)
 - `GET /vendor/payments/status` (vendor)
 - `GET /vendor/payments/history` (vendor)
+- `POST /admin/vendors/{user_id}/restore-stripe-connect` (super admin): 400
+  `stripe_not_configured` / `payout_transfer_not_found` / `connect_account_resolve_failed`,
+  502 `stripe_connect_restore_failed` for any other failure (as the baseline)
 - `POST /webhooks/stripe` (public, signed): `account.updated` (refresh the vendor's
   Connect flags) and `checkout.session.completed` (handed to
   `bookings.service_payments_checkout.finalize_checkout_session`)

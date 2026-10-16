@@ -28,7 +28,7 @@ is publicly listed.
 Built (cut 1): `GET/PUT /vendor/profile`, `GET /vendor/profile/business-name-available`,
 `GET /admin/vendors`, `PATCH /admin/vendors/{user_id}/approval|unsubmit|listing-override|listing-media`,
 `POST /admin/vendors/nudge-profile-complete|nudge-setup-payouts`.
-Cut 2: `GET /admin/vendors/{user_id}/insights`, `POST /admin/vendors/{user_id}/restore-stripe-connect`.
+Cut 2: `GET /admin/vendors/{user_id}/insights`. (`POST /admin/vendors/{user_id}/restore-stripe-connect` is the payments slice's.)
 
 Baseline quirks kept on purpose (the freeze tests pin them):
 - `GET/PUT /vendor/profile` accept any signed-in account, and a `PUT` turns the caller into a vendor.

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.core.errors import InvalidInput, Unavailable
+from app.core.errors import BadGateway, InvalidInput, Unavailable
 
 
 class MissingStripeSignature(InvalidInput):
@@ -46,6 +46,34 @@ class StripeConnectSyncFailed(Unavailable):
         "We could not reach Stripe to verify your payout account. "
         "Please try again shortly or contact support if this continues."
     )
+
+
+class StripeNotConfigured(InvalidInput):
+    """No Stripe key is set, so staff cannot ask Stripe to restore a vendor's Connect account."""
+
+    code = "stripe_not_configured"
+    default_message = "Stripe is not configured."
+
+
+class PayoutTransferNotFound(InvalidInput):
+    """The vendor was never paid out by Stripe Transfer, so there is no Connect account to recover."""
+
+    code = "payout_transfer_not_found"
+    default_message = "No payout transfer found for this vendor."
+
+
+class ConnectAccountResolveFailed(InvalidInput):
+    """The vendor's latest Transfer names no `acct_` destination."""
+
+    code = "connect_account_resolve_failed"
+    default_message = "Could not resolve Connect account from the payout transfer."
+
+
+class StripeConnectRestoreFailed(BadGateway):
+    """Anything else went wrong while restoring Connect (usually Stripe); the baseline answers 502."""
+
+    code = "stripe_connect_restore_failed"
+    default_message = "Could not restore Stripe Connect."
 
 
 # The account-link step's wording of the same failure.

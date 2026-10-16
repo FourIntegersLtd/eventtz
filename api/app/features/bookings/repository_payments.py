@@ -47,7 +47,7 @@ async def vendor_has_transfer(session: AsyncSession, vendor_user_id: str) -> boo
 
 
 async def latest_transfer_id_for_vendor(session: AsyncSession, vendor_user_id: str) -> str | None:
-    """The vendor's most recently paid Transfer id; used by restore-Connect (next20 piece 09)."""
+    """The vendor's most recently paid Transfer id; used by payments to restore a lost Connect account."""
     vendor_uuid = as_uuid(vendor_user_id)
     if vendor_uuid is None:
         return None

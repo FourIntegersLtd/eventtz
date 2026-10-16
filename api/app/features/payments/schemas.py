@@ -44,3 +44,14 @@ class StripeWebhookResponse(BaseModel):
     """Every correctly signed webhook gets this, whatever happened while handling it."""
 
     success: bool = True
+
+
+class AdminVendorRestoreStripeConnectResponse(BaseModel):
+    """The Connect account a super admin restored from the vendor's latest payout Transfer."""
+
+    success: bool = True
+    user_id: str
+    stripe_account_id: str | None = None
+    stripe_charges_enabled: bool = False
+    stripe_payouts_enabled: bool = False
+    restored_from_transfer_id: str | None = None

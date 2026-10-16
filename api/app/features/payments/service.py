@@ -13,6 +13,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.auth import Principal
 from app.core.logging import get_logger
 from app.core.ports import Mailer, PaymentGateway, PaymentGatewayError
 from app.core.settings import get_settings
@@ -21,17 +22,23 @@ from app.features.identity import service as identity
 from app.features.payments import domain, repository
 from app.features.payments.errors import (
     CONNECT_LINK_SYNC_FAILED_MESSAGE,
+    ConnectAccountResolveFailed,
     InvalidStripeSignature,
     MissingStripeSignature,
+    PayoutTransferNotFound,
+    StripeConnectRestoreFailed,
     StripeConnectRestoreRequired,
     StripeConnectSyncFailed,
     StripeConnectUnavailable,
+    StripeNotConfigured,
 )
 from app.features.payments.schemas import (
+    AdminVendorRestoreStripeConnectResponse,
     ConnectState,
     VendorPaymentsStatusResponse,
     VendorPayoutHistoryResponse,
 )
+from app.features.staff import service as staff
 from app.features.vendors import service_payouts as vendor_payouts
 from app.features.vendors import service_profile as vendor_profiles
 
@@ -250,6 +257,76 @@ async def connect_status(
         **state.model_dump(),
         can_accept_bookings=await vendor_profiles.payouts_ready_for_bookings(session, vendor_user_id),
         payout_gate_waived=vendor_payouts.payout_gate_waived(vendor),
+    )
+
+
+async def _restore_connect_state(
+    session: AsyncSession, gateway: PaymentGateway, vendor_user_id: str
+) -> tuple[ConnectState, str]:
+    """Find the vendor's Connect account through their latest payout Transfer and store it.
+
+    Returns the restored state and the Transfer id it came from.
+    """
+    transfer_id = await service_payout_ledger.latest_payout_transfer_id(session, vendor_user_id)
+    if not transfer_id:
+        raise PayoutTransferNotFound()
+    transfer = await gateway.retrieve_transfer(transfer_id)
+    account_id = str(transfer.get("destination") or "").strip()
+    if not account_id.startswith("acct_"):
+        raise ConnectAccountResolveFailed()
+    account = await gateway.retrieve_account(account_id)
+    charges_enabled = bool(account.get("charges_enabled"))
+    payouts_enabled = bool(account.get("payouts_enabled"))
+    await vendor_payouts.save_stripe_account(session, vendor_user_id, account_id)
+    await vendor_payouts.save_stripe_flags(
+        session, vendor_user_id, charges_enabled=charges_enabled, payouts_enabled=payouts_enabled
+    )
+    state = ConnectState(
+        stripe_account_id=account_id, charges_enabled=charges_enabled, payouts_enabled=payouts_enabled
+    )
+    return state, transfer_id
+
+
+async def restore_connect_from_payout_history(
+    session: AsyncSession, gateway: PaymentGateway, *, vendor_user_id: str, actor: Principal
+) -> AdminVendorRestoreStripeConnectResponse:
+    """Super admin: point the vendor back at the Connect account their latest payout went to.
+
+    Used when a vendor's stored account id was lost (e.g. cleared as orphaned) although
+    Stripe still pays out through it. Only reads Stripe, so no idempotency key is needed.
+    The baseline answers 400 for its own refusals and 502 for anything else.
+    """
+    if not gateway.is_configured():
+        raise StripeNotConfigured()
+    try:
+        state, transfer_id = await _restore_connect_state(session, gateway, vendor_user_id)
+    except (PayoutTransferNotFound, ConnectAccountResolveFailed):
+        raise
+    except Exception as error:
+        log.warning(
+            "payments: restore-stripe-connect failed vendor=%s: %s", vendor_user_id, error, exc_info=True
+        )
+        raise StripeConnectRestoreFailed() from error
+    log.info(
+        "payments: restored Stripe Connect vendor=%s account=%s from transfer=%s",
+        vendor_user_id,
+        state.stripe_account_id,
+        transfer_id,
+    )
+    await staff.record_admin_action(
+        session,
+        admin_user_id=actor.id,
+        action="vendor.stripe_connect_restored",
+        entity_type="vendor",
+        entity_id=vendor_user_id,
+        details={"stripe_account_id": state.stripe_account_id, "restored_from_transfer_id": transfer_id},
+    )
+    return AdminVendorRestoreStripeConnectResponse(
+        user_id=vendor_user_id,
+        stripe_account_id=state.stripe_account_id,
+        stripe_charges_enabled=state.charges_enabled,
+        stripe_payouts_enabled=state.payouts_enabled,
+        restored_from_transfer_id=transfer_id,
     )
 
 

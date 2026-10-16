@@ -80,3 +80,11 @@ async def vendor_has_payout_history(session: AsyncSession, vendor_user_id: str) 
     runs through it, so staff look before it is replaced.
     """
     return await repository_payments.vendor_has_transfer(session, vendor_user_id)
+
+
+async def latest_payout_transfer_id(session: AsyncSession, vendor_user_id: str) -> str | None:
+    """The Stripe Transfer id of the vendor's most recently paid booking, or None if never paid out.
+
+    Its destination is the vendor's Connect account, which is how staff recover a lost one.
+    """
+    return await repository_payments.latest_transfer_id_for_vendor(session, vendor_user_id)

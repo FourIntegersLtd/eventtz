@@ -3226,6 +3226,57 @@
         "title": "AdminVendorProfileNudgeResponse",
         "type": "object"
       },
+      "AdminVendorRestoreStripeConnectResponse": {
+        "description": "The Connect account a super admin restored from the vendor's latest payout Transfer.",
+        "properties": {
+          "restored_from_transfer_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Restored From Transfer Id"
+          },
+          "stripe_account_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stripe Account Id"
+          },
+          "stripe_charges_enabled": {
+            "default": false,
+            "title": "Stripe Charges Enabled",
+            "type": "boolean"
+          },
+          "stripe_payouts_enabled": {
+            "default": false,
+            "title": "Stripe Payouts Enabled",
+            "type": "boolean"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "AdminVendorRestoreStripeConnectResponse",
+        "type": "object"
+      },
       "AdminVendorRow": {
         "description": "One vendor on the staff vendor list.",
         "properties": {
@@ -17541,6 +17592,108 @@
         "summary": "Set Listing Override",
         "tags": [
           "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/vendors/{user_id}/restore-stripe-connect": {
+      "post": {
+        "description": "Super admin: restore Connect account id from the vendor's latest payout transfer.",
+        "operationId": "admin_restore_vendor_stripe_connect_api_v1_admin_vendors__user_id__restore_stripe_connect_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminVendorRestoreStripeConnectResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "stripe_not_configured, payout_transfer_not_found, connect_account_resolve_failed",
+            "x-codes": [
+              "stripe_not_configured",
+              "payout_transfer_not_found",
+              "connect_account_resolve_failed"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "stripe_connect_restore_failed",
+            "x-codes": [
+              "stripe_connect_restore_failed"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Restore Vendor Stripe Connect",
+        "tags": [
+          "admin-payments"
         ]
       }
     },
