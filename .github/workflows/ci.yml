@@ -76,6 +76,62 @@ jobs:
       - name: Test
         run: poetry run pytest -q
 
+  api:
+    name: api
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: api
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: eventtz_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/eventtz_test
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/eventtz_test
+      REDIS_DISABLED: "1"
+      APP_ENV: test
+      SENTRY_DSN: ""
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Setup Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@a783c322200f0519c7926aa6faa857c4e23e9263 # v1
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: api/.venv
+          key: venv-api-${{ runner.os }}-py3.13-${{ hashFiles('api/poetry.lock') }}
+
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --extras dev --no-root
+
+      - name: Migrate database
+        run: poetry run alembic upgrade head
+
+      - name: Lint, typecheck, architecture and tests
+        run: make ci
+
   ci-gate:
     name: ci-gate
     runs-on: ubuntu-latest
@@ -83,13 +139,15 @@ jobs:
     needs:
       - frontend
       - backend
+      - api
     if: always()
     steps:
       - name: Require all checks
         run: |
-          if [[ "${{ needs.frontend.result }}" != "success" || "${{ needs.backend.result }}" != "success" ]]; then
+          if [[ "${{ needs.frontend.result }}" != "success" || "${{ needs.backend.result }}" != "success" || "${{ needs.api.result }}" != "success" ]]; then
             echo "One or more required jobs failed."
             echo "frontend: ${{ needs.frontend.result }}"
             echo "backend: ${{ needs.backend.result }}"
+            echo "api: ${{ needs.api.result }}"
             exit 1
           fi
