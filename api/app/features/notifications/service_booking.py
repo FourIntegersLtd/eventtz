@@ -25,6 +25,12 @@ from app.features.notifications.domain_booking_copy import (
     booking_portal_path,
     format_booking_notification,
 )
+from app.features.notifications.domain_booking_emails import (
+    AlternativeVendorLine as AlternativeVendorLine,  # re-exported for the bookings slice
+)
+from app.features.notifications.domain_booking_emails import (
+    client_vendor_no_response_email,
+)
 from app.features.notifications.rows import BookingPartiesRow
 from app.features.notifications.service import render_booking_notification
 from app.features.notifications.service_feed import BOOKING_NOTIFICATIONS_CHANGED
@@ -122,3 +128,39 @@ def _send(mailer: Mailer, outgoing: OutgoingEmail, *, kind: str, booking_id: str
     """Hand the email to the mailer, logging (never raising) when it is refused."""
     if not mailer.send(outgoing):
         log.warning("booking email failed kind=%s booking=%s", kind, booking_id)
+
+
+async def send_client_vendor_no_response_email(
+    session: AsyncSession,
+    mailer: Mailer,
+    *,
+    to_email: str,
+    user_id: str,
+    booking_id: str,
+    vendor_name: str,
+    event_name: str,
+    alternatives: list[AlternativeVendorLine],
+) -> bool:
+    """Email the client that their vendor is silent, listing other vendors; once per booking.
+
+    The send is claimed in `email_delivery_log` first, so a rerun never sends it twice.
+    Returns whether the mailer accepted it.
+    """
+    if not await repository.claim_email_delivery(
+        session,
+        template_id=booking_email_template_id("client_vendor_no_response"),
+        recipient_email=to_email,
+        recipient_user_id=user_id,
+        booking_id=booking_id,
+    ):
+        return False
+    content = client_vendor_no_response_email(
+        vendor_name=vendor_name,
+        event_name=event_name,
+        alternatives=alternatives,
+        booking_url=public_url(booking_portal_path("client", booking_id)),
+        browse_url=public_url("/client/browse"),
+    )
+    outgoing = render_booking_notification(to_email, content)
+    _send(mailer, outgoing, kind="client_vendor_no_response", booking_id=booking_id)
+    return True

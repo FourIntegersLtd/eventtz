@@ -1,9 +1,10 @@
 """The hourly booking maintenance, run by the procrastinate worker (ADR 0008).
 
 Replaces the baseline's in-process scheduler. Each hour, in the baseline's order:
-completion reminders, automatic vendor payouts, stale-enquiry marking and vendor
-enquiry reminders. Each booking that may move money gets its own transaction, so
-one failure never undoes another booking's payout.
+completion reminders, automatic vendor payouts, stale-enquiry marking, vendor
+enquiry reminders, the client's no-response nudge, event-tomorrow reminders,
+pay-to-confirm reminders and the vendor payouts-setup nudge. Each booking that may move money gets its own
+transaction, so one failure never undoes another booking's payout.
 
 `run_booking_maintenance_once` holds the work and takes its adapters as arguments,
 so tests call it with fakes; the registered task only plugs in the real adapters.
@@ -12,16 +13,18 @@ so tests call it with fakes; the registered task only plugs in the real adapters
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+from datetime import UTC, datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.adapters.openai_language_model import OpenAILanguageModel
 from app.adapters.resend_mailer import ResendMailer
 from app.adapters.stripe_payments import StripePaymentGateway
 from app.core.db import job_session
 from app.core.jobs import get_jobs_app
 from app.core.logging import get_logger
-from app.core.ports import Mailer, PaymentGateway
-from app.features.bookings import service_maintenance
+from app.core.ports import LanguageModel, Mailer, PaymentGateway
+from app.features.bookings import service_maintenance, service_reminders
 
 log = get_logger(__name__)
 
@@ -49,8 +52,13 @@ async def _for_each_booking(unset_column: str, step_name: str, run_step: Booking
     return acted
 
 
-async def run_booking_maintenance_once(mailer: Mailer, gateway: PaymentGateway) -> dict[str, int]:
-    """One maintenance pass; returns how many reminders, payouts and marks each step made."""
+async def run_booking_maintenance_once(
+    mailer: Mailer, gateway: PaymentGateway, language_model: LanguageModel
+) -> dict[str, int]:
+    """One maintenance pass; returns how many reminders, payouts and marks each step made.
+
+    `language_model` reads the client's search text when choosing alternative vendors.
+    """
 
     async def remind(session: AsyncSession, booking_id: str) -> bool:
         """Completion reminder step for one booking."""
@@ -67,17 +75,50 @@ async def run_booking_maintenance_once(mailer: Mailer, gateway: PaymentGateway) 
         "payouts_released": await _for_each_booking("payout_auto_released_at", "auto payout", release),
         "stale_enquiries": 0,
         "enquiry_reminders": 0,
+        "client_nudges": 0,
+        "event_tomorrow": 0,
+        "pay_to_confirm": 0,
+        "payouts_setup": 0,
     }
-    try:
-        async with job_session() as session:
-            summary["stale_enquiries"] = await service_maintenance.mark_stale_enquiries(session)
-    except Exception:
-        log.exception("bookings: stale enquiry marking failed")
-    try:
-        async with job_session() as session:
-            summary["enquiry_reminders"] = await service_maintenance.send_enquiry_reminders(session, mailer)
-    except Exception:
-        log.exception("bookings: vendor enquiry reminders failed")
+    now = datetime.now(UTC)
+    # Every remaining step opens its own transaction and logs its own failure, so one
+    # broken reminder never stops the others.
+    steps: list[tuple[str, str, Callable[[AsyncSession], Awaitable[int]]]] = [
+        ("stale_enquiries", "stale enquiry marking", service_maintenance.mark_stale_enquiries),
+        (
+            "enquiry_reminders",
+            "vendor enquiry reminders",
+            lambda session: service_maintenance.send_enquiry_reminders(session, mailer),
+        ),
+        (
+            "client_nudges",
+            "client no-response nudges",
+            lambda session: service_reminders.send_client_no_response_nudges(
+                session, mailer, language_model, now=now
+            ),
+        ),
+        (
+            "event_tomorrow",
+            "event-tomorrow reminders",
+            lambda session: service_reminders.send_event_tomorrow_reminders(session, mailer, now=now),
+        ),
+        (
+            "pay_to_confirm",
+            "pay-to-confirm reminders",
+            lambda session: service_reminders.send_pay_to_confirm_reminders(session, mailer, now=now),
+        ),
+        (
+            "payouts_setup",
+            "payouts-setup nudges",
+            lambda session: service_reminders.send_payouts_setup_nudges(session, mailer, now=now),
+        ),
+    ]
+    for summary_key, step_name, run_step in steps:
+        try:
+            async with job_session() as session:
+                summary[summary_key] = await run_step(session)
+        except Exception:
+            log.exception("bookings: %s failed", step_name)
     log.info("bookings: maintenance done %s", summary)
     return summary
 
@@ -91,4 +132,4 @@ def register() -> None:
     async def run_booking_maintenance(timestamp: int) -> None:
         """The hourly pass with the real Stripe and Resend adapters; `timestamp` is the scheduled time."""
         log.info("bookings: maintenance starting scheduled_at=%s", timestamp)
-        await run_booking_maintenance_once(ResendMailer(), StripePaymentGateway())
+        await run_booking_maintenance_once(ResendMailer(), StripePaymentGateway(), OpenAILanguageModel())

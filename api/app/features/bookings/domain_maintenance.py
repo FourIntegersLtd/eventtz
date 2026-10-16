@@ -6,7 +6,7 @@ Ported from the baseline's `payment_maintenance.py`, `completion_rules.py` and
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 from app.features.bookings import domain
 from app.features.bookings.rows import BookingRow, EnquiryReminderRow
@@ -15,6 +15,12 @@ from app.features.bookings.rows import BookingRow, EnquiryReminderRow
 MAINTENANCE_BATCH_LIMIT = 50
 # How many unanswered enquiries one run looks at for vendor reminders (the baseline's limit).
 ENQUIRY_REMINDER_BATCH_LIMIT = 200
+# How long an unanswered enquiry waits before the client is nudged, and an unpaid accepted booking
+# before its pay-to-confirm reminder.
+CLIENT_NUDGE_AFTER = timedelta(hours=24)
+PAY_TO_CONFIRM_AFTER = timedelta(hours=24)
+# How many bookings the client's other bookings are looked through, to skip vendors they already asked.
+CONTACTED_VENDORS_LOOKUP_LIMIT = 500
 # A client enquiry the vendor never answered within the SLA (a funnel signal, not a decline).
 FAILURE_VENDOR_NO_RESPONSE = "VENDOR_NO_RESPONSE"
 
@@ -126,3 +132,8 @@ def parse_timestamp(value: str | None) -> datetime | None:
         return datetime.fromisoformat(value.replace("Z", "+00:00"))
     except ValueError:
         return None
+
+
+def tomorrow_utc(now: datetime) -> date:
+    """The calendar day after `now` in UTC, which is the day "event tomorrow" reminders look for."""
+    return now.astimezone(UTC).date() + timedelta(days=1)

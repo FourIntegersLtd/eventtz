@@ -46,6 +46,10 @@ slice owns Stripe's side (webhooks, Connect) and calls these, never the reverse.
   the payout date (48 hours after the event's last day) has passed, **mark client
   enquiries unanswered past the SLA** (`VENDOR_NO_RESPONSE`, 72 hours by default)
   and **nudge vendors** 1, 6 and 24 hours after an enquiry they have not answered.
+  I also **nudge the client** 24 hours after an unanswered enquiry (one email that
+  carries up to five alternative vendors), **ask the client to pay** 24 hours after
+  a vendor accepts, **tell both sides the day before** a paid event, and **nudge
+  vendors to set up payouts** 24 hours after approval (`service_reminders.py`).
 - As a **super admin**, I **unstick a booking**: re-check its payment with Stripe,
   release or retry the vendor's payout, finish a cancel whose refund went through,
   cancel for a party (refunding if paid), confirm completion for a party, or run
@@ -91,6 +95,11 @@ slice owns Stripe's side (webhooks, Connect) and calls these, never the reverse.
   booking is paid in its own job transaction; a refused payout is logged (staff
   were alerted) and retried next hour. The completion reminder is claimed by
   stamping `completion_reminder_sent_at` before it is sent, so it goes out once.
+  The four reminders in `service_reminders.py` work the same way: each is claimed by
+  its marker column (`client_no_response_nudge_at`, `pay_to_confirm_reminded_at`,
+  `event_tomorrow_reminded_at`, `vendors.payouts_setup_nudge_at`) before sending.
+  Unlike the baseline, the client nudge sends only the alternatives email (the
+  baseline's generic copy was dropped by its own dedupe), plus the in-app notice.
 - The first confirmation also runs the post-event step (reminder, then any payout
   already due), as the baseline did.
 - Receipt snapshots (`payment_receipt_snapshot`, `vendor_payment_record_snapshot`,
@@ -163,9 +172,5 @@ These wait for the slices that own them; until then the api answers as noted.
   (`service_receipts.py`) are built.
 - The vendor payout ledger (`service_payout_ledger.py`, `repository_payments.py`)
   is built; the payments slice serves it at `GET /vendor/payments/history`.
-- **Maintenance:** the client's nudge when a vendor has not answered, and the
-  lifecycle reminders (pay an accepted booking, event coming up). The completion
-  reminders, automatic payouts, stale-enquiry marking and vendor enquiry nudges
-  are built.
 - **Reviews and disputes:** their routes; this slice reads `booking_reviews` and
   `dispute_cases` through table handles in `repository.py` until then.

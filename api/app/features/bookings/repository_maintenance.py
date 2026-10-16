@@ -6,15 +6,15 @@ writes are conditional so two overlapping runs cannot both act on one booking.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 
 from sqlalchemy import func, select, update
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, AsyncSessionTransaction
 
 from app.core.db import as_uuid, plain_row
 from app.features.bookings.models import BookingRequest
 from app.features.bookings.repository import BOOKING_COLUMNS
-from app.features.bookings.rows import BookingRow, EnquiryReminderRow
+from app.features.bookings.rows import BookingRow, EnquiryReminderRow, SilentEnquiryRow
 
 # The enquiry reminder stamp columns the job may write (anything else is refused).
 _REMINDER_STAMP_COLUMNS = frozenset(
@@ -110,3 +110,81 @@ async def stamp_enquiry_reminders(session: AsyncSession, booking_id: str, stamp_
         .where(BookingRequest.id == as_uuid(booking_id))
         .values(**{stamp_column: func.now() for stamp_column in stamp_columns})
     )
+
+
+def reminder_savepoint(session: AsyncSession) -> AsyncSessionTransaction:
+    """A savepoint around one reminder, so a database error in it undoes only that reminder's claim."""
+    return session.begin_nested()
+
+
+async def silent_client_enquiries(
+    session: AsyncSession, *, created_before: datetime, limit: int
+) -> list[SilentEnquiryRow]:
+    """Pending enquiries sent before `created_before`, never answered, whose client was not nudged."""
+    result = await session.execute(
+        select(
+            BookingRequest.id,
+            BookingRequest.client_user_id,
+            BookingRequest.vendor_user_id,
+            BookingRequest.event_name,
+            BookingRequest.client_search_context,
+        )
+        .where(
+            BookingRequest.status == "pending",
+            BookingRequest.initiator == "client",
+            BookingRequest.vendor_first_response_at.is_(None),
+            BookingRequest.client_no_response_nudge_at.is_(None),
+            BookingRequest.created_at <= created_before,
+        )
+        .order_by(BookingRequest.created_at)
+        .limit(limit)
+    )
+    return [SilentEnquiryRow.model_validate(plain_row(found)) for found in result]
+
+
+async def vendor_ids_contacted_by(session: AsyncSession, client_user_id: str, *, limit: int) -> set[str]:
+    """The vendors this client has sent any request to (at most `limit` bookings are looked at)."""
+    client_uuid = as_uuid(client_user_id)
+    if client_uuid is None:
+        return set()
+    result = await session.execute(
+        select(BookingRequest.vendor_user_id).where(BookingRequest.client_user_id == client_uuid).limit(limit)
+    )
+    return {str(vendor_user_id) for vendor_user_id in result.scalars()}
+
+
+async def unpaid_accepted_bookings(
+    session: AsyncSession, *, accepted_before: datetime, limit: int
+) -> list[BookingRow]:
+    """Accepted, unpaid bookings accepted before `accepted_before` whose pay-to-confirm reminder is unsent."""
+    result = await session.execute(
+        select(*BOOKING_COLUMNS)
+        .where(
+            BookingRequest.status == "accepted",
+            BookingRequest.payment_status == "unpaid",
+            BookingRequest.pay_to_confirm_reminded_at.is_(None),
+            BookingRequest.accepted_at.is_not(None),
+            BookingRequest.accepted_at <= accepted_before,
+        )
+        .order_by(BookingRequest.accepted_at, BookingRequest.id)
+        .limit(limit)
+    )
+    return [BookingRow.model_validate(plain_row(found)) for found in result]
+
+
+async def paid_bookings_starting_on(
+    session: AsyncSession, event_day: date, *, limit: int
+) -> list[BookingRow]:
+    """Accepted, paid bookings whose event starts on `event_day` and whose day-before reminder is unsent."""
+    result = await session.execute(
+        select(*BOOKING_COLUMNS)
+        .where(
+            BookingRequest.status == "accepted",
+            BookingRequest.payment_status == "paid",
+            BookingRequest.event_tomorrow_reminded_at.is_(None),
+            BookingRequest.event_date == event_day,
+        )
+        .order_by(BookingRequest.id)
+        .limit(limit)
+    )
+    return [BookingRow.model_validate(plain_row(found)) for found in result]

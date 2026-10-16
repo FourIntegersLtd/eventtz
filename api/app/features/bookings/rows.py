@@ -89,6 +89,22 @@ class EnquiryReminderRow(BaseModel):
     enquiry_reminder_24h_at: str | None = None
 
 
+class SilentEnquiryRow(BaseModel):
+    """A client enquiry the vendor has not answered, with what the client searched for when sending it."""
+
+    id: str
+    client_user_id: str
+    vendor_user_id: str
+    event_name: str = ""
+    client_search_context: dict[str, Any] | None = None
+
+    @field_validator("client_search_context", mode="before")
+    @classmethod
+    def _context_is_an_object(cls, raw_context: Any) -> dict[str, Any] | None:
+        """A search context that is not a JSON object reads as none."""
+        return raw_context if isinstance(raw_context, dict) else None
+
+
 class CapacityRow(BaseModel):
     """An open booking's dates, for counting the vendor's bookings on each day."""
 

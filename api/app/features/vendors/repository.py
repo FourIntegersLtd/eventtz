@@ -249,10 +249,11 @@ async def vendor_id_for_stripe_account(session: AsyncSession, account_id: str) -
 async def payouts_nudge_candidates(
     session: AsyncSession, *, approved_before: datetime, limit: int
 ) -> list[VendorRow]:
-    """Approved vendors not yet nudged about payouts, approved at or before `approved_before`.
+    """Approved vendors not yet nudged about payouts whose payouts are still not ready.
 
-    Whether their payouts are already verified (or waived) is decided by the
-    caller from the returned rows, with the same rule the listing uses.
+    Approved at or before `approved_before`. "Ready" is the listing's own rule: a Connect
+    account that can charge and pay out, or an admin's waiver (`listing_override` visible).
+    Ready vendors are left out here so they cannot crowd the unready ones out of `limit`.
     """
     result = await session.execute(
         select(*_VENDOR_COLUMNS)
@@ -261,6 +262,12 @@ async def payouts_nudge_candidates(
             Vendor.payouts_setup_nudge_at.is_(None),
             Vendor.approved_at.is_not(None),
             Vendor.approved_at <= approved_before,
+            Vendor.listing_override != "visible",
+            or_(
+                Vendor.stripe_account_id.is_(None),
+                Vendor.stripe_charges_enabled.is_(False),
+                Vendor.stripe_payouts_enabled.is_(False),
+            ),
         )
         .order_by(Vendor.approved_at)
         .limit(limit)
@@ -268,6 +275,15 @@ async def payouts_nudge_candidates(
     return [VendorRow.model_validate(plain_row(row)) for row in result]
 
 
-async def stamp_payouts_nudge(session: AsyncSession, user_id: str) -> None:
-    """Record that the one payouts-setup nudge was handled for this vendor."""
-    await update_vendor(session, user_id, {"payouts_setup_nudge_at": func.now()})
+async def claim_payouts_nudge(session: AsyncSession, user_id: str) -> bool:
+    """Mark the one payouts-setup nudge as handled; False when another run already claimed it."""
+    parsed_id = as_uuid(user_id)
+    if parsed_id is None:
+        return False
+    result = await session.execute(
+        update(Vendor)
+        .where(Vendor.user_id == parsed_id, Vendor.payouts_setup_nudge_at.is_(None))
+        .values(payouts_setup_nudge_at=func.now())
+        .returning(Vendor.user_id)
+    )
+    return result.first() is not None
