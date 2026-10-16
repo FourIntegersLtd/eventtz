@@ -8,13 +8,14 @@ so destructive tests (deletion) never touch the shared session fixtures.
 from __future__ import annotations
 
 import contextlib
+import uuid
 from collections.abc import Iterator
 
 import httpx
 from supabase import Client
 
-from conftest import API, new_browser
-from support.accounts import seed_account, unique_email
+from conftest import API, new_browser, sign_in
+from support.accounts import SeededAccount, seed_account, unique_email
 
 SIGN_IN_REQUIRED = "Please sign in to continue."
 CLIENT_PORTAL_FORBIDDEN = (
@@ -24,6 +25,16 @@ CLIENT_PORTAL_FORBIDDEN = (
 CURRENT_PASSWORD_INCORRECT = "Current password is incorrect."
 ACCOUNT_DELETE_ADMIN = "Staff accounts cannot be deleted here. Ask a super admin to remove team access."
 ACCOUNT_DELETED = "Your Eventtz account has been deleted."
+ACCOUNT_DELETE_MONEY = (
+    "You have a booking with payment still in progress. "
+    "Finish payout or wait for a refund, then try again."
+)
+ACCOUNT_DELETE_ACTIVE = (
+    "You have an accepted booking that has not happened yet. "
+    "Complete or cancel it first, then try again."
+)
+ACCOUNT_DELETE_DISPUTE = "You have an open problem report. Wait until it is resolved, then try again."
+REDACTED_MESSAGE_BODY = "[Deleted]"
 
 CONTACT_SETTINGS_URL = f"{API}/user/contact-settings"
 ACCOUNT_DELETION_URL = f"{API}/user/account/deletion"
@@ -214,3 +225,256 @@ def test_account_deletion_happy_path_tombstones_the_account(admin_db: Client) ->
     row = admin_db.table("users").select("deleted_at,email").eq("id", account.user_id).execute().data[0]
     assert row["deleted_at"] is not None
     assert row["email"] is None
+
+
+# --- deletion gates and erasure ---------------------------------------------------------------
+
+
+def _seed_booking(
+    admin_db: Client,
+    *,
+    client_user_id: str,
+    vendor_user_id: str,
+    status: str = "pending",
+    payment_status: str = "unpaid",
+    event_date: str = "2099-06-01",
+    notes: str | None = None,
+) -> str:
+    """A bare `booking_requests` row between two seeded accounts."""
+    row: dict[str, object] = {
+        "client_user_id": client_user_id,
+        "vendor_user_id": vendor_user_id,
+        "event_name": "Acceptance deletion test",
+        "event_date": event_date,
+        "status": status,
+        "payment_status": payment_status,
+        "total_label": "GBP 150",
+    }
+    if notes is not None:
+        row["notes"] = notes
+    return str(admin_db.table("booking_requests").insert(row).execute().data[0]["id"])
+
+
+def _seed_pair(admin_db: Client, label: str) -> tuple[SeededAccount, SeededAccount]:
+    """A fresh client and vendor account."""
+    return (
+        seed_account(admin_db, unique_email(f"{label}-client"), "client"),
+        seed_account(admin_db, unique_email(f"{label}-vendor"), "vendor"),
+    )
+
+
+def _delete(account: SeededAccount) -> httpx.Response:
+    """Sign in as `account` and ask to delete it with its real password."""
+    browser = sign_in(account)
+    try:
+        return browser.post(ACCOUNT_DELETION_URL, json={"password": account.password})
+    finally:
+        browser.close()
+
+
+def _assert_refused(response: httpx.Response, *, code: str, detail: str) -> None:
+    """A 409 gate refusal with a stable `code` and the exact copy."""
+    assert response.status_code == 409
+    body = response.json()
+    assert body["detail"] == detail
+    assert body["code"] == code
+
+
+def _assert_account_untouched(admin_db: Client, account: SeededAccount) -> None:
+    """The `users` row is not tombstoned."""
+    row = admin_db.table("users").select("deleted_at,email").eq("id", account.user_id).execute().data[0]
+    assert row["deleted_at"] is None
+    assert row["email"] == account.email
+
+
+def test_account_deletion_is_blocked_while_money_is_in_flight(admin_db: Client) -> None:
+    """A paid booking (payout not yet made) refuses deletion and leaves the account intact."""
+    client, vendor = _seed_pair(admin_db, "delete-money")
+    _seed_booking(
+        admin_db, client_user_id=client.user_id, vendor_user_id=vendor.user_id,
+        status="accepted", payment_status="paid",
+    )
+    _assert_refused(_delete(client), code="money_in_flight", detail=ACCOUNT_DELETE_MONEY)
+    _assert_account_untouched(admin_db, client)
+
+
+def test_account_deletion_is_blocked_by_an_accepted_booking_before_the_event(admin_db: Client) -> None:
+    """An accepted, unpaid booking whose event day has not passed refuses deletion."""
+    client, vendor = _seed_pair(admin_db, "delete-active")
+    _seed_booking(
+        admin_db, client_user_id=client.user_id, vendor_user_id=vendor.user_id, status="accepted",
+    )
+    _assert_refused(_delete(client), code="active_booking", detail=ACCOUNT_DELETE_ACTIVE)
+    _assert_account_untouched(admin_db, client)
+
+
+def test_account_deletion_is_blocked_by_an_open_dispute(admin_db: Client) -> None:
+    """An open dispute on a finished booking refuses deletion."""
+    client, vendor = _seed_pair(admin_db, "delete-dispute")
+    booking_id = _seed_booking(
+        admin_db, client_user_id=client.user_id, vendor_user_id=vendor.user_id,
+        status="accepted", event_date="2020-01-01",
+    )
+    admin_db.table("dispute_cases").insert(
+        {
+            "booking_request_id": booking_id,
+            "opened_by_user_id": client.user_id,
+            "status": "open",
+            "summary": "Seeded for the deletion gate.",
+        }
+    ).execute()
+    _assert_refused(_delete(client), code="open_dispute", detail=ACCOUNT_DELETE_DISPUTE)
+    _assert_account_untouched(admin_db, client)
+
+
+def test_account_deletion_gates_apply_to_vendors_too(admin_db: Client) -> None:
+    """The vendor side of a paid booking is blocked with the same money gate."""
+    client, vendor = _seed_pair(admin_db, "delete-vendor-gate")
+    _seed_booking(
+        admin_db, client_user_id=client.user_id, vendor_user_id=vendor.user_id,
+        status="accepted", payment_status="paid",
+    )
+    _assert_refused(_delete(vendor), code="money_in_flight", detail=ACCOUNT_DELETE_MONEY)
+    _assert_account_untouched(admin_db, vendor)
+
+
+def test_account_deletion_cancels_pending_unpaid_bookings(admin_db: Client) -> None:
+    """A pending unpaid booking does not block deletion; it is cancelled by the client."""
+    client, vendor = _seed_pair(admin_db, "delete-cancel")
+    booking_id = _seed_booking(admin_db, client_user_id=client.user_id, vendor_user_id=vendor.user_id)
+    response = _delete(client)
+    assert response.status_code == 200
+    assert response.json()["message"] == ACCOUNT_DELETED
+    row = (
+        admin_db.table("booking_requests").select("status,cancelled_by,cancelled_at")
+        .eq("id", booking_id).execute().data[0]
+    )
+    assert row["status"] == "cancelled"
+    assert row["cancelled_by"] == "client"
+    assert row["cancelled_at"] is not None
+
+
+def test_account_deletion_erases_personal_rows(admin_db: Client) -> None:
+    """Messages are redacted; saved vendors, notifications and contact submissions are removed;
+    the booking row stays with its notes cleared.
+    """
+    client, vendor = _seed_pair(admin_db, "delete-erase")
+    booking_id = _seed_booking(
+        admin_db, client_user_id=client.user_id, vendor_user_id=vendor.user_id,
+        status="declined", notes="private client note",
+    )
+    conversation_id = admin_db.table("conversations").insert(
+        {"kind": "dm", "client_user_id": client.user_id, "vendor_user_id": vendor.user_id}
+    ).execute().data[0]["id"]
+    message_id = admin_db.table("messages").insert(
+        {"conversation_id": conversation_id, "sender_user_id": client.user_id, "body": "my phone is 0123"}
+    ).execute().data[0]["id"]
+    admin_db.table("client_saved_vendors").insert(
+        {"client_user_id": client.user_id, "vendor_user_id": vendor.user_id}
+    ).execute()
+    admin_db.table("booking_notifications").insert(
+        {"user_id": client.user_id, "booking_id": booking_id, "kind": "booking_declined_by_vendor", "body": "x"}
+    ).execute()
+    admin_db.table("contact_submissions").insert(
+        {"user_id": client.user_id, "portal": "client", "subject": "Hi", "message": "erase me"}
+    ).execute()
+
+    assert _delete(client).status_code == 200
+
+    message = admin_db.table("messages").select("body").eq("id", message_id).execute().data[0]
+    assert message["body"] == REDACTED_MESSAGE_BODY
+    for table, column in (
+        ("client_saved_vendors", "client_user_id"),
+        ("booking_notifications", "user_id"),
+        ("contact_submissions", "user_id"),
+    ):
+        assert admin_db.table(table).select("id").eq(column, client.user_id).execute().data == []
+    booking = admin_db.table("booking_requests").select("notes").eq("id", booking_id).execute().data
+    assert booking == [{"notes": None}]
+
+
+def test_account_deletion_tombstone_is_not_restored_by_signup(admin_db: Client) -> None:
+    """Signing up again with a deleted account's email makes a new user; the tombstone stays."""
+    account = seed_account(admin_db, unique_email("delete-resignup"), "client")
+    assert _delete(account).status_code == 200
+    with new_browser() as browser:
+        signup = browser.post(
+            f"{API}/auth/signup",
+            json={"email": account.email, "password": "correct-horse-1", "user_type": "client"},
+        )
+    assert signup.status_code == 200
+    new_user_id = signup.json()["user"]["id"]
+    assert new_user_id != account.user_id
+    old_row = admin_db.table("users").select("deleted_at,email").eq("id", account.user_id).execute().data[0]
+    assert old_row["deleted_at"] is not None
+    assert old_row["email"] is None
+    new_row = admin_db.table("users").select("deleted_at").eq("id", new_user_id).execute().data[0]
+    assert new_row["deleted_at"] is None
+
+
+def test_account_deletion_suspended_account_is_refused(admin_db: Client) -> None:
+    """# BASELINE QUIRK: a suspended account that is already signed in cannot self-delete; the
+    session check refuses every request first (403), so suspension traps the account.
+    """
+    account = seed_account(admin_db, unique_email("delete-suspended"), "client")
+    browser = sign_in(account)
+    admin_db.table("users").update({"account_suspended": True}).eq("id", account.user_id).execute()
+    try:
+        response = browser.post(ACCOUNT_DELETION_URL, json={"password": account.password})
+    finally:
+        browser.close()
+    assert response.status_code == 403
+    assert response.json()["detail"] == (
+        "Your account has been suspended. Contact support if you think this is a mistake."
+    )
+    row = admin_db.table("users").select("deleted_at").eq("id", account.user_id).execute().data[0]
+    assert row["deleted_at"] is None
+
+
+def test_account_deletion_vendor_listing_is_wiped(admin_db: Client) -> None:
+    """A deleted vendor's row is blanked, hidden and Stripe-detached, and leaves public explore."""
+    vendor = seed_account(admin_db, unique_email("delete-wipe"), "vendor")
+    business_name = f"Acceptance Wipe {uuid.uuid4().hex[:8]}"
+    admin_db.table("vendors").insert(
+        {
+            "user_id": vendor.user_id,
+            "status": "complete",
+            "approval_status": "approved",
+            "payload": {"businessName": business_name, "baseCity": "London", "servicesOffered": ["catering"]},
+            "country_code": "GB",
+            "base_city_normalized": "london",
+            "services_offered": ["catering"],
+            "min_list_price_gbp": 100,
+            "stripe_account_id": "acct_fake_deletion",
+            "stripe_charges_enabled": True,
+            "stripe_payouts_enabled": True,
+        }
+    ).execute()
+
+    def listed_names() -> list[str]:
+        with new_browser() as browser:
+            vendors = browser.get(f"{API}/vendors/explore").json()["vendors"]
+        return [
+            row["profile_form_data"].get("businessName")
+            for row in vendors
+            if isinstance(row.get("profile_form_data"), dict)
+        ]
+
+    assert business_name in listed_names()
+    assert _delete(vendor).status_code == 200
+    row = (
+        admin_db.table("vendors")
+        .select("payload,stripe_account_id,stripe_charges_enabled,stripe_payouts_enabled,"
+                "listing_override,listing_override_reason,listing_override_by")
+        .eq("user_id", vendor.user_id).execute().data[0]
+    )
+    assert row == {
+        "payload": {},
+        "stripe_account_id": None,
+        "stripe_charges_enabled": False,
+        "stripe_payouts_enabled": False,
+        "listing_override": "hidden",
+        "listing_override_reason": "Account deleted",
+        "listing_override_by": None,
+    }
+    assert business_name not in listed_names()
