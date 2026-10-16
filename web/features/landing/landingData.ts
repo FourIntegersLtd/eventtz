@@ -8,13 +8,9 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import type { IconType } from "react-icons";
-import {
-  SiFacebook,
-  SiInstagram,
-  SiLinkedin,
-  SiTiktok,
-  SiX,
-} from "react-icons/si";
+// Simple Icons dropped LinkedIn (react-icons 5.7), so it comes from Font Awesome.
+import { FaLinkedin } from "react-icons/fa";
+import { SiFacebook, SiInstagram, SiTiktok, SiX } from "react-icons/si";
 import { VENDOR_SERVICE_CATEGORIES } from "@/lib/vendorServiceCatalog";
 import { getBookingServiceFeePercent } from "@/lib/bookingServiceFee";
 import { FOOTER_CONTACT_EMAIL } from "@/lib/footerLinks";
@@ -202,7 +198,7 @@ export const SOCIAL_LINKS: SocialLink[] = [
     name: "LinkedIn",
     href: "https://www.linkedin.com/company/eventtz/?lipi=urn%3Ali%3Apage%3Ad_flagship3_search_srp_all%3BKW%2FYdf5RREu1tgdsOnlkQg%3D%3D",
     aria: "Eventtz on LinkedIn",
-    Icon: SiLinkedin,
+    Icon: FaLinkedin,
     color: "text-primary",
   },
   {
