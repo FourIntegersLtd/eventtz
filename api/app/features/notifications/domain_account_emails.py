@@ -160,6 +160,26 @@ def password_changed_email(*, user_type: str | None) -> TransactionalEmail:
     )
 
 
+def account_deleted_email() -> TransactionalEmail:
+    """Content for "your account has been deleted", sent when someone closes their own account.
+
+    The baseline's `<title>` is "Your Eventtz account has been deleted" while the subject
+    line is "Account deleted | Eventtz"; both are kept.
+    """
+    return TransactionalEmail(
+        subject=f"Account deleted | {APP_NAME}",
+        title=f"Your {APP_NAME} account has been deleted",
+        headline="Account deleted",
+        subtitle=f"We have closed your {APP_NAME} account as requested.",
+        body=(
+            "Your profile, login, messages, and saved details have been removed.\n\n"
+            "Booking and payment records that the law requires us to keep are stored "
+            "without your name, email, or phone. You can create a new account with the "
+            "same email if you return later."
+        ),
+    )
+
+
 def client_suspended_email(*, support_url: str) -> TransactionalEmail:
     """Content for "your account was suspended", sent to a client when an admin suspends them."""
     headline = "Account suspended"

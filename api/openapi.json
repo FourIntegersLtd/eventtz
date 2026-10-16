@@ -1,6 +1,41 @@
 {
   "components": {
     "schemas": {
+      "AccountDeletionRequest": {
+        "description": "The account's current password, re-entered to confirm closing it.",
+        "properties": {
+          "password": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "password"
+        ],
+        "title": "AccountDeletionRequest",
+        "type": "object"
+      },
+      "AccountDeletionResponse": {
+        "description": "The account is closed; the web app drops its tokens and shows `message`.",
+        "properties": {
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "AccountDeletionResponse",
+        "type": "object"
+      },
       "AddressAutocompleteItem": {
         "description": "One address suggestion.",
         "properties": {
@@ -23245,6 +23280,105 @@
         "summary": "Get Partner For Signup",
         "tags": [
           "referrals"
+        ]
+      }
+    },
+    "/api/v1/user/account/deletion": {
+      "post": {
+        "description": "Close the caller's own client or vendor account after re-checking their password.\n\n`CurrentUser` (not `AnyAccount`): a suspended client or vendor is refused first, as the\nbaseline's session check does (frozen in the acceptance suite).",
+        "operationId": "delete_account_api_v1_user_account_deletion_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountDeletionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountDeletionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_input",
+            "x-codes": [
+              "invalid_input"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "conflict",
+            "x-codes": [
+              "conflict"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Account",
+        "tags": [
+          "user"
         ]
       }
     },

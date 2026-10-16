@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.core.errors import Forbidden, InvalidInput, RateLimited, Unauthenticated
+from app.core.errors import Conflict, Forbidden, InvalidInput, RateLimited, Unauthenticated
 
 # --- sign-up --------------------------------------------------------------------------------------
 
@@ -176,3 +176,39 @@ class TooManyPasswordChanges(InvalidInput):
 
     code = "change_password_rate_limited"
     default_message = "Too many password change attempts. Try again later."
+
+
+# --- account deletion ------------------------------------------------------------------------------
+
+
+class AccountDeletionForbiddenForAdmin(Forbidden):
+    """Staff cannot close their own account from settings; team access is removed by a super admin."""
+
+    code = "account_deletion_staff"
+    default_message = "Staff accounts cannot be deleted here. Ask a super admin to remove team access."
+
+
+class AccountDeletionMoneyInFlight(Conflict):
+    """A booking of this account still has a payment in progress (paid and not yet paid out, or pending)."""
+
+    code = "money_in_flight"
+    default_message = (
+        "You have a booking with payment still in progress. "
+        "Finish payout or wait for a refund, then try again."
+    )
+
+
+class AccountDeletionActiveBooking(Conflict):
+    """An accepted booking of this account has not happened yet."""
+
+    code = "active_booking"
+    default_message = (
+        "You have an accepted booking that has not happened yet. Complete or cancel it first, then try again."
+    )
+
+
+class AccountDeletionOpenDispute(Conflict):
+    """A problem report on one of this account's bookings is still open."""
+
+    code = "open_dispute"
+    default_message = "You have an open problem report. Wait until it is resolved, then try again."

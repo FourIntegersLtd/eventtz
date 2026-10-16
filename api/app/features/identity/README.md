@@ -20,6 +20,12 @@ Other slices name people through `client_display_names` and `emails_by_id`.
 - As a **user**, I **change my password** while signed in; every session ends, including
   this one, and I sign in again.
 - As a **user**, I **choose what contact details I share** after a paid booking.
+- As a **client or vendor**, I **close my own account** after re-entering my password
+  (`service_deletion.py`). It is refused while a booking has money in flight, while an
+  accepted booking has not happened yet, or while a problem report is open, in that
+  order. Otherwise my pending unpaid enquiries are cancelled (the other side is told),
+  my personal rows are erased or redacted, a vendor listing is wiped and hidden, every
+  sign-in ends, my uploads and Stripe Connect account are deleted and I get an email.
 - As a **client**, I **finish first-visit onboarding** and set the name vendors see.
 - As a **vendor**, I **see my clients' names** (`client_display_names`) without their email.
 - As **staff**, I **see a user's email** (`emails_by_id`) on admin screens.
@@ -52,8 +58,12 @@ Other slices name people through `client_display_names` and `emails_by_id`.
 - A vendor-facing name is never an email: deleted accounts show "Deleted user", then
   the preferred name, then a name made from the email's local part, then "Client".
   `tests/golden/referrals/client_names.json` pins this.
-- Account deletion is not here yet; it arrives once bookings, disputes, messaging,
-  planner and payments are rebuilt (it has to check and clean up all of them).
+- Closed accounts are tombstones, never deleted or restored: `users.deleted_at` is set
+  and the personal columns wiped. Sign-up with the same email creates a new row.
+- Account closure's database writes share the request's transaction; the outside
+  clean-up (storage, email, Stripe) is best-effort and never undoes the closure.
+- A suspended client or vendor cannot close their account (`CurrentUser` refuses them
+  first), a baseline quirk frozen by the acceptance suite. Staff cannot self-close.
 - Admin accounts created with no password (`service_staff_accounts.create_admin_account`)
   get `password_hash=None` and a one-click setup link instead of the baseline's
   throwaway Supabase password; the setup link reuses the same
@@ -74,4 +84,9 @@ Other slices name people through `client_display_names` and `emails_by_id`.
 | POST | `/auth/verify-email` | verification link holder |
 | POST | `/auth/change-password` | signed-in account (suspended too) |
 | GET, PUT | `/user/contact-settings` | signed-in user |
+| POST | `/user/account/deletion` | signed-in client or vendor (not suspended) |
 | GET, PATCH | `/client/onboarding` | signed-in client |
+
+## Deferred
+
+- Mixpanel profile delete on account closure (needs an analytics port; awaiting approval).

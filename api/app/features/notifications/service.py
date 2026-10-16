@@ -24,6 +24,7 @@ from app.features.notifications.domain import (
 )
 from app.features.notifications.domain_account_emails import (
     TransactionalEmail,
+    account_deleted_email,
     admin_welcome_email,
     client_suspended_email,
     email_verification_email,
@@ -316,6 +317,23 @@ def send_password_reset(
         return mailer.send(outgoing)
     except Exception:
         log.exception("password reset could not be sent email=%s", normalized)
+        return False
+
+
+def render_account_deleted(*, email: str) -> OutgoingEmail:
+    """Render the "account deleted" confirmation (booking layout, as the baseline), without sending it."""
+    return render_booking_notification(email, account_deleted_email())
+
+
+def send_account_deleted(mailer: Mailer, *, email: str) -> bool:
+    """Email `email` that their account was closed. False for an invalid address, never raises."""
+    normalized = email.strip().lower()
+    if not normalized or "@" not in normalized:
+        return False
+    try:
+        return mailer.send(render_account_deleted(email=normalized))
+    except Exception:
+        log.exception("account deleted email could not be sent")
         return False
 
 

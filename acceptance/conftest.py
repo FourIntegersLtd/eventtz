@@ -44,11 +44,7 @@ API_DATABASE_URL = os.environ.get(
 )
 # Frozen behaviour api/ has not rebuilt yet: expected to fail on `TARGET=api`, and
 # strictly, so an entry whose tests start passing fails the run until it is removed.
-NOT_YET_ON_API = {
-    "test_identity_settings.py::test_account_deletion_*": (
-        "account deletion arrives after bookings, disputes and messaging (identity README)"
-    ),
-}
+NOT_YET_ON_API: dict[str, str] = {}
 LOCAL_HOSTS = ("http://127.0.0.1", "http://localhost", "postgresql://postgres:postgres@127.0.0.1:")
 
 

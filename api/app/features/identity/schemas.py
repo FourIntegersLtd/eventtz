@@ -233,3 +233,16 @@ class ClientOnboardingPatchBody(BaseModel):
 
     preferred_name: str | None = Field(None, max_length=80)
     mark_completed: bool | None = None
+
+
+class AccountDeletionRequest(BaseModel):
+    """The account's current password, re-entered to confirm closing it."""
+
+    password: str = Field(min_length=1, max_length=200)
+
+
+class AccountDeletionResponse(BaseModel):
+    """The account is closed; the web app drops its tokens and shows `message`."""
+
+    success: bool = True
+    message: str

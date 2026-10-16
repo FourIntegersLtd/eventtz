@@ -158,6 +158,14 @@ class Storage(Protocol):
         """The host every stored file's public URL starts with, so saved forms can keep only our uploads."""
         ...
 
+    def delete_object(self, key: str) -> None:
+        """Remove the object stored under `key` (a missing key is not an error). Raises on storage failure."""
+        ...
+
+    def delete_prefix(self, prefix: str) -> None:
+        """Remove every object whose key starts with `prefix`. Raises on storage failure."""
+        ...
+
 
 # --- live updates -------------------------------------------------------------------------------
 
@@ -307,6 +315,10 @@ class PaymentGateway(Protocol):
 
     async def create_account_link(self, *, account_id: str, refresh_url: str, return_url: str) -> str:
         """A one-time onboarding URL for a connected account."""
+        ...
+
+    async def delete_account(self, account_id: str) -> None:
+        """Delete a connected account (account closure; callers treat failure as best-effort)."""
         ...
 
 

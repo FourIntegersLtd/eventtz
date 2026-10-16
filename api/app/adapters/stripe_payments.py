@@ -71,6 +71,8 @@ class StripePaymentGateway:
                 if method == "GET":
                     query = f"?{urlencode(form)}" if form else ""
                     response = await http.get(f"{STRIPE_API}{path}{query}", headers=headers)
+                elif method == "DELETE":
+                    response = await http.delete(f"{STRIPE_API}{path}", headers=headers)
                 else:
                     headers["Content-Type"] = "application/x-www-form-urlencoded"
                     response = await http.post(
@@ -228,6 +230,10 @@ class StripePaymentGateway:
     async def retrieve_transfer(self, transfer_id: str) -> dict[str, Any]:
         """One transfer, for its `destination` connected account id."""
         return await self._call("GET", f"/transfers/{transfer_id}")
+
+    async def delete_account(self, account_id: str) -> None:
+        """Delete a connected account (Stripe allows it for Express accounts with a zero balance)."""
+        await self._call("DELETE", f"/accounts/{account_id}")
 
     async def create_account_link(self, *, account_id: str, refresh_url: str, return_url: str) -> str:
         """A one-time onboarding URL."""

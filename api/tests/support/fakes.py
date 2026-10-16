@@ -113,6 +113,10 @@ class FakeStorage:
     configured: bool = True
     error: Exception | None = None
     saved: list[SavedObject] = field(default_factory=list)
+    deleted_keys: list[str] = field(default_factory=list)
+    deleted_prefixes: list[str] = field(default_factory=list)
+    # Makes every delete fail, so best-effort cleanup can be shown not to stop its caller.
+    delete_error: Exception | None = None
 
     def is_configured(self) -> bool:
         """Whether storage is "switched on"."""
@@ -128,6 +132,18 @@ class FakeStorage:
     def public_host(self) -> str:
         """The host of every URL `save` returns."""
         return FAKE_STORAGE_HOST
+
+    def delete_object(self, key: str) -> None:
+        """Record the deleted key (or raise `delete_error`)."""
+        if self.delete_error is not None:
+            raise self.delete_error
+        self.deleted_keys.append(key)
+
+    def delete_prefix(self, prefix: str) -> None:
+        """Record the deleted prefix (or raise `delete_error`)."""
+        if self.delete_error is not None:
+            raise self.delete_error
+        self.deleted_prefixes.append(prefix)
 
 
 @dataclass
@@ -231,6 +247,10 @@ class FakePaymentGateway:
             "create_account_link", account_id=account_id, refresh_url=refresh_url, return_url=return_url
         )
         return f"https://connect.example/{account_id}"
+
+    async def delete_account(self, account_id: str) -> None:
+        """Record the deletion."""
+        self._enter("delete_account", account_id=account_id)
 
     async def retrieve_transfer(self, transfer_id: str) -> dict[str, Any]:
         """The seeded transfer."""

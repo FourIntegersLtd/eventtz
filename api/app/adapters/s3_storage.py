@@ -20,6 +20,9 @@ from app.core.settings import get_settings
 if TYPE_CHECKING:
     from mypy_boto3_s3 import S3Client
 
+# S3's DeleteObjects accepts at most this many keys per request.
+DELETE_BATCH_SIZE = 1000
+
 # Browsers and the CDN may cache an uploaded file for an hour; keys are never reused.
 CACHE_CONTROL = "public, max-age=3600"
 
@@ -82,6 +85,37 @@ class S3Storage:
             extra_arguments["ContentType"] = content_type.strip()
         self._client().upload_fileobj(BytesIO(body), bucket_name(), key, ExtraArgs=extra_arguments)
         return StoredFile(bucket=bucket_name(), key=key, public_url=public_object_url(key))
+
+    def delete_object(self, key: str) -> None:
+        """Delete one object; S3 answers success for a key that does not exist."""
+        self._client().delete_object(Bucket=bucket_name(), Key=key)
+
+    def delete_prefix(self, prefix: str) -> None:
+        """List every object under `prefix` and delete them in batches of `DELETE_BATCH_SIZE`."""
+        if not prefix:
+            return  # an empty prefix would empty the whole bucket
+        client = self._client()
+        bucket = bucket_name()
+        pending_keys: list[str] = []
+        for page in client.get_paginator("list_objects_v2").paginate(Bucket=bucket, Prefix=prefix):
+            for stored_object in page.get("Contents") or []:
+                object_key = str(stored_object.get("Key") or "")
+                if not object_key:
+                    continue
+                pending_keys.append(object_key)
+                if len(pending_keys) >= DELETE_BATCH_SIZE:
+                    self._delete_batch(client, bucket, pending_keys)
+                    pending_keys = []
+        if pending_keys:
+            self._delete_batch(client, bucket, pending_keys)
+
+    @staticmethod
+    def _delete_batch(client: S3Client, bucket: str, object_keys: list[str]) -> None:
+        """One DeleteObjects request for up to `DELETE_BATCH_SIZE` keys."""
+        client.delete_objects(
+            Bucket=bucket,
+            Delete={"Objects": [{"Key": object_key} for object_key in object_keys], "Quiet": True},
+        )
 
     def _client(self) -> S3Client:
         """A boto3 S3 client using the configured keys and region."""

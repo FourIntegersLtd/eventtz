@@ -322,6 +322,20 @@ async def update_booking(
     return result.first() is not None
 
 
+async def erase_client_booking_extras(session: AsyncSession, client_user_id: str) -> None:
+    """Account closure: clear what only the client wrote on their bookings, and unlink their planner event.
+
+    Mirrors baseline `account_deletion_erase.py:84-91` (notes, search context) and `:112-119`
+    (event_id, so the client's planner events can be deleted). Venue, date and amounts stay
+    for the vendor's records.
+    """
+    await session.execute(
+        update(BookingRequest)
+        .where(BookingRequest.client_user_id == as_uuid(client_user_id))
+        .values(notes=None, client_search_context=None, event_id=None)
+    )
+
+
 async def stamp_first_response(session: AsyncSession, booking_id: str) -> None:
     """Record when the vendor first answered and how long the client waited (set once)."""
     waited_seconds = func.greatest(
