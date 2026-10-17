@@ -4,13 +4,12 @@ Revision ID: 0011
 Revises: 0010
 Create Date: 2026-10-17
 
-Catering and baking vendors must hold public liability
-cover (`vendors/domain_insurance.py`). The vendor uploads the certificate in the profile
+Public liability cover is optional for now (`vendors/domain_insurance.py`): a checked,
+in-date certificate earns the badge. The vendor uploads the certificate in the profile
 form; these columns hold what staff read off it, so the vendor cannot write them:
 
 - `insurance_certificate_url`, `insurance_expires_on`, `insurance_cover_gbp`,
   `insurance_verified_at`, `insurance_verified_by`: the checked certificate.
-- `insurance_reminder_at`: the one renew-or-upload email per certificate.
 
 Additive and nullable: no data changes. Every existing vendor reads as unchecked.
 """
@@ -58,12 +57,6 @@ VENDOR_COLUMNS = (
         sa.Uuid(),
         nullable=True,
         comment="The staff member who checked the certificate.",
-    ),
-    sa.Column(
-        "insurance_reminder_at",
-        sa.DateTime(timezone=True),
-        nullable=True,
-        comment="When the renew-or-upload insurance email was sent; cleared when a certificate is checked.",
     ),
 )
 

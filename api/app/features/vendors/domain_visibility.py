@@ -4,9 +4,7 @@ Admin approval alone is not enough: a vendor whose Stripe Connect account cannot
 a charge or pay out would strand a client mid-checkout, so they stay hidden until
 Stripe reports both. Admins can override that per vendor (`vendors.listing_override`):
 `visible` waives the Stripe requirement, `hidden` takes a listing down without a ban.
-Approval still wins over both: a banned or unreviewed vendor is never listed. Missing or lapsed
-public liability cover (`domain_insurance.insurance_allows_listing`) hides a vendor even when
-forced visible: the override waives Stripe, not insurance.
+Approval still wins over both: a banned or unreviewed vendor is never listed.
 """
 
 from __future__ import annotations
@@ -48,10 +46,9 @@ def is_publicly_listable(
     payouts_ready: bool,
     paused_until: datetime | None = None,
     now: datetime | None = None,
-    insurance_ok: bool = True,
 ) -> bool:
-    """Approved, not paused, not hidden, insured if required, and either forced visible or Stripe-ready."""
-    if approval_status != "approved" or not insurance_ok:
+    """Approved, not paused, not hidden, and either forced visible or Stripe-ready."""
+    if approval_status != "approved":
         return False
     if is_paused(paused_until, now=now):
         return False

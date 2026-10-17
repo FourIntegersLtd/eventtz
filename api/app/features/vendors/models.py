@@ -226,10 +226,6 @@ class Vendor(Base, UUIDPrimaryKey, Timestamps):
     insurance_verified_by: Mapped[uuid.UUID | None] = mapped_column(
         Uuid, comment="The staff member who checked the certificate."
     )
-    insurance_reminder_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True),
-        comment="When the renew-or-upload insurance email was sent; cleared when a certificate is checked.",
-    )
     client_referral_code: Mapped[str | None] = mapped_column(
         Text, comment="Shareable numeric code for clients (?vref= on browse, or booking form). 1–6 digits."
     )

@@ -33,9 +33,8 @@ class VendorProfilePutBody(BaseModel):
 
 
 class VendorInsuranceState(BaseModel):
-    """The vendor's public liability cover: whether it is required, and what staff have checked."""
+    """The vendor's public liability cover (optional for now): what they uploaded and what staff checked."""
 
-    required: bool = Field(default=False, description="The vendor's services need cover (catering, baking).")
     status: Literal["missing", "awaiting_check", "verified", "expiring", "expired"] = Field(
         default="missing",
         description=(
@@ -48,10 +47,6 @@ class VendorInsuranceState(BaseModel):
     expires_on: date | None = None
     cover_gbp: int | None = None
     verified_at: str | None = None
-    listing_hidden_from: date | None = Field(
-        default=None,
-        description="When a required vendor's listing hides itself unless a new certificate is checked.",
-    )
 
 
 class VendorProfileState(BaseModel):

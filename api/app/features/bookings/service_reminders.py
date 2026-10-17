@@ -15,7 +15,7 @@ A closed account gets nothing; its marker is still set so it is not looked at ag
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -311,54 +311,4 @@ async def send_payouts_setup_nudges(session: AsyncSession, mailer: Mailer, *, no
                     sent += 1
         except Exception:
             log.exception("bookings: payouts-setup nudge failed vendor=%s", vendor.user_id)
-    return sent
-
-
-# --- vendor: upload or renew public liability insurance -----------------------------------------------
-
-
-def _day_label(day: date) -> str:
-    """A date as the emails write it: 1 December 2026."""
-    return f"{day.day} {day:%B %Y}"
-
-
-async def send_insurance_reminders(session: AsyncSession, mailer: Mailer, *, now: datetime) -> int:
-    """Email approved vendors who need cover and have none checked, or whose cover ends within 30 days.
-
-    One email per checked certificate: staff checking a new one starts the next cycle.
-    Not in the hourly job yet: it goes on once the owner approves the email (no unapproved sends).
-    Returns how many were sent.
-    """
-    limit = domain_maintenance.MAINTENANCE_BATCH_LIMIT
-    today = now.date()
-    vendors = await service_payouts_nudge.vendors_awaiting_insurance_reminder(
-        session, today=today, limit=limit * 3
-    )
-    contacts = await identity.contact_emails(session, [vendor.user_id for vendor in vendors])
-    sent = 0
-    for vendor in vendors:
-        if sent >= limit:
-            break
-        email = contacts.get(vendor.user_id)
-        gone = _is_gone(contacts, vendor.user_id)
-        if not gone and not _has_address(email):
-            # No address yet: leave the reminder unclaimed so it goes out once there is one.
-            continue
-        cover = service_payouts_nudge.vendor_insurance(vendor, today=today)
-        hidden_from = cover.listing_hidden_from or today
-        try:
-            async with repository_maintenance.reminder_savepoint(session):
-                if not await service_payouts_nudge.claim_insurance_reminder(session, vendor.user_id) or gone:
-                    continue
-                if notification_emails.send_vendor_insurance_reminder(
-                    mailer,
-                    vendor_email=email,
-                    business_name=service_payouts_nudge.nudge_business_name(vendor),
-                    expires_on_label=_day_label(cover.expires_on) if cover.expires_on else None,
-                    hidden_from_label=_day_label(hidden_from),
-                    already_hidden=hidden_from <= today,
-                ):
-                    sent += 1
-        except Exception:
-            log.exception("bookings: insurance reminder failed vendor=%s", vendor.user_id)
     return sent

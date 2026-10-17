@@ -16,7 +16,6 @@ from app.features.vendors.errors import (
     InsuranceAlreadyExpired,
     InsuranceCertificateMissing,
     InsuranceCoverTooLow,
-    InsuranceRequiredForApproval,
     ListingMediaUrlInvalid,
     ListingOverrideReasonRequired,
     ListingOverrideSuperAdminOnly,
@@ -69,7 +68,7 @@ async def list_vendors(
 @router.patch(
     "/vendors/{user_id}/approval",
     response_model=AdminVendorApprovalResponse,
-    responses=error_responses(*ROLE_ERRORS, VendorProfileNotFound, InsuranceRequiredForApproval),
+    responses=error_responses(*ROLE_ERRORS, VendorProfileNotFound),
 )
 async def set_approval(
     session: SessionDep,
@@ -265,5 +264,5 @@ async def verify_insurance(
 async def revoke_insurance(
     session: SessionDep, principal: CurrentStaff, user_id: str
 ) -> AdminVendorInsuranceResponse:
-    """Forget the checked certificate; a vendor who needs cover is unlisted until a new one is checked."""
+    """Forget the checked certificate; the badge goes until a new one is checked."""
     return await service_moderation.revoke_insurance(session, principal, user_id)

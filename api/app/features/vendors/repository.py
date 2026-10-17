@@ -5,7 +5,7 @@ Every function takes the request's session and never commits (ADR 0002).
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
@@ -27,12 +27,6 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import as_uuid, plain_row
-from app.features.vendors.domain_insurance import (
-    EXPIRY_GRACE,
-    INSURANCE_REQUIRED_FROM,
-    INSURANCE_REQUIRED_SERVICES,
-    REMINDER_BEFORE_EXPIRY,
-)
 from app.features.vendors.models import Vendor
 from app.features.vendors.rows import ListedVendorRow, VendorNameRow, VendorRow
 
@@ -182,25 +176,8 @@ async def vendor_name_rows(session: AsyncSession, user_ids: list[str]) -> list[V
     ]
 
 
-def _needs_insurance() -> ColumnElement[bool]:
-    """SQL for `domain_insurance.requires_insurance` over the services copied out of the form."""
-    return func.coalesce(Vendor.services_offered.overlap(sorted(INSURANCE_REQUIRED_SERVICES)), False)
-
-
-def _insurance_allows_listing(today: date) -> ColumnElement[bool]:
-    """SQL for `domain_insurance.insurance_allows_listing` on `today`."""
-    allowed: list[ColumnElement[bool]] = [
-        ~_needs_insurance(),
-        Vendor.insurance_expires_on >= today - EXPIRY_GRACE,
-    ]
-    if today < INSURANCE_REQUIRED_FROM:
-        allowed.append(Vendor.insurance_expires_on.is_(None))
-    return or_(*allowed)
-
-
-def _publicly_listed(today: date) -> ColumnElement[bool]:
-    """SQL for `domain_visibility.is_publicly_listable`: approved, unpaused, not hidden, visible or ready,
-    and insured when the vendor's services need it.
+def _publicly_listed() -> ColumnElement[bool]:
+    """SQL for `domain_visibility.is_publicly_listable`: approved, unpaused, not hidden, visible or ready.
 
     Keep the two in step; the explore freeze tests cover every branch.
     """
@@ -215,7 +192,6 @@ def _publicly_listed(today: date) -> ColumnElement[bool]:
         or_(Vendor.listing_paused_until.is_(None), Vendor.listing_paused_until <= func.now()),
         Vendor.listing_override != "hidden",
         or_(Vendor.listing_override == "visible", stripe_ready),
-        _insurance_allows_listing(today),
     )
 
 
@@ -229,18 +205,15 @@ async def marketplace_vendors(
     budget_max: float | None = None,
     service_types: list[str] | None = None,
     city_query: str | None = None,
-    today: date | None = None,
 ) -> list[ListedVendorRow]:
     """Vendors the marketplace may show, most recently updated first, with their account email.
 
     `listed_only` applies the public listing rule; without it any approved vendor
     matches (for staff-designated QA vendors). Closed accounts never appear. The
     budget, service and city filters read the columns copied out of the profile form.
-    `today` (default: the UTC date) decides whether checked insurance is still in date.
     """
     filters: list[ColumnElement[bool]] = [_users.c.deleted_at.is_(None)]
-    listing_day = today or datetime.now(UTC).date()
-    filters.append(_publicly_listed(listing_day) if listed_only else Vendor.approval_status == "approved")
+    filters.append(_publicly_listed() if listed_only else Vendor.approval_status == "approved")
     if country_code is not None:
         filters.append(Vendor.country_code == country_code)
     if user_ids is not None:
@@ -320,43 +293,6 @@ async def claim_payouts_nudge(session: AsyncSession, user_id: str) -> bool:
         update(Vendor)
         .where(Vendor.user_id == parsed_id, Vendor.payouts_setup_nudge_at.is_(None))
         .values(payouts_setup_nudge_at=func.now())
-        .returning(Vendor.user_id)
-    )
-    return result.first() is not None
-
-
-# --- public liability insurance -------------------------------------------------------------
-
-
-async def insurance_reminder_candidates(session: AsyncSession, *, today: date, limit: int) -> list[VendorRow]:
-    """Approved vendors who need insurance, not yet emailed this cycle, with no checked cover or cover
-    ending within `REMINDER_BEFORE_EXPIRY` of `today`. Soonest expiry first, unchecked ones last."""
-    result = await session.execute(
-        select(*_VENDOR_COLUMNS)
-        .where(
-            Vendor.approval_status == "approved",
-            _needs_insurance(),
-            Vendor.insurance_reminder_at.is_(None),
-            or_(
-                Vendor.insurance_expires_on.is_(None),
-                Vendor.insurance_expires_on <= today + REMINDER_BEFORE_EXPIRY,
-            ),
-        )
-        .order_by(Vendor.insurance_expires_on.asc().nulls_last(), Vendor.created_at)
-        .limit(limit)
-    )
-    return [VendorRow.model_validate(plain_row(row)) for row in result]
-
-
-async def claim_insurance_reminder(session: AsyncSession, user_id: str) -> bool:
-    """Mark this cycle's insurance email as handled; False when another run already claimed it."""
-    parsed_id = as_uuid(user_id)
-    if parsed_id is None:
-        return False
-    result = await session.execute(
-        update(Vendor)
-        .where(Vendor.user_id == parsed_id, Vendor.insurance_reminder_at.is_(None))
-        .values(insurance_reminder_at=func.now())
         .returning(Vendor.user_id)
     )
     return result.first() is not None

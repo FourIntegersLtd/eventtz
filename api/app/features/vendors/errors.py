@@ -73,15 +73,6 @@ class ListingOverrideSuperAdminOnly(Forbidden):
     default_message = "Only super admins can force a vendor listing visible or hidden."
 
 
-class InsuranceRequiredForApproval(Conflict):
-    """The vendor's services need public liability cover, and no in-date certificate has been checked."""
-
-    code = "insurance_required_for_approval"
-    default_message = (
-        "This vendor's services need public liability insurance. Check their certificate before approving."
-    )
-
-
 class InsuranceCertificateMissing(Conflict):
     """Staff tried to record insurance for a vendor who has not uploaded a certificate."""
 

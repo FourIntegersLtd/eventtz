@@ -15,9 +15,7 @@ is publicly listed.
 - As a **super admin**, I **force a listing visible or hidden** with a recorded reason.
 - As **staff**, I **reorder and hide a vendor's listing photos**.
 - As **staff**, I **check a vendor's public liability certificate** (expiry and cover) or withdraw the check, so the
-  "insurance checked" badge and the listing rest on what staff read, not on an upload.
-- As an **approved vendor who needs cover**, I get **one email** 30 days before my checked cover ends (or when I have
-  none checked), saying when my listing hides itself (the hourly bookings maintenance job).
+  "insurance checked" badge rests on what staff read, not on an upload.
 
 ## Invariants
 - A business name (normalised: case and spaces) belongs to at most one vendor.
@@ -32,10 +30,9 @@ is publicly listed.
   `deliveryUpfrontPercent` (50–60) and `deliveryDeadlineDays` (1–60), each optional, and
   `damageDepositGbp` (0–1000). Bookings snapshot them at checkout (ADR 0010); photography is always
   split, with blanks becoming 60% / 30 days.
-- Public liability insurance (`domain_insurance.py`) is required for catering and
-  baking: submitting needs a certificate uploaded, approval needs an in-date one checked by staff (£1m+), and
-  the listing hides itself 14 days after checked cover ends (even when forced visible). Vendors with
-  nothing checked keep their listing until `INSURANCE_REQUIRED_FROM` (2026-12-01). The `insurance_*`
+- Public liability insurance (`domain_insurance.py`) is optional for every service for now: it never
+  blocks submitting, approval or the listing. Staff check a certificate (£1m+), and the badge shows only
+  while that checked cover is in date. The `insurance_*`
   columns are staff-written only; the public payload's `insuranceCheckedUntil` is always set by the
   api, never taken from the vendor's form.
 - The Stripe Connect columns (`stripe_account_id`, `stripe_charges_enabled`, `stripe_payouts_enabled`) are

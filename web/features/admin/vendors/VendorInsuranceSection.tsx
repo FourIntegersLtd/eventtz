@@ -79,11 +79,7 @@ export function VendorInsuranceSection({ vendor }: Props) {
         <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${status.tone}`}>
           {status.label}
         </span>
-        <span className="ml-2">
-          {insurance.required
-            ? "Required for this vendor's services: they cannot be approved or stay listed without checked cover."
-            : "Optional for this vendor; a checked certificate earns the badge."}
-        </span>
+        <span className="ml-2">Optional. A checked, in-date certificate earns the badge.</span>
       </p>
 
       <ul className="space-y-1 text-sm text-neutral-700">
@@ -108,9 +104,6 @@ export function VendorInsuranceSection({ vendor }: Props) {
             {formatDay(insurance.expires_on)}
             {checkedFile !== insurance.certificate_url ? " (an older file; the new upload needs checking)" : ""}.
           </li>
-        ) : null}
-        {insurance.required && insurance.listing_hidden_from ? (
-          <li>The listing hides itself from {formatDay(insurance.listing_hidden_from)} unless a newer certificate is checked.</li>
         ) : null}
       </ul>
 

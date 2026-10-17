@@ -146,7 +146,7 @@ export function StepAdditionalInfo({
       <OnboardingSubQuestion headline="Indemnity / insurance certificate" indexOffset={3}>
         <DocUploadRow
           label=""
-          helpText="Public liability insurance (at least £1,000,000). Required for catering and baking; optional otherwise."
+          helpText="Public liability or indemnity insurance, if you have it."
           persistedUrl={data.indemnityCertNamePersisted}
           displayName={uploadedFileDisplayName(
             data.indemnityCertNamePersisted,

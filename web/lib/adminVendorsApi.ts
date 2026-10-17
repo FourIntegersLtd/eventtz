@@ -44,8 +44,6 @@ export type AdminVendorInsuranceStatus =
   | "expired";
 
 export type AdminVendorInsurance = {
-  /** The vendor offers a service that needs cover (catering, baking). */
-  required: boolean;
   status: AdminVendorInsuranceStatus | string;
   /** The certificate the vendor uploaded most recently. */
   certificate_url: string | null;
@@ -55,8 +53,6 @@ export type AdminVendorInsurance = {
   expires_on: string | null;
   cover_gbp: number | null;
   verified_at: string | null;
-  /** ISO date the listing hides itself if nothing new is checked (required vendors only). */
-  listing_hidden_from: string | null;
 };
 
 export type AdminVendorsQuery = {

@@ -21,7 +21,7 @@ from app.features.identity import service as identity
 from app.features.notifications import service as notifications
 from app.features.staff import service as staff
 from app.features.vendors import repository
-from app.features.vendors.domain_insurance import MIN_COVER_GBP, has_valid_insurance
+from app.features.vendors.domain_insurance import MIN_COVER_GBP
 from app.features.vendors.domain_listing_media import listing_cover_image_url, url_list, with_listing_media
 from app.features.vendors.domain_profile_form import normalize_payload_fields
 from app.features.vendors.domain_visibility import is_paused, listing_override_of
@@ -29,7 +29,6 @@ from app.features.vendors.errors import (
     InsuranceAlreadyExpired,
     InsuranceCertificateMissing,
     InsuranceCoverTooLow,
-    InsuranceRequiredForApproval,
     ListingOverrideReasonRequired,
     ListingOverrideSuperAdminOnly,
     OnlyPendingToDraft,
@@ -55,7 +54,6 @@ from app.features.vendors.schemas import (
 from app.features.vendors.service_profile import (
     insurance_state,
     listing_is_visible,
-    needs_insurance,
     payouts_are_verified,
 )
 
@@ -187,18 +185,10 @@ async def set_approval(
     """Approve, ban or re-queue a vendor, and email them when their state actually changed.
 
     The first approval stamps `approved_at`. The email is chosen from the listing flags
-    after the change (live, finish payouts, or listing paused). A vendor whose services need
-    insurance is approved only once staff have checked an in-date certificate.
+    after the change (live, finish payouts, or listing paused).
     """
     previous = await _vendor_or_404(session, user_id)
     previous_status = previous.approval_status or "pending"
-    if (
-        approval_status == "approved"
-        and previous_status != "approved"
-        and needs_insurance(previous)
-        and not has_valid_insurance(previous.insurance_expires_on, today=datetime.now(UTC).date())
-    ):
-        raise InsuranceRequiredForApproval()
     changes: dict[str, Any] = {"approval_status": approval_status}
     if approval_status == "approved" and previous_status != "approved":
         changes["approved_at"] = _now_iso()
@@ -581,11 +571,7 @@ async def verify_insurance(
     expires_on: date,
     cover_gbp: int,
 ) -> AdminVendorInsuranceResponse:
-    """Record the certificate now on the vendor's form as checked, with the expiry and cover staff read.
-
-    Checking a certificate starts a new reminder cycle, so the vendor is emailed again
-    before this cover ends.
-    """
+    """Record the certificate now on the vendor's form as checked, with the expiry and cover staff read."""
     vendor = await _vendor_or_404(session, user_id)
     certificate_url = insurance_state(vendor).certificate_url
     if certificate_url is None:
@@ -603,7 +589,6 @@ async def verify_insurance(
             "insurance_cover_gbp": cover_gbp,
             "insurance_verified_at": datetime.now(UTC),
             "insurance_verified_by": staff_member.id,
-            "insurance_reminder_at": None,
         },
     )
     updated = await _vendor_or_404(session, user_id)
@@ -638,7 +623,6 @@ async def revoke_insurance(
             "insurance_cover_gbp": None,
             "insurance_verified_at": None,
             "insurance_verified_by": None,
-            "insurance_reminder_at": None,
         },
     )
     updated = await _vendor_or_404(session, user_id)

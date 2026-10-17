@@ -12471,7 +12471,7 @@
         "type": "object"
       },
       "VendorInsuranceState": {
-        "description": "The vendor's public liability cover: whether it is required, and what staff have checked.",
+        "description": "The vendor's public liability cover (optional for now): what they uploaded and what staff checked.",
         "properties": {
           "certificate_url": {
             "anyOf": [
@@ -12507,25 +12507,6 @@
               }
             ],
             "title": "Expires On"
-          },
-          "listing_hidden_from": {
-            "anyOf": [
-              {
-                "format": "date",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "When a required vendor's listing hides itself unless a new certificate is checked.",
-            "title": "Listing Hidden From"
-          },
-          "required": {
-            "default": false,
-            "description": "The vendor's services need cover (catering, baking).",
-            "title": "Required",
-            "type": "boolean"
           },
           "status": {
             "default": "missing",
@@ -18963,19 +18944,6 @@
               "vendor_profile_not_found"
             ]
           },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "insurance_required_for_approval",
-            "x-codes": [
-              "insurance_required_for_approval"
-            ]
-          },
           "422": {
             "content": {
               "application/json": {
@@ -19074,7 +19042,7 @@
     },
     "/api/v1/admin/vendors/{user_id}/insurance": {
       "delete": {
-        "description": "Forget the checked certificate; a vendor who needs cover is unlisted until a new one is checked.",
+        "description": "Forget the checked certificate; the badge goes until a new one is checked.",
         "operationId": "revoke_insurance_api_v1_admin_vendors__user_id__insurance_delete",
         "parameters": [
           {
