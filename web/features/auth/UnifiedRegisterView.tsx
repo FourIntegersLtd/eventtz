@@ -10,7 +10,10 @@ import { TextField } from "@/components/ui/TextField";
 import { PasswordField } from "@/components/ui/PasswordField";
 import { dashboardPathForUserType } from "@/features/auth/authRouting";
 import { ReferralRegisterBanner } from "@/features/auth/ReferralRegisterBanner";
-import { RegisterRoute } from "@/features/auth/RegisterRoute";
+import {
+  RegisterRoute,
+  RegisterRouteCompact,
+} from "@/features/auth/RegisterRoute";
 import { useUnifiedRegister } from "@/features/auth/useUnifiedRegister";
 import { GENERIC_AUTH_ERROR } from "@/lib/auth-messages";
 import { resendVerification } from "@/lib/auth-api";
@@ -119,6 +122,10 @@ export function UnifiedRegisterView() {
                   Choose an account type to get started.
                 </p>
               ) : null}
+              <RegisterRouteCompact
+                accountType={accountType}
+                className="mt-5 lg:hidden"
+              />
 
               <form onSubmit={onSubmit} className="mt-6 space-y-4">
                 {referralLocked && referralSlug ? (
@@ -223,7 +230,10 @@ export function UnifiedRegisterView() {
           )}
         </Card>
         {awaitingVerification ? null : (
-          <RegisterRoute accountType={accountType} />
+          <RegisterRoute
+            accountType={accountType}
+            className="hidden lg:block"
+          />
         )}
       </div>
     </AuthPageShell>
