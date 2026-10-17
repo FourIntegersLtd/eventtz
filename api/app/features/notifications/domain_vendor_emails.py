@@ -234,59 +234,6 @@ def vendor_setup_payouts_nudge_email(*, vendor_email: str, business_name: str | 
     )
 
 
-def vendor_choose_cancellation_policy_email(
-    *, vendor_email: str, business_name: str | None, follow_up: bool = False
-) -> TransactionalEmail:
-    """Content for the email telling an approved vendor they now set their own refund policy.
-
-    Sent once the presets exist and the vendor has not chosen one, and once more as a
-    `follow_up` 14 days later; clients see the Flexible preset on their profile and at
-    checkout until they do. Plain words: "refund policy" and "half" rather than
-    "cancellation preset" and "50%".
-    """
-    name = _greeting_name(business_name, vendor_email)
-    headline = "Still time to pick your refund policy" if follow_up else "You now decide your refund policy"
-    subtitle = "Choose how much a client gets back if they cancel. It takes a minute."
-    opening = (
-        "Two weeks ago we gave you the choice of what a client gets back when they cancel "
-        "a paid booking. You haven't picked yet, so your profile still shows Flexible."
-        if follow_up
-        else "Good news: you now set the rules for what happens when a client cancels a paid "
-        "booking. Until now every cancellation meant a full refund. From today you pick one "
-        "of three policies, and clients agree to it when they pay:"
-    )
-    body = (
-        f"Hi {name},\n\n"
-        f"{opening}\n\n"
-        "\u2022 Flexible: full refund up to 7 days before the event, half between 2 and 6 days "
-        "before, nothing after that\n"
-        "\u2022 Moderate: full refund up to 30 days before, half between 7 and 29 days before, "
-        "nothing after that\n"
-        "\u2022 Strict: full refund up to 90 days before, then 75%, then half, and nothing in "
-        "the last 30 days\n\n"
-        "Whatever the client doesn't get back is yours, and we pay it into your account "
-        "straight away. No waiting for the event date.\n\n"
-        "Three things stay the same whichever you pick: our service fee always goes back to "
-        "the client, a client can change their mind for a full refund within 24 hours of "
-        "paying if the event is at least a week away, and if you cancel, the client gets "
-        "everything back.\n\n"
-        "Until you pick, your profile shows Flexible. Choose the one that fits how you work: "
-        "it is in the Pricing step of your profile.\n\n"
-        f"Questions? Reply to this email or write us at {SUPPORT_EMAIL}."
-    )
-    return TransactionalEmail(
-        subject=f"{headline} | {APP_NAME}",
-        title=headline,
-        headline=headline,
-        subtitle=subtitle,
-        body=body,
-        action_url=public_url("/vendor/profile"),
-        action_label="Pick my policy",
-        secondary_action_url=public_url("/vendor/dashboard"),
-        secondary_action_label="Open dashboard",
-    )
-
-
 def vendor_listing_hidden_email(*, business_name: str | None, reason: str) -> TransactionalEmail:
     """Content telling a vendor staff took their listing down, with the reason and how to appeal."""
     subject_name = _subject_business_name(business_name)

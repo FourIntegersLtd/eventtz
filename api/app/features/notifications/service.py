@@ -43,7 +43,6 @@ from app.features.notifications.domain_booking_copy import (
 )
 from app.features.notifications.domain_vendor_emails import (
     vendor_approval_status_email,
-    vendor_choose_cancellation_policy_email,
     vendor_complete_profile_nudge_email,
     vendor_listing_hidden_email,
     vendor_listing_paused_email,
@@ -542,32 +541,6 @@ def send_vendor_payout_nudge(mailer: Mailer, *, vendor_email: str | None, busine
         return mailer.send(outgoing)
     except Exception:
         log.exception("vendor payout nudge email could not be sent")
-        return False
-
-
-def render_vendor_cancellation_policy_nudge(
-    *, vendor_email: str, business_name: str | None, follow_up: bool = False
-) -> OutgoingEmail:
-    """Render the choose-your-cancellation-policy email (or its follow-up), without sending it."""
-    content = vendor_choose_cancellation_policy_email(
-        vendor_email=vendor_email, business_name=business_name, follow_up=follow_up
-    )
-    return render_booking_notification(vendor_email, content)
-
-
-def send_vendor_cancellation_policy_nudge(
-    mailer: Mailer, *, vendor_email: str | None, business_name: str | None, follow_up: bool = False
-) -> bool:
-    """Email an approved vendor to choose a cancellation preset. False for a missing/invalid address."""
-    if not vendor_email or "@" not in vendor_email:
-        return False
-    try:
-        outgoing = render_vendor_cancellation_policy_nudge(
-            vendor_email=vendor_email, business_name=business_name, follow_up=follow_up
-        )
-        return mailer.send(outgoing)
-    except Exception:
-        log.exception("vendor cancellation policy nudge email could not be sent")
         return False
 
 

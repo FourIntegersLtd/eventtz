@@ -11,7 +11,7 @@ is publicly listed.
 - As a **vendor**, I **submit my profile** so that staff can review and approve it.
 - As **staff**, I **list, approve, ban or return vendors for edits** so that only good vendors are listed.
 - As **staff**, I **nudge vendors** to finish their profile or set up payouts.
-- As an **approved vendor** with no cancellation preset chosen, I get **one email** asking me to pick one, a dashboard banner, and one reminder 14 days later (the hourly bookings maintenance job; clients see Flexible until I do).
+- As an **approved vendor** with no cancellation preset chosen, I see a dashboard banner asking me to pick one (clients see Flexible until I do).
 - As a **super admin**, I **force a listing visible or hidden** with a recorded reason.
 - As **staff**, I **reorder and hide a vendor's listing photos**.
 

@@ -3,8 +3,7 @@
 Replaces the baseline's in-process scheduler. Each hour, in the baseline's order:
 completion reminders, automatic vendor payouts, stale-enquiry marking, vendor
 enquiry reminders, the client's no-response nudge, event-tomorrow reminders,
-pay-to-confirm reminders, the vendor payouts-setup nudge and the choose-a-cancellation-policy
-nudge. Each booking that may move money gets its own
+pay-to-confirm reminders and the vendor payouts-setup nudge. Each booking that may move money gets its own
 transaction, so one failure never undoes another booking's payout.
 
 `run_booking_maintenance_once` holds the work and takes its adapters as arguments,
@@ -87,8 +86,6 @@ async def run_booking_maintenance_once(
         "event_tomorrow": 0,
         "pay_to_confirm": 0,
         "payouts_setup": 0,
-        "cancellation_policy": 0,
-        "cancellation_policy_reminder": 0,
         "final_payouts": 0,
         "unpaid_expired": 0,
         "deposits_refunded": 0,
@@ -130,20 +127,6 @@ async def run_booking_maintenance_once(
             "payouts_setup",
             "payouts-setup nudges",
             lambda session: service_reminders.send_payouts_setup_nudges(
-                session, AfterCommitMailer(session, mailer), now=now
-            ),
-        ),
-        (
-            "cancellation_policy",
-            "cancellation-policy nudges",
-            lambda session: service_reminders.send_cancellation_policy_nudges(
-                session, AfterCommitMailer(session, mailer)
-            ),
-        ),
-        (
-            "cancellation_policy_reminder",
-            "cancellation-policy reminders",
-            lambda session: service_reminders.send_cancellation_policy_reminders(
                 session, AfterCommitMailer(session, mailer), now=now
             ),
         ),

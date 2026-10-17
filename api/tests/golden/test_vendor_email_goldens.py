@@ -19,7 +19,6 @@ import pytest
 from app.core.ports import Mailer
 from app.features.notifications.service import (
     send_vendor_approval_changed,
-    send_vendor_cancellation_policy_nudge,
     send_vendor_payout_nudge,
     send_vendor_profile_nudge,
     send_vendor_returned_for_edits,
@@ -130,10 +129,6 @@ def test_vendor_payout_nudge_matches_baseline(case: dict[str, Any]) -> None:
         lambda mailer: send_vendor_profile_nudge(mailer, vendor_email=None, business_name=None),
         lambda mailer: send_vendor_payout_nudge(mailer, vendor_email="not-an-email", business_name=None),
         lambda mailer: send_vendor_payout_nudge(mailer, vendor_email=None, business_name=None),
-        lambda mailer: send_vendor_cancellation_policy_nudge(
-            mailer, vendor_email="not-an-email", business_name=None
-        ),
-        lambda mailer: send_vendor_cancellation_policy_nudge(mailer, vendor_email=None, business_name=None),
     ],
     ids=[
         "approval_changed_invalid",
@@ -144,8 +139,6 @@ def test_vendor_payout_nudge_matches_baseline(case: dict[str, Any]) -> None:
         "profile_nudge_missing",
         "payout_nudge_invalid",
         "payout_nudge_missing",
-        "policy_nudge_invalid",
-        "policy_nudge_missing",
     ],
 )
 def test_send_rejects_missing_or_invalid_vendor_address(
@@ -164,18 +157,3 @@ def test_send_vendor_submitted_alert_hands_the_fake_mailer_exactly_one_email() -
         mailer, vendor_user_id="user-1", vendor_email="vendor@example.com", business_name="Ama's Kitchen"
     )
     assert len(mailer.sent) == 1
-
-
-def test_cancellation_policy_nudge_names_the_default_and_links_to_the_profile() -> None:
-    """The one post-launch email: greeting, the Flexible default, the three shared rules, profile link."""
-    mailer = FakeMailer()
-    assert send_vendor_cancellation_policy_nudge(
-        mailer, vendor_email="vendor@example.com", business_name="Ama's Kitchen"
-    )
-    (email,) = mailer.sent
-    assert email.to == ("vendor@example.com",)
-    assert email.subject == "You now decide your refund policy | Eventtz"
-    assert "Hi Ama's Kitchen," in email.text
-    assert "Until you pick, your profile shows Flexible." in email.text
-    assert "our service fee always goes back to the client" in email.text
-    assert "/vendor/profile" in email.html
