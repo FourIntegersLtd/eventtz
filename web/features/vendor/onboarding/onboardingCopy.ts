@@ -50,7 +50,7 @@ export const STEP_COPY = {
   },
   7: {
     headline: "Anything else?",
-    subtext: "Certificates and insurance are optional.",
+    subtext: "",
   },
   8: {
     headline: "Look good?",
