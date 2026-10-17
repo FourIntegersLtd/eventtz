@@ -207,7 +207,11 @@ class StripePaymentGateway:
     async def create_express_account(
         self, *, email: str | None, individual: dict[str, Any], business_profile: dict[str, Any]
     ) -> str:
-        """Open a UK Express account; prefill is only possible here, never by a later update."""
+        """Open a UK Express account; prefill is only possible here, never by a later update.
+
+        The payout schedule is pinned (daily, 7-day rolling: Stripe's UK default) so the Terms can
+        promise vendors a fixed bank timing and a change to Stripe's default cannot alter it.
+        """
         account = await self._call(
             "POST",
             "/accounts",
@@ -216,6 +220,7 @@ class StripePaymentGateway:
                 "country": "GB",
                 "email": email,
                 "capabilities": {"card_payments": {"requested": True}, "transfers": {"requested": True}},
+                "settings": {"payouts": {"schedule": {"interval": "daily", "delay_days": 7}}},
                 "business_type": "individual",
                 "business_profile": business_profile or None,
                 "individual": individual or None,

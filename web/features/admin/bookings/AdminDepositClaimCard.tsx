@@ -1,0 +1,81 @@
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { useToast } from "@/components/ui/Toast";
+import { depositAwardError } from "@/features/bookings/bookingTerms";
+import { adminResolveDepositClaim } from "@/lib/adminBookingsApi";
+import { withMutationFeedback } from "@/lib/mutationFeedback";
+import { formatGbp } from "@/lib/vendorDiscountDisplay";
+
+type Props = {
+  bookingId: string;
+  booking: Record<string, unknown>;
+  canDecide: boolean;
+  onResolved: () => void;
+};
+
+/**
+ * Shows an open damage-deposit claim (amount and the vendor's note) and lets
+ * staff decide how much of it the vendor is awarded (0 up to the claim).
+ * Renders nothing unless a claim exists and is unresolved.
+ */
+export function AdminDepositClaimCard({ bookingId, booking, canDecide, onResolved }: Props) {
+  const { showToast } = useToast();
+  const [award, setAward] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const claimedAt = booking.deposit_claimed_at;
+  const resolvedAt = booking.deposit_claim_resolved_at;
+  const claim = Number(booking.deposit_claim_gbp ?? 0);
+  if (!claimedAt || resolvedAt || !(claim > 0)) return null;
+  const note = typeof booking.deposit_claim_note === "string" ? booking.deposit_claim_note : "";
+
+  const decide = async () => {
+    const error = depositAwardError(award, claim);
+    setFormError(error);
+    if (error) return;
+    setBusy(true);
+    const ok = await withMutationFeedback(showToast, {
+      successTitle: "Deposit claim decided",
+      successDescription: `Vendor awarded £${formatGbp(Number(award))}; the rest goes back to the client.`,
+      errorTitle: "Couldn't decide the claim",
+      run: () => adminResolveDepositClaim(bookingId, Number(award)),
+    });
+    setBusy(false);
+    if (ok !== null) onResolved();
+  };
+
+  return (
+    <section className="rounded-2xl border border-amber-200 bg-amber-50/70 px-5 py-4">
+      <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">Deposit claim</h2>
+      <p className="mt-1 text-sm text-neutral-800">Vendor is claiming £{formatGbp(claim)}.</p>
+      {note ? (
+        <p className="mt-2 whitespace-pre-wrap rounded-xl bg-white px-3 py-2 text-sm text-neutral-700">
+          {note}
+        </p>
+      ) : null}
+      {canDecide ? (
+        <div className="mt-3 space-y-2">
+          <label className="block text-sm text-neutral-800">
+            Award to vendor (£0 to £{formatGbp(claim)})
+            <input
+              type="text"
+              inputMode="decimal"
+              value={award}
+              onChange={(event) => setAward(event.target.value)}
+              className="mt-1 block w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm"
+            />
+          </label>
+          {formError ? <p className="text-xs text-amber-800">{formError}</p> : null}
+          <Button variant="primary" size="md" loading={busy} onClick={() => void decide()}>
+            Decide deposit claim
+          </Button>
+        </div>
+      ) : (
+        <p className="mt-2 text-xs text-neutral-500">Only super admins can decide deposit claims.</p>
+      )}
+    </section>
+  );
+}

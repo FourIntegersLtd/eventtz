@@ -17,6 +17,7 @@ from app.features.bookings.schemas import (
     AdminBookingDetailResponse,
     AdminCancelOnBehalfBody,
     AdminConfirmCompletionBody,
+    AdminResolveDepositClaimBody,
 )
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -140,7 +141,14 @@ async def admin_cancel_booking_on_behalf(
 ) -> AdminBookingDetailResponse:
     """Cancel (and refund, if paid) for the client or vendor who asked support to."""
     return await service_admin_recovery.cancel_on_behalf(
-        session, mailer, gateway, staff, booking_id, party=body.party, reason=body.reason
+        session,
+        mailer,
+        gateway,
+        staff,
+        booking_id,
+        party=body.party,
+        reason=body.reason,
+        exceptional=body.exceptional,
     )
 
 
@@ -183,3 +191,29 @@ async def admin_run_booking_maintenance(
 ) -> AdminBookingDetailResponse:
     """Run the post-event step now: the completion reminder, then any payout that is due."""
     return await service_admin_recovery.run_maintenance(session, mailer, gateway, staff, booking_id)
+
+
+@router.post(
+    "/bookings/{booking_id}/deposit-claim/resolve",
+    response_model=AdminBookingDetailResponse,
+    responses=error_responses(
+        *_BOOKING_ERRORS,
+        errors.NoDepositClaim,
+        errors.DepositAwardInvalid,
+        errors.DepositVendorPayoutsNotReady,
+        errors.RefundFailed,
+        errors.PayoutReleaseFailed,
+    ),
+)
+async def admin_resolve_deposit_claim(
+    session: SessionDep,
+    staff: CurrentSuperAdmin,
+    booking_id: str,
+    body: AdminResolveDepositClaimBody,
+    mailer: MailerDependency,
+    gateway: PaymentGatewayDependency,
+) -> AdminBookingDetailResponse:
+    """Decide a vendor's deposit claim: the vendor keeps the award, the client is refunded the rest."""
+    return await service_admin_recovery.resolve_deposit_claim(
+        session, mailer, gateway, staff, booking_id, body.award_gbp
+    )

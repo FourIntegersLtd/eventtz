@@ -1,3 +1,4 @@
+import { vendorCancellationPolicyLabel } from "@/features/bookings/cancellationPolicyCopy";
 import { MIN_PORTFOLIO_IMAGES, SOCIAL_PLATFORM_OPTIONS, WEEKDAY_LABELS } from "@/features/vendor/onboarding/constants";
 import {
   countCompletePackages,
@@ -504,6 +505,7 @@ export function buildAdminVendorSubmissionReviewModel(
         "Daily rate",
         String(data.dailyRate ?? "").trim() ? `£${String(data.dailyRate ?? "").trim()}` : "-",
       ),
+      field("Cancellation policy", vendorCancellationPolicyLabel(String(data.cancellationPolicy ?? ""))),
       field("Offers discounts", data.offerDiscounts ? "Yes" : "No"),
     ],
     pricingOptions,

@@ -22,6 +22,8 @@ export function ClientBookingPayView({ bookingId }: ClientBookingPayViewProps) {
     venueAddress,
     setVenueAddress,
     busy,
+    cancellationPolicyLabel,
+    cancellationPolicyLines,
     continueFromVenue,
     confirmSafetyAndPay,
   } = useClientBookingPay(bookingId);
@@ -127,6 +129,8 @@ export function ClientBookingPayView({ bookingId }: ClientBookingPayViewProps) {
       <PaymentSafetyModal
         isOpen={!error && (phase === "safety" || phase === "redirecting")}
         loading={busy || phase === "redirecting"}
+        cancellationPolicyLabel={cancellationPolicyLabel}
+        cancellationPolicyLines={cancellationPolicyLines}
         onConfirm={confirmSafetyAndPay}
         onCancel={() => router.push(bookingHref)}
       />

@@ -7,15 +7,24 @@ what that party chose to share).
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.settings import get_settings
-from app.features.bookings import domain, repository, service_pricing
+from app.features.bookings import (
+    domain,
+    domain_cancellation,
+    domain_payments,
+    domain_policy,
+    repository,
+    service_pricing,
+)
 from app.features.bookings.errors import BookingNotFound, InvalidListGroup
 from app.features.bookings.rows import BookingRow, ClientReviewRow, VendorReviewRow
 from app.features.bookings.schemas import (
+    CancellationPreview,
     ClientBookingDetail,
     ClientBookingListItem,
     ClientReviewSummary,
@@ -122,6 +131,46 @@ def _shared_detail_fields(
         "completion_waiting_on": domain.completion_waiting_on(booking),
         "initiator": booking.initiator,
         "conversation_id": booking.conversation_id,
+        **terms_fields(booking),
+    }
+
+
+def _iso(moment: datetime | None) -> str | None:
+    """An instant as ISO 8601 text, or None."""
+    return moment.isoformat() if moment is not None else None
+
+
+def terms_fields(booking: BookingRow) -> dict[str, Any]:
+    """The `BookingTermsFields` both parties see: payment deadline, split payout, date move, deposit."""
+    settings = get_settings()
+    now = datetime.now(UTC)
+    payment_due = domain_policy.booking_payment_due_at(
+        booking, deadline_hours=settings.booking_payment_deadline_hours, terms_version=settings.terms_version
+    )
+    is_split = bool(booking.payout_upfront_percent)
+    return {
+        "payment_due_at": _iso(payment_due),
+        "report_window_hours": booking.report_window_hours,
+        "payout_upfront_percent": booking.payout_upfront_percent,
+        "delivery_deadline_days": booking.delivery_deadline_days,
+        "upfront_amount_gbp": booking.upfront_amount_gbp,
+        "upfront_payout_at": booking.upfront_payout_at,
+        "delivery_confirmed_at": booking.delivery_confirmed_at,
+        "delivery_due_at": _iso(domain_policy.delivery_due_at(booking)),
+        "payout_stage": domain_policy.payout_stage(booking, now) if is_split else None,
+        "proposed_event_date": (booking.proposed_event_date or "")[:10] or None,
+        "proposed_event_end_date": (booking.proposed_event_end_date or "")[:10] or None,
+        "date_change_requested_by": booking.date_change_requested_by,
+        "date_change_requested_at": booking.date_change_requested_at,
+        "date_change_note": booking.date_change_note,
+        "damage_deposit_gbp": booking.damage_deposit_gbp or None,
+        "deposit_refund_due_at": _iso(domain_policy.deposit_refund_due_at(booking)),
+        "deposit_refunded_at": booking.deposit_refunded_at,
+        "deposit_claim_gbp": booking.deposit_claim_gbp,
+        "deposit_claim_note": booking.deposit_claim_note,
+        "deposit_claimed_at": booking.deposit_claimed_at,
+        "deposit_claim_awarded_gbp": booking.deposit_claim_awarded_gbp,
+        "deposit_claim_resolved_at": booking.deposit_claim_resolved_at,
     }
 
 
@@ -212,8 +261,13 @@ async def vendor_booking_detail(
         client_display_name=(await identity.client_display_names(session, [client_id])).get(client_id),
         review=reviews.get(booking.id),
         conversation_id=await _backfilled_thread(session, booking),
+        has_open_dispute=await repository.has_active_dispute(session, booking.id),
         client_email=None,
         counterparty_phone=None,
+        cancellation_policy=booking.cancellation_policy,
+        cancellation_refund_percent=booking.cancellation_refund_percent,
+        cancellation_vendor_share_gbp=booking.cancellation_vendor_share_gbp,
+        cancellation_payout_at=booking.cancellation_payout_at,
     )
     if domain.contact_visible(booking):
         shared = await identity_settings.contact_settings(session, client_id)
@@ -309,10 +363,53 @@ async def client_booking_detail(
         vendor_referral_code=booking.vendor_referral_code,
         review=_client_review_view(review) if review is not None else None,
         conversation_id=await _backfilled_thread(session, booking),
+        has_open_dispute=await repository.has_active_dispute(session, booking.id),
         counterparty_phone=None,
+        cancellation_refund_percent=booking.cancellation_refund_percent,
+        cancellation_refund_gbp=booking.cancellation_refund_gbp,
     )
+    detail.update(await _cancellation_policy_fields(session, booking))
     if domain.contact_visible(booking):
         shared = await identity_settings.contact_settings(session, vendor_id)
         phone = await service_profile.listed_phone(session, vendor_id)
         detail["counterparty_phone"] = phone if shared.share_phone and phone else None
     return ClientBookingDetail.model_validate(detail)
+
+
+async def _cancellation_policy_fields(session: AsyncSession, booking: BookingRow) -> dict[str, Any]:
+    """The cancellation policy the client is (or would be) bound by, and a preview of cancelling now.
+
+    A paid booking shows the preset snapshotted at checkout (NULL for bookings paid before
+    presets existed, which still refund in full). An unpaid one shows the vendor's current
+    preset, so the pay page can state what the client is agreeing to.
+    """
+    policy = booking.cancellation_policy
+    if policy is None and booking.payment_status != domain_payments.PAID:
+        policy = await service_profile.cancellation_policy(session, booking.vendor_user_id)
+    fields: dict[str, Any] = {
+        "cancellation_policy": policy,
+        "cancellation_policy_label": domain_cancellation.preset_label(policy) if policy else None,
+        "cancellation_policy_lines": domain_cancellation.describe_preset(policy) if policy else [],
+        "cancellation_preview": None,
+    }
+    if booking.payment_status == domain_payments.PAID and booking.status in ("pending", "accepted"):
+        fields["cancellation_preview"] = _cancellation_preview(booking)
+    return fields
+
+
+def _cancellation_preview(booking: BookingRow) -> CancellationPreview:
+    """What a client cancel this minute would refund, and when that would next change."""
+    now = datetime.now(UTC)
+    settlement = domain_cancellation.settlement(booking, now)
+    refund_gbp = domain_payments.pence_to_gbp(settlement.refund_pence)
+    next_change = domain_cancellation.next_tier_change(booking, now)
+    cooling_off_until = domain_cancellation.cooling_off_until(booking) if settlement.cooling_off else None
+    return CancellationPreview(
+        percent=settlement.refund_percent,
+        refund_gbp=refund_gbp,
+        refund_label=pricing.format_gbp(refund_gbp),
+        cooling_off_until=cooling_off_until.isoformat() if cooling_off_until else None,
+        next_tier_at=next_change[0].isoformat() if next_change else None,
+        next_tier_percent=next_change[1] if next_change else None,
+        lines=domain_cancellation.describe_preset(settlement.policy) if settlement.policy else [],
+    )

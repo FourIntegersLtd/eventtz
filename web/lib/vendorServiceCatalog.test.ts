@@ -23,6 +23,15 @@ describe("vendorServiceCatalog", () => {
     );
   });
 
+  it("gives every category a non-empty examples line for the pickers", () => {
+    for (const { value, examples } of VENDOR_SERVICE_OPTIONS) {
+      expect(examples, `missing examples for ${value}`).toMatch(/\w+, \w+/);
+    }
+    expect(VENDOR_SERVICE_OPTIONS.find((option) => option.value === "hair_styling")?.examples).toContain(
+      "gele tying",
+    );
+  });
+
   it("has package examples for every onboardable service", () => {
     for (const { value } of VENDOR_SERVICE_OPTIONS) {
       expect(PACKAGE_EXAMPLES_BY_SERVICE[value], `missing examples for ${value}`).toBeDefined();

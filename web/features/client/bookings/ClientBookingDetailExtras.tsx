@@ -2,15 +2,19 @@
 
 import type { RefObject } from "react";
 import { Button } from "@/components/ui/Button";
+import { formatGbp } from "@/lib/vendorDiscountDisplay";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { resolveWasClientTotalLabel } from "@/features/bookings/bookingPriceLabels";
 import { BookingPriceUpdateBanner } from "@/features/bookings/BookingPriceUpdateBanner";
 import { BookingCompletionBanner } from "@/features/bookings/BookingCompletionBanner";
+import { ClientBookingTermsNotices } from "@/features/bookings/BookingTermsNotices";
 import { BookingPayoutPendingBanner } from "@/features/bookings/BookingPayoutPendingBanner";
-import { PAYMENT_FLOW_COPY, isPayoutReleasePending } from "@/features/bookings/bookingConfirmCopy";
+import { PAYMENT_FLOW_COPY, PAYMENT_SAFETY_COPY, isPayoutReleasePending, partialRefundBannerLine } from "@/features/bookings/bookingConfirmCopy";
 import { ReceiptActions } from "@/features/receipts/ReceiptActions";
 import { hasPaymentReceipt } from "@/lib/receiptsApi";
 import type { ClientBookingDetail } from "@/lib/clientBookingsApi";
+import { BookingDateChangeCard } from "@/features/bookings/BookingDateChangeCard";
+import type { BookingDateChangeFields } from "@/lib/bookingDateChangeApi";
 
 type ClientBookingDetailExtrasProps = {
   detail: ClientBookingDetail;
@@ -30,6 +34,7 @@ type ClientBookingDetailExtrasProps = {
   onDeclineUpdatedPrice: () => void;
   onConfirmComplete: () => void;
   onPayNow: () => void;
+  onDetailChanged: () => void;
 };
 
 export function ClientBookingDetailExtras({
@@ -50,9 +55,20 @@ export function ClientBookingDetailExtras({
   onDeclineUpdatedPrice,
   onConfirmComplete,
   onPayNow,
+  onDetailChanged,
 }: ClientBookingDetailExtrasProps) {
   return (
     <>
+      <BookingDateChangeCard
+        role="client"
+        bookingId={detail.booking_request_id}
+        bookingStatus={detail.booking_status}
+        paymentStatus={detail.payment_status}
+        eventDate={detail.event_date}
+        eventEndDate={detail.event_end_date}
+        dateChange={detail as ClientBookingDetail & BookingDateChangeFields}
+      />
+
       {showUpdatedPriceBanner ? (
         <BookingPriceUpdateBanner
           wasTotalLabel={resolveWasClientTotalLabel(detail)}
@@ -104,9 +120,12 @@ export function ClientBookingDetailExtras({
         eventEndDate={detail.event_end_date}
         waitingOn={detail.completion_waiting_on}
         autoReleaseAt={detail.payout_auto_release_at}
+        hasOpenDispute={detail.has_open_dispute}
         confirmDisabled={actionBusy || confirmingCompletion}
         onConfirm={onConfirmComplete}
       />
+
+      <ClientBookingTermsNotices detail={detail} onChanged={onDetailChanged} />
 
       {isPayoutReleasePending(detail) ? (
         <BookingPayoutPendingBanner viewer="client" />
@@ -115,7 +134,14 @@ export function ClientBookingDetailExtras({
       {showCancelledRefunded ? (
         <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-950">
           <LottieIllustration asset="pendingReview" size="status" className="mb-2" />
-          {PAYMENT_FLOW_COPY.cancelledRefunded}
+          {detail.cancellation_refund_percent != null &&
+          detail.cancellation_refund_percent < 100 &&
+          detail.cancellation_refund_gbp != null
+            ? partialRefundBannerLine(
+                `£${formatGbp(detail.cancellation_refund_gbp)}`,
+                detail.cancellation_refund_percent,
+              )
+            : PAYMENT_FLOW_COPY.cancelledRefunded}
         </div>
       ) : null}
 
@@ -143,6 +169,18 @@ export function ClientBookingDetailExtras({
                 {PAYMENT_FLOW_COPY.paymentDueSubtitle}
               </p>
               <p className="mt-1 text-[13px] text-neutral-400">{PAYMENT_FLOW_COPY.beforePay}</p>
+              {detail.cancellation_policy_label ? (
+                <details className="mt-2 text-[13px] text-neutral-600">
+                  <summary className="cursor-pointer font-medium text-neutral-700">
+                    {PAYMENT_SAFETY_COPY.cancellationPolicyHeading(detail.cancellation_policy_label)}
+                  </summary>
+                  <ul className="mt-1 list-disc space-y-1 pl-5">
+                    {(detail.cancellation_policy_lines ?? []).map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                  </ul>
+                </details>
+              ) : null}
             </div>
             <Button variant="primary" size="md" className="shrink-0" onClick={onPayNow}>
               {PAYMENT_FLOW_COPY.payNowLabel}

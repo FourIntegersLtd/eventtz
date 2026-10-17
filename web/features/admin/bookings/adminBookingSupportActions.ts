@@ -25,6 +25,7 @@ type BuildSupportActionsArgs = {
   holdActive: boolean;
   cancelParty: "client" | "vendor";
   cancelReason: string;
+  cancelExceptional: boolean;
 };
 
 export function buildSupportActions({
@@ -32,6 +33,7 @@ export function buildSupportActions({
   holdActive,
   cancelParty,
   cancelReason,
+  cancelExceptional,
 }: BuildSupportActionsArgs): SupportAction[] {
   return [
     {
@@ -130,6 +132,7 @@ export function buildSupportActions({
         adminCancelBookingOnBehalf(bookingId, {
           party: cancelParty,
           reason: cancelReason.trim(),
+          exceptional: cancelExceptional,
         }),
     },
   ];

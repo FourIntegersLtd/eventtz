@@ -18,7 +18,7 @@ import {
   markAllClientBookingNotificationsRead,
 } from "@/lib/clientNotificationsApi";
 import { useParticipantBookingsScaffold } from "@/features/bookings/useParticipantBookingsScaffold";
-import { BOOKING_CONFIRM_COPY } from "@/features/bookings/bookingConfirmCopy";
+import { BOOKING_CONFIRM_COPY, clientPaidCancelCopy } from "@/features/bookings/bookingConfirmCopy";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { useClientBookingActions } from "@/features/client/bookings/useClientBookingActions";
 import { useClientBookingPaymentReturn } from "@/features/client/bookings/useClientBookingPaymentReturn";
@@ -152,7 +152,7 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
 
   const clientCancelCopy =
     detail?.payment_status === "paid"
-      ? BOOKING_CONFIRM_COPY.cancelClientPaid
+      ? clientPaidCancelCopy(detail.cancellation_preview)
       : BOOKING_CONFIRM_COPY.cancelClient;
 
   const showCancelledRefunded =
@@ -176,7 +176,11 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
         setCancelOpen(true);
       },
     });
-    if (detail.booking_status === "accepted" && detail.payment_status === "paid") {
+    if (
+      detail.booking_status === "accepted" &&
+      detail.payment_status === "paid" &&
+      !detail.has_open_dispute
+    ) {
       if (!detail.client_completion_confirmed_at) {
         footerActions.push({
           key: "confirm-completion",
@@ -274,5 +278,6 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
     showCancelledRefunded,
     selectBooking,
     payNow,
+    bumpDetail,
   };
 }

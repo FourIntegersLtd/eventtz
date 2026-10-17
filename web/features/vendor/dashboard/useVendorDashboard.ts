@@ -8,6 +8,7 @@ import { installVisibilityRefresh } from "@/lib/useVisibilityRefresh";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 import { fetchVendorBookingNotificationsUnreadCount } from "@/lib/vendorNotificationsApi";
 import { fetchVendorNotificationsFeed, type NotificationFeedItem } from "@/lib/notificationsFeedApi";
+import { fetchVendorProfile, type VendorProfileResponse } from "@/lib/vendorProfileApi";
 import {
   fetchVendorStripeConnectStatus,
   postConnectStripeAccount,
@@ -54,6 +55,8 @@ export type VendorDashboardState = {
   errorMessage: string | null;
   /** `null` when payout status could not be loaded. */
   payoutsReady: boolean | null;
+  /** True once an approved vendor has stored a cancellation preset; `null` while unknown or not yet approved. */
+  cancellationPolicyChosen: boolean | null;
 };
 
 const initial: VendorDashboardState = {
@@ -70,7 +73,14 @@ const initial: VendorDashboardState = {
   bookingsByDate: {},
   errorMessage: null,
   payoutsReady: null,
+  cancellationPolicyChosen: null,
 };
+
+/** Whether an approved vendor's form holds a preset; `null` for a draft or unloaded profile (no nudge). */
+export function cancellationPolicyChosenFor(profile: VendorProfileResponse | null): boolean | null {
+  if (!profile || profile.approval_status !== "approved") return null;
+  return typeof profile.profile_form_data.cancellationPolicy === "string";
+}
 
 export function useVendorDashboard(enabled: boolean) {
   const { showToast } = useToast();
@@ -97,13 +107,14 @@ export function useVendorDashboard(enabled: boolean) {
     if (!enabled) return;
     setState((s) => ({ ...s, loadStatus: "loading", errorMessage: null }));
     try {
-      const [active, chatUnread, bookingNotificationsUnread, updates, paymentsStatus] =
+      const [active, chatUnread, bookingNotificationsUnread, updates, paymentsStatus, profile] =
         await Promise.all([
         fetchVendorBookings("active"),
         fetchChatUnreadCount(),
         fetchVendorBookingNotificationsUnreadCount(),
         fetchVendorNotificationsFeed(),
         fetchVendorStripeConnectStatus().catch((): VendorPaymentsStatus | null => null),
+        fetchVendorProfile().catch((): VendorProfileResponse | null => null),
       ]);
       const pendingBookingsCount = active.filter((b) => b.booking_status === "pending").length;
       const needsResponse = active.filter((b) => b.booking_status === "pending").slice(0, 3);
@@ -158,6 +169,7 @@ export function useVendorDashboard(enabled: boolean) {
         bookingsByDate,
         errorMessage: null,
         payoutsReady: paymentsStatus ? isVendorPayoutsReady(paymentsStatus) : null,
+        cancellationPolicyChosen: cancellationPolicyChosenFor(profile),
       });
     } catch {
       setState({

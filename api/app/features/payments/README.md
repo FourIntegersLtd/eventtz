@@ -8,7 +8,12 @@ bookings slice (`service_payments*.py`); this slice calls them, never the revers
 
 ## Use cases
 - As **Stripe**, I **deliver a signed webhook**; it is verified by HMAC in pure code
-  and acted on at most once per event id.
+  and acted on at most once per event id. Handled: `checkout.session.completed`,
+  `account.updated`, `charge.dispute.created` / `charge.dispute.closed` (a card
+  chargeback holds the booking; won lifts the hold, lost marks it refunded) and
+  `charge.refunded` (a refund made in the Stripe dashboard is recorded on the
+  booking). The live endpoint must be subscribed to all five in the Stripe
+  dashboard; the money writes are the bookings slice's (`service_payments.py`).
 - As a **vendor**, I **set up payouts**: Eventtz opens a Stripe Express account
   (prefilled with my email, name, phone and business) and sends me to Stripe's
   onboarding link.
@@ -26,8 +31,8 @@ bookings slice (`service_payments*.py`); this slice calls them, never the revers
   verifies, so with no secret configured every webhook is a 400.
 - Each handled event id is claimed in `stripe_webhook_events` before it is acted on;
   a redelivery is acknowledged and ignored. Unhandled types are not recorded.
-- Once the signature is valid the webhook always answers 200: the handler runs in a
-  savepoint, and a failure is logged and rolled back rather than retried forever.
+- A handler failure answers 503 and rolls the whole transaction back, claim included,
+  so Stripe redelivers the event and a transient failure cannot strand a paid booking.
 - A Connect return path is allowlisted (`/vendor/payments` or `/vendor/bookings/{id}`),
   so Stripe's redirect cannot become an open redirect.
 - Only an explicit "no such account / not on your platform" refusal marks a stored

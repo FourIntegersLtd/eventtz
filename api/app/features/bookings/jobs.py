@@ -3,7 +3,8 @@
 Replaces the baseline's in-process scheduler. Each hour, in the baseline's order:
 completion reminders, automatic vendor payouts, stale-enquiry marking, vendor
 enquiry reminders, the client's no-response nudge, event-tomorrow reminders,
-pay-to-confirm reminders and the vendor payouts-setup nudge. Each booking that may move money gets its own
+pay-to-confirm reminders, the vendor payouts-setup nudge and the choose-a-cancellation-policy
+nudge. Each booking that may move money gets its own
 transaction, so one failure never undoes another booking's payout.
 
 `run_booking_maintenance_once` holds the work and takes its adapters as arguments,
@@ -25,7 +26,8 @@ from app.core.jobs import get_jobs_app
 from app.core.logging import get_logger
 from app.core.mail import AfterCommitMailer
 from app.core.ports import LanguageModel, Mailer, PaymentGateway
-from app.features.bookings import service_maintenance, service_reminders
+from app.features.bookings import service_deposits, service_maintenance, service_reminders
+from app.features.notifications import service_terms_notice
 
 log = get_logger(__name__)
 
@@ -86,6 +88,12 @@ async def run_booking_maintenance_once(
         "event_tomorrow": 0,
         "pay_to_confirm": 0,
         "payouts_setup": 0,
+        "cancellation_policy": 0,
+        "cancellation_policy_reminder": 0,
+        "terms_notices": 0,
+        "final_payouts": 0,
+        "unpaid_expired": 0,
+        "deposits_refunded": 0,
     }
     now = datetime.now(UTC)
     # Every remaining step opens its own transaction and logs its own failure, so one
@@ -125,6 +133,48 @@ async def run_booking_maintenance_once(
             "payouts-setup nudges",
             lambda session: service_reminders.send_payouts_setup_nudges(
                 session, AfterCommitMailer(session, mailer), now=now
+            ),
+        ),
+        (
+            "cancellation_policy",
+            "cancellation-policy nudges",
+            lambda session: service_reminders.send_cancellation_policy_nudges(
+                session, AfterCommitMailer(session, mailer)
+            ),
+        ),
+        (
+            "cancellation_policy_reminder",
+            "cancellation-policy reminders",
+            lambda session: service_reminders.send_cancellation_policy_reminders(
+                session, AfterCommitMailer(session, mailer), now=now
+            ),
+        ),
+        (
+            "terms_notices",
+            "terms-updated notices",
+            lambda session: service_terms_notice.send_terms_updated_notices(
+                session, AfterCommitMailer(session, mailer)
+            ),
+        ),
+        (
+            "final_payouts",
+            "split payout final parts",
+            lambda session: service_maintenance.release_final_payouts(
+                session, AfterCommitMailer(session, mailer), gateway
+            ),
+        ),
+        (
+            "unpaid_expired",
+            "unpaid booking expiry",
+            lambda session: service_maintenance.expire_unpaid_bookings(
+                session, AfterCommitMailer(session, mailer), gateway
+            ),
+        ),
+        (
+            "deposits_refunded",
+            "deposit refunds",
+            lambda session: service_deposits.refund_due_deposits(
+                session, AfterCommitMailer(session, mailer), gateway
             ),
         ),
     ]

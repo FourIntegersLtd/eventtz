@@ -189,12 +189,26 @@ class Vendor(Base, UUIDPrimaryKey, Timestamps):
     listing_override_reason: Mapped[str | None] = mapped_column(Text)
     listing_override_by: Mapped[uuid.UUID | None] = mapped_column(Uuid)
     listing_override_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    listing_paused_until: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        comment="Staff paused the listing until this time (repeated cancellations); it returns on its own.",
+    )
+    listing_pause_reason: Mapped[str | None] = mapped_column(
+        Text, comment="The reason sent to the vendor when the listing was paused."
+    )
     approved_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         comment="When approval_status last became approved (for the 24h payouts-setup nudge).",
     )
     payouts_setup_nudge_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), comment="When the automatic payouts-setup email was sent."
+    )
+    cancellation_policy_nudge_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), comment="When the one choose-your-cancellation-policy email was sent."
+    )
+    cancellation_policy_reminder_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        comment="When the one follow-up was sent, 14 days after the first email, if still no preset.",
     )
     client_referral_code: Mapped[str | None] = mapped_column(
         Text, comment="Shareable numeric code for clients (?vref= on browse, or booking form). 1–6 digits."

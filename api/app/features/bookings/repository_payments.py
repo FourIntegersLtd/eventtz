@@ -6,7 +6,7 @@ Writes to `payment_status` go through `repository.update_booking` with a
 
 from __future__ import annotations
 
-from sqlalchemy import desc, exists, select
+from sqlalchemy import desc, exists, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import as_uuid, plain_row
@@ -17,14 +17,18 @@ from app.features.bookings.rows import BookingRow
 
 
 async def payout_ledger_bookings(session: AsyncSession, vendor_user_id: str) -> list[BookingRow]:
-    """The vendor's bookings whose payment was collected (`paid`) or already paid out."""
+    """The vendor's bookings whose payment was collected (`paid`), paid out, or split by a client cancel."""
     vendor_uuid = as_uuid(vendor_user_id)
     if vendor_uuid is None:
         return []
     result = await session.execute(
         select(*BOOKING_COLUMNS).where(
             BookingRequest.vendor_user_id == vendor_uuid,
-            BookingRequest.payment_status.in_(PAID_PAYMENT_STATUSES),
+            or_(
+                BookingRequest.payment_status.in_(PAID_PAYMENT_STATUSES),
+                # A client cancel the vendor's policy left them a share of (domain_cancellation).
+                BookingRequest.cancellation_vendor_share_gbp > 0,
+            ),
         )
     )
     return [BookingRow.model_validate(plain_row(found)) for found in result]

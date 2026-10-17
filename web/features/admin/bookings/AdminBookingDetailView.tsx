@@ -18,6 +18,7 @@ import {
   mapAdminLineItems,
 } from "./adminBookingDetailUtils";
 import { buildSupportActions } from "./adminBookingSupportActions";
+import { AdminDepositClaimCard } from "./AdminDepositClaimCard";
 import { AdminBookingSupportActionsPanel } from "./AdminBookingSupportActionsPanel";
 
 type Props = {
@@ -36,6 +37,7 @@ export function AdminBookingDetailView({ bookingId }: Props) {
   } | null>(null);
   const [cancelParty, setCancelParty] = useState<"client" | "vendor">("client");
   const [cancelReason, setCancelReason] = useState("");
+  const [cancelExceptional, setCancelExceptional] = useState(false);
 
   const cancelFormParsed = parseForm(adminCancelBookingSchema, {
     reason: cancelReason,
@@ -60,6 +62,7 @@ export function AdminBookingDetailView({ bookingId }: Props) {
       });
       if (action.id === "cancel") {
         setCancelReason("");
+        setCancelExceptional(false);
       }
     } catch (err) {
       setFeedback({
@@ -94,6 +97,7 @@ export function AdminBookingDetailView({ bookingId }: Props) {
     holdActive,
     cancelParty,
     cancelReason,
+    cancelExceptional,
   });
 
   return (
@@ -105,6 +109,13 @@ export function AdminBookingDetailView({ bookingId }: Props) {
         holdActive={holdActive}
         support={support}
         openDispute={openDispute}
+      />
+
+      <AdminDepositClaimCard
+        bookingId={bookingId}
+        booking={booking}
+        canDecide={canRunBookingSupportActions}
+        onResolved={reload}
       />
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
@@ -127,6 +138,8 @@ export function AdminBookingDetailView({ bookingId }: Props) {
           onCancelPartyChange={setCancelParty}
           cancelReason={cancelReason}
           onCancelReasonChange={setCancelReason}
+          cancelExceptional={cancelExceptional}
+          onCancelExceptionalChange={setCancelExceptional}
           cancelFormValid={cancelFormValid}
           feedback={feedback}
           onFeedbackClose={() => setFeedback(null)}

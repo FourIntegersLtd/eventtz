@@ -97,6 +97,11 @@ function PayoutListCard({ payout }: { payout: VendorPayoutRow }) {
           >
             {payoutStatusLabel(payout.status)}
           </span>
+          {payout.kind === "cancellation_share" ? (
+            <span className="inline-flex shrink-0 items-center rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-semibold text-neutral-700">
+              Cancellation share
+            </span>
+          ) : null}
         </div>
         <p className="mt-1.5 text-sm text-neutral-600">
           {payout.client_display_name ?? "Client"}

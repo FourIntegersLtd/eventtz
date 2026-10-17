@@ -17,7 +17,7 @@ from app.core.auth import Principal
 from app.core.logging import get_logger
 from app.core.ports import Mailer, PaymentGateway, PaymentGatewayError
 from app.core.settings import get_settings
-from app.features.bookings import service_payments_checkout, service_payout_ledger
+from app.features.bookings import service_payments, service_payments_checkout, service_payout_ledger
 from app.features.identity import service as identity
 from app.features.payments import domain, repository
 from app.features.payments.errors import (
@@ -31,6 +31,7 @@ from app.features.payments.errors import (
     StripeConnectSyncFailed,
     StripeConnectUnavailable,
     StripeNotConfigured,
+    StripeWebhookHandlerFailed,
 )
 from app.features.payments.schemas import (
     AdminVendorRestoreStripeConnectResponse,
@@ -47,6 +48,17 @@ log = get_logger(__name__)
 # The webhook event types Eventtz acts on; every other type is acknowledged and ignored.
 CHECKOUT_COMPLETED = "checkout.session.completed"
 ACCOUNT_UPDATED = "account.updated"
+# Money moving outside the app: a card chargeback, and a refund made in the Stripe dashboard.
+CHARGE_DISPUTE_CREATED = "charge.dispute.created"
+CHARGE_DISPUTE_CLOSED = "charge.dispute.closed"
+CHARGE_REFUNDED = "charge.refunded"
+HANDLED_EVENT_TYPES = (
+    CHECKOUT_COMPLETED,
+    ACCOUNT_UPDATED,
+    CHARGE_DISPUTE_CREATED,
+    CHARGE_DISPUTE_CLOSED,
+    CHARGE_REFUNDED,
+)
 # Stripe's error text is kept in logs, trimmed like the baseline's audit detail.
 _MAX_ERROR_DETAIL = 500
 
@@ -374,6 +386,32 @@ async def _dispatch(
         vendor_user_id = await vendor_payouts.vendor_for_stripe_account(session, account_id)
         if vendor_user_id is not None:
             await sync_connect_account(session, gateway, vendor_user_id)
+    elif event_type == CHARGE_DISPUTE_CREATED:
+        await service_payments.hold_for_chargeback(
+            session,
+            mailer,
+            charge_id=str(event_object.get("charge") or ""),
+            dispute_id=str(event_object.get("id") or ""),
+            amount_pence=int(event_object.get("amount") or 0),
+            reason=event_object.get("reason"),
+        )
+    elif event_type == CHARGE_DISPUTE_CLOSED:
+        await service_payments.settle_chargeback(
+            session,
+            mailer,
+            charge_id=str(event_object.get("charge") or ""),
+            dispute_id=str(event_object.get("id") or ""),
+            amount_pence=int(event_object.get("amount") or 0),
+            outcome=str(event_object.get("status") or ""),
+        )
+    elif event_type == CHARGE_REFUNDED:
+        await service_payments.reconcile_external_refund(
+            session,
+            mailer,
+            charge_id=str(event_object.get("id") or ""),
+            amount_pence=int(event_object.get("amount") or 0),
+            amount_refunded_pence=int(event_object.get("amount_refunded") or 0),
+        )
 
 
 async def handle_webhook(
@@ -386,21 +424,24 @@ async def handle_webhook(
 ) -> None:
     """Verify, deduplicate and act on one Stripe webhook delivery.
 
-    Once the signature is valid this never raises: Stripe retries anything but a 2xx,
-    and a retry of an event that keeps failing would never succeed either. Handlers
-    use conditional writes, and the event id is claimed first, so a redelivery is a no-op.
+    The event id is claimed first, in the same transaction as the handler's writes, so
+    a redelivery of a handled event is a no-op. A handler that fails raises
+    `StripeWebhookHandlerFailed` (a 503): the request's transaction rolls back, claim
+    included, and Stripe redelivers the event, so a transient failure (a database blip,
+    a lost connection) does not leave a paid booking `pending` until someone syncs it.
+    Handlers use conditional writes, so a retry after a partial success changes nothing twice.
     """
     event = verified_event(payload, signature_header)
     event_id = str(event.get("id") or "")
     event_type = str(event.get("type") or "")
-    if event_type not in (CHECKOUT_COMPLETED, ACCOUNT_UPDATED):
+    if event_type not in HANDLED_EVENT_TYPES:
         log.debug("payments: unhandled Stripe webhook type=%s id=%s", event_type, event_id)
         return
     if not await repository.claim_webhook_event(session, event_id, event_type):
         log.info("payments: Stripe webhook already processed id=%s type=%s", event_id, event_type)
         return
     try:
-        async with repository.webhook_handler_savepoint(session):
-            await _dispatch(session, mailer, gateway, event_type, domain.webhook_event_object(event))
-    except Exception:
+        await _dispatch(session, mailer, gateway, event_type, domain.webhook_event_object(event))
+    except Exception as handler_error:
         log.exception("payments: Stripe webhook handler failed type=%s id=%s", event_type, event_id)
+        raise StripeWebhookHandlerFailed() from handler_error

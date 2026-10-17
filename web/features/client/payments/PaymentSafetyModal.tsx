@@ -8,6 +8,9 @@ import { PAYMENT_SAFETY_COPY } from "@/features/bookings/bookingConfirmCopy";
 type PaymentSafetyModalProps = {
   isOpen: boolean;
   loading?: boolean;
+  /** Vendor's cancellation policy label, shown when payment is about to be made. */
+  cancellationPolicyLabel?: string | null;
+  cancellationPolicyLines?: string[];
   onConfirm: () => void;
   onCancel: () => void;
 };
@@ -16,6 +19,8 @@ type PaymentSafetyModalProps = {
 export function PaymentSafetyModal({
   isOpen,
   loading = false,
+  cancellationPolicyLabel,
+  cancellationPolicyLines = [],
   onConfirm,
   onCancel,
 }: PaymentSafetyModalProps) {
@@ -47,6 +52,19 @@ export function PaymentSafetyModal({
             <li key={point}>{point}</li>
           ))}
         </ul>
+        {cancellationPolicyLabel ? (
+          <div className="rounded-xl bg-neutral-50 px-4 py-3">
+            <p className="font-semibold text-neutral-900">
+              {PAYMENT_SAFETY_COPY.cancellationPolicyHeading(cancellationPolicyLabel)}
+            </p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-[13px]">
+              {cancellationPolicyLines.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+            <p className="mt-2 text-[13px] font-medium">{PAYMENT_SAFETY_COPY.cancellationAgreement}</p>
+          </div>
+        ) : null}
       </div>
     </Modal>
   );

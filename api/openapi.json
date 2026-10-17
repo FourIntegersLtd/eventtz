@@ -1,6 +1,62 @@
 {
   "components": {
     "schemas": {
+      "AcceptTermsRequest": {
+        "description": "`POST /user/terms/accept`: the Terms version the user read, which must be the current one.",
+        "properties": {
+          "version": {
+            "minLength": 1,
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version"
+        ],
+        "title": "AcceptTermsRequest",
+        "type": "object"
+      },
+      "AcceptTermsResponse": {
+        "description": "The acceptance now on record.",
+        "properties": {
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "terms_accepted_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Terms Accepted At"
+          },
+          "terms_accepted_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Terms Accepted Version"
+          },
+          "terms_version": {
+            "title": "Terms Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "terms_version"
+        ],
+        "title": "AcceptTermsResponse",
+        "type": "object"
+      },
       "AccountDeletionRequest": {
         "description": "The account's current password, re-entered to confirm closing it.",
         "properties": {
@@ -286,8 +342,63 @@
         "type": "object"
       },
       "AdminBookingDetail": {
-        "description": "One booking as the admin console sees it: every column plus resolved party details.",
+        "description": "One booking as the admin console sees it: every column, resolved party details and its terms.",
         "properties": {
+          "cancellation_payout_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancellation Payout At"
+          },
+          "cancellation_policy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancellation Policy"
+          },
+          "cancellation_refund_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancellation Refund Gbp"
+          },
+          "cancellation_refund_percent": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancellation Refund Percent"
+          },
+          "cancellation_vendor_share_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancellation Vendor Share Gbp"
+          },
           "client_completion_confirmed_at": {
             "anyOf": [
               {
@@ -324,6 +435,164 @@
               }
             ],
             "title": "Created At"
+          },
+          "damage_deposit_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Damage Deposit Gbp"
+          },
+          "date_change_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date Change Note"
+          },
+          "date_change_requested_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date Change Requested At"
+          },
+          "date_change_requested_by": {
+            "anyOf": [
+              {
+                "enum": [
+                  "client",
+                  "vendor"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date Change Requested By"
+          },
+          "delivery_confirmed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Confirmed At"
+          },
+          "delivery_deadline_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Deadline Days"
+          },
+          "delivery_due_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Due At"
+          },
+          "deposit_claim_awarded_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deposit Claim Awarded Gbp"
+          },
+          "deposit_claim_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deposit Claim Gbp"
+          },
+          "deposit_claim_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deposit Claim Note"
+          },
+          "deposit_claim_resolved_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deposit Claim Resolved At"
+          },
+          "deposit_claimed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deposit Claimed At"
+          },
+          "deposit_refund_due_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deposit Refund Due At"
+          },
+          "deposit_refunded_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deposit Refunded At"
           },
           "event_address": {
             "anyOf": [
@@ -408,6 +677,17 @@
             ],
             "title": "Payment Amount Gbp"
           },
+          "payment_due_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Due At"
+          },
           "payment_status": {
             "default": "unpaid",
             "title": "Payment Status",
@@ -424,6 +704,34 @@
             ],
             "title": "Payout Released At"
           },
+          "payout_stage": {
+            "anyOf": [
+              {
+                "enum": [
+                  "full",
+                  "upfront",
+                  "waiting_delivery",
+                  "final"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payout Stage"
+          },
+          "payout_upfront_percent": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payout Upfront Percent"
+          },
           "platform_fee_gbp": {
             "anyOf": [
               {
@@ -434,6 +742,39 @@
               }
             ],
             "title": "Platform Fee Gbp"
+          },
+          "proposed_event_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed Event Date"
+          },
+          "proposed_event_end_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed Event End Date"
+          },
+          "report_window_hours": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Report Window Hours"
           },
           "selected_option_ids": {
             "items": {
@@ -496,6 +837,28 @@
           "total_label": {
             "title": "Total Label",
             "type": "string"
+          },
+          "upfront_amount_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upfront Amount Gbp"
+          },
+          "upfront_payout_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upfront Payout At"
           },
           "vendor_adjustments": {
             "items": {},
@@ -860,6 +1223,12 @@
       "AdminCancelOnBehalfBody": {
         "description": "Staff cancel a booking for one party, writing down why (kept in the audit log).",
         "properties": {
+          "exceptional": {
+            "default": false,
+            "description": "Exceptional circumstances: the cancellation is not counted against a cancelling vendor.",
+            "title": "Exceptional",
+            "type": "boolean"
+          },
           "party": {
             "enum": [
               "client",
@@ -1525,7 +1894,8 @@
                 "enum": [
                   "release_to_vendor",
                   "refund_client",
-                  "partial_refund"
+                  "partial_refund",
+                  "vendor_no_show"
                 ],
                 "type": "string"
               },
@@ -1680,7 +2050,8 @@
                 "enum": [
                   "release_to_vendor",
                   "refund_client",
-                  "partial_refund"
+                  "partial_refund",
+                  "vendor_no_show"
                 ],
                 "type": "string"
               },
@@ -2237,6 +2608,23 @@
           }
         },
         "title": "AdminPaymentFieldsPatchResponse",
+        "type": "object"
+      },
+      "AdminResolveDepositClaimBody": {
+        "additionalProperties": false,
+        "description": "Staff decide a deposit claim: how much the vendor keeps (0 up to the claim); the rest is refunded.",
+        "properties": {
+          "award_gbp": {
+            "maximum": 1000.0,
+            "minimum": 0.0,
+            "title": "Award Gbp",
+            "type": "number"
+          }
+        },
+        "required": [
+          "award_gbp"
+        ],
+        "title": "AdminResolveDepositClaimBody",
         "type": "object"
       },
       "AdminReviewDetailResponse": {
@@ -2950,6 +3338,19 @@
             ],
             "title": "Approval Status",
             "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Staff's reason, quoted in the email to the vendor when banning.",
+            "title": "Reason"
           }
         },
         "required": [
@@ -3175,6 +3576,77 @@
         "title": "AdminVendorListingOverrideResponse",
         "type": "object"
       },
+      "AdminVendorPauseBody": {
+        "description": "Pause a vendor's public listing for a number of days.",
+        "properties": {
+          "days": {
+            "description": "How many days the listing stays hidden.",
+            "maximum": 90.0,
+            "minimum": 1.0,
+            "title": "Days",
+            "type": "integer"
+          },
+          "reason": {
+            "description": "Sent to the vendor with the end date.",
+            "maxLength": 2000,
+            "minLength": 3,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "days",
+          "reason"
+        ],
+        "title": "AdminVendorPauseBody",
+        "type": "object"
+      },
+      "AdminVendorPauseResponse": {
+        "description": "The pause now stored (both null once cleared) and whether clients can find the vendor.",
+        "properties": {
+          "listing_pause_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Listing Pause Reason"
+          },
+          "listing_paused_until": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Listing Paused Until"
+          },
+          "listing_visible": {
+            "default": false,
+            "title": "Listing Visible",
+            "type": "boolean"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "AdminVendorPauseResponse",
+        "type": "object"
+      },
       "AdminVendorPayoutNudgeBody": {
         "description": "Approved vendors to email a \"set up payouts\" nudge (duplicates and blanks are ignored).",
         "properties": {
@@ -3320,6 +3792,12 @@
             "title": "Approval Status",
             "type": "string"
           },
+          "cancellation_review_flag": {
+            "default": false,
+            "description": "True when the count has reached the staff-review threshold.",
+            "title": "Cancellation Review Flag",
+            "type": "boolean"
+          },
           "created_at": {
             "anyOf": [
               {
@@ -3373,6 +3851,28 @@
               }
             ],
             "title": "Listing Override Reason"
+          },
+          "listing_pause_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Listing Pause Reason"
+          },
+          "listing_paused_until": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Listing Paused Until"
           },
           "listing_visible": {
             "default": false,
@@ -3429,6 +3929,12 @@
           "user_id": {
             "title": "User Id",
             "type": "string"
+          },
+          "vendor_cancellation_count": {
+            "default": 0,
+            "description": "Cancellations counted against the vendor in the last 180 days (staff only).",
+            "title": "Vendor Cancellation Count",
+            "type": "integer"
           }
         },
         "required": [
@@ -3491,6 +3997,47 @@
           "status"
         ],
         "title": "AdminVendorUnsubmitResponse",
+        "type": "object"
+      },
+      "AdminVendorWarnBody": {
+        "description": "A formal warning staff send to a vendor by email.",
+        "properties": {
+          "message": {
+            "description": "What the vendor is warned about.",
+            "maxLength": 2000,
+            "minLength": 3,
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "AdminVendorWarnBody",
+        "type": "object"
+      },
+      "AdminVendorWarnResponse": {
+        "description": "Whether the warning email reached the provider.",
+        "properties": {
+          "email_sent": {
+            "title": "Email Sent",
+            "type": "boolean"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "email_sent"
+        ],
+        "title": "AdminVendorWarnResponse",
         "type": "object"
       },
       "AdminVendorsListResponse": {
@@ -3678,6 +4225,39 @@
               }
             ],
             "title": "Preferred Name"
+          },
+          "terms_accepted_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Terms Accepted At"
+          },
+          "terms_accepted_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Terms Accepted Version"
+          },
+          "terms_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Terms Version"
           },
           "user_metadata": {
             "additionalProperties": true,
@@ -4779,6 +5359,70 @@
         "title": "BudgetLine",
         "type": "object"
       },
+      "CancellationPreview": {
+        "description": "What the client would get back if they cancelled a paid booking right now.",
+        "properties": {
+          "cooling_off_until": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cooling Off Until"
+          },
+          "lines": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "next_tier_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Tier At"
+          },
+          "next_tier_percent": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Tier Percent"
+          },
+          "percent": {
+            "title": "Percent",
+            "type": "integer"
+          },
+          "refund_gbp": {
+            "title": "Refund Gbp",
+            "type": "number"
+          },
+          "refund_label": {
+            "title": "Refund Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "percent",
+          "refund_gbp",
+          "refund_label"
+        ],
+        "title": "CancellationPreview",
+        "type": "object"
+      },
       "CelebrationBrief": {
         "description": "What the planner understood (or guessed) about the celebration, in full.",
         "properties": {
@@ -5061,6 +5705,67 @@
             "title": "Booking Status",
             "type": "string"
           },
+          "cancellation_policy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancellation Policy"
+          },
+          "cancellation_policy_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancellation Policy Label"
+          },
+          "cancellation_policy_lines": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Cancellation Policy Lines",
+            "type": "array"
+          },
+          "cancellation_preview": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CancellationPreview"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cancellation_refund_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancellation Refund Gbp"
+          },
+          "cancellation_refund_percent": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancellation Refund Percent"
+          },
           "client_completion_confirmed_at": {
             "anyOf": [
               {
@@ -5120,6 +5825,164 @@
               }
             ],
             "title": "Created At"
+          },
+          "damage_deposit_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Damage Deposit Gbp"
+          },
+          "date_change_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date Change Note"
+          },
+          "date_change_requested_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date Change Requested At"
+          },
+          "date_change_requested_by": {
+            "anyOf": [
+              {
+                "enum": [
+                  "client",
+                  "vendor"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date Change Requested By"
+          },
+          "delivery_confirmed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Confirmed At"
+          },
+          "delivery_deadline_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Deadline Days"
+          },
+          "delivery_due_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Due At"
+          },
+          "deposit_claim_awarded_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deposit Claim Awarded Gbp"
+          },
+          "deposit_claim_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deposit Claim Gbp"
+          },
+          "deposit_claim_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deposit Claim Note"
+          },
+          "deposit_claim_resolved_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deposit Claim Resolved At"
+          },
+          "deposit_claimed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deposit Claimed At"
+          },
+          "deposit_refund_due_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deposit Refund Due At"
+          },
+          "deposit_refunded_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deposit Refunded At"
           },
           "event_address": {
             "anyOf": [
@@ -5184,6 +6047,11 @@
             ],
             "title": "Event Title"
           },
+          "has_open_dispute": {
+            "default": false,
+            "title": "Has Open Dispute",
+            "type": "boolean"
+          },
           "initial_client_total_label": {
             "anyOf": [
               {
@@ -5234,6 +6102,17 @@
             ],
             "title": "Paid At"
           },
+          "payment_due_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Due At"
+          },
           "payment_status": {
             "default": "unpaid",
             "title": "Payment Status",
@@ -5250,6 +6129,34 @@
             ],
             "title": "Payout Auto Release At"
           },
+          "payout_stage": {
+            "anyOf": [
+              {
+                "enum": [
+                  "full",
+                  "upfront",
+                  "waiting_delivery",
+                  "final"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payout Stage"
+          },
+          "payout_upfront_percent": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payout Upfront Percent"
+          },
           "pricing": {
             "anyOf": [
               {
@@ -5259,6 +6166,39 @@
                 "type": "null"
               }
             ]
+          },
+          "proposed_event_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed Event Date"
+          },
+          "proposed_event_end_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed Event End Date"
+          },
+          "report_window_hours": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Report Window Hours"
           },
           "review": {
             "anyOf": [
@@ -5280,6 +6220,28 @@
           "total_label": {
             "title": "Total Label",
             "type": "string"
+          },
+          "upfront_amount_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upfront Amount Gbp"
+          },
+          "upfront_payout_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upfront Payout At"
           },
           "vendor_adjustments": {
             "items": {
@@ -6931,6 +7893,85 @@
           "line_items"
         ],
         "title": "CreateVendorQuoteBody",
+        "type": "object"
+      },
+      "DateChangeRequestBody": {
+        "additionalProperties": false,
+        "description": "A proposed new date (or date range) for an accepted booking, with an optional note.",
+        "properties": {
+          "new_event_date": {
+            "format": "date",
+            "title": "New Event Date",
+            "type": "string"
+          },
+          "new_event_end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Event End Date"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "required": [
+          "new_event_date"
+        ],
+        "title": "DateChangeRequestBody",
+        "type": "object"
+      },
+      "DateChangeRespondBody": {
+        "additionalProperties": false,
+        "description": "The other party's answer to a pending date change.",
+        "properties": {
+          "accept": {
+            "title": "Accept",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "accept"
+        ],
+        "title": "DateChangeRespondBody",
+        "type": "object"
+      },
+      "DepositClaimBody": {
+        "additionalProperties": false,
+        "description": "The vendor asks to keep part of the client's damage deposit, saying what was damaged or missing.",
+        "properties": {
+          "amount_gbp": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 1000.0,
+            "title": "Amount Gbp",
+            "type": "number"
+          },
+          "note": {
+            "maxLength": 2000,
+            "minLength": 10,
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount_gbp",
+          "note"
+        ],
+        "title": "DepositClaimBody",
         "type": "object"
       },
       "DisputeDetailResponse": {
@@ -9978,6 +11019,17 @@
             ],
             "title": "Referral Code"
           },
+          "terms_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Terms Version"
+          },
           "user_type": {
             "default": "client",
             "enum": [
@@ -10384,6 +11436,50 @@
             "title": "Booking Status",
             "type": "string"
           },
+          "cancellation_payout_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancellation Payout At"
+          },
+          "cancellation_policy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancellation Policy"
+          },
+          "cancellation_refund_percent": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancellation Refund Percent"
+          },
+          "cancellation_vendor_share_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancellation Vendor Share Gbp"
+          },
           "client_completion_confirmed_at": {
             "anyOf": [
               {
@@ -10477,6 +11573,164 @@
             ],
             "title": "Created At"
           },
+          "damage_deposit_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Damage Deposit Gbp"
+          },
+          "date_change_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date Change Note"
+          },
+          "date_change_requested_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date Change Requested At"
+          },
+          "date_change_requested_by": {
+            "anyOf": [
+              {
+                "enum": [
+                  "client",
+                  "vendor"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date Change Requested By"
+          },
+          "delivery_confirmed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Confirmed At"
+          },
+          "delivery_deadline_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Deadline Days"
+          },
+          "delivery_due_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Due At"
+          },
+          "deposit_claim_awarded_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deposit Claim Awarded Gbp"
+          },
+          "deposit_claim_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deposit Claim Gbp"
+          },
+          "deposit_claim_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deposit Claim Note"
+          },
+          "deposit_claim_resolved_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deposit Claim Resolved At"
+          },
+          "deposit_claimed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deposit Claimed At"
+          },
+          "deposit_refund_due_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deposit Refund Due At"
+          },
+          "deposit_refunded_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deposit Refunded At"
+          },
           "event_address": {
             "anyOf": [
               {
@@ -10517,6 +11771,11 @@
               }
             ],
             "title": "Event Postcode"
+          },
+          "has_open_dispute": {
+            "default": false,
+            "title": "Has Open Dispute",
+            "type": "boolean"
           },
           "initial_client_total_label": {
             "anyOf": [
@@ -10568,6 +11827,17 @@
             ],
             "title": "Paid At"
           },
+          "payment_due_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Due At"
+          },
           "payment_status": {
             "default": "unpaid",
             "title": "Payment Status",
@@ -10584,6 +11854,34 @@
             ],
             "title": "Payout Auto Release At"
           },
+          "payout_stage": {
+            "anyOf": [
+              {
+                "enum": [
+                  "full",
+                  "upfront",
+                  "waiting_delivery",
+                  "final"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payout Stage"
+          },
+          "payout_upfront_percent": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payout Upfront Percent"
+          },
           "pricing": {
             "anyOf": [
               {
@@ -10593,6 +11891,39 @@
                 "type": "null"
               }
             ]
+          },
+          "proposed_event_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed Event Date"
+          },
+          "proposed_event_end_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed Event End Date"
+          },
+          "report_window_hours": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Report Window Hours"
           },
           "review": {
             "anyOf": [
@@ -10614,6 +11945,28 @@
           "total_label": {
             "title": "Total Label",
             "type": "string"
+          },
+          "upfront_amount_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upfront Amount Gbp"
+          },
+          "upfront_payout_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upfront Payout At"
           },
           "vendor_adjustments": {
             "items": {
@@ -10882,6 +12235,28 @@
           "booking_status": {
             "title": "Booking Status",
             "type": "string"
+          },
+          "refund_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refund Gbp"
+          },
+          "refund_percent": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refund Percent"
           },
           "success": {
             "default": true,
@@ -11282,6 +12657,11 @@
           },
           "event_name": {
             "title": "Event Name",
+            "type": "string"
+          },
+          "kind": {
+            "default": "event_payout",
+            "title": "Kind",
             "type": "string"
           },
           "paid_out_at": {
@@ -13134,6 +14514,121 @@
         ]
       }
     },
+    "/api/v1/admin/bookings/{booking_id}/deposit-claim/resolve": {
+      "post": {
+        "description": "Decide a vendor's deposit claim: the vendor keeps the award, the client is refunded the rest.",
+        "operationId": "admin_resolve_deposit_claim_api_v1_admin_bookings__booking_id__deposit_claim_resolve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminResolveDepositClaimBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminBookingDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id, recovery_booking_not_found, deposit_award_invalid, refund_failed, payout_release_failed",
+            "x-codes": [
+              "invalid_booking_id",
+              "recovery_booking_not_found",
+              "deposit_award_invalid",
+              "refund_failed",
+              "payout_release_failed"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "no_deposit_claim, deposit_vendor_payouts_not_ready",
+            "x-codes": [
+              "no_deposit_claim",
+              "deposit_vendor_payouts_not_ready"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Resolve Deposit Claim",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/v1/admin/bookings/{booking_id}/payment-fields": {
       "patch": {
         "description": "Write staff-verified Stripe ids and amount onto a booking, after checking them with Stripe.",
@@ -14698,7 +16193,7 @@
     },
     "/api/v1/admin/email/test-send": {
       "post": {
-        "description": "Send one fixed test email, and log the attempt to the audit trail.",
+        "description": "Send one fixed test email, and log the attempt to the audit trail.\n\nThe only send that does not wait for the commit: the response reports the\nprovider's answer (`delivered`), and a test email describes no change to undo.",
         "operationId": "send_test_api_v1_admin_email_test_send_post",
         "requestBody": {
           "content": {
@@ -17094,7 +18589,7 @@
     },
     "/api/v1/admin/vendors/nudge-profile-complete": {
       "post": {
-        "description": "Email draft vendors to finish their profile.",
+        "description": "Email draft vendors to finish their profile.\n\nEmails during the request: the response counts each provider's answer\n(`sent`/`failures`), and a nudge changes no row besides the audit entry.",
         "operationId": "nudge_to_complete_profile_api_v1_admin_vendors_nudge_profile_complete_post",
         "requestBody": {
           "content": {
@@ -17167,7 +18662,7 @@
     },
     "/api/v1/admin/vendors/nudge-setup-payouts": {
       "post": {
-        "description": "Email approved vendors to finish Stripe payout setup.",
+        "description": "Email approved vendors to finish Stripe payout setup.\n\nEmails during the request for the same reason as the profile nudge: the\nresponse reports each provider's answer.",
         "operationId": "nudge_to_set_up_payouts_api_v1_admin_vendors_nudge_setup_payouts_post",
         "requestBody": {
           "content": {
@@ -17630,6 +19125,188 @@
         ]
       }
     },
+    "/api/v1/admin/vendors/{user_id}/listing-pause": {
+      "delete": {
+        "description": "End a listing pause early.",
+        "operationId": "clear_listing_pause_api_v1_admin_vendors__user_id__listing_pause_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminVendorPauseResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "vendor_profile_not_found",
+            "x-codes": [
+              "vendor_profile_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Clear Listing Pause",
+        "tags": [
+          "admin"
+        ]
+      },
+      "put": {
+        "description": "Hide the vendor's listing for a number of days; it returns on its own.",
+        "operationId": "pause_listing_api_v1_admin_vendors__user_id__listing_pause_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminVendorPauseBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminVendorPauseResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "vendor_profile_not_found",
+            "x-codes": [
+              "vendor_profile_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Pause Listing",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/v1/admin/vendors/{user_id}/restore-stripe-connect": {
       "post": {
         "description": "Super admin: restore Connect account id from the vendor's latest payout transfer.",
@@ -17734,7 +19411,7 @@
     },
     "/api/v1/admin/vendors/{user_id}/unsubmit": {
       "patch": {
-        "description": "Send a submitted profile back to the vendor for edits.",
+        "description": "Send a submitted profile back to the vendor for edits.\n\nEmails during the request, not after commit: the response's `email_sent` is\nthe provider's answer, which the console shows (baseline contract).",
         "operationId": "return_for_edits_api_v1_admin_vendors__user_id__unsubmit_patch",
         "parameters": [
           {
@@ -17838,6 +19515,103 @@
           }
         ],
         "summary": "Return For Edits",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/vendors/{user_id}/warn": {
+      "post": {
+        "description": "Email the vendor a formal warning (recorded in the audit log).",
+        "operationId": "warn_vendor_api_v1_admin_vendors__user_id__warn_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminVendorWarnBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminVendorWarnResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "vendor_profile_not_found",
+            "x-codes": [
+              "vendor_profile_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Warn Vendor",
         "tags": [
           "admin"
         ]
@@ -19618,6 +21392,19 @@
               "forbidden"
             ]
           },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "payment_deadline_passed",
+            "x-codes": [
+              "payment_deadline_passed"
+            ]
+          },
           "422": {
             "content": {
               "application/json": {
@@ -19872,6 +21659,485 @@
           }
         ],
         "summary": "Post Client Confirm Completion",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/booking-requests/{booking_id}/confirm-delivery": {
+      "post": {
+        "description": "Confirm the vendor's work (photos, video) arrived; the rest of their payout is then sent.",
+        "operationId": "post_client_confirm_delivery_api_v1_client_booking_requests__booking_id__confirm_delivery_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmCompletionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id",
+            "x-codes": [
+              "invalid_booking_id"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_not_found",
+            "x-codes": [
+              "booking_not_found"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "delivery_not_awaited",
+            "x-codes": [
+              "delivery_not_awaited"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Client Confirm Delivery",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/booking-requests/{booking_id}/date-change": {
+      "post": {
+        "description": "Ask to move an accepted booking to a new date; the other party is asked to agree.",
+        "operationId": "post_client_date_change_api_v1_client_booking_requests__booking_id__date_change_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DateChangeRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientBookingDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id, date_change_invalid_dates, event_span_too_long",
+            "x-codes": [
+              "invalid_booking_id",
+              "date_change_invalid_dates",
+              "event_span_too_long"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_not_found",
+            "x-codes": [
+              "booking_not_found"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "date_change_not_allowed, date_change_pending",
+            "x-codes": [
+              "date_change_not_allowed",
+              "date_change_pending"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Client Date Change",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/booking-requests/{booking_id}/date-change/respond": {
+      "post": {
+        "description": "Accept or decline the other party's pending date change.",
+        "operationId": "post_client_date_change_respond_api_v1_client_booking_requests__booking_id__date_change_respond_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DateChangeRespondBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientBookingDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id",
+            "x-codes": [
+              "invalid_booking_id"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_not_found",
+            "x-codes": [
+              "booking_not_found"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "date_change_not_allowed, no_date_change, date_change_not_yours, date_change_capacity_full",
+            "x-codes": [
+              "date_change_not_allowed",
+              "no_date_change",
+              "date_change_not_yours",
+              "date_change_capacity_full"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Client Date Change Respond",
+        "tags": [
+          "client"
+        ]
+      }
+    },
+    "/api/v1/client/booking-requests/{booking_id}/date-change/withdraw": {
+      "post": {
+        "description": "Take back your own pending date change.",
+        "operationId": "post_client_date_change_withdraw_api_v1_client_booking_requests__booking_id__date_change_withdraw_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientBookingDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id",
+            "x-codes": [
+              "invalid_booking_id"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_not_found",
+            "x-codes": [
+              "booking_not_found"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "no_date_change, date_change_not_yours",
+            "x-codes": [
+              "no_date_change",
+              "date_change_not_yours"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Client Date Change Withdraw",
         "tags": [
           "client"
         ]
@@ -23506,6 +25772,92 @@
         ]
       }
     },
+    "/api/v1/user/terms/accept": {
+      "post": {
+        "description": "Record that the caller accepted the current Terms of Service version.",
+        "operationId": "accept_terms_api_v1_user_terms_accept_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptTermsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptTermsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "terms_version_mismatch",
+            "x-codes": [
+              "terms_version_mismatch"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Accept Terms",
+        "tags": [
+          "user"
+        ]
+      }
+    },
     "/api/v1/vendor/analytics": {
       "get": {
         "description": "Enquiries, the booking funnel, revenue, ratings and reply times over the last `days` days.",
@@ -24143,6 +26495,496 @@
           }
         ],
         "summary": "Post Vendor Confirm Completion",
+        "tags": [
+          "vendor"
+        ]
+      }
+    },
+    "/api/v1/vendor/booking-requests/{booking_id}/date-change": {
+      "post": {
+        "description": "Ask to move an accepted booking to a new date; the other party is asked to agree.",
+        "operationId": "post_vendor_date_change_api_v1_vendor_booking_requests__booking_id__date_change_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DateChangeRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorBookingDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id, date_change_invalid_dates, event_span_too_long",
+            "x-codes": [
+              "invalid_booking_id",
+              "date_change_invalid_dates",
+              "event_span_too_long"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_not_found",
+            "x-codes": [
+              "booking_not_found"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "date_change_not_allowed, date_change_pending",
+            "x-codes": [
+              "date_change_not_allowed",
+              "date_change_pending"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Vendor Date Change",
+        "tags": [
+          "vendor"
+        ]
+      }
+    },
+    "/api/v1/vendor/booking-requests/{booking_id}/date-change/respond": {
+      "post": {
+        "description": "Accept or decline the other party's pending date change.",
+        "operationId": "post_vendor_date_change_respond_api_v1_vendor_booking_requests__booking_id__date_change_respond_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DateChangeRespondBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorBookingDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id",
+            "x-codes": [
+              "invalid_booking_id"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_not_found",
+            "x-codes": [
+              "booking_not_found"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "date_change_not_allowed, no_date_change, date_change_not_yours, date_change_capacity_full",
+            "x-codes": [
+              "date_change_not_allowed",
+              "no_date_change",
+              "date_change_not_yours",
+              "date_change_capacity_full"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Vendor Date Change Respond",
+        "tags": [
+          "vendor"
+        ]
+      }
+    },
+    "/api/v1/vendor/booking-requests/{booking_id}/date-change/withdraw": {
+      "post": {
+        "description": "Take back your own pending date change.",
+        "operationId": "post_vendor_date_change_withdraw_api_v1_vendor_booking_requests__booking_id__date_change_withdraw_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorBookingDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id",
+            "x-codes": [
+              "invalid_booking_id"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_not_found",
+            "x-codes": [
+              "booking_not_found"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "no_date_change, date_change_not_yours",
+            "x-codes": [
+              "no_date_change",
+              "date_change_not_yours"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Vendor Date Change Withdraw",
+        "tags": [
+          "vendor"
+        ]
+      }
+    },
+    "/api/v1/vendor/booking-requests/{booking_id}/deposit-claim": {
+      "post": {
+        "description": "Ask to keep part of the client's damage deposit, saying what was damaged or missing; staff decide.",
+        "operationId": "post_vendor_deposit_claim_api_v1_vendor_booking_requests__booking_id__deposit_claim_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DepositClaimBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorBookingDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "invalid_booking_id, deposit_claim_invalid",
+            "x-codes": [
+              "invalid_booking_id",
+              "deposit_claim_invalid"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "booking_not_found",
+            "x-codes": [
+              "booking_not_found"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "deposit_claim_closed",
+            "x-codes": [
+              "deposit_claim_closed"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Vendor Deposit Claim",
         "tags": [
           "vendor"
         ]

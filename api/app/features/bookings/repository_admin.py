@@ -12,7 +12,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import Boolean, Text, Uuid, column, exists, func, select, table, update
+from sqlalchemy import Boolean, DateTime, Text, Uuid, column, exists, func, or_, select, table, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import as_uuid, plain_row
@@ -77,6 +77,11 @@ _BOOKING_COLUMNS = (
     BookingRequest.completed_at,
     BookingRequest.refunded_at,
     BookingRequest.cancelled_by,
+    BookingRequest.cancellation_policy,
+    BookingRequest.cancellation_refund_percent,
+    BookingRequest.cancellation_refund_gbp,
+    BookingRequest.cancellation_vendor_share_gbp,
+    BookingRequest.cancellation_payout_at,
     BookingRequest.support_hold,
 )
 
@@ -250,3 +255,58 @@ async def paid_bookings_for_financials(
         select(*_BOOKING_COLUMNS).where(*conditions).order_by(BookingRequest.paid_at.asc()).limit(5000)
     )
     return [BookingRow.model_validate(plain_row(found)) for found in result]
+
+
+# The dispute columns the vendor cancellation record reads (see `_dispute_cases` above for the active check).
+_dispute_outcomes = table(
+    "dispute_cases",
+    column("booking_request_id", Uuid),
+    column("resolution_action", Text),
+    column("resolved_at", DateTime(timezone=True)),
+    column("created_at", DateTime(timezone=True)),
+)
+
+
+async def vendor_cancellation_counts(
+    session: AsyncSession, vendor_user_ids: list[str], *, since: datetime
+) -> dict[str, int]:
+    """Per vendor, the cancellations that count against them since `since` (private staff record).
+
+    A cancellation counts when the vendor cancelled a booking the client had paid for
+    (refunded, partly refunded, or with a `paid_at`) and staff did not mark it
+    `exceptional`; a dispute resolved as `vendor_no_show` counts as one too.
+    """
+    vendor_uuids = [parsed for parsed in (as_uuid(vendor_id) for vendor_id in vendor_user_ids) if parsed]
+    if not vendor_uuids:
+        return {}
+    counts: dict[str, int] = {}
+    cancelled = await session.execute(
+        select(BookingRequest.vendor_user_id, func.count())
+        .where(
+            BookingRequest.vendor_user_id.in_(vendor_uuids),
+            BookingRequest.cancelled_by == "vendor",
+            BookingRequest.cancelled_at >= since,
+            or_(
+                BookingRequest.payment_status.in_(("refunded", "partially_refunded")),
+                BookingRequest.paid_at.is_not(None),
+            ),
+            BookingRequest.cancellation_reason.is_distinct_from("exceptional"),
+        )
+        .group_by(BookingRequest.vendor_user_id)
+    )
+    for vendor_id, total in cancelled:
+        counts[str(vendor_id)] = int(total)
+    no_shows = await session.execute(
+        select(BookingRequest.vendor_user_id, func.count())
+        .select_from(_dispute_outcomes)
+        .join(BookingRequest, BookingRequest.id == _dispute_outcomes.c.booking_request_id)
+        .where(
+            BookingRequest.vendor_user_id.in_(vendor_uuids),
+            _dispute_outcomes.c.resolution_action == "vendor_no_show",
+            func.coalesce(_dispute_outcomes.c.resolved_at, _dispute_outcomes.c.created_at) >= since,
+        )
+        .group_by(BookingRequest.vendor_user_id)
+    )
+    for vendor_id, total in no_shows:
+        counts[str(vendor_id)] = counts.get(str(vendor_id), 0) + int(total)
+    return counts

@@ -14,6 +14,8 @@ from app.features.bookings import (
     service_adjustments,
     service_completion,
     service_create,
+    service_date_change,
+    service_deposits,
     service_queries,
     service_receipts,
     service_status,
@@ -22,6 +24,9 @@ from app.features.bookings.schemas import (
     BookingRequestCreated,
     ConfirmCompletionResponse,
     CreateVendorQuoteBody,
+    DateChangeRequestBody,
+    DateChangeRespondBody,
+    DepositClaimBody,
     PaymentReceiptResponse,
     PutVendorBookingAdjustmentsBody,
     PutVendorBookingAdjustmentsResponse,
@@ -271,4 +276,126 @@ async def get_vendor_booking_payout_statement_html(
     return HTMLResponse(
         content=service_receipts.render_receipt_html(payload),
         headers={"Content-Disposition": f'attachment; filename="payout-statement-{receipt_number}.html"'},
+    )
+
+
+@router.post(
+    "/booking-requests/{booking_id}/date-change",
+    response_model=VendorBookingDetailResponse,
+    responses=error_responses(
+        *ROLE_ERRORS,
+        errors.InvalidBookingId,
+        errors.BookingNotFound,
+        errors.DateChangeNotAllowed,
+        errors.DateChangePending,
+        errors.DateChangeInPast,
+        errors.EventSpanTooLong,
+    ),
+)
+async def post_vendor_date_change(
+    session: SessionDep,
+    vendor: CurrentVendor,
+    booking_id: str,
+    body: DateChangeRequestBody,
+    mailer: MailerDependency,
+) -> VendorBookingDetailResponse:
+    """Ask to move an accepted booking to a new date; the other party is asked to agree."""
+    booking_id = require_booking_id(booking_id)
+    await service_date_change.request_date_change(
+        session,
+        mailer,
+        "vendor",
+        vendor.id,
+        booking_id,
+        body.new_event_date,
+        body.new_event_end_date,
+        body.note,
+    )
+    return VendorBookingDetailResponse(
+        booking=await service_queries.vendor_booking_detail(session, vendor.id, booking_id)
+    )
+
+
+@router.post(
+    "/booking-requests/{booking_id}/date-change/respond",
+    response_model=VendorBookingDetailResponse,
+    responses=error_responses(
+        *ROLE_ERRORS,
+        errors.InvalidBookingId,
+        errors.BookingNotFound,
+        errors.DateChangeNotAllowed,
+        errors.NoDateChange,
+        errors.DateChangeNotYours,
+        errors.DateChangeCapacityFull,
+    ),
+)
+async def post_vendor_date_change_respond(
+    session: SessionDep,
+    vendor: CurrentVendor,
+    booking_id: str,
+    body: DateChangeRespondBody,
+    mailer: MailerDependency,
+) -> VendorBookingDetailResponse:
+    """Accept or decline the other party's pending date change."""
+    booking_id = require_booking_id(booking_id)
+    await service_date_change.respond_to_date_change(
+        session, mailer, "vendor", vendor.id, booking_id, accept=body.accept
+    )
+    return VendorBookingDetailResponse(
+        booking=await service_queries.vendor_booking_detail(session, vendor.id, booking_id)
+    )
+
+
+@router.post(
+    "/booking-requests/{booking_id}/date-change/withdraw",
+    response_model=VendorBookingDetailResponse,
+    responses=error_responses(
+        *ROLE_ERRORS,
+        errors.InvalidBookingId,
+        errors.BookingNotFound,
+        errors.NoDateChange,
+        errors.DateChangeNotYours,
+    ),
+)
+async def post_vendor_date_change_withdraw(
+    session: SessionDep, vendor: CurrentVendor, booking_id: str, mailer: MailerDependency
+) -> VendorBookingDetailResponse:
+    """Take back your own pending date change."""
+    booking_id = require_booking_id(booking_id)
+    await service_date_change.withdraw_date_change(session, mailer, "vendor", vendor.id, booking_id)
+    return VendorBookingDetailResponse(
+        booking=await service_queries.vendor_booking_detail(session, vendor.id, booking_id)
+    )
+
+
+@router.post(
+    "/booking-requests/{booking_id}/deposit-claim",
+    response_model=VendorBookingDetailResponse,
+    responses=error_responses(
+        *ROLE_ERRORS,
+        errors.InvalidBookingId,
+        errors.BookingNotFound,
+        errors.DepositClaimClosed,
+        errors.DepositClaimInvalid,
+    ),
+)
+async def post_vendor_deposit_claim(
+    session: SessionDep,
+    vendor: CurrentVendor,
+    booking_id: str,
+    body: DepositClaimBody,
+    mailer: MailerDependency,
+) -> VendorBookingDetailResponse:
+    """Ask to keep part of the client's damage deposit, saying what was damaged or missing; staff decide."""
+    booking_id = require_booking_id(booking_id)
+    await service_deposits.claim_deposit(
+        session,
+        mailer,
+        vendor_user_id=vendor.id,
+        booking_id=booking_id,
+        amount_gbp=body.amount_gbp,
+        note=body.note,
+    )
+    return VendorBookingDetailResponse(
+        booking=await service_queries.vendor_booking_detail(session, vendor.id, booking_id)
     )

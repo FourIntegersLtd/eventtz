@@ -25,6 +25,13 @@ export type AdminVendorRow = {
   /** Admin override on top of the automatic approval + Stripe rule. */
   listing_override?: VendorListingOverride | string;
   listing_override_reason?: string | null;
+  /** Staff-only: cancellations counted against the vendor in the last 180 days. */
+  vendor_cancellation_count?: number;
+  /** Staff-only: the count has reached the review threshold. */
+  cancellation_review_flag?: boolean;
+  /** Listing pause still running (ISO time) and why. */
+  listing_paused_until?: string | null;
+  listing_pause_reason?: string | null;
 };
 
 export type AdminVendorsQuery = {
@@ -231,4 +238,30 @@ export async function postAdminVendorPayoutNudge(
     skipped: data.skipped ?? 0,
     failures: data.failures ?? [],
   };
+}
+
+/** Email the vendor a formal warning (recorded in the audit log). */
+export async function postVendorWarning(userId: string, message: string): Promise<boolean> {
+  const { data } = await api.post<{ email_sent: boolean }>(`/api/v1/admin/vendors/${userId}/warn`, {
+    message: message.trim(),
+  });
+  return Boolean(data.email_sent);
+}
+
+/** Hide the vendor's listing for `days` days; it returns on its own. */
+export async function putVendorListingPause(
+  userId: string,
+  days: number,
+  reason: string,
+): Promise<{ listing_paused_until: string | null }> {
+  const { data } = await api.put<{ listing_paused_until: string | null }>(
+    `/api/v1/admin/vendors/${userId}/listing-pause`,
+    { days, reason: reason.trim() },
+  );
+  return { listing_paused_until: data.listing_paused_until ?? null };
+}
+
+/** End a listing pause early. */
+export async function deleteVendorListingPause(userId: string): Promise<void> {
+  await api.delete(`/api/v1/admin/vendors/${userId}/listing-pause`);
 }

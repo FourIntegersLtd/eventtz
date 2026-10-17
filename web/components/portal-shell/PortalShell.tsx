@@ -26,6 +26,7 @@ import { NotificationBell } from "@/features/notifications/NotificationBell";
 import { HelpWidget } from "@/features/help/HelpWidget";
 import { VendorCopilotProvider } from "@/features/vendor/copilot/VendorCopilotContext";
 import { VendorCopilotWidget } from "@/features/vendor/copilot/VendorCopilotWidget";
+import { TermsUpdateBanner } from "@/components/portal-shell/TermsUpdateBanner";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   isPortalNavActive,
@@ -441,6 +442,7 @@ export function PortalShell({
                   : "mt-3"
               }`}
             >
+              <TermsUpdateBanner />
               {children}
             </div>
           </div>

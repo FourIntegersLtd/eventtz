@@ -19,6 +19,8 @@ type BookingCompletionBannerProps = {
   /** Opens the confirm-completion dialog when the viewer still needs to confirm. */
   onConfirm?: () => void;
   confirmDisabled?: boolean;
+  /** While a problem report is open the payout is held, so the confirm button is hidden. */
+  hasOpenDispute?: boolean;
 };
 
 /**
@@ -35,6 +37,7 @@ export function BookingCompletionBanner({
   autoReleaseAt,
   onConfirm,
   confirmDisabled,
+  hasOpenDispute,
 }: BookingCompletionBannerProps) {
   if (status !== "accepted" || paymentStatus !== "paid" || !waitingOn) return null;
   if (!eventDayOver(eventDate, eventEndDate)) return null;
@@ -61,7 +64,7 @@ export function BookingCompletionBanner({
             ) : null}
           </div>
         </div>
-        {viewerNeedsToConfirm && onConfirm ? (
+        {viewerNeedsToConfirm && onConfirm && !hasOpenDispute ? (
           <Button
             variant="primary"
             size="md"

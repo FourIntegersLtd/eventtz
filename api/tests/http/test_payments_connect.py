@@ -208,6 +208,37 @@ async def test_account_updated_webhook_syncs_the_vendor_once_per_event(
     assert (stored.stripe_charges_enabled, stored.stripe_payouts_enabled) == (True, False)
 
 
+async def test_webhook_whose_handler_fails_is_not_claimed_so_stripe_can_redeliver_it(
+    client: AsyncClient, db_session: AsyncSession, payment_gateway: FakePaymentGateway, webhook_secret: str
+) -> None:
+    """Stripe failing mid-handler answers 503; the redelivery then does the work the first try could not."""
+    vendor_id, _token = await _make_vendor(
+        db_session, email="connect-retry@example.com", stripe_account_id="acct_retry"
+    )
+    payment_gateway.objects["acct_retry"] = {
+        "id": "acct_retry",
+        "charges_enabled": True,
+        "payouts_enabled": True,
+    }
+    payload = json.dumps(
+        {"id": "evt_account_retry", "type": "account.updated", "data": {"object": {"id": "acct_retry"}}}
+    ).encode()
+    payment_gateway.error = PaymentGatewayError("Stripe is having a moment", http_status=500)
+    # The failed request rolls back; settle the test's own rows first so only the claim is undone.
+    await db_session.commit()
+
+    first = await client.post("/api/v1/webhooks/stripe", content=payload, headers=_signed(payload))
+    redelivered = await client.post("/api/v1/webhooks/stripe", content=payload, headers=_signed(payload))
+
+    assert first.status_code == 503, first.text
+    assert first.json()["code"] == "stripe_webhook_handler_failed"
+    assert redelivered.status_code == 200, redelivered.text
+    assert [call.name for call in payment_gateway.calls] == ["retrieve_account", "retrieve_account"]
+    stored = await vendors_repository.get_vendor(db_session, vendor_id)
+    assert stored is not None
+    assert (stored.stripe_charges_enabled, stored.stripe_payouts_enabled) == (True, True)
+
+
 async def test_webhook_of_an_unhandled_type_is_acknowledged_without_calling_stripe(
     client: AsyncClient, payment_gateway: FakePaymentGateway, webhook_secret: str
 ) -> None:

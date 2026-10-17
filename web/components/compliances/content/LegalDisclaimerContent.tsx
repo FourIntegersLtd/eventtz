@@ -1,94 +1,108 @@
 import Link from "next/link";
+import policy from "@/lib/policyConstants.json";
 import { FOOTER_COMPANY_NAME, FOOTER_CONTACT_EMAIL } from "@/lib/footerLinks";
 
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June", "July",
+  "August", "September", "October", "November", "December",
+];
+
+/** The Legal Disclaimer page, written in plain English. */
 export function LegalDisclaimerContent() {
+  const [year, month, day] = policy.termsVersion.split("-").map(Number);
+  const effectiveDate = `${day} ${MONTH_NAMES[month - 1]} ${year}`;
+
   return (
     <>
       <h1>Legal Disclaimer</h1>
       <p className="compliance-meta">
-        Effective date: 1 July 2026
+        Effective date: {effectiveDate}
         <br />
-        Last updated: 11 July 2026
+        Last updated: 17 October 2026
       </p>
       <p>
-        The information on Eventtz is provided for general marketplace purposes
-        only. By using the Platform, you acknowledge the following:
+        This page explains what Eventtz is responsible for, and what it is not.
+        By using Eventtz, you accept the points below.
       </p>
 
       <section id="marketplace-role">
-        <h2>1. Marketplace role</h2>
+        <h2>1. What Eventtz does</h2>
         <p>
-          {FOOTER_COMPANY_NAME} operates Eventtz as a technology platform connecting
-          clients and independent vendors. We are not the employer of vendors and
-          are not a party to the service contract formed when a booking is
-          confirmed between a client and a vendor.
+          {FOOTER_COMPANY_NAME} runs Eventtz, a website that puts clients in
+          touch with event vendors. Vendors are their own businesses. They do not
+          work for us. When a client and a vendor agree a booking, the agreement
+          for the event service is between them. Eventtz is not part of that
+          agreement.
         </p>
       </section>
 
       <section id="vendor-services">
-        <h2>2. Vendor services</h2>
+        <h2>2. Vendors are responsible for their work</h2>
         <p>
-          Vendors are solely responsible for the quality, safety, legality, and
-          delivery of their services, including food handling, staffing,
-          equipment, and compliance with local regulations. Listings, reviews,
-          and badges are informational and do not constitute endorsements or
-          guarantees by Eventtz.
+          Each vendor is responsible for the quality and safety of their service,
+          for doing it legally, and for turning up and delivering it. This
+          includes handling food safely, their staff, their equipment, and
+          following local rules. Listings, reviews and badges on Eventtz are
+          there to help you choose. They are not a promise or a recommendation
+          from Eventtz.
         </p>
       </section>
 
       <section id="no-professional-advice">
-        <h2>3. No professional advice</h2>
+        <h2>3. We do not give professional advice</h2>
         <p>
-          Content on Eventtz does not constitute legal, financial, health, or
-          event-planning advice. You should obtain independent professional
-          advice where appropriate.
+          Nothing on Eventtz is legal, money, health or event-planning advice.
+          If you need that kind of advice, ask a qualified professional.
         </p>
       </section>
 
       <section id="accuracy">
-        <h2>4. Accuracy of information</h2>
+        <h2>4. Information on the website</h2>
         <p>
-          We strive to keep platform information accurate but do not warrant
-          that listings, pricing, availability, or third-party content are
-          complete, current, or error-free. Vendors may update offerings at any
-          time.
+          We try to keep everything on Eventtz correct, but we cannot promise
+          that listings, prices, availability or information from other
+          companies are complete, up to date or free of mistakes. Vendors can
+          change what they offer at any time.
         </p>
       </section>
 
       <section id="ai-features">
-        <h2>5. AI-assisted features</h2>
+        <h2>5. AI writing helpers</h2>
         <p>
-          Optional AI tools (such as vendor onboarding suggestions) generate
-          draft content that must be reviewed by the vendor before publication.
-          AI outputs may be incomplete or inaccurate and should not be relied on
-          without human review.
+          Some optional tools, such as the helper that suggests profile wording
+          for vendors, are written by AI (a computer program). AI can get things
+          wrong or leave things out. A person must check everything it writes
+          before relying on it. Vendors must read and approve any suggestion
+          before it is published.
         </p>
       </section>
 
       <section id="external-links">
-        <h2>6. External links</h2>
+        <h2>6. Links to other websites</h2>
         <p>
-          Eventtz may link to third-party websites or social profiles. We are
-          not responsible for their content, policies, or practices.
+          Eventtz may link to other websites or social media pages. We are not
+          responsible for what they say or how they work.
         </p>
       </section>
 
       <section id="limitation">
-        <h2>7. Limitation of liability</h2>
+        <h2>7. Limits on what we are responsible for</h2>
         <p>
-          To the maximum extent permitted by law, {FOOTER_COMPANY_NAME} excludes
-          liability for losses arising from vendor services, event outcomes, or
-          reliance on Platform content. Nothing in this disclaimer limits
-          liability that cannot be excluded under applicable law.
+          The limits on what Eventtz is responsible for are set out in one
+          place only: the{" "}
+          <Link href="/compliances/terms-of-service#liability">
+            Terms of Service
+          </Link>
+          . Please read them there.
         </p>
       </section>
 
       <section id="contact">
-        <h2>8. Contact</h2>
+        <h2>8. Contact us</h2>
         <p>
           Questions:{" "}
           <a href={`mailto:${FOOTER_CONTACT_EMAIL}`}>{FOOTER_CONTACT_EMAIL}</a>.
-          See our{" "}
+          See also our{" "}
           <Link href="/compliances/terms-of-service">Terms of Service</Link>.
         </p>
       </section>

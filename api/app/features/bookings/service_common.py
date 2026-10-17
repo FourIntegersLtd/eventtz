@@ -1,5 +1,5 @@
 """Steps several booking flows share: checking the path id, telling both screens, linking the notes thread,
-and the checks before a cancel."""
+and the checks before a cancel or a payout."""
 
 from __future__ import annotations
 
@@ -9,7 +9,13 @@ from app.core.db import as_uuid
 from app.core.events import publish_after_commit, user_topic
 from app.features.bookings import domain, repository
 from app.features.bookings.domain import BOOKING_CHANGED
-from app.features.bookings.errors import CancelOpenDispute, InvalidBookingId
+from app.features.bookings.errors import (
+    CancelOnSupportHold,
+    CancelOpenDispute,
+    InvalidBookingId,
+    PayoutBlockedByDispute,
+    PayoutOnSupportHold,
+)
 from app.features.bookings.rows import BookingRow
 from app.features.messaging import service_bookings as messaging
 
@@ -50,5 +56,21 @@ async def check_may_cancel(session: AsyncSession, booking: BookingRow) -> None:
     checkout or refunds a paid booking before the cancel is written.
     """
     domain.check_cancel_money_state(status=booking.status, payment_status=booking.payment_status)
+    if booking.support_hold:
+        raise CancelOnSupportHold()
     if await repository.has_active_dispute(session, booking.id):
         raise CancelOpenDispute()
+
+
+async def check_may_pay_out(session: AsyncSession, booking: BookingRow) -> None:
+    """Refuse to pay the vendor while support holds the booking or a problem report is open.
+
+    Every path that calls `service_payments.release_vendor_payout` runs this first: both
+    parties confirming, the hourly retry and auto-release, and staff tools. The one
+    exception is a dispute resolution that releases to the vendor, which closes the
+    dispute itself. A hold is set by staff or by a card chargeback (`hold_for_chargeback`).
+    """
+    if booking.support_hold:
+        raise PayoutOnSupportHold()
+    if await repository.has_active_dispute(session, booking.id):
+        raise PayoutBlockedByDispute()

@@ -8,8 +8,11 @@ from app.core.auth import ROLE_ERRORS, CurrentClient, CurrentUser
 from app.core.db import SessionDep
 from app.core.errors import Conflict, InvalidInput, error_responses
 from app.core.ports import MailerDependency, PaymentGatewayDependency, StorageDependency
-from app.features.identity import service_deletion, service_settings
+from app.features.identity import service, service_deletion, service_settings
+from app.features.identity.errors import TermsVersionMismatch
 from app.features.identity.schemas import (
+    AcceptTermsRequest,
+    AcceptTermsResponse,
     AccountDeletionRequest,
     AccountDeletionResponse,
     ClientOnboardingPatchBody,
@@ -99,3 +102,16 @@ async def patch_onboarding(
     return ClientOnboardingResponse(
         onboarding=await service_settings.update_client_onboarding(session, principal.id, body)
     )
+
+
+@router.post(
+    "/user/terms/accept",
+    tags=["user"],
+    response_model=AcceptTermsResponse,
+    responses=error_responses(*ROLE_ERRORS, TermsVersionMismatch),
+)
+async def accept_terms(
+    body: AcceptTermsRequest, principal: CurrentUser, session: SessionDep
+) -> AcceptTermsResponse:
+    """Record that the caller accepted the current Terms of Service version."""
+    return await service.accept_terms(session, principal.id, body.version)

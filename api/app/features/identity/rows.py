@@ -34,6 +34,8 @@ class UserProfileRow(BaseModel):
     deleted_at: str | None = None
     preferred_name: str | None = None
     client_onboarding_completed_at: str | None = None
+    terms_accepted_version: str | None = None
+    terms_accepted_at: str | None = None
 
 
 class ContactSettingsRow(BaseModel):

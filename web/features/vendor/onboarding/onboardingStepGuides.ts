@@ -50,10 +50,10 @@ export function getOnboardingStepGuide(
     case 4: {
       const examples = packageExamplesForServices(servicesOffered);
       return {
-        title: "What is a package?",
+        title: "What is an item / package?",
         sections: [
           {
-            body: "A package is something a customer can choose and book from you — not your whole business. Each package needs a clear name, a price, and a description of exactly what's included.",
+            body: "An item / package is something a customer can choose and book from you — not your whole business. It can be a bundle (a full decor set-up) or a single item (chair hire, one cake). Each needs a clear name, a price, and a description of exactly what's included.",
           },
           {
             heading: "Good rule",

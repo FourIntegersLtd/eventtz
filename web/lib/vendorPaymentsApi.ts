@@ -21,6 +21,8 @@ export type VendorPayoutRow = {
   amount_gbp: number;
   amount_label: string;
   status: VendorPayoutStatus | string;
+  /** `cancellation_share` rows are the vendor's cut of a cancelled paid booking. */
+  kind?: "event_payout" | "cancellation_share";
   paid_out_at: string | null;
 };
 

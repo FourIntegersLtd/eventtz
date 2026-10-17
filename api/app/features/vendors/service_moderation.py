@@ -8,20 +8,21 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import Principal
 from app.core.ports import Mailer, Storage
+from app.features.bookings import service_vendor_record
 from app.features.identity import service as identity
 from app.features.notifications import service as notifications
 from app.features.staff import service as staff
 from app.features.vendors import repository
 from app.features.vendors.domain_listing_media import listing_cover_image_url, url_list, with_listing_media
 from app.features.vendors.domain_profile_form import normalize_payload_fields
-from app.features.vendors.domain_visibility import listing_override_of
+from app.features.vendors.domain_visibility import is_paused, listing_override_of
 from app.features.vendors.errors import (
     ListingOverrideReasonRequired,
     ListingOverrideSuperAdminOnly,
@@ -34,11 +35,13 @@ from app.features.vendors.schemas import (
     AdminVendorApprovalResponse,
     AdminVendorListingMediaResponse,
     AdminVendorListingOverrideResponse,
+    AdminVendorPauseResponse,
     AdminVendorProfileNudgeFailure,
     AdminVendorProfileNudgeResponse,
     AdminVendorRow,
     AdminVendorsListResponse,
     AdminVendorUnsubmitResponse,
+    AdminVendorWarnResponse,
     VendorApprovalStatus,
     VendorListingOverride,
 )
@@ -65,6 +68,12 @@ def _business_name(vendor: VendorRow) -> str | None:
     """The vendor's business name as typed (trimmed), for emails."""
     raw_name = vendor.payload.get("businessName")
     return raw_name.strip() if isinstance(raw_name, str) else None
+
+
+def _paused_until_iso(vendor: VendorRow) -> str | None:
+    """The end of a pause that is still running, as ISO text; None when there is none or it has lapsed."""
+    until = vendor.listing_paused_until
+    return until.isoformat() if until is not None and is_paused(until) else None
 
 
 async def _vendor_or_404(session: AsyncSession, user_id: str) -> VendorRow:
@@ -117,6 +126,9 @@ async def list_vendors(
         status=(status or "").strip() or None,
     )
     emails = await identity.emails_by_id(session, [vendor.user_id for vendor in vendors])
+    cancellation_counts = await service_vendor_record.cancellation_counts(
+        session, [vendor.user_id for vendor in vendors]
+    )
     rows = [
         AdminVendorRow(
             id=vendor.id,
@@ -135,6 +147,12 @@ async def list_vendors(
             listing_visible=listing_is_visible(vendor),
             listing_override=listing_override_of(vendor.listing_override),
             listing_override_reason=vendor.listing_override_reason,
+            listing_paused_until=_paused_until_iso(vendor),
+            listing_pause_reason=vendor.listing_pause_reason if _paused_until_iso(vendor) else None,
+            vendor_cancellation_count=cancellation_counts.get(vendor.user_id, 0),
+            cancellation_review_flag=service_vendor_record.needs_review(
+                cancellation_counts.get(vendor.user_id, 0)
+            ),
         )
         for vendor in vendors
     ]
@@ -151,6 +169,7 @@ async def set_approval(
     approval_status: VendorApprovalStatus,
     *,
     mailer: Mailer,
+    reason: str | None = None,
 ) -> AdminVendorApprovalResponse:
     """Approve, ban or re-queue a vendor, and email them when their state actually changed.
 
@@ -174,6 +193,7 @@ async def set_approval(
             business_name=_business_name(updated),
             listing_visible=listing_is_visible(updated),
             payouts_verified=payouts_are_verified(updated),
+            reason=(reason or "").strip() or None,
         )
     await staff.record_admin_action(
         session,
@@ -181,7 +201,7 @@ async def set_approval(
         action="vendor.approval",
         entity_type="vendor",
         entity_id=user_id,
-        details={"approval_status": updated.approval_status or approval_status},
+        details={"approval_status": updated.approval_status or approval_status, "reason": reason},
     )
     return AdminVendorApprovalResponse(
         user_id=user_id, approval_status=updated.approval_status or approval_status
@@ -353,18 +373,20 @@ async def set_listing_override(
     listing_override: VendorListingOverride,
     *,
     reason: str | None,
+    mailer: Mailer,
 ) -> AdminVendorListingOverrideResponse:
     """Force a listing visible or hidden (super admins, with a reason), or return it to the automatic rule.
 
     `visible` waives the Stripe requirement for a vendor vetted another way; `hidden`
     takes a listing down without a ban. Neither lists an unapproved or banned vendor.
+    Hiding emails the vendor the reason and how to appeal (a statement of reasons).
     """
     if listing_override != "auto" and not staff_member.is_super_admin:
         raise ListingOverrideSuperAdminOnly()
     clean_reason = (reason or "").strip() or None
     if listing_override != "auto" and not clean_reason:
         raise ListingOverrideReasonRequired()
-    await _vendor_or_404(session, user_id)
+    previous = await _vendor_or_404(session, user_id)
     await repository.update_vendor(
         session,
         user_id,
@@ -378,6 +400,14 @@ async def set_listing_override(
     updated = await _vendor_or_404(session, user_id)
     stored_override = listing_override_of(updated.listing_override)
     visible = listing_is_visible(updated)
+    if listing_override == "hidden" and listing_override_of(previous.listing_override) != "hidden":
+        await asyncio.to_thread(
+            notifications.send_vendor_listing_hidden,
+            mailer,
+            vendor_email=await _email_of(session, user_id),
+            business_name=_business_name(updated),
+            reason=clean_reason or "",
+        )
     await staff.record_admin_action(
         session,
         admin_user_id=staff_member.id,
@@ -429,3 +459,91 @@ async def set_listing_media(
         display_order=stored_order,
         hidden_image_urls=stored_hidden,
     )
+
+
+# --- consequences: warnings and timed pauses ---------------------------------------------------------
+
+
+async def warn_vendor(
+    session: AsyncSession, staff_member: Principal, user_id: str, *, message: str, mailer: Mailer
+) -> AdminVendorWarnResponse:
+    """Email the vendor a formal warning and record it in the staff audit log."""
+    vendor = await _vendor_or_404(session, user_id)
+    clean_message = message.strip()
+    email_sent = await asyncio.to_thread(
+        notifications.send_vendor_warning,
+        mailer,
+        vendor_email=await _email_of(session, user_id),
+        business_name=_business_name(vendor),
+        message=clean_message,
+    )
+    await staff.record_admin_action(
+        session,
+        admin_user_id=staff_member.id,
+        action="vendor.warning",
+        entity_type="vendor",
+        entity_id=user_id,
+        details={"message": clean_message[:AUDITED_MESSAGE_CHARS], "email_sent": email_sent},
+    )
+    return AdminVendorWarnResponse(user_id=user_id, email_sent=email_sent)
+
+
+async def pause_listing(
+    session: AsyncSession,
+    staff_member: Principal,
+    user_id: str,
+    *,
+    days: int,
+    reason: str,
+    mailer: Mailer,
+) -> AdminVendorPauseResponse:
+    """Hide the vendor's listing for `days` days; it returns by itself, and the vendor is emailed why."""
+    await _vendor_or_404(session, user_id)
+    clean_reason = reason.strip()
+    paused_until = datetime.now(UTC).replace(microsecond=0) + timedelta(days=days)
+    await repository.update_vendor(
+        session, user_id, {"listing_paused_until": paused_until, "listing_pause_reason": clean_reason}
+    )
+    updated = await _vendor_or_404(session, user_id)
+    await asyncio.to_thread(
+        notifications.send_vendor_listing_paused,
+        mailer,
+        vendor_email=await _email_of(session, user_id),
+        business_name=_business_name(updated),
+        reason=clean_reason,
+        paused_until_label=f"{paused_until.day} {paused_until:%B %Y}",
+    )
+    await staff.record_admin_action(
+        session,
+        admin_user_id=staff_member.id,
+        action="vendor.listing_pause",
+        entity_type="vendor",
+        entity_id=user_id,
+        details={"days": days, "paused_until": paused_until.isoformat(), "reason": clean_reason},
+    )
+    return AdminVendorPauseResponse(
+        user_id=user_id,
+        listing_paused_until=paused_until.isoformat(),
+        listing_pause_reason=clean_reason,
+        listing_visible=listing_is_visible(updated),
+    )
+
+
+async def clear_listing_pause(
+    session: AsyncSession, staff_member: Principal, user_id: str
+) -> AdminVendorPauseResponse:
+    """End a listing pause early."""
+    await _vendor_or_404(session, user_id)
+    await repository.update_vendor(
+        session, user_id, {"listing_paused_until": None, "listing_pause_reason": None}
+    )
+    updated = await _vendor_or_404(session, user_id)
+    await staff.record_admin_action(
+        session,
+        admin_user_id=staff_member.id,
+        action="vendor.listing_pause_cleared",
+        entity_type="vendor",
+        entity_id=user_id,
+        details={},
+    )
+    return AdminVendorPauseResponse(user_id=user_id, listing_visible=listing_is_visible(updated))

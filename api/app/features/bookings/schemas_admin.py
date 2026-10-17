@@ -11,6 +11,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.features.bookings.domain_financials import DISCLAIMER
+from app.features.bookings.schemas_terms import BookingTermsFields
 
 
 class AdminBookingListSupportSummary(BaseModel):
@@ -69,8 +70,8 @@ class AdminBookingSupportMeta(BaseModel):
     next_action: str | None = None
 
 
-class AdminBookingDetail(BaseModel):
-    """One booking as the admin console sees it: every column plus resolved party details."""
+class AdminBookingDetail(BookingTermsFields):
+    """One booking as the admin console sees it: every column, resolved party details and its terms."""
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -104,6 +105,11 @@ class AdminBookingDetail(BaseModel):
     payout_released_at: str | None = None
     client_completion_confirmed_at: str | None = None
     vendor_completion_confirmed_at: str | None = None
+    cancellation_policy: str | None = None
+    cancellation_refund_percent: int | None = None
+    cancellation_refund_gbp: float | None = None
+    cancellation_vendor_share_gbp: float | None = None
+    cancellation_payout_at: str | None = None
     support: AdminBookingSupportMeta
 
 

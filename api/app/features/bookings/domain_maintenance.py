@@ -23,6 +23,8 @@ PAY_TO_CONFIRM_AFTER = timedelta(hours=24)
 CONTACTED_VENDORS_LOOKUP_LIMIT = 500
 # A client enquiry the vendor never answered within the SLA (a funnel signal, not a decline).
 FAILURE_VENDOR_NO_RESPONSE = "VENDOR_NO_RESPONSE"
+# An accepted booking the client did not pay by its deadline (`domain_policy.payment_due_at`).
+FAILURE_PAYMENT_DEADLINE = "PAYMENT_DEADLINE"
 
 # The vendor's nudges about an unanswered enquiry: (stamp column, notice kind, hours after it was sent).
 ENQUIRY_REMINDER_STEPS: tuple[tuple[str, str, int], ...] = (

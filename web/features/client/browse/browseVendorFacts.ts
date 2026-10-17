@@ -1,3 +1,7 @@
+import {
+  cancellationPolicyLabel,
+  describeCancellationPolicy,
+} from "@/features/bookings/cancellationPolicyCopy";
 import { RADIUS_OPTIONS, WEEKDAY_LABELS } from "@/features/vendor/onboarding/constants";
 
 const TRAVEL_DELIVERY_LABELS: Record<string, string> = {
@@ -63,6 +67,9 @@ export type BrowseVendorProfileFacts = {
   foodNotes: BrowseVendorFact[];
   trustBadges: string[];
   portfolioVideoUrls: string[];
+  /** Vendor's cancellation preset label; absent payload key means Flexible. */
+  cancellationPolicyLabel: string;
+  cancellationPolicyLines: string[];
 };
 
 function formatAvailableWeekdays(raw: unknown): string | null {
@@ -187,5 +194,7 @@ export function buildBrowseVendorProfileFacts(
     foodNotes,
     trustBadges,
     portfolioVideoUrls: videoUrls,
+    cancellationPolicyLabel: cancellationPolicyLabel(payloadStr(payload, "cancellationPolicy")),
+    cancellationPolicyLines: describeCancellationPolicy(payloadStr(payload, "cancellationPolicy")),
   };
 }

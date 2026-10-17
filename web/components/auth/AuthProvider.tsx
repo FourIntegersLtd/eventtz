@@ -32,6 +32,7 @@ type AuthContextValue = {
     password: string,
     userType?: Extract<UserType, "client" | "vendor">,
     referralCode?: string,
+    termsVersion?: string,
   ) => Promise<{ message?: string | null }>;
   signOut: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -102,8 +103,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           throw new Error(SESSION_VERIFY_FAILED);
         }
       },
-      signUp: async (email, password, userType = "client", referralCode) => {
-        const result = await apiSignUp(email, password, userType, referralCode);
+      signUp: async (email, password, userType = "client", referralCode, termsVersion) => {
+        const result = await apiSignUp(email, password, userType, referralCode, termsVersion);
         // Signup no longer returns a session until email is verified.
         if (!result.session) {
           setUser(null);

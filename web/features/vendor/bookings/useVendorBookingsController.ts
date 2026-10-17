@@ -247,6 +247,7 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
     listLoading,
     listError,
     detail,
+    reloadBookingDetail,
     setDetail,
     detailLoading,
     detailError,

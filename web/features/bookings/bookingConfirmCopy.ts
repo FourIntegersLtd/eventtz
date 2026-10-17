@@ -12,7 +12,7 @@ export const BOOKING_CONFIRM_COPY = {
   cancelClientPaid: {
     title: "Cancel this booking?",
     description:
-      "This ends the booking and you'll get a full refund back to your card. Refunds usually take 5-10 working days. The vendor will be notified.",
+      "This ends the booking. Your refund follows the vendor's cancellation policy and goes back to your card, usually within 5-10 working days. The vendor will be notified.",
     cancelLabel: "Keep booking",
     confirmLabel: "Cancel and refund me",
     confirmLoadingLabel: "Cancelling…",
@@ -105,6 +105,64 @@ export const BOOKING_CONFIRM_COPY = {
   },
 } as const;
 
+/** Minimal shape of the refund preview the cancel dialog needs. */
+type CancelPreviewForCopy = {
+  percent: number;
+  refund_label: string;
+  cooling_off_until: string | null;
+  next_tier_at: string | null;
+  next_tier_percent: number | null;
+};
+
+/** Cancel dialog copy for a paid booking, tailored to the refund the client would get now. */
+export function clientPaidCancelCopy(preview: CancelPreviewForCopy | null | undefined) {
+  const base = BOOKING_CONFIRM_COPY.cancelClientPaid;
+  if (!preview) return base;
+  if (preview.percent < 100) {
+    const nextTier =
+      preview.next_tier_at && preview.next_tier_percent != null
+        ? ` From ${new Date(preview.next_tier_at).toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          })} you would get ${preview.next_tier_percent}% back.`
+        : "";
+    return {
+      ...base,
+      description: `You'll get ${preview.refund_label} back (${preview.percent}% of the vendor's price plus the full Eventtz service fee).${nextTier} Refunds usually take 5-10 working days. The vendor will be notified.`,
+      confirmLabel: "Cancel booking",
+    };
+  }
+  if (preview.cooling_off_until) {
+    return {
+      ...base,
+      description: `${base.description} Full refund: you're within 24 hours of paying.`,
+    };
+  }
+  return base;
+}
+
+/** Banner line for a booking cancelled with a partial refund. */
+export function partialRefundBannerLine(refundLabel: string, percent: number): string {
+  return `Refunded ${refundLabel} (${percent}%). This booking was cancelled under the vendor's cancellation policy. Refunds usually take 5-10 working days to reach your card.`;
+}
+
+/** Vendor line for a cancelled paid booking that left them a share of the price. */
+export function vendorCancellationShareLine(
+  shareLabel: string,
+  payoutAt: string | null | undefined,
+): string {
+  if (!payoutAt) {
+    return `Your share from this cancellation: ${shareLabel} — held until your Stripe payout setup is complete.`;
+  }
+  const sentOn = new Date(payoutAt).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+  return `Your share from this cancellation: ${shareLabel} — sent ${sentOn}.`;
+}
+
 /** The one-line payment story, reused wherever money is explained. */
 export const PAYMENT_FLOW_COPY = {
   /** Shown before/at checkout so the client knows where their money goes. */
@@ -132,6 +190,9 @@ export const PAYMENT_FLOW_COPY = {
   /** Cancelled + refunded booking state (vendor). */
   cancelledRefundedVendor:
     "This booking was cancelled. The client's payment was refunded in full.",
+  /** Cancelled booking where the client got only a tiered refund (vendor view). */
+  cancelledPartialRefundVendor:
+    "This booking was cancelled by the client under your cancellation policy. They were refunded part of your price.",
   /** Both sides confirmed but payout transfer is still processing or retrying. */
   payoutPendingVendor: {
     title: "Payout not released yet",
@@ -226,6 +287,8 @@ export const PAYMENT_SAFETY_COPY = {
     "If anything did not go to plan, you have 48 hours after the event to report a problem and we will be here to help.",
     "When all is well, we will release payment to your vendor automatically after 48 hours.",
   ],
+  cancellationPolicyHeading: (label: string) => `Cancellation policy: ${label}`,
+  cancellationAgreement: "By paying you agree to this vendor's cancellation policy.",
   confirmLabel: "Continue to secure payment",
   cancelLabel: "Go back",
 } as const;

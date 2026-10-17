@@ -7,7 +7,7 @@ the web keeps working, and each now has a stable code.
 
 from __future__ import annotations
 
-from app.core.errors import InvalidInput, NotFound, Unavailable
+from app.core.errors import Conflict, InvalidInput, NotFound, Unavailable
 
 # --- ids and lookups -------------------------------------------------------------------------------
 
@@ -337,6 +337,32 @@ class CancelOpenDispute(InvalidInput):
 
     code = "cancel_open_dispute"
     default_message = "This booking has an open problem report. It can't be cancelled until that's resolved."
+
+
+class CancelOnSupportHold(InvalidInput):
+    """A booking support has put on hold (for example a card chargeback) cannot be cancelled or refunded."""
+
+    code = "cancel_on_support_hold"
+    default_message = (
+        "This booking is on hold with our support team. It can't be cancelled until that's cleared."
+    )
+
+
+# --- payout guard (every path that pays the vendor) -------------------------------------------------
+
+
+class PayoutBlockedByDispute(InvalidInput):
+    """An open problem report holds the vendor's payout until staff resolve it."""
+
+    code = "payout_blocked_by_dispute"
+    default_message = "This booking has an open problem report. The payout is held until it's resolved."
+
+
+class PayoutOnSupportHold(InvalidInput):
+    """Support put the booking on hold (for example a card chargeback): no payout until cleared."""
+
+    code = "payout_on_support_hold"
+    default_message = "This booking is on hold with our support team. The payout is held until it's cleared."
 
 
 # --- adjustments -------------------------------------------------------------------------------------
@@ -708,10 +734,17 @@ class RecoveryPaymentIntentNotSucceeded(InvalidInput):
 
 
 class RecoveryPaymentIntentMismatch(InvalidInput):
-    """The payment intent's metadata names a different booking."""
+    """The payment intent's metadata names a different booking, or none at all."""
 
     code = "recovery_payment_intent_mismatch"
     default_message = "Payment intent does not match this booking."
+
+
+class RecoveryPaymentIntentAmountMismatch(InvalidInput):
+    """The payment intent's amount differs from the total its metadata says the server priced."""
+
+    code = "recovery_payment_intent_amount_mismatch"
+    default_message = "Payment intent amount does not match the priced total for this booking."
 
 
 class RecoveryPaymentIntentNoAmount(InvalidInput):
@@ -807,3 +840,109 @@ class RecoveryPaymentRequiredMarkComplete(InvalidInput):
 
     code = "recovery_payment_required_mark_complete"
     default_message = "Payment must be completed before marking complete."
+
+
+# --- rescheduling ------------------------------------------------------------------------------------
+
+
+class DateChangeNotAllowed(Conflict):
+    """A date change needs an accepted booking that is unpaid or paid (not cancelled or finished)."""
+
+    code = "date_change_not_allowed"
+    default_message = "The date can only be changed on an accepted booking that has not been completed."
+
+
+class DateChangePending(Conflict):
+    """A date change is already waiting for an answer."""
+
+    code = "date_change_pending"
+    default_message = "A date change is already waiting for an answer."
+
+
+class NoDateChange(Conflict):
+    """There is no pending date change to answer or withdraw."""
+
+    code = "no_date_change"
+    default_message = "There is no date change waiting on this booking."
+
+
+class DateChangeNotYours(Conflict):
+    """Only the other party may answer a date change, and only the requester may withdraw it."""
+
+    code = "date_change_not_yours"
+    default_message = "You cannot do that with this date change."
+
+
+class DateChangeInPast(InvalidInput):
+    """The proposed start date is before today, or the end is before the start."""
+
+    code = "date_change_invalid_dates"
+    default_message = "Choose a date that is today or later, with the end on or after the start."
+
+
+class DateChangeCapacityFull(Conflict):
+    """The vendor is fully booked on one of the proposed days, so the move cannot happen."""
+
+    code = "date_change_capacity_full"
+    default_message = "The vendor is fully booked on the new date, so the date could not be moved."
+
+
+# --- Terms rules on money: payment deadline, split payouts, deposits (terms remediation 2.1, 3.1, 3.5) ---
+
+
+class PartialRefundTooLarge(InvalidInput):
+    """A staff partial refund larger than the payment less a held deposit and any upfront payout."""
+
+    code = "partial_refund_too_large"
+    default_message = (
+        "That refund is more than can be returned: a held deposit and any payout already sent are excluded."
+    )
+
+
+class PaymentDeadlinePassed(Conflict):
+    """The client tried to pay after the booking's payment deadline; it is about to be cancelled."""
+
+    code = "payment_deadline_passed"
+    default_message = "The time to pay for this booking has passed. Please send the vendor a new request."
+
+
+class DeliveryNotAwaited(Conflict):
+    """Delivery can be confirmed only on a split-payout booking whose first part has been paid."""
+
+    code = "delivery_not_awaited"
+    default_message = "This booking is not waiting for delivery to be confirmed."
+
+
+class DepositClaimClosed(Conflict):
+    """The vendor may claim a deposit only while it is held and the claim window is open."""
+
+    code = "deposit_claim_closed"
+    default_message = "A deposit claim cannot be made on this booking now."
+
+
+class DepositClaimInvalid(InvalidInput):
+    """A deposit claim needs an amount within the deposit and a description of what happened."""
+
+    code = "deposit_claim_invalid"
+    default_message = "Enter an amount up to the deposit and describe what was damaged or missing."
+
+
+class NoDepositClaim(Conflict):
+    """Staff tried to decide a deposit claim that does not exist or was already decided."""
+
+    code = "no_deposit_claim"
+    default_message = "There is no open deposit claim on this booking."
+
+
+class DepositAwardInvalid(InvalidInput):
+    """The amount awarded to the vendor must be between zero and what they claimed."""
+
+    code = "deposit_award_invalid"
+    default_message = "The award must be between £0 and the amount the vendor claimed."
+
+
+class DepositVendorPayoutsNotReady(Conflict):
+    """A deposit award cannot be sent until the vendor's Stripe payouts are set up."""
+
+    code = "deposit_vendor_payouts_not_ready"
+    default_message = "The vendor must finish Stripe payout setup before a deposit award can be sent."

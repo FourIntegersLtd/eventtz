@@ -89,6 +89,8 @@ async def _financials_rows(
                         if booking.platform_fee_gbp is not None
                         else None
                     ),
+                    cancellation_share_pence=pence_from_gbp(booking.cancellation_vendor_share_gbp),
+                    cancellation_share_sent=booking.cancellation_payout_at is not None,
                 ),
             )
         )

@@ -28,7 +28,7 @@ export function PackageExamplesModal({ servicesOffered }: Props) {
       <Modal
         isOpen={open}
         onClose={() => setOpen(false)}
-        title="What is a package?"
+        title="What is an item / package?"
         maxWidthClassName="max-w-md"
         bodyMaxHeightClassName=""
         bodyClassName="bg-white"

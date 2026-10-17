@@ -44,6 +44,8 @@ async def _make_account(session: AsyncSession, email: str, user_type: str) -> tu
         account_suspended=False,
     )
     assert account_id is not None
+    # Paying needs the current Terms accepted (terms remediation 0.2).
+    await identity_repository.stamp_terms_accepted(session, account_id, get_settings().terms_version)
     return account_id, issue_access_token(user_id=account_id, email=email, settings=get_settings())
 
 
@@ -290,7 +292,7 @@ async def test_webhook_marks_paid_once_even_when_stripe_redelivers(
 async def test_webhook_refuses_a_charge_that_differs_from_the_priced_total(
     client: AsyncClient, db_session: AsyncSession, payment_gateway: FakePaymentGateway, webhook_secret: str
 ) -> None:
-    """A session charging GBP 1 against a GBP 157.50 total never marks the booking paid."""
+    """A session charging GBP 1 against a GBP 157.50 total is refunded and the booking can be paid again."""
     client_id, _token = await _make_account(db_session, "mismatch-payer@example.com", "client")
     vendor_id = await _make_waived_vendor(db_session, "mismatch-vendor@example.com")
     booking_id = await _make_booking(
@@ -308,8 +310,11 @@ async def test_webhook_refuses_a_charge_that_differs_from_the_priced_total(
     response = await client.post("/api/v1/webhooks/stripe", content=payload, headers=headers)
 
     assert response.status_code == 200, response.text
-    assert (await _booking(db_session, booking_id)).payment_status == "pending"
-    assert payment_gateway.calls == []
+    assert [(call.name, call.arguments["idempotency_key"]) for call in payment_gateway.calls] == [
+        ("create_refund", f"refund-{booking_id}-amount-mismatch")
+    ]
+    booking = await _booking(db_session, booking_id)
+    assert (booking.payment_status, booking.stripe_checkout_session_id) == ("unpaid", None)
 
 
 async def test_webhook_refunds_a_payment_for_a_booking_that_was_cancelled(
@@ -372,4 +377,94 @@ async def test_webhook_refunds_a_session_a_newer_checkout_replaced(
     assert [call.arguments["idempotency_key"] for call in payment_gateway.calls] == [
         f"refund-{booking_id}-stale-checkout-session"
     ]
-    assert (await _booking(db_session, booking_id)).payment_status == "refunded"
+    # The newer session is still open, so the booking keeps waiting on it.
+    booking = await _booking(db_session, booking_id)
+    assert (booking.payment_status, booking.stripe_checkout_session_id) == ("pending", "cs_test_newer")
+
+
+async def test_webhook_for_a_stale_session_leaves_a_paid_booking_paid(
+    client: AsyncClient, db_session: AsyncSession, payment_gateway: FakePaymentGateway, webhook_secret: str
+) -> None:
+    """Completing an old tab after the newer session was paid refunds the old payment and nothing else."""
+    client_id, _token = await _make_account(db_session, "double-payer@example.com", "client")
+    vendor_id = await _make_waived_vendor(db_session, "double-vendor@example.com")
+    booking_id = await _make_booking(
+        db_session,
+        client_id=client_id,
+        vendor_id=vendor_id,
+        payment_status="paid",
+        stripe_checkout_session_id="cs_test_paid_newer",
+        stripe_payment_intent_id="pi_test_paid_newer",
+        payment_amount_gbp=157.5,
+    )
+    checkout_session = _completed_session(
+        "cs_test_paid_older", booking_id=booking_id, client_id=client_id, vendor_id=vendor_id
+    )
+
+    payload, headers = _signed_event("evt_checkout_double", checkout_session)
+    response = await client.post("/api/v1/webhooks/stripe", content=payload, headers=headers)
+
+    assert response.status_code == 200, response.text
+    assert [(call.name, call.arguments["payment_intent_id"]) for call in payment_gateway.calls] == [
+        ("create_refund", "pi_test_1")
+    ]
+    booking = await _booking(db_session, booking_id)
+    assert (booking.payment_status, booking.stripe_checkout_session_id, booking.stripe_payment_intent_id) == (
+        "paid",
+        "cs_test_paid_newer",
+        "pi_test_paid_newer",
+    )
+
+
+async def test_webhook_for_a_completed_booking_refunds_without_reopening_its_payment(
+    client: AsyncClient, db_session: AsyncSession, payment_gateway: FakePaymentGateway, webhook_secret: str
+) -> None:
+    """A stray session completing after the event was paid for and completed never marks it refunded."""
+    client_id, _token = await _make_account(db_session, "done-payer@example.com", "client")
+    vendor_id = await _make_waived_vendor(db_session, "done-vendor@example.com")
+    booking_id = await _make_booking(
+        db_session,
+        client_id=client_id,
+        vendor_id=vendor_id,
+        status="completed",
+        payment_status="payout_released",
+        stripe_checkout_session_id="cs_test_done",
+    )
+    checkout_session = _completed_session(
+        "cs_test_stray", booking_id=booking_id, client_id=client_id, vendor_id=vendor_id
+    )
+
+    payload, headers = _signed_event("evt_checkout_stray", checkout_session)
+    response = await client.post("/api/v1/webhooks/stripe", content=payload, headers=headers)
+
+    assert response.status_code == 200, response.text
+    assert [call.name for call in payment_gateway.calls] == ["create_refund"]
+    assert (await _booking(db_session, booking_id)).payment_status == "payout_released"
+
+
+async def test_checkout_closes_the_previous_pending_session_before_opening_a_new_one(
+    client: AsyncClient, db_session: AsyncSession, payment_gateway: FakePaymentGateway
+) -> None:
+    """Paying again expires the old link first, so an old tab cannot take a second payment."""
+    client_id, token = await _make_account(db_session, "repeat-payer@example.com", "client")
+    vendor_id = await _make_waived_vendor(db_session, "repeat-vendor@example.com")
+    booking_id = await _make_booking(
+        db_session,
+        client_id=client_id,
+        vendor_id=vendor_id,
+        payment_status="pending",
+        stripe_checkout_session_id="cs_test_previous",
+    )
+
+    response = await client.post(
+        f"/api/v1/client/booking-requests/{booking_id}/checkout", headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response.status_code == 200, response.text
+    assert [(call.name, call.arguments.get("session_id")) for call in payment_gateway.calls] == [
+        ("expire_checkout_session", "cs_test_previous"),
+        ("create_checkout_session", None),
+    ]
+    booking = await _booking(db_session, booking_id)
+    # The fake names a session after its call count, and the expire call came first.
+    assert (booking.payment_status, booking.stripe_checkout_session_id) == ("pending", "cs_test_2")

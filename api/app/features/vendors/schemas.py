@@ -79,6 +79,14 @@ class AdminVendorRow(BaseModel):
     listing_visible: bool = False
     listing_override: str = "auto"
     listing_override_reason: str | None = None
+    listing_paused_until: str | None = None
+    listing_pause_reason: str | None = None
+    vendor_cancellation_count: int = Field(
+        default=0, description="Cancellations counted against the vendor in the last 180 days (staff only)."
+    )
+    cancellation_review_flag: bool = Field(
+        default=False, description="True when the count has reached the staff-review threshold."
+    )
 
 
 class AdminVendorsListResponse(BaseModel):
@@ -99,6 +107,11 @@ class AdminVendorApprovalBody(BaseModel):
             "pending = awaiting review; approved = visible on client explore; "
             "banned = hidden from client explore."
         ),
+    )
+    reason: str | None = Field(
+        default=None,
+        max_length=2000,
+        description="Staff's reason, quoted in the email to the vendor when banning.",
     )
 
 
@@ -213,3 +226,34 @@ class ListedVendor(BaseModel):
     approval_status: str | None = None
     payload: dict[str, Any] = Field(default_factory=dict)
     updated_at: str | None = None
+
+
+class AdminVendorWarnBody(BaseModel):
+    """A formal warning staff send to a vendor by email."""
+
+    message: str = Field(min_length=3, max_length=2000, description="What the vendor is warned about.")
+
+
+class AdminVendorWarnResponse(BaseModel):
+    """Whether the warning email reached the provider."""
+
+    success: bool = True
+    user_id: str
+    email_sent: bool
+
+
+class AdminVendorPauseBody(BaseModel):
+    """Pause a vendor's public listing for a number of days."""
+
+    days: int = Field(ge=1, le=90, description="How many days the listing stays hidden.")
+    reason: str = Field(min_length=3, max_length=2000, description="Sent to the vendor with the end date.")
+
+
+class AdminVendorPauseResponse(BaseModel):
+    """The pause now stored (both null once cleared) and whether clients can find the vendor."""
+
+    success: bool = True
+    user_id: str
+    listing_paused_until: str | None = None
+    listing_pause_reason: str | None = None
+    listing_visible: bool = False

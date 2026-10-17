@@ -60,6 +60,10 @@ class PaidBookingFinancials:
     payment_amount_snapshot_pence: int | None
     vendor_amount_snapshot_pence: int | None
     platform_fee_snapshot_pence: int | None
+    # After a partial refund (tiered cancel or staff split): the vendor's share, and whether
+    # its Transfer has gone out (`cancellation_payout_at` set).
+    cancellation_share_pence: int = 0
+    cancellation_share_sent: bool = False
 
     @property
     def gmv_pence(self) -> int:
@@ -84,13 +88,25 @@ class PaidBookingFinancials:
 
     @property
     def held_pence(self) -> int:
-        """Still sitting in the platform's Stripe balance: paid, but payout not yet released."""
-        return self.vendor_amount_pence if self.payment_status == "paid" else 0
+        """Still sitting in the platform's Stripe balance for the vendor.
+
+        The whole vendor amount while paid and not yet released; after a partial refund,
+        the vendor's share until its Transfer goes out.
+        """
+        if self.payment_status == "paid":
+            return self.vendor_amount_pence
+        if self.payment_status == "partially_refunded" and not self.cancellation_share_sent:
+            return self.cancellation_share_pence
+        return 0
 
     @property
     def released_pence(self) -> int:
-        """Already transferred to the vendor."""
-        return self.vendor_amount_pence if self.payment_status == "payout_released" else 0
+        """Already transferred to the vendor: the full amount, or their share of a partial refund."""
+        if self.payment_status == "payout_released":
+            return self.vendor_amount_pence
+        if self.payment_status == "partially_refunded" and self.cancellation_share_sent:
+            return self.cancellation_share_pence
+        return 0
 
 
 @dataclass(frozen=True)

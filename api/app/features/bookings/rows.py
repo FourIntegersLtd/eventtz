@@ -56,7 +56,40 @@ class BookingRow(BaseModel):
     completed_at: str | None = None
     refunded_at: str | None = None
     cancelled_by: str | None = None
+    # The client-cancel split (`domain_cancellation`); NULL policy means a full refund.
+    cancellation_policy: str | None = None
+    cancellation_refund_percent: int | None = None
+    cancellation_refund_gbp: float | None = None
+    cancellation_vendor_share_gbp: float | None = None
+    cancellation_payout_at: str | None = None
     support_hold: bool = False
+    accepted_at: str | None = None
+    # Why staff cancelled: 'exceptional' (events outside the vendor's control) keeps it off their record.
+    cancellation_reason: str | None = None
+    # Hours the client has after the event to report a problem; NULL means the default setting.
+    report_window_hours: int | None = None
+    # Delivery split (photography): part paid after the event, the rest on delivery or deadline.
+    payout_upfront_percent: int | None = None
+    delivery_deadline_days: int | None = None
+    upfront_amount_gbp: float | None = None
+    upfront_transfer_id: str | None = None
+    upfront_payout_at: str | None = None
+    delivery_confirmed_at: str | None = None
+    # A pending request to move the event date, made by either side.
+    proposed_event_date: str | None = None
+    proposed_event_end_date: str | None = None
+    date_change_requested_by: str | None = None
+    date_change_requested_at: str | None = None
+    date_change_note: str | None = None
+    # Refundable damage deposit (rentals, decor), held by Eventtz until the claim window ends.
+    damage_deposit_gbp: float | None = None
+    deposit_refunded_at: str | None = None
+    deposit_claim_gbp: float | None = None
+    deposit_claim_note: str | None = None
+    deposit_claimed_at: str | None = None
+    deposit_claim_awarded_gbp: float | None = None
+    deposit_claim_resolved_at: str | None = None
+    deposit_transfer_id: str | None = None
 
     @field_validator("line_items", "vendor_adjustments", "selected_option_ids", mode="before")
     @classmethod

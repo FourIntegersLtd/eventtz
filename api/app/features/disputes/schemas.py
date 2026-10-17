@@ -71,7 +71,9 @@ class AdminDisputeCase(BaseModel):
     assigned_admin_id: str | None = None
     assigned_admin_email: str | None = None
     conversation_id: str | None = None
-    resolution_action: Literal["release_to_vendor", "refund_client", "partial_refund"] | None = None
+    resolution_action: (
+        Literal["release_to_vendor", "refund_client", "partial_refund", "vendor_no_show"] | None
+    ) = None
     refund_amount_gbp: float | None = None
     created_at: str | None = None
     updated_at: str | None = None
@@ -102,5 +104,7 @@ class AdminDisputePatchBody(BaseModel):
     client_resolution_note: str | None = None
     vendor_resolution_note: str | None = None
     assigned_admin_id: str | None = None
-    resolution_action: Literal["release_to_vendor", "refund_client", "partial_refund"] | None = None
+    resolution_action: (
+        Literal["release_to_vendor", "refund_client", "partial_refund", "vendor_no_show"] | None
+    ) = None
     refund_amount_gbp: float | None = Field(default=None, gt=0)

@@ -15,6 +15,11 @@ export type AuthUser = {
   preferred_name?: string | null;
   /** Client accounts: first-visit portal onboarding done (or skipped). */
   client_onboarding_completed?: boolean;
+  /** The Terms version currently in force (from the API). */
+  terms_version?: string | null;
+  /** The Terms version this user last accepted, or null. */
+  terms_accepted_version?: string | null;
+  terms_accepted_at?: string | null;
   user_metadata: Record<string, unknown>;
   app_metadata: Record<string, unknown>;
 };
@@ -45,12 +50,14 @@ export async function signUp(
   password: string,
   userType: Extract<UserType, "client" | "vendor"> = "client",
   referralCode?: string,
+  termsVersion?: string,
 ): Promise<AuthResponse> {
   const { data } = await api.post<AuthResponse>("/api/v1/auth/signup", {
     email,
     password,
     user_type: userType,
     referral_code: referralCode,
+    terms_version: termsVersion,
   });
   return data;
 }
@@ -122,4 +129,9 @@ export async function verifyEmail(
 }> {
   const { data } = await api.post("/api/v1/auth/verify-email", { token });
   return data;
+}
+
+/** Record that the signed-in user accepted the current Terms version. */
+export async function acceptTerms(version: string): Promise<void> {
+  await api.post("/api/v1/user/terms/accept", { version });
 }

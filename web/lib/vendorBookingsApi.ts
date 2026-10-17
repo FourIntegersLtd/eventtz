@@ -1,4 +1,5 @@
 import api from "@/lib/axios";
+import type { BookingTermsFields } from "@/features/bookings/bookingTerms";
 import type {
   BookingInitiator,
   BookingLineItem,
@@ -61,7 +62,7 @@ export type VendorBookingsListResponse = {
   bookings: VendorBookingListItem[];
 };
 
-export type VendorBookingDetail = {
+export type VendorBookingDetail = BookingTermsFields & {
   booking_request_id: string;
   booking_status: string;
   event_name: string;
@@ -84,6 +85,8 @@ export type VendorBookingDetail = {
   paid_at: string | null;
   /** Money lifecycle, independent of `booking_status`: unpaid/pending/paid/refunded/partially_refunded/payout_released. */
   payment_status: string;
+  /** True while a problem report is open or under review: completion cannot be confirmed. */
+  has_open_dispute?: boolean;
   client_completion_confirmed_at: string | null;
   vendor_completion_confirmed_at: string | null;
   /** When the vendor payout releases automatically (48h after the event) if no one confirms. */
@@ -96,6 +99,12 @@ export type VendorBookingDetail = {
   conversation_id: string | null;
   /** Client-facing total at request time (before vendor price changes). */
   initial_client_total_label?: string | null;
+  cancellation_policy?: string | null;
+  cancellation_refund_percent?: number | null;
+  /** Vendor's share of a cancelled paid booking (GBP). */
+  cancellation_vendor_share_gbp?: number | null;
+  /** When that share was sent; null means held until Stripe payout setup is complete. */
+  cancellation_payout_at?: string | null;
 };
 
 export type VendorBookingDetailResponse = {
@@ -211,4 +220,12 @@ export async function putVendorBookingAdjustments(
     { adjustments },
   );
   return data.booking;
+}
+
+/** Vendor asks to keep part of the client's damage deposit. */
+export async function postVendorDepositClaim(
+  bookingId: string,
+  body: { amount_gbp: number; note: string },
+): Promise<void> {
+  await api.post(`/api/v1/vendor/booking-requests/${bookingId}/deposit-claim`, body);
 }

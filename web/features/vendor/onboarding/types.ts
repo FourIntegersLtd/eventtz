@@ -119,6 +119,12 @@ export interface VendorOnboardingData {
   // Step 4
   hourlyRate: string;
   dailyRate: string;
+  /** Photography only: whole % paid up front (policy range); blank = pay in full. */
+  deliveryUpfrontPercent: string;
+  /** Photography only: days allowed to deliver after the event; set together with the % above. */
+  deliveryDeadlineDays: string;
+  /** Rentals / decor only: optional refundable damage deposit in GBP. */
+  damageDepositGbp: string;
   useDefaultTravelHourly: boolean;
   useDefaultTravelDaily: boolean;
   packages: VendorPackageItem[];
@@ -134,6 +140,8 @@ export interface VendorOnboardingData {
   availableWeekdays: number[];
   blockedDates: string[];
   maxBookingsPerDay: string;
+  /** Client-cancellation policy preset: flexible, moderate or strict; "" until the vendor picks one. */
+  cancellationPolicy: string;
   // Step 6 - File objects are client-only; portfolioFileNamesPersisted comes from API after save
   portfolioFiles: File[];
   /** Filenames last saved to the server (File objects cannot be restored from JSON). */
@@ -194,6 +202,9 @@ export const initialVendorOnboardingData: VendorOnboardingData = {
   travelDeliveryPolicyCustomText: "",
   hourlyRate: "",
   dailyRate: "",
+  deliveryUpfrontPercent: "",
+  deliveryDeadlineDays: "",
+  damageDepositGbp: "",
   useDefaultTravelHourly: true,
   useDefaultTravelDaily: true,
   packages: [
@@ -220,6 +231,7 @@ export const initialVendorOnboardingData: VendorOnboardingData = {
   availableWeekdays: [],
   blockedDates: [],
   maxBookingsPerDay: "1",
+  cancellationPolicy: "",
   portfolioFiles: [],
   portfolioFileNamesPersisted: [],
   portfolioVideo: null,

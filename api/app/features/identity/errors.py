@@ -212,3 +212,22 @@ class AccountDeletionOpenDispute(Conflict):
 
     code = "open_dispute"
     default_message = "You have an open problem report. Wait until it is resolved, then try again."
+
+
+# --- terms of service -----------------------------------------------------------------------------------
+
+
+class TermsVersionMismatch(Conflict):
+    """The user accepted a Terms version that is not the current one (their page was out of date)."""
+
+    code = "terms_version_mismatch"
+    default_message = (
+        "The Terms have changed since you opened this page. Refresh and read the latest version."
+    )
+
+
+class TermsNotAccepted(Conflict):
+    """The user has not accepted the current Terms, which this action requires."""
+
+    code = "terms_not_accepted"
+    default_message = "Please read and accept our updated Terms of Service to continue."

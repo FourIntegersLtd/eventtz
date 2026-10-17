@@ -142,6 +142,16 @@ export function StepBusiness({
             </ToggleChip>
           ))}
         </div>
+        {/* Examples per category so a vendor whose product has no obvious home (gele, hijab, barbering…) can see where it fits. */}
+        <ul className="mt-3 space-y-1 text-xs text-neutral-500">
+          {SERVICE_OPTIONS.filter((o) => o.examples).map((o) => (
+            <li key={o.value}>
+              <span className="font-medium text-neutral-700">{o.label}</span>
+              {" — e.g. "}
+              {o.examples}
+            </li>
+          ))}
+        </ul>
       </OnboardingSubQuestion>
       <OnboardingSubQuestion headline={copy.eventTypesHeadline} indexOffset={6}>
         <div className="flex flex-wrap gap-2">

@@ -71,6 +71,8 @@ def seed_account(
         "email_verified_at": now if verified else None,
         "account_suspended": suspended,
         "deleted_at": now if deleted else None,
+        "terms_accepted_version": "2026-11-01",
+        "terms_accepted_at": now,
     }
     user_id = _seed_api_login(admin_db, email)
     admin_db.table("users").update(state).eq("id", user_id).execute()

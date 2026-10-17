@@ -26,6 +26,7 @@ from app.features.bookings import (
     domain_payments,
     repository,
     service_admin,
+    service_deposits,
     service_maintenance,
     service_payments,
     service_payments_checkout,
@@ -34,6 +35,8 @@ from app.features.bookings import (
 from app.features.bookings.errors import (
     CancelOnlyPendingOrAccepted,
     CompleteOnlyAccepted,
+    PayoutBlockedByDispute,
+    PayoutOnSupportHold,
     RecoveryBookingNotFound,
     RecoveryCheckoutSessionNotFound,
     RecoveryCouldNotCancel,
@@ -45,6 +48,7 @@ from app.features.bookings.errors import (
     RecoveryOnlyAcceptedMarkPaid,
     RecoveryOnlyPaidPayoutRelease,
     RecoveryOnlyRefundedCompleteCancel,
+    RecoveryPaymentIntentAmountMismatch,
     RecoveryPaymentIntentMismatch,
     RecoveryPaymentIntentNoAmount,
     RecoveryPaymentIntentNotSucceeded,
@@ -56,15 +60,21 @@ from app.features.bookings.errors import (
 )
 from app.features.bookings.rows import BookingRow
 from app.features.bookings.schemas import AdminBookingDetailResponse
-from app.features.bookings.service_common import announce_change, check_may_cancel, require_booking_id
+from app.features.bookings.service_common import (
+    announce_change,
+    check_may_cancel,
+    check_may_pay_out,
+    require_booking_id,
+)
 from app.features.staff import service as staff_service
 
 log = get_logger(__name__)
 
 Party = Literal["client", "vendor"]
 
-# Payment intent states that mean the client's money was taken (or is authorised to be).
-_PAID_INTENT_STATUSES = ("succeeded", "requires_capture")
+# The only payment intent state in which the client's money has been taken. An authorised
+# but uncaptured intent (`requires_capture`) is not money Eventtz holds.
+_PAID_INTENT_STATUSES = ("succeeded",)
 
 
 async def _load(session: AsyncSession, booking_id: str) -> BookingRow:
@@ -103,34 +113,48 @@ async def _audited_detail(
 async def _mark_paid_from_payment_intent(
     session: AsyncSession, gateway: PaymentGateway, booking: BookingRow, payment_intent: dict[str, Any]
 ) -> bool:
-    """Mark the booking paid from a succeeded payment intent; True when the write matched."""
+    """Mark the booking paid from a succeeded payment intent; True when the write matched.
+
+    Holds the intent to the same checks as the webhook (`finalize_checkout_session`): it
+    must name this booking in its metadata and have received exactly the total the server
+    priced there. `paid_at` is when Stripe created the intent, not when staff synced it,
+    so the client's cooling-off window (`domain_cancellation`) is not reopened.
+    """
     if str(payment_intent.get("status") or "").lower() not in _PAID_INTENT_STATUSES:
         raise RecoveryPaymentIntentNotSucceeded()
     metadata = payment_intent.get("metadata") or {}
-    metadata_booking_id = str(metadata.get("booking_id") or "").strip()
-    if metadata_booking_id and metadata_booking_id != booking.id:
+    if str(metadata.get("booking_id") or "").strip() != booking.id:
         raise RecoveryPaymentIntentMismatch()
-    amount_pence = payment_intent.get("amount_received") or payment_intent.get("amount")
-    if not isinstance(amount_pence, int | float) or amount_pence <= 0:
+    amount_pence = payment_intent.get("amount_received")
+    if not isinstance(amount_pence, int | float) or isinstance(amount_pence, bool) or amount_pence <= 0:
         raise RecoveryPaymentIntentNoAmount()
+    if int(amount_pence) != domain_payments.expected_checkout_pence(metadata):
+        raise RecoveryPaymentIntentAmountMismatch()
     charge_fields = await service_payments_checkout._charge_fields(
         gateway, {"payment_intent": payment_intent}
     )
+    values: dict[str, Any] = {
+        "payment_status": domain_payments.PAID,
+        "stripe_payment_intent_id": str(payment_intent.get("id") or "").strip(),
+        "stripe_charge_id": charge_fields["stripe_charge_id"],
+        "stripe_receipt_url": charge_fields["stripe_receipt_url"],
+        "payment_amount_gbp": domain_payments.pence_to_gbp(int(amount_pence)),
+        "vendor_amount_gbp": domain_payments.metadata_amount_gbp(metadata, "vendor_amount_gbp"),
+        "platform_fee_gbp": domain_payments.metadata_amount_gbp(metadata, "service_fee_gbp"),
+        "referral_fee_discount_gbp": domain_payments.metadata_amount_gbp(
+            metadata, "referral_fee_discount_gbp"
+        ),
+    }
+    created = payment_intent.get("created")
+    if isinstance(created, int | float) and not isinstance(created, bool) and created > 0:
+        values["paid_at"] = datetime.fromtimestamp(created, UTC)
     return await repository.update_booking(
         session,
         booking.id,
-        {
-            "payment_status": domain_payments.PAID,
-            "stripe_payment_intent_id": str(payment_intent.get("id") or "").strip(),
-            "stripe_charge_id": charge_fields["stripe_charge_id"],
-            "stripe_receipt_url": charge_fields["stripe_receipt_url"],
-            "payment_amount_gbp": domain_payments.pence_to_gbp(int(amount_pence)),
-            "vendor_amount_gbp": domain_payments.metadata_amount_gbp(metadata, "vendor_amount_gbp"),
-            "platform_fee_gbp": domain_payments.metadata_amount_gbp(metadata, "service_fee_gbp"),
-        },
+        values,
         status_in=("accepted",),
         payment_status_in=domain_payments.PAYABLE_PAYMENT_STATUSES,
-        now_columns=("paid_at",),
+        now_columns=() if "paid_at" in values else ("paid_at",),
     )
 
 
@@ -218,18 +242,31 @@ async def release_payout(
     audit action differs. An open dispute blocks it.
     """
     booking = await _load(session, booking_id)
+    if _holds_cancellation_share(booking):
+        # A client cancel whose vendor share could not be sent (Stripe setup unfinished): send it now.
+        if not await service_payments.pay_cancellation_share(session, mailer, gateway, booking):
+            raise RecoveryPayoutNotReleased()
+        return await _audited_detail(session, staff, booking.id, action=action)
     if booking.payment_status != domain_payments.PAID:
         raise RecoveryOnlyPaidPayoutRelease()
-    if booking.status != "accepted":
+    # A split payout whose first part is out is completed but still holds the rest: staff may send it.
+    rest_of_split = booking.status == "completed" and bool(booking.upfront_payout_at)
+    if booking.status != "accepted" and not rest_of_split:
         raise RecoveryPayoutNeedsAccepted()
-    if await repository.has_active_dispute(session, booking.id):
-        raise RecoveryDisputeBlocksPayout()
+    try:
+        await check_may_pay_out(session, booking)
+    except PayoutBlockedByDispute as blocked:
+        # The admin screen branches on this older code for the dispute case; a support hold surfaces as is.
+        raise RecoveryDisputeBlocksPayout() from blocked
     hours_after_event = get_settings().booking_payout_auto_release_hours_after_event
-    if not domain_maintenance.payout_eligible_for_staff(
+    if not rest_of_split and not domain_maintenance.payout_eligible_for_staff(
         booking, datetime.now(UTC), hours_after_event=hours_after_event
     ):
         raise RecoveryPayoutNotEligible()
-    result = await service_payments.release_vendor_payout(session, mailer, gateway, booking_id=booking.id)
+    # Staff pay everything still owed in one go, even on a split payout (`by_staff`).
+    result = await service_payments.release_vendor_payout(
+        session, mailer, gateway, booking_id=booking.id, by_staff=True
+    )
     if result.payment_status != domain_payments.PAYOUT_RELEASED:
         # The vendor cannot be paid yet (Stripe setup unfinished); their notice is kept.
         raise RecoveryPayoutNotReleased()
@@ -239,9 +276,24 @@ async def release_payout(
 # --- cancellation ------------------------------------------------------------------------------------
 
 
+def _holds_cancellation_share(booking: BookingRow) -> bool:
+    """True while the vendor's share of a partial refund (tiered cancel or staff split) is still unsent."""
+    return (booking.cancellation_vendor_share_gbp or 0.0) > 0 and booking.cancellation_payout_at is None
+
+
+def _refunded_at_cancel(booking: BookingRow) -> bool:
+    """True once a cancel's refund went through: in full, or the tiered split `domain_cancellation` made."""
+    if booking.payment_status == domain_payments.REFUNDED:
+        return True
+    return (
+        booking.payment_status == domain_payments.PARTIALLY_REFUNDED
+        and booking.cancellation_refund_percent is not None
+    )
+
+
 async def _complete_refunded_cancellation(session: AsyncSession, booking: BookingRow) -> None:
-    """Flip an accepted booking whose payment was already refunded to cancelled."""
-    if booking.payment_status != domain_payments.REFUNDED:
+    """Flip an accepted booking whose payment was already refunded (in full or by tier) to cancelled."""
+    if not _refunded_at_cancel(booking):
         raise RecoveryOnlyRefundedCompleteCancel()
     if booking.status != "accepted":
         raise RecoveryNotAcceptedRefunded()
@@ -251,7 +303,7 @@ async def _complete_refunded_cancellation(session: AsyncSession, booking: Bookin
         booking.id,
         {"status": "cancelled", "cancelled_by": cancelled_by},
         status_in=("accepted",),
-        payment_status_in=(domain_payments.REFUNDED,),
+        payment_status_in=(booking.payment_status,),
         now_columns=("cancelled_at",),
     )
     if not cancelled:
@@ -277,12 +329,18 @@ async def cancel_on_behalf(
     *,
     party: Party,
     reason: str,
+    exceptional: bool = False,
 ) -> AdminBookingDetailResponse:
     """Cancel a pending or accepted booking as the client or vendor asked support to, refunding a paid one.
 
-    The same money rules as a party's own cancel apply (no cancel after payout or with
-    an open dispute). The reason is kept in the audit log only; nobody is emailed, as
-    in the baseline.
+    With `exceptional`, the booking is marked `cancellation_reason = 'exceptional'` once cancelled,
+    so the cancellation is never counted in the vendor's private record.
+
+    The same gates as a party's own cancel apply (no cancel after payout or with an open
+    dispute), but a paid booking is always refunded in full, whichever party asked: the
+    vendor's cancellation preset is for the client cancelling themselves, and staff who
+    mean to split the money use the dispute `partial_refund` tool. The reason is kept in
+    the audit log only; nobody is emailed, as in the baseline.
     """
     stripped_reason = reason.strip()
     if not stripped_reason:
@@ -293,11 +351,16 @@ async def cancel_on_behalf(
     if booking.status not in ("pending", "accepted"):
         raise CancelOnlyPendingOrAccepted()
     await check_may_cancel(session, booking)
-    details = {"party": party, "reason": stripped_reason}
+    details: dict[str, object] = {"party": party, "reason": stripped_reason}
+    if exceptional:
+        details["exceptional"] = True
     if booking.payment_status == domain_payments.PAID:
-        await service_payments.prepare_cancel(session, mailer, gateway, booking, cancelled_by=party)
-    elif booking.payment_status == domain_payments.REFUNDED and booking.status == "accepted":
+        await service_payments.prepare_cancel(
+            session, mailer, gateway, booking, cancelled_by=party, by_staff=True
+        )
+    elif _refunded_at_cancel(booking) and booking.status == "accepted":
         await _complete_refunded_cancellation(session, booking)
+        await _mark_exceptional(session, booking.id, exceptional=exceptional)
         return await _audited_detail(
             session, staff, booking.id, action="booking.cancel_on_behalf", details=details
         )
@@ -311,10 +374,17 @@ async def cancel_on_behalf(
     if not cancelled:
         # A refund already made stays recorded (persist_effects).
         raise RecoveryCouldNotCancel()
+    await _mark_exceptional(session, booking.id, exceptional=exceptional)
     announce_change(session, booking)
     return await _audited_detail(
         session, staff, booking.id, action="booking.cancel_on_behalf", details=details
     )
+
+
+async def _mark_exceptional(session: AsyncSession, booking_id: str, *, exceptional: bool) -> None:
+    """Record `cancellation_reason = 'exceptional'` on a cancelled booking when staff said so."""
+    if exceptional:
+        await repository.update_booking(session, booking_id, {"cancellation_reason": "exceptional"})
 
 
 # --- completion and maintenance ----------------------------------------------------------------------
@@ -334,6 +404,14 @@ async def _confirm_for_party(
         announce_change(session, booking)
     confirmed = await _load(session, booking.id)
     if confirmed.client_completion_confirmed_at and confirmed.vendor_completion_confirmed_at:
+        try:
+            await check_may_pay_out(session, confirmed)
+        except (PayoutBlockedByDispute, PayoutOnSupportHold) as held:
+            # The confirmation stays recorded; the money waits. The admin detail shows the hold or dispute.
+            log.info(
+                "bookings: staff confirmation recorded, payout held booking=%s: %s", confirmed.id, held.code
+            )
+            return
         await service_payments.release_vendor_payout(session, mailer, gateway, booking_id=confirmed.id)
     elif not already_confirmed:
         await service_maintenance.run_post_event_step(session, mailer, gateway, confirmed)
@@ -367,3 +445,21 @@ async def run_maintenance(
     booking = await _load(session, booking_id)
     await service_maintenance.run_post_event_step(session, mailer, gateway, booking)
     return await _audited_detail(session, staff, booking.id, action="booking.run_maintenance")
+
+
+async def resolve_deposit_claim(
+    session: AsyncSession,
+    mailer: Mailer,
+    gateway: PaymentGateway,
+    staff: Principal,
+    booking_id: str,
+    award_gbp: float,
+) -> AdminBookingDetailResponse:
+    """Decide a vendor's damage-deposit claim: the vendor keeps `award_gbp`, the client gets the rest."""
+    booking = await _load(session, booking_id)
+    await service_deposits.resolve_deposit_claim(
+        session, mailer, gateway, booking_id=booking.id, award_gbp=award_gbp
+    )
+    return await _audited_detail(
+        session, staff, booking.id, action="booking.resolve_deposit_claim", details={"award_gbp": award_gbp}
+    )

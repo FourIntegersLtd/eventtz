@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ThirdPartyServicesTable } from "@/components/compliances/content/ThirdPartyServicesTable";
 import { FOOTER_COMPANY_NAME, FOOTER_CONTACT_EMAIL } from "@/lib/footerLinks";
 
+/** The Cookie Policy page, written in plain English. */
 export function CookiesPolicyContent() {
   return (
     <>
@@ -9,78 +10,78 @@ export function CookiesPolicyContent() {
       <p className="compliance-meta">
         Effective date: 1 July 2026
         <br />
-        Last updated: 14 July 2026
+        Last updated: 17 October 2026
       </p>
       <p>
-        This Cookie Policy explains how Eventtz, operated by {FOOTER_COMPANY_NAME},
-        uses cookies and similar technologies when you visit eventtz.com and
-        related pages.
+        This policy explains how Eventtz, run by {FOOTER_COMPANY_NAME}, uses
+        cookies when you visit eventtz.com.
       </p>
 
       <section id="what-are-cookies">
-        <h2>1. What are cookies?</h2>
+        <h2>1. What cookies are</h2>
         <p>
-          Cookies are small text files stored on your device. They help websites
-          remember preferences, keep you signed in, and understand how pages are
-          used.
+          Cookies are small files that a website saves on your phone or
+          computer. They let the website remember you, for example so you stay
+          signed in, and help it understand how pages are used.
         </p>
       </section>
 
       <section id="how-we-use-cookies">
-        <h2>2. How we use cookies</h2>
-        <h3>Strictly necessary</h3>
+        <h2>2. The cookies we use</h2>
+        <h3>Cookies we need to make Eventtz work</h3>
         <p>
-          Required for core functionality such as authentication sessions,
-          security, and load balancing. These cannot be switched off if you want
-          to use signed-in features.
+          These keep you signed in, keep your account safe and keep the website
+          running smoothly. You cannot turn them off if you want to use your
+          account.
         </p>
-        <h3>Functional</h3>
+        <h3>Cookies that remember your choices</h3>
         <p>
-          Remember choices such as notification preferences or UI settings to
-          improve your experience.
+          These remember settings you pick, such as your notification choices or
+          how the page is laid out.
         </p>
-        <h3>Analytics</h3>
+        <h3>Cookies that help us improve Eventtz</h3>
         <p>
-          Help us understand traffic patterns and improve the marketplace. We use
-          Mixpanel for product analytics (page views and key funnel events). Where
-          required, analytics cookies are deployed in a privacy-conscious manner
-          and may be subject to consent depending on your jurisdiction.
+          These count which pages are visited and which main steps people take,
+          such as signing in or sending a booking request. We use a service
+          called Mixpanel for this. Where the law requires it, we ask your
+          permission first.
         </p>
       </section>
 
       <section id="third-party-cookies">
-        <h2>3. Third-party technologies</h2>
+        <h2>3. Cookies from other companies</h2>
         <p>
-          Some cookies or storage mechanisms are set by services we integrate
-          with to operate Eventtz, including payment and hosting providers:
+          Some cookies, or similar ways of saving information on your device,
+          come from companies we use to run Eventtz, such as our payment and
+          hosting companies:
         </p>
         <ThirdPartyServicesTable />
         <p>
-          Stripe may use cookies or similar storage when you complete checkout
-          or manage payouts. Refer to Stripe&apos;s policies for details.
+          Stripe, our payment company, may save cookies when you pay or when a
+          vendor sets up how they get paid. Stripe’s own policies explain how.
         </p>
       </section>
 
       <section id="managing-cookies">
-        <h2>4. Managing cookies</h2>
+        <h2>4. How to control cookies</h2>
         <p>
-          You can control cookies through your browser settings. Blocking
-          strictly necessary cookies may prevent you from logging in or
-          completing bookings. Most browsers let you delete existing cookies and
-          block future ones.
+          You can block or delete cookies in your browser’s settings. Most
+          browsers let you delete the cookies already saved and block new ones.
+          If you block the cookies we need, you will not be able to sign in or
+          make bookings.
         </p>
       </section>
 
       <section id="updates">
-        <h2>5. Updates</h2>
+        <h2>5. Changes to this policy</h2>
         <p>
-          We may update this Cookie Policy when our use of cookies changes.
-          Check this page for the latest version.
+          We will update this policy if the cookies we use change. The latest
+          version is always on this page.
         </p>
       </section>
 
       <section id="contact">
-        <h2>6. Contact</h2>
+        <h2>6. Contact us</h2>
         <p>
           Questions about cookies:{" "}
           <a href={`mailto:${FOOTER_CONTACT_EMAIL}`}>{FOOTER_CONTACT_EMAIL}</a>.

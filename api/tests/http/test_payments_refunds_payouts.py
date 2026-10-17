@@ -7,7 +7,7 @@ key, and what is stored afterwards is proved here with `FakePaymentGateway`.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
@@ -381,7 +381,7 @@ async def test_a_missing_vendor_amount_refuses_the_payout(
 
 
 async def test_staff_partial_refund_marks_the_booking_partially_refunded(db_session: AsyncSession) -> None:
-    """A staff refund of GBP 40 of a paid booking uses the `partial` key and keeps the rest held."""
+    """A staff refund of GBP 40 of a paid booking uses the `partial` key and sends the vendor the rest."""
     gateway = FakePaymentGateway()
     client_id, _client_token = await _make_account(db_session, "staff-refund-client@example.com", "client")
     vendor_id, _vendor_token = await _make_vendor(
@@ -403,8 +403,22 @@ async def test_staff_partial_refund_marks_the_booking_partially_refunded(db_sess
                 "metadata": {"booking_id": booking_id},
                 "idempotency_key": f"refund-{booking_id}-partial",
             },
-        )
+        ),
+        PaymentCall(name="list_transfer_ids", arguments={"transfer_group": f"booking_{booking_id}"}),
+        PaymentCall(
+            name="create_transfer",
+            arguments={
+                "amount_pence": 11000,
+                "destination_account_id": "acct_test_vendor",
+                "transfer_group": f"booking_{booking_id}",
+                "metadata": {"booking_id": booking_id},
+                "source_charge_id": "ch_test_paid",
+                "idempotency_key": f"transfer-{booking_id}-11000-acct_test_vendor-src-ch_test_paid",
+            },
+        ),
     ]
+    assert (refunded.cancellation_refund_gbp, refunded.cancellation_vendor_share_gbp) == (40.0, 110.0)
+    assert refunded.cancellation_payout_at is not None
 
 
 async def test_staff_payout_release_needs_a_paid_booking(db_session: AsyncSession) -> None:
@@ -426,7 +440,7 @@ async def test_staff_payout_release_needs_a_paid_booking(db_session: AsyncSessio
 async def test_resolving_a_dispute_with_a_partial_refund_refunds_that_amount(
     client: AsyncClient, db_session: AsyncSession, payment_gateway: FakePaymentGateway
 ) -> None:
-    """A super admin's `partial_refund` of GBP 40 reaches Stripe in pence and the dispute is resolved."""
+    """A super admin's `partial_refund` of GBP 40 reaches Stripe, and the vendor is sent the other GBP 110."""
     client_id, _client_token = await _make_account(db_session, "dispute-refund-client@example.com", "client")
     vendor_id, _vendor_token = await _make_vendor(
         db_session, "dispute-refund-vendor@example.com", stripe_ready=True
@@ -469,7 +483,234 @@ async def test_resolving_a_dispute_with_a_partial_refund_refunds_that_amount(
                 "metadata": {"booking_id": booking_id},
                 "idempotency_key": f"refund-{booking_id}-partial",
             },
-        )
+        ),
+        PaymentCall(name="list_transfer_ids", arguments={"transfer_group": f"booking_{booking_id}"}),
+        PaymentCall(
+            name="create_transfer",
+            arguments={
+                "amount_pence": 11000,
+                "destination_account_id": "acct_test_vendor",
+                "transfer_group": f"booking_{booking_id}",
+                "metadata": {"booking_id": booking_id},
+                "source_charge_id": "ch_test_paid",
+                "idempotency_key": f"transfer-{booking_id}-11000-acct_test_vendor-src-ch_test_paid",
+            },
+        ),
     ]
     booking = await _booking(db_session, booking_id)
-    assert booking.payment_status == "partially_refunded"
+    assert (
+        booking.payment_status,
+        booking.cancellation_refund_percent,
+        booking.cancellation_refund_gbp,
+        booking.cancellation_vendor_share_gbp,
+    ) == ("partially_refunded", None, 40.0, 110.0)
+    assert booking.cancellation_payout_at is not None
+    assert booking.stripe_transfer_id is not None
+
+
+def _event_in(days: int) -> str:
+    """An event date `days` days from today (UTC), as the booking rows store it."""
+    return (datetime.now(UTC) + timedelta(days=days)).date().isoformat()
+
+
+async def test_client_cancel_under_a_strict_policy_at_45_days_splits_the_money(
+    client: AsyncClient, db_session: AsyncSession, payment_gateway: FakePaymentGateway
+) -> None:
+    """Strict, 45 days out: GBP 82.50 (fee + half the vendor price) is refunded, GBP 75 goes to the vendor."""
+    client_id, token = await _make_account(db_session, "tiered-client@example.com", "client")
+    vendor_id, _vendor_token = await _make_vendor(db_session, "tiered-vendor@example.com", stripe_ready=True)
+    booking_id = await _make_booking(
+        db_session,
+        client_id=client_id,
+        vendor_id=vendor_id,
+        event_date=_event_in(45),
+        paid_at=datetime(2026, 1, 1, tzinfo=UTC),
+        cancellation_policy="strict",
+    )
+
+    response = await client.post(
+        f"/api/v1/client/booking-requests/{booking_id}/cancel", headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json() == {
+        "success": True,
+        "booking_request_id": booking_id,
+        "booking_status": "cancelled",
+        "refund_percent": 50,
+        "refund_gbp": 82.5,
+    }
+    assert payment_gateway.calls == [
+        PaymentCall(
+            name="create_refund",
+            arguments={
+                "payment_intent_id": "pi_test_paid",
+                "amount_pence": 8250,
+                "metadata": {"booking_id": booking_id},
+                "idempotency_key": f"refund-{booking_id}-cancel-client-8250",
+            },
+        ),
+        PaymentCall(name="list_transfer_ids", arguments={"transfer_group": f"booking_{booking_id}"}),
+        PaymentCall(
+            name="create_transfer",
+            arguments={
+                "amount_pence": 7500,
+                "destination_account_id": "acct_test_vendor",
+                "transfer_group": f"booking_{booking_id}",
+                "metadata": {"booking_id": booking_id},
+                "source_charge_id": "ch_test_paid",
+                "idempotency_key": f"transfer-{booking_id}-7500-acct_test_vendor-src-ch_test_paid",
+            },
+        ),
+    ]
+    booking = await _booking(db_session, booking_id)
+    assert (booking.status, booking.payment_status, booking.cancelled_by) == (
+        "cancelled",
+        "partially_refunded",
+        "client",
+    )
+    assert (
+        booking.cancellation_refund_percent,
+        booking.cancellation_refund_gbp,
+        booking.cancellation_vendor_share_gbp,
+    ) == (50, 82.5, 75.0)
+    assert booking.refunded_at is not None
+    assert booking.cancellation_payout_at is not None
+    assert booking.stripe_transfer_id is not None
+    assert (
+        "payment_refunded",
+        "This booking was cancelled. Under the vendor's Strict cancellation policy, GBP 82.50 of your "
+        "GBP 157.50 payment has been refunded (50% of the vendor's price plus the full Eventtz service "
+        "fee).\n\nIt should reach your card within 5-10 working days, depending on your bank.",
+    ) in await _notice_kinds(db_session, client_id)
+    assert (
+        "booking_cancelled_by_client",
+        "The client has cancelled this booking. Under your Strict cancellation policy they were "
+        "refunded 50% of your price plus the Eventtz service fee.\n\n"
+        "Your share of GBP 75 has been sent to your connected account.",
+    ) in await _notice_kinds(db_session, vendor_id)
+
+
+async def test_client_cancel_in_cooling_off_refunds_in_full(
+    client: AsyncClient, db_session: AsyncSession, payment_gateway: FakePaymentGateway
+) -> None:
+    """Paid an hour ago with the event 10 days out: Strict would give 0%, cooling-off gives all back."""
+    client_id, token = await _make_account(db_session, "cooling-client@example.com", "client")
+    vendor_id, _vendor_token = await _make_vendor(db_session, "cooling-vendor@example.com", stripe_ready=True)
+    booking_id = await _make_booking(
+        db_session,
+        client_id=client_id,
+        vendor_id=vendor_id,
+        event_date=_event_in(10),
+        paid_at=datetime.now(UTC) - timedelta(hours=1),
+        cancellation_policy="strict",
+    )
+
+    response = await client.post(
+        f"/api/v1/client/booking-requests/{booking_id}/cancel", headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json()["refund_percent"] == 100
+    assert [call.name for call in payment_gateway.calls] == ["create_refund"]
+    assert payment_gateway.calls[0].arguments["idempotency_key"] == f"refund-{booking_id}-cancel-client"
+    booking = await _booking(db_session, booking_id)
+    assert (booking.payment_status, booking.cancellation_refund_percent) == ("refunded", None)
+
+
+async def test_client_cancel_at_zero_percent_refunds_only_the_fee(
+    client: AsyncClient, db_session: AsyncSession, payment_gateway: FakePaymentGateway
+) -> None:
+    """Strict, 10 days out, paid long ago: GBP 7.50 fee back, the vendor is sent all GBP 150."""
+    client_id, token = await _make_account(db_session, "late-client@example.com", "client")
+    vendor_id, _vendor_token = await _make_vendor(db_session, "late-vendor@example.com", stripe_ready=True)
+    booking_id = await _make_booking(
+        db_session,
+        client_id=client_id,
+        vendor_id=vendor_id,
+        event_date=_event_in(10),
+        paid_at=datetime(2026, 1, 1, tzinfo=UTC),
+        cancellation_policy="strict",
+    )
+
+    response = await client.post(
+        f"/api/v1/client/booking-requests/{booking_id}/cancel", headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response.status_code == 200, response.text
+    assert (response.json()["refund_percent"], response.json()["refund_gbp"]) == (0, 7.5)
+    assert payment_gateway.calls[0].arguments["amount_pence"] == 750
+    assert payment_gateway.calls[2].arguments["amount_pence"] == 15000
+    booking = await _booking(db_session, booking_id)
+    assert (booking.payment_status, booking.cancellation_vendor_share_gbp) == ("partially_refunded", 150.0)
+
+
+async def test_the_vendor_share_is_held_until_their_stripe_setup_is_done(
+    client: AsyncClient, db_session: AsyncSession, payment_gateway: FakePaymentGateway
+) -> None:
+    """No payouts yet: the client is still refunded, the share is recorded unsent and the vendor told."""
+    client_id, token = await _make_account(db_session, "held-share-client@example.com", "client")
+    vendor_id, _vendor_token = await _make_vendor(
+        db_session, "held-share-vendor@example.com", stripe_ready=False
+    )
+    booking_id = await _make_booking(
+        db_session,
+        client_id=client_id,
+        vendor_id=vendor_id,
+        event_date=_event_in(45),
+        paid_at=datetime(2026, 1, 1, tzinfo=UTC),
+        cancellation_policy="strict",
+    )
+
+    response = await client.post(
+        f"/api/v1/client/booking-requests/{booking_id}/cancel", headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response.status_code == 200, response.text
+    assert [call.name for call in payment_gateway.calls] == ["create_refund"]
+    booking = await _booking(db_session, booking_id)
+    assert (booking.status, booking.payment_status, booking.cancellation_vendor_share_gbp) == (
+        "cancelled",
+        "partially_refunded",
+        75.0,
+    )
+    assert (booking.cancellation_payout_at, booking.stripe_transfer_id) == (None, None)
+    vendor_notices = await _notice_kinds(db_session, vendor_id)
+    held_body = service_payments._CANCELLATION_SHARE_HELD_BODY
+    assert ("payout_held_connect_incomplete", held_body) in vendor_notices
+    assert any(
+        kind == "booking_cancelled_by_client" and body is not None and "is held until" in body
+        for kind, body in vendor_notices
+    )
+
+
+async def test_vendor_payout_history_lists_a_cancellation_share(
+    client: AsyncClient, db_session: AsyncSession, payment_gateway: FakePaymentGateway
+) -> None:
+    """A tiered cancel shows in the vendor's payout history as the share, paid out."""
+    client_id, _client_token = await _make_account(db_session, "ledger-client@example.com", "client")
+    vendor_id, vendor_token = await _make_vendor(db_session, "ledger-vendor@example.com", stripe_ready=True)
+    booking_id = await _make_booking(
+        db_session,
+        client_id=client_id,
+        vendor_id=vendor_id,
+        status="cancelled",
+        payment_status="partially_refunded",
+        cancellation_policy="strict",
+        cancellation_refund_percent=50,
+        cancellation_refund_gbp=82.5,
+        cancellation_vendor_share_gbp=75.0,
+        cancellation_payout_at=datetime(2026, 2, 1, tzinfo=UTC),
+        stripe_transfer_id="tr_share",
+    )
+
+    response = await client.get(
+        "/api/v1/vendor/payments/history", headers={"Authorization": f"Bearer {vendor_token}"}
+    )
+
+    assert response.status_code == 200, response.text
+    payouts = response.json()["payouts"]
+    assert [(row["booking_id"], row["amount_gbp"], row["status"], row["kind"]) for row in payouts] == [
+        (booking_id, 75.0, "paid_out", "cancellation_share")
+    ]
+    assert response.json()["total_paid_out_gbp"] == 75.0

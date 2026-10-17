@@ -18,7 +18,7 @@ export type AdminDisputeCase = {
   /** In-app chat thread captured when the dispute was opened (if any). */
   conversation_id?: string | null;
   /** Money decision recorded when the dispute was resolved. */
-  resolution_action?: "release_to_vendor" | "refund_client" | "partial_refund" | null;
+  resolution_action?: "release_to_vendor" | "refund_client" | "partial_refund" | "vendor_no_show" | null;
   refund_amount_gbp?: number | null;
   event_name?: string | null;
   event_date?: string | null;
@@ -49,7 +49,7 @@ export async function patchAdminDispute(
     vendor_resolution_note?: string | null;
     assigned_admin_id?: string | null;
     /** Only acted on when status is being set to "resolved". */
-    resolution_action?: "release_to_vendor" | "refund_client" | "partial_refund" | null;
+    resolution_action?: "release_to_vendor" | "refund_client" | "partial_refund" | "vendor_no_show" | null;
     /** Required (and only used) when resolution_action === "partial_refund". */
     refund_amount_gbp?: number | null;
   },

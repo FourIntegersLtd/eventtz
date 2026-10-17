@@ -26,12 +26,16 @@ from app.features.vendors.schemas import (
     AdminVendorListingMediaResponse,
     AdminVendorListingOverrideBody,
     AdminVendorListingOverrideResponse,
+    AdminVendorPauseBody,
+    AdminVendorPauseResponse,
     AdminVendorPayoutNudgeBody,
     AdminVendorProfileNudgeBody,
     AdminVendorProfileNudgeResponse,
     AdminVendorsListResponse,
     AdminVendorUnsubmitBody,
     AdminVendorUnsubmitResponse,
+    AdminVendorWarnBody,
+    AdminVendorWarnResponse,
 )
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -69,7 +73,7 @@ async def set_approval(
 ) -> AdminVendorApprovalResponse:
     """Approve, ban or re-queue a vendor."""
     return await service_moderation.set_approval(
-        session, principal, user_id, body.approval_status, mailer=mailer
+        session, principal, user_id, body.approval_status, mailer=mailer, reason=body.reason
     )
 
 
@@ -166,9 +170,61 @@ async def nudge_to_set_up_payouts(
     ),
 )
 async def set_listing_override(
-    session: SessionDep, principal: CurrentStaff, user_id: str, body: AdminVendorListingOverrideBody
+    session: SessionDep,
+    principal: CurrentStaff,
+    user_id: str,
+    body: AdminVendorListingOverrideBody,
+    mailer: MailerDependency,
 ) -> AdminVendorListingOverrideResponse:
     """Force a listing visible or hidden, or return it to the automatic rule."""
     return await service_moderation.set_listing_override(
-        session, principal, user_id, body.listing_override, reason=body.reason
+        session, principal, user_id, body.listing_override, reason=body.reason, mailer=mailer
     )
+
+
+@router.post(
+    "/vendors/{user_id}/warn",
+    response_model=AdminVendorWarnResponse,
+    responses=error_responses(*ROLE_ERRORS, VendorProfileNotFound),
+)
+async def warn_vendor(
+    session: SessionDep,
+    principal: CurrentStaff,
+    user_id: str,
+    body: AdminVendorWarnBody,
+    mailer: ImmediateMailerDependency,
+) -> AdminVendorWarnResponse:
+    """Email the vendor a formal warning (recorded in the audit log)."""
+    return await service_moderation.warn_vendor(
+        session, principal, user_id, message=body.message, mailer=mailer
+    )
+
+
+@router.put(
+    "/vendors/{user_id}/listing-pause",
+    response_model=AdminVendorPauseResponse,
+    responses=error_responses(*ROLE_ERRORS, VendorProfileNotFound),
+)
+async def pause_listing(
+    session: SessionDep,
+    principal: CurrentStaff,
+    user_id: str,
+    body: AdminVendorPauseBody,
+    mailer: MailerDependency,
+) -> AdminVendorPauseResponse:
+    """Hide the vendor's listing for a number of days; it returns on its own."""
+    return await service_moderation.pause_listing(
+        session, principal, user_id, days=body.days, reason=body.reason, mailer=mailer
+    )
+
+
+@router.delete(
+    "/vendors/{user_id}/listing-pause",
+    response_model=AdminVendorPauseResponse,
+    responses=error_responses(*ROLE_ERRORS, VendorProfileNotFound),
+)
+async def clear_listing_pause(
+    session: SessionDep, principal: CurrentStaff, user_id: str
+) -> AdminVendorPauseResponse:
+    """End a listing pause early."""
+    return await service_moderation.clear_listing_pause(session, principal, user_id)

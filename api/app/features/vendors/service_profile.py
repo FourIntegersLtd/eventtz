@@ -15,6 +15,7 @@ from app.features.vendors.domain_profile_form import (
     business_name_from_payload,
     explore_search_patch_from_payload,
     normalize_business_name,
+    normalize_cancellation_policy,
     normalize_payload_fields,
     validate_payload_for_progress,
     with_clamped_bio,
@@ -40,6 +41,7 @@ def listing_is_visible(vendor: VendorRow) -> bool:
         approval_status=vendor.approval_status or "pending",
         listing_override=vendor.listing_override,
         payouts_ready=payouts_are_verified(vendor),
+        paused_until=vendor.listing_paused_until,
     )
 
 
@@ -59,6 +61,17 @@ async def payout_route_ready(session: AsyncSession, vendor_user_id: str) -> bool
     """
     vendor = await repository.get_vendor(session, vendor_user_id)
     return bool(vendor and vendor.stripe_account_id and vendor.stripe_payouts_enabled)
+
+
+async def cancellation_policy(session: AsyncSession, vendor_user_id: str) -> str:
+    """The vendor's current cancellation preset key (`flexible` when they have not chosen one).
+
+    Bookings snapshot this at checkout (`bookings.domain_cancellation`); this is for screens
+    shown before payment, so the client knows what they are agreeing to.
+    """
+    vendor = await repository.get_vendor(session, vendor_user_id)
+    raw_policy = vendor.payload.get("cancellationPolicy") if vendor is not None else None
+    return normalize_cancellation_policy(raw_policy if isinstance(raw_policy, str) else "")
 
 
 async def listed_phone(session: AsyncSession, vendor_user_id: str) -> str | None:

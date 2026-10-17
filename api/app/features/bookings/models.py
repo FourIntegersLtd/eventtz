@@ -22,6 +22,7 @@ from sqlalchemy import (
     Index,
     Integer,
     Numeric,
+    SmallInteger,
     Text,
     Uuid,
     func,
@@ -208,6 +209,98 @@ class BookingRequest(Base, UUIDPrimaryKey):
     )
     cancelled_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), comment="When the booking was cancelled."
+    )
+    # A client cancel of a paid booking splits the money by the vendor's preset (migration 0006,
+    # `domain_cancellation.py`). NULL policy = paid before presets existed = full refund.
+    cancellation_policy: Mapped[str | None] = mapped_column(
+        Text,
+        comment="Cancellation preset copied at checkout (flexible/moderate/strict); NULL = full refund.",
+    )
+    cancellation_refund_percent: Mapped[int | None] = mapped_column(
+        SmallInteger, comment="Percent of the vendor's price refunded when the client cancelled."
+    )
+    cancellation_refund_gbp: Mapped[Decimal | None] = mapped_column(
+        Numeric(12, 2),
+        comment="What the client got back on cancel (the full service fee plus the tier's share).",
+    )
+    cancellation_vendor_share_gbp: Mapped[Decimal | None] = mapped_column(
+        Numeric(12, 2), comment="What the vendor keeps from a client cancel; 0 when refunded in full."
+    )
+    cancellation_payout_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        comment="When the vendor's cancellation share was transferred; NULL while it is still held.",
+    )
+    # Terms remediation (migration 0007). Staff cancel reason, the per-category reporting window,
+    # the photography/video delivery split, date-change requests and damage deposits.
+    cancellation_reason: Mapped[str | None] = mapped_column(
+        Text,
+        comment="Why staff cancelled; 'exceptional' = exceptional circumstances, never held against the vendor.",  # noqa: E501 (verbatim DB comment)
+    )
+    report_window_hours: Mapped[int | None] = mapped_column(
+        SmallInteger,
+        comment="Hours after the event to report a problem before payout, copied at checkout; NULL = default.",  # noqa: E501 (verbatim DB comment)
+    )
+    payout_upfront_percent: Mapped[int | None] = mapped_column(
+        SmallInteger,
+        comment="Percent of the vendor's price paid on completion; the rest after delivery. NULL = no split.",
+    )
+    delivery_deadline_days: Mapped[int | None] = mapped_column(
+        SmallInteger,
+        comment="Days after the event the vendor has to deliver (photos, video) before the rest is released.",
+    )
+    upfront_amount_gbp: Mapped[Decimal | None] = mapped_column(
+        Numeric(12, 2), comment="The upfront part of the vendor's price, fixed when the client paid."
+    )
+    upfront_transfer_id: Mapped[str | None] = mapped_column(
+        Text, comment="Stripe Transfer id of the upfront part."
+    )
+    upfront_payout_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), comment="When the upfront part was transferred to the vendor."
+    )
+    delivery_confirmed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        comment="When the client confirmed they received the delivery (releases the rest).",
+    )
+    proposed_event_date: Mapped[date | None] = mapped_column(
+        Date, comment="New first day asked for in an open date-change request."
+    )
+    proposed_event_end_date: Mapped[date | None] = mapped_column(
+        Date, comment="New last day asked for in an open date-change request (multi-day events)."
+    )
+    date_change_requested_by: Mapped[str | None] = mapped_column(
+        Text, comment="client or vendor: who asked to move the date. NULL = no open request."
+    )
+    date_change_requested_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), comment="When the open date-change request was made."
+    )
+    date_change_note: Mapped[str | None] = mapped_column(
+        Text, comment="Optional message sent with the date-change request."
+    )
+    damage_deposit_gbp: Mapped[Decimal | None] = mapped_column(
+        Numeric(12, 2),
+        comment="Refundable damage deposit charged with the booking (rentals, decor). NULL = none.",
+    )
+    deposit_refunded_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        comment="When the deposit (or what was left of it after a claim) went back to the client.",
+    )
+    deposit_claim_gbp: Mapped[Decimal | None] = mapped_column(
+        Numeric(12, 2), comment="How much of the deposit the vendor claimed for damage or loss."
+    )
+    deposit_claim_note: Mapped[str | None] = mapped_column(
+        Text, comment="The vendor's description of the damage or loss."
+    )
+    deposit_claimed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), comment="When the vendor made the deposit claim."
+    )
+    deposit_claim_awarded_gbp: Mapped[Decimal | None] = mapped_column(
+        Numeric(12, 2), comment="What staff awarded the vendor from the deposit; the rest is refunded."
+    )
+    deposit_claim_resolved_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), comment="When staff decided the deposit claim."
+    )
+    deposit_transfer_id: Mapped[str | None] = mapped_column(
+        Text, comment="Stripe Transfer id of the deposit amount awarded to the vendor."
     )
     payout_auto_released_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),

@@ -10,13 +10,7 @@ export function BrowseProfileGoodToKnowCard({
   facts,
   className = "",
 }: BrowseProfileGoodToKnowCardProps) {
-  const hasContent =
-    Boolean(facts.availableDays) ||
-    Boolean(facts.unavailableDatesLabel) ||
-    facts.foodNotes.length > 0 ||
-    facts.trustBadges.length > 0;
-
-  if (!hasContent) {
+  if (!hasBrowseGoodToKnowContent(facts)) {
     return null;
   }
 
@@ -55,12 +49,24 @@ export function BrowseProfileGoodToKnowCard({
           />
         ) : null}
       </dl>
+      <div className="border-t border-neutral-100 px-5 py-4">
+        <h5 className="text-[13px] font-semibold text-neutral-900">
+          Cancellation policy — {facts.cancellationPolicyLabel}
+        </h5>
+        <ul className="mt-2 list-disc space-y-1 pl-5 text-[13px] text-neutral-600">
+          {facts.cancellationPolicyLines.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+      </div>
     </section>
   );
 }
 
+/** Always true: every vendor shows a cancellation policy (Flexible when unset). */
 export function hasBrowseGoodToKnowContent(facts: BrowseVendorProfileFacts): boolean {
   return (
+    facts.cancellationPolicyLines.length > 0 ||
     Boolean(facts.availableDays) ||
     Boolean(facts.unavailableDatesLabel) ||
     facts.foodNotes.length > 0 ||

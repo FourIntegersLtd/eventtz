@@ -11,7 +11,7 @@ import uuid
 from datetime import datetime
 from typing import Any, Literal
 
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -53,6 +53,8 @@ def _profile_row(user: User) -> UserProfileRow:
         deleted_at=plain_value(user.deleted_at),
         preferred_name=user.preferred_name,
         client_onboarding_completed_at=plain_value(user.client_onboarding_completed_at),
+        terms_accepted_version=user.terms_accepted_version,
+        terms_accepted_at=plain_value(user.terms_accepted_at),
     )
 
 
@@ -122,6 +124,8 @@ async def create_account(
     admin_role: str | None = None,
     email_verified_at: datetime | None = None,
     account_suspended: bool = False,
+    terms_accepted_version: str | None = None,
+    terms_accepted_at: datetime | None = None,
 ) -> str | None:
     """Insert a `users` row and return its new id; `None` when the email is already taken.
 
@@ -136,6 +140,8 @@ async def create_account(
         admin_role=admin_role,
         email_verified_at=email_verified_at,
         account_suspended=account_suspended,
+        terms_accepted_version=terms_accepted_version,
+        terms_accepted_at=terms_accepted_at,
     )
     try:
         async with session.begin_nested():
@@ -174,6 +180,42 @@ async def open_user_ids_of_type(
     if not include_suspended:
         statement = statement.where(User.account_suspended.is_(False))
     return [str(user_id) for user_id in await session.scalars(statement.order_by(User.id))]
+
+
+async def stamp_terms_accepted(session: AsyncSession, user_id: str, version: str) -> None:
+    """Record that the account accepted Terms `version`, stamped with the database clock."""
+    await update_profile(
+        session, user_id, {"terms_accepted_version": version, "terms_accepted_at": func.now()}
+    )
+
+
+async def users_awaiting_terms_notice(
+    session: AsyncSession, version: str, *, limit: int
+) -> list[UserSummaryRow]:
+    """Open, unsuspended accounts not yet emailed about Terms `version`, lowest id first, at most `limit`."""
+    statement = (
+        select(User)
+        .where(
+            User.terms_notice_sent_version.is_distinct_from(version),
+            User.deleted_at.is_(None),
+            User.account_suspended.is_(False),
+        )
+        .order_by(User.id)
+        .limit(limit)
+    )
+    return [
+        UserSummaryRow(id=str(user.id), email=user.email, user_type=user.user_type)
+        for user in await session.scalars(statement)
+    ]
+
+
+async def mark_terms_notice_sent(session: AsyncSession, user_ids: list[str], version: str) -> None:
+    """Remember these accounts were emailed about Terms `version`, so the next pass skips them."""
+    account_ids = [account_id for account_id in map(as_uuid, user_ids) if account_id is not None]
+    if account_ids:
+        await session.execute(
+            update(User).where(User.id.in_(account_ids)).values(terms_notice_sent_version=version)
+        )
 
 
 async def set_password_hash(session: AsyncSession, user_id: str, password_hash: str) -> None:

@@ -28,6 +28,8 @@ type Props = {
   onCancelPartyChange: (party: "client" | "vendor") => void;
   cancelReason: string;
   onCancelReasonChange: (reason: string) => void;
+  cancelExceptional: boolean;
+  onCancelExceptionalChange: (exceptional: boolean) => void;
   cancelFormValid: boolean;
   feedback: Feedback | null;
   onFeedbackClose: () => void;
@@ -44,6 +46,8 @@ export function AdminBookingSupportActionsPanel({
   onCancelPartyChange,
   cancelReason,
   onCancelReasonChange,
+  cancelExceptional,
+  onCancelExceptionalChange,
   cancelFormValid,
   feedback,
   onFeedbackClose,
@@ -183,6 +187,15 @@ export function AdminBookingSupportActionsPanel({
                   className={formControlClass("mt-1")}
                   placeholder="Why support is cancelling"
                 />
+              </label>
+              <label className="flex items-start gap-2 text-sm text-neutral-700">
+                <input
+                  type="checkbox"
+                  checked={cancelExceptional}
+                  onChange={(e) => onCancelExceptionalChange(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-neutral-300"
+                />
+                <span>Exceptional circumstances (does not count against the vendor)</span>
               </label>
             </div>
           ) : null}

@@ -44,6 +44,8 @@ _VENDOR_COLUMNS = (
     Vendor.stripe_payouts_enabled,
     Vendor.listing_override,
     Vendor.listing_override_reason,
+    Vendor.listing_paused_until,
+    Vendor.listing_pause_reason,
 )
 # The account table (identity's), read here only to attach the email and skip closed accounts.
 _users = table(
@@ -171,7 +173,7 @@ async def vendor_name_rows(session: AsyncSession, user_ids: list[str]) -> list[V
 
 
 def _publicly_listed() -> ColumnElement[bool]:
-    """SQL for `domain_visibility.is_publicly_listable`: approved, not hidden, forced visible or Stripe-ready.
+    """SQL for `domain_visibility.is_publicly_listable`: approved, unpaused, not hidden, visible or ready.
 
     Keep the two in step; the explore freeze tests cover every branch.
     """
@@ -182,6 +184,8 @@ def _publicly_listed() -> ColumnElement[bool]:
     )
     return and_(
         Vendor.approval_status == "approved",
+        # A staff pause lapses by time: the column is simply compared to now().
+        or_(Vendor.listing_paused_until.is_(None), Vendor.listing_paused_until <= func.now()),
         Vendor.listing_override != "hidden",
         or_(Vendor.listing_override == "visible", stripe_ready),
     )
@@ -273,6 +277,48 @@ async def payouts_nudge_candidates(
         .limit(limit)
     )
     return [VendorRow.model_validate(plain_row(row)) for row in result]
+
+
+async def cancellation_policy_nudge_candidates(
+    session: AsyncSession, *, limit: int, nudged_before: datetime | None = None
+) -> list[VendorRow]:
+    """Approved vendors whose form still has no cancellation preset, due the first email or the follow-up.
+
+    The form key is absent until the vendor saves a choice (`domain_profile_form`), so
+    "has the key" is the whole test; clients see the Flexible preset meanwhile. With
+    `nudged_before` the rows are those sent the first email at or before it and not yet
+    the follow-up; without it, those never emailed at all.
+    """
+    due: ColumnElement[bool]
+    if nudged_before is None:
+        due = Vendor.cancellation_policy_nudge_at.is_(None)
+    else:
+        due = and_(
+            Vendor.cancellation_policy_nudge_at <= nudged_before,
+            Vendor.cancellation_policy_reminder_at.is_(None),
+        )
+    result = await session.execute(
+        select(*_VENDOR_COLUMNS)
+        .where(Vendor.approval_status == "approved", due, ~Vendor.payload.has_key("cancellationPolicy"))
+        .order_by(Vendor.created_at)
+        .limit(limit)
+    )
+    return [VendorRow.model_validate(plain_row(row)) for row in result]
+
+
+async def claim_cancellation_policy_nudge(session: AsyncSession, user_id: str, *, follow_up: bool) -> bool:
+    """Mark the first email (or, with `follow_up`, the reminder) as handled; False when already claimed."""
+    parsed_id = as_uuid(user_id)
+    if parsed_id is None:
+        return False
+    marker = Vendor.cancellation_policy_reminder_at if follow_up else Vendor.cancellation_policy_nudge_at
+    result = await session.execute(
+        update(Vendor)
+        .where(Vendor.user_id == parsed_id, marker.is_(None))
+        .values({marker: func.now()})
+        .returning(Vendor.user_id)
+    )
+    return result.first() is not None
 
 
 async def claim_payouts_nudge(session: AsyncSession, user_id: str) -> bool:

@@ -57,7 +57,8 @@ sends nothing. The frontend listener is `web-new/lib/useRealtimeSse.ts`.
 `service_admin._perform_money_action` calls the bookings slice, which owns `payment_status`:
 `release_to_vendor` → `service_payments.release_payout_for_staff`, `refund_client` →
 `refund_booking_for_staff(amount_pence=None)`, `partial_refund` → the same with the amount in
-pence. Money moves before the dispute is written, so a refusal (`payout_only_paid`,
+pence. `vendor_no_show` refunds in full like `refund_client` and counts on the vendor's
+record. Money moves before the dispute is written, so a refusal (`payout_only_paid`,
 `refund_only_paid`, `refund_no_payment_on_record`, `refund_failed`, …, all 400 as in the
 baseline) leaves the dispute unresolved. A vendor Stripe cannot pay yet gets a "payout held"
 notice and the booking stays paid, yet the dispute is still resolved — the baseline's own

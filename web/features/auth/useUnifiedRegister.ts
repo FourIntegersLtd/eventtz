@@ -12,6 +12,7 @@ import {
   captureReferralFromSearchParams,
   fetchReferralPartnerDisplayName,
 } from "@/lib/referralAttribution";
+import policyConstants from "@/lib/policyConstants.json";
 import { parseForm, registerSchema } from "@/lib/validation";
 
 export type RegisterAccountType = "client" | "vendor";
@@ -66,12 +67,17 @@ export function useUnifiedRegister() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [termsAgreed, setTermsAgreed] = useState(false);
 
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     setFieldErrors({});
     setMessage(null);
+    if (!termsAgreed) {
+      setFieldErrors({ terms: "Please agree to the Terms of Service and Privacy Policy." });
+      return;
+    }
     const parsed = parseForm(registerSchema, {
       accountType,
       email: email.trim(),
@@ -89,6 +95,7 @@ export function useUnifiedRegister() {
         parsed.data.password,
         parsed.data.accountType,
         parsed.data.accountType === "vendor" ? referralSlug ?? undefined : undefined,
+        policyConstants.termsVersion,
       );
       if (result.message) {
         setMessage(result.message);
@@ -128,6 +135,11 @@ export function useUnifiedRegister() {
     setPassword: (value: string) => {
       setPassword(value);
       onFieldErrorClear("password");
+    },
+    termsAgreed,
+    setTermsAgreed: (value: boolean) => {
+      setTermsAgreed(value);
+      onFieldErrorClear("terms");
     },
     error,
     fieldErrors,

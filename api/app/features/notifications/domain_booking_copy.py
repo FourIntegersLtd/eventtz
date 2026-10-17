@@ -53,6 +53,8 @@ _USE_STORED_BODY: frozenset[str] = frozenset(
         "vendor_event_tomorrow",
         "pay_to_confirm",
         "payout_held_connect_incomplete",
+        "deposit_claim_resolved",
+        "vendor_deposit_claim_resolved",
     }
 )
 
@@ -378,6 +380,124 @@ _COPY: dict[str, dict[Portal, tuple[str, str]]] = {
             "You have an event tomorrow",
             "A reminder that a paid Eventtz booking is tomorrow.\n\n"
             "Open the booking for the time, venue and client messages so you can prepare.",
+        ),
+    },
+    "date_change_requested": {
+        "client": (
+            "Date change requested",
+            "Your vendor has asked to move this event to a new date.\n\n"
+            "Open the booking to accept or decline. Your price and payment stay the same "
+            "if you accept, and nothing changes if you decline.",
+        ),
+        "vendor": (
+            "Date change requested",
+            "Your client has asked to move this event to a new date.\n\n"
+            "Open the booking to accept or decline. The price and payment stay the same "
+            "if you accept, and nothing changes if you decline.",
+        ),
+    },
+    "date_change_accepted": {
+        "client": (
+            "New date agreed",
+            "Your vendor accepted the date change.\n\nThe event has moved to the new date. "
+            "Your price and payment are unchanged.",
+        ),
+        "vendor": (
+            "New date agreed",
+            "Your client accepted the date change.\n\nThe event has moved to the new date. "
+            "The price and payment are unchanged.",
+        ),
+    },
+    "date_change_declined": {
+        "client": (
+            "Date change declined",
+            "Your vendor declined the date change.\n\nThe event stays on its original date. "
+            "You can message them from the booking to talk it through.",
+        ),
+        "vendor": (
+            "Date change declined",
+            "Your client declined the date change.\n\nThe event stays on its original date. "
+            "You can message them from the booking to talk it through.",
+        ),
+    },
+    "date_change_withdrawn": {
+        "client": (
+            "Date change withdrawn",
+            "Your vendor withdrew their date change request.\n\nThe event stays on its original date.",
+        ),
+        "vendor": (
+            "Date change withdrawn",
+            "Your client withdrew their date change request.\n\nThe event stays on its original date.",
+        ),
+    },
+    "booking_payment_expired": {
+        "client": (
+            "Booking cancelled: not paid in time",
+            "This booking was cancelled because it was not paid by the deadline.\n\n"
+            "You have not been charged. If you still want this vendor, you can send them a new request.",
+        ),
+    },
+    "vendor_booking_payment_expired": {
+        "vendor": (
+            "Booking cancelled: the client did not pay",
+            "The client did not pay by the deadline, so the booking was cancelled and your date is free.\n\n"
+            "You do not need to do anything.",
+        ),
+    },
+    "delivery_confirmed": {
+        "vendor": (
+            "Delivery confirmed",
+            "The client confirmed they have received your work.\n\nWe are sending the rest of your payout.",
+        ),
+    },
+    "deposit_refunded": {
+        "client": (
+            "Deposit refunded",
+            "Your refundable deposit for this booking has been sent back to your card.\n\n"
+            "It should arrive within 5-10 working days, depending on your bank.",
+        ),
+    },
+    "deposit_claim_opened": {
+        "client": (
+            "The vendor has asked to keep part of your deposit",
+            "The vendor says something was damaged or missing and has asked to keep part of your deposit.\n\n"
+            "Eventtz support will look at what both of you say before deciding. "
+            "Reply to this email or contact support if you disagree.",
+        ),
+    },
+    "deposit_claim_resolved": {
+        "client": (
+            "Deposit decision",
+            "Eventtz support has decided the vendor's deposit claim.\n\nOpen the booking to see the details.",
+        ),
+    },
+    "vendor_deposit_claim_resolved": {
+        "vendor": (
+            "Deposit decision",
+            "Eventtz support has decided your deposit claim.\n\nOpen the booking to see the details.",
+        ),
+    },
+    "awaiting_delivery": {
+        "client": (
+            "Please confirm delivery",
+            "Your event is over and the vendor has been paid the first part of their fee.\n\n"
+            "When your photos or video arrive, please confirm delivery on your booking page. "
+            "If they have not arrived by the date shown there, report a problem before then.",
+        ),
+    },
+    "vendor_upfront_released": {
+        "vendor": (
+            "First part of your payout sent",
+            "The first part of your payout for this booking is on its way.\n\n"
+            "The rest is sent when the client confirms delivery, or automatically on your delivery date "
+            "unless a problem is reported.",
+        ),
+    },
+    "vendor_final_released": {
+        "vendor": (
+            "Rest of your payout sent",
+            "The rest of your payout for this booking is on its way. "
+            "It should reach your bank account shortly.",
         ),
     },
     "pay_to_confirm": {

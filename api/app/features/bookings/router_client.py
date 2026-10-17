@@ -18,6 +18,7 @@ from app.features.bookings import (
     errors,
     service_completion,
     service_create,
+    service_date_change,
     service_payments_checkout,
     service_queries,
     service_receipts,
@@ -34,6 +35,8 @@ from app.features.bookings.schemas import (
     ClientBookingStatusBody,
     ConfirmCompletionResponse,
     CreateBookingRequestBody,
+    DateChangeRequestBody,
+    DateChangeRespondBody,
     PaymentReceiptResponse,
     UpdateBookingVenueBody,
     VendorBookingStatusResponse,
@@ -229,6 +232,7 @@ async def patch_client_booking_venue(
         errors.CheckoutPricesToConfirm,
         errors.NothingToPay,
         errors.EventAddressRequiredToPay,
+        errors.PaymentDeadlinePassed,
         PaymentsUnavailable,
         PaymentGatewayError,
     ),
@@ -313,6 +317,33 @@ async def post_client_confirm_completion(
 
 
 @router.post(
+    "/booking-requests/{booking_id}/confirm-delivery",
+    response_model=ConfirmCompletionResponse,
+    responses=error_responses(
+        *ROLE_ERRORS,
+        errors.InvalidBookingId,
+        errors.BookingNotFound,
+        errors.DeliveryNotAwaited,
+    ),
+)
+async def post_client_confirm_delivery(
+    session: SessionDep,
+    client: CurrentClient,
+    booking_id: str,
+    mailer: MailerDependency,
+    gateway: PaymentGatewayDependency,
+) -> ConfirmCompletionResponse:
+    """Confirm the vendor's work (photos, video) arrived; the rest of their payout is then sent."""
+    return await service_completion.confirm_delivery(
+        session,
+        mailer,
+        gateway,
+        client_user_id=client.id,
+        booking_id=require_booking_id(booking_id),
+    )
+
+
+@router.post(
     "/booking-requests",
     response_model=BookingRequestCreated,
     responses=error_responses(
@@ -333,3 +364,92 @@ async def post_booking_request(
 ) -> BookingRequestCreated:
     """Ask a vendor for some of their packages on a date; the vendor is told and the notes go to chat."""
     return await service_create.create_request(session, mailer, client, body)
+
+
+@router.post(
+    "/booking-requests/{booking_id}/date-change",
+    response_model=ClientBookingDetailResponse,
+    responses=error_responses(
+        *ROLE_ERRORS,
+        errors.InvalidBookingId,
+        errors.BookingNotFound,
+        errors.DateChangeNotAllowed,
+        errors.DateChangePending,
+        errors.DateChangeInPast,
+        errors.EventSpanTooLong,
+    ),
+)
+async def post_client_date_change(
+    session: SessionDep,
+    client: CurrentClient,
+    booking_id: str,
+    body: DateChangeRequestBody,
+    mailer: MailerDependency,
+) -> ClientBookingDetailResponse:
+    """Ask to move an accepted booking to a new date; the other party is asked to agree."""
+    booking_id = require_booking_id(booking_id)
+    await service_date_change.request_date_change(
+        session,
+        mailer,
+        "client",
+        client.id,
+        booking_id,
+        body.new_event_date,
+        body.new_event_end_date,
+        body.note,
+    )
+    return ClientBookingDetailResponse(
+        booking=await service_queries.client_booking_detail(session, client.id, booking_id)
+    )
+
+
+@router.post(
+    "/booking-requests/{booking_id}/date-change/respond",
+    response_model=ClientBookingDetailResponse,
+    responses=error_responses(
+        *ROLE_ERRORS,
+        errors.InvalidBookingId,
+        errors.BookingNotFound,
+        errors.DateChangeNotAllowed,
+        errors.NoDateChange,
+        errors.DateChangeNotYours,
+        errors.DateChangeCapacityFull,
+    ),
+)
+async def post_client_date_change_respond(
+    session: SessionDep,
+    client: CurrentClient,
+    booking_id: str,
+    body: DateChangeRespondBody,
+    mailer: MailerDependency,
+) -> ClientBookingDetailResponse:
+    """Accept or decline the other party's pending date change."""
+    booking_id = require_booking_id(booking_id)
+    await service_date_change.respond_to_date_change(
+        session, mailer, "client", client.id, booking_id, accept=body.accept
+    )
+    return ClientBookingDetailResponse(
+        booking=await service_queries.client_booking_detail(session, client.id, booking_id)
+    )
+
+
+@router.post(
+    "/booking-requests/{booking_id}/date-change/withdraw",
+    response_model=ClientBookingDetailResponse,
+    responses=error_responses(
+        *ROLE_ERRORS,
+        errors.InvalidBookingId,
+        errors.BookingNotFound,
+        errors.NoDateChange,
+        errors.DateChangeNotYours,
+    ),
+)
+async def post_client_date_change_withdraw(
+    session: SessionDep, client: CurrentClient, booking_id: str, mailer: MailerDependency
+) -> ClientBookingDetailResponse:
+    """Take back your own pending date change."""
+    booking_id = require_booking_id(booking_id)
+    await service_date_change.withdraw_date_change(session, mailer, "client", client.id, booking_id)
+    return ClientBookingDetailResponse(
+        booking=await service_queries.client_booking_detail(session, client.id, booking_id)
+    )

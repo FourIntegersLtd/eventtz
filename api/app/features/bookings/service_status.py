@@ -12,7 +12,7 @@ from typing import Literal
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.ports import Mailer, PaymentGateway
-from app.features.bookings import domain, repository, service_payments, service_pricing
+from app.features.bookings import domain, domain_cancellation, repository, service_payments, service_pricing
 from app.features.bookings.errors import (
     AcceptOnlyPendingOrDeclined,
     BookingNotFound,
@@ -30,17 +30,23 @@ from app.features.bookings.errors import (
 from app.features.bookings.rows import BookingRow
 from app.features.bookings.schemas import VendorBookingStatusResponse
 from app.features.bookings.service_common import announce_change, check_may_cancel
+from app.features.identity import service as identity
 from app.features.marketplace import service_events as events
 from app.features.notifications import service_booking as notices
+from app.features.pricing import service as pricing
 from app.features.vendors import service_profile
 
 VendorStatus = Literal["accepted", "declined", "cancelled"]
 ClientAnswer = Literal["accepted", "declined"]
 
 
-def _status_response(booking_id: str, status: str) -> VendorBookingStatusResponse:
-    """The booking's id and its status after the change."""
-    return VendorBookingStatusResponse.model_validate({"id": booking_id, "status": status})
+def _status_response(
+    booking_id: str, status: str, *, refund_percent: int | None = None, refund_gbp: float | None = None
+) -> VendorBookingStatusResponse:
+    """The booking's id and its status after the change (and, for a client cancel, the refund made)."""
+    return VendorBookingStatusResponse.model_validate(
+        {"id": booking_id, "status": status, "refund_percent": refund_percent, "refund_gbp": refund_gbp}
+    )
 
 
 async def _vendor_booking(session: AsyncSession, vendor_user_id: str, booking_id: str) -> BookingRow:
@@ -72,9 +78,10 @@ async def _vendor_cancel(
     refunded = False
     if not withdrawing_quote:
         await check_may_cancel(session, booking)
-        refunded = await service_payments.prepare_cancel(
+        settlement = await service_payments.prepare_cancel(
             session, mailer, gateway, booking, cancelled_by="vendor"
         )
+        refunded = settlement.refunded
     changed = await repository.update_booking(
         session,
         booking.id,
@@ -125,7 +132,11 @@ async def _vendor_cancel(
 async def _vendor_accept(
     session: AsyncSession, mailer: Mailer, booking: BookingRow
 ) -> VendorBookingStatusResponse:
-    """Accept a pending client request (or re-accept one the vendor declined)."""
+    """Accept a pending client request (or re-accept one the vendor declined).
+
+    The vendor must have accepted the current Terms first.
+    """
+    await identity.require_current_terms(session, booking.vendor_user_id)
     if booking.initiator == "vendor":
         raise ClientMustAcceptQuote()
     if not await service_profile.payouts_ready_for_bookings(session, booking.vendor_user_id):
@@ -242,7 +253,9 @@ async def cancel_for_client(
     if booking.status not in ("pending", "accepted"):
         raise CancelOnlyPendingOrAccepted()
     await check_may_cancel(session, booking)
-    refunded = await service_payments.prepare_cancel(session, mailer, gateway, booking, cancelled_by="client")
+    settlement = await service_payments.prepare_cancel(
+        session, mailer, gateway, booking, cancelled_by="client"
+    )
     changed = await repository.update_booking(
         session,
         booking.id,
@@ -252,22 +265,14 @@ async def cancel_for_client(
         now_columns=("cancelled_at",),
     )
     if not changed:
-        raise RefundedButBookingChanged() if refunded else BookingNotFound()
+        raise RefundedButBookingChanged() if settlement.refunded else BookingNotFound()
     await notices.dispatch_booking_notification(
         session,
         mailer,
         user_id=booking.vendor_user_id,
         booking_id=booking.id,
         kind="booking_cancelled_by_client",
-        body=(
-            "The client has cancelled this booking. Their payment has been refunded in full.\n\n"
-            "No further action is needed on your side."
-            if refunded
-            else (
-                "The client has cancelled this booking.\n\n"
-                "The booking is now closed. You can still message them on Eventtz if you need to."
-            )
-        ),
+        body=_client_cancelled_vendor_body(booking, settlement),
     )
     announce_change(session, booking)
     await repository.update_booking(
@@ -284,7 +289,35 @@ async def cancel_for_client(
         vendor_user_id=booking.vendor_user_id,
         booking_request_id=booking.id,
     )
-    return _status_response(booking.id, "cancelled")
+    return _status_response(
+        booking.id, "cancelled", refund_percent=settlement.refund_percent, refund_gbp=settlement.refund_gbp
+    )
+
+
+def _client_cancelled_vendor_body(booking: BookingRow, settlement: service_payments.CancelSettlement) -> str:
+    """What the vendor is told when the client cancels: whether, and how, the money was split."""
+    if not settlement.refunded:
+        return (
+            "The client has cancelled this booking.\n\n"
+            "The booking is now closed. You can still message them on Eventtz if you need to."
+        )
+    if not settlement.partial:
+        return (
+            "The client has cancelled this booking. Their payment has been refunded in full.\n\n"
+            "No further action is needed on your side."
+        )
+    policy_label = domain_cancellation.preset_label(booking.cancellation_policy)
+    share_label = pricing.format_gbp(settlement.vendor_share_gbp or 0.0)
+    share_line = (
+        f"Your share of {share_label} has been sent to your connected account."
+        if settlement.vendor_share_paid
+        else f"Your share of {share_label} is held until your Stripe payout setup is complete."
+    )
+    return (
+        f"The client has cancelled this booking. Under your {policy_label} cancellation policy they "
+        f"were refunded {settlement.refund_percent}% of your price plus the Eventtz service fee.\n\n"
+        f"{share_line}"
+    )
 
 
 async def _decline_updated_price(

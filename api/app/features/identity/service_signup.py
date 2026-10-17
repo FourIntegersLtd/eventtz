@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.core.ports import Mailer
+from app.core.settings import get_settings
 from app.features.identity import repository
 from app.features.identity.domain_accounts import (
     EMAIL_VERIFIED_SIGN_IN,
@@ -86,8 +87,14 @@ async def sign_up(
     `persist_effects`) and the user asks for a new link later.
     """
     email = normalise_email(body.email)
+    accepted_now = body.terms_version is not None and body.terms_version == get_settings().terms_version
     user_id = await repository.create_account(
-        session, email=email, user_type=body.user_type, password_hash=hash_password(body.password)
+        session,
+        email=email,
+        user_type=body.user_type,
+        password_hash=hash_password(body.password),
+        terms_accepted_version=body.terms_version if accepted_now else None,
+        terms_accepted_at=datetime.now(UTC) if accepted_now else None,
     )
     if user_id is None:
         raise EmailAlreadyRegistered()

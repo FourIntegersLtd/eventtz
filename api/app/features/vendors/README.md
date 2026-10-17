@@ -11,6 +11,7 @@ is publicly listed.
 - As a **vendor**, I **submit my profile** so that staff can review and approve it.
 - As **staff**, I **list, approve, ban or return vendors for edits** so that only good vendors are listed.
 - As **staff**, I **nudge vendors** to finish their profile or set up payouts.
+- As an **approved vendor** with no cancellation preset chosen, I get **one email** asking me to pick one, a dashboard banner, and one reminder 14 days later (the hourly bookings maintenance job; clients see Flexible until I do).
 - As a **super admin**, I **force a listing visible or hidden** with a recorded reason.
 - As **staff**, I **reorder and hide a vendor's listing photos**.
 
@@ -21,6 +22,11 @@ is publicly listed.
 - A vendor is listed when approved and payouts are verified, unless a super admin overrides it.
 - Listing photo overrides may only use the vendor's own profile photo or portfolio images.
 - Every staff action is written to the audit log.
+- A listing pause (`PUT/DELETE /admin/vendors/{user_id}/listing-pause`) hides the vendor through the
+  visibility helpers, like an unapproved listing; it never touches `approval_status`.
+- Terms options in the profile payload are validated in `domain_profile_form._check_terms_options`:
+  `deliveryUpfrontPercent` (50–80) and `deliveryDeadlineDays` (1–60) together or not at all, and
+  `damageDepositGbp` (0–1000). Bookings snapshot them at checkout (ADR 0010).
 - The Stripe Connect columns (`stripe_account_id`, `stripe_charges_enabled`, `stripe_payouts_enabled`) are
   written only through `service_payouts.py`, which the payments slice calls.
 
@@ -28,7 +34,8 @@ is publicly listed.
 Built (cut 1): `GET/PUT /vendor/profile`, `GET /vendor/profile/business-name-available`,
 `GET /admin/vendors`, `PATCH /admin/vendors/{user_id}/approval|unsubmit|listing-override|listing-media`,
 `POST /admin/vendors/nudge-profile-complete|nudge-setup-payouts`.
-Cut 2: `GET /admin/vendors/{user_id}/insights`. (`POST /admin/vendors/{user_id}/restore-stripe-connect` is the payments slice's.)
+Cut 2: `GET /admin/vendors/{user_id}/insights`.
+Terms remediation: `POST /admin/vendors/{user_id}/warn`, `PUT/DELETE /admin/vendors/{user_id}/listing-pause`. (`POST /admin/vendors/{user_id}/restore-stripe-connect` is the payments slice's.)
 
 Baseline quirks kept on purpose (the freeze tests pin them):
 - `GET/PUT /vendor/profile` accept any signed-in account, and a `PUT` turns the caller into a vendor.

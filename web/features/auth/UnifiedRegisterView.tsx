@@ -22,6 +22,8 @@ export function UnifiedRegisterView() {
     email,
     setEmail,
     password,
+    termsAgreed,
+    setTermsAgreed,
     setPassword,
     error,
     fieldErrors,
@@ -143,6 +145,31 @@ export function UnifiedRegisterView() {
                 error={fieldErrors.password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+
+              <div>
+                <label className="flex items-start gap-3 text-sm text-neutral-700">
+                  <input
+                    type="checkbox"
+                    required
+                    checked={termsAgreed}
+                    onChange={(e) => setTermsAgreed(e.target.checked)}
+                    className="mt-0.5 h-5 w-5 shrink-0 rounded border-neutral-300 text-primary"
+                  />
+                  <span>
+                    I agree to the{" "}
+                    <Link href="/compliances/terms-of-service" target="_blank" className="font-medium text-primary hover:underline">
+                      Terms of Service
+                    </Link>{" "}
+                    and{" "}
+                    <Link href="/compliances/privacy-policy" target="_blank" className="font-medium text-primary hover:underline">
+                      Privacy Policy
+                    </Link>
+                  </span>
+                </label>
+                {fieldErrors.terms ? (
+                  <p className="mt-1 text-sm text-red-700">{fieldErrors.terms}</p>
+                ) : null}
+              </div>
 
               {error ? (
                 <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-red-200/60">

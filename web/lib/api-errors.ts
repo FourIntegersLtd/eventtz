@@ -63,3 +63,25 @@ export function getApiErrorCode(error: unknown): string | null {
   }
   return null;
 }
+
+/** Friendly copy for booking-rule error codes, keyed by the API's stable `code`. */
+export const BOOKING_RULE_ERROR_MESSAGES: Record<string, string> = {
+  payment_deadline_passed:
+    "The payment deadline for this booking has passed, so it has been cancelled and the date released. You can send a new request.",
+  delivery_not_awaited: "This booking isn't waiting on delivery confirmation any more. Refresh to see its latest status.",
+  deposit_claim_closed:
+    "The window to report damage has closed, or a claim has already been made for this booking.",
+  deposit_claim_invalid:
+    "That damage report isn't valid. Check the amount is no more than the deposit and the description is 10 to 2000 characters.",
+  no_deposit_claim: "There is no open deposit claim on this booking.",
+  deposit_award_invalid: "The award must be between £0 and the amount claimed.",
+  deposit_vendor_payouts_not_ready:
+    "The vendor hasn't finished setting up payouts yet, so the award can't be paid. Ask them to complete Stripe setup, then try again.",
+};
+
+/** AppError code the API returns when an action needs the current Terms accepted. */
+export const TERMS_NOT_ACCEPTED_CODE = "terms_not_accepted";
+
+/** Friendly copy for TERMS_NOT_ACCEPTED, pointing at the banner at the top of the portal. */
+export const TERMS_NOT_ACCEPTED_MESSAGE =
+  "Please accept our updated Terms of Service first. Use the banner at the top of the page, then try again.";

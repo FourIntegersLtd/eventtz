@@ -13,6 +13,7 @@ import {
   formatVendorCompletedBookings,
 } from "@/lib/vendorMetrics";
 import { useLaunchingSoonBookingGuard } from "@/features/bookings/useLaunchingSoonBookingGuard";
+import { serviceFeeBadgeLabel } from "@/features/bookings/bookingTerms";
 import { profileImageUrlFromPayload } from "@/lib/vendorPortfolioImages";
 
 /** Conversion rate above which plan cards show “Often booked”. */
@@ -282,6 +283,11 @@ export function MarketplaceVendorCard({
             ) : (
               priceLabel
             )}
+            {minGbp != null ? (
+              <span className="ml-1.5 text-[11px] font-medium text-primary/65">
+                {serviceFeeBadgeLabel()}
+              </span>
+            ) : null}
           </p>
           {!selectable ? (
             <span className="text-[11px] font-semibold tracking-[0.12em] text-primary/80 uppercase">

@@ -184,5 +184,5 @@ async def sign_out(session: AsyncSession, *, principal: Principal | None, refres
 
 async def me(session: AsyncSession, principal: Principal) -> MeResponse:
     """The signed-in account, with client onboarding details for clients."""
-    profile = await repository.get_profile(session, principal.id) if principal.user_type == "client" else None
+    profile = await repository.get_profile(session, principal.id)
     return MeResponse(user=principal_view(principal, profile))

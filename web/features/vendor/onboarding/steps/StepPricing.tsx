@@ -2,6 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { ChevronDown, Plus, Trash2 } from "lucide-react";
+import {
+  CANCELLATION_POLICY_KEYS,
+  CANCELLATION_POLICY_LABELS,
+  CANCELLATION_POLICY_NOT_CHOSEN,
+  CANCELLATION_POLICY_SUMMARIES,
+  describeCancellationPolicy,
+} from "@/features/bookings/cancellationPolicyCopy";
+import { OnboardingOptionPill } from "../ui/OnboardingOptionPill";
 import { STEP_COPY } from "../onboardingCopy";
 import {
   packageIncludedPlaceholder,
@@ -26,6 +34,13 @@ import { PackageExamplesModal } from "../ui/PackageExamplesModal";
 import { consumeCoachScrollTarget } from "../packageCoachApply";
 import { labelClass, ClearableTextField, ClearableTextarea } from "./form-primitives";
 import { singleGbpAmountFieldError } from "@/lib/validation/money";
+import {
+  damageDepositError,
+  deliverySplitErrors,
+  offersDamageDeposit,
+  offersDeliverySplit,
+} from "@/features/bookings/bookingTerms";
+import policy from "@/lib/policyConstants.json";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import {
   PACKAGE_PRICING_MODE_FIXED,
@@ -58,7 +73,7 @@ function AddPackageButton({ onClick }: { onClick: () => void }) {
       className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-primary/30 bg-primary/5 px-4 py-3 text-sm font-semibold text-primary transition hover:bg-primary/10"
     >
       <Plus className="h-4 w-4" strokeWidth={2.5} aria-hidden />
-      Add another package
+      Add another item / package
     </button>
   );
 }
@@ -128,6 +143,11 @@ export function StepPricing({ data, update, usePostLaunchOptimizer = false }: St
     ? singleGbpAmountFieldError(data.dailyRate, "Daily rate", { required: false })
     : null;
 
+  const showDeliverySplit = offersDeliverySplit(data.servicesOffered);
+  const showDeposit = offersDamageDeposit(data.servicesOffered);
+  const splitErrors = deliverySplitErrors(data.deliveryUpfrontPercent, data.deliveryDeadlineDays);
+  const depositError = damageDepositError(data.damageDepositGbp);
+
   return (
     <div className="space-y-8">
       <OnboardingSubQuestion headline={copy.fixedRatesHeadline} indexOffset={0}>
@@ -179,6 +199,63 @@ export function StepPricing({ data, update, usePostLaunchOptimizer = false }: St
         </div>
       </OnboardingSubQuestion>
 
+      {showDeliverySplit ? (
+        <OnboardingSubQuestion
+          headline="Split payment for photos/video (optional)"
+          subtext={`Get part of your fee when the booking is paid, and the rest once the client confirms they have their photos or video (or the delivery deadline passes). Leave both blank to be paid in full after the event.`}
+          indexOffset={7}
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className={labelClass()}>
+                Paid up front (%, {policy.deliveryUpfrontPercentMin} to {policy.deliveryUpfrontPercentMax})
+              </label>
+              <ClearableTextField
+                inputMode="numeric"
+                value={data.deliveryUpfrontPercent}
+                onChange={(v) => update({ deliveryUpfrontPercent: v })}
+                placeholder="e.g. 60"
+              />
+              {splitErrors.upfront ? (
+                <p className="mt-1 text-xs text-amber-800">{splitErrors.upfront}</p>
+              ) : null}
+            </div>
+            <div>
+              <label className={labelClass()}>
+                Days to deliver (1 to {policy.deliveryDeadlineDaysMax})
+              </label>
+              <ClearableTextField
+                inputMode="numeric"
+                value={data.deliveryDeadlineDays}
+                onChange={(v) => update({ deliveryDeadlineDays: v })}
+                placeholder="e.g. 14"
+              />
+              {splitErrors.deadline ? (
+                <p className="mt-1 text-xs text-amber-800">{splitErrors.deadline}</p>
+              ) : null}
+            </div>
+          </div>
+        </OnboardingSubQuestion>
+      ) : null}
+
+      {showDeposit ? (
+        <OnboardingSubQuestion
+          headline="Refundable damage deposit (optional)"
+          subtext={`Clients pay this on top and get it back within ${policy.depositClaimDays} days after the event, unless you report damage or missing items. Up to £${policy.depositMaxGbp.toLocaleString("en-GB")}. Leave blank for no deposit.`}
+          indexOffset={7}
+        >
+          <label className={labelClass()}>Deposit (£)</label>
+          <ClearableTextField
+            type="text"
+            inputMode="decimal"
+            value={data.damageDepositGbp}
+            onChange={(v) => update({ damageDepositGbp: v })}
+            placeholder="e.g. 100"
+          />
+          {depositError ? <p className="mt-1 text-xs text-amber-800">{depositError}</p> : null}
+        </OnboardingSubQuestion>
+      ) : null}
+
       <OnboardingSubQuestion headline={copy.packagesHeadline} indexOffset={6}>
         <PackageExamplesModal servicesOffered={data.servicesOffered} />
         <p className="mt-4 text-xs text-neutral-500">{copy.packagesHint}</p>
@@ -190,7 +267,7 @@ export function StepPricing({ data, update, usePostLaunchOptimizer = false }: St
               ? pkg.title.trim()
               : hasPartial && !pkg.title.trim()
                 ? null
-                : `Package ${index + 1}`;
+                : `Item / package ${index + 1}`;
             const perUnit = isPerUnitPricing(pkg.pricingMode);
             const pricePart = pkg.price.trim()
               ? perUnit
@@ -259,7 +336,7 @@ export function StepPricing({ data, update, usePostLaunchOptimizer = false }: St
                 <div className="border-t px-4 py-4">
                   <div className="space-y-4">
                     <div>
-                      <label className={labelClass()}>Package name *</label>
+                      <label className={labelClass()}>Item / package name *</label>
                       <ClearableTextField
                         value={pkg.title}
                         onChange={(v) =>
@@ -455,6 +532,34 @@ export function StepPricing({ data, update, usePostLaunchOptimizer = false }: St
             error={coach.error}
             onCheck={coach.runCheck}
           />
+        )}
+      </OnboardingSubQuestion>
+
+      <OnboardingSubQuestion
+        headline="Cancellation policy"
+        subtext="If a client cancels after paying, this decides how much of your price they get back. The Eventtz service fee is always refunded."
+        indexOffset={8}
+      >
+        <div className="space-y-2">
+          {CANCELLATION_POLICY_KEYS.map((policyKey) => (
+            <OnboardingOptionPill
+              key={policyKey}
+              active={data.cancellationPolicy === policyKey}
+              onClick={() => update({ cancellationPolicy: policyKey })}
+              description={CANCELLATION_POLICY_SUMMARIES[policyKey]}
+            >
+              {CANCELLATION_POLICY_LABELS[policyKey]}
+            </OnboardingOptionPill>
+          ))}
+        </div>
+        {data.cancellationPolicy ? (
+          <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-neutral-500">
+            {describeCancellationPolicy(data.cancellationPolicy).map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-3 text-xs text-neutral-500">{CANCELLATION_POLICY_NOT_CHOSEN}</p>
         )}
       </OnboardingSubQuestion>
 

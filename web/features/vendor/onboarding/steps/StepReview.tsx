@@ -31,6 +31,7 @@ import type {
 import { ClearableTextarea, labelClass } from "./form-primitives";
 import { uploadedFileDisplayName } from "../uploadedFileDisplayName";
 import { AnimatedStepItem } from "../ui/AnimatedStepItem";
+import { vendorCancellationPolicyLabel } from "@/features/bookings/cancellationPolicyCopy";
 import { VendorProfilePhotoField } from "../VendorProfilePhotoField";
 
 const BIO_MAX_WORDS = 100;
@@ -349,6 +350,7 @@ export function StepReview({
         <FieldList compact={!isLiveEdit}>
           <Field label="Hourly rate" value={`£${data.hourlyRate || "-"}`} />
           <Field label="Daily rate" value={`£${data.dailyRate || "-"}`} />
+          <Field label="Cancellation policy" value={vendorCancellationPolicyLabel(data.cancellationPolicy)} />
           {readOnly ? (
             <>
               <Field

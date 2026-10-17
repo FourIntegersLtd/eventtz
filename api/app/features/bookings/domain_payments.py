@@ -23,8 +23,10 @@ PARTIALLY_REFUNDED = "partially_refunded"
 SETTLED_PAYMENT_STATUSES = (PAID, PAYOUT_RELEASED, REFUNDED, PARTIALLY_REFUNDED)
 # A checkout that lands in either of these was (or has already been) paid successfully.
 PAID_PAYMENT_STATUSES = (PAID, PAYOUT_RELEASED)
-# A checkout completion refund may undo any of these (the baseline's `refund_checkout_payment`).
-CHECKOUT_REFUNDABLE_STATUSES = ("pending", "unpaid", PAID)
+# Refunding a Checkout payment the booking cannot take only ever rewrites a row still waiting
+# for money (`service_payments_checkout.refund_checkout_payment`): a `paid` row holds a
+# different, valid payment, so a stray session's refund must never touch it.
+CHECKOUT_REFUND_REWRITABLE_STATUSES = PAYABLE_PAYMENT_STATUSES
 
 DEFAULT_CHECKOUT_DESCRIPTION = "Eventtz booking"
 # Stripe caps a product name at 500 characters.
@@ -72,11 +74,18 @@ def transfer_idempotency_key(
     return base
 
 
-def checkout_description(event_name: str | None) -> str:
-    """The Checkout line item's name: the event name, trimmed to Stripe's limit."""
-    return (event_name or DEFAULT_CHECKOUT_DESCRIPTION)[
+def checkout_description(event_name: str | None, *, deposit_pence: int = 0) -> str:
+    """The Checkout line item's name: the event name, trimmed to Stripe's limit.
+
+    With a damage deposit the name says so, since the charge is the booking plus the deposit.
+    """
+    name = (event_name or DEFAULT_CHECKOUT_DESCRIPTION)[
         :_MAX_CHECKOUT_DESCRIPTION
     ] or DEFAULT_CHECKOUT_DESCRIPTION
+    if deposit_pence <= 0:
+        return name
+    suffix = f" (includes £{deposit_pence // 100}.{deposit_pence % 100:02d} refundable deposit)"
+    return name[: _MAX_CHECKOUT_DESCRIPTION - len(suffix)] + suffix
 
 
 def checkout_metadata(
@@ -88,13 +97,14 @@ def checkout_metadata(
     vendor_amount_gbp: float,
     service_fee_gbp: float,
     referral_fee_discount_gbp: float,
+    damage_deposit_gbp: float = 0.0,
 ) -> dict[str, str]:
     """The metadata a Checkout Session carries, read back when it completes.
 
     The amounts are the server's own re-priced figures, never the client's; finalisation
     checks the charged total against `client_total_gbp` before marking the booking paid.
     """
-    return {
+    metadata = {
         "booking_id": booking_id,
         "vendor_user_id": vendor_user_id,
         "client_user_id": client_user_id,
@@ -103,6 +113,10 @@ def checkout_metadata(
         "service_fee_gbp": f"{service_fee_gbp:.2f}",
         "referral_fee_discount_gbp": f"{max(0.0, referral_fee_discount_gbp):.2f}",
     }
+    if damage_deposit_gbp > 0:
+        # Included in `client_total_gbp`; held apart and refunded after the event unless claimed.
+        metadata["damage_deposit_gbp"] = f"{damage_deposit_gbp:.2f}"
+    return metadata
 
 
 def checkout_urls(frontend_url: str, booking_id: str) -> tuple[str, str]:

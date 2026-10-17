@@ -5,7 +5,9 @@ Ported from the baseline's `enquiry_reminders.py` and `lifecycle_reminders.py`:
 - the client is nudged 24 hours after an enquiry the vendor never answered, with other vendors to try;
 - the client is reminded to pay 24 hours after the vendor accepted;
 - both sides are reminded the day before a paid event (UTC calendar day);
-- an approved vendor without ready payouts is nudged 24 hours after approval.
+- an approved vendor without ready payouts is nudged 24 hours after approval;
+- an approved vendor who has not chosen a cancellation policy is asked to pick one, and reminded once
+  14 days later.
 
 Each reminder is claimed by its marker column with a conditional write BEFORE anything is
 sent, so two overlapping runs cannot both send it. Each one runs in its own savepoint: a
@@ -311,4 +313,61 @@ async def send_payouts_setup_nudges(session: AsyncSession, mailer: Mailer, *, no
                     sent += 1
         except Exception:
             log.exception("bookings: payouts-setup nudge failed vendor=%s", vendor.user_id)
+    return sent
+
+
+# --- vendor: choose a cancellation policy ----------------------------------------------------------------
+
+
+async def send_cancellation_policy_nudges(session: AsyncSession, mailer: Mailer) -> int:
+    """Email approved vendors who have not chosen a cancellation preset, once each; returns the count sent.
+
+    Vendors are approved with no preset stored (clients see Flexible meanwhile), so this is
+    both the launch announcement to existing vendors and the standing nudge for new ones.
+    """
+    limit = domain_maintenance.MAINTENANCE_BATCH_LIMIT
+    vendors = await service_payouts_nudge.vendors_awaiting_cancellation_policy_nudge(session, limit=limit * 3)
+    return await _send_cancellation_policy_emails(session, mailer, vendors, follow_up=False)
+
+
+async def send_cancellation_policy_reminders(session: AsyncSession, mailer: Mailer, *, now: datetime) -> int:
+    """The one follow-up, 14 days after the first email, to vendors who still have no preset."""
+    limit = domain_maintenance.MAINTENANCE_BATCH_LIMIT
+    vendors = await service_payouts_nudge.vendors_awaiting_cancellation_policy_reminder(
+        session, now=now, limit=limit * 3
+    )
+    return await _send_cancellation_policy_emails(session, mailer, vendors, follow_up=True)
+
+
+async def _send_cancellation_policy_emails(
+    session: AsyncSession, mailer: Mailer, vendors: list[service_payouts_nudge.VendorRow], *, follow_up: bool
+) -> int:
+    """Claim and send the first email or the follow-up to each vendor; returns how many were sent."""
+    limit = domain_maintenance.MAINTENANCE_BATCH_LIMIT
+    contacts = await identity.contact_emails(session, [vendor.user_id for vendor in vendors])
+    sent = 0
+    for vendor in vendors:
+        if sent >= limit:
+            break
+        email = contacts.get(vendor.user_id)
+        gone = _is_gone(contacts, vendor.user_id)
+        if not gone and not _has_address(email):
+            # No address yet: leave the nudge unclaimed so it goes out once there is one.
+            continue
+        try:
+            async with repository_maintenance.reminder_savepoint(session):
+                claimed = await service_payouts_nudge.claim_cancellation_policy_nudge(
+                    session, vendor.user_id, follow_up=follow_up
+                )
+                if not claimed or gone:
+                    continue
+                if notification_emails.send_vendor_cancellation_policy_nudge(
+                    mailer,
+                    vendor_email=email,
+                    business_name=service_payouts_nudge.nudge_business_name(vendor),
+                    follow_up=follow_up,
+                ):
+                    sent += 1
+        except Exception:
+            log.exception("bookings: cancellation-policy email failed vendor=%s", vendor.user_id)
     return sent

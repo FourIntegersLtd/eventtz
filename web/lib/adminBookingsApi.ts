@@ -126,7 +126,7 @@ export async function adminCompleteBookingCancellation(
 
 export async function adminCancelBookingOnBehalf(
   bookingId: string,
-  body: { party: "client" | "vendor"; reason: string },
+  body: { party: "client" | "vendor"; reason: string; exceptional?: boolean },
 ): Promise<AdminBookingDetail> {
   return postAdminBookingAction(bookingId, "cancel-on-behalf", body);
 }
@@ -151,4 +151,11 @@ export async function adminSetBookingSupportHold(
     { hold },
   );
   return data.booking;
+}
+
+/** Staff decide a deposit claim: how much the vendor keeps (0 up to the claim). */
+export async function adminResolveDepositClaim(bookingId: string, awardGbp: number): Promise<void> {
+  await api.post(`/api/v1/admin/bookings/${bookingId}/deposit-claim/resolve`, {
+    award_gbp: awardGbp,
+  });
 }

@@ -9,6 +9,7 @@ Approval still wins over both: a banned or unreviewed vendor is never listed.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Literal
 
 ListingOverride = Literal["auto", "visible", "hidden"]
@@ -30,11 +31,26 @@ def payouts_verified(*, stripe_account_id: str | None, charges_enabled: bool, pa
     return bool(stripe_account_id) and charges_enabled and payouts_enabled
 
 
+def is_paused(paused_until: datetime | None, *, now: datetime | None = None) -> bool:
+    """True while a staff listing pause is still running; it lapses by time, with no job."""
+    if paused_until is None:
+        return False
+    moment = now or datetime.now(UTC)
+    return paused_until > moment
+
+
 def is_publicly_listable(
-    *, approval_status: str | None, listing_override: str | None, payouts_ready: bool
+    *,
+    approval_status: str | None,
+    listing_override: str | None,
+    payouts_ready: bool,
+    paused_until: datetime | None = None,
+    now: datetime | None = None,
 ) -> bool:
-    """Approved, not hidden, and either forced visible or Stripe-ready."""
+    """Approved, not paused, not hidden, and either forced visible or Stripe-ready."""
     if approval_status != "approved":
+        return False
+    if is_paused(paused_until, now=now):
         return False
     override = listing_override_of(listing_override)
     if override == "hidden":

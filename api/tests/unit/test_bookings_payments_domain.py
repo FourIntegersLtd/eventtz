@@ -12,6 +12,7 @@ from app.features.bookings.domain_payments import (
     gbp_to_pence,
     metadata_amount_gbp,
     payment_intent_id_from_session,
+    pence_to_gbp,
     refund_idempotency_key,
     transfer_group,
     transfer_idempotency_key,
@@ -25,6 +26,14 @@ def test_pence_rounds_the_baseline_way() -> None:
     assert gbp_to_pence(0.1 + 0.2) == 30
     assert gbp_to_pence(19.999) == 2000
     assert gbp_to_pence(0.004) == 0
+
+
+def test_pence_round_trips_every_penny_amount_up_to_ten_thousand_pounds() -> None:
+    """GBP values arrive as floats (`numeric` → float); none of them may round to the wrong penny."""
+    for pence in range(0, 1_000_001):
+        assert gbp_to_pence(pence / 100) == pence, pence
+    for pence in (1, 5, 15, 115, 1_005, 2_675, 15_750, 99_999_999):
+        assert gbp_to_pence(pence_to_gbp(pence)) == pence
 
 
 def test_refund_and_transfer_keys_are_stable_per_booking_and_parameters() -> None:

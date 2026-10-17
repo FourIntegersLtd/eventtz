@@ -1,4 +1,4 @@
-import { VENDOR_SERVICE_OPTIONS } from "@/lib/vendorServiceCatalog";
+import { VENDOR_SERVICE_OPTIONS, type VendorServiceOption } from "@/lib/vendorServiceCatalog";
 
 export const STEP_LABELS = [
   "Account",
@@ -12,10 +12,7 @@ export const STEP_LABELS = [
   "Submitted",
 ] as const;
 
-export const SERVICE_OPTIONS: {
-  value: string;
-  label: string;
-}[] = [
+export const SERVICE_OPTIONS: VendorServiceOption[] = [
   ...VENDOR_SERVICE_OPTIONS,
   { value: "other", label: "Other" },
 ];

@@ -5,6 +5,7 @@ were written against. The mapped tables are in `models.py`."""
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
@@ -26,6 +27,8 @@ class VendorRow(BaseModel):
     stripe_payouts_enabled: bool | None = None
     listing_override: str | None = None
     listing_override_reason: str | None = None
+    listing_paused_until: datetime | None = None
+    listing_pause_reason: str | None = None
 
     @field_validator("payload", mode="before")
     @classmethod

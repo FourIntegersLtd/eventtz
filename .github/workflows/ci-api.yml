@@ -6,12 +6,14 @@ on:
   pull_request:
     paths:
       - "api/**"
+      - "web/lib/policyConstants.json"
       - ".github/workflows/ci-api.yml"
   push:
     branches:
       - main
     paths:
       - "api/**"
+      - "web/lib/policyConstants.json"
       - ".github/workflows/ci-api.yml"
 
 permissions:

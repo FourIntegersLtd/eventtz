@@ -124,7 +124,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       },
       {
         q: "What if I need to cancel?",
-        a: "You can cancel from your booking before the vendor is paid. If you have already paid, you get a full refund back to your card, usually within 5-10 working days",
+        a: "You can cancel from your booking any time before the vendor is paid. Within 24 hours of paying you get a full refund. After that, your refund follows the vendor's cancellation policy, which you see before you pay, and the Eventtz service fee is always refunded. Refunds usually reach your card within 5-10 working days",
       },
       {
         q: "Are vendors vetted?",

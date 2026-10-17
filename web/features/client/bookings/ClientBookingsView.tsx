@@ -156,6 +156,7 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
                       onDeclineUpdatedPrice={() => c.setDeclinePriceOpen(true)}
                       onConfirmComplete={() => c.setConfirmCompleteOpen(true)}
                       onPayNow={c.payNow}
+                      onDetailChanged={c.bumpDetail}
                     />
                   ) : undefined,
                   afterSections:

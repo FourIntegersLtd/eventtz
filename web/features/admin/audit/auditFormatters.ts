@@ -82,6 +82,8 @@ function resolutionLabel(action: string): string {
       return "refunded client in full";
     case "partial_refund":
       return "issued partial refund to client";
+    case "vendor_no_show":
+      return "marked the vendor as a no-show and refunded the client in full";
     default:
       return action.replace(/_/g, " ");
   }

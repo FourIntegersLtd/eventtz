@@ -212,6 +212,8 @@ async def make_actor(db_session: AsyncSession) -> MakeActor:
             admin_role=admin_role,
             email_verified_at=datetime.now(UTC) if verified else None,
             account_suspended=suspended,
+            terms_accepted_version=get_settings().terms_version,
+            terms_accepted_at=datetime.now(UTC),
         )
         assert account_id is not None, f"an account with {email} already exists in this test"
         return issue_access_token(user_id=account_id, email=email, settings=get_settings())

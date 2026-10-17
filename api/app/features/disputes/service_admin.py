@@ -86,13 +86,15 @@ async def _perform_money_action(
 
     The bookings slice owns `payment_status`, so it moves the money: `release_to_vendor`
     pays the vendor, `refund_client` refunds in full, `partial_refund` refunds the amount
-    already checked against what was paid. Its refusals (not paid, Stripe failed) propagate.
+    already checked against what was paid, and `vendor_no_show` refunds in full like
+    `refund_client` but is recorded against the vendor (their cancellation record counts it).
+    Its refusals (not paid, Stripe failed) propagate.
     """
     if resolution_action == "release_to_vendor":
         await service_payments.release_payout_for_staff(
             session, mailer, gateway, booking_id=booking_request_id
         )
-    elif resolution_action == "refund_client":
+    elif resolution_action in ("refund_client", "vendor_no_show"):
         await service_payments.refund_booking_for_staff(
             session, mailer, gateway, booking_id=booking_request_id, amount_pence=None
         )

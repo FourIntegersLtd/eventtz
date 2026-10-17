@@ -28,6 +28,9 @@ class AuthUser(BaseModel):
     email_verified: bool | None = None
     preferred_name: str | None = None
     client_onboarding_completed: bool | None = None
+    terms_version: str | None = None
+    terms_accepted_version: str | None = None
+    terms_accepted_at: str | None = None
     user_metadata: dict[str, Any] = Field(default_factory=dict)
     app_metadata: dict[str, Any] = Field(default_factory=dict)
 
@@ -50,6 +53,21 @@ class MeResponse(BaseModel):
     user: AuthUser
 
 
+class AcceptTermsRequest(BaseModel):
+    """`POST /user/terms/accept`: the Terms version the user read, which must be the current one."""
+
+    version: str = Field(min_length=1)
+
+
+class AcceptTermsResponse(BaseModel):
+    """The acceptance now on record."""
+
+    success: bool = True
+    terms_version: str
+    terms_accepted_version: str | None = None
+    terms_accepted_at: str | None = None
+
+
 # --- sign-up, sign-in, sessions ------------------------------------------------------------------------
 
 
@@ -60,6 +78,7 @@ class SignupRequest(BaseModel):
     password: str = Field(min_length=6)
     user_type: Literal["client", "vendor"] = "client"
     referral_code: str | None = None
+    terms_version: str | None = None
 
 
 class SignupResponse(BaseModel):

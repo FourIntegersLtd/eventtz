@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.auth import Principal
 from app.core.ports import PaymentGateway, PaymentGatewayError
 from app.core.settings import get_settings
-from app.features.bookings import repository_admin, service_admin_diagnostics
+from app.features.bookings import repository_admin, service_admin_diagnostics, service_queries
 from app.features.bookings.errors import (
     AdminBookingNotFound,
     CouldNotUpdatePaymentFields,
@@ -179,7 +179,13 @@ async def to_admin_detail(session: AsyncSession, booking: BookingRow) -> AdminBo
         payout_released_at=booking.payout_released_at,
         client_completion_confirmed_at=booking.client_completion_confirmed_at,
         vendor_completion_confirmed_at=booking.vendor_completion_confirmed_at,
+        cancellation_policy=booking.cancellation_policy,
+        cancellation_refund_percent=booking.cancellation_refund_percent,
+        cancellation_refund_gbp=booking.cancellation_refund_gbp,
+        cancellation_vendor_share_gbp=booking.cancellation_vendor_share_gbp,
+        cancellation_payout_at=booking.cancellation_payout_at,
         support=AdminBookingSupportMeta(**support),
+        **service_queries.terms_fields(booking),
     )
 
 
@@ -239,10 +245,10 @@ async def patch_payment_fields(
             payment_intent = await payment_gateway.retrieve_payment_intent(resolved_payment_intent_id)
         except PaymentGatewayError as error:
             raise StripeVerificationFailed() from error
-        status = str(payment_intent.get("status") or "").lower()
+        # Only a succeeded intent has taken money; an authorised one (`requires_capture`) has not.
         amount_received = payment_intent.get("amount_received")
-        if not amount_received and status in ("succeeded", "requires_capture"):
-            amount_received = payment_intent.get("amount")
+        if str(payment_intent.get("status") or "").lower() != "succeeded":
+            raise StripePaymentIntentNoConfirmedAmount()
         if not isinstance(amount_received, int | float) or amount_received <= 0:
             raise StripePaymentIntentNoConfirmedAmount()
         values["payment_amount_gbp"] = round(float(amount_received) / 100.0, 2)

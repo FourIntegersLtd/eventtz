@@ -29,7 +29,21 @@ HTTP_METHODS = frozenset({"get", "put", "post", "delete", "patch", "head", "opti
 _PATH_PARAMETER = re.compile(r"\{[^}]+\}")
 # Path prefixes allowed to add operations the baseline does not serve. See the module
 # docstring: only the realtime slice's ticket-issue route needs this today.
-ADDITIVE_PATH_PREFIXES = ("/api/v1/realtime/",)
+ADDITIVE_PATH_PREFIXES = (
+    "/api/v1/realtime/",
+    # Terms acceptance (terms remediation 0.2).
+    "/api/v1/user/terms/",
+    # Rescheduling (terms remediation 3.3): new post-baseline routes, request/respond/withdraw.
+    "/api/v1/client/booking-requests/{}/date-change",
+    "/api/v1/vendor/booking-requests/{}/date-change",
+    # Vendor consequences (terms remediation 3.4): staff warning and timed listing pause.
+    "/api/v1/admin/vendors/{}/warn",
+    "/api/v1/admin/vendors/{}/listing-pause",
+    # Split payouts and damage deposits (terms remediation 3.1, 3.5).
+    "/api/v1/client/booking-requests/{}/confirm-delivery",
+    "/api/v1/vendor/booking-requests/{}/deposit-claim",
+    "/api/v1/admin/bookings/{}/deposit-claim/resolve",
+)
 
 
 def operations(document: dict[str, Any]) -> set[tuple[str, str]]:

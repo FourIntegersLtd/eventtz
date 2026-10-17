@@ -13,6 +13,7 @@ Ported from the baseline's `payment_checkout.py` and `payment_finalize.py`.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Any, cast
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,7 +21,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.logging import get_logger
 from app.core.ports import Mailer, PaymentGateway, PaymentGatewayError, PaymentsUnavailable
 from app.core.settings import get_settings
-from app.features.bookings import domain_payments, repository, service_pricing, service_receipts
+from app.features.bookings import (
+    domain_cancellation,
+    domain_payments,
+    domain_policy,
+    repository,
+    service_pricing,
+    service_receipts,
+)
 from app.features.bookings.errors import (
     BookingNoLongerPayable,
     CheckoutAlreadyPaid,
@@ -34,6 +42,7 @@ from app.features.bookings.errors import (
     NoCheckoutSession,
     NothingToPay,
     OnlyAcceptedCanBePaid,
+    PaymentDeadlinePassed,
     PaymentLinkExpired,
     PaymentNotFinished,
     VendorPayoutsNotReady,
@@ -47,6 +56,7 @@ from app.features.notifications import service_booking as notices
 from app.features.notifications.service_payment_alerts import (
     PAYMENT_RECEIVED_CLIENT_BODY,
     VENDOR_PAYMENT_RECEIVED_BODY,
+    send_checkout_refunded_alert,
 )
 from app.features.pricing import service as pricing
 from app.features.vendors import service_catalogue
@@ -59,6 +69,13 @@ log = get_logger(__name__)
 _SUFFIX_NOT_ACCEPTED = "stale-checkout-not-accepted"
 _SUFFIX_STALE_SESSION = "stale-checkout-session"
 _SUFFIX_NOT_ELIGIBLE = "checkout-not-eligible"
+_SUFFIX_AMOUNT_MISMATCH = "amount-mismatch"
+
+AMOUNT_MISMATCH_REFUND_BODY = (
+    "The amount Stripe charged did not match this booking's total, so we have refunded it in full.\n\n"
+    "It should reach your card within 5 to 10 working days. Please tap Pay now on the booking "
+    "to pay the correct total; if the problem repeats, contact support."
+)
 
 
 # --- start checkout ------------------------------------------------------------------------------------
@@ -78,11 +95,14 @@ async def _check_vendor_can_be_paid(session: AsyncSession, vendor_user_id: str) 
         raise VendorPayoutsNotReady()
 
 
-async def _repriced(session: AsyncSession, booking: BookingRow) -> tuple[list[Any], pricing.PricingBreakdown]:
+async def _repriced(
+    session: AsyncSession, booking: BookingRow
+) -> tuple[list[Any], pricing.PricingBreakdown, dict[str, Any]]:
     """The booking's line items and price today, from the vendor's stored price list and the event date.
 
     Automatic discounts (early booking, off-peak days…) are re-applied for the event
-    date, so a client cannot keep a discount the vendor has since withdrawn.
+    date, so a client cannot keep a discount the vendor has since withdrawn. The
+    vendor's payload is returned too, for the cancellation policy snapshot.
     """
     vendor_payload = await service_explore.bookable_vendor_payload(
         session, booking.vendor_user_id, viewer=None
@@ -103,7 +123,7 @@ async def _repriced(session: AsyncSession, booking: BookingRow) -> tuple[list[An
         raise CheckoutPricesToConfirm()
     if breakdown.vendor_portion_gbp <= 0:
         raise NothingToPay()
-    return line_items, breakdown
+    return line_items, breakdown, vendor_payload
 
 
 async def start_checkout(
@@ -117,13 +137,42 @@ async def start_checkout(
         raise OnlyAcceptedCanBePaid()
     if booking.payment_status not in domain_payments.PAYABLE_PAYMENT_STATUSES:
         raise CheckoutAlreadyPaid()
+    settings = get_settings()
+    due_at = domain_policy.booking_payment_due_at(
+        booking, deadline_hours=settings.booking_payment_deadline_hours, terms_version=settings.terms_version
+    )
+    if due_at is not None and datetime.now(UTC) >= due_at:
+        # The hourly job cancels it; until then it must not be paid either.
+        raise PaymentDeadlinePassed()
+    # The client pays under the current Terms (the money rules on this booking come from them).
+    await identity.require_current_terms(session, client_user_id)
     await _check_vendor_can_be_paid(session, booking.vendor_user_id)
+    # Close the previous session first, so an old tab cannot take a second payment for this
+    # booking once the new one is paid (a completed stale session is refunded, but the client
+    # should never be charged twice to begin with).
+    if booking.payment_status == "pending":
+        await expire_checkout_session(gateway, booking.stripe_checkout_session_id)
 
-    line_items, breakdown = await _repriced(session, booking)
+    line_items, breakdown, vendor_payload = await _repriced(session, booking)
+    # The cancellation preset the client sees at checkout is the one applied if they cancel later,
+    # whatever the vendor changes in between (`domain_cancellation`).
+    cancellation_policy = domain_cancellation.normalize_preset(
+        str(vendor_payload.get("cancellationPolicy") or "")
+    )
+    # The payout timing, split and deposit are fixed now too, from the profile the client pays against.
+    terms_columns = domain_policy.checkout_terms_columns(
+        vendor_payload, default_report_hours=settings.booking_payout_auto_release_hours_after_event
+    )
+    deposit_pence = domain_payments.gbp_to_pence(float(terms_columns.get("damage_deposit_gbp") or 0.0))
     await repository.update_booking(
         session,
         booking_id,
-        {"line_items": line_items, **service_pricing.snapshot_columns(breakdown)},
+        {
+            "line_items": line_items,
+            "cancellation_policy": cancellation_policy,
+            **terms_columns,
+            **service_pricing.snapshot_columns(breakdown),
+        },
         client_user_id=client_user_id,
     )
     if breakdown.client_total_gbp <= 0:
@@ -135,17 +184,20 @@ async def start_checkout(
     success_url, cancel_url = domain_payments.checkout_urls(get_settings().frontend_url, booking_id)
     # No fixed idempotency key: opening a session takes no money, and reusing a key
     # could hand back an old expired link. Refunds and transfers always carry one.
+    # A refundable deposit is charged with the booking and held apart (`service_deposits`).
+    charge_pence = domain_payments.gbp_to_pence(breakdown.client_total_gbp) + deposit_pence
     checkout = await gateway.create_checkout_session(
-        amount_pence=domain_payments.gbp_to_pence(breakdown.client_total_gbp),
-        description=domain_payments.checkout_description(booking.event_name),
+        amount_pence=charge_pence,
+        description=domain_payments.checkout_description(booking.event_name, deposit_pence=deposit_pence),
         metadata=domain_payments.checkout_metadata(
             booking_id=booking_id,
             vendor_user_id=booking.vendor_user_id,
             client_user_id=client_user_id,
-            client_total_gbp=breakdown.client_total_gbp,
+            client_total_gbp=domain_payments.pence_to_gbp(charge_pence),
             vendor_amount_gbp=breakdown.vendor_portion_gbp,
             service_fee_gbp=breakdown.service_fee_gbp,
             referral_fee_discount_gbp=breakdown.referral_fee_discount_gbp or 0.0,
+            damage_deposit_gbp=domain_payments.pence_to_gbp(deposit_pence),
         ),
         customer_email=client_email or None,
         success_url=success_url,
@@ -173,18 +225,38 @@ async def start_checkout(
     return checkout.url
 
 
+async def expire_checkout_session(gateway: PaymentGateway, checkout_session_id: str | None) -> None:
+    """Close an open Checkout Session; a session already gone, or Stripe being down, is only logged."""
+    session_id = (checkout_session_id or "").strip()
+    if not session_id.startswith("cs_"):
+        return
+    try:
+        await gateway.expire_checkout_session(session_id)
+    except (PaymentGatewayError, PaymentsUnavailable) as expire_error:
+        log.info("bookings: checkout session expire skipped session=%s: %s", session_id, expire_error)
+
+
 # --- finalise a completed session ----------------------------------------------------------------------
 
 
 async def refund_checkout_payment(
     session: AsyncSession,
+    mailer: Mailer,
     gateway: PaymentGateway,
     checkout_session: dict[str, Any],
     booking_id: str,
     *,
     suffix: str,
+    then_write: dict[str, Any] | None,
+    detail: str,
 ) -> bool:
     """Refund a completed Checkout payment in full when the booking cannot take it; True once refunded.
+
+    `then_write` is what the booking row becomes after the refund, applied only while the
+    row is still waiting for money: a `paid` row holds a different, valid payment (a newer
+    session the client also completed) and is left alone. None leaves the row as it is, for
+    a stale session whose replacement is still open. Staff get an ops email either way,
+    since money moved outside the normal flow.
 
     The idempotency key names the booking and the reason, so a redelivered event
     never refunds twice. A failure is logged, not raised: the webhook must still answer 2xx.
@@ -208,18 +280,20 @@ async def refund_checkout_payment(
             suffix,
         )
         return False
-    await repository.update_booking(
-        session,
-        booking_id,
-        {"payment_status": domain_payments.REFUNDED},
-        payment_status_in=domain_payments.CHECKOUT_REFUNDABLE_STATUSES,
-    )
+    if then_write:
+        await repository.update_booking(
+            session,
+            booking_id,
+            then_write,
+            payment_status_in=domain_payments.CHECKOUT_REFUND_REWRITABLE_STATUSES,
+        )
     log.info(
         "bookings: refunded checkout booking=%s payment_intent=%s suffix=%s",
         booking_id,
         payment_intent_id,
         suffix,
     )
+    send_checkout_refunded_alert(mailer, booking_id=booking_id, reason=suffix, detail=detail)
     return True
 
 
@@ -252,7 +326,11 @@ async def _charge_fields(gateway: PaymentGateway, checkout_session: dict[str, An
 
 
 async def _handle_not_marked_paid(
-    session: AsyncSession, gateway: PaymentGateway, checkout_session: dict[str, Any], booking_id: str
+    session: AsyncSession,
+    mailer: Mailer,
+    gateway: PaymentGateway,
+    checkout_session: dict[str, Any],
+    booking_id: str,
 ) -> None:
     """The paid write matched nothing: a duplicate (already paid), or a booking that moved on (refund)."""
     reloaded = await repository.get_booking(session, booking_id)
@@ -270,7 +348,14 @@ async def _handle_not_marked_paid(
             payment_status,
         )
         await refund_checkout_payment(
-            session, gateway, checkout_session, booking_id, suffix=_SUFFIX_NOT_ELIGIBLE
+            session,
+            mailer,
+            gateway,
+            checkout_session,
+            booking_id,
+            suffix=_SUFFIX_NOT_ELIGIBLE,
+            then_write={"payment_status": domain_payments.REFUNDED},
+            detail=f"The booking was {status} / {payment_status} when its payment completed.",
         )
     else:
         log.info("bookings: checkout booking=%s not eligible for payment; skipping", booking_id)
@@ -281,9 +366,12 @@ async def finalize_checkout_session(
 ) -> bool:
     """Mark the session's booking paid; True only when this call is the one that marked it.
 
-    Refuses (and refunds) a session for a booking that is no longer accepted, or one
-    that a newer checkout replaced. Refuses a charged amount that differs from the
-    total the server priced, so a tampered session is never accepted as payment.
+    Refuses (and refunds) a session for a booking that is no longer accepted, one that
+    a newer checkout replaced, and one whose charged amount differs from the total the
+    server priced, so a tampered session is never accepted as payment. Only the first
+    of those closes the booking's payment (`refunded`); a stale session leaves the row
+    on its current session, and a mismatched amount returns it to `unpaid` so the
+    client can pay the right total.
     """
     metadata = checkout_session.get("metadata") or {}
     booking_id = str(metadata.get("booking_id") or "").strip()
@@ -297,7 +385,14 @@ async def finalize_checkout_session(
     if booking.status != "accepted":
         log.warning("bookings: checkout for booking %s in status=%s; refunding", booking_id, booking.status)
         await refund_checkout_payment(
-            session, gateway, checkout_session, booking_id, suffix=_SUFFIX_NOT_ACCEPTED
+            session,
+            mailer,
+            gateway,
+            checkout_session,
+            booking_id,
+            suffix=_SUFFIX_NOT_ACCEPTED,
+            then_write={"payment_status": domain_payments.REFUNDED},
+            detail=f"The booking was in status {booking.status} when its payment completed.",
         )
         return False
     session_id = str(checkout_session.get("id") or "").strip()
@@ -309,8 +404,16 @@ async def finalize_checkout_session(
             session_id,
             stored_session_id,
         )
+        # The row stays on its current session: that one is still open (or already paid).
         await refund_checkout_payment(
-            session, gateway, checkout_session, booking_id, suffix=_SUFFIX_STALE_SESSION
+            session,
+            mailer,
+            gateway,
+            checkout_session,
+            booking_id,
+            suffix=_SUFFIX_STALE_SESSION,
+            then_write=None,
+            detail=f"Session {session_id} completed after {stored_session_id} replaced it.",
         )
         return False
 
@@ -325,11 +428,31 @@ async def finalize_checkout_session(
         return False
     if int(amount_total) != expected_pence:
         log.warning(
-            "bookings: checkout amount mismatch booking=%s charged=%s expected=%s",
+            "bookings: checkout amount mismatch booking=%s charged=%s expected=%s; refunding",
             booking_id,
             amount_total,
             expected_pence,
         )
+        # The client has paid the wrong total: give it back and let them pay the right one.
+        refunded = await refund_checkout_payment(
+            session,
+            mailer,
+            gateway,
+            checkout_session,
+            booking_id,
+            suffix=_SUFFIX_AMOUNT_MISMATCH,
+            then_write={"payment_status": "unpaid", "stripe_checkout_session_id": None},
+            detail=f"Charged {int(amount_total)} pence; the server priced {expected_pence} pence.",
+        )
+        if refunded:
+            await notices.dispatch_booking_notification(
+                session,
+                mailer,
+                user_id=booking.client_user_id,
+                booking_id=booking_id,
+                kind="payment_refunded",
+                body=AMOUNT_MISMATCH_REFUND_BODY,
+            )
         return False
 
     payment_amount_gbp = domain_payments.pence_to_gbp(int(amount_total))
@@ -345,13 +468,14 @@ async def finalize_checkout_session(
             "referral_fee_discount_gbp": domain_payments.metadata_amount_gbp(
                 metadata, "referral_fee_discount_gbp"
             ),
+            "damage_deposit_gbp": domain_payments.metadata_amount_gbp(metadata, "damage_deposit_gbp"),
         },
         status_in=("accepted",),
         payment_status_in=domain_payments.PAYABLE_PAYMENT_STATUSES,
         now_columns=("paid_at",),
     )
     if not marked_paid:
-        await _handle_not_marked_paid(session, gateway, checkout_session, booking_id)
+        await _handle_not_marked_paid(session, mailer, gateway, checkout_session, booking_id)
         return False
 
     await notices.dispatch_booking_notification(

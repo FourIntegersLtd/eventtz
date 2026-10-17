@@ -82,7 +82,9 @@ def payout_auto_release_at(booking: BookingRow, *, hours_after_event: float) -> 
     if booking.status != "accepted" or booking.payment_status != "paid":
         return None
     day_end = _event_day_end_utc(booking)
-    return day_end + timedelta(hours=hours_after_event) if day_end is not None else None
+    # A booking whose category needs longer to spot a problem (rentals, decor) carries its own window.
+    window_hours = booking.report_window_hours or hours_after_event
+    return day_end + timedelta(hours=window_hours) if day_end is not None else None
 
 
 def event_day_over(booking: BookingRow, now: datetime) -> bool:

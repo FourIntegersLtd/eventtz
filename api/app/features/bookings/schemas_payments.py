@@ -20,6 +20,8 @@ class VendorPayoutRow(BaseModel):
     # paid_out | awaiting_payout
     status: str
     paid_out_at: str | None = None
+    # event_payout (the price, after the event) | cancellation_share (what a client cancel left the vendor)
+    kind: str = "event_payout"
 
 
 class VendorPayoutLedger(BaseModel):

@@ -45,7 +45,7 @@ make new-migration M=x  # autogenerate, then review by hand
 make dev                # uvicorn :8001
 make worker             # procrastinate worker
 make ci                 # lint + typecheck + arch (incl. alembic check) + tests
-make openapi            # regenerate openapi.json (then web: npm run api:types)
+make openapi            # regenerate openapi.json (then update web/lib/api-types.ts by hand)
 
 # acceptance (from acceptance/): the freeze suite, black-box over HTTP
 make serve              # api/ on :8001 over its compose Postgres (leave running)
@@ -91,6 +91,7 @@ Traps in this machine's shell:
 ## Traps
 
 - **Payments are two lifecycles.** `booking_requests.status` is the request; `payment_status` is money. Only the payments slice writes `payment_status`, with conditional `.eq("payment_status", expected)` writes.
+- **Tiered client cancels.** `cancelled` + `partially_refunded` with `cancellation_refund_percent` set means the vendor's cancellation preset split the money (`bookings/domain_cancellation.py`); the vendor's share is a Transfer at cancel time, held (`cancellation_payout_at IS NULL`) until their Stripe setup is done. NULL `cancellation_policy` = paid before presets = full refund.
 - **Held funds.** Checkout pays Eventtz; vendor payout is always an explicit `Transfer`. That is what lets disputes block payouts.
 - **SSE fans out over Redis** (ADR 0005). Without Redis the in-process bus only works on one replica.
 - **The session commits before the response.** Ask for it as `core.db.SessionDep` only
@@ -103,6 +104,16 @@ Traps in this machine's shell:
 - **Daily capacity** is enforced by a Postgres trigger (migration 033, kept in Alembic `0002`); the Python check is only for friendly errors.
 - **Closed accounts are tombstones** (`users.deleted_at`); never restore one on upsert.
 - **Local auth mode** logs reset URLs instead of emailing them.
+- **One notice per (booking, kind).** `booking_notifications` is unique on `(booking_id, kind)`
+  across users, so a notice for both sides needs a `vendor_*` kind (added to migration 0007's
+  check constraint and `domain_booking_copy.py`), or the second insert is silently dropped.
+- **Terms numbers live twice.** `web/lib/policyConstants.json` (copy) and the api constants/settings
+  (`bookings/domain_policy.py`); `tests/unit/test_policy_constants.py` keeps them equal. Booking
+  terms are snapshotted at checkout (ADR 0010).
+- **`web/lib/api-types.ts` is hand-written.** There is no `api:types` script; update it by hand
+  after `make openapi`.
+- **Docker hung?** DB tests skip silently. Run them against the compose Postgres directly:
+  create a fresh database and set `TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5434/<name>`.
 
 ## Engineering principles
 

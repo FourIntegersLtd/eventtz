@@ -25,6 +25,7 @@ import {
 import { usePerUnitPackageSelection } from "./usePerUnitPackageSelection";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { lineTotalGbp } from "@/lib/packagePricing";
+import { depositFromPayload, depositSummaryLine } from "@/features/bookings/bookingTerms";
 import { useVendorBookingSubmit } from "@/features/client/browse/useVendorBookingSubmit";
 import { useVendorReferralPreview } from "@/features/client/browse/useVendorReferralPreview";
 import type { ClientSearchContext } from "@/lib/clientBookingsApi";
@@ -598,6 +599,11 @@ export function VendorBookingModal({
                   </p>
                 </>
               )}
+              {depositSummaryLine(depositFromPayload(vendorPayload)) ? (
+                <p className="mt-2 border-t border-neutral-200 pt-2 text-xs text-neutral-600">
+                  {depositSummaryLine(depositFromPayload(vendorPayload))}
+                </p>
+              ) : null}
             </div>
 
             {validationError ? <LottieFailureInline message={validationError} /> : null}

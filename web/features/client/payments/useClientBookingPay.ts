@@ -23,6 +23,8 @@ export function useClientBookingPay(bookingId: string | undefined) {
   const [error, setError] = useState<string | null>(null);
   const [venueAddress, setVenueAddress] = useState("");
   const [busy, setBusy] = useState(false);
+  const [cancellationPolicyLabel, setCancellationPolicyLabel] = useState<string | null>(null);
+  const [cancellationPolicyLines, setCancellationPolicyLines] = useState<string[]>([]);
 
   useEffect(() => {
     if (!bookingId) return;
@@ -36,6 +38,8 @@ export function useClientBookingPay(bookingId: string | undefined) {
           setPhase("error");
           return;
         }
+        setCancellationPolicyLabel(booking.cancellation_policy_label ?? null);
+        setCancellationPolicyLines(booking.cancellation_policy_lines ?? []);
         if (bookingNeedsVenue(booking.event_address)) {
           setVenueAddress(booking.event_address ?? "");
           setPhase("venue");
@@ -100,6 +104,8 @@ export function useClientBookingPay(bookingId: string | undefined) {
     venueAddress,
     setVenueAddress,
     busy,
+    cancellationPolicyLabel,
+    cancellationPolicyLines,
     continueFromVenue,
     confirmSafetyAndPay,
   };

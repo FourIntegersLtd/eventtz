@@ -14,6 +14,7 @@ import {
   type AdminVendorInsights,
   type AdminVendorRow,
 } from "@/lib/adminVendorsApi";
+import { VendorConsequencesSection } from "./VendorConsequencesSection";
 import type { VendorApprovalStatus, VendorListingOverride } from "@/lib/domain-types";
 import type { AdminVendorUnsubmitHandler } from "./vendorUnsubmitTypes";
 import { VendorDetailsApprovalSection } from "./VendorDetailsApprovalSection";
@@ -172,6 +173,8 @@ export function VendorDetailsModal({
               onRestoreStripe={onRestoreStripe}
             />
           ) : null}
+
+          {tab === "actions" ? <VendorConsequencesSection vendor={vendor} /> : null}
         </div>
       )}
     </Modal>

@@ -14,16 +14,17 @@ from typing import Literal
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.ports import Mailer, PaymentGateway
-from app.features.bookings import domain, repository, service_maintenance, service_payments
+from app.features.bookings import domain, domain_policy, repository, service_maintenance, service_payments
 from app.features.bookings.errors import (
     BookingNotFound,
     CompleteNeedsPayment,
     CompleteOnlyAccepted,
+    DeliveryNotAwaited,
     EventDayNotOver,
 )
 from app.features.bookings.rows import BookingRow
 from app.features.bookings.schemas import ConfirmCompletionResponse
-from app.features.bookings.service_common import announce_change
+from app.features.bookings.service_common import announce_change, check_may_pay_out
 from app.features.notifications import service_booking as notices
 
 Party = Literal["client", "vendor"]
@@ -65,6 +66,9 @@ async def confirm_completion(
         raise CompleteOnlyAccepted()
     if booking.payment_status != "paid":
         raise CompleteNeedsPayment()
+    # A hold or an open problem report refuses the confirmation outright: the screen hides
+    # the button while a dispute is open, so reaching here means a stale page.
+    await check_may_pay_out(session, booking)
 
     confirmed_column = f"{party}_completion_confirmed_at"
     if getattr(booking, confirmed_column):
@@ -104,3 +108,57 @@ async def confirm_completion(
     # The response is still the state this confirmation left, as the baseline returned it.
     await service_maintenance.run_post_event_step(session, mailer, gateway, confirmed)
     return _result(confirmed)
+
+
+async def confirm_delivery(
+    session: AsyncSession,
+    mailer: Mailer,
+    gateway: PaymentGateway,
+    *,
+    client_user_id: str,
+    booking_id: str,
+) -> ConfirmCompletionResponse:
+    """The client confirms they received the vendor's work (photos, video); the rest of the payout goes.
+
+    Only for a split payout whose first part is out and whose rest is still held. The
+    confirmation is stamped once; the final payout then runs like any other, so a hold or
+    an open problem report still stops it (the confirmation is kept and the job pays later).
+    """
+    booking = await repository.get_booking(session, booking_id, client_user_id=client_user_id)
+    if booking is None:
+        raise BookingNotFound()
+    awaiting = (
+        booking.status == "completed"
+        and booking.payment_status == "paid"
+        and bool(booking.upfront_payout_at)
+        and not booking.delivery_confirmed_at
+    )
+    if not awaiting:
+        raise DeliveryNotAwaited()
+    stamped = await repository.update_booking(
+        session,
+        booking.id,
+        {},
+        client_user_id=client_user_id,
+        unset_column="delivery_confirmed_at",
+        now_columns=("delivery_confirmed_at",),
+    )
+    if not stamped:
+        raise DeliveryNotAwaited()
+    await notices.dispatch_booking_notification(
+        session,
+        mailer,
+        user_id=booking.vendor_user_id,
+        booking_id=booking.id,
+        kind="delivery_confirmed",
+        mode="insert_if_absent",
+    )
+    confirmed = await repository.get_booking(session, booking.id)
+    if confirmed is None:
+        raise BookingNotFound()
+    if domain_policy.payout_stage(confirmed, datetime.now(UTC)) == "final":
+        # A refusal (hold, problem report, Stripe) leaves the rest for the hourly job.
+        await service_maintenance.release_final_payout_if_allowed(session, mailer, gateway, confirmed)
+    announce_change(session, confirmed)
+    stored = await repository.get_booking(session, booking.id)
+    return _result(stored or confirmed)

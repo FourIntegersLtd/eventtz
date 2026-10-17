@@ -74,7 +74,34 @@ BOOKING_COLUMNS = (
     BookingRequest.completed_at,
     BookingRequest.refunded_at,
     BookingRequest.cancelled_by,
+    BookingRequest.cancellation_policy,
+    BookingRequest.cancellation_refund_percent,
+    BookingRequest.cancellation_refund_gbp,
+    BookingRequest.cancellation_vendor_share_gbp,
+    BookingRequest.cancellation_payout_at,
     BookingRequest.support_hold,
+    BookingRequest.accepted_at,
+    BookingRequest.cancellation_reason,
+    BookingRequest.report_window_hours,
+    BookingRequest.payout_upfront_percent,
+    BookingRequest.delivery_deadline_days,
+    BookingRequest.upfront_amount_gbp,
+    BookingRequest.upfront_transfer_id,
+    BookingRequest.upfront_payout_at,
+    BookingRequest.delivery_confirmed_at,
+    BookingRequest.proposed_event_date,
+    BookingRequest.proposed_event_end_date,
+    BookingRequest.date_change_requested_by,
+    BookingRequest.date_change_requested_at,
+    BookingRequest.date_change_note,
+    BookingRequest.damage_deposit_gbp,
+    BookingRequest.deposit_refunded_at,
+    BookingRequest.deposit_claim_gbp,
+    BookingRequest.deposit_claim_note,
+    BookingRequest.deposit_claimed_at,
+    BookingRequest.deposit_claim_awarded_gbp,
+    BookingRequest.deposit_claim_resolved_at,
+    BookingRequest.deposit_transfer_id,
 )
 
 # Reviews and disputes are separate slices; these handles read their tables directly so the booking
@@ -129,6 +156,30 @@ async def get_booking(
             BookingRequest.id == booking_uuid,
             *_party_filters(client_user_id=client_user_id, vendor_user_id=vendor_user_id),
         )
+    )
+    found = result.first()
+    return BookingRow.model_validate(plain_row(found)) if found is not None else None
+
+
+async def lock_booking(session: AsyncSession, booking_id: str) -> None:
+    """Lock the booking row until the transaction ends (`SELECT … FOR UPDATE`).
+
+    Every path that moves money for a booking takes this first, then re-reads the row, so a
+    payout, a refund, a deposit decision and the Stripe webhook can never act on the same
+    stale state at once (a second caller waits, then sees what the first one wrote).
+    """
+    booking_uuid = as_uuid(booking_id)
+    if booking_uuid is None:
+        return
+    await session.execute(
+        select(BookingRequest.id).where(BookingRequest.id == booking_uuid).with_for_update()
+    )
+
+
+async def get_booking_by_charge_id(session: AsyncSession, charge_id: str) -> BookingRow | None:
+    """The booking a Stripe charge paid for, or `None`: how a chargeback or refund webhook finds its row."""
+    result = await session.execute(
+        select(*BOOKING_COLUMNS).where(BookingRequest.stripe_charge_id == charge_id)
     )
     found = result.first()
     return BookingRow.model_validate(plain_row(found)) if found is not None else None
@@ -347,3 +398,33 @@ async def stamp_first_response(session: AsyncSession, booking_id: str) -> None:
         .where(BookingRequest.id == as_uuid(booking_id), BookingRequest.vendor_first_response_at.is_(None))
         .values(vendor_first_response_at=func.now(), vendor_response_time_seconds=waited_seconds)
     )
+
+
+async def apply_date_change(session: AsyncSession, booking_id: str, values: dict[str, Any]) -> bool:
+    """Move the event to `values` (new dates, cleared proposal) while a change is still pending.
+
+    The daily-capacity trigger re-checks on UPDATE; its rejection becomes `VendorFullOnDate`.
+    The savepoint keeps the request's transaction usable after that rejection. Returns
+    whether a row changed.
+    """
+    booking_uuid = as_uuid(booking_id)
+    if booking_uuid is None:
+        return False
+    try:
+        async with session.begin_nested():
+            result = await session.execute(
+                update(BookingRequest)
+                .where(
+                    BookingRequest.id == booking_uuid,
+                    BookingRequest.status == "accepted",
+                    BookingRequest.date_change_requested_by.is_not(None),
+                )
+                .values(**values)
+                .returning(BookingRequest.id)
+            )
+            return result.first() is not None
+    except DBAPIError as error:
+        mapped = domain.capacity_error_from_db(str(error.orig))
+        if mapped is None:
+            raise
+        raise mapped from error

@@ -19,11 +19,19 @@ import {
   requiresAtLeastOnePackage,
   servicesRequiringPackages,
 } from "@/features/vendor/onboarding/packageQuality";
+import { CANCELLATION_POLICY_KEYS } from "@/features/bookings/cancellationPolicyCopy";
 import { parseMoneyNumber } from "@/lib/vendorDiscountDisplay";
 import {
   addSingleGbpAmountIssue,
   singleGbpAmountFieldError,
 } from "@/lib/validation/money";
+
+import {
+  damageDepositError,
+  deliverySplitErrors,
+  offersDamageDeposit,
+  offersDeliverySplit,
+} from "@/features/bookings/bookingTerms";
 
 const vendorDataSchema = z.custom<VendorOnboardingData>(
   (d) => d != null && typeof d === "object",
@@ -102,8 +110,21 @@ const step3Schema = vendorDataSchema.superRefine((d, ctx) => {
 });
 
 const step4Schema = vendorDataSchema.superRefine((d, ctx) => {
+  if (!(CANCELLATION_POLICY_KEYS as readonly string[]).includes(d.cancellationPolicy)) {
+    addIssue(ctx, "Cancellation policy");
+  }
   addSingleGbpAmountIssue(ctx, d.hourlyRate, "Hourly rate", { required: false, max: MAX_MONEY_GBP });
   addSingleGbpAmountIssue(ctx, d.dailyRate, "Daily rate", { required: false, max: MAX_MONEY_GBP });
+
+  if (offersDeliverySplit(d.servicesOffered)) {
+    const split = deliverySplitErrors(d.deliveryUpfrontPercent, d.deliveryDeadlineDays);
+    if (split.upfront) addIssue(ctx, split.upfront);
+    if (split.deadline) addIssue(ctx, split.deadline);
+  }
+  if (offersDamageDeposit(d.servicesOffered)) {
+    const depositError = damageDepositError(d.damageDepositGbp);
+    if (depositError) addIssue(ctx, depositError);
+  }
 
   const completePackages = d.packages.filter(
     (p) => isConfiguredPackage(p) && isCompletePackage(p),

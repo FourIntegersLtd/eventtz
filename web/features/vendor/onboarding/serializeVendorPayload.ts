@@ -151,6 +151,9 @@ export function vendorDataToPayload(
     travelDeliveryPolicyCustomText: data.travelDeliveryPolicyCustomText,
     hourlyRate: data.hourlyRate,
     dailyRate: data.dailyRate,
+    deliveryUpfrontPercent: data.deliveryUpfrontPercent,
+    deliveryDeadlineDays: data.deliveryDeadlineDays,
+    damageDepositGbp: data.damageDepositGbp,
     useDefaultTravelHourly: data.useDefaultTravelHourly,
     useDefaultTravelDaily: data.useDefaultTravelDaily,
     packages: data.packages.map((p) => ({
@@ -175,6 +178,8 @@ export function vendorDataToPayload(
     availableWeekdays: data.availableWeekdays,
     blockedDates: data.blockedDates,
     maxBookingsPerDay: data.maxBookingsPerDay,
+    // Absent until chosen: the API nudges vendors whose form has no key (clients see Flexible meanwhile).
+    ...(data.cancellationPolicy ? { cancellationPolicy: data.cancellationPolicy } : {}),
     portfolioFileNames: [...names],
     portfolioVideoNamesPersisted: data.portfolioVideoNamesPersisted,
     uploadedFileLabels: data.uploadedFileLabels,
@@ -272,6 +277,9 @@ export function mergePayloadIntoVendorData(
     travelDeliveryPolicyCustomText: coerceStr(p, "travelDeliveryPolicyCustomText"),
     hourlyRate: coerceStr(p, "hourlyRate"),
     dailyRate: coerceStr(p, "dailyRate"),
+    deliveryUpfrontPercent: coerceStr(p, "deliveryUpfrontPercent"),
+    deliveryDeadlineDays: coerceStr(p, "deliveryDeadlineDays"),
+    damageDepositGbp: coerceStr(p, "damageDepositGbp"),
     useDefaultTravelHourly:
       typeof p.useDefaultTravelHourly === "boolean"
         ? p.useDefaultTravelHourly
@@ -293,6 +301,7 @@ export function mergePayloadIntoVendorData(
     availableWeekdays: numArr("availableWeekdays"),
     blockedDates: strArr("blockedDates"),
     maxBookingsPerDay: coerceStr(p, "maxBookingsPerDay") || "1",
+    cancellationPolicy: coerceStr(p, "cancellationPolicy"),
     portfolioFiles: [],
     portfolioFileNamesPersisted,
     portfolioVideo: null,

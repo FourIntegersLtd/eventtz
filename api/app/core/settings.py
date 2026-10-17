@@ -120,9 +120,19 @@ class Settings(BaseSettings):
     booking_max_adjustment_pct_of_subtotal: float = 100.0
     # Hours after the event day ends before a paid booking's payout is released automatically.
     booking_payout_auto_release_hours_after_event: int = 48
+    # Hours after the vendor accepts that the client has to pay; never later than the start of the
+    # event day. An unpaid booking is then cancelled and the vendor's date freed. Only bookings
+    # accepted on or after the Terms that introduced it (`terms_version`) are expired.
+    booking_payment_deadline_hours: int = 72
     # Hours a client enquiry may wait for the vendor's first reply before the hourly job marks it
     # VENDOR_NO_RESPONSE (a funnel signal only; the booking stays open). 0 turns the marking off.
     enquiry_response_sla_hours: int = 72
+
+    # --- Terms of Service ---
+    # The version (effective date, YYYY-MM-DD) of the Terms people must accept. It must equal
+    # `termsVersion` in web/lib/policyConstants.json (a unit test checks). Raising it shows every
+    # signed-in person the accept banner and emails them the change notice once.
+    terms_version: str = "2026-11-01"
 
     # --- Marketplace search ---
     # How long a parsed search query is reused before the language model is asked again (0 = never cache).

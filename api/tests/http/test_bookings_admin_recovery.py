@@ -7,7 +7,7 @@ with `FakePaymentGateway`.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
@@ -330,6 +330,41 @@ async def test_cancel_on_behalf_of_the_vendor_refunds_a_paid_booking(
     ]
 
 
+async def test_cancel_on_behalf_of_the_client_refunds_in_full_despite_the_vendors_preset(
+    client: AsyncClient, db_session: AsyncSession, payment_gateway: FakePaymentGateway
+) -> None:
+    """Support cancelling for the client is not the client cancelling: the tiered preset does not apply."""
+    client_id, vendor_id = await _make_parties(db_session, "on-behalf-client")
+    # Two days out under "strict" the client's own cancel would refund only the GBP 7.50 fee.
+    booking_id = await _make_booking(
+        db_session,
+        client_id=client_id,
+        vendor_id=vendor_id,
+        event_date=(datetime.now(UTC) + timedelta(days=2)).date().isoformat(),
+        cancellation_policy="strict",
+        paid_at=(datetime.now(UTC) - timedelta(days=3)).isoformat(),
+    )
+
+    response = await client.post(
+        f"/api/v1/admin/bookings/{booking_id}/cancel-on-behalf",
+        json={"party": "client", "reason": "client asked support to cancel"},
+        headers=await _super_admin_headers(db_session),
+    )
+
+    assert response.status_code == 200, response.text
+    assert [
+        (call.name, call.arguments["amount_pence"], call.arguments["idempotency_key"])
+        for call in payment_gateway.calls
+    ] == [("create_refund", None, f"refund-{booking_id}-cancel-client")]
+    booking = await _booking(db_session, booking_id)
+    assert (
+        booking.status,
+        booking.payment_status,
+        booking.cancelled_by,
+        booking.cancellation_vendor_share_gbp,
+    ) == ("cancelled", "refunded", "client", None)
+
+
 async def test_complete_cancellation_finishes_a_refunded_booking(
     client: AsyncClient, db_session: AsyncSession, payment_gateway: FakePaymentGateway
 ) -> None:
@@ -441,3 +476,97 @@ async def test_a_malformed_booking_id_is_refused(client: AsyncClient, db_session
 
     assert response.status_code == 400
     assert response.json() == {"detail": "Invalid booking id.", "code": "invalid_booking_id"}
+
+
+async def test_release_payout_sends_a_held_cancellation_share(
+    client: AsyncClient, db_session: AsyncSession, payment_gateway: FakePaymentGateway
+) -> None:
+    """A tiered client cancel whose GBP 75 share waited for Stripe setup: staff send it now."""
+    client_id, vendor_id = await _make_parties(db_session, "held-share")
+    booking_id = await _make_booking(
+        db_session,
+        client_id=client_id,
+        vendor_id=vendor_id,
+        status="cancelled",
+        cancelled_by="client",
+        payment_status="partially_refunded",
+        cancellation_policy="strict",
+        cancellation_refund_percent=50,
+        cancellation_refund_gbp=82.5,
+        cancellation_vendor_share_gbp=75.0,
+    )
+
+    response = await client.post(
+        f"/api/v1/admin/bookings/{booking_id}/release-payout", headers=await _super_admin_headers(db_session)
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json()["booking"]["cancellation_payout_at"] is not None
+    assert payment_gateway.calls == [
+        PaymentCall(name="list_transfer_ids", arguments={"transfer_group": f"booking_{booking_id}"}),
+        PaymentCall(
+            name="create_transfer",
+            arguments={
+                "amount_pence": 7500,
+                "destination_account_id": "acct_test_vendor",
+                "transfer_group": f"booking_{booking_id}",
+                "metadata": {"booking_id": booking_id},
+                "source_charge_id": "ch_test_paid",
+                "idempotency_key": f"transfer-{booking_id}-7500-acct_test_vendor-src-ch_test_paid",
+            },
+        ),
+    ]
+    booking = await _booking(db_session, booking_id)
+    assert (booking.status, booking.payment_status) == ("cancelled", "partially_refunded")
+    assert booking.stripe_transfer_id is not None
+    assert await _audit_entries(db_session, booking_id) == [("booking.release_payout", {})]
+
+
+async def test_complete_cancellation_finishes_a_tiered_refund(
+    client: AsyncClient, db_session: AsyncSession, payment_gateway: FakePaymentGateway
+) -> None:
+    """Partially refunded by the client's policy but still accepted: the booking is cancelled."""
+    client_id, vendor_id = await _make_parties(db_session, "complete-tiered")
+    booking_id = await _make_booking(
+        db_session,
+        client_id=client_id,
+        vendor_id=vendor_id,
+        payment_status="partially_refunded",
+        cancellation_policy="strict",
+        cancellation_refund_percent=50,
+        cancellation_refund_gbp=82.5,
+        cancellation_vendor_share_gbp=75.0,
+        cancellation_payout_at=datetime(2026, 2, 1, tzinfo=UTC),
+    )
+
+    response = await client.post(
+        f"/api/v1/admin/bookings/{booking_id}/complete-cancellation",
+        headers=await _super_admin_headers(db_session),
+    )
+
+    assert response.status_code == 200, response.text
+    booking = await _booking(db_session, booking_id)
+    assert (booking.status, booking.payment_status, booking.cancelled_by) == (
+        "cancelled",
+        "partially_refunded",
+        "client",
+    )
+    assert payment_gateway.calls == []
+
+
+async def test_complete_cancellation_refuses_a_staff_partial_refund(
+    client: AsyncClient, db_session: AsyncSession, payment_gateway: FakePaymentGateway
+) -> None:
+    """A staff partial refund (no cancellation percent on record) is not a cancel in progress."""
+    client_id, vendor_id = await _make_parties(db_session, "complete-partial")
+    booking_id = await _make_booking(
+        db_session, client_id=client_id, vendor_id=vendor_id, payment_status="partially_refunded"
+    )
+
+    response = await client.post(
+        f"/api/v1/admin/bookings/{booking_id}/complete-cancellation",
+        headers=await _super_admin_headers(db_session),
+    )
+
+    assert response.status_code == 400, response.text
+    assert response.json()["code"] == "recovery_only_refunded_complete_cancel"

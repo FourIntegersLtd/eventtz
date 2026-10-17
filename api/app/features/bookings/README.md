@@ -21,8 +21,12 @@ slice owns Stripe's side (webhooks, Connect) and calls these, never the reverse.
   then **accepts or declines the new price** (declining restores the original).
 - As a **client**, I **accept or decline a vendor's quote** (giving the venue),
   and **cancel** a pending or accepted booking.
-- As a **client or vendor**, I **cancel a paid booking**; the client is refunded
-  in full first, and a checkout still open is closed so it cannot be paid.
+- As a **client or vendor**, I **cancel a paid booking**; the money is settled
+  first, and a checkout still open is closed so it cannot be paid. A vendor
+  cancelling refunds the client in full. A client cancelling is refunded by the
+  vendor's cancellation preset (`domain_cancellation.py`: Flexible, Moderate or
+  Strict tiers by days before the event, a 24h cooling-off, the Eventtz fee
+  always refunded) and the vendor is sent the rest at once.
 - As a **client**, I **set the venue of an accepted booking** before paying.
 - As a **client or vendor**, I **list my bookings by bucket** (active, completed,
   closed, all) and **open one** with its price breakdown, the other party's
@@ -69,8 +73,30 @@ slice owns Stripe's side (webhooks, Connect) and calls these, never the reverse.
   or completed, and follow each party's sharing settings. A closed account's
   email is never shown.
 - A vendor must be able to receive payouts (or have a staff override) to accept.
-- A booking cannot be cancelled once completed, paid out, partly refunded, or
-  while a problem report is open.
+- **Terms snapshot (ADR 0010).** Checkout copies the vendor's report window, split payout,
+  delivery deadline and deposit onto the booking; later profile edits never change a paid
+  booking. NULL means the booking predates the rule.
+- **Payment deadline.** Accepted + unpaid bookings expire at the earlier of
+  `booking_payment_deadline_hours` after acceptance and 48h before the event (event start if
+  accepted inside 48h). Expiry is `cancelled` by `system` with `failure_reason = PAYMENT_DEADLINE`.
+  Bookings accepted before `terms_version` are exempt.
+- **Split payouts.** Photography bookings with `payout_upfront_percent` pay in two Transfers
+  (`{id}-upfront`, then the remainder). After the first, `status = completed` and
+  `payment_status` stays `paid`; `payout_stage` is derived, never stored.
+- **Deposits** ride inside the Checkout charge. Refund key `refund-{id}-deposit`; a resolved claim
+  pays the award as a Transfer (part `deposit`) and refunds the rest (`refund-{id}-deposit-remainder`).
+- **Notices to both sides** use separate kinds (`vendor_*`): `booking_notifications` is unique on
+  `(booking_id, kind)`.
+- A booking cannot be cancelled once completed, paid out, partly refunded, while
+  a problem report is open, or while support holds it (`cancel_on_support_hold`). (`cancelled` + `partially_refunded` with
+  `cancellation_refund_percent` set is a finished tiered client cancel, not a
+  booking awaiting one; the vendor's share, `cancellation_vendor_share_gbp`, is
+  sent at cancel time, or held with `cancellation_payout_at` empty until their
+  Stripe setup is done and staff retry it with **release-payout**. A staff
+  dispute `partial_refund` on a `paid` booking records the same split with no
+  percent: the refund comes off the vendor's price, Eventtz keeps its fee, and
+  the vendor's remainder is sent or held the same way. Refunding a share that
+  has already been split needs the Stripe dashboard.)
 - Every change notifies the other party (`notifications.service_booking`) and
   publishes `booking_changed` to both parties after commit.
 - `payment_status` (`unpaid → pending → paid → payout_released`, or `refunded` /
@@ -79,11 +105,16 @@ slice owns Stripe's side (webhooks, Connect) and calls these, never the reverse.
 - Checkout charges the server's own re-priced total (automatic discounts
   re-applied for the event date) into Eventtz's balance; the vendor is paid later
   by a Transfer. A completed session is marked paid only when the charged pence
-  equal the total the server priced; a session for a booking no longer accepted,
-  or one a newer checkout replaced, is refunded in full.
+  equal the total the server priced. Any other completed session is refunded in
+  full and staff emailed: a booking no longer accepted ends `refunded`; a session
+  a newer checkout replaced leaves the row on the newer session (which may already
+  be `paid`: a stray refund never rewrites a paid row); a mismatched amount returns
+  the row to `unpaid` so the client can pay the right total. Opening a new checkout
+  expires the previous pending session first.
 - Every Stripe refund carries an idempotency key `refund-{booking id}-{reason}`
-  (`full`, `partial`, `cancel-client`, `cancel-vendor`, or a checkout reason), so a
-  redelivered webhook or a retry never refunds twice.
+  (`full`, `partial`, `cancel-client`, `cancel-client-{pence}` for a tiered refund,
+  `cancel-vendor`, or a checkout reason), so a redelivered webhook or a retry never
+  refunds twice.
 - Money moves first, then the booking is written: a refund Stripe refuses stops
   the cancel (400 `refund_failed`, staff emailed). The vendor is paid only by a
   Transfer in group `booking_{id}`, funded from the client's charge; one already in
@@ -91,7 +122,13 @@ slice owns Stripe's side (webhooks, Connect) and calls these, never the reverse.
   guards a retry. A vendor Stripe cannot pay yet is told the payout is held and the
   booking stays paid. `completed` + `payout_released` is written only from
   `accepted` + `paid`.
-- An automatic payout never happens with an open dispute or a support hold. Each
+- No payout happens with an open dispute or a support hold: every caller of
+  `release_vendor_payout` (both parties confirming, the hourly retry and
+  auto-release, staff release-payout and confirm-on-behalf) runs
+  `service_common.check_may_pay_out` first (`payout_blocked_by_dispute`,
+  `payout_on_support_hold`); the client and vendor detail carry `has_open_dispute`
+  so the screens hide "Confirm event complete". Only a dispute resolution that
+  releases to the vendor pays out past an open dispute, closing it as it does. Each
   booking is paid in its own job transaction; a refused payout is logged (staff
   were alerted) and retried next hour. The completion reminder is claimed by
   stamping `completion_reminder_sent_at` before it is sent, so it goes out once.
@@ -102,6 +139,16 @@ slice owns Stripe's side (webhooks, Connect) and calls these, never the reverse.
   baseline's generic copy was dropped by its own dedupe), plus the in-app notice.
 - The first confirmation also runs the post-event step (reminder, then any payout
   already due), as the baseline did.
+- Money that moves outside the app is recorded from Stripe's webhooks
+  (`payments/service.py` → `service_payments.py`): a card chargeback
+  (`charge.dispute.created`) sets `support_hold` and emails staff with the dispute
+  id; `charge.dispute.closed` lifts the hold when won, or writes `refunded` (from
+  `paid` / `partially_refunded`) and keeps the hold when lost. A refund made in the
+  Stripe dashboard (`charge.refunded`) rewrites `payment_status` to `refunded` or
+  `partially_refunded` to match Stripe's `amount_refunded` and emails staff; the
+  echo of the app's own refund already matches and is a no-op. A `payout_released`
+  booking is never rewritten by either: staff recover the money in Stripe. No
+  dispute or refund id is stored on the row; the ops email and the log carry them.
 - Receipt snapshots (`payment_receipt_snapshot`, `vendor_payment_record_snapshot`,
   `vendor_payout_statement_snapshot`) are frozen write-once at checkout finalize,
   payout release and admin payment sync; a frozen snapshot is returned as-is with
@@ -115,13 +162,16 @@ Client (`/client`): `GET /booking-requests`, `POST /booking-requests`,
 `POST /booking-requests/{id}/cancel`, `PATCH /booking-requests/{id}/venue`,
 `POST /booking-requests/{id}/checkout`, `POST /booking-requests/{id}/checkout/sync`,
 `POST /booking-requests/{id}/confirm-completion`,
+`POST /booking-requests/{id}/confirm-delivery`, `POST /booking-requests/{id}/date-change` (and `/respond`, `/withdraw`),
 `GET /booking-requests/{id}/receipt`, `GET /booking-requests/{id}/receipt.html`.
 
 Vendor (`/vendor`): `POST /booking-requests/vendor-quote`, `GET /booking-requests`,
 `GET /booking-requests/{id}`, `PUT /booking-requests/{id}/adjustments`,
 `PATCH /booking-requests/{id}/status`, `POST /booking-requests/{id}/confirm-completion`,
 `GET /booking-requests/{id}/payment-record`, `GET /booking-requests/{id}/payment-record.html`,
-`GET /booking-requests/{id}/payout-statement`, `GET /booking-requests/{id}/payout-statement.html`.
+`GET /booking-requests/{id}/payout-statement`, `GET /booking-requests/{id}/payout-statement.html`,
+`POST /booking-requests/{id}/deposit-claim`, `POST /booking-requests/{id}/date-change`
+(and `/respond`, `/withdraw`).
 
 Admin (`/admin`): `GET /bookings`, `GET /bookings/{id}` (any staff member);
 `PATCH /bookings/{id}/payment-fields`, `POST /bookings/{id}/reset-checkout`,
@@ -133,8 +183,12 @@ paid booking in an optional `paid_at` range; the export additionally writes a
 
 Super admin (`/admin`, `router_admin_recovery.py`), each `POST /bookings/{id}/...`:
 `sync-payment`, `release-payout`, `retry-payout`, `complete-cancellation`,
-`cancel-on-behalf` (`{party, reason}`), `confirm-completion` (`{party}`),
-`run-maintenance`. Each answers `{success, booking}` with the admin detail view.
+`cancel-on-behalf` (`{party, reason, exceptional}`), `confirm-completion` (`{party}`),
+`run-maintenance`, `deposit-claim/resolve` (`{award_gbp}`). Each answers `{success, booking}` with the admin detail view.
+`sync-payment` from a PaymentIntent holds it to the webhook's checks (succeeded,
+names this booking, amount equals the priced total in its metadata) and stamps
+`paid_at` from the intent's creation time, so the cooling-off window is not
+reopened. `cancel-on-behalf` always refunds a paid booking in full, for either party.
 
 Job: `bookings.run_booking_maintenance`, hourly (`0 * * * *`).
 

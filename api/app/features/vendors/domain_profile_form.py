@@ -278,6 +278,19 @@ def _is_iso_date_text(text: str) -> bool:
     return bool(_ISO_DATE.match(text[:10] if len(text) >= 10 else text))
 
 
+# The client-cancellation presets a vendor may pick. The refund tiers behind each key live in
+# `bookings/domain_cancellation.py` (slices meet only at services, so the keys are repeated here;
+# `tests/unit/test_bookings_cancellation_domain.py` keeps the two lists equal).
+CANCELLATION_POLICY_KEYS = ("flexible", "moderate", "strict")
+DEFAULT_CANCELLATION_POLICY = "flexible"
+
+
+def normalize_cancellation_policy(raw_policy: str) -> str:
+    """The vendor's chosen preset key, or the default (the most client-friendly) for anything else."""
+    key = raw_policy.strip().lower()
+    return key if key in CANCELLATION_POLICY_KEYS else DEFAULT_CANCELLATION_POLICY
+
+
 def normalize_payload_fields(payload: dict[str, Any], user_id: str, *, upload_host: str) -> dict[str, Any]:
     """A copy of the form with numbers clamped into range and foreign upload URLs dropped.
 
@@ -295,6 +308,10 @@ def normalize_payload_fields(payload: dict[str, Any], user_id: str, *, upload_ho
         form["packages"] = [_normalize_package(package) for package in packages if isinstance(package, dict)]
 
     form["maxBookingsPerDay"] = str(_max_bookings(text_field(form, "maxBookingsPerDay")))
+    # Absent means "not chosen yet" (read as the default); only a sent value is clamped, so forms
+    # saved before the setting existed keep their baseline shape and vendors can be prompted later.
+    if "cancellationPolicy" in form:
+        form["cancellationPolicy"] = normalize_cancellation_policy(text_field(form, "cancellationPolicy"))
     _normalize_uploads(form, user_id, upload_host)
 
     blocked_dates = form.get("blockedDates")
@@ -413,6 +430,42 @@ def _check_pricing(payload: dict[str, Any]) -> None:
         _check_pct(text_field(payload, "bulkDiscountPercent"), "Bulk discount")
         _check_pct(text_field(payload, "offPeakDiscountPercent"), "Off-peak discount")
         _check_money(text_field(payload, "bulkDiscountThreshold"), "Bulk threshold")
+    _check_terms_options(payload)
+
+
+# The vendor's own payout and deposit options (terms remediation 3.1, 3.5). The same limits are in
+# `bookings/domain_policy.py`, which applies them to a booking, and `web/lib/policyConstants.json`;
+# `tests/unit/test_policy_constants.py` keeps the three in step.
+DELIVERY_UPFRONT_PERCENT_MIN = 50
+DELIVERY_UPFRONT_PERCENT_MAX = 80
+DELIVERY_DEADLINE_DAYS_MAX = 60
+DEPOSIT_MAX_GBP = 1000
+
+
+def _check_whole_number_between(raw: str, label: str, lowest: int, highest: int) -> None:
+    """A filled-in whole number must lie between `lowest` and `highest`."""
+    if not raw.strip():
+        return
+    number = parse_money_gbp(raw)
+    if number is None or number != int(number) or not lowest <= number <= highest:
+        raise ProfileInvalid(f"{label} must be a whole number from {lowest} to {highest}.")
+
+
+def _check_terms_options(payload: dict[str, Any]) -> None:
+    """The optional split payout (photography) and damage deposit (rentals, decor) settings."""
+    upfront = text_field(payload, "deliveryUpfrontPercent")
+    deadline = text_field(payload, "deliveryDeadlineDays")
+    _check_whole_number_between(
+        upfront, "Paid after the event (%)", DELIVERY_UPFRONT_PERCENT_MIN, DELIVERY_UPFRONT_PERCENT_MAX
+    )
+    _check_whole_number_between(deadline, "Days to deliver", 1, DELIVERY_DEADLINE_DAYS_MAX)
+    if bool(upfront.strip()) != bool(deadline.strip()):
+        raise ProfileInvalid("Set both the part paid after the event and the days to deliver, or neither.")
+    deposit = text_field(payload, "damageDepositGbp")
+    if deposit.strip():
+        amount = parse_money_gbp(deposit)
+        if amount is None or not 0 <= amount <= DEPOSIT_MAX_GBP:
+            raise ProfileInvalid(f"Damage deposit must be an amount from £0 to £{DEPOSIT_MAX_GBP}.")
 
 
 def _check_availability(payload: dict[str, Any]) -> None:

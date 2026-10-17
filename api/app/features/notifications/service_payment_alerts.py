@@ -23,6 +23,10 @@ log = get_logger(__name__)
 __all__ = [
     "PAYMENT_RECEIVED_CLIENT_BODY",
     "VENDOR_PAYMENT_RECEIVED_BODY",
+    "send_chargeback_alert",
+    "send_checkout_refunded_alert",
+    "send_deposit_claim_alert",
+    "send_external_refund_alert",
     "send_payout_stuck_alert",
     "send_refund_failed_alert",
 ]
@@ -42,6 +46,118 @@ def send_refund_failed_alert(mailer: Mailer, *, booking_id: str, error_hint: str
             headline="Stripe refund failed",
             fields=[("Booking", booking_id)],
             body=error_hint or "Check logs and Stripe dashboard.",
+            action_url=admin_sign_in_url(),
+            action_label="Sign in to admin",
+        ),
+    )
+
+
+def send_checkout_refunded_alert(mailer: Mailer, *, booking_id: str, reason: str, detail: str) -> bool:
+    """Tell staff a Checkout payment was refunded because the booking could not take it.
+
+    Money moved outside the normal flow (a stale tab, a cancelled booking, a charged amount
+    that differs from the priced total), so staff check the booking even though the client
+    has already been refunded. False when the email could not go out.
+    """
+    return send_admin_alert(
+        mailer,
+        AdminAlert(
+            template_id="admin.checkout_refunded",
+            subject=f"[Eventtz ops] Checkout payment refunded | booking {booking_id[:8]}",
+            headline="A Checkout payment was refunded automatically",
+            fields=[("Booking", booking_id), ("Reason", reason)],
+            body=detail,
+            action_url=admin_sign_in_url(),
+            action_label="Sign in to admin",
+        ),
+    )
+
+
+def send_deposit_claim_alert(
+    mailer: Mailer, *, booking_id: str, claim_label: str, deposit_label: str, note: str
+) -> bool:
+    """Tell staff a vendor claimed part of a client's damage deposit, so they decide it.
+
+    The deposit stays held until staff resolve the claim from the admin booking page.
+    False when the email could not go out.
+    """
+    return send_admin_alert(
+        mailer,
+        AdminAlert(
+            template_id="admin.deposit_claim",
+            subject=f"[Eventtz ops] Deposit claim to decide | booking {booking_id[:8]}",
+            headline="A vendor claimed part of a damage deposit",
+            fields=[("Booking", booking_id), ("Claimed", claim_label), ("Deposit", deposit_label)],
+            body=note,
+            action_url=admin_sign_in_url(),
+            action_label="Sign in to admin",
+        ),
+    )
+
+
+def send_chargeback_alert(
+    mailer: Mailer,
+    *,
+    booking_id: str,
+    dispute_id: str,
+    amount_label: str,
+    reason: str | None,
+    outcome: str,
+) -> bool:
+    """Tell staff a card chargeback was opened, won or lost on `booking_id` (`outcome` is one of those).
+
+    An open chargeback puts the booking on support hold, so nothing pays out or refunds
+    until staff clear it; a lost one has already taken the money back from Eventtz's
+    balance, so the booking reads refunded. False when the email could not go out.
+    """
+    headline = {
+        "opened": "Card chargeback opened: booking put on hold",
+        "won": "Card chargeback won: hold lifted",
+        "lost": "Card chargeback lost: booking marked refunded",
+    }.get(outcome, f"Card chargeback {outcome}")
+    return send_admin_alert(
+        mailer,
+        AdminAlert(
+            template_id="admin.chargeback",
+            subject=f"[Eventtz ops] Chargeback {outcome} | booking {booking_id[:8]}",
+            headline=headline,
+            fields=[
+                ("Booking", booking_id),
+                ("Stripe dispute", dispute_id),
+                ("Amount", amount_label),
+                ("Reason", reason or "not given"),
+            ],
+            body=(
+                "Respond to the dispute in the Stripe dashboard. "
+                "The booking stays on hold until you clear it."
+            ),
+            action_url=admin_sign_in_url(),
+            action_label="Sign in to admin",
+        ),
+    )
+
+
+def send_external_refund_alert(
+    mailer: Mailer, *, booking_id: str, refunded_label: str, charged_label: str, payment_status: str
+) -> bool:
+    """Tell staff a refund made outside the app (the Stripe dashboard) was recorded on `booking_id`.
+
+    The booking's `payment_status` now reflects it, but the booking status, the client's
+    notice and any vendor share are for staff to settle. False when the email could not go out.
+    """
+    return send_admin_alert(
+        mailer,
+        AdminAlert(
+            template_id="admin.external_refund",
+            subject=f"[Eventtz ops] Refund outside the app | booking {booking_id[:8]}",
+            headline="A refund was made in the Stripe dashboard",
+            fields=[
+                ("Booking", booking_id),
+                ("Refunded so far", refunded_label),
+                ("Charged", charged_label),
+                ("Payment status now", payment_status),
+            ],
+            body="Check the booking: its status, the client's notice and any vendor share were not changed.",
             action_url=admin_sign_in_url(),
             action_label="Sign in to admin",
         ),

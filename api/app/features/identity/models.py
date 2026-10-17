@@ -87,6 +87,16 @@ class User(Base, UUIDPrimaryKey, Timestamps):
         DateTime(timezone=True),
         comment="When set, the account is closed: login is gone, PII is stripped, row kept for booking FKs.",
     )
+    terms_accepted_version: Mapped[str | None] = mapped_column(
+        Text, comment="Version (effective date) of the Terms of Service the person last accepted."
+    )
+    terms_accepted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), comment="When they accepted terms_accepted_version."
+    )
+    terms_notice_sent_version: Mapped[str | None] = mapped_column(
+        Text,
+        comment="Terms version whose change notice was last emailed to them (one email per version).",
+    )
 
 
 class EmailVerificationToken(Base, UUIDPrimaryKey):

@@ -76,6 +76,7 @@ export function AdminVendorsTable({
           <AdminTableHeaderCell>Form</AdminTableHeaderCell>
           <AdminTableHeaderCell>Approval</AdminTableHeaderCell>
           <AdminTableHeaderCell>Payouts</AdminTableHeaderCell>
+          <AdminTableHeaderCell>Cancellations</AdminTableHeaderCell>
           <AdminTableHeaderCell>Updated</AdminTableHeaderCell>
           <AdminTableHeaderCell className="text-right">Action</AdminTableHeaderCell>
         </AdminTableHead>
@@ -141,6 +142,14 @@ export function AdminVendorsTable({
                     </span>
                   ) : approvedNotLive ? (
                     <span className="mt-1 block text-xs text-amber-800">Hidden from clients</span>
+                  ) : null}
+                </AdminTableCell>
+                <AdminTableCell className="whitespace-nowrap">
+                  {r.vendor_cancellation_count ?? 0}
+                  {r.cancellation_review_flag ? (
+                    <span className="ml-2 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-900">
+                      Review
+                    </span>
                   ) : null}
                 </AdminTableCell>
                 <AdminTableCell className="whitespace-nowrap text-neutral-500">{updated}</AdminTableCell>

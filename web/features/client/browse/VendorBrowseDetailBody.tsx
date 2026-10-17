@@ -32,6 +32,7 @@ import { ClientFeeBreakdownSummary } from "@/features/bookings/ClientFeeBreakdow
 import { useVendorReferralPreview } from "./useVendorReferralPreview";
 import { marketLocationFallback } from "@/lib/markets";
 import { payloadStringField } from "@/lib/vendorPayload";
+import { serviceFeeBadgeLabel } from "@/features/bookings/bookingTerms";
 import { publicListingImageUrlsFromPayload } from "@/lib/vendorPortfolioImages";
 
 type VendorBrowseDetailBodyProps = {
@@ -148,6 +149,9 @@ export function VendorBrowseDetailBody({
 
   const bookingCard = (
     <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+      <p className="px-5 pt-4 text-xs font-medium text-neutral-500">
+        Prices shown are the vendor&apos;s own. {serviceFeeBadgeLabel()} is added at checkout.
+      </p>
       <BrowsePricingSharedInfo
         {...pricingShared}
         variant="booking"

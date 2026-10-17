@@ -6,7 +6,7 @@ Every function takes the request's session and never commits (ADR 0002).
 from __future__ import annotations
 
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.ext.asyncio import AsyncSession, AsyncSessionTransaction
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.features.payments.models import StripeWebhookEvent
 
@@ -24,14 +24,3 @@ async def claim_webhook_event(session: AsyncSession, event_id: str, event_type: 
         .returning(StripeWebhookEvent.id)
     )
     return result.first() is not None
-
-
-def webhook_handler_savepoint(session: AsyncSession) -> AsyncSessionTransaction:
-    """A savepoint around one webhook handler.
-
-    The webhook always answers 200 once the signature is valid (Stripe retries
-    anything else), so a handler that fails half way must not leave half its writes
-    behind to be committed with the event claim. Rolling back to the savepoint
-    keeps the claim and discards the rest, as the baseline's failure did.
-    """
-    return session.begin_nested()

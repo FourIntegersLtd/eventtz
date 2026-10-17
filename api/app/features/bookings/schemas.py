@@ -18,6 +18,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 # (a router imports only its slice's `schemas`).
 from app.features.bookings.schemas_admin import AdminBookingDetailResponse as AdminBookingDetailResponse
 from app.features.bookings.schemas_receipts import PaymentReceiptResponse as PaymentReceiptResponse
+from app.features.bookings.schemas_terms import BookingTermsFields as BookingTermsFields
 
 # A client referral code is at most this many digits (as in the referrals slice).
 _REFERRAL_CODE_MAX_DIGITS = 6
@@ -323,7 +324,7 @@ class VendorBookingsListResponse(BaseModel):
     bookings: list[VendorBookingListItem]
 
 
-class VendorBookingDetail(BaseModel):
+class VendorBookingDetail(BookingTermsFields):
     """One booking as the vendor sees it."""
 
     model_config = ConfigDict(populate_by_name=True)
@@ -356,6 +357,13 @@ class VendorBookingDetail(BaseModel):
     review: VendorReviewSummary | None = None
     initiator: Literal["client", "vendor"] = "client"
     conversation_id: str | None = None
+    # True while a problem report is open or under review: completion cannot be confirmed.
+    has_open_dispute: bool = False
+    # After a tiered client cancel: the vendor's share and whether it has been sent.
+    cancellation_policy: str | None = None
+    cancellation_refund_percent: int | None = None
+    cancellation_vendor_share_gbp: float | None = None
+    cancellation_payout_at: str | None = None
 
 
 class VendorBookingDetailResponse(BaseModel):
@@ -388,6 +396,9 @@ class VendorBookingStatusResponse(BaseModel):
     success: bool = True
     booking_request_id: str = Field(validation_alias="id")
     booking_status: str = Field(validation_alias="status")
+    # Set only by a client cancel of a paid booking: what the vendor's policy refunded.
+    refund_percent: int | None = None
+    refund_gbp: float | None = None
 
 
 # --- client views ------------------------------------------------------------------------------------
@@ -427,7 +438,22 @@ class ClientBookingsListResponse(BaseModel):
     bookings: list[ClientBookingListItem]
 
 
-class ClientBookingDetail(BaseModel):
+class CancellationPreview(BaseModel):
+    """What the client would get back if they cancelled a paid booking right now."""
+
+    percent: int
+    refund_gbp: float
+    refund_label: str
+    # Set while the 24h cooling-off window still guarantees a full refund.
+    cooling_off_until: str | None = None
+    # The next day the refund percent drops, and what it drops to.
+    next_tier_at: str | None = None
+    next_tier_percent: int | None = None
+    # The policy in plain language, one line per tier.
+    lines: list[str] = Field(default_factory=list)
+
+
+class ClientBookingDetail(BookingTermsFields):
     """One booking as the client sees it."""
 
     model_config = ConfigDict(populate_by_name=True)
@@ -458,10 +484,21 @@ class ClientBookingDetail(BaseModel):
     review: ClientReviewSummary | None = None
     initiator: Literal["client", "vendor"] = "client"
     conversation_id: str | None = None
+    # True while a problem report is open or under review: completion cannot be confirmed.
+    has_open_dispute: bool = False
     event_id: str | None = None
     event_title: str | None = None
     vendor_referral_code: str | None = None
     counterparty_phone: str | None = None
+    # The vendor's cancellation preset: snapshotted at checkout once paid, else the vendor's current one.
+    cancellation_policy: str | None = None
+    cancellation_policy_label: str | None = None
+    cancellation_policy_lines: list[str] = Field(default_factory=list)
+    # Only while paid and cancellable: the refund a cancel now would make.
+    cancellation_preview: CancellationPreview | None = None
+    # After a tiered client cancel: what was refunded.
+    cancellation_refund_percent: int | None = None
+    cancellation_refund_gbp: float | None = None
 
 
 class ClientBookingDetailResponse(BaseModel):
@@ -553,9 +590,54 @@ class AdminCancelOnBehalfBody(BaseModel):
 
     party: Literal["client", "vendor"]
     reason: str = Field(min_length=3, max_length=2000)
+    exceptional: bool = Field(
+        default=False,
+        description="Exceptional circumstances: the cancellation is not counted against a cancelling vendor.",
+    )
 
 
 class AdminConfirmCompletionBody(BaseModel):
     """Staff confirm, for one party, that the event went ahead."""
 
     party: Literal["client", "vendor"]
+
+
+# --- rescheduling ------------------------------------------------------------------------------------
+
+
+class DateChangeRequestBody(BaseModel):
+    """A proposed new date (or date range) for an accepted booking, with an optional note."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    new_event_date: date
+    new_event_end_date: date | None = None
+    note: str | None = Field(default=None, max_length=1000)
+
+
+class DateChangeRespondBody(BaseModel):
+    """The other party's answer to a pending date change."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    accept: bool
+
+
+# --- split payouts and deposits ----------------------------------------------------------------------
+
+
+class DepositClaimBody(BaseModel):
+    """The vendor asks to keep part of the client's damage deposit, saying what was damaged or missing."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    amount_gbp: float = Field(gt=0, le=1000)
+    note: str = Field(min_length=10, max_length=2000)
+
+
+class AdminResolveDepositClaimBody(BaseModel):
+    """Staff decide a deposit claim: how much the vendor keeps (0 up to the claim); the rest is refunded."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    award_gbp: float = Field(ge=0, le=1000)

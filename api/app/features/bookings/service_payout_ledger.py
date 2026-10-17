@@ -3,7 +3,9 @@
 Vendors see their own earnings here, never `total_label` (the client total, which
 includes the Eventtz fee the vendor never receives). A booking appears once its
 payment was collected: `paid` (Transfer still to come) or `payout_released`
-(Transfer sent). A `pending` checkout is money Eventtz has not received yet.
+(Transfer sent), or once a partial refund (a tiered client cancel, `domain_cancellation`,
+or a staff dispute refund) left the vendor a share of the payment. A `pending` checkout
+is money Eventtz has not received yet.
 """
 
 from __future__ import annotations
@@ -25,9 +27,20 @@ def vendor_amount_for(booking: BookingRow) -> float:
     return float(pricing.vendor_portion_gbp(booking.line_items, booking.vendor_adjustments))
 
 
+def _is_cancellation_share(booking: BookingRow) -> bool:
+    """True when a partial refund left the vendor a recorded share, whatever the booking's status."""
+    return (booking.cancellation_vendor_share_gbp or 0.0) > 0
+
+
 def _newest_first_key(booking: BookingRow) -> str:
     """Sort key: when the payout went out, else when the client paid, else when the booking was made."""
-    return str(booking.payout_released_at or booking.paid_at or booking.created_at or "")
+    return str(
+        booking.payout_released_at
+        or booking.cancellation_payout_at
+        or booking.paid_at
+        or booking.created_at
+        or ""
+    )
 
 
 async def vendor_payout_ledger(session: AsyncSession, vendor_user_id: str) -> VendorPayoutLedger:
@@ -44,8 +57,15 @@ async def vendor_payout_ledger(session: AsyncSession, vendor_user_id: str) -> Ve
     paid_out_total = 0.0
     awaiting_total = 0.0
     for booking in bookings:
-        released = booking.payment_status == PAYOUT_RELEASED
-        amount = vendor_amount_for(booking)
+        share = _is_cancellation_share(booking)
+        released = (
+            booking.cancellation_payout_at is not None if share else booking.payment_status == PAYOUT_RELEASED
+        )
+        amount = (
+            round(float(booking.cancellation_vendor_share_gbp or 0.0), 2)
+            if share
+            else vendor_amount_for(booking)
+        )
         if released:
             paid_out_total += amount
         else:
@@ -59,7 +79,10 @@ async def vendor_payout_ledger(session: AsyncSession, vendor_user_id: str) -> Ve
                 amount_gbp=amount,
                 amount_label=pricing.format_gbp(amount),
                 status="paid_out" if released else "awaiting_payout",
-                paid_out_at=booking.payout_released_at if released else None,
+                paid_out_at=(booking.cancellation_payout_at if share else booking.payout_released_at)
+                if released
+                else None,
+                kind="cancellation_share" if share else "event_payout",
             )
         )
     paid_out_total = round(paid_out_total, 2)

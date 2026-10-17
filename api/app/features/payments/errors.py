@@ -38,6 +38,13 @@ class StripeConnectRestoreRequired(Unavailable):
     )
 
 
+class StripeWebhookHandlerFailed(Unavailable):
+    """A verified webhook's handler failed; the 503 makes Stripe redeliver the event later."""
+
+    code = "stripe_webhook_handler_failed"
+    default_message = "The webhook could not be processed; Stripe will retry it."
+
+
 class StripeConnectSyncFailed(Unavailable):
     """Stripe refused to show the vendor's Connect account (a permission error), so setup cannot go on."""
 

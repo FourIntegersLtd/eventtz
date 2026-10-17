@@ -24,6 +24,8 @@ export function resolutionActionLabel(a: AdminDisputeCase["resolution_action"]):
       return "Refund client in full";
     case "partial_refund":
       return "Partial refund to client";
+    case "vendor_no_show":
+      return "Vendor didn't turn up (full refund, counts against the vendor)";
     default:
       return "-";
   }
@@ -40,6 +42,7 @@ export const RESOLUTION_ACTIONS: NonNullable<AdminDisputeCase["resolution_action
   "release_to_vendor",
   "refund_client",
   "partial_refund",
+  "vendor_no_show",
 ];
 
 export function formatEventDate(iso: string | null | undefined): string {

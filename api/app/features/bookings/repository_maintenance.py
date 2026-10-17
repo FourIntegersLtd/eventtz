@@ -7,6 +7,7 @@ writes are conditional so two overlapping runs cannot both act on one booking.
 from __future__ import annotations
 
 from datetime import date, datetime
+from typing import Any
 
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, AsyncSessionTransaction
@@ -188,3 +189,91 @@ async def paid_bookings_starting_on(
         .limit(limit)
     )
     return [BookingRow.model_validate(plain_row(found)) for found in result]
+
+
+async def bookings_awaiting_final_payout(
+    session: AsyncSession, *, limit: int, after_id: str | None = None
+) -> list[BookingRow]:
+    """Completed, still-paid split bookings whose first part is out (the caller checks the deadline).
+
+    Paged by id (`after_id`) so bookings that are not due yet never crowd out ones that are.
+    """
+    result = await session.execute(
+        select(*BOOKING_COLUMNS)
+        .where(
+            BookingRequest.status == "completed",
+            BookingRequest.payment_status == "paid",
+            BookingRequest.upfront_payout_at.is_not(None),
+            BookingRequest.support_hold.is_(False),
+            *_after(after_id),
+        )
+        .order_by(BookingRequest.id)
+        .limit(limit)
+    )
+    return [BookingRow.model_validate(plain_row(found)) for found in result]
+
+
+async def unpaid_bookings_accepted_since(
+    session: AsyncSession, *, accepted_on_or_after: date, limit: int, after_id: str | None = None
+) -> list[BookingRow]:
+    """Accepted bookings not yet paid, accepted on or after `accepted_on_or_after` (deadline rule).
+
+    The caller works out each booking's deadline; this only narrows to the ones that can have one.
+    """
+    result = await session.execute(
+        select(*BOOKING_COLUMNS)
+        .where(
+            BookingRequest.status == "accepted",
+            BookingRequest.payment_status.in_(("unpaid", "pending")),
+            BookingRequest.accepted_at.is_not(None),
+            func.date(BookingRequest.accepted_at) >= accepted_on_or_after,
+            *_after(after_id),
+        )
+        .order_by(BookingRequest.id)
+        .limit(limit)
+    )
+    return [BookingRow.model_validate(plain_row(found)) for found in result]
+
+
+async def bookings_holding_deposit(
+    session: AsyncSession, *, limit: int, after_id: str | None = None
+) -> list[BookingRow]:
+    """Paid bookings whose deposit is still held and unclaimed (the caller checks the claim window)."""
+    result = await session.execute(
+        select(*BOOKING_COLUMNS)
+        .where(
+            BookingRequest.damage_deposit_gbp > 0,
+            BookingRequest.paid_at.is_not(None),
+            BookingRequest.deposit_refunded_at.is_(None),
+            BookingRequest.deposit_claim_resolved_at.is_(None),
+            BookingRequest.deposit_claimed_at.is_(None),
+            BookingRequest.payment_status.in_(("paid", "payout_released", "partially_refunded")),
+            *_after(after_id),
+        )
+        .order_by(BookingRequest.id)
+        .limit(limit)
+    )
+    return [BookingRow.model_validate(plain_row(found)) for found in result]
+
+
+async def bookings_owing_deposit_remainder(session: AsyncSession, *, limit: int) -> list[BookingRow]:
+    """Decided deposit claims whose refund of the rest to the client has not gone through yet."""
+    result = await session.execute(
+        select(*BOOKING_COLUMNS)
+        .where(
+            BookingRequest.damage_deposit_gbp > 0,
+            BookingRequest.deposit_claim_resolved_at.is_not(None),
+            BookingRequest.deposit_refunded_at.is_(None),
+            BookingRequest.deposit_claim_awarded_gbp < BookingRequest.damage_deposit_gbp,
+            BookingRequest.payment_status.in_(("paid", "payout_released", "partially_refunded")),
+        )
+        .order_by(BookingRequest.id)
+        .limit(limit)
+    )
+    return [BookingRow.model_validate(plain_row(found)) for found in result]
+
+
+def _after(after_id: str | None) -> list[Any]:
+    """The keyset filter for the next page: rows whose id sorts after `after_id` (none on page one)."""
+    after_uuid = as_uuid(after_id) if after_id else None
+    return [BookingRequest.id > after_uuid] if after_uuid is not None else []

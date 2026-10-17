@@ -86,6 +86,9 @@ def principal_view(principal: Principal, profile: UserProfileRow | None) -> Auth
         email_verified=principal.email_verified,
         preferred_name=preferred_name,
         client_onboarding_completed=onboarding_completed,
+        terms_version=get_settings().terms_version,
+        terms_accepted_version=profile.terms_accepted_version if profile else None,
+        terms_accepted_at=profile.terms_accepted_at if profile else None,
     )
 
 

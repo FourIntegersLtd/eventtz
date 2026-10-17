@@ -62,6 +62,27 @@ def test_summarize_a_released_payout_moves_the_vendor_amount_out_of_held() -> No
     assert summary.platform_fee_pence == 750
 
 
+def test_summarize_counts_an_unsent_vendor_share_after_a_partial_refund_as_held() -> None:
+    """GBP 40 refunded off a GBP 150 vendor price: GBP 110 still sits in Eventtz's balance."""
+    summary = summarize([_paid_booking(payment_status="partially_refunded", cancellation_share_pence=11000)])
+    assert summary.held_in_platform_balance_pence == 11000
+    assert summary.payout_released_pence == 0
+
+
+def test_summarize_moves_a_sent_vendor_share_to_released() -> None:
+    summary = summarize(
+        [
+            _paid_booking(
+                payment_status="partially_refunded",
+                cancellation_share_pence=7500,
+                cancellation_share_sent=True,
+            )
+        ]
+    )
+    assert summary.held_in_platform_balance_pence == 0
+    assert summary.payout_released_pence == 7500
+
+
 def test_summarize_falls_back_to_the_priced_breakdown_when_no_snapshot_was_stored() -> None:
     booking = _paid_booking(
         payment_amount_snapshot_pence=None,

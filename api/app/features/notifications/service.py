@@ -32,6 +32,7 @@ from app.features.notifications.domain_account_emails import (
     password_reset_email,
     support_message_email,
     team_invite_email,
+    terms_updated_email,
     transactional_context,
     welcome_context,
     welcome_email,
@@ -43,10 +44,14 @@ from app.features.notifications.domain_booking_copy import (
 )
 from app.features.notifications.domain_vendor_emails import (
     vendor_approval_status_email,
+    vendor_choose_cancellation_policy_email,
     vendor_complete_profile_nudge_email,
+    vendor_listing_hidden_email,
+    vendor_listing_paused_email,
     vendor_returned_for_edits_email,
     vendor_setup_payouts_nudge_email,
     vendor_submitted_alert,
+    vendor_warning_email,
 )
 from app.features.notifications.rendering import render_template
 
@@ -356,6 +361,19 @@ def send_password_changed(mailer: Mailer, *, email: str, user_type: str | None =
         return False
 
 
+def send_terms_updated(mailer: Mailer, *, email: str, terms_version: str) -> bool:
+    """Email `email` about the updated Terms. False for an invalid address or a failed send, never raises."""
+    normalized = email.strip().lower()
+    if "@" not in normalized:
+        return False
+    try:
+        content = terms_updated_email(terms_version=terms_version)
+        return mailer.send(_render_transactional(normalized, content))
+    except Exception:
+        log.exception("terms updated notice could not be sent")
+        return False
+
+
 def render_welcome(*, email: str, user_type: str) -> OutgoingEmail:
     """Render the welcome email for `email`. Raises `ValueError` for any `user_type` but the three below."""
     if user_type == "admin":
@@ -436,6 +454,7 @@ def render_vendor_approval_changed(
     business_name: str | None,
     listing_visible: bool = False,
     payouts_verified: bool = False,
+    reason: str | None = None,
 ) -> OutgoingEmail:
     """Render the approval-change email to `vendor_email` for `approval_status`, without sending it."""
     content = vendor_approval_status_email(
@@ -443,6 +462,7 @@ def render_vendor_approval_changed(
         business_name=business_name,
         listing_visible=listing_visible,
         payouts_verified=payouts_verified,
+        reason=reason,
     )
     return render_booking_notification(vendor_email, content)
 
@@ -455,6 +475,7 @@ def send_vendor_approval_changed(
     business_name: str | None,
     listing_visible: bool = False,
     payouts_verified: bool = False,
+    reason: str | None = None,
 ) -> bool:
     """Email a vendor that an admin changed their approval status. False for a missing/invalid address."""
     if not vendor_email or "@" not in vendor_email:
@@ -466,6 +487,7 @@ def send_vendor_approval_changed(
             business_name=business_name,
             listing_visible=listing_visible,
             payouts_verified=payouts_verified,
+            reason=reason,
         )
         return mailer.send(outgoing)
     except Exception:
@@ -537,6 +559,32 @@ def send_vendor_payout_nudge(mailer: Mailer, *, vendor_email: str | None, busine
         return False
 
 
+def render_vendor_cancellation_policy_nudge(
+    *, vendor_email: str, business_name: str | None, follow_up: bool = False
+) -> OutgoingEmail:
+    """Render the choose-your-cancellation-policy email (or its follow-up), without sending it."""
+    content = vendor_choose_cancellation_policy_email(
+        vendor_email=vendor_email, business_name=business_name, follow_up=follow_up
+    )
+    return render_booking_notification(vendor_email, content)
+
+
+def send_vendor_cancellation_policy_nudge(
+    mailer: Mailer, *, vendor_email: str | None, business_name: str | None, follow_up: bool = False
+) -> bool:
+    """Email an approved vendor to choose a cancellation preset. False for a missing/invalid address."""
+    if not vendor_email or "@" not in vendor_email:
+        return False
+    try:
+        outgoing = render_vendor_cancellation_policy_nudge(
+            vendor_email=vendor_email, business_name=business_name, follow_up=follow_up
+        )
+        return mailer.send(outgoing)
+    except Exception:
+        log.exception("vendor cancellation policy nudge email could not be sent")
+        return False
+
+
 def render_support_message(
     *, email: str, messages_url: str, body_html: str, body_plain: str
 ) -> OutgoingEmail:
@@ -560,3 +608,59 @@ def send_support_message(
     except Exception:
         log.exception("support message email could not be sent")
         return False
+
+
+def _send_vendor_content(
+    mailer: Mailer, vendor_email: str | None, content: TransactionalEmail, failure_message: str
+) -> bool:
+    """Render and send one vendor email. False for a missing/invalid address; never raises."""
+    if not vendor_email or "@" not in vendor_email:
+        return False
+    try:
+        return mailer.send(render_booking_notification(vendor_email, content))
+    except Exception:
+        log.exception(failure_message)
+        return False
+
+
+def send_vendor_listing_hidden(
+    mailer: Mailer, *, vendor_email: str | None, business_name: str | None, reason: str
+) -> bool:
+    """Email a vendor why staff hid their listing and how to appeal."""
+    return _send_vendor_content(
+        mailer,
+        vendor_email,
+        vendor_listing_hidden_email(business_name=business_name, reason=reason),
+        "vendor listing hidden email could not be sent",
+    )
+
+
+def send_vendor_warning(
+    mailer: Mailer, *, vendor_email: str | None, business_name: str | None, message: str
+) -> bool:
+    """Email a vendor a staff warning."""
+    return _send_vendor_content(
+        mailer,
+        vendor_email,
+        vendor_warning_email(business_name=business_name, message=message),
+        "vendor warning email could not be sent",
+    )
+
+
+def send_vendor_listing_paused(
+    mailer: Mailer,
+    *,
+    vendor_email: str | None,
+    business_name: str | None,
+    reason: str,
+    paused_until_label: str,
+) -> bool:
+    """Email a vendor that their listing is paused until a date, and why."""
+    return _send_vendor_content(
+        mailer,
+        vendor_email,
+        vendor_listing_paused_email(
+            business_name=business_name, reason=reason, paused_until_label=paused_until_label
+        ),
+        "vendor listing paused email could not be sent",
+    )

@@ -142,19 +142,31 @@ def _receipt_lines(
     return lines
 
 
-def _status_note(payment_status: str) -> str | None:
-    """The note under a client receipt or payout statement's total, for a refund."""
+def _status_note(payment_status: str, booking: ReceiptBookingRow | None = None) -> str | None:
+    """The note under a client receipt or payout statement's total, for a refund.
+
+    A tiered client cancel (`domain_cancellation`) says how much came back and why.
+    """
     if payment_status == "refunded":
         return "This payment was refunded in full."
     if payment_status == "partially_refunded":
+        if booking is not None and booking.cancellation_refund_percent is not None:
+            refund_label = _format_gbp(float(booking.cancellation_refund_gbp or 0.0))
+            return (
+                f"This booking was cancelled by the client. {refund_label} was refunded under the "
+                f"vendor's cancellation policy ({booking.cancellation_refund_percent}% of the vendor's "
+                "price plus the Eventtz service fee)."
+            )
         return "This payment was partially refunded."
     return None
 
 
-def _vendor_payment_record_status_note(payment_status: str) -> str | None:
+def _vendor_payment_record_status_note(
+    payment_status: str, booking: ReceiptBookingRow | None = None
+) -> str | None:
     """The note under a vendor payment record's total: refunded, held, or released."""
     if payment_status in ("refunded", "partially_refunded"):
-        return _status_note(payment_status)
+        return _status_note(payment_status, booking)
     if payment_status == "payout_released":
         return "Client payment received. Your share has been released to your connected Stripe account."
     if payment_status == "paid":
@@ -192,6 +204,13 @@ def require_eligible(payment_status: str, *, allowed: frozenset[str]) -> None:
         raise ReceiptNotAvailable()
 
 
+def _deposit_lines(booking: ReceiptBookingRow) -> list[dict[str, str]]:
+    """The client's refundable damage deposit, when they paid one (it is part of the total charged)."""
+    if not booking.damage_deposit_gbp or booking.damage_deposit_gbp <= 0:
+        return []
+    return [{"label": "Refundable deposit", "amount_label": _format_gbp(float(booking.damage_deposit_gbp))}]
+
+
 def build_client_payment_receipt(
     booking: ReceiptBookingRow, *, pricing_breakdown: dict[str, Any], vendor_display_name: str
 ) -> dict[str, Any]:
@@ -216,7 +235,8 @@ def build_client_payment_receipt(
         "counterparty_name": vendor_display_name,
         "line_items": _receipt_lines(
             line_items=booking.line_items, pricing_breakdown=pricing_breakdown, include_service_fee=True
-        ),
+        )
+        + _deposit_lines(booking),
         "subtotal_label": str(pricing_breakdown.get("vendor_portion_label") or ""),
         "service_fee_label": str(pricing_breakdown.get("service_fee_label") or ""),
         "service_fee_percent": float(percent) if percent is not None else None,
@@ -226,7 +246,7 @@ def build_client_payment_receipt(
         "payment_reference": payment_reference(booking.stripe_charge_id),
         "transfer_reference": None,
         "stripe_receipt_url": (booking.stripe_receipt_url or "").strip() or None,
-        "status_note": _status_note(booking.payment_status),
+        "status_note": _status_note(booking.payment_status, booking),
         "stripe_payment_intent_id": (booking.stripe_payment_intent_id or "").strip() or None,
         "payment_amount_gbp": payment_amount,
     }
@@ -268,7 +288,7 @@ def build_vendor_payment_record(
         "payment_reference": payment_reference(booking.stripe_charge_id),
         "transfer_reference": None,
         "stripe_receipt_url": None,
-        "status_note": _vendor_payment_record_status_note(booking.payment_status),
+        "status_note": _vendor_payment_record_status_note(booking.payment_status, booking),
     }
 
 
@@ -351,9 +371,9 @@ def overlay_live_payment_status(payload: dict[str, Any], booking: ReceiptBooking
     out["payment_status"] = status
     document_type = str(out.get("document_type") or "")
     if document_type == "vendor_payment_record":
-        out["status_note"] = _vendor_payment_record_status_note(status)
+        out["status_note"] = _vendor_payment_record_status_note(status, booking)
     elif document_type == "client_payment_receipt":
-        out["status_note"] = _status_note(status)
+        out["status_note"] = _status_note(status, booking)
     elif document_type == "vendor_payout_statement":
         out["status_note"] = out.get("status_note") or (
             "Payout sent to your connected Stripe account. Bank arrival times depend on your bank."
