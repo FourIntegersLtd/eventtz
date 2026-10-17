@@ -13,9 +13,8 @@ Monday run.
 **Every Dependabot PR is merged by hand**, after:
 
 - `make ci` passes in `api/` (for a pip PR), or `npm ci && npm run ci` in `web/`
-  (for an npm PR), run locally on the PR branch. `ci.yml`'s `ci-gate` tests
-  only the baseline `backend/` and `frontend/`, so a green PR says nothing
-  about `api/` or `web/` until the cutover adds them.
+  (for an npm PR), run locally on the PR branch, or a green `ci-api` /
+  `ci-web` run on the PR.
 - for a major bump, reading the changelog.
 
 ## 2. Why there is no auto-merge workflow
@@ -23,8 +22,9 @@ Monday run.
 `gh pr merge --auto` waits for *required* status checks. With no branch
 protection there are none, so it merges at once. That is how #42, #47 and #54
 reached `main` untested, and why `dependabot-automerge.yml` was removed.
-Bring it back only when both hold: `ci.yml` runs `api/` and `web/` CI, and
-`main` requires `ci-gate` (a paid plan or a public repo).
+Bring it back only when `main` requires the `ci-api` and `ci-web` checks (a paid
+plan or a public repo). Those workflows are path-filtered, so a required check
+would then need a gate job that always reports.
 
 ## 3. Dependabot security updates
 
@@ -34,7 +34,7 @@ security updates**. These are toggles, not files.
 ## 4. Audits in CI
 
 `.github/workflows/security-audit.yml` runs `pip-audit (api)` and
-`npm-audit (web)` (runtime dependencies, high and critical only) on every PR and push to `main`. They
+`npm-audit (web)` (runtime dependencies, high and critical only) when a manifest or lockfile changes, and weekly. They
 report; nothing can block a merge without branch protection.
 
 ## 5. Why there is no CodeQL

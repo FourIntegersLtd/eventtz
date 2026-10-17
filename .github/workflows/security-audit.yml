@@ -1,19 +1,32 @@
-# Dependency vulnerability scanning for api/ and web/, run as its own workflow
-# so it does not disturb ci.yml's job list or gate (owned by other workstreams
-# rebuilding those trees). Triggers match ci.yml (pull_request + push to main)
-# so a Dependabot PR gets scanned the same as a human one.
-#
-# Neither tool is added as a project dependency (AGENTS.md: ask first for new
-# Poetry/npm dependencies). pip-audit is pip-installed into the job's Poetry
-# venv, which is thrown away with the runner; `npm audit` ships inside npm
-# itself, so no install is needed at all.
+# Dependency vulnerability scanning for api/ and web/: `pip-audit` and `npm audit`.
+# Runs when a manifest or lockfile changes, plus weekly for advisories published
+# against dependencies that did not change. Neither tool is a project dependency:
+# pip-audit is pip-installed into the job's throwaway venv and `npm audit` ships with npm.
 name: security-audit
 
 on:
   pull_request:
+    paths:
+      - "api/pyproject.toml"
+      - "api/poetry.lock"
+      - "web/package.json"
+      - "web/package-lock.json"
+      - ".github/workflows/security-audit.yml"
   push:
     branches:
       - main
+    paths:
+      - "api/pyproject.toml"
+      - "api/poetry.lock"
+      - "web/package.json"
+      - "web/package-lock.json"
+      - ".github/workflows/security-audit.yml"
+  schedule:
+    - cron: "0 6 * * 1"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -66,21 +79,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Check web/ exists
-        # web/ is being built by a parallel workstream and may not have
-        # landed on this branch yet. Skip cleanly rather than failing a job
-        # for a directory nobody has created yet.
-        id: web-check
-        run: |
-          if [ -f web/package.json ]; then
-            echo "present=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "present=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::web/package.json not found yet; skipping npm audit until web/ lands."
-          fi
-
       - name: Setup Node
-        if: steps.web-check.outputs.present == 'true'
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: "22"
@@ -88,7 +87,6 @@ jobs:
           cache-dependency-path: web/package-lock.json
 
       - name: Install dependencies
-        if: steps.web-check.outputs.present == 'true'
         working-directory: web
         run: npm ci
 
@@ -97,6 +95,5 @@ jobs:
         # `--omit=dev` audits only what ships: the lint plugins
         # (eslint-config-next, eslint-plugin-boundaries) carry advisories whose
         # only "fix" is a downgrade, and they never run on the site.
-        if: steps.web-check.outputs.present == 'true'
         working-directory: web
         run: npm audit --omit=dev --audit-level=high

@@ -93,11 +93,8 @@ Backend secrets (Supabase, Stripe, Resend, OpenAI) belong in **`backend/.env`**,
 
 ### CI
 
-Pull requests and pushes to `main` run **`.github/workflows/ci.yml`**:
-
-- **frontend:** `npx tsc --noEmit`, `npm test`
-- **backend:** `poetry run pytest -q`
-- **ci-gate:** single required check for branch protection
+Pull requests and pushes to `main` that touch `web/` run **`.github/workflows/ci-web.yml`**:
+`npm ci`, `npx tsc --noEmit`, `npm test`, `npm run build`. `api/` has its own `ci-api.yml`.
 
 ESLint cleanup is tracked separately; run `npm run lint` locally before large UI changes.
 

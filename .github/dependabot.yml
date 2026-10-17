@@ -4,12 +4,12 @@
 # environment (see `acceptance/Makefile`), so there is nothing separate for
 # Dependabot to version there — bumping `api/`'s `pip` entry below covers it.
 #
-# Each ecosystem groups patch and minor bumps into one weekly PR, so there is
-# one PR per ecosystem to review. Every PR is merged by hand: `ci.yml` does not
-# test `api/` or `web/` yet, and a private repo on the free plan has no branch
+# At most two PRs per ecosystem: one for all patch/minor bumps and one for all
+# major bumps, so CI runs a few times a month instead of once per package (all
+# private repos on the account share one Actions allowance). GitHub Actions bumps
+# come monthly in a single PR. Every PR is merged by hand: a private repo on the free plan has no branch
 # protection to hold an auto-merge back until checks pass (see
-# docs/runbooks/github-security-settings.md). Major bumps are left ungrouped —
-# they need a human to read the changelog, since a major version can change
+# docs/runbooks/github-security-settings.md). Major bumps need a human to read the changelog, since a major version can change
 # behaviour CI won't catch (e.g. a Stripe SDK major version changing a response
 # shape).
 version: 2
@@ -21,7 +21,7 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 2
     labels:
       - "dependencies"
       - "api"
@@ -30,6 +30,9 @@ updates:
         update-types:
           - "patch"
           - "minor"
+      api-major:
+        update-types:
+          - "major"
     commit-message:
       prefix: "api"
 
@@ -39,7 +42,7 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 2
     labels:
       - "dependencies"
       - "web"
@@ -48,6 +51,9 @@ updates:
         update-types:
           - "patch"
           - "minor"
+      web-major:
+        update-types:
+          - "major"
     commit-message:
       prefix: "web"
 
@@ -57,16 +63,14 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
-    open-pull-requests-limit: 10
+      interval: "monthly"
+    open-pull-requests-limit: 1
     labels:
       - "dependencies"
       - "github-actions"
     groups:
-      actions-patch-minor:
-        update-types:
-          - "patch"
-          - "minor"
+      actions-all:
+        patterns:
+          - "*"
     commit-message:
       prefix: "ci"
