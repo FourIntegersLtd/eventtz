@@ -32,7 +32,6 @@ from app.features.notifications.domain_account_emails import (
     password_reset_email,
     support_message_email,
     team_invite_email,
-    terms_updated_email,
     transactional_context,
     welcome_context,
     welcome_email,
@@ -358,19 +357,6 @@ def send_password_changed(mailer: Mailer, *, email: str, user_type: str | None =
         return mailer.send(outgoing)
     except Exception:
         log.exception("password changed notice could not be sent email=%s", normalized)
-        return False
-
-
-def send_terms_updated(mailer: Mailer, *, email: str, terms_version: str) -> bool:
-    """Email `email` about the updated Terms. False for an invalid address or a failed send, never raises."""
-    normalized = email.strip().lower()
-    if "@" not in normalized:
-        return False
-    try:
-        content = terms_updated_email(terms_version=terms_version)
-        return mailer.send(_render_transactional(normalized, content))
-    except Exception:
-        log.exception("terms updated notice could not be sent")
         return False
 
 

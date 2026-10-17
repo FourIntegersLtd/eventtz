@@ -259,7 +259,6 @@ async def test_the_hourly_job_runs_every_step(_engine: None) -> None:
         "payouts_setup": 0,
         "cancellation_policy": 0,
         "cancellation_policy_reminder": 0,
-        "terms_notices": 0,
         "final_payouts": 0,
         "unpaid_expired": 0,
         "deposits_refunded": 0,

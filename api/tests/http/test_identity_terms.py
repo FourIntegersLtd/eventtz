@@ -13,9 +13,7 @@ from app.core.settings import Settings
 from app.features.identity import repository
 from app.features.identity import service as identity
 from app.features.identity.errors import TermsNotAccepted
-from app.features.notifications import service_terms_notice
 from tests.http.test_payments_refunds_payouts import _make_account, _make_booking, _make_vendor
-from tests.support.fakes import FakeMailer
 
 pytestmark = [pytest.mark.db, pytest.mark.e2e]
 
@@ -154,23 +152,3 @@ async def test_a_vendor_who_accepted_can_accept_a_booking(
     response = await client.patch(url, json={"status": "accepted"}, headers=headers)
 
     assert response.status_code == 200, response.text
-
-
-async def test_terms_notice_is_sent_once_to_open_unsuspended_accounts(
-    db_session: AsyncSession, settings: Settings
-) -> None:
-    """Each open account is emailed once per version; suspended and closed accounts are skipped."""
-    await _account_without_terms(db_session, "terms-notice-open@example.com", settings)
-    await _account_without_terms(db_session, "terms-notice-suspended@example.com", settings, suspended=True)
-    closed_id, _ = await _account_without_terms(db_session, "terms-notice-closed@example.com", settings)
-    await repository.update_profile(db_session, closed_id, {"deleted_at": datetime.now(UTC)})
-    mailer = FakeMailer()
-
-    first = await service_terms_notice.send_terms_updated_notices(db_session, mailer, batch_size=500)
-    second = await service_terms_notice.send_terms_updated_notices(db_session, mailer, batch_size=500)
-
-    recipients = [address for email in mailer.sent for address in email.to]
-    assert "terms-notice-open@example.com" in recipients
-    assert not any("suspended" in str(to) or "closed" in str(to) for to in recipients)
-    assert second == 0 and first == len(mailer.sent)
-    assert not await identity.users_awaiting_terms_notice(db_session, "2026-11-01", limit=500)

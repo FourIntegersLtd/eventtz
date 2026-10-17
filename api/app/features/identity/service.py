@@ -9,7 +9,6 @@ from app.features.identity import repository
 from app.features.identity.domain import client_display_name
 from app.features.identity.errors import TermsNotAccepted as TermsNotAccepted
 from app.features.identity.errors import TermsVersionMismatch
-from app.features.identity.rows import UserSummaryRow
 from app.features.identity.schemas import AcceptTermsResponse
 
 
@@ -109,15 +108,3 @@ async def accept_terms(session: AsyncSession, user_id: str, version: str) -> Acc
         terms_accepted_version=profile.terms_accepted_version if profile else None,
         terms_accepted_at=profile.terms_accepted_at if profile else None,
     )
-
-
-async def users_awaiting_terms_notice(
-    session: AsyncSession, version: str, *, limit: int
-) -> list[UserSummaryRow]:
-    """Open, unsuspended accounts not yet emailed about Terms `version` (at most `limit`)."""
-    return await repository.users_awaiting_terms_notice(session, version, limit=limit)
-
-
-async def mark_terms_notice_sent(session: AsyncSession, user_ids: list[str], version: str) -> None:
-    """Record that these accounts were emailed about Terms `version`."""
-    await repository.mark_terms_notice_sent(session, user_ids, version)

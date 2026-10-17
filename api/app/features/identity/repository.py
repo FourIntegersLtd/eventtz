@@ -189,35 +189,6 @@ async def stamp_terms_accepted(session: AsyncSession, user_id: str, version: str
     )
 
 
-async def users_awaiting_terms_notice(
-    session: AsyncSession, version: str, *, limit: int
-) -> list[UserSummaryRow]:
-    """Open, unsuspended accounts not yet emailed about Terms `version`, lowest id first, at most `limit`."""
-    statement = (
-        select(User)
-        .where(
-            User.terms_notice_sent_version.is_distinct_from(version),
-            User.deleted_at.is_(None),
-            User.account_suspended.is_(False),
-        )
-        .order_by(User.id)
-        .limit(limit)
-    )
-    return [
-        UserSummaryRow(id=str(user.id), email=user.email, user_type=user.user_type)
-        for user in await session.scalars(statement)
-    ]
-
-
-async def mark_terms_notice_sent(session: AsyncSession, user_ids: list[str], version: str) -> None:
-    """Remember these accounts were emailed about Terms `version`, so the next pass skips them."""
-    account_ids = [account_id for account_id in map(as_uuid, user_ids) if account_id is not None]
-    if account_ids:
-        await session.execute(
-            update(User).where(User.id.in_(account_ids)).values(terms_notice_sent_version=version)
-        )
-
-
 async def set_password_hash(session: AsyncSession, user_id: str, password_hash: str) -> None:
     """Store a new password hash for this account."""
     await update_profile(session, user_id, {"password_hash": password_hash})

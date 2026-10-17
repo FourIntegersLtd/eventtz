@@ -27,7 +27,6 @@ from app.core.logging import get_logger
 from app.core.mail import AfterCommitMailer
 from app.core.ports import LanguageModel, Mailer, PaymentGateway
 from app.features.bookings import service_deposits, service_maintenance, service_reminders
-from app.features.notifications import service_terms_notice
 
 log = get_logger(__name__)
 
@@ -90,7 +89,6 @@ async def run_booking_maintenance_once(
         "payouts_setup": 0,
         "cancellation_policy": 0,
         "cancellation_policy_reminder": 0,
-        "terms_notices": 0,
         "final_payouts": 0,
         "unpaid_expired": 0,
         "deposits_refunded": 0,
@@ -147,13 +145,6 @@ async def run_booking_maintenance_once(
             "cancellation-policy reminders",
             lambda session: service_reminders.send_cancellation_policy_reminders(
                 session, AfterCommitMailer(session, mailer), now=now
-            ),
-        ),
-        (
-            "terms_notices",
-            "terms-updated notices",
-            lambda session: service_terms_notice.send_terms_updated_notices(
-                session, AfterCommitMailer(session, mailer)
             ),
         ),
         (

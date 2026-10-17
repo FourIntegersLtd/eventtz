@@ -59,7 +59,6 @@ exists.
 | 0.2 | `users.terms_accepted_version` + `terms_accepted_at`; written at signup and by a new `POST /api/v1/user/terms/accept`. Alembic revision. | identity slice, alembic | S |
 | 0.3 | Web: signup checkbox stores the version; a portal banner asks existing users to accept a newer version. Vendors are blocked from Accept-booking until they accept; clients are blocked at checkout. | web/features/auth, PortalShell | S |
 | 0.4 | "Changes to these Terms" clause: consumers get reasonable notice by email; vendors get at least 15 days, may close their account before the effective date, and the previous version stays available at `/compliances/terms-of-service/<version>`. | TermsOfServiceContent | S |
-| 0.5 | Notification + email template `terms_updated` sent to all active users; job in notifications slice, run once per version. | notifications slice | S |
 
 Acceptance check: a new vendor signs up, `terms_accepted_version` equals
 `TERMS_VERSION`; bump the constant, the banner appears, accepting clears it.

@@ -8,7 +8,6 @@ Resend or the filesystem; `service.py` renders these into `OutgoingEmail`s.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date
 from typing import Literal
 
 from app.core.site import ensure_public_url, public_url
@@ -457,38 +456,4 @@ def welcome_context(welcome: WelcomeEmail) -> dict[str, object]:
         welcome_cta_url=welcome.welcome_cta_url,
         welcome_support_line=welcome.welcome_support_line,
         hero_image_url=welcome.hero_image_url,
-    )
-
-
-def _terms_effective_date_text(terms_version: str) -> str:
-    """ "1 November 2026" for a version string like "2026-11-01"; the raw text if it is not a date."""
-    try:
-        effective = date.fromisoformat(terms_version)
-    except ValueError:
-        return terms_version
-    return f"{effective.day} {effective:%B %Y}"
-
-
-def terms_updated_email(*, terms_version: str) -> TransactionalEmail:
-    """Content for the "we are updating our Terms" notice, sent once per Terms version.
-
-    Vendors are business users and are owed at least 15 days' notice, so the copy says
-    when the new Terms apply and that an account can be closed before then.
-    """
-    effective_text = _terms_effective_date_text(terms_version)
-    headline = "We are updating our Terms of Service"
-    terms_url = public_url("/compliances/terms-of-service")
-    body = (
-        f"We are updating our Terms on {effective_text}. Vendors get at least 15 days' notice.\n\n"
-        f"Read the new terms at {terms_url}.\n\n"
-        "If you do not agree you can close your account before that date."
-    )
-    return TransactionalEmail(
-        subject=f"{headline} | {APP_NAME}",
-        title=headline,
-        headline=headline,
-        subtitle=f"New Terms from {effective_text}",
-        body=body,
-        action_url=terms_url,
-        action_label="Read the new Terms",
     )
