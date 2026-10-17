@@ -1,4 +1,5 @@
-"""Staff moderation of vendors: the vendor list, approval, returning for edits, nudges and listing overrides.
+"""Staff moderation of vendors: the vendor list, approval, returning for edits, nudges, listing overrides
+and checking public liability insurance.
 
 Every change is written to the staff audit log. Emails to vendors never fail the
 action: the decision is already saved when the email is attempted.
@@ -8,7 +9,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,10 +21,15 @@ from app.features.identity import service as identity
 from app.features.notifications import service as notifications
 from app.features.staff import service as staff
 from app.features.vendors import repository
+from app.features.vendors.domain_insurance import MIN_COVER_GBP, has_valid_insurance
 from app.features.vendors.domain_listing_media import listing_cover_image_url, url_list, with_listing_media
 from app.features.vendors.domain_profile_form import normalize_payload_fields
 from app.features.vendors.domain_visibility import is_paused, listing_override_of
 from app.features.vendors.errors import (
+    InsuranceAlreadyExpired,
+    InsuranceCertificateMissing,
+    InsuranceCoverTooLow,
+    InsuranceRequiredForApproval,
     ListingOverrideReasonRequired,
     ListingOverrideSuperAdminOnly,
     OnlyPendingToDraft,
@@ -33,6 +39,7 @@ from app.features.vendors.errors import (
 from app.features.vendors.rows import VendorRow
 from app.features.vendors.schemas import (
     AdminVendorApprovalResponse,
+    AdminVendorInsuranceResponse,
     AdminVendorListingMediaResponse,
     AdminVendorListingOverrideResponse,
     AdminVendorPauseResponse,
@@ -45,7 +52,12 @@ from app.features.vendors.schemas import (
     VendorApprovalStatus,
     VendorListingOverride,
 )
-from app.features.vendors.service_profile import listing_is_visible, payouts_are_verified
+from app.features.vendors.service_profile import (
+    insurance_state,
+    listing_is_visible,
+    needs_insurance,
+    payouts_are_verified,
+)
 
 # The staff routes' 404 copy has no full stop; the nudge failures' copy has one (baseline).
 VENDOR_PROFILE_NOT_FOUND_ROUTE = "Vendor profile not found"
@@ -153,6 +165,7 @@ async def list_vendors(
             cancellation_review_flag=service_vendor_record.needs_review(
                 cancellation_counts.get(vendor.user_id, 0)
             ),
+            insurance=insurance_state(vendor),
         )
         for vendor in vendors
     ]
@@ -174,10 +187,18 @@ async def set_approval(
     """Approve, ban or re-queue a vendor, and email them when their state actually changed.
 
     The first approval stamps `approved_at`. The email is chosen from the listing flags
-    after the change (live, finish payouts, or listing paused).
+    after the change (live, finish payouts, or listing paused). A vendor whose services need
+    insurance is approved only once staff have checked an in-date certificate.
     """
     previous = await _vendor_or_404(session, user_id)
     previous_status = previous.approval_status or "pending"
+    if (
+        approval_status == "approved"
+        and previous_status != "approved"
+        and needs_insurance(previous)
+        and not has_valid_insurance(previous.insurance_expires_on, today=datetime.now(UTC).date())
+    ):
+        raise InsuranceRequiredForApproval()
     changes: dict[str, Any] = {"approval_status": approval_status}
     if approval_status == "approved" and previous_status != "approved":
         changes["approved_at"] = _now_iso()
@@ -547,3 +568,88 @@ async def clear_listing_pause(
         details={},
     )
     return AdminVendorPauseResponse(user_id=user_id, listing_visible=listing_is_visible(updated))
+
+
+# --- public liability insurance --------------------------------------------------------------------
+
+
+async def verify_insurance(
+    session: AsyncSession,
+    staff_member: Principal,
+    user_id: str,
+    *,
+    expires_on: date,
+    cover_gbp: int,
+) -> AdminVendorInsuranceResponse:
+    """Record the certificate now on the vendor's form as checked, with the expiry and cover staff read.
+
+    Checking a certificate starts a new reminder cycle, so the vendor is emailed again
+    before this cover ends.
+    """
+    vendor = await _vendor_or_404(session, user_id)
+    certificate_url = insurance_state(vendor).certificate_url
+    if certificate_url is None:
+        raise InsuranceCertificateMissing()
+    if expires_on <= datetime.now(UTC).date():
+        raise InsuranceAlreadyExpired()
+    if cover_gbp < MIN_COVER_GBP:
+        raise InsuranceCoverTooLow()
+    await repository.update_vendor(
+        session,
+        user_id,
+        {
+            "insurance_certificate_url": certificate_url,
+            "insurance_expires_on": expires_on,
+            "insurance_cover_gbp": cover_gbp,
+            "insurance_verified_at": datetime.now(UTC),
+            "insurance_verified_by": staff_member.id,
+            "insurance_reminder_at": None,
+        },
+    )
+    updated = await _vendor_or_404(session, user_id)
+    await staff.record_admin_action(
+        session,
+        admin_user_id=staff_member.id,
+        action="vendor.insurance_verified",
+        entity_type="vendor",
+        entity_id=user_id,
+        details={
+            "expires_on": expires_on.isoformat(),
+            "cover_gbp": cover_gbp,
+            "certificate_url": certificate_url,
+        },
+    )
+    return AdminVendorInsuranceResponse(
+        user_id=user_id, insurance=insurance_state(updated), listing_visible=listing_is_visible(updated)
+    )
+
+
+async def revoke_insurance(
+    session: AsyncSession, staff_member: Principal, user_id: str
+) -> AdminVendorInsuranceResponse:
+    """Forget the checked certificate (it was wrong, forged or cancelled); the vendor reads as unchecked."""
+    await _vendor_or_404(session, user_id)
+    await repository.update_vendor(
+        session,
+        user_id,
+        {
+            "insurance_certificate_url": None,
+            "insurance_expires_on": None,
+            "insurance_cover_gbp": None,
+            "insurance_verified_at": None,
+            "insurance_verified_by": None,
+            "insurance_reminder_at": None,
+        },
+    )
+    updated = await _vendor_or_404(session, user_id)
+    await staff.record_admin_action(
+        session,
+        admin_user_id=staff_member.id,
+        action="vendor.insurance_revoked",
+        entity_type="vendor",
+        entity_id=user_id,
+        details={},
+    )
+    return AdminVendorInsuranceResponse(
+        user_id=user_id, insurance=insurance_state(updated), listing_visible=listing_is_visible(updated)
+    )

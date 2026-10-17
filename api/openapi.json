@@ -3448,6 +3448,58 @@
         "title": "AdminVendorInsightsResponse",
         "type": "object"
       },
+      "AdminVendorInsuranceBody": {
+        "description": "What staff read off the vendor's uploaded public liability certificate.",
+        "properties": {
+          "cover_gbp": {
+            "description": "The cover for any one claim, in whole pounds.",
+            "maximum": 100000000.0,
+            "minimum": 1.0,
+            "title": "Cover Gbp",
+            "type": "integer"
+          },
+          "expires_on": {
+            "description": "The day the cover ends.",
+            "format": "date",
+            "title": "Expires On",
+            "type": "string"
+          }
+        },
+        "required": [
+          "expires_on",
+          "cover_gbp"
+        ],
+        "title": "AdminVendorInsuranceBody",
+        "type": "object"
+      },
+      "AdminVendorInsuranceResponse": {
+        "description": "The vendor's insurance after the change, and whether clients can find them.",
+        "properties": {
+          "insurance": {
+            "$ref": "#/components/schemas/VendorInsuranceState"
+          },
+          "listing_visible": {
+            "default": false,
+            "title": "Listing Visible",
+            "type": "boolean"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "insurance"
+        ],
+        "title": "AdminVendorInsuranceResponse",
+        "type": "object"
+      },
       "AdminVendorListingMediaBody": {
         "description": "Staff's order for the vendor's listing photos and which ones to hide.",
         "properties": {
@@ -3835,6 +3887,9 @@
               }
             ],
             "title": "Id"
+          },
+          "insurance": {
+            "$ref": "#/components/schemas/VendorInsuranceState"
           },
           "listing_override": {
             "default": "auto",
@@ -12415,6 +12470,103 @@
         "title": "VendorCopilotBriefResponse",
         "type": "object"
       },
+      "VendorInsuranceState": {
+        "description": "The vendor's public liability cover: whether it is required, and what staff have checked.",
+        "properties": {
+          "certificate_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The certificate on the profile form now.",
+            "title": "Certificate Url"
+          },
+          "cover_gbp": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Gbp"
+          },
+          "expires_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires On"
+          },
+          "listing_hidden_from": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When a required vendor's listing hides itself unless a new certificate is checked.",
+            "title": "Listing Hidden From"
+          },
+          "required": {
+            "default": false,
+            "description": "The vendor's services need cover (catering, baking).",
+            "title": "Required",
+            "type": "boolean"
+          },
+          "status": {
+            "default": "missing",
+            "description": "missing = nothing checked or uploaded; awaiting_check = an upload staff have not checked yet; verified = checked and in date; expiring = ends within 30 days; expired = checked cover ended.",
+            "enum": [
+              "missing",
+              "awaiting_check",
+              "verified",
+              "expiring",
+              "expired"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "verified_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified At"
+          },
+          "verified_certificate_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The certificate staff checked.",
+            "title": "Verified Certificate Url"
+          }
+        },
+        "title": "VendorInsuranceState",
+        "type": "object"
+      },
       "VendorOwnerReviewItem": {
         "description": "One review from the vendor's own reviews list: only ever the visible ones.",
         "properties": {
@@ -12739,6 +12891,9 @@
           "current_step": {
             "title": "Current Step",
             "type": "integer"
+          },
+          "insurance": {
+            "$ref": "#/components/schemas/VendorInsuranceState"
           },
           "listing_override": {
             "default": "auto",
@@ -18808,6 +18963,19 @@
               "vendor_profile_not_found"
             ]
           },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "insurance_required_for_approval",
+            "x-codes": [
+              "insurance_required_for_approval"
+            ]
+          },
           "422": {
             "content": {
               "application/json": {
@@ -18899,6 +19067,215 @@
           }
         ],
         "summary": "Get Vendor Insights",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/vendors/{user_id}/insurance": {
+      "delete": {
+        "description": "Forget the checked certificate; a vendor who needs cover is unlisted until a new one is checked.",
+        "operationId": "revoke_insurance_api_v1_admin_vendors__user_id__insurance_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminVendorInsuranceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "vendor_profile_not_found",
+            "x-codes": [
+              "vendor_profile_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Revoke Insurance",
+        "tags": [
+          "admin"
+        ]
+      },
+      "put": {
+        "description": "Record the vendor's uploaded certificate as checked, with its expiry and cover.",
+        "operationId": "verify_insurance_api_v1_admin_vendors__user_id__insurance_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminVendorInsuranceBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminVendorInsuranceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "insurance_already_expired, insurance_cover_too_low",
+            "x-codes": [
+              "insurance_already_expired",
+              "insurance_cover_too_low"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "vendor_profile_not_found",
+            "x-codes": [
+              "vendor_profile_not_found"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "insurance_certificate_missing",
+            "x-codes": [
+              "insurance_certificate_missing"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Verify Insurance",
         "tags": [
           "admin"
         ]

@@ -5,7 +5,7 @@ were written against. The mapped tables are in `models.py`."""
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
@@ -29,6 +29,10 @@ class VendorRow(BaseModel):
     listing_override_reason: str | None = None
     listing_paused_until: datetime | None = None
     listing_pause_reason: str | None = None
+    insurance_certificate_url: str | None = None
+    insurance_expires_on: date | None = None
+    insurance_cover_gbp: int | None = None
+    insurance_verified_at: str | None = None
 
     @field_validator("payload", mode="before")
     @classmethod
@@ -46,6 +50,7 @@ class ListedVendorRow(BaseModel):
     approval_status: str | None = None
     payload: dict[str, Any] = Field(default_factory=dict)
     updated_at: str | None = None
+    insurance_expires_on: date | None = None
 
     @field_validator("payload", mode="before")
     @classmethod

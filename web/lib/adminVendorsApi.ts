@@ -32,6 +32,31 @@ export type AdminVendorRow = {
   /** Listing pause still running (ISO time) and why. */
   listing_paused_until?: string | null;
   listing_pause_reason?: string | null;
+  /** Public liability insurance as staff checked it. */
+  insurance?: AdminVendorInsurance;
+};
+
+export type AdminVendorInsuranceStatus =
+  | "missing"
+  | "awaiting_check"
+  | "verified"
+  | "expiring"
+  | "expired";
+
+export type AdminVendorInsurance = {
+  /** The vendor offers a service that needs cover (catering, baking). */
+  required: boolean;
+  status: AdminVendorInsuranceStatus | string;
+  /** The certificate the vendor uploaded most recently. */
+  certificate_url: string | null;
+  /** The certificate staff checked. */
+  verified_certificate_url: string | null;
+  /** ISO date the checked cover ends. */
+  expires_on: string | null;
+  cover_gbp: number | null;
+  verified_at: string | null;
+  /** ISO date the listing hides itself if nothing new is checked (required vendors only). */
+  listing_hidden_from: string | null;
 };
 
 export type AdminVendorsQuery = {
@@ -264,4 +289,27 @@ export async function putVendorListingPause(
 /** End a listing pause early. */
 export async function deleteVendorListingPause(userId: string): Promise<void> {
   await api.delete(`/api/v1/admin/vendors/${userId}/listing-pause`);
+}
+
+/** Record a checked certificate: when its cover ends and how much it is. */
+export async function putVendorInsurance(
+  userId: string,
+  expiresOn: string,
+  coverGbp: number,
+): Promise<{ insurance: AdminVendorInsurance; listing_visible: boolean }> {
+  const { data } = await api.put<{ insurance: AdminVendorInsurance; listing_visible: boolean }>(
+    `/api/v1/admin/vendors/${userId}/insurance`,
+    { expires_on: expiresOn, cover_gbp: coverGbp },
+  );
+  return { insurance: data.insurance, listing_visible: Boolean(data.listing_visible) };
+}
+
+/** Withdraw a check (wrong certificate, or cover cancelled). */
+export async function deleteVendorInsurance(
+  userId: string,
+): Promise<{ insurance: AdminVendorInsurance; listing_visible: boolean }> {
+  const { data } = await api.delete<{ insurance: AdminVendorInsurance; listing_visible: boolean }>(
+    `/api/v1/admin/vendors/${userId}/insurance`,
+  );
+  return { insurance: data.insurance, listing_visible: Boolean(data.listing_visible) };
 }

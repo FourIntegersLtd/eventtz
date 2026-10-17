@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import UTC, date, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,6 +12,13 @@ from app.core.ports import Mailer, Storage
 from app.features.identity import service as identity
 from app.features.notifications import service as notifications
 from app.features.vendors import repository
+from app.features.vendors.domain_insurance import (
+    EXPIRY_GRACE,
+    INSURANCE_REQUIRED_FROM,
+    insurance_allows_listing,
+    insurance_status,
+    requires_insurance,
+)
 from app.features.vendors.domain_profile_form import (
     business_name_from_payload,
     explore_search_patch_from_payload,
@@ -23,7 +31,48 @@ from app.features.vendors.domain_profile_form import (
 from app.features.vendors.domain_visibility import is_publicly_listable, listing_override_of, payouts_verified
 from app.features.vendors.errors import BusinessNameTaken
 from app.features.vendors.rows import VendorRow
-from app.features.vendors.schemas import VendorProfilePutBody, VendorProfileState
+from app.features.vendors.schemas import VendorInsuranceState, VendorProfilePutBody, VendorProfileState
+
+
+def _today() -> date:
+    """The UTC date: insurance runs by whole days."""
+    return datetime.now(UTC).date()
+
+
+def needs_insurance(vendor: VendorRow) -> bool:
+    """True when the vendor's services need public liability cover."""
+    services = vendor.payload.get("servicesOffered")
+    return requires_insurance([str(service) for service in services] if isinstance(services, list) else [])
+
+
+def insurance_state(vendor: VendorRow, *, today: date | None = None) -> VendorInsuranceState:
+    """The vendor's cover as staff and the vendor see it."""
+    day = today or _today()
+    required = needs_insurance(vendor)
+    raw_certificate = vendor.payload.get("indemnityCertNamePersisted")
+    certificate_url = raw_certificate.strip() or None if isinstance(raw_certificate, str) else None
+    hidden_from: date | None = None
+    if required:
+        hidden_from = (
+            vendor.insurance_expires_on + EXPIRY_GRACE + timedelta(days=1)
+            if vendor.insurance_expires_on is not None
+            else INSURANCE_REQUIRED_FROM
+        )
+    return VendorInsuranceState(
+        required=required,
+        status=insurance_status(
+            certificate_url=certificate_url,
+            verified_certificate_url=vendor.insurance_certificate_url,
+            expires_on=vendor.insurance_expires_on,
+            today=day,
+        ),
+        certificate_url=certificate_url,
+        verified_certificate_url=vendor.insurance_certificate_url,
+        expires_on=vendor.insurance_expires_on,
+        cover_gbp=vendor.insurance_cover_gbp,
+        verified_at=vendor.insurance_verified_at,
+        listing_hidden_from=hidden_from,
+    )
 
 
 def payouts_are_verified(vendor: VendorRow) -> bool:
@@ -42,6 +91,9 @@ def listing_is_visible(vendor: VendorRow) -> bool:
         listing_override=vendor.listing_override,
         payouts_ready=payouts_are_verified(vendor),
         paused_until=vendor.listing_paused_until,
+        insurance_ok=insurance_allows_listing(
+            required=needs_insurance(vendor), expires_on=vendor.insurance_expires_on, today=_today()
+        ),
     )
 
 
@@ -92,6 +144,7 @@ def _profile_state(vendor: VendorRow) -> VendorProfileState:
         payouts_verified=payouts_are_verified(vendor),
         listing_visible=listing_is_visible(vendor),
         listing_override=listing_override_of(vendor.listing_override),
+        insurance=insurance_state(vendor),
     )
 
 

@@ -1,4 +1,5 @@
-"""Staff routes for moderating vendors: the list, approval, returns for edits, nudges, listing controls."""
+"""Staff routes for moderating vendors: the list, approval, returns for edits, nudges, listing controls,
+and checking insurance certificates."""
 
 from __future__ import annotations
 
@@ -12,6 +13,10 @@ from app.core.errors import error_responses
 from app.core.ports import ImmediateMailerDependency, MailerDependency, StorageDependency
 from app.features.vendors import service_moderation
 from app.features.vendors.errors import (
+    InsuranceAlreadyExpired,
+    InsuranceCertificateMissing,
+    InsuranceCoverTooLow,
+    InsuranceRequiredForApproval,
     ListingMediaUrlInvalid,
     ListingOverrideReasonRequired,
     ListingOverrideSuperAdminOnly,
@@ -22,6 +27,8 @@ from app.features.vendors.errors import (
 from app.features.vendors.schemas import (
     AdminVendorApprovalBody,
     AdminVendorApprovalResponse,
+    AdminVendorInsuranceBody,
+    AdminVendorInsuranceResponse,
     AdminVendorListingMediaBody,
     AdminVendorListingMediaResponse,
     AdminVendorListingOverrideBody,
@@ -62,7 +69,7 @@ async def list_vendors(
 @router.patch(
     "/vendors/{user_id}/approval",
     response_model=AdminVendorApprovalResponse,
-    responses=error_responses(*ROLE_ERRORS, VendorProfileNotFound),
+    responses=error_responses(*ROLE_ERRORS, VendorProfileNotFound, InsuranceRequiredForApproval),
 )
 async def set_approval(
     session: SessionDep,
@@ -228,3 +235,35 @@ async def clear_listing_pause(
 ) -> AdminVendorPauseResponse:
     """End a listing pause early."""
     return await service_moderation.clear_listing_pause(session, principal, user_id)
+
+
+@router.put(
+    "/vendors/{user_id}/insurance",
+    response_model=AdminVendorInsuranceResponse,
+    responses=error_responses(
+        *ROLE_ERRORS,
+        VendorProfileNotFound,
+        InsuranceCertificateMissing,
+        InsuranceAlreadyExpired,
+        InsuranceCoverTooLow,
+    ),
+)
+async def verify_insurance(
+    session: SessionDep, principal: CurrentStaff, user_id: str, body: AdminVendorInsuranceBody
+) -> AdminVendorInsuranceResponse:
+    """Record the vendor's uploaded certificate as checked, with its expiry and cover."""
+    return await service_moderation.verify_insurance(
+        session, principal, user_id, expires_on=body.expires_on, cover_gbp=body.cover_gbp
+    )
+
+
+@router.delete(
+    "/vendors/{user_id}/insurance",
+    response_model=AdminVendorInsuranceResponse,
+    responses=error_responses(*ROLE_ERRORS, VendorProfileNotFound),
+)
+async def revoke_insurance(
+    session: SessionDep, principal: CurrentStaff, user_id: str
+) -> AdminVendorInsuranceResponse:
+    """Forget the checked certificate; a vendor who needs cover is unlisted until a new one is checked."""
+    return await service_moderation.revoke_insurance(session, principal, user_id)

@@ -50,7 +50,8 @@ export const STEP_COPY = {
   },
   7: {
     headline: "Anything else?",
-    subtext: "Certificates and insurance are optional.",
+    subtext:
+      "Catering and baking vendors must upload public liability insurance. Everything else here is optional.",
   },
   8: {
     headline: "Look good?",

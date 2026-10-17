@@ -6,9 +6,13 @@ repeats it in SQL so the database does the filtering.
 
 from __future__ import annotations
 
+from datetime import UTC, date, datetime
+from typing import Any
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.features.vendors import repository
+from app.features.vendors.domain_insurance import has_valid_insurance
 from app.features.vendors.domain_profile_form import vendor_display_name
 from app.features.vendors.rows import ListedVendorRow
 from app.features.vendors.schemas import ListedVendor
@@ -17,9 +21,28 @@ from app.features.vendors.schemas import ListedVendor
 MAX_FILTER_IDS = 500
 
 
+# The form key the web app reads for the "insurance checked" badge. The vendor can type any key
+# into their form, so the listing always overwrites this one with what staff checked.
+INSURANCE_CHECKED_UNTIL_KEY = "insuranceCheckedUntil"
+
+
+def _public_payload(row: ListedVendorRow, today: date) -> dict[str, Any]:
+    """The form as the public sees it, with the badge key set only for checked, in-date cover."""
+    payload = {key: value for key, value in row.payload.items() if key != INSURANCE_CHECKED_UNTIL_KEY}
+    if has_valid_insurance(row.insurance_expires_on, today=today) and row.insurance_expires_on is not None:
+        payload[INSURANCE_CHECKED_UNTIL_KEY] = row.insurance_expires_on.isoformat()
+    return payload
+
+
 def _listed(rows: list[ListedVendorRow]) -> list[ListedVendor]:
     """The public view of repository rows."""
-    return [ListedVendor.model_validate(row.model_dump()) for row in rows]
+    today = datetime.now(UTC).date()
+    return [
+        ListedVendor.model_validate(
+            {**row.model_dump(exclude={"insurance_expires_on"}), "payload": _public_payload(row, today)}
+        )
+        for row in rows
+    ]
 
 
 async def listed_vendors(

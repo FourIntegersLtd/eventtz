@@ -22,6 +22,7 @@ from app.features.vendors.domain_catalogue import (
     is_market_enabled,
     normalize_country_code,
 )
+from app.features.vendors.domain_insurance import requires_insurance
 from app.features.vendors.domain_packages import validate_package_fields, validate_packages_for_payload
 from app.features.vendors.domain_price_list import (
     MAX_MONEY_GBP,
@@ -63,6 +64,11 @@ _SINGLE_UPLOAD_FIELDS = (
 )
 
 # --- copy (verbatim from the baseline) -------------------------------------------------------------
+
+# Not baseline copy: the insurance rule came after the rebuild (domain_insurance).
+STEP_DOCUMENTS_INSURANCE_REQUIRED = (
+    "Step additional info: catering and baking vendors must upload a public liability insurance certificate."
+)
 
 STEP_LOCATION_SUPPORTED_COUNTRY = "Step location: select a supported country."
 STEP_LOCATION_BASE_CITY_REQUIRED = "Step location: base city is required."
@@ -538,6 +544,11 @@ def validate_payload_for_progress(
         if not known_services:
             raise ProfileInvalid(INVALID_SERVICE_OFFERED)
         payload["servicesOffered"] = known_services
+        if (
+            requires_insurance(known_services)
+            and not text_field(payload, "indemnityCertNamePersisted").strip()
+        ):
+            raise ProfileInvalid(STEP_DOCUMENTS_INSURANCE_REQUIRED)
         validate_packages_for_payload(payload, on_submit=True)
         return
 

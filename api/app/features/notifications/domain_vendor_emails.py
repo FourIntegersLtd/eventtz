@@ -294,3 +294,53 @@ def vendor_listing_paused_email(
         action_url=public_url("/vendor/dashboard"),
         action_label="Open dashboard",
     )
+
+
+def vendor_insurance_reminder_email(
+    *,
+    vendor_email: str,
+    business_name: str | None,
+    expires_on_label: str | None,
+    hidden_from_label: str,
+    already_hidden: bool,
+) -> TransactionalEmail:
+    """Content asking a vendor whose services need cover to upload (or renew) their insurance certificate.
+
+    `expires_on_label` is the end of the cover staff checked, or `None` when nothing is
+    checked yet. `hidden_from_label` is the day the listing hides itself without a checked
+    certificate; `already_hidden` says that day has passed.
+    """
+    name = _greeting_name(business_name, vendor_email)
+    if expires_on_label is None:
+        headline = "Upload your public liability insurance"
+        opening = (
+            "Catering and baking vendors need public liability insurance "
+            "(cover for harm or damage caused by accident) of at least \u00a31,000,000 to be listed "
+            "on Eventtz. We have not checked a certificate for you yet."
+        )
+    else:
+        headline = "Your insurance is ending soon"
+        opening = f"The public liability insurance we have on file for you ends on {expires_on_label}."
+    deadline = (
+        "Your listing is hidden until we have checked your certificate."
+        if already_hidden
+        else f"If we have not checked one by {hidden_from_label}, your listing is hidden until we do."
+    )
+    body = (
+        f"Hi {name},\n\n"
+        f"{opening}\n\n"
+        "Upload your current certificate in the Additional info step of your profile and we "
+        "will check it, usually within two working days. If you have already uploaded it, "
+        "there is nothing more to do.\n\n"
+        f"{deadline} Your bookings are not affected.\n\n"
+        f"Questions? Reply to this email or write to {SUPPORT_EMAIL}."
+    )
+    return TransactionalEmail(
+        subject=f"{headline} | {APP_NAME}",
+        title=headline,
+        headline=headline,
+        subtitle="Clients and venues rely on it if something goes wrong at an event.",
+        body=body,
+        action_url=public_url("/vendor/profile"),
+        action_label="Upload certificate",
+    )

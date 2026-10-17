@@ -44,6 +44,7 @@ from app.features.notifications.domain_booking_copy import (
 from app.features.notifications.domain_vendor_emails import (
     vendor_approval_status_email,
     vendor_complete_profile_nudge_email,
+    vendor_insurance_reminder_email,
     vendor_listing_hidden_email,
     vendor_listing_paused_email,
     vendor_returned_for_edits_email,
@@ -580,6 +581,32 @@ def _send_vendor_content(
     except Exception:
         log.exception(failure_message)
         return False
+
+
+def send_vendor_insurance_reminder(
+    mailer: Mailer,
+    *,
+    vendor_email: str | None,
+    business_name: str | None,
+    expires_on_label: str | None,
+    hidden_from_label: str,
+    already_hidden: bool,
+) -> bool:
+    """Email a vendor to upload or renew their public liability certificate. False for a missing address."""
+    if not vendor_email or "@" not in vendor_email:
+        return False
+    return _send_vendor_content(
+        mailer,
+        vendor_email,
+        vendor_insurance_reminder_email(
+            vendor_email=vendor_email,
+            business_name=business_name,
+            expires_on_label=expires_on_label,
+            hidden_from_label=hidden_from_label,
+            already_hidden=already_hidden,
+        ),
+        "vendor insurance reminder email could not be sent",
+    )
 
 
 def send_vendor_listing_hidden(

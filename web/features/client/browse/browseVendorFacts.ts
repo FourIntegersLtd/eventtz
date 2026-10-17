@@ -172,8 +172,9 @@ export function buildBrowseVendorProfileFacts(
   if (payloadStr(payload, "foodHygieneCertNamePersisted")) {
     trustBadges.push("Food hygiene certificate on file");
   }
-  if (payloadStr(payload, "indemnityCertNamePersisted")) {
-    trustBadges.push("Public liability insurance on file");
+  // Set by the api only while cover staff checked is in date; the upload alone earns nothing.
+  if (payloadStr(payload, "insuranceCheckedUntil")) {
+    trustBadges.push("Public liability insurance checked");
   }
 
   const videoUrls: string[] = [];

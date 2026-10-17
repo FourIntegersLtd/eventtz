@@ -6,6 +6,7 @@ so the generated web types do not change.
 
 from __future__ import annotations
 
+from datetime import date
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -31,6 +32,28 @@ class VendorProfilePutBody(BaseModel):
     )
 
 
+class VendorInsuranceState(BaseModel):
+    """The vendor's public liability cover: whether it is required, and what staff have checked."""
+
+    required: bool = Field(default=False, description="The vendor's services need cover (catering, baking).")
+    status: Literal["missing", "awaiting_check", "verified", "expiring", "expired"] = Field(
+        default="missing",
+        description=(
+            "missing = nothing checked or uploaded; awaiting_check = an upload staff have not checked yet; "
+            "verified = checked and in date; expiring = ends within 30 days; expired = checked cover ended."
+        ),
+    )
+    certificate_url: str | None = Field(default=None, description="The certificate on the profile form now.")
+    verified_certificate_url: str | None = Field(default=None, description="The certificate staff checked.")
+    expires_on: date | None = None
+    cover_gbp: int | None = None
+    verified_at: str | None = None
+    listing_hidden_from: date | None = Field(
+        default=None,
+        description="When a required vendor's listing hides itself unless a new certificate is checked.",
+    )
+
+
 class VendorProfileState(BaseModel):
     """The vendor's onboarding form and where it stands, with why they are (or are not) listed."""
 
@@ -48,6 +71,7 @@ class VendorProfileState(BaseModel):
         description="Clients can find this vendor: approved, and payouts verified unless overridden.",
     )
     listing_override: str = "auto"
+    insurance: VendorInsuranceState = Field(default_factory=VendorInsuranceState)
 
 
 class VendorBusinessNameAvailabilityResponse(BaseModel):
@@ -87,6 +111,7 @@ class AdminVendorRow(BaseModel):
     cancellation_review_flag: bool = Field(
         default=False, description="True when the count has reached the staff-review threshold."
     )
+    insurance: VendorInsuranceState = Field(default_factory=VendorInsuranceState)
 
 
 class AdminVendorsListResponse(BaseModel):
@@ -256,4 +281,20 @@ class AdminVendorPauseResponse(BaseModel):
     user_id: str
     listing_paused_until: str | None = None
     listing_pause_reason: str | None = None
+    listing_visible: bool = False
+
+
+class AdminVendorInsuranceBody(BaseModel):
+    """What staff read off the vendor's uploaded public liability certificate."""
+
+    expires_on: date = Field(description="The day the cover ends.")
+    cover_gbp: int = Field(ge=1, le=100_000_000, description="The cover for any one claim, in whole pounds.")
+
+
+class AdminVendorInsuranceResponse(BaseModel):
+    """The vendor's insurance after the change, and whether clients can find them."""
+
+    success: bool = True
+    user_id: str
+    insurance: VendorInsuranceState
     listing_visible: bool = False

@@ -8,7 +8,7 @@ constraints (status, approval and override values) live in the migrations only.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 
@@ -16,6 +16,7 @@ from sqlalchemy import (
     CHAR,
     Boolean,
     Computed,
+    Date,
     DateTime,
     ForeignKey,
     Index,
@@ -209,6 +210,25 @@ class Vendor(Base, UUIDPrimaryKey, Timestamps):
     cancellation_policy_reminder_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         comment="When the one follow-up was sent, 14 days after the first email, if still no preset.",
+    )
+    insurance_certificate_url: Mapped[str | None] = mapped_column(
+        Text, comment="The public liability certificate staff checked (the payload upload at the time)."
+    )
+    insurance_expires_on: Mapped[date | None] = mapped_column(
+        Date, comment="When the checked public liability cover ends, as staff read it off the certificate."
+    )
+    insurance_cover_gbp: Mapped[int | None] = mapped_column(
+        Integer, comment="The checked public liability cover, in whole pounds."
+    )
+    insurance_verified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), comment="When staff checked the certificate."
+    )
+    insurance_verified_by: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, comment="The staff member who checked the certificate."
+    )
+    insurance_reminder_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        comment="When the renew-or-upload insurance email was sent; cleared when a certificate is checked.",
     )
     client_referral_code: Mapped[str | None] = mapped_column(
         Text, comment="Shareable numeric code for clients (?vref= on browse, or booking form). 1–6 digits."

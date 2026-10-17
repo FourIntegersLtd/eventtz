@@ -15,6 +15,7 @@ import {
   type AdminVendorRow,
 } from "@/lib/adminVendorsApi";
 import { VendorConsequencesSection } from "./VendorConsequencesSection";
+import { VendorInsuranceSection } from "./VendorInsuranceSection";
 import type { VendorApprovalStatus, VendorListingOverride } from "@/lib/domain-types";
 import type { AdminVendorUnsubmitHandler } from "./vendorUnsubmitTypes";
 import { VendorDetailsApprovalSection } from "./VendorDetailsApprovalSection";
@@ -173,6 +174,8 @@ export function VendorDetailsModal({
               onRestoreStripe={onRestoreStripe}
             />
           ) : null}
+
+          {tab === "actions" ? <VendorInsuranceSection key={vendor.user_id} vendor={vendor} /> : null}
 
           {tab === "actions" ? <VendorConsequencesSection vendor={vendor} /> : null}
         </div>

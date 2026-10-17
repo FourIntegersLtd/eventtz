@@ -73,6 +73,36 @@ class ListingOverrideSuperAdminOnly(Forbidden):
     default_message = "Only super admins can force a vendor listing visible or hidden."
 
 
+class InsuranceRequiredForApproval(Conflict):
+    """The vendor's services need public liability cover, and no in-date certificate has been checked."""
+
+    code = "insurance_required_for_approval"
+    default_message = (
+        "This vendor's services need public liability insurance. Check their certificate before approving."
+    )
+
+
+class InsuranceCertificateMissing(Conflict):
+    """Staff tried to record insurance for a vendor who has not uploaded a certificate."""
+
+    code = "insurance_certificate_missing"
+    default_message = "This vendor has not uploaded an insurance certificate."
+
+
+class InsuranceAlreadyExpired(InvalidInput):
+    """The expiry date staff entered is today or earlier, so the cover would not count."""
+
+    code = "insurance_already_expired"
+    default_message = "The cover must end after today. Ask the vendor for their current certificate."
+
+
+class InsuranceCoverTooLow(InvalidInput):
+    """The cover on the certificate is below the minimum Eventtz accepts."""
+
+    code = "insurance_cover_too_low"
+    default_message = "Public liability cover must be at least £1,000,000."
+
+
 class ListingMediaUrlInvalid(InvalidInput):
     """Staff picked a listing photo that is not the vendor's profile photo or a portfolio image."""
 

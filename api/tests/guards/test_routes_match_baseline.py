@@ -39,6 +39,8 @@ ADDITIVE_PATH_PREFIXES = (
     # Vendor consequences (terms remediation 3.4): staff warning and timed listing pause.
     "/api/v1/admin/vendors/{}/warn",
     "/api/v1/admin/vendors/{}/listing-pause",
+    # Staff-checked public liability insurance for higher-risk vendors.
+    "/api/v1/admin/vendors/{}/insurance",
     # Split payouts and damage deposits (terms remediation 3.1, 3.5).
     "/api/v1/client/booking-requests/{}/confirm-delivery",
     "/api/v1/vendor/booking-requests/{}/deposit-claim",
