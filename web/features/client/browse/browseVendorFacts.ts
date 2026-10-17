@@ -1,6 +1,8 @@
 import {
   cancellationPolicyLabel,
+  cancellationPolicyTiers,
   describeCancellationPolicy,
+  type CancellationPolicyTier,
 } from "@/features/bookings/cancellationPolicyCopy";
 import { RADIUS_OPTIONS, WEEKDAY_LABELS } from "@/features/vendor/onboarding/constants";
 
@@ -70,6 +72,7 @@ export type BrowseVendorProfileFacts = {
   /** Vendor's cancellation preset label; absent payload key means Flexible. */
   cancellationPolicyLabel: string;
   cancellationPolicyLines: string[];
+  cancellationPolicyTiers: CancellationPolicyTier[];
 };
 
 function formatAvailableWeekdays(raw: unknown): string | null {
@@ -196,5 +199,6 @@ export function buildBrowseVendorProfileFacts(
     portfolioVideoUrls: videoUrls,
     cancellationPolicyLabel: cancellationPolicyLabel(payloadStr(payload, "cancellationPolicy")),
     cancellationPolicyLines: describeCancellationPolicy(payloadStr(payload, "cancellationPolicy")),
+    cancellationPolicyTiers: cancellationPolicyTiers(payloadStr(payload, "cancellationPolicy")),
   };
 }

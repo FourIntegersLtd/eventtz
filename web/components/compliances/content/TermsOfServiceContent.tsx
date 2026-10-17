@@ -184,6 +184,12 @@ export function TermsOfServiceContent() {
           provide the event services ourselves. Each vendor is their own business
           and is responsible for doing the work they agreed to do.
         </p>
+        <p>
+          When you book, the contract for the service is between you and the
+          vendor. Eventtz is not a party to it and is not the provider, so we
+          are not responsible for how the vendor performs it. We still apply
+          the payment, refund and dispute rules in these Terms.
+        </p>
       </section>
 
       <section id="accounts">
@@ -380,12 +386,6 @@ export function TermsOfServiceContent() {
           policy applies.
         </p>
 
-        <h3>Older bookings</h3>
-        <p>
-          If you paid before vendors could choose a cancellation policy, you get
-          all your money back if you cancel.
-        </p>
-
         <h3>When cancelling is not possible</h3>
         <ul>
           <li>
@@ -460,21 +460,23 @@ export function TermsOfServiceContent() {
         <h3>Photography: paid in two parts</h3>
         <p>
           Photos and videos are only ready after the event. So for{" "}
-          {splitCategories}, the vendor is paid in two parts:
+          {splitCategories}, every booking is paid to the vendor in two parts:
         </p>
         <ul>
           <li>
             The first part is paid when the event is complete. The vendor picks
             the size of this part, between {policy.deliveryUpfrontPercentMin}%
-            and {policy.deliveryUpfrontPercentMax}% of their price. You see it
-            before you pay.
+            and {policy.deliveryUpfrontPercentMax}% of their price (
+            {policy.deliveryUpfrontPercentDefault}% if they do not choose). You
+            see it before you pay.
           </li>
           <li>
             The rest is paid when you confirm you have received your photos or
             videos. If you do not confirm, it is paid when the vendor’s delivery
             deadline passes and no problem has been reported. The vendor picks
             the delivery deadline. It can be up to {policy.deliveryDeadlineDaysMax}{" "}
-            days after the event, and you see it before you pay.
+            days after the event ({policy.deliveryDeadlineDaysDefault} if they do
+            not choose), and you see it before you pay.
           </li>
           <li>
             If the photos or videos are not delivered, report it from the
@@ -885,11 +887,6 @@ export function TermsOfServiceContent() {
           <li>
             If you want to make a claim against us, you must do so within{" "}
             {policy.claimsTimeLimitMonths} months of the problem.
-          </li>
-          <li>
-            The client is responsible for damage their guests cause to a
-            vendor’s equipment. The vendor is responsible for damage they cause
-            to the client’s property or venue.
           </li>
         </ul>
       </section>

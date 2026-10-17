@@ -40,7 +40,7 @@ export function VendorPayoutAccountPanel({
   const headline = payoutsReady
     ? "You're ready to get paid"
     : started
-      ? "Almost there — finish verification"
+      ? "Almost there: finish verification"
       : "Connect your payout account";
 
   const subcopy = payoutsReady
@@ -101,7 +101,7 @@ export function VendorPayoutAccountPanel({
           <h2 className="font-heading text-base font-semibold text-neutral-900">Setup progress</h2>
           <p className="mt-1 text-sm text-neutral-500">
             {payoutsReady
-              ? "All steps complete — you can accept paid bookings."
+              ? "All steps complete. You can accept paid bookings."
               : "Complete each step to appear in search and receive payouts."}
           </p>
         </div>

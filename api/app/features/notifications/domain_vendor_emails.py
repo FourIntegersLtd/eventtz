@@ -211,7 +211,7 @@ def vendor_setup_payouts_nudge_email(*, vendor_email: str, business_name: str | 
     """Content for the nudge sent to an approved vendor who has not finished Stripe payout setup."""
     name = _greeting_name(business_name, vendor_email)
     headline = "Set up payouts to go live on Eventtz"
-    subtitle = "Your profile is approved — one step left before clients can find you."
+    subtitle = "Your profile is approved. One step left before clients can find you."
     body = (
         f"Hi {name},\n\n"
         "Your vendor profile has been approved on Eventtz. Before clients can discover "

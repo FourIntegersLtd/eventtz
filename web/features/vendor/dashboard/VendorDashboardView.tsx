@@ -15,9 +15,8 @@ import { eventDayOver } from "@/features/bookings/eventDay";
 import { VendorGrowthGlanceTile } from "@/features/vendor/copilot/VendorGrowthGlanceTile";
 import { useVendorDashboard } from "./useVendorDashboard";
 import { VendorBookingsCalendarCard } from "./VendorBookingsCalendarCard";
-import { VendorCancellationPolicyBanner } from "./VendorCancellationPolicyBanner";
+import { VendorAttentionCard } from "./VendorAttentionCard";
 import { VendorCancellationPolicyModal } from "./VendorCancellationPolicyModal";
-import { VendorPayoutSetupBanner } from "./VendorPayoutSetupBanner";
 
 function daysUntil(iso: string): number {
   const start = new Date(`${iso.slice(0, 10)}T00:00:00`);
@@ -172,18 +171,15 @@ export function VendorDashboardView() {
         />
       )}
 
-      <VendorPayoutSetupBanner
+      <VendorAttentionCard
         payoutsReady={payoutsReady}
+        policyChosen={cancellationPolicyChosen}
         loading={loadStatus === "loading"}
         connecting={payoutsConnecting}
         onConnect={() => void connectPayouts("/vendor/payments")}
       />
 
       <VendorCancellationPolicyModal
-        policyChosen={cancellationPolicyChosen}
-        loading={loadStatus === "loading"}
-      />
-      <VendorCancellationPolicyBanner
         policyChosen={cancellationPolicyChosen}
         loading={loadStatus === "loading"}
       />

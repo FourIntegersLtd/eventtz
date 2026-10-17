@@ -57,9 +57,9 @@ const SHOUTOUT_OPTIONS = [
 ];
 
 function formatDate(iso: string | null): string {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
+  if (Number.isNaN(d.getTime())) return "-";
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
@@ -216,14 +216,14 @@ export function AdminReferralSignupsView({ partnerId }: AdminReferralSignupsView
               <AdminTableBody>
                 {signups.map((row) => (
                   <AdminTableRow key={row.user_id}>
-                    <AdminTableCell>{row.email ?? "—"}</AdminTableCell>
-                    <AdminTableCell>{row.business_name ?? "—"}</AdminTableCell>
+                    <AdminTableCell>{row.email ?? "-"}</AdminTableCell>
+                    <AdminTableCell>{row.business_name ?? "-"}</AdminTableCell>
                     <AdminTableCell>{formatDate(row.attributed_at)}</AdminTableCell>
                     <AdminTableCell>
                       {row.approval_status ? (
                         <VendorApprovalStatusBadge status={row.approval_status} />
                       ) : (
-                        "—"
+                        "-"
                       )}
                     </AdminTableCell>
                     <AdminTableCell>
@@ -255,7 +255,7 @@ export function AdminReferralSignupsView({ partnerId }: AdminReferralSignupsView
                           View
                         </ButtonLink>
                       ) : (
-                        "—"
+                        "-"
                       )}
                     </AdminTableCell>
                   </AdminTableRow>

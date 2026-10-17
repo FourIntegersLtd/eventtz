@@ -213,10 +213,10 @@ async def bookings_awaiting_final_payout(
     return [BookingRow.model_validate(plain_row(found)) for found in result]
 
 
-async def unpaid_bookings_accepted_since(
-    session: AsyncSession, *, accepted_on_or_after: date, limit: int, after_id: str | None = None
+async def bookings_awaiting_payment(
+    session: AsyncSession, *, limit: int, after_id: str | None = None
 ) -> list[BookingRow]:
-    """Accepted bookings not yet paid, accepted on or after `accepted_on_or_after` (deadline rule).
+    """Accepted bookings not yet paid (the payment-deadline rule).
 
     The caller works out each booking's deadline; this only narrows to the ones that can have one.
     """
@@ -226,7 +226,6 @@ async def unpaid_bookings_accepted_since(
             BookingRequest.status == "accepted",
             BookingRequest.payment_status.in_(("unpaid", "pending")),
             BookingRequest.accepted_at.is_not(None),
-            func.date(BookingRequest.accepted_at) >= accepted_on_or_after,
             *_after(after_id),
         )
         .order_by(BookingRequest.id)

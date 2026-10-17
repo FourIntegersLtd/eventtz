@@ -629,7 +629,7 @@ def test_copilot_score_computes_deterministic_growth_score_from_profile(admin_db
         "score": 0,
         "max_score": 100,
         "status": "needs_work",
-        "tip": "Add a profile photo — clients trust listings with a face or logo.",
+        "tip": "Add a profile photo. Clients trust listings with a face or logo.",
     }
     assert levers_by_key["response"]["score"] == 48
     assert levers_by_key["response"]["status"] == "ok"

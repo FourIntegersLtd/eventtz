@@ -4,6 +4,7 @@ import {
   canReportDeposit,
   damageDepositError,
   deliverySplitErrors,
+  savedUpfrontPercentForForm,
   depositAwardError,
   depositClaimError,
   depositFromPayload,
@@ -64,11 +65,26 @@ describe("bookingTerms", () => {
     expect(depositAwardError("81", 80)).toBe("Enter an amount from £0 to £80.");
   });
 
+  it("caps a split saved under the old 80% limit so the vendor can still save the form", () => {
+    expect(savedUpfrontPercentForForm("80")).toBe("60");
+    expect(savedUpfrontPercentForForm("61")).toBe("60");
+    expect(savedUpfrontPercentForForm("55")).toBe("55");
+    expect(savedUpfrontPercentForForm("")).toBe("");
+    expect(savedUpfrontPercentForForm("abc")).toBe("abc");
+  });
+
   it("validates vendor split and deposit fields against policy", () => {
     expect(deliverySplitErrors("", "")).toEqual({ upfront: null, deadline: null });
     expect(deliverySplitErrors("60", "14")).toEqual({ upfront: null, deadline: null });
-    expect(deliverySplitErrors("40", "14").upfront).toBe("Paid up front (%) must be a whole number from 50 to 80.");
-    expect(deliverySplitErrors("60", "").deadline).toMatch(/both/);
+    expect(deliverySplitErrors("40", "14").upfront).toBe(
+      "Paid after the event (%) must be a whole number from 50 to 60.",
+    );
+    expect(deliverySplitErrors("70", "14").upfront).toBe(
+      "Paid after the event (%) must be a whole number from 50 to 60.",
+    );
+    // One blank half is fine: the default fills it.
+    expect(deliverySplitErrors("60", "")).toEqual({ upfront: null, deadline: null });
+    expect(deliverySplitErrors("", "14")).toEqual({ upfront: null, deadline: null });
     expect(deliverySplitErrors("60", "61").deadline).toBe("Days to deliver must be a whole number from 1 to 60.");
     expect(damageDepositError("1000")).toBeNull();
     expect(damageDepositError("1001")).toBe("Damage deposit must be an amount from £0 to £1,000.");

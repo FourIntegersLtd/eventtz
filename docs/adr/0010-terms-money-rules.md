@@ -7,13 +7,11 @@ Source: `docs/plans/terms-remediation-2026-10-17.md` (Phases 2 and 3), Terms of 
 - **Snapshot at checkout.** `start_checkout` copies the vendor's terms onto the booking with
   `domain_policy.checkout_terms_columns`: `report_window_hours`, `payout_upfront_percent`,
   `delivery_deadline_days`, `damage_deposit_gbp` (and, from 0006, `cancellation_policy`). The client
-  is held to what they saw when they paid, whatever the vendor edits later. A NULL column means the
-  booking predates the rule and follows the old behaviour.
+  is held to what they saw when they paid, whatever the vendor edits later.
 - **Payment deadline (2.1).** An accepted, unpaid booking must be paid by the earlier of
   `booking_payment_deadline_hours` after acceptance and 48 hours before the event (the event start if
   accepted inside those 48 hours). The hourly job cancels it (`cancelled_by = system`,
   `failure_reason = PAYMENT_DEADLINE`) rather than declining it: `declined` means the vendor said no.
-  Bookings accepted before `terms_version` have no deadline.
 - **Reporting window by category (3.2).** Rentals and decor get 96 hours; everyone else keeps
   `booking_payout_auto_release_hours_after_event` (48). The longest window among the vendor's
   categories wins.
@@ -24,6 +22,11 @@ Source: `docs/plans/terms-remediation-2026-10-17.md` (Phases 2 and 3), Terms of 
   `delivery_deadline_days` pass with no dispute. `payout_stage` is derived, never stored. Staff
   release pays everything left in one go. A full refund after the first part returns only what is
   still held.
+- **Split made compulsory (amended 2026-10-17).** The plan let the photographer opt in, so a
+  photographer who left it blank was paid in full before any photos existed and the client had
+  nothing held back. Every photography booking is now split: the first part is 50–60% (was 50–80%),
+  and a blank or out-of-range number becomes 60% / 30 days. A percent saved above 60 is capped at
+  60, not reset. Bookings already paid keep their snapshot, including 70–80% and unsplit ones.
 - **Damage deposit (3.5), deviation from the plan.** The plan proposed a separate manual-capture
   PaymentIntent. Manual-capture authorisations expire after 7 days, which is shorter than the gap
   between paying and most events, so the deposit is added to the same Checkout charge instead and

@@ -188,7 +188,7 @@ export function SettingsReferralsSection() {
           ) : (
             <div className="space-y-3">
               <p className="text-sm text-neutral-600">
-                Choose a code once — it cannot be changed later. Leave blank for a random 6-digit code.
+                Choose a code once. It cannot be changed later. Leave blank for a random 6-digit code.
               </p>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                 <div className="min-w-0 flex-1">

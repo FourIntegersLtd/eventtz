@@ -115,11 +115,11 @@ def _listing_lever(payload: dict[str, Any]) -> dict[str, Any]:
     if complete_packages >= 1 and profile_image and portfolio_count >= 3:
         tip = "Your listing looks strong. Keep packages and photos up to date."
     elif not profile_image:
-        tip = "Add a profile photo — clients trust listings with a face or logo."
+        tip = "Add a profile photo. Clients trust listings with a face or logo."
     elif complete_packages < 1:
         tip = "Finish at least one complete package with name, price, and what's included."
     elif portfolio_count < 3:
-        tip = "Add more portfolio photos — 3 or more helps clients choose you."
+        tip = "Add more portfolio photos. 3 or more helps clients choose you."
 
     return {
         "key": "listing",
@@ -158,7 +158,7 @@ def _response_lever(overview: dict[str, Any]) -> dict[str, Any]:
     tip = "Reply to new enquiries within 2 hours to win more bookings."
     if pending_enquiries > 0:
         plural = "y" if pending_enquiries == 1 else "ies"
-        tip = f"You have {pending_enquiries} pending enquir{plural} — reply soon to protect your score."
+        tip = f"You have {pending_enquiries} pending enquir{plural}. Reply soon to protect your score."
     elif average_response_seconds is not None and average_response_seconds <= 7200:
         tip = "Great response time. Keep replying quickly to stay visible."
 
@@ -196,7 +196,7 @@ def _conversion_lever(overview: dict[str, Any]) -> dict[str, Any]:
     profile_views = int(overview.get("profile_views") or 0)
     tip = "When enquiries arrive, accept promptly and keep packages clear to convert."
     if profile_views >= 5 and enquiries == 0:
-        tip = "Clients are viewing your profile but not enquiring yet — sharpen packages and photos."
+        tip = "Clients are viewing your profile but not enquiring yet. Sharpen packages and photos."
     elif enquiries >= 1 and conversion_rate < 0.15:
         tip = "Focus on accepting suitable enquiries and confirming details quickly."
 
@@ -226,7 +226,7 @@ def _reviews_lever(overview: dict[str, Any]) -> dict[str, Any]:
     ratio = points / _REVIEWS_MAX
     tip = "Complete bookings and ask happy clients to leave a review."
     if review_count >= 3 and average_rating >= 4.5:
-        tip = "Strong reviews — mention your best work in your bio."
+        tip = "Strong reviews. Mention your best work in your bio."
 
     return {
         "key": "reviews",

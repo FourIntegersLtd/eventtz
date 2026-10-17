@@ -166,25 +166,34 @@ function wholeNumberError(text: string, label: string, lowest: number, highest: 
   return null;
 }
 
-/** Errors for the optional split-payout fields: both or neither, each within policy. */
+/**
+ * Errors for the split-payout fields, each within policy. A blank field is fine: photography is
+ * always split, and the api uses the default for anything left blank.
+ */
 export function deliverySplitErrors(
   upfrontPercent: string,
   deadlineDays: string,
 ): { upfront: string | null; deadline: string | null } {
   const upfront = wholeNumberError(
     upfrontPercent,
-    "Paid up front (%)",
+    "Paid after the event (%)",
     policy.deliveryUpfrontPercentMin,
     policy.deliveryUpfrontPercentMax,
   );
   const deadline = wholeNumberError(deadlineDays, "Days to deliver", 1, policy.deliveryDeadlineDaysMax);
-  const hasUpfront = upfrontPercent.trim() !== "";
-  const hasDeadline = deadlineDays.trim() !== "";
-  if (hasUpfront !== hasDeadline) {
-    const message = "Set both the part paid up front and the days to deliver, or neither.";
-    return { upfront: upfront ?? (hasUpfront ? null : message), deadline: deadline ?? (hasDeadline ? null : message) };
-  }
   return { upfront, deadline };
+}
+
+/**
+ * A saved first-part percent as the form should show it. Profiles saved when the limit was 80%
+ * show the new maximum instead, so the vendor is not blocked from saving; the api caps it the same way.
+ */
+export function savedUpfrontPercentForForm(savedText: string): string {
+  const value = Number(savedText);
+  if (savedText.trim() && Number.isInteger(value) && value > policy.deliveryUpfrontPercentMax) {
+    return String(policy.deliveryUpfrontPercentMax);
+  }
+  return savedText;
 }
 
 export function damageDepositError(text: string): string | null {

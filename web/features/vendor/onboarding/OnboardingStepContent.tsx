@@ -5,7 +5,9 @@ import type { VendorOnboardingData, VendorOnboardingUpdate, VendorStatusCheckFee
 import type { VendorApprovalStatus } from "@/lib/domain-types";
 import type { PortfolioImageQualityRow } from "./useVendorOnboardingController";
 import { OnboardingWizardStepTitle } from "./ui/OnboardingWizardStepTitle";
+import { CANCELLATION_POLICY_SECTION, type ProfileSectionSlug } from "./constants";
 import {
+  CancellationPolicyPicker,
   StepAccount,
   StepAdditionalInfo,
   StepAvailability,
@@ -64,6 +66,8 @@ type Props = {
   isLiveEdit?: boolean;
   lockedPendingReview?: boolean;
   onOpenStepInfo?: () => void;
+  /** Live editor only: the open section, which splits step 4 into Pricing and Cancellation policy. */
+  section?: ProfileSectionSlug | null;
 };
 
 function LiveEditStepShell({ children }: { children: ReactNode }) {
@@ -117,6 +121,7 @@ export function OnboardingStepContent({
   isLiveEdit = false,
   lockedPendingReview = false,
   onOpenStepInfo,
+  section = null,
 }: Props) {
   const wrapLive = (node: ReactNode) =>
     isLiveEdit ? (
@@ -157,11 +162,19 @@ export function OnboardingStepContent({
     case 3:
       return wrapLive(<StepLocation data={data} update={update} />);
     case 4:
+      if (isLiveEdit && section === CANCELLATION_POLICY_SECTION) {
+        return (
+          <LiveEditStepShell>
+            <CancellationPolicyPicker data={data} update={update} />
+          </LiveEditStepShell>
+        );
+      }
       return wrapLive(
         <StepPricing
           data={data}
           update={update}
           usePostLaunchOptimizer={isLiveEdit && approvalStatus === "approved"}
+          showCancellationPolicy={!isLiveEdit}
         />,
       );
     case 5:

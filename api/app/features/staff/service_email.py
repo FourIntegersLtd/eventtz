@@ -94,7 +94,7 @@ def send_test(
     delivered = mailer.send(
         OutgoingEmail(
             to=(email,),
-            subject=f"Eventtz admin test email — {trimmed_id}",
+            subject=f"Eventtz admin test email: {trimmed_id}",
             html=message_body_html or f"<p>{message_body or fallback_text}</p>",
             text=message_body or fallback_text,
         )

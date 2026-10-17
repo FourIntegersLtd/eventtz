@@ -121,8 +121,7 @@ class Settings(BaseSettings):
     # Hours after the event day ends before a paid booking's payout is released automatically.
     booking_payout_auto_release_hours_after_event: int = 48
     # Hours after the vendor accepts that the client has to pay; never later than the start of the
-    # event day. An unpaid booking is then cancelled and the vendor's date freed. Only bookings
-    # accepted on or after the Terms that introduced it (`terms_version`) are expired.
+    # event day. An unpaid booking is then cancelled and the vendor's date freed.
     booking_payment_deadline_hours: int = 72
     # Hours a client enquiry may wait for the vendor's first reply before the hourly job marks it
     # VENDOR_NO_RESPONSE (a funnel signal only; the booking stays open). 0 turns the marking off.

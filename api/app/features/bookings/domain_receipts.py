@@ -172,7 +172,7 @@ def _vendor_payment_record_status_note(
     if payment_status == "paid":
         return (
             "Client payment received. Your share is held safely with Eventtz until the event "
-            "is complete and both sides confirm — or the automatic release date passes."
+            "is complete and both sides confirm, or until the automatic release date passes."
         )
     return None
 

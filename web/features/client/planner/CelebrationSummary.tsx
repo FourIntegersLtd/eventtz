@@ -33,7 +33,7 @@ export function CelebrationSummary({ plan }: CelebrationSummaryProps) {
       {plan.brief.unsupported_categories_mentioned?.length ? (
         <p className="mt-2 text-xs text-neutral-500">
           We don&apos;t list {plan.brief.unsupported_categories_mentioned.join(", ")} as dedicated
-          categories yet — try browsing related vendors or contact us for help.
+          categories yet. Try browsing related vendors or contact us for help.
         </p>
       ) : null}
     </header>

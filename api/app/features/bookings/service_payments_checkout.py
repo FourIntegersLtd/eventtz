@@ -139,7 +139,7 @@ async def start_checkout(
         raise CheckoutAlreadyPaid()
     settings = get_settings()
     due_at = domain_policy.booking_payment_due_at(
-        booking, deadline_hours=settings.booking_payment_deadline_hours, terms_version=settings.terms_version
+        booking, deadline_hours=settings.booking_payment_deadline_hours
     )
     if due_at is not None and datetime.now(UTC) >= due_at:
         # The hourly job cancels it; until then it must not be paid either.

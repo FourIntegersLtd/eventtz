@@ -43,7 +43,7 @@ export function useVendorReferralPreview({
         } else if (preview.qualified_discount_gbp <= 0) {
           setError(
             portion < REFERRAL_LOWEST_TIER_SPEND_GBP
-              ? `Referral code saved — discount applies when the vendor total is £${REFERRAL_LOWEST_TIER_SPEND_GBP}+.`
+              ? `Referral code saved. The discount applies when the vendor total is £${REFERRAL_LOWEST_TIER_SPEND_GBP}+.`
               : null,
           );
         }

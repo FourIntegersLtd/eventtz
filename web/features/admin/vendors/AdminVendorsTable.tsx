@@ -108,9 +108,9 @@ export function AdminVendorsTable({
                       aria-label={`Select ${email}`}
                       title={
                         isDraft
-                          ? "Draft profile — complete profile email"
+                          ? "Draft profile: complete profile email"
                           : needsPayout
-                            ? "Approved — setup payouts email"
+                            ? "Approved: setup payouts email"
                             : undefined
                       }
                     />

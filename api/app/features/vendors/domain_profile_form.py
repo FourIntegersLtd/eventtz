@@ -437,7 +437,7 @@ def _check_pricing(payload: dict[str, Any]) -> None:
 # `bookings/domain_policy.py`, which applies them to a booking, and `web/lib/policyConstants.json`;
 # `tests/unit/test_policy_constants.py` keeps the three in step.
 DELIVERY_UPFRONT_PERCENT_MIN = 50
-DELIVERY_UPFRONT_PERCENT_MAX = 80
+DELIVERY_UPFRONT_PERCENT_MAX = 60
 DELIVERY_DEADLINE_DAYS_MAX = 60
 DEPOSIT_MAX_GBP = 1000
 
@@ -452,15 +452,14 @@ def _check_whole_number_between(raw: str, label: str, lowest: int, highest: int)
 
 
 def _check_terms_options(payload: dict[str, Any]) -> None:
-    """The optional split payout (photography) and damage deposit (rentals, decor) settings."""
+    """The split payout numbers (photography, defaults when blank) and the optional damage deposit."""
     upfront = text_field(payload, "deliveryUpfrontPercent")
     deadline = text_field(payload, "deliveryDeadlineDays")
     _check_whole_number_between(
         upfront, "Paid after the event (%)", DELIVERY_UPFRONT_PERCENT_MIN, DELIVERY_UPFRONT_PERCENT_MAX
     )
+    # A blank half is allowed: photography is always split and the booking rule fills the default.
     _check_whole_number_between(deadline, "Days to deliver", 1, DELIVERY_DEADLINE_DAYS_MAX)
-    if bool(upfront.strip()) != bool(deadline.strip()):
-        raise ProfileInvalid("Set both the part paid after the event and the days to deliver, or neither.")
     deposit = text_field(payload, "damageDepositGbp")
     if deposit.strip():
         amount = parse_money_gbp(deposit)

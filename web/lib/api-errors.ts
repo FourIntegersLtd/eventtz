@@ -16,11 +16,11 @@ export type MediaUploadKind = "photo" | "video" | "document";
 
 const MEDIA_UPLOAD_TIMEOUT_COPY: Record<MediaUploadKind, string> = {
   photo:
-    "Photo upload timed out. Large images can take a while on slower connections — try Wi‑Fi, wait until the upload finishes, or use a smaller photo.",
+    "Photo upload timed out. Large images can take a while on slower connections. Try Wi‑Fi, wait until the upload finishes, or use a smaller photo.",
   video:
-    "Video upload timed out. Large videos can take several minutes on slower connections — try Wi‑Fi, wait until the upload finishes, or use a shorter or smaller video.",
+    "Video upload timed out. Large videos can take several minutes on slower connections. Try Wi‑Fi, wait until the upload finishes, or use a shorter or smaller video.",
   document:
-    "Document upload timed out. Large files can take a while on slower connections — try Wi‑Fi, wait until the upload finishes, or use a smaller file.",
+    "Document upload timed out. Large files can take a while on slower connections. Try Wi‑Fi, wait until the upload finishes, or use a smaller file.",
 };
 
 /** User-facing message for failed media uploads (photos, videos, PDFs). */

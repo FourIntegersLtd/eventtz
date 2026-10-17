@@ -43,7 +43,7 @@ export function PackageExamplesModal({ servicesOffered }: Props) {
         <div className="space-y-4 pb-1 text-sm leading-relaxed text-neutral-700">
           <p>
             A package is something a customer can{" "}
-            <strong className="font-semibold text-neutral-900">choose and book</strong> from you — not
+            <strong className="font-semibold text-neutral-900">choose and book</strong> from you, not
             your whole business. Each package needs a clear name, a price, and exactly what&apos;s
             included.
           </p>

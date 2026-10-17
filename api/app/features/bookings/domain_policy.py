@@ -26,10 +26,15 @@ REPORT_WINDOW_HOURS_BY_CATEGORY: dict[str, int] = {"rentals": 96, "decor": 96}
 
 # --- photography: part on completion, the rest once the photos are delivered -------------------------
 
+# Compulsory for these categories: paying in full before the photos exist left the client with
+# nothing held back if they never arrived. The vendor may tune the numbers inside the ranges.
 DELIVERY_SPLIT_CATEGORIES: frozenset[str] = frozenset({"photography"})
 DELIVERY_UPFRONT_PERCENT_MIN = 50
-DELIVERY_UPFRONT_PERCENT_MAX = 80
+DELIVERY_UPFRONT_PERCENT_MAX = 60
 DELIVERY_DEADLINE_DAYS_MAX = 60
+# Used when the vendor left a number blank or it is out of range.
+DEFAULT_DELIVERY_UPFRONT_PERCENT = 60
+DEFAULT_DELIVERY_DEADLINE_DAYS = 30
 
 # --- damage deposits ---------------------------------------------------------------------------------
 
@@ -69,34 +74,21 @@ def payment_due_at(
     accepted_at: datetime | None,
     event_date: date | None,
     deadline_hours: int,
-    rule_starts_on: date | None,
 ) -> datetime | None:
     """When an accepted booking must be paid by, or None when no deadline applies.
 
     The earlier of `deadline_hours` after acceptance and PAYMENT_DEADLINE_HOURS_BEFORE_EVENT
     before the start (UTC midnight) of the event's first day. A booking accepted inside that
     window would otherwise be due before it was accepted, so it is due by the event start instead.
-    Bookings accepted before the Terms that introduced the rule (`rule_starts_on`) have no
-    deadline: their Terms did not have one.
     """
     if accepted_at is None or event_date is None:
         return None
     accepted_utc = accepted_at.astimezone(UTC)
-    if rule_starts_on is not None and accepted_utc.date() < rule_starts_on:
-        return None
     event_start = datetime(event_date.year, event_date.month, event_date.day, tzinfo=UTC)
     latest_due = event_start - timedelta(hours=PAYMENT_DEADLINE_HOURS_BEFORE_EVENT)
     if latest_due <= accepted_utc:
         latest_due = event_start
     return min(accepted_utc + timedelta(hours=deadline_hours), latest_due)
-
-
-def terms_effective_date(terms_version: str) -> date | None:
-    """The Terms version (`YYYY-MM-DD`) as a date, or None when it is not one."""
-    try:
-        return date.fromisoformat(terms_version.strip()[:10])
-    except ValueError:
-        return None
 
 
 # --- split payouts, deposits: what a booking carries from the vendor's profile ------------------------
@@ -124,19 +116,20 @@ def _whole_number(raw_value: Any) -> int | None:
 def delivery_split_terms(vendor_payload: dict[str, Any]) -> tuple[int, int] | None:
     """The vendor's (upfront percent, delivery deadline days), or None when no split applies.
 
-    Only for categories with work delivered after the event (photography), and only when both
-    numbers are inside the ranges the Terms allow; anything else pays in full after the event.
+    Only categories with work delivered after the event (photography) are split, and for them the
+    split is never off: a blank or unusable number falls back to the default. A percent above the
+    maximum (saved when the limit was 80) is capped rather than reset, as the vendor meant "a lot".
     """
     if not DELIVERY_SPLIT_CATEGORIES.intersection(_service_keys(vendor_payload)):
         return None
     upfront_percent = _whole_number(vendor_payload.get("deliveryUpfrontPercent"))
     deadline_days = _whole_number(vendor_payload.get("deliveryDeadlineDays"))
-    if upfront_percent is None or deadline_days is None:
-        return None
-    if not DELIVERY_UPFRONT_PERCENT_MIN <= upfront_percent <= DELIVERY_UPFRONT_PERCENT_MAX:
-        return None
-    if not 1 <= deadline_days <= DELIVERY_DEADLINE_DAYS_MAX:
-        return None
+    if upfront_percent is not None and upfront_percent > DELIVERY_UPFRONT_PERCENT_MAX:
+        upfront_percent = DELIVERY_UPFRONT_PERCENT_MAX
+    if upfront_percent is None or upfront_percent < DELIVERY_UPFRONT_PERCENT_MIN:
+        upfront_percent = DEFAULT_DELIVERY_UPFRONT_PERCENT
+    if deadline_days is None or not 1 <= deadline_days <= DELIVERY_DEADLINE_DAYS_MAX:
+        deadline_days = DEFAULT_DELIVERY_DEADLINE_DAYS
     return upfront_percent, deadline_days
 
 
@@ -294,9 +287,7 @@ def staff_refundable_pence(booking: BookingRow) -> int:
     return max(0, paid_pence - deposit_pence(booking) - held_upfront_pence(booking))
 
 
-def booking_payment_due_at(
-    booking: BookingRow, *, deadline_hours: int, terms_version: str
-) -> datetime | None:
+def booking_payment_due_at(booking: BookingRow, *, deadline_hours: int) -> datetime | None:
     """`payment_due_at` for a stored booking: only while it is accepted and not yet paid."""
     if booking.status != "accepted" or booking.payment_status not in ("unpaid", "pending"):
         return None
@@ -308,5 +299,4 @@ def booking_payment_due_at(
         accepted_at=_parse_instant(booking.accepted_at),
         event_date=event_day,
         deadline_hours=deadline_hours,
-        rule_starts_on=terms_effective_date(terms_version),
     )

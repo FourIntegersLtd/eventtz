@@ -2,14 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ChevronDown, Plus, Trash2 } from "lucide-react";
-import {
-  CANCELLATION_POLICY_KEYS,
-  CANCELLATION_POLICY_LABELS,
-  CANCELLATION_POLICY_NOT_CHOSEN,
-  CANCELLATION_POLICY_SUMMARIES,
-  describeCancellationPolicy,
-} from "@/features/bookings/cancellationPolicyCopy";
-import { OnboardingOptionPill } from "../ui/OnboardingOptionPill";
+import { CancellationPolicyPicker } from "./CancellationPolicyPicker";
 import { STEP_COPY } from "../onboardingCopy";
 import {
   packageIncludedPlaceholder,
@@ -55,6 +48,8 @@ export type StepPricingProps = {
   update: VendorOnboardingUpdate;
   /** Approved live profile — use post-launch growth optimizer instead of onboarding coach. */
   usePostLaunchOptimizer?: boolean;
+  /** False in the live profile editor, where cancellation policy is its own section. */
+  showCancellationPolicy?: boolean;
 };
 
 function updatePackage(
@@ -78,7 +73,12 @@ function AddPackageButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-export function StepPricing({ data, update, usePostLaunchOptimizer = false }: StepPricingProps) {
+export function StepPricing({
+  data,
+  update,
+  usePostLaunchOptimizer = false,
+  showCancellationPolicy = true,
+}: StepPricingProps) {
   const copy = STEP_COPY[4];
   const { packages } = data;
   const [scrollTargetId, setScrollTargetId] = useState<string | null>(null);
@@ -201,20 +201,20 @@ export function StepPricing({ data, update, usePostLaunchOptimizer = false }: St
 
       {showDeliverySplit ? (
         <OnboardingSubQuestion
-          headline="Split payment for photos/video (optional)"
-          subtext={`Get part of your fee when the booking is paid, and the rest once the client confirms they have their photos or video (or the delivery deadline passes). Leave both blank to be paid in full after the event.`}
+          headline="Two-part payout for photos/video"
+          subtext={`Every photography booking is paid in two parts. You get the first part after the event, and the rest once the client confirms they have their photos or video (or your delivery deadline passes). Leave a box blank to use ${policy.deliveryUpfrontPercentDefault}% and ${policy.deliveryDeadlineDaysDefault} days.`}
           indexOffset={7}
         >
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label className={labelClass()}>
-                Paid up front (%, {policy.deliveryUpfrontPercentMin} to {policy.deliveryUpfrontPercentMax})
+                Paid after the event (%, {policy.deliveryUpfrontPercentMin} to {policy.deliveryUpfrontPercentMax})
               </label>
               <ClearableTextField
                 inputMode="numeric"
                 value={data.deliveryUpfrontPercent}
                 onChange={(v) => update({ deliveryUpfrontPercent: v })}
-                placeholder="e.g. 60"
+                placeholder={`${policy.deliveryUpfrontPercentDefault}`}
               />
               {splitErrors.upfront ? (
                 <p className="mt-1 text-xs text-amber-800">{splitErrors.upfront}</p>
@@ -228,7 +228,7 @@ export function StepPricing({ data, update, usePostLaunchOptimizer = false }: St
                 inputMode="numeric"
                 value={data.deliveryDeadlineDays}
                 onChange={(v) => update({ deliveryDeadlineDays: v })}
-                placeholder="e.g. 14"
+                placeholder={`${policy.deliveryDeadlineDaysDefault}`}
               />
               {splitErrors.deadline ? (
                 <p className="mt-1 text-xs text-amber-800">{splitErrors.deadline}</p>
@@ -535,33 +535,9 @@ export function StepPricing({ data, update, usePostLaunchOptimizer = false }: St
         )}
       </OnboardingSubQuestion>
 
-      <OnboardingSubQuestion
-        headline="Cancellation policy"
-        subtext="If a client cancels after paying, this decides how much of your price they get back. The Eventtz service fee is always refunded."
-        indexOffset={8}
-      >
-        <div className="space-y-2">
-          {CANCELLATION_POLICY_KEYS.map((policyKey) => (
-            <OnboardingOptionPill
-              key={policyKey}
-              active={data.cancellationPolicy === policyKey}
-              onClick={() => update({ cancellationPolicy: policyKey })}
-              description={CANCELLATION_POLICY_SUMMARIES[policyKey]}
-            >
-              {CANCELLATION_POLICY_LABELS[policyKey]}
-            </OnboardingOptionPill>
-          ))}
-        </div>
-        {data.cancellationPolicy ? (
-          <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-neutral-500">
-            {describeCancellationPolicy(data.cancellationPolicy).map((line) => (
-              <li key={line}>{line}</li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-3 text-xs text-neutral-500">{CANCELLATION_POLICY_NOT_CHOSEN}</p>
-        )}
-      </OnboardingSubQuestion>
+      {showCancellationPolicy ? (
+        <CancellationPolicyPicker data={data} update={update} indexOffset={8} />
+      ) : null}
 
       <AnimatedStepItem index={9}>
         <OnboardingSubQuestion headline={copy.bookingHeadline} indexOffset={0}>

@@ -1,4 +1,4 @@
-Payout statement — {{ receipt.receipt_number }}
+Payout statement: {{ receipt.receipt_number }}
 
 {{ headline }}
 {{ subtitle }}

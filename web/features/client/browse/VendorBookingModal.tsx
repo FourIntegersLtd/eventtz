@@ -560,7 +560,7 @@ export function VendorBookingModal({
                   <p className="mt-1 text-xs text-neutral-500">Checking code…</p>
                 ) : referralApplied ? (
                   <p className="mt-1 text-xs font-medium text-emerald-700">
-                    Referral discount applied — {clientFeeBreakdown?.referralDiscountLabel?.replace("-", "")}{" "}
+                    Referral discount applied: {clientFeeBreakdown?.referralDiscountLabel?.replace("-", "")}{" "}
                     off your Eventtz fee
                   </p>
                 ) : referralError ? (

@@ -6,7 +6,12 @@ import { portalCard, portalCardPaddingLg } from "@/components/portal-shell/porta
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { MIN_PORTFOLIO_IMAGES } from "./constants";
+import {
+  defaultProfileSectionForStep,
+  MIN_PORTFOLIO_IMAGES,
+  profileSectionFromParam,
+  profileSectionHref,
+} from "./constants";
 import { portfolioApprovalBlockedCopy } from "./onboardingCopy";
 import { OnboardingStepContent } from "./OnboardingStepContent";
 import { OnboardingProgressHeader } from "./OnboardingProgressHeader";
@@ -99,6 +104,21 @@ export function VendorOnboarding() {
   const questionnaireTopRef = useRef<HTMLDivElement>(null);
   const [stepInfoOpen, setStepInfoOpen] = useState(false);
 
+  // Live editor: the URL (`?section=<slug>`) is the source of truth for the open section,
+  // so a link from anywhere (e.g. the dashboard's refund-policy prompt) opens it directly.
+  const sectionFromUrl = profileSectionFromParam(searchParams.get("section"));
+  const sectionStepFromUrl = sectionFromUrl?.step;
+  useEffect(() => {
+    if (!isLiveEdit || loadStatus !== "ready" || sectionStepFromUrl === undefined) return;
+    navigateToStep(sectionStepFromUrl);
+  }, [isLiveEdit, loadStatus, sectionStepFromUrl, navigateToStep]);
+  const activeSection =
+    sectionFromUrl && sectionFromUrl.step === step ? sectionFromUrl.slug : defaultProfileSectionForStep(step);
+  /** In the live editor, in-page jumps (Review's "Edit" links) go through the URL too. */
+  const goToStep = isLiveEdit
+    ? (target: number) => router.push(profileSectionHref(defaultProfileSectionForStep(target)), { scroll: false })
+    : navigateToStep;
+
   useEffect(() => {
     if (isLiveEdit || step > 8) return;
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -118,7 +138,7 @@ export function VendorOnboarding() {
     setPhoneError,
     onGenerateBioWithAI,
     generatingBio,
-    onNavigateToStep: navigateToStep,
+    onNavigateToStep: goToStep,
     approvalStatus,
     listingVisible,
     payoutsVerified,
@@ -151,6 +171,7 @@ export function VendorOnboarding() {
     isLiveEdit,
     lockedPendingReview,
     onOpenStepInfo: () => setStepInfoOpen(true),
+    section: activeSection,
   };
 
   if (authLoading || loadStatus === "loading") {
@@ -302,11 +323,7 @@ export function VendorOnboarding() {
         <div className="space-y-4 lg:space-y-6">
           <div className="space-y-4 lg:hidden">
             <VendorProfilePhotoField variant="header" {...profilePhotoProps} />
-            <VendorProfileSectionTabs
-              step={step}
-              reviewsActive={reviewsActive}
-              onNavigateToStep={navigateToStep}
-            />
+            <VendorProfileSectionTabs activeSection={reviewsActive ? null : activeSection} />
           </div>
 
           <header className="hidden lg:block">
@@ -324,15 +341,13 @@ export function VendorOnboarding() {
                 <VendorProfilePhotoField variant="sidebar" {...profilePhotoProps} />
                 <VendorProfileSectionTabs
                   orientation="vertical"
-                  step={step}
-                  reviewsActive={reviewsActive}
-                  onNavigateToStep={navigateToStep}
+                  activeSection={reviewsActive ? null : activeSection}
                 />
               </div>
             </aside>
 
             <div className="min-w-0 space-y-4 lg:space-y-6">
-              <div key={step} className="animate-onboarding-panel">
+              <div key={activeSection} className="animate-onboarding-panel">
                 <OnboardingStepContent {...stepContentProps} />
               </div>
               <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white lg:sticky lg:bottom-4">

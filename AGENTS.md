@@ -91,7 +91,7 @@ Traps in this machine's shell:
 ## Traps
 
 - **Payments are two lifecycles.** `booking_requests.status` is the request; `payment_status` is money. Only the payments slice writes `payment_status`, with conditional `.eq("payment_status", expected)` writes.
-- **Tiered client cancels.** `cancelled` + `partially_refunded` with `cancellation_refund_percent` set means the vendor's cancellation preset split the money (`bookings/domain_cancellation.py`); the vendor's share is a Transfer at cancel time, held (`cancellation_payout_at IS NULL`) until their Stripe setup is done. NULL `cancellation_policy` = paid before presets = full refund.
+- **Tiered client cancels.** `cancelled` + `partially_refunded` with `cancellation_refund_percent` set means the vendor's cancellation preset split the money (`bookings/domain_cancellation.py`); the vendor's share is a Transfer at cancel time, held (`cancellation_payout_at IS NULL`) until their Stripe setup is done.
 - **Held funds.** Checkout pays Eventtz; vendor payout is always an explicit `Transfer`. That is what lets disputes block payouts.
 - **SSE fans out over Redis** (ADR 0005). Without Redis the in-process bus only works on one replica.
 - **The session commits before the response.** Ask for it as `core.db.SessionDep` only

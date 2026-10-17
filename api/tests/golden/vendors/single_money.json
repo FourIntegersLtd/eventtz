@@ -66,21 +66,21 @@
   },
   {
     "kind": "multiple_amounts",
-    "message": "Step pricing: Package price must be one amount only — add a separate package for each price.",
+    "message": "Step pricing: Package price must be one amount only. Add a separate package for each price.",
     "parsed": null,
     "raise_if_invalid": {
       "error": "ValidationError",
-      "message": "Step pricing: Package price must be one amount only — add a separate package for each price."
+      "message": "Step pricing: Package price must be one amount only. Add a separate package for each price."
     },
     "raw": "100, 200"
   },
   {
     "kind": "multiple_amounts",
-    "message": "Step pricing: Package price must be one amount only — add a separate package for each price.",
+    "message": "Step pricing: Package price must be one amount only. Add a separate package for each price.",
     "parsed": null,
     "raise_if_invalid": {
       "error": "ValidationError",
-      "message": "Step pricing: Package price must be one amount only — add a separate package for each price."
+      "message": "Step pricing: Package price must be one amount only. Add a separate package for each price."
     },
     "raw": "100/200"
   },
@@ -210,11 +210,11 @@
   },
   {
     "kind": "multiple_amounts",
-    "message": "Step pricing: Package price must be one amount only — add a separate package for each price.",
+    "message": "Step pricing: Package price must be one amount only. Add a separate package for each price.",
     "parsed": null,
     "raise_if_invalid": {
       "error": "ValidationError",
-      "message": "Step pricing: Package price must be one amount only — add a separate package for each price."
+      "message": "Step pricing: Package price must be one amount only. Add a separate package for each price."
     },
     "raw": "1,200"
   }

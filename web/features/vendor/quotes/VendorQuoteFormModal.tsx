@@ -219,7 +219,7 @@ export function VendorQuoteFormModal({
         <p className="text-sm leading-relaxed text-neutral-600">
           Send this client a price from chat. Use a package you already list, or enter a
           one-off amount. They can accept or decline in Bookings. This stays on their
-          booking only — it won&apos;t appear on your listing.
+          booking only. It won&apos;t appear on your listing.
         </p>
         {error ? <LottieFailureInline message={error} /> : null}
         <TextField

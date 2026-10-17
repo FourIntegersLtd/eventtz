@@ -122,12 +122,18 @@ async def _notice_kinds(session: AsyncSession, user_id: str) -> list[tuple[str, 
 async def test_client_cancel_of_a_paid_booking_refunds_in_full_first(
     client: AsyncClient, db_session: AsyncSession, payment_gateway: FakePaymentGateway
 ) -> None:
-    """Stripe refunds with the cancel key, then the booking is cancelled and marked refunded."""
+    """Flexible, event far off: Stripe refunds in full with the cancel key, then the booking is cancelled."""
     client_id, token = await _make_account(db_session, "cancel-refund-client@example.com", "client")
     vendor_id, _vendor_token = await _make_vendor(
         db_session, "cancel-refund-vendor@example.com", stripe_ready=True
     )
-    booking_id = await _make_booking(db_session, client_id=client_id, vendor_id=vendor_id)
+    booking_id = await _make_booking(
+        db_session,
+        client_id=client_id,
+        vendor_id=vendor_id,
+        event_date="2099-06-01",
+        cancellation_policy="flexible",
+    )
 
     response = await client.post(
         f"/api/v1/client/booking-requests/{booking_id}/cancel", headers={"Authorization": f"Bearer {token}"}

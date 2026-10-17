@@ -67,7 +67,7 @@ export const VENDOR_SERVICE_CATEGORIES: VendorServiceCategory[] = [
     value: "photography",
     label: "Photography",
     description: "See services and prices on every profile before you send a message",
-    onboardingHint: "Wedding, party, and event photography — stills and edited galleries.",
+    onboardingHint: "Wedding, party, and event photography: stills and edited galleries.",
     examples: "photos, videography, photo booths, drone footage",
     Icon: Camera,
     iconBg: "bg-violet-100",
@@ -78,7 +78,7 @@ export const VENDOR_SERVICE_CATEGORIES: VendorServiceCategory[] = [
     value: "makeup",
     label: "Makeup",
     description: "Bridal, party, and on-the-day looks",
-    onboardingHint: "Makeup and glam for bridal, party, and on-the-day looks — not hair styling.",
+    onboardingHint: "Makeup and glam for bridal, party, and on-the-day looks, not hair styling.",
     examples: "bridal makeup, party glam, henna, lashes",
     Icon: Sparkles,
     iconBg: "bg-fuchsia-100",
@@ -89,7 +89,7 @@ export const VENDOR_SERVICE_CATEGORIES: VendorServiceCategory[] = [
     value: "rentals",
     label: "Rentals",
     description: "Marquees, furniture, chairs, tables, and event hire",
-    onboardingHint: "Marquees, chairs, tables, and equipment hire — not styling or décor.",
+    onboardingHint: "Marquees, chairs, tables, and equipment hire, not styling or décor.",
     examples: "marquees, chairs and tables, linens, sound and lighting hire, cold rooms",
     Icon: Package,
     iconBg: "bg-sky-100",
@@ -111,7 +111,7 @@ export const VENDOR_SERVICE_CATEGORIES: VendorServiceCategory[] = [
     value: "decor",
     label: "Decor",
     description: "Balloons, florals, backdrops, and table styling",
-    onboardingHint: "Balloons, florals, backdrops, and table styling — not furniture hire.",
+    onboardingHint: "Balloons, florals, backdrops, and table styling, not furniture hire.",
     examples: "balloons, flowers, backdrops, stage and table styling, fabric draping",
     Icon: Flower2,
     iconBg: "bg-pink-100",
@@ -144,7 +144,7 @@ export const VENDOR_SERVICE_CATEGORIES: VendorServiceCategory[] = [
     value: "hair_styling",
     label: "Hair stylist",
     description: "Bridal hair, braids, weaves, and occasion styling",
-    onboardingHint: "Bridal hair, braids, weaves, and occasion styling — not makeup.",
+    onboardingHint: "Bridal hair, braids, weaves, and occasion styling, not makeup.",
     examples: "bridal hair, braids, weaves, gele tying, hijab styling, selling hair, barbers at events",
     Icon: Scissors,
     iconBg: "bg-teal-100",
@@ -166,14 +166,14 @@ export function labelForVendorService(value: string): string {
 }
 
 const CATEGORY_CONFUSION_CALLOUT = [
-  "Decor vs Rentals — Decor is styling (balloons, florals, backdrops). Rentals is hire (marquees, chairs, tables).",
-  "Makeup vs Hair stylist — Pick Makeup for MUA and glam; pick Hair stylist if hair is your main service.",
+  "Decor vs Rentals: Decor is styling (balloons, florals, backdrops). Rentals is hire (marquees, chairs, tables).",
+  "Makeup vs Hair stylist: Pick Makeup for MUA and glam; pick Hair stylist if hair is your main service.",
 ].join("\n\n");
 
 /** Sections for the step 2 “What we need here” category guide. */
 export function vendorServiceOnboardingGuideSections(): VendorServiceOnboardingGuideSection[] {
   const categoryLines = VENDOR_SERVICE_CATEGORIES.map((category) => {
-    return `${category.label} — ${category.onboardingHint} e.g. ${category.examples}`;
+    return `${category.label}: ${category.onboardingHint} e.g. ${category.examples}`;
   });
 
   return [

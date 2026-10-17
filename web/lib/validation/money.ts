@@ -40,7 +40,7 @@ export function validateSingleMoneyAmount(
     return required ? `${label} is required` : null;
   }
   if (MULTIPLE_AMOUNT_SEPARATOR_RE.test(trimmed)) {
-    return `${label} must be one amount only — add a separate package for each price.`;
+    return `${label} must be one amount only. Add a separate package for each price.`;
   }
   if (AMBIGUOUS_PRICE_RE.test(trimmed)) {
     return `${label} must be one fixed amount, not a range or “starts from” price.`;

@@ -1,5 +1,6 @@
 export { StepAccount } from "./StepAccount";
 export { StepAdditionalInfo } from "./StepAdditionalInfo";
+export { CancellationPolicyPicker } from "./CancellationPolicyPicker";
 export { StepAvailability } from "./StepAvailability";
 export { StepBusiness } from "./StepBusiness";
 export { StepLocation } from "./StepLocation";

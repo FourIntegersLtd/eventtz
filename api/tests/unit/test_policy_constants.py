@@ -61,7 +61,9 @@ def test_every_key_in_the_file_is_either_checked_here_or_listed_as_copy_only(pol
         "deliverySplitCategories",
         "deliveryUpfrontPercentMin",
         "deliveryUpfrontPercentMax",
+        "deliveryUpfrontPercentDefault",
         "deliveryDeadlineDaysMax",
+        "deliveryDeadlineDaysDefault",
         "depositCategories",
         "depositMaxGbp",
         "depositClaimDays",
@@ -87,8 +89,10 @@ def test_report_windows_split_and_deposit_equal_the_domain_policy_constants(poli
     assert policy["reportWindowHoursByCategory"] == domain_policy.REPORT_WINDOW_HOURS_BY_CATEGORY
     assert set(policy["deliverySplitCategories"]) == domain_policy.DELIVERY_SPLIT_CATEGORIES
     assert policy["deliveryUpfrontPercentMin"] == domain_policy.DELIVERY_UPFRONT_PERCENT_MIN
-    assert policy["deliveryUpfrontPercentMax"] == domain_policy.DELIVERY_UPFRONT_PERCENT_MAX
+    assert policy["deliveryUpfrontPercentMax"] == domain_policy.DELIVERY_UPFRONT_PERCENT_MAX == 60
     assert policy["deliveryDeadlineDaysMax"] == domain_policy.DELIVERY_DEADLINE_DAYS_MAX
+    assert policy["deliveryUpfrontPercentDefault"] == domain_policy.DEFAULT_DELIVERY_UPFRONT_PERCENT == 60
+    assert policy["deliveryDeadlineDaysDefault"] == domain_policy.DEFAULT_DELIVERY_DEADLINE_DAYS == 30
     assert set(policy["depositCategories"]) == domain_policy.DEPOSIT_CATEGORIES
     assert policy["depositMaxGbp"] == domain_policy.DEPOSIT_MAX_GBP
     assert policy["depositClaimDays"] == domain_policy.DEPOSIT_CLAIM_DAYS

@@ -23,24 +23,46 @@ export const CANCELLATION_POLICY_SUMMARIES: Record<CancellationPolicyKey, string
   strict: "Full refund up to 90 days before, then 75% / 50% / none",
 };
 
-const TIER_LINES: Record<CancellationPolicyKey, string[]> = {
+/** One refund tier: how long before the event the client cancels, and what comes back. */
+export type CancellationPolicyTier = {
+  /** "7 or more days before the event" */
+  window: string;
+  /** "Full refund", "50% refund" or "No refund" (of the vendor's price) */
+  refund: string;
+};
+
+export const CANCELLATION_POLICY_TIERS: Record<CancellationPolicyKey, CancellationPolicyTier[]> = {
   flexible: [
-    "7 or more days before the event: full refund of the vendor's price",
-    "2 to 6 days before the event: 50% refund of the vendor's price",
-    "Less than 2 days before the event: no refund of the vendor's price",
+    { window: "7 or more days before the event", refund: "Full refund" },
+    { window: "2 to 6 days before the event", refund: "50% refund" },
+    { window: "Less than 2 days before the event", refund: "No refund" },
   ],
   moderate: [
-    "30 or more days before the event: full refund of the vendor's price",
-    "7 to 29 days before the event: 50% refund of the vendor's price",
-    "Less than 7 days before the event: no refund of the vendor's price",
+    { window: "30 or more days before the event", refund: "Full refund" },
+    { window: "7 to 29 days before the event", refund: "50% refund" },
+    { window: "Less than 7 days before the event", refund: "No refund" },
   ],
   strict: [
-    "90 or more days before the event: full refund of the vendor's price",
-    "60 to 89 days before the event: 75% refund of the vendor's price",
-    "30 to 59 days before the event: 50% refund of the vendor's price",
-    "Less than 30 days before the event: no refund of the vendor's price",
+    { window: "90 or more days before the event", refund: "Full refund" },
+    { window: "60 to 89 days before the event", refund: "75% refund" },
+    { window: "30 to 59 days before the event", refund: "50% refund" },
+    { window: "Less than 30 days before the event", refund: "No refund" },
   ],
 };
+
+/** Protections every preset gives the client, as short headline + detail pairs. */
+export const CANCELLATION_POLICY_GUARANTEES = [
+  {
+    title: "24-hour change of mind",
+    detail: "Full refund if you cancel within 24 hours of paying and the event is at least 7 days away.",
+  },
+  { title: "Service fee always refunded", detail: "The Eventtz service fee comes back whatever the timing." },
+] as const;
+
+function tierLine(tier: CancellationPolicyTier): string {
+  const refund = tier.refund === "Full refund" ? "full refund" : tier.refund === "No refund" ? "no refund" : tier.refund;
+  return `${tier.window}: ${refund} of the vendor's price`;
+}
 
 const SHARED_LINES = [
   "Within 24 hours of paying, if the event is at least 7 days away: full refund",
@@ -56,7 +78,12 @@ export function normaliseCancellationPolicy(preset: string | null | undefined): 
 
 /** Every line describing a preset: its tiers, then the lines shared by all presets. */
 export function describeCancellationPolicy(preset: string): string[] {
-  return [...TIER_LINES[normaliseCancellationPolicy(preset)], ...SHARED_LINES];
+  return [...cancellationPolicyTiers(preset).map(tierLine), ...SHARED_LINES];
+}
+
+/** The refund tiers of a preset, for tables; unknown or empty means flexible. */
+export function cancellationPolicyTiers(preset: string): CancellationPolicyTier[] {
+  return CANCELLATION_POLICY_TIERS[normaliseCancellationPolicy(preset)];
 }
 
 /** Human label for a preset ("Flexible", ...). */

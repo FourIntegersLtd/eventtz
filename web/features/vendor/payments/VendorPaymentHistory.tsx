@@ -76,7 +76,7 @@ function PayoutSummaryCards({ data }: { data: VendorPayoutHistory | null }) {
       <AdminKpiCard
         label="Total earnings"
         value={totalLabel}
-        hint="Your share from paid bookings — not the client total"
+        hint="Your share from paid bookings, not the client total"
         icon={PiggyBank}
         tone="primary"
       />
@@ -173,7 +173,7 @@ export function VendorPaymentHistory() {
         <LottieEmptyPanel
           variant="payments"
           title="No payouts yet"
-          description="Once a client pays, your earnings show up here — the amount you receive, not the client's total."
+          description="Once a client pays, your earnings show up here: the amount you receive, not the client's total."
         />
       ) : (
         <section className="space-y-4">
@@ -186,7 +186,7 @@ export function VendorPaymentHistory() {
                 Recent payouts
               </h2>
               <p className="text-sm text-neutral-500">
-                Amounts are your share only — Eventtz service fees are not included.
+                Amounts are your share only. Eventtz service fees are not included.
               </p>
             </div>
           </div>

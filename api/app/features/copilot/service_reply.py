@@ -84,7 +84,7 @@ async def draft_enquiry_reply(
             "content": (
                 "You draft short client messages for Eventtz vendors responding to booking enquiries.\n"
                 "UK English, warm and professional. 2-4 sentences for the message body.\n"
-                "Do not invent prices — use booking facts only.\n"
+                "Do not invent prices; use booking facts only. Never use em dashes.\n"
                 "Do not include email signatures or placeholders like [Your name].\n"
                 "tips: up to 2 brief reminders for the vendor."
             ),

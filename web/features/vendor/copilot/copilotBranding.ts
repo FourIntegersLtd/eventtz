@@ -3,7 +3,7 @@ export const VENDOR_COPILOT = {
   name: "Abba",
   meetHeading: "Meet Abba",
   tagline: "Your personal growth manager",
-  glanceTitle: "Abba — your growth manager",
+  glanceTitle: "Abba, your growth manager",
   glanceSubtitle: "Tips to grow your business",
   openLabel: "Open Abba",
   openHelpLabel: "Open help and Abba",

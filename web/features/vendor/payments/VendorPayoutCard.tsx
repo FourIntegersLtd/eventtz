@@ -124,7 +124,7 @@ const STEPS = [
   {
     key: "connect",
     title: "Link your payout account",
-    description: "Secure setup through Stripe — usually 2–3 minutes.",
+    description: "Secure setup through Stripe, usually 2–3 minutes.",
     done: (s: VendorPaymentsStatus | null) => Boolean(s?.stripe_account_id),
   },
   {
@@ -202,7 +202,7 @@ export function VendorPayoutSecurityNote() {
       <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden />
       <p className="text-sm leading-relaxed text-neutral-600">
         Bank details are stored and verified by Stripe. Eventtz never sees your full account
-        number — only whether payouts are ready.
+        number, only whether payouts are ready.
       </p>
     </div>
   );

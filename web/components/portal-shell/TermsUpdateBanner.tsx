@@ -1,5 +1,6 @@
 "use client";
 
+import { FileText } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -38,16 +39,22 @@ export function TermsUpdateBanner() {
   return (
     <div
       role="status"
-      className="mb-4 flex flex-col gap-3 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-200/70 sm:flex-row sm:items-center sm:justify-between"
+      className="mb-4 flex flex-col gap-3 rounded-2xl border border-neutral-200/80 bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:gap-4 sm:px-5"
     >
-      <p>
-        We&apos;ve updated our Terms of Service. Please read and accept them to keep booking.{" "}
-        <Link href="/compliances/terms-of-service" target="_blank" className="font-medium underline">
-          Read the Terms
-        </Link>
-        {error ? <span className="mt-1 block text-red-700">{error}</span> : null}
-      </p>
-      <Button type="button" loading={accepting} onClick={onAccept} className="shrink-0">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-800">
+        <FileText className="h-[18px] w-[18px]" aria-hidden />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold text-neutral-900">We&apos;ve updated our Terms of Service</p>
+        <p className="mt-0.5 text-[13px] leading-relaxed text-neutral-600">
+          Please read and accept them to keep booking.{" "}
+          <Link href="/compliances/terms-of-service" target="_blank" className="font-medium text-neutral-900 underline">
+            Read the Terms
+          </Link>
+        </p>
+        {error ? <p className="mt-1 text-[13px] text-red-700">{error}</p> : null}
+      </div>
+      <Button type="button" size="sm" loading={accepting} onClick={onAccept} className="shrink-0 sm:ml-2">
         Accept
       </Button>
     </div>

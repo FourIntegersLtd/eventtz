@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { CANCELLATION_POLICY_SECTION, profileSectionHref } from "@/features/vendor/onboarding/constants";
 import { Modal } from "@/components/ui/Modal";
 
 type VendorCancellationPolicyModalProps = {
@@ -69,7 +70,7 @@ export function VendorCancellationPolicyModal({ policyChosen, loading }: VendorC
 
   const goToProfile = () => {
     dismiss();
-    router.push("/vendor/profile");
+    router.push(profileSectionHref(CANCELLATION_POLICY_SECTION));
   };
 
   return (

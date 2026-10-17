@@ -57,10 +57,10 @@ export function SettingsReferralBookingsTable({
               </td>
               <td className="px-4 py-3 text-neutral-600">{row.client_display_name || "Client"}</td>
               {showCodeColumn ? (
-                <td className="px-4 py-3 font-mono text-xs text-neutral-500">{row.referral_code || "—"}</td>
+                <td className="px-4 py-3 font-mono text-xs text-neutral-500">{row.referral_code || "-"}</td>
               ) : null}
               <td className="px-4 py-3 tabular-nums text-neutral-600">
-                {row.event_date ? formatEventDate(row.event_date) : "—"}
+                {row.event_date ? formatEventDate(row.event_date) : "-"}
               </td>
               <td className="px-4 py-3 capitalize text-neutral-600">
                 {statusLabel(row.booking_status)}
@@ -74,7 +74,7 @@ export function SettingsReferralBookingsTable({
               <td className="px-5 py-3 text-right tabular-nums text-emerald-700 sm:px-6">
                 {row.referral_fee_discount_gbp > 0
                   ? formatBookingMoneyLabel(row.referral_fee_discount_gbp)
-                  : "—"}
+                  : "-"}
               </td>
             </tr>
           ))}

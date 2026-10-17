@@ -78,7 +78,7 @@ export function VendorDraftReplyPanel({ bookingId, onUseDraft }: Props) {
         ) : (
           <div className="space-y-4">
             <p className="text-xs text-neutral-500">
-              Review before sending — AI can make mistakes. This is a suggestion only.
+              Review before sending. AI can make mistakes. This is a suggestion only.
             </p>
             <textarea
               value={draft}

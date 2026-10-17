@@ -1,13 +1,11 @@
 """The Terms money rules end to end: split payouts, payment deadline, deposits, no-show refunds, refund cap.
 
 Stripe is `FakePaymentGateway`, so every Transfer and Refund is asserted with its exact pence and
-idempotency key. The Terms start date is moved to 2020-01-01 for the whole module, so the
-payment-deadline rule applies to bookings accepted "now" whatever today's date is.
+idempotency key.
 """
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -34,16 +32,6 @@ pytestmark = [pytest.mark.db, pytest.mark.e2e]
 LINE_ITEM = {"id": "pkg-1", "heading": "Classic Package", "unit_price_gbp": 150.0}
 PACKAGE = {"id": "pkg-1", "title": "Classic Package", "price": "150", "pricingMode": "fixed"}
 TRANSFER_SUFFIX = "acct_test_vendor-src-ch_test_paid"
-
-
-@pytest.fixture(autouse=True)
-def terms_in_force_since_2020(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    """Make the current Terms date 2020-01-01, so "accepted now" falls under the deadline rule."""
-    monkeypatch.setenv("TERMS_VERSION", "2020-01-01")
-    get_settings.cache_clear()
-    yield
-    monkeypatch.undo()
-    get_settings.cache_clear()
 
 
 def _today() -> str:
@@ -328,28 +316,6 @@ async def test_unpaid_bookings_past_their_deadline_are_cancelled_by_the_system(
     assert (await _booking(db_session, fresh_id)).status == "accepted"
 
 
-async def test_a_booking_accepted_before_the_terms_date_is_never_expired(db_session: AsyncSession) -> None:
-    """The Terms date is 2020-01-01; a booking accepted in 2019 was promised no deadline."""
-    gateway = FakePaymentGateway()
-    client_id, _client_token = await _make_account(db_session, "oldterms-client@example.com", "client")
-    vendor_id, _vendor_token = await _make_vendor(db_session, "oldterms-vendor@example.com")
-    booking_id = await _make_booking(
-        db_session,
-        client_id=client_id,
-        vendor_id=vendor_id,
-        payment_status="unpaid",
-        event_date="2099-06-01",
-        accepted_at=datetime(2019, 12, 31, 12, 0, tzinfo=UTC),
-        stripe_payment_intent_id=None,
-    )
-
-    expired = await service_maintenance.expire_unpaid_bookings(db_session, FakeMailer(), gateway)
-
-    assert expired == 0
-    assert (await _booking(db_session, booking_id)).status == "accepted"
-    assert gateway.calls == []
-
-
 async def test_a_pending_checkout_is_closed_at_stripe_before_the_booking_expires(
     db_session: AsyncSession,
 ) -> None:
@@ -473,13 +439,13 @@ async def test_checkout_without_a_deposit_leaves_the_charge_and_metadata_unchang
 async def test_checkout_snapshots_a_photographers_split_terms(
     client: AsyncClient, db_session: AsyncSession, payment_gateway: FakePaymentGateway
 ) -> None:
-    """Paying copies 70% / 14 days onto the booking, so a later profile edit cannot change them."""
+    """Paying copies 55% / 14 days onto the booking, so a later profile edit cannot change them."""
     client_id, token = await _make_account(db_session, "split-pay-client@example.com", "client")
     vendor_id, _vendor_token = await _make_vendor(
         db_session,
         "split-pay-vendor@example.com",
         servicesOffered=["photography"],
-        deliveryUpfrontPercent="70",
+        deliveryUpfrontPercent="55",
         deliveryDeadlineDays="14",
     )
     booking_id = await _make_booking(
@@ -497,8 +463,34 @@ async def test_checkout_snapshots_a_photographers_split_terms(
 
     assert response.status_code == 200, response.text
     booking = await _booking(db_session, booking_id)
-    assert (booking.payout_upfront_percent, booking.delivery_deadline_days) == (70, 14)
+    assert (booking.payout_upfront_percent, booking.delivery_deadline_days) == (55, 14)
     assert payment_gateway.calls[0].arguments["amount_pence"] == 15750
+
+
+async def test_checkout_splits_a_photographer_who_set_no_split_at_60_percent_and_30_days(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """The split is compulsory for photography: a vendor who left it blank is held to the defaults."""
+    client_id, token = await _make_account(db_session, "split-default-client@example.com", "client")
+    vendor_id, _vendor_token = await _make_vendor(
+        db_session, "split-default-vendor@example.com", servicesOffered=["photography"]
+    )
+    booking_id = await _make_booking(
+        db_session,
+        client_id=client_id,
+        vendor_id=vendor_id,
+        payment_status="unpaid",
+        event_date="2099-06-01",
+        stripe_payment_intent_id=None,
+    )
+
+    response = await client.post(
+        f"/api/v1/client/booking-requests/{booking_id}/checkout", headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response.status_code == 200, response.text
+    booking = await _booking(db_session, booking_id)
+    assert (booking.payout_upfront_percent, booking.delivery_deadline_days) == (60, 30)
 
 
 def _paid_deposit_columns(**columns: Any) -> dict[str, Any]:

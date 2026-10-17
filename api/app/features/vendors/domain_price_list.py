@@ -72,7 +72,7 @@ def step_pricing_label_single_amount(label: str) -> str:
 
 def step_pricing_label_one_amount_only(label: str) -> str:
     """The message for a pricing field that looks like it holds more than one amount."""
-    return f"Step pricing: {label} must be one amount only — add a separate package for each price."
+    return f"Step pricing: {label} must be one amount only. Add a separate package for each price."
 
 
 def step_pricing_label_no_range_price(label: str) -> str:

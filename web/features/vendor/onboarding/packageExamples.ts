@@ -187,12 +187,12 @@ export const PACKAGE_EXAMPLES_BY_SERVICE: Record<string, ServicePackageExamples>
 const FALLBACK: ServicePackageExamples = {
   serviceKey: "default",
   label: "Your service",
-  intro: "Each package is one option a client can book — with a clear name, price, and what's included.",
+  intro: "Each package is one option a client can book, with a clear name, price, and what's included.",
   examples: [
     {
       name: "Standard Package",
       price: "£200",
-      included: "Describe exactly what the client gets — items, time, headcount, or deliverables.",
+      included: "Describe exactly what the client gets: items, time, headcount, or deliverables.",
     },
   ],
 };
@@ -236,13 +236,13 @@ export function packageIncludedPlaceholder(serviceKey: string | undefined): stri
   switch (serviceKey) {
     case "catering":
     case "baking":
-      return "List what's included with quantities — e.g. 10 samosas, 10 spring rolls, serves 30 guests.";
+      return "List what's included with quantities, e.g. 10 samosas, 10 spring rolls, serves 30 guests.";
     case "makeup":
-      return "What's included — e.g. lashes, skin prep, touch-up kit, trial session.";
+      return "What's included, e.g. lashes, skin prep, touch-up kit, trial session.";
     case "photography":
       return "Hours covered, edited photos, gallery access, second shooter if included.";
     case "rentals":
-      return "What's included — e.g. white folding chairs, 3-day hire, delivery and collection.";
+      return "What's included, e.g. white folding chairs, 3-day hire, delivery and collection.";
     case "event_planning":
       return "Hours covered, planning scope, vendor liaison, and on-the-day duties.";
     case "decor":
@@ -252,8 +252,8 @@ export function packageIncludedPlaceholder(serviceKey: string | undefined): stri
     case "mc":
       return "Ceremony segments covered, languages, and duration on the day.";
     case "hair_styling":
-      return "What's included — e.g. trial, styling on the day, extensions if provided.";
+      return "What's included, e.g. trial, styling on the day, extensions if provided.";
     default:
-      return "Exactly what the customer gets — items, duration, headcount, or deliverables.";
+      return "Exactly what the customer gets: items, duration, headcount, or deliverables.";
   }
 }

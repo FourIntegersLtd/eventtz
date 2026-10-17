@@ -145,7 +145,7 @@ def terms_fields(booking: BookingRow) -> dict[str, Any]:
     settings = get_settings()
     now = datetime.now(UTC)
     payment_due = domain_policy.booking_payment_due_at(
-        booking, deadline_hours=settings.booking_payment_deadline_hours, terms_version=settings.terms_version
+        booking, deadline_hours=settings.booking_payment_deadline_hours
     )
     is_split = bool(booking.payout_upfront_percent)
     return {
@@ -379,13 +379,12 @@ async def client_booking_detail(
 async def _cancellation_policy_fields(session: AsyncSession, booking: BookingRow) -> dict[str, Any]:
     """The cancellation policy the client is (or would be) bound by, and a preview of cancelling now.
 
-    A paid booking shows the preset snapshotted at checkout (NULL for bookings paid before
-    presets existed, which still refund in full). An unpaid one shows the vendor's current
-    preset, so the pay page can state what the client is agreeing to.
+    A paid booking shows the preset snapshotted at checkout. An unpaid one shows the vendor's
+    current preset, so the pay page can state what the client is agreeing to.
     """
-    policy = booking.cancellation_policy
-    if policy is None and booking.payment_status != domain_payments.PAID:
-        policy = await service_profile.cancellation_policy(session, booking.vendor_user_id)
+    policy = booking.cancellation_policy or await service_profile.cancellation_policy(
+        session, booking.vendor_user_id
+    )
     fields: dict[str, Any] = {
         "cancellation_policy": policy,
         "cancellation_policy_label": domain_cancellation.preset_label(policy) if policy else None,

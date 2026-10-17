@@ -153,14 +153,14 @@ export function vendorCancellationShareLine(
   payoutAt: string | null | undefined,
 ): string {
   if (!payoutAt) {
-    return `Your share from this cancellation: ${shareLabel} — held until your Stripe payout setup is complete.`;
+    return `Your share from this cancellation: ${shareLabel}, held until your Stripe payout setup is complete.`;
   }
   const sentOn = new Date(payoutAt).toLocaleDateString("en-GB", {
     day: "numeric",
     month: "long",
     year: "numeric",
   });
-  return `Your share from this cancellation: ${shareLabel} — sent ${sentOn}.`;
+  return `Your share from this cancellation: ${shareLabel}, sent ${sentOn}.`;
 }
 
 /** The one-line payment story, reused wherever money is explained. */
@@ -196,11 +196,11 @@ export const PAYMENT_FLOW_COPY = {
   /** Both sides confirmed but payout transfer is still processing or retrying. */
   payoutPendingVendor: {
     title: "Payout not released yet",
-    body: "You and the client both confirmed this event. We're releasing your payout now — tap below if nothing has changed after a minute.",
+    body: "You and the client both confirmed this event. We're releasing your payout now. Tap below if nothing has changed after a minute.",
   },
   payoutPendingClient: {
     title: "Paying your vendor",
-    body: "You've both confirmed the event went well. We're releasing the vendor's payout now — this usually takes a moment.",
+    body: "You've both confirmed the event went well. We're releasing the vendor's payout now. This usually takes a moment.",
   },
 } as const;
 

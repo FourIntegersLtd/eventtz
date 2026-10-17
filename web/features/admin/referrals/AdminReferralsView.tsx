@@ -23,9 +23,9 @@ import { fetchReferralPartners, type ReferralPartner } from "@/lib/adminReferral
 import { copyToClipboard } from "@/lib/copyToClipboard";
 
 function formatDate(iso: string | null): string {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
+  if (Number.isNaN(d.getTime())) return "-";
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
@@ -113,7 +113,7 @@ export function AdminReferralsView() {
               {partners.map((p) => (
                 <AdminTableRow key={p.id}>
                   <AdminTableCell className="font-medium text-neutral-900">{p.display_name}</AdminTableCell>
-                  <AdminTableCell>{p.instagram_handle || "—"}</AdminTableCell>
+                  <AdminTableCell>{p.instagram_handle || "-"}</AdminTableCell>
                   <AdminTableCell>
                     <div className="flex min-w-0 items-center gap-1">
                       <span className="min-w-0 truncate text-xs text-neutral-600" title={p.referral_link}>

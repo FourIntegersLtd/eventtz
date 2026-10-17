@@ -63,6 +63,9 @@ export function StepBusiness({
   const [checkingName, setCheckingName] = useState(false);
   const [nameAvailable, setNameAvailable] = useState<boolean | null>(null);
   const [waitlistModalOpen, setWaitlistModalOpen] = useState(false);
+  const selectedServiceOption = SERVICE_OPTIONS.find(
+    (option) => option.value === data.servicesOffered[0],
+  );
 
   const verifyBusinessName = async (name: string) => {
     const trimmed = name.trim();
@@ -142,16 +145,14 @@ export function StepBusiness({
             </ToggleChip>
           ))}
         </div>
-        {/* Examples per category so a vendor whose product has no obvious home (gele, hijab, barbering…) can see where it fits. */}
-        <ul className="mt-3 space-y-1 text-xs text-neutral-500">
-          {SERVICE_OPTIONS.filter((o) => o.examples).map((o) => (
-            <li key={o.value}>
-              <span className="font-medium text-neutral-700">{o.label}</span>
-              {" — e.g. "}
-              {o.examples}
-            </li>
-          ))}
-        </ul>
+        {/* Examples for the picked category only, so a vendor whose product has no obvious home (gele, hijab, barbering…) can check it fits. */}
+        {selectedServiceOption?.examples && (
+          <p className="mt-3 text-xs text-neutral-500">
+            <span className="font-medium text-neutral-700">{selectedServiceOption.label}:</span>
+            {" e.g. "}
+            {selectedServiceOption.examples}
+          </p>
+        )}
       </OnboardingSubQuestion>
       <OnboardingSubQuestion headline={copy.eventTypesHeadline} indexOffset={6}>
         <div className="flex flex-wrap gap-2">

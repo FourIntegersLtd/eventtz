@@ -326,7 +326,7 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
             <div className="border-t border-neutral-100 px-4 py-3">
               {editingId ? (
                 <div className="flex items-center justify-between gap-2 rounded-lg bg-neutral-50 px-3 py-2 text-sm text-neutral-600">
-                  <span>Editing a message — save or cancel above.</span>
+                  <span>Editing a message. Save or cancel above.</span>
                   <button
                     type="button"
                     onClick={cancelEdit}

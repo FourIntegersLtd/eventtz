@@ -147,13 +147,11 @@ def test_cooling_off_ends_after_24_hours() -> None:
     assert not domain_cancellation.in_cooling_off(booking, datetime(2026, 4, 17, 10, 0, tzinfo=UTC))
 
 
-def test_a_booking_paid_before_presets_existed_refunds_in_full() -> None:
-    """NULL policy: the client paid under the old terms, so the old full refund stands."""
+def test_a_booking_without_a_policy_snapshot_follows_the_default_preset() -> None:
+    """No snapshot reads as Flexible: one day out, the vendor keeps their whole GBP 150."""
     booking = _booking(cancellation_policy=None)
     settlement = domain_cancellation.settlement(booking, datetime(2026, 5, 31, tzinfo=UTC))
-    assert (settlement.policy, settlement.refund_percent, settlement.refund_pence) == (None, 100, 15750)
-    assert settlement.full_refund
-    assert domain_cancellation.next_tier_change(booking, NOW) is None
+    assert (settlement.policy, settlement.refund_percent, settlement.refund_pence) == ("flexible", 0, 750)
 
 
 def test_next_tier_change_names_the_day_the_refund_drops() -> None:

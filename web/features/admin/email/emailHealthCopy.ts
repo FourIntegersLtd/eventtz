@@ -18,7 +18,7 @@ export const EMAIL_HEALTH_LAYOUT_INFO: Record<string, EmailHealthLayoutInfo> = {
       "Booking accepted, paid, or cancelled",
       "Vendor approved, under review, or asked to update their profile",
     ],
-    whenToUse: "Best for almost every test — start here.",
+    whenToUse: "Best for almost every test. Start here.",
   },
   "layout.welcome": {
     title: "Welcome email",
@@ -34,7 +34,7 @@ export const EMAIL_HEALTH_LAYOUT_INFO: Record<string, EmailHealthLayoutInfo> = {
     summary:
       "A simple security email: short heading, your message, and one button (for example verify email or reset password).",
     tooltip:
-      "Matches verify-email and password-reset emails. Use this to check that styling — not for support broadcasts.",
+      "Matches verify-email and password-reset emails. Use this to check that styling, not for support broadcasts.",
     realWorldExamples: [
       "Verify your email after signup",
       "Reset your password",

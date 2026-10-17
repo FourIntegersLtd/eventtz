@@ -2,12 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useRef } from "react";
-import { STEP_LABELS } from "./constants";
+import { PROFILE_SECTIONS, profileSectionHref, type ProfileSectionSlug } from "./constants";
 
 type VendorProfileSectionTabsProps = {
-  step: number;
-  reviewsActive: boolean;
-  onNavigateToStep: (step: number) => void;
+  /** The open section, or `null` while the reviews page is open. */
+  activeSection: ProfileSectionSlug | null;
   /** `horizontal` = scrollable pill row (mobile); `vertical` = sidebar list (desktop). */
   orientation?: "horizontal" | "vertical";
 };
@@ -34,14 +33,13 @@ const ITEM_CLASS: Record<"horizontal" | "vertical", (active: boolean) => string>
 };
 
 /**
- * Every section a vendor can jump to from their live profile: onboarding steps 1-8
- * plus the reviews page. One list drives both the mobile pill row and the desktop
- * sidebar so a new section only needs to be added here.
+ * Every section a vendor can jump to from their live profile, plus the reviews page.
+ * Each tab is a link to `/vendor/profile?section=<slug>`, so a section can be bookmarked
+ * or linked from elsewhere. One list drives both the mobile pill row and the desktop
+ * sidebar, so a new section only needs adding to `PROFILE_SECTIONS`.
  */
 export function VendorProfileSectionTabs({
-  step,
-  reviewsActive,
-  onNavigateToStep,
+  activeSection,
   orientation = "horizontal",
 }: VendorProfileSectionTabsProps) {
   const listRef = useRef<HTMLDivElement>(null);
@@ -50,9 +48,10 @@ export function VendorProfileSectionTabs({
     if (orientation !== "horizontal") return;
     const active = listRef.current?.querySelector<HTMLElement>('[data-active="true"]');
     active?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
-  }, [step, reviewsActive, orientation]);
+  }, [activeSection, orientation]);
 
   const itemClass = ITEM_CLASS[orientation];
+  const reviewsActive = activeSection === null;
 
   return (
     <div
@@ -61,21 +60,20 @@ export function VendorProfileSectionTabs({
       role="tablist"
       aria-label="Profile sections"
     >
-      {STEP_LABELS.slice(0, 8).map((label, i) => {
-        const n = i + 1;
-        const active = !reviewsActive && n === step;
+      {PROFILE_SECTIONS.map((section) => {
+        const active = section.slug === activeSection;
         return (
-          <button
-            key={n}
-            type="button"
+          <Link
+            key={section.slug}
+            href={profileSectionHref(section.slug)}
+            scroll={false}
             role="tab"
             aria-selected={active}
             data-active={active ? "true" : undefined}
-            onClick={() => onNavigateToStep(n)}
             className={itemClass(active)}
           >
-            {label}
-          </button>
+            {section.label}
+          </Link>
         );
       })}
       {orientation === "vertical" ? (

@@ -178,7 +178,7 @@ export function PackageCoachPanel({
         <div className="mt-3 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-sm text-neutral-900">
           <p>
             We&apos;ve updated your packages. Please review the highlighted packages and check
-            everything is accurate — AI can make mistakes.
+            everything is accurate. AI can make mistakes.
           </p>
         </div>
       ) : null}
@@ -211,7 +211,7 @@ export function PackageCoachPanel({
 
       {hasOverallOnly ? (
         <p className="mt-2 text-xs text-neutral-500">
-          Add any missing packages manually — we can only auto-fill existing ones.
+          Add any missing packages manually. We can only auto-fill existing ones.
         </p>
       ) : null}
     </div>

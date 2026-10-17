@@ -211,10 +211,10 @@ class BookingRequest(Base, UUIDPrimaryKey):
         DateTime(timezone=True), comment="When the booking was cancelled."
     )
     # A client cancel of a paid booking splits the money by the vendor's preset (migration 0006,
-    # `domain_cancellation.py`). NULL policy = paid before presets existed = full refund.
+    # `domain_cancellation.py`). NULL until checkout copies the vendor's preset.
     cancellation_policy: Mapped[str | None] = mapped_column(
         Text,
-        comment="Cancellation preset copied at checkout (flexible/moderate/strict); NULL = full refund.",
+        comment="Cancellation preset copied at checkout (flexible/moderate/strict); NULL until then.",
     )
     cancellation_refund_percent: Mapped[int | None] = mapped_column(
         SmallInteger, comment="Percent of the vendor's price refunded when the client cancelled."

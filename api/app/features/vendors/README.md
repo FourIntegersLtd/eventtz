@@ -25,8 +25,9 @@ is publicly listed.
 - A listing pause (`PUT/DELETE /admin/vendors/{user_id}/listing-pause`) hides the vendor through the
   visibility helpers, like an unapproved listing; it never touches `approval_status`.
 - Terms options in the profile payload are validated in `domain_profile_form._check_terms_options`:
-  `deliveryUpfrontPercent` (50–80) and `deliveryDeadlineDays` (1–60) together or not at all, and
-  `damageDepositGbp` (0–1000). Bookings snapshot them at checkout (ADR 0010).
+  `deliveryUpfrontPercent` (50–60) and `deliveryDeadlineDays` (1–60), each optional, and
+  `damageDepositGbp` (0–1000). Bookings snapshot them at checkout (ADR 0010); photography is always
+  split, with blanks becoming 60% / 30 days.
 - The Stripe Connect columns (`stripe_account_id`, `stripe_charges_enabled`, `stripe_payouts_enabled`) are
   written only through `service_payouts.py`, which the payments slice calls.
 

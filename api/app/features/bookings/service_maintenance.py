@@ -240,21 +240,16 @@ async def expire_unpaid_bookings(session: AsyncSession, mailer: Mailer, gateway:
     """Cancel accepted bookings not paid by their deadline and free the vendor's date; returns how many.
 
     The deadline is `domain_policy.payment_due_at`: the earlier of the configured hours after
-    acceptance and 48 hours before the event, for bookings accepted under the Terms that
-    introduced it. An open Checkout session is expired first, so the client cannot pay a
-    booking that has just been cancelled; if Stripe refuses, the booking is left for the
-    next run. The write is conditional on the status read, so a payment landing at the same
-    moment wins.
+    acceptance and 48 hours before the event. An open Checkout session is expired first, so
+    the client cannot pay a booking that has just been cancelled; if Stripe refuses, the
+    booking is left for the next run. The write is conditional on the status read, so a
+    payment landing at the same moment wins.
     """
     settings = get_settings()
     now = datetime.now(UTC)
-    rule_starts_on = domain_policy.terms_effective_date(settings.terms_version)
-    if rule_starts_on is None:
-        return 0
     candidates = each_booking_in_pages(
-        lambda after_id: repository_maintenance.unpaid_bookings_accepted_since(
+        lambda after_id: repository_maintenance.bookings_awaiting_payment(
             session,
-            accepted_on_or_after=rule_starts_on,
             limit=domain_maintenance.MAINTENANCE_BATCH_LIMIT,
             after_id=after_id,
         )
@@ -264,7 +259,6 @@ async def expire_unpaid_bookings(session: AsyncSession, mailer: Mailer, gateway:
         due_at = domain_policy.booking_payment_due_at(
             booking,
             deadline_hours=settings.booking_payment_deadline_hours,
-            terms_version=settings.terms_version,
         )
         if due_at is None or now < due_at:
             continue

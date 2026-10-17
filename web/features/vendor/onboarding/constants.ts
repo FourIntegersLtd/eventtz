@@ -75,3 +75,41 @@ export const SOCIAL_PLATFORM_OPTIONS: {
   { value: "website", label: "Website", placeholder: "https://yourbusiness.com" },
   { value: "other", label: "Other", placeholder: "Link or handle" },
 ];
+
+/**
+ * Sections of the live profile editor, each addressable as `/vendor/profile?section=<slug>`
+ * so other screens (e.g. the dashboard's refund-policy prompt) can link straight to one.
+ * Cancellation policy is its own section but saves with the Pricing step (4), so the
+ * wizard's step numbers, which are persisted as `current_step`, stay unchanged.
+ */
+export const PROFILE_SECTIONS = [
+  { slug: "account", label: "Account", step: 1 },
+  { slug: "business", label: "Business", step: 2 },
+  { slug: "location", label: "Location", step: 3 },
+  { slug: "pricing", label: "Pricing", step: 4 },
+  { slug: "cancellation-policy", label: "Cancellation policy", step: 4 },
+  { slug: "availability", label: "Availability", step: 5 },
+  { slug: "portfolio", label: "Portfolio", step: 6 },
+  { slug: "additional-info", label: "Additional info", step: 7 },
+  { slug: "review", label: "Review", step: 8 },
+] as const;
+
+export type ProfileSection = (typeof PROFILE_SECTIONS)[number];
+export type ProfileSectionSlug = ProfileSection["slug"];
+
+export const CANCELLATION_POLICY_SECTION: ProfileSectionSlug = "cancellation-policy";
+
+/** URL of one profile section. */
+export function profileSectionHref(slug: ProfileSectionSlug): string {
+  return `/vendor/profile?section=${slug}`;
+}
+
+/** The section named by a `?section=` value, or undefined when missing or unknown. */
+export function profileSectionFromParam(value: string | null): ProfileSection | undefined {
+  return PROFILE_SECTIONS.find((section) => section.slug === value);
+}
+
+/** The section shown for a step when the URL names none (step 4 → Pricing). */
+export function defaultProfileSectionForStep(step: number): ProfileSectionSlug {
+  return PROFILE_SECTIONS.find((section) => section.step === step)?.slug ?? "review";
+}

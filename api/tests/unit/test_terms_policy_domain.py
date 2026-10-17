@@ -5,7 +5,7 @@ Every expected value is worked out by hand in pence; nothing touches a database 
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 import pytest
@@ -91,20 +91,34 @@ def test_held_upfront_is_zero_until_the_first_part_is_actually_paid() -> None:
 def test_split_terms_come_only_from_photography_with_numbers_inside_the_ranges() -> None:
     photography = {"servicesOffered": ["photography"]}
     assert domain_policy.delivery_split_terms(
-        {**photography, "deliveryUpfrontPercent": "70", "deliveryDeadlineDays": 14}
-    ) == (70, 14)
+        {**photography, "deliveryUpfrontPercent": "55", "deliveryDeadlineDays": 14}
+    ) == (55, 14)
     assert domain_policy.delivery_split_terms(
         {**photography, "deliveryUpfrontPercent": 50, "deliveryDeadlineDays": 60}
     ) == (50, 60)
-    for upfront, days in ((49, 14), (81, 14), (70, 0), (70, 61), (70.5, 14), (None, 14), (70, None)):
-        assert (
-            domain_policy.delivery_split_terms(
-                {**photography, "deliveryUpfrontPercent": upfront, "deliveryDeadlineDays": days}
-            )
-            is None
-        ), (upfront, days)
-    caterer = {"servicesOffered": ["catering"], "deliveryUpfrontPercent": 70, "deliveryDeadlineDays": 14}
+    caterer = {"servicesOffered": ["catering"], "deliveryUpfrontPercent": 55, "deliveryDeadlineDays": 14}
     assert domain_policy.delivery_split_terms(caterer) is None
+
+
+def test_every_photography_booking_is_split_even_when_the_vendor_set_nothing() -> None:
+    """Blank or unusable numbers fall back to 60% / 30 days; a saved 70 or 80 is capped at 60."""
+    photography = {"servicesOffered": ["photography"]}
+    assert domain_policy.delivery_split_terms(photography) == (60, 30)
+    cases = {
+        (None, None): (60, 30),
+        ("", ""): (60, 30),
+        (80, 14): (60, 14),
+        (61, 14): (60, 14),
+        (49, 14): (60, 14),
+        (55.5, 14): (60, 14),
+        (55, 0): (55, 30),
+        (55, 61): (55, 30),
+        (55, None): (55, 30),
+        (None, 14): (60, 14),
+    }
+    for (upfront, days), expected in cases.items():
+        payload = {**photography, "deliveryUpfrontPercent": upfront, "deliveryDeadlineDays": days}
+        assert domain_policy.delivery_split_terms(payload) == expected, (upfront, days)
 
 
 # --- checkout snapshot --------------------------------------------------------------------------------------
@@ -113,13 +127,13 @@ def test_split_terms_come_only_from_photography_with_numbers_inside_the_ranges()
 def test_checkout_snapshot_for_a_photographer_a_renter_and_an_ordinary_vendor() -> None:
     photographer = {
         "servicesOffered": ["photography"],
-        "deliveryUpfrontPercent": "70",
+        "deliveryUpfrontPercent": "55",
         "deliveryDeadlineDays": "14",
     }
     renter = {"servicesOffered": ["Rentals"], "damageDepositGbp": "75.50"}
     assert domain_policy.checkout_terms_columns(photographer, default_report_hours=48) == {
         "report_window_hours": None,
-        "payout_upfront_percent": 70,
+        "payout_upfront_percent": 55,
         "delivery_deadline_days": 14,
         "damage_deposit_gbp": None,
     }
@@ -165,19 +179,17 @@ def test_payment_is_due_72_hours_after_acceptance_when_the_event_is_far_off() ->
         accepted_at=datetime(2030, 1, 10, 12, 0, tzinfo=UTC),
         event_date=date(2030, 6, 1),
         deadline_hours=72,
-        rule_starts_on=date(2026, 11, 1),
     )
 
     assert due_at == datetime(2030, 1, 13, 12, 0, tzinfo=UTC)
 
 
 def _due(accepted_at: datetime) -> datetime | None:
-    """The deadline for a booking for 1 June 2030 accepted at `accepted_at`, under the 2026-11-01 Terms."""
+    """The deadline for a booking for 1 June 2030 accepted at `accepted_at`."""
     return domain_policy.payment_due_at(
         accepted_at=accepted_at,
         event_date=date(2030, 6, 1),
         deadline_hours=72,
-        rule_starts_on=date(2026, 11, 1),
     )
 
 
@@ -195,33 +207,15 @@ def test_a_booking_accepted_inside_the_48_hour_cap_is_due_at_the_event_start() -
     assert _due(datetime(2030, 5, 29, 23, 59, 59, tzinfo=UTC)) == datetime(2030, 5, 30, 0, 0, tzinfo=UTC)
 
 
-def test_bookings_accepted_before_the_terms_date_have_no_payment_deadline() -> None:
-    """The date is judged in UTC: 00:30 on 1 Nov at +01:00 is still 31 Oct."""
-    common = {"event_date": date(2030, 6, 1), "deadline_hours": 72, "rule_starts_on": date(2026, 11, 1)}
-    before = domain_policy.payment_due_at(accepted_at=datetime(2026, 10, 31, 23, 59, tzinfo=UTC), **common)
-    first_day = domain_policy.payment_due_at(accepted_at=datetime(2026, 11, 1, 0, 0, tzinfo=UTC), **common)
-    offset_before = domain_policy.payment_due_at(
-        accepted_at=datetime(2026, 11, 1, 0, 30, tzinfo=timezone(timedelta(hours=1))), **common
-    )
-
-    assert before is None
-    assert first_day == datetime(2026, 11, 4, 0, 0, tzinfo=UTC)
-    assert offset_before is None
-
-
 def test_no_deadline_without_an_acceptance_time_or_an_event_date() -> None:
     assert (
-        domain_policy.payment_due_at(
-            accepted_at=None, event_date=date(2030, 6, 1), deadline_hours=72, rule_starts_on=None
-        )
-        is None
+        domain_policy.payment_due_at(accepted_at=None, event_date=date(2030, 6, 1), deadline_hours=72) is None
     )
     assert (
         domain_policy.payment_due_at(
             accepted_at=datetime(2030, 1, 1, tzinfo=UTC),
             event_date=None,
             deadline_hours=72,
-            rule_starts_on=None,
         )
         is None
     )
@@ -229,7 +223,7 @@ def test_no_deadline_without_an_acceptance_time_or_an_event_date() -> None:
 
 def test_a_stored_booking_has_a_deadline_only_while_accepted_and_unpaid() -> None:
     accepted = {"accepted_at": "2030-01-10T12:00:00+00:00"}
-    settings = {"deadline_hours": 72, "terms_version": "2026-11-01"}
+    settings = {"deadline_hours": 72}
 
     due_at = domain_policy.booking_payment_due_at(_booking(payment_status="unpaid", **accepted), **settings)
     pending = domain_policy.booking_payment_due_at(_booking(payment_status="pending", **accepted), **settings)
@@ -239,11 +233,6 @@ def test_a_stored_booking_has_a_deadline_only_while_accepted_and_unpaid() -> Non
     assert due_at == datetime(2030, 1, 13, 12, 0, tzinfo=UTC)
     assert pending == due_at
     assert (paid, cancelled) == (None, None)
-
-
-def test_the_terms_version_is_read_as_a_date_or_not_at_all() -> None:
-    assert domain_policy.terms_effective_date("2026-11-01") == date(2026, 11, 1)
-    assert domain_policy.terms_effective_date("not-a-date") is None
 
 
 # --- deposits -----------------------------------------------------------------------------------------------
@@ -334,9 +323,12 @@ def _step_four(**options: Any) -> dict[str, Any]:
 
 def test_profile_accepts_a_valid_split_and_deposit_and_their_boundaries() -> None:
     validate_step_fields(4, _step_four())
-    validate_step_fields(4, _step_four(deliveryUpfrontPercent="70", deliveryDeadlineDays="14"))
+    validate_step_fields(4, _step_four(deliveryUpfrontPercent="55", deliveryDeadlineDays="14"))
     validate_step_fields(4, _step_four(deliveryUpfrontPercent="50", deliveryDeadlineDays="1"))
-    validate_step_fields(4, _step_four(deliveryUpfrontPercent=80, deliveryDeadlineDays=60))
+    validate_step_fields(4, _step_four(deliveryUpfrontPercent=60, deliveryDeadlineDays=60))
+    # One blank half is fine: the booking rule fills it with the default.
+    validate_step_fields(4, _step_four(deliveryUpfrontPercent="55"))
+    validate_step_fields(4, _step_four(deliveryDeadlineDays="14"))
     validate_step_fields(4, _step_four(damageDepositGbp="0"))
     validate_step_fields(4, _step_four(damageDepositGbp="1000"))
     validate_step_fields(4, _step_four(damageDepositGbp="250.50"))
@@ -347,39 +339,29 @@ def test_profile_accepts_a_valid_split_and_deposit_and_their_boundaries() -> Non
     [
         (
             {"deliveryUpfrontPercent": "49", "deliveryDeadlineDays": "14"},
-            "Paid after the event (%) must be a whole number from 50 to 80.",
+            "Paid after the event (%) must be a whole number from 50 to 60.",
         ),
         (
-            {"deliveryUpfrontPercent": "81", "deliveryDeadlineDays": "14"},
-            "Paid after the event (%) must be a whole number from 50 to 80.",
+            {"deliveryUpfrontPercent": "61", "deliveryDeadlineDays": "14"},
+            "Paid after the event (%) must be a whole number from 50 to 60.",
         ),
         (
-            {"deliveryUpfrontPercent": "70.5", "deliveryDeadlineDays": "14"},
-            "Paid after the event (%) must be a whole number from 50 to 80.",
+            {"deliveryUpfrontPercent": "55.5", "deliveryDeadlineDays": "14"},
+            "Paid after the event (%) must be a whole number from 50 to 60.",
         ),
         (
-            {"deliveryUpfrontPercent": "70", "deliveryDeadlineDays": "0"},
+            {"deliveryUpfrontPercent": "55", "deliveryDeadlineDays": "0"},
             "Days to deliver must be a whole number from 1 to 60.",
         ),
         (
-            {"deliveryUpfrontPercent": "70", "deliveryDeadlineDays": "61"},
+            {"deliveryUpfrontPercent": "55", "deliveryDeadlineDays": "61"},
             "Days to deliver must be a whole number from 1 to 60.",
-        ),
-        (
-            {"deliveryUpfrontPercent": "70"},
-            "Set both the part paid after the event and the days to deliver, or neither.",
-        ),
-        (
-            {"deliveryDeadlineDays": "14"},
-            "Set both the part paid after the event and the days to deliver, or neither.",
         ),
         ({"damageDepositGbp": "1000.01"}, "Damage deposit must be an amount from £0 to £1000."),
         ({"damageDepositGbp": "abc"}, "Damage deposit must be an amount from £0 to £1000."),
     ],
 )
-def test_profile_rejects_out_of_range_or_half_filled_terms_options(
-    options: dict[str, str], message: str
-) -> None:
+def test_profile_rejects_out_of_range_terms_options(options: dict[str, str], message: str) -> None:
     with pytest.raises(ProfileInvalid) as raised:
         validate_step_fields(4, _step_four(**options))
 

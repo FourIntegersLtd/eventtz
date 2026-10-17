@@ -75,13 +75,13 @@ slice owns Stripe's side (webhooks, Connect) and calls these, never the reverse.
 - A vendor must be able to receive payouts (or have a staff override) to accept.
 - **Terms snapshot (ADR 0010).** Checkout copies the vendor's report window, split payout,
   delivery deadline and deposit onto the booking; later profile edits never change a paid
-  booking. NULL means the booking predates the rule.
+  booking.
 - **Payment deadline.** Accepted + unpaid bookings expire at the earlier of
   `booking_payment_deadline_hours` after acceptance and 48h before the event (event start if
   accepted inside 48h). Expiry is `cancelled` by `system` with `failure_reason = PAYMENT_DEADLINE`.
-  Bookings accepted before `terms_version` are exempt.
-- **Split payouts.** Photography bookings with `payout_upfront_percent` pay in two Transfers
-  (`{id}-upfront`, then the remainder). After the first, `status = completed` and
+- **Split payouts.** Every photography booking paid from 2026-10-17 is split: the first part is
+  50–60% (default 60%, deadline default 30 days; `domain_policy.delivery_split_terms`). Bookings
+  with `payout_upfront_percent` pay in two Transfers (`{id}-upfront`, then the remainder). After the first, `status = completed` and
   `payment_status` stays `paid`; `payout_stage` is derived, never stored.
 - **Deposits** ride inside the Checkout charge. Refund key `refund-{id}-deposit`; a resolved claim
   pays the award as a Transfer (part `deposit`) and refunds the rest (`refund-{id}-deposit-remainder`).

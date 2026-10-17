@@ -55,7 +55,7 @@ export function VendorStripeConnectSection({ vendor, busy, onRestoreStripe }: Pr
           <div>
             <h3 className="text-sm font-semibold text-neutral-900">Stripe Connect</h3>
             <p className="mt-0.5 text-xs text-neutral-500">
-              Payout account — separate from Explore listing visibility
+              Payout account (separate from Explore listing visibility)
             </p>
           </div>
           <VendorPayoutStatusBadge verified={vendor.payouts_verified} />

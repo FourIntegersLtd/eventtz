@@ -196,10 +196,7 @@ export function BookingPricingBreakdown({
         <div className="border-t border-emerald-100 bg-emerald-50/60 px-5 py-3 text-xs text-emerald-900">
           Referral discount applied
           {pricing.referral_fee_discount_label ? (
-            <span>
-              {" "}
-              — {pricing.referral_fee_discount_label} off your Eventtz fee
-            </span>
+            <span>: {pricing.referral_fee_discount_label} off your Eventtz fee</span>
           ) : null}
           {pricing.vendor_referral_code ? (
             <span className="text-emerald-800/80"> · Code {pricing.vendor_referral_code}</span>

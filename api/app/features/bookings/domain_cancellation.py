@@ -11,9 +11,8 @@ Tagvenue use. Two rules sit above every preset:
   refunded in full;
 - the Eventtz service fee is always refunded; only the vendor's price is tiered.
 
-A booking with no policy snapshot was paid before presets existed, under Terms that
-promised a full refund, so it is refunded in full. Money is integer pence here; the
-services format it at the edge.
+A booking with no policy snapshot follows the default preset. Money is integer pence
+here; the services format it at the edge.
 """
 
 from __future__ import annotations
@@ -47,7 +46,7 @@ COOLING_OFF_MIN_DAYS_BEFORE_EVENT = 7
 class CancellationSettlement:
     """How a paid booking's money is split when the client cancels."""
 
-    policy: str | None
+    policy: str
     refund_percent: int
     refund_pence: int
     vendor_share_pence: int
@@ -126,14 +125,12 @@ def cooling_off_until(booking: BookingRow) -> datetime | None:
 
 def refund_percent(booking: BookingRow, now: datetime) -> tuple[int, bool]:
     """The percent of the vendor's price the client gets back, and whether cooling-off decided it."""
-    if booking.cancellation_policy is None:
-        return 100, False
     if in_cooling_off(booking, now):
         return 100, True
     days_out = days_before_event(booking, now)
     if days_out is None:
         return 100, False
-    return tier_percent(booking.cancellation_policy, days_out), False
+    return tier_percent(normalize_preset(booking.cancellation_policy), days_out), False
 
 
 def settlement(booking: BookingRow, now: datetime) -> CancellationSettlement:
@@ -146,7 +143,7 @@ def settlement(booking: BookingRow, now: datetime) -> CancellationSettlement:
     non_vendor_pence = paid_pence - vendor_pence
     refunded_vendor_pence = int(round(vendor_pence * percent / 100))
     return CancellationSettlement(
-        policy=booking.cancellation_policy,
+        policy=normalize_preset(booking.cancellation_policy),
         refund_percent=percent,
         refund_pence=non_vendor_pence + refunded_vendor_pence,
         vendor_share_pence=vendor_pence - refunded_vendor_pence,
@@ -156,17 +153,16 @@ def settlement(booking: BookingRow, now: datetime) -> CancellationSettlement:
 
 def next_tier_change(booking: BookingRow, now: datetime) -> tuple[date, int] | None:
     """The next day the refund percent drops, and what it drops to; None when it cannot drop further."""
-    if booking.cancellation_policy is None:
-        return None
+    preset = normalize_preset(booking.cancellation_policy)
     days_out = days_before_event(booking, now)
     event_day = parse_event_date(booking.event_date)
     if days_out is None or event_day is None:
         return None
-    current = tier_percent(booking.cancellation_policy, days_out)
-    for min_days, percent in PRESET_TIERS[normalize_preset(booking.cancellation_policy)]:
+    current = tier_percent(preset, days_out)
+    for min_days, percent in PRESET_TIERS[preset]:
         # The first tier below today's: it starts the day the count drops under the tier above it.
         if percent < current and days_out >= min_days:
-            return event_day - timedelta(days=_tier_above(booking.cancellation_policy, min_days) - 1), percent
+            return event_day - timedelta(days=_tier_above(preset, min_days) - 1), percent
     return None
 
 

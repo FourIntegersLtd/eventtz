@@ -9,6 +9,7 @@ import type {
 } from "./types";
 import { createVendorPackage, createVendorSocialLink, initialVendorOnboardingData } from "./types";
 import { parsePackagePricingMode } from "@/lib/packagePricing";
+import { savedUpfrontPercentForForm } from "@/features/bookings/bookingTerms";
 
 /** JSONB may arrive as object or (rarely) string; numbers may appear instead of string fields. */
 export function normalizeVendorPayload(
@@ -277,7 +278,7 @@ export function mergePayloadIntoVendorData(
     travelDeliveryPolicyCustomText: coerceStr(p, "travelDeliveryPolicyCustomText"),
     hourlyRate: coerceStr(p, "hourlyRate"),
     dailyRate: coerceStr(p, "dailyRate"),
-    deliveryUpfrontPercent: coerceStr(p, "deliveryUpfrontPercent"),
+    deliveryUpfrontPercent: savedUpfrontPercentForForm(coerceStr(p, "deliveryUpfrontPercent")),
     deliveryDeadlineDays: coerceStr(p, "deliveryDeadlineDays"),
     damageDepositGbp: coerceStr(p, "damageDepositGbp"),
     useDefaultTravelHourly:

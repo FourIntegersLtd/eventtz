@@ -43,7 +43,7 @@ export function getOnboardingStepGuide(
         title: "Location & travel",
         sections: [
           {
-            body: "Your base city helps clients find you. Travel and delivery rules affect how you charge for distance — you can apply the default rule to each package on the Pricing step.",
+            body: "Your base city helps clients find you. Travel and delivery rules affect how you charge for distance. You can apply the default rule to each package on the Pricing step.",
           },
         ],
       };
@@ -53,7 +53,7 @@ export function getOnboardingStepGuide(
         title: "What is an item / package?",
         sections: [
           {
-            body: "An item / package is something a customer can choose and book from you — not your whole business. It can be a bundle (a full decor set-up) or a single item (chair hire, one cake). Each needs a clear name, a price, and a description of exactly what's included.",
+            body: "An item / package is something a customer can choose and book from you, not your whole business. It can be a bundle (a full decor set-up) or a single item (chair hire, one cake). Each needs a clear name, a price, and a description of exactly what's included.",
           },
           {
             heading: "Good rule",
@@ -107,7 +107,7 @@ export function getOnboardingStepGuide(
             body: "We review every profile before it goes live. Check that each package has a name, price, and a clear “what's included” description. Add a profile photo if you haven't already.",
           },
           {
-            body: "Use “Help me improve my packages” on the Pricing step for AI suggestions — they won't block you from submitting.",
+            body: "Use “Help me improve my packages” on the Pricing step for AI suggestions. They won't block you from submitting.",
           },
         ],
       };

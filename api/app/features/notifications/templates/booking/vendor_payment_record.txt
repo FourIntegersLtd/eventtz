@@ -1,4 +1,4 @@
-Payment record — {{ receipt.receipt_number }}
+Payment record: {{ receipt.receipt_number }}
 
 {{ headline }}
 {{ subtitle }}

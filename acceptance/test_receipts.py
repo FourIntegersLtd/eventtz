@@ -60,7 +60,7 @@ PLATFORM_FEE_LABEL = "GBP 7.50"
 LINE_ITEM_LABEL = "GBP 150"
 HELD_UNTIL_RELEASE_NOTE = (
     "Client payment received. Your share is held safely with Eventtz until the event "
-    "is complete and both sides confirm — or the automatic release date passes."
+    "is complete and both sides confirm, or until the automatic release date passes."
 )
 PAYOUT_SENT_NOTE = "Payout sent to your connected Stripe account. Bank arrival times depend on your bank."
 FROZEN_STRIPE_ACCOUNT_ID = "acct_acceptancefrozen01"
