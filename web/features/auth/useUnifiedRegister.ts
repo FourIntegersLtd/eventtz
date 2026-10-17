@@ -18,7 +18,7 @@ import { parseForm, registerSchema } from "@/lib/validation";
 export type RegisterAccountType = "client" | "vendor";
 
 function accountTypeFromQuery(value: string | null): RegisterAccountType {
-  return value === "vendor" ? "vendor" : "client";
+  return value === "client" ? "client" : "vendor";
 }
 
 export function useUnifiedRegister() {
