@@ -486,37 +486,6 @@ body::-webkit-scrollbar:vertical {
   margin-top: 0;
 }
 
-/* Contents list: one column on phones, two from tablet up. */
-.compliance-prose .compliance-toc {
-  margin-top: 2.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--primary-border);
-}
-
-@media (min-width: 768px) {
-  .compliance-prose .compliance-toc {
-    columns: 2;
-    column-gap: 2.5rem;
-  }
-
-  .compliance-prose .compliance-toc h2 {
-    column-span: all;
-  }
-
-  .compliance-prose .compliance-toc > div {
-    break-inside: avoid;
-  }
-}
-
-.compliance-prose .compliance-toc h3 {
-  margin-top: 1rem;
-  font-size: 0.95rem;
-}
-
-.compliance-prose .compliance-toc li {
-  margin-bottom: 0.25rem;
-}
-
 /* "Part A. General" style label above a group of sections. */
 .compliance-prose .compliance-part {
   margin-top: 3.5rem;

@@ -238,22 +238,6 @@ export function TermsOfServiceContent() {
         </ul>
       </section>
 
-      <nav aria-labelledby="contents-heading" className="compliance-toc">
-        <h2 id="contents-heading">Contents</h2>
-        {CONTENTS.map((group) => (
-          <div key={group.part}>
-            <h3>{group.part}</h3>
-            <ol>
-              {group.sections.map((section) => (
-                <li key={section.id} value={SECTION_NUMBERS.get(section.id)}>
-                  <a href={`#${section.id}`}>{section.title}</a>
-                </li>
-              ))}
-            </ol>
-          </div>
-        ))}
-      </nav>
-
       {/* ---------- Part A. General ---------- */}
       <p className="compliance-part">Part A. General</p>
 

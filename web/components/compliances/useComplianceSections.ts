@@ -28,8 +28,7 @@ const ACTIVE_LINE_OFFSET_PX = 120;
  * Reads the h2 headings rendered inside `contentRef` and returns them as contents entries,
  * plus the id of the section currently under the top of the viewport.
  *
- * Headings inside a `<nav>` (the in-text contents of the terms) are skipped. A heading whose
- * enclosing `<section>` already has an id keeps that id, so existing in-page links still work;
+ * A heading whose enclosing `<section>` already has an id keeps that id, so existing in-page links still work;
  * otherwise the heading gets a slug id. Heading text is never changed. The headings are re-read
  * whenever `content` (the rendered children) changes.
  */
@@ -43,7 +42,6 @@ export function useComplianceSections(contentRef: RefObject<HTMLElement | null>,
 
     const found: ComplianceSection[] = [];
     container.querySelectorAll("h2").forEach((heading, index) => {
-      if (heading.closest("nav")) return;
       const label = (heading.textContent ?? "").trim();
       if (!label) return;
       const target = heading.closest("section[id]") ?? heading;
