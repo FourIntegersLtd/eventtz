@@ -16,7 +16,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@lottiefiles/dotlottie-react": "^0.20.0",
-    "@sentry/nextjs": "^10.70.0",
+    "@sentry/nextjs": "^11.8.0",
     "@tiptap/extension-blockquote": "^3.32.0",
     "@tiptap/extension-image": "^3.32.0",
     "@tiptap/extension-link": "^3.32.0",
