@@ -56,6 +56,16 @@ updates:
           - "major"
     commit-message:
       prefix: "web"
+    ignore:
+      # The site runs on Node 22 (ci-web.yml), so its types stay on Node 22.
+      - dependency-name: "@types/node"
+        versions: [">=23"]
+      # typescript-eslint only supports TypeScript below 6.1; lift this once it supports 7.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      # vitest 5 needs a newer @types/node than Node 22's; lift with the one above.
+      - dependency-name: "vitest"
+        update-types: ["version-update:semver-major"]
 
   # The workflow files themselves (actions pinned to a SHA still get patch/minor
   # tag-following bumps proposed here; the SHA pin keeps a compromised tag from

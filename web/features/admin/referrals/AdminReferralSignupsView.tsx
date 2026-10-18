@@ -1,7 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { Instagram, Link2, type LucideIcon } from "lucide-react";
+// lucide-react 1.x dropped brand logos, so the Instagram mark comes from react-icons.
+import { Link2, type LucideIcon } from "lucide-react";
+import type { IconType } from "react-icons";
+import { SiInstagram } from "react-icons/si";
 import { useToast } from "@/components/ui/Toast";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { CopyReferralLinkButton } from "@/features/admin/referrals/CopyReferralLinkButton";
@@ -35,7 +38,7 @@ function CreatorDetailRow({
   label,
   children,
 }: {
-  icon: LucideIcon;
+  icon: LucideIcon | IconType;
   label: string;
   children: ReactNode;
 }) {
@@ -162,7 +165,7 @@ export function AdminReferralSignupsView({ partnerId }: AdminReferralSignupsView
           </div>
         </div>
         <div className="space-y-4">
-          <CreatorDetailRow icon={Instagram} label="Instagram handle">
+          <CreatorDetailRow icon={SiInstagram} label="Instagram handle">
             {partner.instagram_handle ? (
               <span>{partner.instagram_handle}</span>
             ) : (
