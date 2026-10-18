@@ -43,7 +43,7 @@ async def test_me_reports_current_and_accepted_versions(
 
     user = response.json()["user"]
     assert (user["terms_version"], user["terms_accepted_version"], user["terms_accepted_at"]) == (
-        "2026-11-01",
+        "2026-11-16",
         None,
         None,
     )
@@ -58,12 +58,12 @@ async def test_accepting_the_current_version_is_recorded(
 
     response = await client.post(
         "/api/v1/user/terms/accept",
-        json={"version": "2026-11-01"},
+        json={"version": "2026-11-16"},
         headers={"Authorization": f"Bearer {token}"},
     )
 
     assert response.status_code == 200, response.text
-    assert response.json()["terms_accepted_version"] == "2026-11-01"
+    assert response.json()["terms_accepted_version"] == "2026-11-16"
     assert response.json()["terms_accepted_at"] is not None
     assert await identity.has_accepted_current_terms(db_session, account_id)
 
@@ -93,7 +93,7 @@ async def test_require_current_terms_raises_until_accepted(
 
     with pytest.raises(TermsNotAccepted):
         await identity.require_current_terms(db_session, account_id)
-    await repository.stamp_terms_accepted(db_session, account_id, "2026-11-01")
+    await repository.stamp_terms_accepted(db_session, account_id, "2026-11-16")
     await identity.require_current_terms(db_session, account_id)
 
 
@@ -104,7 +104,7 @@ async def test_signup_with_the_current_version_records_acceptance(client: AsyncC
         json={
             "email": "terms-signup@example.com",
             "password": "Correct-horse-9battery",
-            "terms_version": "2026-11-01",
+            "terms_version": "2026-11-16",
         },
     )
     without_terms = await client.post(
@@ -113,7 +113,7 @@ async def test_signup_with_the_current_version_records_acceptance(client: AsyncC
     )
 
     assert with_terms.status_code == without_terms.status_code == 200
-    assert with_terms.json()["user"]["terms_accepted_version"] == "2026-11-01"
+    assert with_terms.json()["user"]["terms_accepted_version"] == "2026-11-16"
     assert without_terms.json()["user"]["terms_accepted_version"] is None
 
 
@@ -124,7 +124,7 @@ async def _pending_booking_for_vendor(
     client_id, _client_token = await _make_account(db_session, f"{label}-client@example.com", "client")
     vendor_id, token = await _make_vendor(db_session, f"{label}-vendor@example.com", stripe_ready=True)
     if accepted_terms:
-        await repository.stamp_terms_accepted(db_session, vendor_id, "2026-11-01")
+        await repository.stamp_terms_accepted(db_session, vendor_id, "2026-11-16")
     booking_id = await _make_booking(
         db_session, client_id=client_id, vendor_id=vendor_id, status="pending", payment_status="unpaid"
     )

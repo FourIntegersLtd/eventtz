@@ -75,7 +75,7 @@ def test_every_key_in_the_file_is_either_checked_here_or_listed_as_copy_only(pol
 
 
 def test_terms_version_and_deadlines_equal_the_settings_defaults(policy: dict[str, Any]) -> None:
-    assert policy["termsVersion"] == _default("terms_version") == "2026-11-01"
+    assert policy["termsVersion"] == _default("terms_version") == "2026-11-16"
     assert policy["paymentDeadlineHours"] == _default("booking_payment_deadline_hours") == 72
     assert (
         policy["paymentDeadlineHoursBeforeEvent"] == domain_policy.PAYMENT_DEADLINE_HOURS_BEFORE_EVENT == 48

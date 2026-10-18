@@ -423,6 +423,61 @@ body::-webkit-scrollbar:vertical {
   margin-top: 2.5rem;
 }
 
+/* Boxed "summary of key points" at the top of a long policy. */
+.compliance-prose .compliance-summary {
+  margin-top: 2rem;
+  padding: 1.25rem 1.5rem 0.5rem;
+  border: 1px solid var(--primary-border);
+  border-radius: 0.75rem;
+  background: var(--primary-soft);
+}
+
+.compliance-prose .compliance-summary h2 {
+  margin-top: 0;
+}
+
+/* Contents list: one column on phones, two from tablet up. */
+.compliance-prose .compliance-toc {
+  margin-top: 2.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--primary-border);
+}
+
+@media (min-width: 768px) {
+  .compliance-prose .compliance-toc {
+    columns: 2;
+    column-gap: 2.5rem;
+  }
+
+  .compliance-prose .compliance-toc h2 {
+    column-span: all;
+  }
+
+  .compliance-prose .compliance-toc > div {
+    break-inside: avoid;
+  }
+}
+
+.compliance-prose .compliance-toc h3 {
+  margin-top: 1rem;
+  font-size: 0.95rem;
+}
+
+.compliance-prose .compliance-toc li {
+  margin-bottom: 0.25rem;
+}
+
+/* "Part A. General" style label above a group of sections. */
+.compliance-prose .compliance-part {
+  margin-top: 3.5rem;
+  margin-bottom: -1.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(115 115 115);
+}
+
 /* Public blog index - 3-up grid (named class so layout does not depend on Tailwind purge) */
 .blog-index-grid {
   display: grid;

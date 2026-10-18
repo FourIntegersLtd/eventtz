@@ -131,7 +131,7 @@ class Settings(BaseSettings):
     # The version (effective date, YYYY-MM-DD) of the Terms people must accept. It must equal
     # `termsVersion` in web/lib/policyConstants.json (a unit test checks). Raising it shows every
     # signed-in person the accept banner and emails them the change notice once.
-    terms_version: str = "2026-11-01"
+    terms_version: str = "2026-11-16"
 
     # --- Marketplace search ---
     # How long a parsed search query is reused before the language model is asked again (0 = never cache).

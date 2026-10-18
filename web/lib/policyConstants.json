@@ -1,5 +1,5 @@
 {
-  "termsVersion": "2026-11-01",
+  "termsVersion": "2026-11-16",
   "previousTermsVersion": "2026-07-01",
   "cancellationPresets": {
     "flexible": [[7, 100], [2, 50], [0, 0]],
