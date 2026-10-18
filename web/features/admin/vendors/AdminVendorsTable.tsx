@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { AdminVendorRow } from "@/lib/adminVendorsApi";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { VendorApprovalStatusBadge } from "@/components/badges/VendorApprovalStatusBadge";
@@ -32,8 +33,12 @@ type AdminVendorsTableProps = {
   onToggleSelected: (userId: string, selected: boolean) => void;
   onSelectAllSelectable: () => void;
   onClearSelectableOnPage: () => void;
-  onSelect: (userId: string) => void;
 };
+
+/** The vendor's own admin page. */
+export function adminVendorHref(userId: string): string {
+  return `/admin/directory/vendors/${userId}`;
+}
 
 export function AdminVendorsTable({
   rows,
@@ -42,7 +47,6 @@ export function AdminVendorsTable({
   onToggleSelected,
   onSelectAllSelectable,
   onClearSelectableOnPage,
-  onSelect,
 }: AdminVendorsTableProps) {
   if (rows.length === 0) {
     return (
@@ -71,8 +75,8 @@ export function AdminVendorsTable({
               title="Select draft vendors and approved vendors needing payouts"
             />
           </AdminTableHeaderCell>
+          <AdminTableHeaderCell className="min-w-[10rem]">Business</AdminTableHeaderCell>
           <AdminTableHeaderCell className="min-w-[11rem]">Email</AdminTableHeaderCell>
-          <AdminTableHeaderCell className="min-w-[8rem]">Business</AdminTableHeaderCell>
           <AdminTableHeaderCell>Form</AdminTableHeaderCell>
           <AdminTableHeaderCell>Approval</AdminTableHeaderCell>
           <AdminTableHeaderCell>Payouts</AdminTableHeaderCell>
@@ -83,7 +87,7 @@ export function AdminVendorsTable({
         <AdminTableBody>
           {rows.map((r) => {
             const p = r.profile_form_data ?? {};
-            const biz = payloadStr(p, "businessName") || "-";
+            const biz = payloadStr(p, "businessName") || "No business name";
             const email = r.email ?? "-";
             const updated = r.updated_at ? new Date(r.updated_at).toLocaleString() : "-";
             const pending = r.approval_status === "pending";
@@ -116,14 +120,18 @@ export function AdminVendorsTable({
                     />
                   ) : null}
                 </AdminTableCell>
+                <AdminTableCell className="min-w-[10rem] max-w-[14rem]">
+                  <Link
+                    href={adminVendorHref(r.user_id)}
+                    className="block truncate font-medium text-primary hover:underline"
+                    title={biz}
+                  >
+                    {biz}
+                  </Link>
+                </AdminTableCell>
                 <AdminTableCell className="min-w-[11rem] max-w-[14rem]">
                   <span className="block truncate" title={email}>
                     {email}
-                  </span>
-                </AdminTableCell>
-                <AdminTableCell className="min-w-[8rem] max-w-[12rem]">
-                  <span className="block truncate" title={biz}>
-                    {biz}
                   </span>
                 </AdminTableCell>
                 <AdminTableCell className="whitespace-nowrap">
@@ -154,13 +162,12 @@ export function AdminVendorsTable({
                 </AdminTableCell>
                 <AdminTableCell className="whitespace-nowrap text-neutral-500">{updated}</AdminTableCell>
                 <AdminTableCell className="whitespace-nowrap text-right">
-                  <button
-                    type="button"
-                    onClick={() => onSelect(r.user_id)}
+                  <Link
+                    href={adminVendorHref(r.user_id)}
                     className="rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50"
                   >
                     Review
-                  </button>
+                  </Link>
                 </AdminTableCell>
               </AdminTableRow>
             );

@@ -119,6 +119,13 @@ class AdminVendorsListResponse(BaseModel):
     limit: int = 50
 
 
+class AdminVendorDetailResponse(BaseModel):
+    """One vendor for the staff vendor page, in the same shape as a list row."""
+
+    success: bool = True
+    vendor: AdminVendorRow
+
+
 class AdminVendorApprovalBody(BaseModel):
     """The approval state staff are moving a vendor to."""
 

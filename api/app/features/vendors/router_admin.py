@@ -26,6 +26,7 @@ from app.features.vendors.errors import (
 from app.features.vendors.schemas import (
     AdminVendorApprovalBody,
     AdminVendorApprovalResponse,
+    AdminVendorDetailResponse,
     AdminVendorInsuranceBody,
     AdminVendorInsuranceResponse,
     AdminVendorListingMediaBody,
@@ -63,6 +64,16 @@ async def list_vendors(
     return await service_moderation.list_vendors(
         session, offset=offset, limit=limit, search=search, approval_status=approval_status, status=status
     )
+
+
+@router.get(
+    "/vendors/{user_id}",
+    response_model=AdminVendorDetailResponse,
+    responses=error_responses(*ROLE_ERRORS, VendorProfileNotFound),
+)
+async def get_vendor(session: SessionDep, principal: CurrentStaff, user_id: str) -> AdminVendorDetailResponse:
+    """One vendor, as the list shows it, for the vendor's own admin page."""
+    return await service_moderation.get_vendor(session, user_id)
 
 
 @router.patch(

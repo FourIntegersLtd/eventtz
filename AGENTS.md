@@ -34,6 +34,7 @@ supabase-py) and `frontend/`, which were then deleted. Their behaviour is frozen
 | `docs/adr/` | Architecture decisions. Read before changing structure |
 | `docs/domain-rules.md` | Business invariants not yet moved into slice READMEs |
 | `web/UI-CONVENTIONS.md` | Feedback, mobile, motion and Lottie rules |
+| `.claude/` | Owner agents, rule files, skills and the quality-gate hook (see Agents and routing) |
 
 ## Commands
 
@@ -114,6 +115,34 @@ Traps in this machine's shell:
   after `make openapi`.
 - **Docker hung?** DB tests skip silently. Run them against the compose Postgres directly:
   create a fresh database and set `TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5434/<name>`.
+
+## Agents and routing
+
+Every source file under `api/`, `web/` and `acceptance/` has one owner agent
+(`.claude/OWNERS.md`; `api/tests/guards/test_ownership.py` fails on a file with none or two).
+Work goes to the owner of the paths it touches, through one of three routes:
+
+| Intent | Route |
+|---|---|
+| New behaviour or a change to one | `/build-feature`, as the owner |
+| Something broken | `/fix-bug`, as the owner |
+| Review a diff, branch or range | `/review-change` (`reviewer` + `quality-reviewer`, + `/security-review` when high risk) |
+
+| Owner | Area | Rule file / proof |
+|---|---|---|
+| `access-owner` | Identity, sessions and the proxy, staff team, roles, audit, staff email | `rules/access.md`, `verify-access` |
+| `money-owner` | Payments, pricing, referrals, the money files of `bookings/`, receipts | `rules/money.md`, `verify-money` |
+| `bookings-owner` | Booking lifecycle, quotes, date changes, capacity, disputes, reviews | `rules/bookings.md`, `verify-bookings` |
+| `vendors-owner` | Onboarding, profiles, moderation, visibility, insurance, media, co-pilot | `rules/vendors.md`, `verify-vendors` |
+| `marketplace-owner` | Explore, search, favourites, planner, client dashboard | `rules/marketplace.md`, `verify-marketplace` |
+| `comms-owner` | Chat, support threads, notifications, email, realtime | `rules/comms.md`, `verify-comms` |
+| `platform-owner` | Core, migrations, worker, guards, content, web shell and shared lib | `rules/platform.md`, `verify-platform` |
+
+`.claude/hooks/quality-gate.sh` reminds every prompt of the routes, and on Stop blocks until the
+owner (or its verify skill) and `quality-reviewer` ran on the session's code changes; access,
+money, `api/alembic/` and CI also need `reviewer` (opus) and `/security-review`, and the user's
+review. `QUALITY_GATE_OFF=1` turns it off. A new folder needs an OWNERS.md row; a lesson learned
+goes in the owner's rule file or verify skill.
 
 ## Engineering principles
 

@@ -46,6 +46,14 @@ ADDITIVE_PATH_PREFIXES = (
     "/api/v1/vendor/booking-requests/{}/deposit-claim",
     "/api/v1/admin/bookings/{}/deposit-claim/resolve",
 )
+# Single new operations whose path is a prefix of baseline routes, so they are matched exactly
+# (a prefix entry would also let every route under them through).
+ADDITIVE_OPERATIONS = frozenset(
+    {
+        # One vendor for the staff vendor page (the baseline only had the list, shown in a popup).
+        ("GET", "/api/v1/admin/vendors/{}"),
+    }
+)
 
 
 def operations(document: dict[str, Any]) -> set[tuple[str, str]]:
@@ -71,7 +79,7 @@ def api_operations() -> set[tuple[str, str]]:
 def test_every_api_route_exists_in_the_baseline() -> None:
     invented = sorted(
         operation
-        for operation in api_operations() - baseline_operations()
+        for operation in api_operations() - baseline_operations() - ADDITIVE_OPERATIONS
         if not operation[1].startswith(ADDITIVE_PATH_PREFIXES)
     )
     assert not invented, f"api/ serves routes the baseline does not (renamed or new URLs?): {invented}"

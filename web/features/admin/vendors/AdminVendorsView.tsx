@@ -12,7 +12,6 @@ import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState
 import { AdminPageHeader } from "@/features/admin/components/AdminPageHeader";
 import { AdminVendorsTable } from "@/features/admin/vendors/AdminVendorsTable";
 import { useAdminVendors } from "@/features/admin/vendors/useAdminVendors";
-import { VendorDetailsModal } from "@/features/admin/vendors/VendorDetailsModal";
 import type { AdminVendorProfileNudgeResult } from "@/lib/adminVendorsApi";
 
 const APPROVAL_STATUSES = ["", "pending", "approved", "banned"];
@@ -70,15 +69,6 @@ export function AdminVendorsView() {
     setOffset,
     loading,
     error,
-    busyId,
-    selectedVendor,
-    setSelectedUserId,
-    setApproval,
-    setListingOverride,
-    setListingMedia,
-    restoreStripeConnect,
-    unsubmitVendor,
-    reportError,
     search,
     setSearch,
     approvalStatus,
@@ -234,7 +224,6 @@ export function AdminVendorsView() {
             onToggleSelected={toggleSelectedUserId}
             onSelectAllSelectable={selectAllSelectableOnPage}
             onClearSelectableOnPage={clearSelectableOnPage}
-            onSelect={setSelectedUserId}
           />
           <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-neutral-600">
             <span>
@@ -261,18 +250,6 @@ export function AdminVendorsView() {
           </div>
         </>
       )}
-
-      <VendorDetailsModal
-        vendor={selectedVendor}
-        busyId={busyId}
-        onClose={() => setSelectedUserId(null)}
-        onSetApproval={setApproval}
-        onSetListingOverride={setListingOverride}
-        onSaveListingMedia={setListingMedia}
-        onRestoreStripe={restoreStripeConnect}
-        onUnsubmit={unsubmitVendor}
-        onReportError={reportError}
-      />
     </div>
   );
 }

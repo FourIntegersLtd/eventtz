@@ -96,6 +96,14 @@ export async function fetchAdminVendors(
   };
 }
 
+/** One vendor, in the list's row shape, for the vendor's own admin page. */
+export async function fetchAdminVendor(userId: string): Promise<AdminVendorRow> {
+  const { data } = await api.get<{ success: boolean; vendor: AdminVendorRow }>(
+    `/api/v1/admin/vendors/${userId}`,
+  );
+  return data.vendor;
+}
+
 export async function patchVendorApproval(
   userId: string,
   approval_status: VendorApprovalStatus,

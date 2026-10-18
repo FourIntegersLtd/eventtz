@@ -38,6 +38,7 @@ from app.features.vendors.errors import (
 from app.features.vendors.rows import VendorRow
 from app.features.vendors.schemas import (
     AdminVendorApprovalResponse,
+    AdminVendorDetailResponse,
     AdminVendorInsuranceResponse,
     AdminVendorListingMediaResponse,
     AdminVendorListingOverrideResponse,
@@ -135,11 +136,24 @@ async def list_vendors(
         approval_status=(approval_status or "").strip() or None,
         status=(status or "").strip() or None,
     )
+    rows = await _admin_rows(session, vendors)
+    return AdminVendorsListResponse(vendors=rows, total=total, offset=offset, limit=limit)
+
+
+async def get_vendor(session: AsyncSession, user_id: str) -> AdminVendorDetailResponse:
+    """One vendor as the staff list shows it, for the vendor's own admin page."""
+    vendor = await _vendor_or_404(session, user_id)
+    rows = await _admin_rows(session, [vendor])
+    return AdminVendorDetailResponse(vendor=rows[0])
+
+
+async def _admin_rows(session: AsyncSession, vendors: list[VendorRow]) -> list[AdminVendorRow]:
+    """Staff rows for `vendors`: profile, email, payout and listing state, private cancellation record."""
     emails = await identity.emails_by_id(session, [vendor.user_id for vendor in vendors])
     cancellation_counts = await service_vendor_record.cancellation_counts(
         session, [vendor.user_id for vendor in vendors]
     )
-    rows = [
+    return [
         AdminVendorRow(
             id=vendor.id,
             user_id=vendor.user_id,
@@ -167,7 +181,6 @@ async def list_vendors(
         )
         for vendor in vendors
     ]
-    return AdminVendorsListResponse(vendors=rows, total=total, offset=offset, limit=limit)
 
 
 # --- approval ------------------------------------------------------------------------------------------

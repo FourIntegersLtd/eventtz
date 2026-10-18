@@ -3383,6 +3383,24 @@
         "title": "AdminVendorApprovalResponse",
         "type": "object"
       },
+      "AdminVendorDetailResponse": {
+        "description": "One vendor for the staff vendor page, in the same shape as a list row.",
+        "properties": {
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "vendor": {
+            "$ref": "#/components/schemas/AdminVendorRow"
+          }
+        },
+        "required": [
+          "vendor"
+        ],
+        "title": "AdminVendorDetailResponse",
+        "type": "object"
+      },
       "AdminVendorInsightsResponse": {
         "description": "One vendor's booking history and review standing, for the admin console's vendor page.",
         "properties": {
@@ -18864,6 +18882,93 @@
           }
         ],
         "summary": "Nudge To Set Up Payouts",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/vendors/{user_id}": {
+      "get": {
+        "description": "One vendor, as the list shows it, for the vendor's own admin page.",
+        "operationId": "get_vendor_api_v1_admin_vendors__user_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminVendorDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "vendor_profile_not_found",
+            "x-codes": [
+              "vendor_profile_not_found"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Vendor",
         "tags": [
           "admin"
         ]
