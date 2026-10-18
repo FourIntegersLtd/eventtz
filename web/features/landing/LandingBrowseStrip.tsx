@@ -1,11 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import { ArrowRight, BadgeCheck, CreditCard, MapPin, Tags } from "lucide-react";
+import { Card } from "@/components/ui/Card";
+import { TONE } from "@/components/ui/tokens";
 import { BROWSE_CATEGORIES, BROWSE_SECTION } from "@/features/landing/landingData";
 import {
   LANDING_HORIZONTAL_PADDING,
   LANDING_PAGE_MAX_WIDTH,
+  LANDING_SCROLL_MT_CLASS,
   LANDING_SECTION_SHELL,
 } from "@/features/landing/landingSectionStyles";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
@@ -21,27 +25,22 @@ export function LandingBrowseStrip() {
   return (
     <section
       id="browse"
-      className={`scroll-mt-24 sm:scroll-mt-28 ${LANDING_SECTION_SHELL.content} z-10 bg-white`}
+      className={`${LANDING_SCROLL_MT_CLASS} ${LANDING_SECTION_SHELL.content} z-10 bg-white`}
     >
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-neutral-100/80 to-transparent"
-        aria-hidden
-      />
-
       <div
         className={`relative mx-auto flex w-full flex-col ${LANDING_PAGE_MAX_WIDTH} ${LANDING_HORIZONTAL_PADDING} py-14 sm:py-16 lg:py-20`}
       >
         <div className="mx-auto w-full max-w-4xl text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-ink-3">
             {BROWSE_SECTION.eyebrow}
           </p>
-          <h2 className="font-heading mt-2 text-2xl font-semibold tracking-tight text-neutral-900 sm:mt-3 sm:text-3xl lg:text-4xl">
+          <h2 className="font-heading mt-2 text-2xl font-semibold tracking-tight text-ink sm:mt-3 sm:text-3xl lg:text-4xl">
             {BROWSE_SECTION.title}
           </h2>
-          <p className="mx-auto mt-2 max-w-2xl text-sm leading-relaxed text-neutral-600 sm:mt-3 sm:text-base">
+          <p className="mx-auto mt-2 max-w-2xl text-sm leading-relaxed text-ink-2 sm:mt-3 sm:text-base">
             {BROWSE_SECTION.description}
           </p>
-          <span className="mx-auto mt-4 block h-px w-12 bg-primary/40" aria-hidden />
+          <span className="mx-auto mt-4 block h-px w-12 bg-accent-gold" aria-hidden />
         </div>
 
         <nav
@@ -69,7 +68,7 @@ export function LandingBrowseStrip() {
                   aria-hidden
                 />
               </span>
-              <span className="font-heading text-sm font-semibold text-neutral-900 transition group-hover:text-primary sm:text-base">
+              <span className="font-heading text-sm font-semibold text-ink transition group-hover:text-primary sm:text-base">
                 {name}
               </span>
             </Link>
@@ -77,9 +76,9 @@ export function LandingBrowseStrip() {
         </nav>
 
         <div className="mt-8 flex justify-center pb-6 sm:mt-10 sm:pb-8">
-          <Link
+          <ButtonLink
             href="/client/browse"
-            className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary transition hover:gap-2.5 hover:opacity-90"
+            variant="secondary"
             onClick={() =>
               track(MixpanelEvents.landing_cta_clicked, {
                 cta: "view_all",
@@ -89,7 +88,7 @@ export function LandingBrowseStrip() {
           >
             View all categories
             <ArrowRight className="h-4 w-4" aria-hidden />
-          </Link>
+          </ButtonLink>
         </div>
       </div>
 
@@ -99,17 +98,17 @@ export function LandingBrowseStrip() {
           className={`mx-auto grid w-full grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-4 ${LANDING_PAGE_MAX_WIDTH} ${LANDING_HORIZONTAL_PADDING}`}
         >
           {TRUST_ITEMS.map(({ icon: Icon, label }) => (
-            <div
+            <Card
               key={label}
-              className="flex min-w-0 items-center justify-center gap-2 rounded-2xl border border-primary-border/80 bg-white px-3 py-3 text-center shadow-primary-soft sm:gap-3 sm:px-5 sm:py-4"
+              className="flex min-w-0 items-center justify-center gap-2 px-3 py-3 text-center shadow-md sm:gap-3 sm:px-5 sm:py-4"
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary sm:h-10 sm:w-10">
+              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-control sm:h-10 sm:w-10 ${TONE.brand.background} ${TONE.brand.text}`}>
                 <Icon className="h-4 w-4" strokeWidth={2} aria-hidden />
               </span>
-              <span className="text-[11px] font-semibold leading-snug text-primary sm:text-sm">
+              <span className="text-[11px] font-semibold leading-snug text-ink sm:text-sm">
                 {label}
               </span>
-            </div>
+            </Card>
           ))}
         </div>
       </div>

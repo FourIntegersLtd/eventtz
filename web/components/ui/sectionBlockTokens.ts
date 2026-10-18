@@ -1,19 +1,19 @@
 /** Shared section + card surfaces (admin console, portal, modals). */
 
-export const panelCardSurface = "rounded-2xl border border-neutral-100 bg-white";
+export const panelCardSurface = "rounded-2xl border border-line bg-white shadow-xs";
 
-export const contentCardSurface = "rounded-xl border border-neutral-100 bg-white";
+export const contentCardSurface = "rounded-2xl border border-line bg-white shadow-xs";
 
-export const contentCardPadding = "px-5 py-6 sm:px-6 sm:py-7";
+export const contentCardPadding = "p-5";
 
-export const sectionHeaderWrap = "mb-5 border-b-2 border-neutral-200 pb-4";
+export const sectionHeaderWrap = "mb-5";
 
 export const sectionHeaderTitle =
-  "font-heading text-lg font-semibold tracking-tight text-neutral-900 sm:text-xl";
+  "text-base font-medium tracking-tight text-ink";
 
-export const sectionHeaderDescription = "mt-2.5 text-[13px] leading-relaxed text-neutral-500";
+export const sectionHeaderDescription = "mt-1.5 text-[13px] leading-relaxed text-ink-3";
 
 export const sectionSubheading =
-  "mb-4 w-full border-b border-neutral-200 pb-3 text-left font-heading text-base font-semibold tracking-tight text-neutral-900";
+  "mb-4 w-full border-b border-line pb-3 text-left text-base font-medium tracking-tight text-ink";
 
 export const sectionBlockBody = "space-y-5";

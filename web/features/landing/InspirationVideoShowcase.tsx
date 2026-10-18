@@ -1,5 +1,6 @@
 "use client";
 
+import { Chip } from "@/components/ui/Chip";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { InspirationMobileReel } from "@/features/landing/InspirationMobileReel";
@@ -91,7 +92,7 @@ export function InspirationVideoShowcase({ videos }: InspirationVideoShowcasePro
       <button
         type="button"
         onClick={goPrev}
-        className="absolute left-0 top-1/2 z-30 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-primary-border bg-white/95 text-primary shadow-primary-soft backdrop-blur-sm transition hover:bg-primary-soft sm:left-2 md:h-12 md:w-12"
+        className="absolute left-0 top-1/2 z-30 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-line-strong bg-white/95 text-ink shadow-md backdrop-blur-sm transition hover:bg-primary-soft sm:left-2 md:h-12 md:w-12"
         aria-label="Previous celebration"
       >
         <ChevronLeft className="h-4 w-4 md:h-5 md:w-5" strokeWidth={2} />
@@ -99,7 +100,7 @@ export function InspirationVideoShowcase({ videos }: InspirationVideoShowcasePro
       <button
         type="button"
         onClick={goNext}
-        className="absolute right-0 top-1/2 z-30 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-primary-border bg-white/95 text-primary shadow-primary-soft backdrop-blur-sm transition hover:bg-primary-soft sm:right-2 md:h-12 md:w-12"
+        className="absolute right-0 top-1/2 z-30 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-line-strong bg-white/95 text-ink shadow-md backdrop-blur-sm transition hover:bg-primary-soft sm:right-2 md:h-12 md:w-12"
         aria-label="Next celebration"
       >
         <ChevronRight className="h-4 w-4 md:h-5 md:w-5" strokeWidth={2} />
@@ -129,7 +130,7 @@ export function InspirationVideoShowcase({ videos }: InspirationVideoShowcasePro
               video={active}
               inView={inView}
               reduceMotion={reduceMotion}
-              className="aspect-[4/3] max-h-[min(52vw,240px)] w-full rounded-xl shadow-2xl shadow-primary/20 ring-1 ring-primary-border"
+              className="aspect-[4/3] max-h-[min(52vw,240px)] w-full rounded-card shadow-md ring-1 ring-line"
             />
             {arrows}
           </div>
@@ -157,7 +158,7 @@ export function InspirationVideoShowcase({ videos }: InspirationVideoShowcasePro
                     shouldLoad={shouldLoad}
                     showTitle={false}
                     onClick={isActive ? undefined : () => goTo(videoIndex)}
-                    className={`aspect-[2.35/1] w-full shadow-2xl ring-1 ring-primary-border ${
+                    className={`aspect-[2.35/1] w-full shadow-md ring-1 ring-line ${
                       isActive
                         ? "rounded-2xl shadow-primary/20 lg:rounded-3xl"
                         : "rounded-xl shadow-primary/15"
@@ -172,14 +173,14 @@ export function InspirationVideoShowcase({ videos }: InspirationVideoShowcasePro
 
         <div className="mx-auto mt-4 flex max-w-5xl flex-col gap-4 sm:flex-row sm:items-end sm:justify-between md:mt-10">
           <div className="min-w-0 text-center sm:text-left">
-            <p className="hidden text-xs font-semibold tabular-nums tracking-[0.25em] text-primary/50 md:block">
+            <p className="hidden text-xs font-semibold tabular-nums tracking-[0.25em] text-ink-3 md:block">
               {String(index + 1).padStart(2, "0")}{" "}
-              <span className="text-primary/25">/</span>{" "}
+              <span className="text-ink-3/50">/</span>{" "}
               {String(total).padStart(2, "0")}
             </p>
             <h3
               key={active.src}
-              className="font-heading mt-0 text-lg font-semibold tracking-tight text-primary animate-inspiration-title md:mt-2 md:text-4xl lg:text-5xl"
+              className="font-heading mt-0 text-lg font-semibold tracking-tight text-ink animate-inspiration-title md:mt-2 md:text-4xl lg:text-5xl"
             >
               {active.eventName}
             </h3>
@@ -187,19 +188,14 @@ export function InspirationVideoShowcase({ videos }: InspirationVideoShowcasePro
 
           <div className="hidden flex-wrap gap-2 sm:flex sm:max-w-md sm:justify-end">
             {videos.map((video, videoIndex) => (
-              <button
+              <Chip
                 key={video.src}
-                type="button"
+                active={videoIndex === index}
                 onClick={() => goTo(videoIndex)}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition-all duration-300 ${
-                  videoIndex === index
-                    ? "bg-primary text-white shadow-md shadow-primary/20"
-                    : "border border-primary-border bg-white text-primary/80 hover:border-primary/30 hover:bg-primary-soft"
-                }`}
                 aria-current={videoIndex === index ? "true" : undefined}
               >
                 {video.eventName}
-              </button>
+              </Chip>
             ))}
           </div>
         </div>
@@ -212,7 +208,7 @@ export function InspirationVideoShowcase({ videos }: InspirationVideoShowcasePro
                 type="button"
                 onClick={() => goTo(videoIndex)}
                 className={`h-1.5 rounded-full transition-all duration-300 ${
-                  videoIndex === index ? "w-5 bg-primary" : "w-1.5 bg-primary/25"
+                  videoIndex === index ? "w-5 bg-primary" : "w-1.5 bg-line-strong"
                 }`}
                 aria-label={`Show ${video.eventName}`}
                 aria-current={videoIndex === index ? "true" : undefined}
@@ -222,7 +218,7 @@ export function InspirationVideoShowcase({ videos }: InspirationVideoShowcasePro
         ) : null}
 
         {!reduceMotion && total > 1 ? (
-          <div className="mx-auto mt-4 h-0.5 max-w-[8rem] overflow-hidden rounded-full bg-primary-border/60 md:mt-6 md:max-w-5xl">
+          <div className="mx-auto mt-4 h-0.5 max-w-[8rem] overflow-hidden rounded-full bg-line md:mt-6 md:max-w-5xl">
             <div
               key={progressKey}
               className="h-full origin-left bg-gradient-to-r from-primary to-accent-gold animate-inspiration-progress"

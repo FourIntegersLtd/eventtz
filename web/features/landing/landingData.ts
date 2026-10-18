@@ -210,8 +210,15 @@ export const SOCIAL_LINKS: SocialLink[] = [
   },
 ];
 
+/** Top-level nav link classes; light-on-dark when the nav sits over the hero. */
+export function navLinkClass(darkNav: boolean): string {
+  return darkNav
+    ? "rounded-control px-3 py-2 text-sm font-medium text-white/95 transition hover:bg-white/10"
+    : "rounded-control px-3 py-2 text-sm font-medium text-ink-2 transition hover:bg-surface-3 hover:text-ink";
+}
+
 export const NAV_DROPDOWN_LINK_CLASS =
-  "block rounded-lg px-3 py-2.5 text-sm text-neutral-700 transition hover:bg-neutral-100 hover:text-primary";
+  "block rounded-control px-3 py-2.5 text-sm text-ink-2 transition hover:bg-surface-3 hover:text-ink";
 
 /**
  * Hero background - Pexels #3045163 (food/catering prep, free licence).

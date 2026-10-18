@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useToast } from "@/components/ui/Toast";
+import { Banner } from "@/components/ui/Banner";
 import { Button } from "@/components/ui/Button";
+import { PageHeader } from "@/components/ui/PageHeader";
 import {
   buildClientBrowseVendorUrl,
   buildMarketplaceSearchUrl,
@@ -13,7 +15,7 @@ import { MarketplaceBrowseShell } from "@/features/marketplace/MarketplaceBrowse
 import { MarketplaceFiltersBar } from "@/features/marketplace/MarketplaceFiltersBar";
 import { MarketplacePagination } from "@/features/marketplace/MarketplacePagination";
 import { LoadingState } from "@/components/ui/LoadingState";
-import { LottieEmptyPanel } from "@/components/ui/LottieEmptyPanel";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import {
@@ -112,14 +114,14 @@ export function MarketplaceExploreView({
   const selectionBar =
     explore.isClient && selectedCount > 0 ? (
       <div
-        className={`sticky z-30 mx-auto mt-6 flex max-w-xl flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/25 bg-white px-4 py-3 shadow-lg ring-1 ring-primary/10 ${
+        className={`sticky z-30 mx-auto mt-6 flex max-w-xl flex-wrap items-center justify-between gap-3 rounded-card border border-primary-border bg-surface px-4 py-3 shadow-overlay ${
           embedded
             ? "bottom-[calc(1rem+5.5rem+env(safe-area-inset-bottom,0px))] md:bottom-4"
             : "bottom-4"
         }`}
       >
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-neutral-900">{selectedCount} selected</p>
+          <p className="text-sm font-semibold text-ink">{selectedCount} selected</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="secondary" size="sm" onClick={clearSelection}>
@@ -156,18 +158,18 @@ export function MarketplaceExploreView({
       ) : null}
 
       {state.fromPlannerPlanId && !loading ? (
-        <div className="mt-4 rounded-xl border border-primary/15 bg-[#faf8fc] px-4 py-3 text-sm text-neutral-800">
+        <Banner tone="brand" className="mt-4">
           From your celebration plan - open a vendor to pick packages, or select several and
           message them together.
-        </div>
+        </Banner>
       ) : null}
 
       <div className="mt-6">
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-neutral-900">
+          <p className="text-sm font-semibold text-ink">
             {loading ? (
               <span className="inline-flex items-center gap-1.5">
-                <LoadingSpinner size="sm" className="text-neutral-400" />
+                <LoadingSpinner size="sm" className="text-ink-3" />
                 Loading…
               </span>
             ) : isPlanMode ? (
@@ -177,7 +179,7 @@ export function MarketplaceExploreView({
             )}
           </p>
           {!savedOnly && headline ? (
-            <p className="mt-1 text-sm text-neutral-600">{headline}</p>
+            <p className="mt-1 text-sm text-ink-2">{headline}</p>
           ) : null}
           {isPlanMode && plan?.needs?.length ? (
             <div className="mt-3 flex flex-wrap gap-2">
@@ -185,10 +187,10 @@ export function MarketplaceExploreView({
                 <a
                   key={need.id}
                   href={`#plan-need-${need.id}`}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs font-medium text-neutral-700 hover:border-primary/40 hover:text-primary"
+                  className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line-strong bg-white px-3 py-1 text-xs font-medium text-ink-2 transition hover:bg-surface-3 hover:text-primary"
                 >
                   {need.label}
-                  {need.optional ? <span className="text-neutral-400">optional</span> : null}
+                  {need.optional ? <span className="text-ink-3">optional</span> : null}
                 </a>
               ))}
             </div>
@@ -201,8 +203,8 @@ export function MarketplaceExploreView({
       ) : error ? (
         <LottieFailureInline message={error} className="mt-6" />
       ) : visibleCards.length === 0 && !isPlanMode ? (
-        <LottieEmptyPanel
-          className="mt-6"
+        <EmptyState
+          className="mt-6 bg-surface py-12"
           variant={savedOnly ? "favorites" : "vendors"}
           title={savedOnly ? "No saved vendors yet" : "No vendors match these filters"}
           description={
@@ -233,8 +235,8 @@ export function MarketplaceExploreView({
       ) : isPlanMode ? (
         <div className="mt-6 space-y-10">
           {state.query.trim() ? (
-            <div className="rounded-xl border border-primary/15 bg-[#faf8fc] px-4 py-3 sm:flex sm:items-center sm:justify-between sm:gap-4">
-              <p className="text-sm text-neutral-700">
+            <div className="rounded-control border border-primary-border bg-primary-soft px-4 py-3 sm:flex sm:items-center sm:justify-between sm:gap-4">
+              <p className="text-sm text-ink-2">
                 Want a full celebration plan with budget and ranked picks?
               </p>
               <Link
@@ -258,13 +260,13 @@ export function MarketplaceExploreView({
               >
                 <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
                   <div className="min-w-0">
-                    <h2 className="font-heading text-lg font-semibold tracking-tight text-neutral-900">
+                    <h2 className="font-heading text-lg font-semibold tracking-tight text-ink">
                       {section.label}
                       {section.optional ? (
-                        <span className="ml-2 text-sm font-medium text-neutral-500">Optional</span>
+                        <span className="ml-2 text-sm font-medium text-ink-3">Optional</span>
                       ) : null}
                     </h2>
-                    <p className="mt-0.5 text-xs font-medium text-neutral-500">
+                    <p className="mt-0.5 text-xs font-medium text-ink-3">
                       {planOptionsLabel(section.total_count)}
                     </p>
                   </div>
@@ -278,7 +280,8 @@ export function MarketplaceExploreView({
                   ) : null}
                 </div>
                 {sectionCards.length === 0 ? (
-                  <LottieEmptyPanel
+                  <EmptyState
+                    className="bg-surface py-8"
                     variant="vendors"
                     title="No vendors for this yet"
                     description="Try another category or check back as we add more vendors."
@@ -312,9 +315,7 @@ export function MarketplaceExploreView({
       ) : (
         <div className="mt-6 space-y-8">
           {matchNotice ? (
-            <p className="rounded-lg border border-primary-border/60 bg-primary-soft/40 px-4 py-3 text-sm text-neutral-800">
-              {matchNotice}
-            </p>
+            <Banner tone="brand">{matchNotice}</Banner>
           ) : null}
 
           {exactCards.length > 0 ? (
@@ -336,8 +337,8 @@ export function MarketplaceExploreView({
 
           {alsoConsiderCards.length > 0 ? (
             <div>
-              <div className="mb-4 border-t border-neutral-200 pt-6">
-                <p className="text-sm font-semibold text-neutral-900">Also consider</p>
+              <div className="mb-4 border-t border-line pt-6">
+                <p className="text-sm font-semibold text-ink">Also consider</p>
               </div>
               <div className={CARD_GRID}>
                 {alsoConsiderCards.map((card, index) => (
@@ -404,11 +405,7 @@ export function MarketplaceExploreView({
   return (
     <MarketplaceBrowseShell>
       {!savedOnly ? (
-        <div className="mb-6">
-          <h1 className="font-heading text-2xl font-semibold text-neutral-900 sm:text-3xl">
-            Find vendors
-          </h1>
-        </div>
+        <PageHeader title="Find vendors" className="mb-6" />
       ) : null}
       {filtersAndResults}
       <ScrollToTopButton />

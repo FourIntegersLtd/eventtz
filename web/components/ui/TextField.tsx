@@ -19,12 +19,12 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
   const generatedId = useId();
   const inputId = id ?? generatedId;
   const inputClassName = `${FORM_CONTROL} ${FORM_CONTROL_FOCUS} ${FOCUS_RING} ${
-    error ? "border-red-300" : ""
+    error ? "border-danger-line" : ""
   } ${className}`.trim();
 
   return (
     <div className="min-w-0 space-y-1.5">
-      <label htmlFor={inputId} className="block text-sm font-medium text-neutral-800">
+      <label htmlFor={inputId} className="block text-sm font-medium text-ink">
         {label}
       </label>
       {type === "date" ? (
@@ -50,11 +50,11 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
         />
       )}
       {error ? (
-        <p id={`${inputId}-error`} className="text-xs font-medium text-red-600">
+        <p id={`${inputId}-error`} className="text-xs font-medium text-danger">
           {error}
         </p>
       ) : hint ? (
-        <p id={`${inputId}-hint`} className="text-xs text-neutral-500">
+        <p id={`${inputId}-hint`} className="text-xs text-ink-3">
           {hint}
         </p>
       ) : null}

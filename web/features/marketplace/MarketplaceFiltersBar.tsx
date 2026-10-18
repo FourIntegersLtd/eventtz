@@ -166,7 +166,7 @@ export function MarketplaceFiltersBar({
 
   const sortActive = state.sort !== "relevance";
   const filterActiveClass = "border-primary/30 bg-primary/10 text-primary";
-  const filterIdleClass = "border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50";
+  const filterIdleClass = "border-line bg-white text-ink-2 hover:bg-surface-3";
 
   const sortOptionsList = (onSelect: (sort: MarketplaceSort) => void) =>
     SORT_OPTIONS.map((opt) => (
@@ -177,7 +177,7 @@ export function MarketplaceFiltersBar({
         className={`flex w-full rounded-lg px-3 py-3 text-left text-sm transition lg:py-2.5 ${
           state.sort === opt.value
             ? "bg-primary/10 font-medium text-primary"
-            : "text-neutral-800 hover:bg-neutral-50"
+            : "text-ink hover:bg-surface-3"
         }`}
       >
         {opt.label}
@@ -285,7 +285,7 @@ export function MarketplaceFiltersBar({
             <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" aria-hidden />
           </button>
           {sortOpen ? (
-            <div className="absolute right-0 top-full z-[60] mt-2 hidden w-56 rounded-xl border border-neutral-200 bg-white p-1.5 shadow-lg shadow-neutral-900/10 lg:block">
+            <div className="absolute right-0 top-full z-[60] mt-2 hidden w-56 rounded-control border border-line bg-white p-1.5 shadow-card lg:block">
               {sortOptionsList(selectSort)}
             </div>
           ) : null}
@@ -316,9 +316,9 @@ export function MarketplaceFiltersBar({
                     animate={{ y: 0 }}
                     exit={reduceMotion ? undefined : { y: "100%" }}
                     transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-                    className="absolute inset-x-0 bottom-0 rounded-t-2xl border-t border-neutral-200 bg-white px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 shadow-2xl"
+                    className="absolute inset-x-0 bottom-0 rounded-t-2xl border-t border-line bg-white px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 shadow-2xl"
                   >
-                    <h3 className="mb-2 font-heading text-base font-semibold text-neutral-900">
+                    <h3 className="mb-2 font-heading text-base font-semibold text-ink">
                       Sort by
                     </h3>
                     <div className="space-y-1">{sortOptionsList(selectSort)}</div>
@@ -397,7 +397,7 @@ export function MarketplaceFiltersBar({
       >
         <div className="space-y-8">
           <section>
-            <h3 className="text-sm font-semibold text-neutral-900">Category</h3>
+            <h3 className="text-sm font-semibold text-ink">Category</h3>
             <div className="mt-3">
               <MarketplaceCategoryFilterFields
                 types={draftTypes}
@@ -414,7 +414,7 @@ export function MarketplaceFiltersBar({
           </section>
 
           <section>
-            <h3 className="text-sm font-semibold text-neutral-900">Location</h3>
+            <h3 className="text-sm font-semibold text-ink">Location</h3>
             <div className="mt-3">
               <LocationAutocompleteInput
                 ariaLabel="City or area"
@@ -439,13 +439,13 @@ export function MarketplaceFiltersBar({
                 </button>
               ) : null}
               {geoError ? (
-                <p className="mt-2 text-xs font-medium text-red-600">{geoError}</p>
+                <p className="mt-2 text-xs font-medium text-danger">{geoError}</p>
               ) : null}
             </div>
           </section>
 
           <section>
-            <h3 className="text-sm font-semibold text-neutral-900">
+            <h3 className="text-sm font-semibold text-ink">
               {budgetFilterLabel(state.country)}
             </h3>
             <div className="mt-3 flex items-center gap-2">
@@ -461,9 +461,9 @@ export function MarketplaceFiltersBar({
                 }}
                 placeholder={`Min (${currencySymbol})`}
                 aria-label="Minimum budget"
-                className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-base text-neutral-900 outline-none ring-primary/15 focus:border-primary focus:bg-white focus:ring-2 md:text-sm"
+                className="w-full rounded-control border border-line bg-surface-3 px-3 py-2 text-base text-ink outline-none ring-primary/15 focus:border-primary focus:bg-white focus:ring-2 md:text-sm"
               />
-              <span className="text-neutral-400">–</span>
+              <span className="text-ink-3">–</span>
               <input
                 type="number"
                 min={0}
@@ -476,11 +476,11 @@ export function MarketplaceFiltersBar({
                 }}
                 placeholder={`Max (${currencySymbol})`}
                 aria-label="Maximum budget"
-                className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-base text-neutral-900 outline-none ring-primary/15 focus:border-primary focus:bg-white focus:ring-2 md:text-sm"
+                className="w-full rounded-control border border-line bg-surface-3 px-3 py-2 text-base text-ink outline-none ring-primary/15 focus:border-primary focus:bg-white focus:ring-2 md:text-sm"
               />
             </div>
             {budgetError ? (
-              <p className="mt-2 text-xs font-medium text-red-600">{budgetError}</p>
+              <p className="mt-2 text-xs font-medium text-danger">{budgetError}</p>
             ) : null}
           </section>
         </div>

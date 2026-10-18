@@ -17,7 +17,7 @@ function SkeletonSpinnerHeader() {
 export function Skeleton({ className = "" }: SkeletonProps) {
   return (
     <div
-      className={`animate-pulse bg-neutral-200/70 ${RADIUS.sm} ${className}`.trim()}
+      className={`animate-pulse bg-surface-3 ${RADIUS.sm} ${className}`.trim()}
       aria-hidden
     />
   );
@@ -29,7 +29,7 @@ export function SkeletonListRows({ rows = 4, showSpinner = true }: { rows?: numb
     <div className="space-y-2" role="status" aria-label="Loading">
       {showSpinner ? <SkeletonSpinnerHeader /> : null}
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className={`flex items-center gap-3 border border-neutral-100 p-3 ${RADIUS.md}`}>
+        <div key={i} className={`flex items-center gap-3 border border-line p-3 ${RADIUS.md}`}>
           <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
           <div className="min-w-0 flex-1 space-y-2">
             <Skeleton className="h-3.5 w-2/3" />

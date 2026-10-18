@@ -1,3 +1,5 @@
+import type { Tone } from "@/lib/tone";
+
 export type UserType = "client" | "vendor" | "admin";
 
 export type VendorApprovalStatus = "pending" | "approved" | "banned";
@@ -7,13 +9,13 @@ export type VendorProfileStatus = "draft" | "submitted" | "complete";
 export type VendorApprovalStatusMeta = {
   status: VendorApprovalStatus;
   label: string;
-  badgeClassName: string;
+  tone: Tone;
 };
 
 export type VendorProfileStatusMeta = {
   status: VendorProfileStatus;
   label: string;
-  badgeClassName: string;
+  tone: Tone;
 };
 
 /**
@@ -25,7 +27,7 @@ export type VendorPayoutStatus = "verified" | "unverified";
 export type VendorPayoutStatusMeta = {
   status: VendorPayoutStatus;
   label: string;
-  badgeClassName: string;
+  tone: Tone;
 };
 
 /**
@@ -46,17 +48,17 @@ export const VENDOR_APPROVAL_STATUS_META: Record<VendorApprovalStatus, VendorApp
   pending: {
     status: "pending",
     label: "Pending",
-    badgeClassName: "bg-amber-100 text-amber-900",
+    tone: "warning",
   },
   approved: {
     status: "approved",
     label: "Approved",
-    badgeClassName: "bg-emerald-100 text-emerald-900",
+    tone: "success",
   },
   banned: {
     status: "banned",
     label: "Banned",
-    badgeClassName: "bg-red-100 text-red-900",
+    tone: "danger",
   },
 };
 
@@ -64,17 +66,17 @@ export const VENDOR_PROFILE_STATUS_META: Record<VendorProfileStatus, VendorProfi
   draft: {
     status: "draft",
     label: "Draft",
-    badgeClassName: "bg-neutral-100 text-neutral-700",
+    tone: "neutral",
   },
   submitted: {
     status: "submitted",
     label: "Submitted",
-    badgeClassName: "bg-sky-100 text-sky-900",
+    tone: "info",
   },
   complete: {
     status: "complete",
     label: "Complete",
-    badgeClassName: "bg-emerald-100 text-emerald-900",
+    tone: "success",
   },
 };
 
@@ -82,12 +84,12 @@ export const VENDOR_PAYOUT_STATUS_META: Record<VendorPayoutStatus, VendorPayoutS
   verified: {
     status: "verified",
     label: "Verified",
-    badgeClassName: "bg-emerald-100 text-emerald-900",
+    tone: "success",
   },
   unverified: {
     status: "unverified",
     label: "Not verified",
-    badgeClassName: "bg-amber-100 text-amber-900",
+    tone: "warning",
   },
 };
 
@@ -209,8 +211,8 @@ export type BookingStatusMeta = {
   label: string;
   /** Longer label for status headers on the detail page. */
   headline: string;
-  /** Tailwind classes for the StatusBadge pill - the only place status color is declared. */
-  badgeClassName: string;
+  /** Semantic tone for the StatusBadge pill - the only place status color is declared. */
+  tone: Tone;
   /** Which top-level attention group this status belongs to for dashboards/filters. */
   group: "needsAction" | "upcoming" | "completed" | "closed";
 };
@@ -220,42 +222,42 @@ export const BOOKING_STATUS_META: Record<BookingStatus, BookingStatusMeta> = {
     status: "pending",
     label: "Pending",
     headline: "Awaiting response",
-    badgeClassName: "bg-amber-100 text-amber-800",
+    tone: "warning",
     group: "needsAction",
   },
   accepted: {
     status: "accepted",
     label: "Accepted",
     headline: "Accepted",
-    badgeClassName: "bg-emerald-100 text-emerald-800",
+    tone: "success",
     group: "upcoming",
   },
   completed: {
     status: "completed",
     label: "Completed",
     headline: "Completed",
-    badgeClassName: "bg-blue-100 text-blue-800",
+    tone: "info",
     group: "completed",
   },
   declined: {
     status: "declined",
     label: "Declined",
     headline: "Declined",
-    badgeClassName: "bg-neutral-200 text-neutral-700",
+    tone: "neutral",
     group: "closed",
   },
   cancelled: {
     status: "cancelled",
     label: "Cancelled",
     headline: "Cancelled",
-    badgeClassName: "bg-neutral-200 text-neutral-700",
+    tone: "neutral",
     group: "closed",
   },
   disputed: {
     status: "disputed",
     label: "Disputed",
     headline: "Under dispute",
-    badgeClassName: "bg-rose-100 text-rose-800",
+    tone: "danger",
     group: "closed",
   },
 };

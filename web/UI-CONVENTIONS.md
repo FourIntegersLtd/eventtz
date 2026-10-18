@@ -3,6 +3,13 @@
 Moved from the old architecture reference. Paths refer to the pre-rebuild layout
 (`components/ui`, `lib/`, `features/`); they move to `foundation/ui` during Phase 3.
 
+### Shared primitives, not hand-rolled classes
+
+Use `Card`, `Button`, `Badge` and `Banner` from `components/ui` instead of writing card, button, pill or
+alert classes by hand. Colour comes from the semantic tokens (`TONE`: neutral, brand, success, warning,
+danger, info); brand purple is for the main action only. Weights stop at 600, controls and labels use 500,
+inputs 400. `/internal/ui-kit` shows every primitive in every state.
+
 ### Action feedback (mutations)
 
 After a button click or form submit, the user must see **success or failure** within about a second unless the UI change is obviously immediate (e.g. chat bubble appears).

@@ -7,9 +7,9 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { AuthPageShell } from "@/components/auth/AuthPageShell";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
-import { Card } from "@/components/ui/Card";
+import { Banner } from "@/components/ui/Banner";
 import { PasswordField } from "@/components/ui/PasswordField";
-import { adminPageBg, adminCard } from "@/components/admin-shell/adminTheme";
+import { adminPageBg } from "@/components/admin-shell/adminTheme";
 import { dashboardPathForUserType, loginPathWithNext } from "@/features/auth/authRouting";
 import { getMe, resetPassword } from "@/lib/auth-api";
 import { getApiErrorDetail } from "@/lib/api-errors";
@@ -25,6 +25,7 @@ type ResetPasswordViewProps = {
   variant?: "default" | "admin";
 };
 
+/** Choose-a-new-password screen reached from the emailed reset link. */
 export function ResetPasswordView({ variant = "default" }: ResetPasswordViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -43,9 +44,6 @@ export function ResetPasswordView({ variant = "default" }: ResetPasswordViewProp
   const forgotHref = isAdmin ? "/forgot-password?portal=admin" : "/forgot-password";
   const adminSignInHref = loginPathWithNext("/admin/dashboard");
   const shellClassName = isAdmin ? adminPageBg : undefined;
-  const cardClassName = isAdmin
-    ? `${adminCard} w-full max-w-md p-6 pb-8 sm:p-8 sm:pb-10`
-    : "w-full max-w-md";
   const schema = isAdmin ? adminResetPasswordSchema : resetPasswordSchema;
   const minLength = 6;
 
@@ -56,22 +54,19 @@ export function ResetPasswordView({ variant = "default" }: ResetPasswordViewProp
         className={shellClassName}
         backHref={isAdmin ? adminSignInHref : "/"}
         backLabel={isAdmin ? "Back to sign in" : "Back to home"}
+        headline="A fresh start."
+        supportingLine="Choose a strong password you do not use anywhere else."
       >
-        <Card padding={isAdmin ? "none" : "lg"} className={cardClassName}>
-          <h1 className="font-heading text-2xl font-semibold text-neutral-900">
-            Reset password
-          </h1>
-          <p className="mt-3 text-sm text-neutral-600">
+        <div>
+          <h1 className="font-heading text-3xl font-semibold text-ink">Reset password</h1>
+          <p className="mt-3 text-sm text-ink-2">
             This reset link is missing or incomplete. Request a new one from the forgot
             password page.
           </p>
-          <Link
-            href={forgotHref}
-            className="mt-6 inline-block text-sm font-medium text-primary hover:underline"
-          >
-            Forgot password
-          </Link>
-        </Card>
+        </div>
+        <Link href={forgotHref} className="text-sm font-medium text-primary hover:underline">
+          Forgot password
+        </Link>
       </AuthPageShell>
     );
   }
@@ -109,60 +104,52 @@ export function ResetPasswordView({ variant = "default" }: ResetPasswordViewProp
       className={shellClassName}
       backHref={isAdmin ? adminSignInHref : "/"}
       backLabel={isAdmin ? "Back to sign in" : "Back to home"}
+      headline="A fresh start."
+      supportingLine="Choose a strong password you do not use anywhere else."
     >
-      <Card padding={isAdmin ? "none" : "lg"} className={cardClassName}>
-        <h1 className="font-heading text-2xl font-semibold text-neutral-900">
-          Choose a new password
-        </h1>
-        <p className="mt-1 text-sm text-neutral-500">
+      <div>
+        <h1 className="font-heading text-3xl font-semibold text-ink">Choose a new password</h1>
+        <p className="mt-1 text-sm text-ink-2">
           {isAdmin
             ? "Enter a strong password for your admin account."
             : "Enter a new password for your Eventtz account."}
         </p>
-        <form onSubmit={(e) => void onSubmit(e)} className="mt-6 space-y-4">
-          <PasswordField
-            label="New password"
-            required
-            minLength={minLength}
-            autoComplete="new-password"
-            value={password}
-            error={fieldErrors.password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <PasswordField
-            label="Confirm password"
-            required
-            minLength={minLength}
-            autoComplete="new-password"
-            value={confirmPassword}
-            error={fieldErrors.confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
-          {error ? (
-            <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-red-200/60">
-              {error}
-            </p>
-          ) : null}
-          <Button type="submit" loading={submitting} className="w-full">
-            {submitting ? "Saving…" : "Update password"}
-          </Button>
-        </form>
-        {isAdmin ? (
-          <div
-            className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
-            aria-live="polite"
-          >
-            <p className="font-medium">Password requirements</p>
-            <ul className="mt-2 list-outside list-disc space-y-1.5 pl-5 marker:text-red-600">
-              {ADMIN_PASSWORD_REQUIREMENTS.map((requirement) => (
-                <li key={requirement} className="pl-1">
-                  {requirement}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-      </Card>
+      </div>
+      <form onSubmit={(e) => void onSubmit(e)} className="flex flex-col gap-5">
+        {error ? <Banner tone="danger">{error}</Banner> : null}
+        <PasswordField
+          label="New password"
+          required
+          minLength={minLength}
+          autoComplete="new-password"
+          value={password}
+          error={fieldErrors.password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <PasswordField
+          label="Confirm password"
+          required
+          minLength={minLength}
+          autoComplete="new-password"
+          value={confirmPassword}
+          error={fieldErrors.confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+        />
+        <Button type="submit" size="lg" loading={submitting} className="w-full">
+          {submitting ? "Saving…" : "Update password"}
+        </Button>
+      </form>
+      {isAdmin ? (
+        <Banner tone="danger" title="Password requirements">
+          <ul className="list-outside list-disc space-y-1.5 pl-5">
+            {ADMIN_PASSWORD_REQUIREMENTS.map((requirement) => (
+              <li key={requirement} className="pl-1">
+                {requirement}
+              </li>
+            ))}
+          </ul>
+        </Banner>
+      ) : null}
     </AuthPageShell>
   );
 }

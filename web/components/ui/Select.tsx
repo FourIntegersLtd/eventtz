@@ -17,7 +17,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
   const inputId = id ?? generatedId;
   return (
     <div className="min-w-0 space-y-1.5">
-      <label htmlFor={inputId} className="block text-sm font-medium text-neutral-800">
+      <label htmlFor={inputId} className="block text-sm font-medium text-ink">
         {label}
       </label>
       <div className="relative">
@@ -26,18 +26,18 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
           id={inputId}
           aria-invalid={Boolean(error)}
           className={`${FORM_CONTROL} ${FORM_CONTROL_FOCUS} appearance-none pr-9 ${FOCUS_RING} ${
-            error ? "border-red-300" : ""
+            error ? "border-danger-line" : ""
           } ${className}`.trim()}
           {...rest}
         >
           {children}
         </select>
         <ChevronDown
-          className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500"
+          className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-3"
           aria-hidden
         />
       </div>
-      {error ? <p className="text-xs font-medium text-red-600">{error}</p> : null}
+      {error ? <p className="text-xs font-medium text-danger">{error}</p> : null}
     </div>
   );
 });

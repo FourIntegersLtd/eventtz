@@ -1,6 +1,7 @@
+import { Badge } from "@/components/ui/Badge";
 import {
-  participantDisputeStatusBadgeClass,
   participantDisputeStatusLabel,
+  participantDisputeStatusTone,
 } from "@/lib/bookingDisputeHelpers";
 
 export type ParticipantDisputeStatusBadgeProps = {
@@ -14,10 +15,8 @@ export function ParticipantDisputeStatusBadge({
   className = "",
 }: ParticipantDisputeStatusBadgeProps) {
   return (
-    <span
-      className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${participantDisputeStatusBadgeClass(status)} ${className}`.trim()}
-    >
+    <Badge tone={participantDisputeStatusTone(status)} className={className}>
       {participantDisputeStatusLabel(status)}
-    </span>
+    </Badge>
   );
 }

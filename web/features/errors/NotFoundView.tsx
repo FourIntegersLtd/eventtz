@@ -1,42 +1,38 @@
 "use client";
 
-import Link from "next/link";
-import { authPageGradient } from "@/components/portal-shell/portalTheme";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
-import { getButtonClassName } from "@/components/ui/buttonStyles";
+import { ButtonLink } from "@/components/ui/ButtonLink";
+import { LandingFooter } from "@/features/landing/LandingFooter";
+import { LandingNav } from "@/features/landing/LandingNav";
+import { LandingSection } from "@/features/landing/LandingSection";
+import { landingSectionClass } from "@/features/landing/landingSectionStyles";
 
+/** Public 404: landing nav and footer around a centred message on the page background. */
 export function NotFoundView() {
   return (
-    <main className="relative flex min-h-dvh w-full flex-col items-center justify-center overflow-hidden bg-page-bg px-4 py-12 text-center">
-      <div
-        className={`pointer-events-none absolute inset-0 ${authPageGradient}`}
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute -left-24 -top-32 h-80 w-80 rounded-full bg-primary/15 blur-3xl"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute -right-16 bottom-0 h-96 w-96 rounded-full bg-primary/10 blur-3xl"
-        aria-hidden
-      />
-
-      <div className="relative z-10 flex w-full max-w-xl flex-col items-center">
-        <LottieIllustration
-          asset="notFound"
-          className="h-[min(55vh,28rem)] w-[min(55vh,28rem)] max-w-full"
-          ariaLabel="Page not found illustration"
-        />
-        <h1 className="font-heading mt-2 text-3xl font-semibold text-neutral-900 sm:text-4xl">
-          Page not found
-        </h1>
-        <p className="mt-3 max-w-md text-base leading-relaxed text-neutral-600">
-          The page you&apos;re looking for doesn&apos;t exist or may have moved.
-        </p>
-        <Link href="/" className={getButtonClassName({ className: "mt-8 px-6 py-3" })}>
-          Back to home
-        </Link>
-      </div>
-    </main>
+    <div className="min-h-dvh bg-page-bg text-ink">
+      <LandingNav variant="solid" sectionLinkPrefix="/" />
+      <main className={landingSectionClass("muted", { bordered: false, extra: "pt-28 sm:pt-32 min-h-[calc(100dvh-8rem)]" })}>
+        <LandingSection width="3xl">
+          <div className="flex flex-col items-center text-center">
+            <LottieIllustration
+              asset="notFound"
+              className="h-[min(40vh,22rem)] w-[min(40vh,22rem)] max-w-full"
+              ariaLabel="Page not found illustration"
+            />
+            <h1 className="font-heading mt-2 text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+              Page not found
+            </h1>
+            <p className="mt-3 max-w-md text-base leading-relaxed text-ink-2">
+              The page you&apos;re looking for doesn&apos;t exist or may have moved.
+            </p>
+            <ButtonLink href="/" size="lg" className="mt-8">
+              Back to home
+            </ButtonLink>
+          </div>
+        </LandingSection>
+      </main>
+      <LandingFooter sectionLinkPrefix="/" />
+    </div>
   );
 }

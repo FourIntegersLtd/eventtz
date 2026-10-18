@@ -34,26 +34,26 @@ export function VendorBrowseBreadcrumb({
   return (
     <nav
       aria-label="Breadcrumb"
-      className={`text-sm text-neutral-600 ${className}`.trim()}
+      className={`text-sm text-ink-2 ${className}`.trim()}
     >
       <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
         <li>
-          <Link href={browseHref} className="hover:text-neutral-900">
+          <Link href={browseHref} className="hover:text-ink">
             Home
           </Link>
         </li>
-        <li aria-hidden className="text-neutral-400">
+        <li aria-hidden className="text-ink-3">
           ›
         </li>
         <li>
-          <Link href={categoryHref} className="hover:text-neutral-900">
+          <Link href={categoryHref} className="hover:text-ink">
             {categoryLabel}
           </Link>
         </li>
-        <li aria-hidden className="text-neutral-400">
+        <li aria-hidden className="text-ink-3">
           ›
         </li>
-        <li className="min-w-0 truncate font-medium text-neutral-900">{vendorName}</li>
+        <li className="min-w-0 truncate font-medium text-ink">{vendorName}</li>
       </ol>
     </nav>
   );

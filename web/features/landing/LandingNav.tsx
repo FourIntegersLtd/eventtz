@@ -16,11 +16,15 @@ import {
   REGISTER_LINK,
   MOBILE_NAV_SECTION_LINKS,
   NAV_DROPDOWN_LINK_CLASS,
+  navLinkClass,
   resolveLandingSectionPrefix,
   SIGN_IN_LINK,
 } from "@/features/landing/landingData";
 import { useLandingNavScroll } from "@/features/landing/useLandingNavScroll";
-import { LANDING_PAGE_CONTAINER_CLASS } from "@/features/landing/landingSectionStyles";
+import {
+  LANDING_NAV_MENU_TOP_CLASS,
+  LANDING_PAGE_CONTAINER_CLASS,
+} from "@/features/landing/landingSectionStyles";
 
 type NavLinkItemProps = {
   href: string;
@@ -57,11 +61,7 @@ function NavDropdown({ label, align = "right", items, darkNav = false }: NavDrop
     <div className="group relative z-10 hidden hover:z-[100] focus-within:z-[100] lg:block">
       <button
         type="button"
-        className={
-          darkNav
-            ? "flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-white/95 transition hover:bg-white/10"
-            : "flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 hover:text-primary"
-        }
+        className={`flex items-center gap-1 ${navLinkClass(darkNav)}`}
       >
         {label}
         <ChevronDown
@@ -72,7 +72,7 @@ function NavDropdown({ label, align = "right", items, darkNav = false }: NavDrop
       <div
         className={`pointer-events-none absolute top-full z-[80] w-52 pt-2 opacity-0 transition group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100 ${panelAlign}`}
       >
-        <div className="rounded-xl border border-neutral-200 bg-white p-2 shadow-lg shadow-neutral-200/60">
+        <div className="rounded-card border border-line bg-white p-2 shadow-md">
           {items.map((item) => (
             <NavLinkItem
               key={`${item.href}-${item.label}`}
@@ -136,33 +136,23 @@ export function LandingNav({
 
   const closeMobile = () => setMobileOpen(false);
 
-  const outlineCtaClass = getButtonClassName({
-    variant: darkNav ? "invertedOutline" : "outline",
-    shape: "pill",
-    className: "ml-1 px-4 py-2",
-  });
-
   const primaryCtaClass = getButtonClassName({
     variant: darkNav ? "inverted" : "primary",
-    shape: "pill",
     className: "ml-2 px-5 py-2",
   });
 
   const mobileHeaderBrowseClass = getButtonClassName({
     variant: darkNav ? "inverted" : "primary",
-    shape: "pill",
     className: "inline-flex shrink-0 items-center px-4 py-2.5 text-xs font-semibold sm:text-sm",
   });
 
   const mobileMenuPrimaryClass = getButtonClassName({
     variant: darkNav ? "inverted" : "primary",
-    shape: "pill",
     className: "inline-flex w-full items-center justify-center px-4 py-3 text-sm font-semibold",
   });
 
   const mobileMenuSecondaryClass = getButtonClassName({
     variant: darkNav ? "invertedOutline" : "outline",
-    shape: "pill",
     className: "inline-flex w-full items-center justify-center px-4 py-3 text-sm font-semibold",
   });
 
@@ -180,9 +170,9 @@ export function LandingNav({
           mobileOpen
             ? darkNav
               ? "bg-neutral-950"
-              : "bg-white shadow-sm"
+              : "bg-white shadow-xs"
             : navSolid
-              ? "border-b border-primary-border/40 bg-white/85 shadow-sm backdrop-blur-xl"
+              ? "border-b border-line bg-white/90 shadow-xs backdrop-blur-xl"
               : "bg-gradient-to-b from-black/50 to-transparent backdrop-blur-[2px]"
         }`}
       >
@@ -196,9 +186,6 @@ export function LandingNav({
               href="/"
               className="inline-flex shrink-0 items-center"
               variant="header"
-              imageClassName="h-9 w-auto sm:h-10 md:h-11"
-              width={200}
-              height={72}
               priority
             />
           </div>
@@ -208,22 +195,14 @@ export function LandingNav({
 
             <NavLinkItem
               href={BLOG_LINK.href}
-              className={
-                darkNav
-                  ? "rounded-lg px-3 py-2 text-sm font-medium text-white/95 transition hover:bg-white/10"
-                  : "rounded-lg px-3 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 hover:text-primary"
-              }
+              className={navLinkClass(darkNav)}
             >
               {BLOG_LINK.label}
             </NavLinkItem>
 
             <NavLinkItem
               href={CONTACT_US_LINK.href}
-              className={
-                darkNav
-                  ? "rounded-lg px-3 py-2 text-sm font-medium text-white/95 transition hover:bg-white/10"
-                  : "rounded-lg px-3 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 hover:text-primary"
-              }
+              className={navLinkClass(darkNav)}
             >
               {CONTACT_US_LINK.label}
             </NavLinkItem>
@@ -236,11 +215,7 @@ export function LandingNav({
               <>
                 <NavLinkItem
                   href={SIGN_IN_LINK.href}
-                  className={
-                    darkNav
-                      ? "rounded-lg px-3 py-2 text-sm font-medium text-white/95 transition hover:bg-white/10"
-                      : "rounded-lg px-3 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 hover:text-primary"
-                  }
+                  className={navLinkClass(darkNav)}
                 >
                   {SIGN_IN_LINK.label}
                 </NavLinkItem>
@@ -265,8 +240,8 @@ export function LandingNav({
               onClick={() => setMobileOpen((o) => !o)}
               className={
                 darkNav
-                  ? "flex h-10 w-10 items-center justify-center rounded-lg border border-white/30 bg-white/10 text-white backdrop-blur-sm"
-                  : "flex h-10 w-10 items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-800"
+                  ? "flex h-10 w-10 items-center justify-center rounded-control border border-white/30 bg-white/10 text-white backdrop-blur-sm"
+                  : "flex h-10 w-10 items-center justify-center rounded-control border border-line-strong bg-white text-ink"
               }
               aria-label={mobileOpen ? "Close menu" : "Open menu"}
             >
@@ -278,8 +253,8 @@ export function LandingNav({
 
       {mobileOpen ? (
         <div
-          className={`fixed inset-x-0 bottom-0 top-[calc(env(safe-area-inset-top)+3.75rem)] z-[95] overflow-y-auto pb-[max(2rem,env(safe-area-inset-bottom))] lg:hidden ${
-            darkNav ? "text-white" : "text-neutral-900"
+          className={`fixed inset-x-0 bottom-0 ${LANDING_NAV_MENU_TOP_CLASS} z-[95] overflow-y-auto pb-[max(2rem,env(safe-area-inset-bottom))] lg:hidden ${
+            darkNav ? "text-white" : "text-ink"
           }`}
         >
           <div className={`flex flex-col ${LANDING_PAGE_CONTAINER_CLASS}`}>
@@ -288,8 +263,8 @@ export function LandingNav({
                 <NavLinkItem
                   key={`${item.href}-${item.label}`}
                   href={item.href}
-                  className={`rounded-lg py-3.5 text-[15px] font-medium leading-none ${
-                    darkNav ? "text-white/90 hover:bg-white/10" : "text-neutral-800 hover:bg-neutral-50"
+                  className={`rounded-control py-3.5 text-[15px] font-medium leading-none ${
+                    darkNav ? "text-white/90 hover:bg-white/10" : "text-ink hover:bg-surface-3"
                   }`}
                   onClick={closeMobile}
                 >
@@ -300,7 +275,7 @@ export function LandingNav({
 
             <div
               className={`mt-10 flex flex-col gap-3 border-t pt-6 ${
-                darkNav ? "border-white/10" : "border-neutral-200/80"
+                darkNav ? "border-white/10" : "border-line"
               }`}
             >
               <NavLinkItem
@@ -329,8 +304,8 @@ export function LandingNav({
                   </NavLinkItem>
                   <NavLinkItem
                     href={SIGN_IN_LINK.href}
-                    className={`rounded-lg py-3.5 text-center text-[15px] font-medium ${
-                      darkNav ? "text-white/80 hover:text-white" : "text-neutral-600 hover:text-primary"
+                    className={`rounded-control py-3.5 text-center text-[15px] font-medium ${
+                      darkNav ? "text-white/80 hover:text-white" : "text-ink-2 hover:text-ink"
                     }`}
                     onClick={closeMobile}
                   >

@@ -18,23 +18,23 @@ export function BlogByline({
 
   return (
     <p
-      className={`flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm text-neutral-600 ${className}`.trim()}
+      className={`flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm text-ink-2 ${className}`.trim()}
     >
       {publishedAt ? (
         <time
           dateTime={publishedAtIso ?? undefined}
-          className="text-xs font-medium uppercase tracking-wider text-neutral-500"
+          className="text-xs font-medium uppercase tracking-wider text-ink-3"
         >
           {publishedAt}
         </time>
       ) : null}
       {publishedAt && author ? (
-        <span className="text-neutral-300" aria-hidden>
+        <span className="text-line-strong" aria-hidden>
           ·
         </span>
       ) : null}
       {author ? (
-        <span className="text-sm font-medium text-neutral-800">
+        <span className="text-sm font-medium text-ink">
           By {author}
         </span>
       ) : null}

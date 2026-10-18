@@ -17,7 +17,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(function 
   const inputId = id ?? generatedId;
   return (
     <div className="min-w-0 space-y-1.5">
-      <label htmlFor={inputId} className="block text-sm font-medium text-neutral-800">
+      <label htmlFor={inputId} className="block text-sm font-medium text-ink">
         {label}
       </label>
       <textarea
@@ -27,16 +27,16 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(function 
         aria-invalid={Boolean(error)}
         aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
         className={`${FORM_CONTROL} ${FORM_CONTROL_FOCUS} resize-none ${FOCUS_RING} ${
-          error ? "border-red-300" : ""
+          error ? "border-danger-line" : ""
         } ${className}`.trim()}
         {...rest}
       />
       {error ? (
-        <p id={`${inputId}-error`} className="text-xs font-medium text-red-600">
+        <p id={`${inputId}-error`} className="text-xs font-medium text-danger">
           {error}
         </p>
       ) : hint ? (
-        <p id={`${inputId}-hint`} className="text-xs text-neutral-500">
+        <p id={`${inputId}-hint`} className="text-xs text-ink-3">
           {hint}
         </p>
       ) : null}

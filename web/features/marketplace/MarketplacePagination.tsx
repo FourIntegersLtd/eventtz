@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 
 type MarketplacePaginationProps = {
   page: number;
@@ -24,8 +25,8 @@ function pageItems(page: number, totalPages: number): (number | "ellipsis")[] {
   return items;
 }
 
-const squareBtn =
-  "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-40";
+/** Fixed square footprint for page-number buttons; 44px keeps them touch friendly. */
+const squareBtn = "!px-0 min-w-11";
 
 export function MarketplacePagination({
   page,
@@ -43,50 +44,49 @@ export function MarketplacePagination({
       aria-label="Browse pages"
       className="mt-8 flex flex-wrap items-center justify-center gap-2.5"
     >
-      <button
-        type="button"
+      <Button
+        variant="secondary"
+        size="sm"
         aria-label="Previous page"
         disabled={page <= 1}
         onClick={() => onPageChange(page - 1)}
-        className={`${squareBtn} border-neutral-200 bg-white text-neutral-500 hover:bg-neutral-50`}
+        className={squareBtn}
       >
         <ChevronLeft className="h-4 w-4" strokeWidth={2} />
-      </button>
+      </Button>
       {items.map((item, idx) =>
         item === "ellipsis" ? (
           <span
             key={`e-${idx}`}
-            className="inline-flex h-10 w-8 items-center justify-center text-sm text-neutral-400"
+            className="inline-flex h-11 w-8 items-center justify-center text-sm text-ink-3"
             aria-hidden
           >
             …
           </span>
         ) : (
-          <button
+          <Button
             key={item}
-            type="button"
+            variant={item === page ? "primary" : "secondary"}
+            size="sm"
             aria-label={`Page ${item}`}
             aria-current={item === page ? "page" : undefined}
             onClick={() => onPageChange(item)}
-            className={
-              item === page
-                ? `${squareBtn} border-primary/20 bg-primary-muted text-primary`
-                : `${squareBtn} border-neutral-200 bg-white text-neutral-700 hover:border-primary/15 hover:bg-primary-soft/60`
-            }
+            className={squareBtn}
           >
             {item}
-          </button>
+          </Button>
         ),
       )}
-      <button
-        type="button"
+      <Button
+        variant="secondary"
+        size="sm"
         aria-label="Next page"
         disabled={page >= totalPages}
         onClick={() => onPageChange(page + 1)}
-        className={`${squareBtn} border-neutral-200 bg-white text-neutral-500 hover:bg-neutral-50`}
+        className={squareBtn}
       >
         <ChevronRight className="h-4 w-4" strokeWidth={2} />
-      </button>
+      </Button>
     </nav>
   );
 }

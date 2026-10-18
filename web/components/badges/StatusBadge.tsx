@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/Badge";
 import { getBookingStatusMeta } from "@/lib/domain-types";
 
 export type StatusBadgeProps = {
@@ -14,10 +15,8 @@ export type StatusBadgeProps = {
 export function StatusBadge({ status, className = "" }: StatusBadgeProps) {
   const meta = getBookingStatusMeta(status);
   return (
-    <span
-      className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${meta.badgeClassName} ${className}`.trim()}
-    >
+    <Badge tone={meta.tone} className={className}>
       {meta.label}
-    </span>
+    </Badge>
   );
 }

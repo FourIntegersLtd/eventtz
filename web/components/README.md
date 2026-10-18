@@ -16,6 +16,13 @@ Reusable UI and cross-cutting chrome only. **Product screens and domain widgets 
 | [`media/`](media/) | Landing media wrappers |
 | [`analytics/`](analytics/) | Mixpanel page-view tracking |
 
+## Design rule
+
+Use `Card`, `Button`, `Badge` and `Banner` (plus `Tabs`, `Chip`, `PageHeader`, `StatTile`, `Avatar`,
+`DescriptionList`, `Stepper`) from `ui/` instead of hand-rolled card, button, pill or alert classes.
+Colours, shadows and radii come from the tokens in `app/globals.css`, surfaced by `ui/tokens.ts`
+(`TONE`, `SHADOW`, `RADIUS`, `FORM_CONTROL`). Preview everything at `/internal/ui-kit`.
+
 ## Dependency rules
 
 ```text

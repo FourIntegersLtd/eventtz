@@ -24,7 +24,7 @@ export function LottieEmptyPanel({
       description={description}
       lottie={lottie}
       variant={variant}
-      className={`border-neutral-200 bg-neutral-50 py-8 ${className}`.trim()}
+      className={`border-line bg-surface-3 py-8 ${className}`.trim()}
     />
   );
 }

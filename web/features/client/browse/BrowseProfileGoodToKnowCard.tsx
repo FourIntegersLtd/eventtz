@@ -23,8 +23,8 @@ type SectionProps = {
 function Section({ icon: Icon, title, badge, children }: SectionProps) {
   return (
     <section className="px-5 py-4">
-      <h5 className="flex items-center gap-2 text-[13px] font-semibold text-neutral-900">
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-600">
+      <h5 className="flex items-center gap-2 text-[13px] font-semibold text-ink">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-3 text-ink-2">
           <Icon className="h-4 w-4" aria-hidden />
         </span>
         {title}
@@ -44,7 +44,7 @@ function RefundTierTable({ tiers }: { tiers: BrowseVendorProfileFacts["cancellat
   return (
     <table className="w-full text-[13px]">
       <thead>
-        <tr className="text-left text-[11px] font-medium uppercase tracking-wide text-neutral-400">
+        <tr className="text-left text-[11px] font-medium uppercase tracking-wide text-ink-3">
           <th scope="col" className="pb-1.5 font-medium">
             If you cancel
           </th>
@@ -53,13 +53,13 @@ function RefundTierTable({ tiers }: { tiers: BrowseVendorProfileFacts["cancellat
           </th>
         </tr>
       </thead>
-      <tbody className="divide-y divide-neutral-100">
+      <tbody className="divide-y divide-line">
         {tiers.map((tier) => (
           <tr key={tier.window}>
-            <td className="py-2 pr-3 text-neutral-700">{tier.window}</td>
+            <td className="py-2 pr-3 text-ink-2">{tier.window}</td>
             <td
               className={`py-2 text-right font-semibold ${
-                tier.refund === "No refund" ? "text-neutral-500" : "text-neutral-900"
+                tier.refund === "No refund" ? "text-ink-3" : "text-ink"
               }`}
             >
               {tier.refund}
@@ -83,20 +83,20 @@ export function BrowseProfileGoodToKnowCard({
 
   return (
     <div
-      className={`overflow-hidden rounded-2xl border border-neutral-100 bg-white ${className}`.trim()}
+      className={`overflow-hidden rounded-card border border-line bg-white ${className}`.trim()}
     >
-      <div className="border-b border-neutral-100 px-5 pt-4 pb-3">
-        <h4 className="text-sm font-semibold text-neutral-900">Before you book</h4>
-        <p className="mt-0.5 text-[12px] text-neutral-500">Availability, dietary notes and refunds</p>
+      <div className="border-b border-line px-5 pt-4 pb-3">
+        <h4 className="text-sm font-semibold text-ink">Before you book</h4>
+        <p className="mt-0.5 text-[12px] text-ink-3">Availability, dietary notes and refunds</p>
       </div>
 
-      <div className="divide-y divide-neutral-100">
+      <div className="divide-y divide-line">
         {hasAvailability ? (
           <Section icon={CalendarDays} title="Availability">
             <div className="space-y-3">
               {facts.availableDays ? (
-                <p className="text-sm text-neutral-800">
-                  <span className="text-neutral-500">Usually available on </span>
+                <p className="text-sm text-ink">
+                  <span className="text-ink-3">Usually available on </span>
                   <span className="font-medium">{facts.availableDays}</span>
                 </p>
               ) : null}
@@ -130,7 +130,7 @@ export function BrowseProfileGoodToKnowCard({
               {facts.trustBadges.map((badge) => (
                 <li
                   key={badge}
-                  className="rounded-full bg-emerald-50 px-2.5 py-1 text-[12px] font-medium text-emerald-900 ring-1 ring-inset ring-emerald-200/60"
+                  className="rounded-full border border-success-line bg-success-soft px-2.5 py-1 text-[12px] font-medium text-success"
                 >
                   {badge}
                 </li>
@@ -140,17 +140,17 @@ export function BrowseProfileGoodToKnowCard({
         ) : null}
 
         <Section icon={RotateCcw} title="Cancellation policy" badge={facts.cancellationPolicyLabel}>
-          <p className="mb-3 text-[12px] text-neutral-500">
+          <p className="mb-3 text-[12px] text-ink-3">
             How much of the vendor&apos;s price comes back if you cancel after paying.
           </p>
           <RefundTierTable tiers={facts.cancellationPolicyTiers} />
-          <ul className="mt-4 space-y-2.5 border-t border-neutral-100 pt-3">
+          <ul className="mt-4 space-y-2.5 border-t border-line pt-3">
             {CANCELLATION_POLICY_GUARANTEES.map((guarantee) => (
               <li key={guarantee.title} className="flex items-start gap-2.5">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden />
                 <div className="text-[13px] leading-snug">
-                  <p className="font-medium text-neutral-900">{guarantee.title}</p>
-                  <p className="mt-0.5 text-neutral-600">{guarantee.detail}</p>
+                  <p className="font-medium text-ink">{guarantee.title}</p>
+                  <p className="mt-0.5 text-ink-2">{guarantee.detail}</p>
                 </div>
               </li>
             ))}

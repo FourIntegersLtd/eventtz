@@ -102,7 +102,7 @@ export function Drawer({
             animate={{ opacity: 1 }}
             exit={reduceMotion ? undefined : { opacity: 0 }}
             transition={transition}
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-scrim"
             onClick={onClose}
           />
           <motion.div
@@ -114,12 +114,12 @@ export function Drawer({
             animate={{ x: 0 }}
             exit={reduceMotion ? undefined : { x: "100%" }}
             transition={transition}
-            className={`absolute inset-y-0 right-0 flex h-full max-h-[100dvh] w-full max-w-[100vw] flex-col overflow-hidden border-l border-neutral-200 bg-white ${widthClassName} ${SHADOW.overlay}`}
+            className={`absolute inset-y-0 right-0 flex h-full max-h-[100dvh] w-full max-w-[100vw] flex-col overflow-hidden border-l border-line bg-white ${widthClassName} ${SHADOW.overlay}`}
           >
-            <div className="flex shrink-0 items-start justify-between gap-3 border-b border-neutral-200 px-5 py-4">
+            <div className="flex shrink-0 items-start justify-between gap-3 border-b border-line px-5 py-4">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-3">
-                  <h2 className="truncate font-heading text-lg font-semibold text-neutral-900">
+                  <h2 className="truncate font-heading text-lg font-semibold text-ink">
                     {title}
                   </h2>
                   {headerAction ? <div className="shrink-0">{headerAction}</div> : null}
@@ -147,7 +147,7 @@ export function Drawer({
               {children}
             </div>
             {footer ? (
-              <div className="relative z-10 shrink-0 border-t border-neutral-200 bg-white px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+              <div className="relative z-10 shrink-0 border-t border-line bg-white px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
                 {footer}
               </div>
             ) : null}

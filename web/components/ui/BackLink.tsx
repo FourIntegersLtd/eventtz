@@ -14,7 +14,7 @@ type BackLinkProps = {
 
 const toneClass: Record<NonNullable<BackLinkProps["tone"]>, string> = {
   primary: "text-primary hover:opacity-80",
-  muted: "text-neutral-600 hover:text-neutral-900",
+  muted: "text-ink-3 hover:text-ink",
 };
 
 /**

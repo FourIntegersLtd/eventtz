@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronRight, Flag, MapPin } from "lucide-react";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import type { RegisterAccountType } from "@/features/auth/useUnifiedRegister";
 
 /** One stop on the route between registering and the destination. */
@@ -45,17 +45,18 @@ const ROUTES: Record<RegisterAccountType, RouteCopy> = {
 };
 
 /** Dashed connector drawn between two markers in the vertical list. */
-function Connector() {
-  return <span className="mx-auto block h-8 w-0 border-l-2 border-dashed border-primary/40" aria-hidden />;
+function Connector({ onBrand = false }: { onBrand?: boolean }) {
+  const lineColor = onBrand ? "border-white/40" : "border-primary/40";
+  return <span className={`mx-auto block h-8 w-0 border-l-2 border-dashed ${lineColor}`} aria-hidden />;
 }
 
 /** "You are here" marker: a filled pin inside a soft halo. */
-function CurrentMarker({ size }: { size: "sm" | "lg" }) {
+function CurrentMarker({ size, onBrand = false }: { size: "sm" | "lg"; onBrand?: boolean }) {
   const outer = size === "lg" ? "h-14 w-14" : "h-11 w-11";
   const inner = size === "lg" ? "h-10 w-10" : "h-8 w-8";
   return (
-    <span className={`relative flex ${outer} items-center justify-center rounded-full bg-primary/15`}>
-      <span className={`flex ${inner} items-center justify-center rounded-full bg-primary text-white`}>
+    <span className={`relative flex ${outer} items-center justify-center rounded-full ${onBrand ? "bg-white/15" : "bg-primary/15"}`}>
+      <span className={`flex ${inner} items-center justify-center rounded-full ${onBrand ? "bg-white text-primary" : "bg-primary text-white"}`}>
         <MapPin className="h-4 w-4" aria-hidden />
       </span>
     </span>
@@ -63,73 +64,95 @@ function CurrentMarker({ size }: { size: "sm" | "lg" }) {
 }
 
 /** Numbered marker for a stop between registering and the destination. */
-function StepMarker({ number }: { number: number }) {
+function StepMarker({ number, onBrand = false }: { number: number; onBrand?: boolean }) {
   return (
-    <span className="relative flex h-9 w-9 items-center justify-center rounded-full border-2 border-primary/50 bg-white text-sm font-semibold text-primary">
+    <span className={`relative flex h-9 w-9 items-center justify-center rounded-full border-2 ${onBrand ? "border-white/60 bg-transparent text-white" : "border-primary/50 bg-white text-primary"}`}>
       {number}
     </span>
   );
 }
 
 /** Filled flag marker for the destination. */
-function DestinationMarker({ size }: { size: "sm" | "lg" }) {
+function DestinationMarker({ size, onBrand = false }: { size: "sm" | "lg"; onBrand?: boolean }) {
   const dimensions = size === "lg" ? "h-12 w-12" : "h-11 w-11";
   return (
-    <span className={`relative flex ${dimensions} items-center justify-center rounded-full bg-primary text-white`}>
+    <span className={`relative flex ${dimensions} items-center justify-center rounded-full ${onBrand ? "bg-white text-primary" : "bg-primary text-white"}`}>
       <Flag className="h-5 w-5" aria-hidden />
     </span>
   );
 }
 
+type StepLabelProps = {
+  /** `solid` filled pill, `muted` quiet pill, `plain` bare uppercase text. */
+  look: "solid" | "muted" | "plain";
+  onBrand: boolean;
+  children: ReactNode;
+};
+
+/** Small uppercase label used beside the route stops ("You are here", "Optional", "Destination"). */
+function StepLabel({ look, onBrand, children }: StepLabelProps) {
+  const looks = {
+    solid: onBrand ? "bg-white text-primary" : "bg-primary text-white",
+    muted: onBrand ? "bg-white/15 text-white/80" : "bg-surface-3 text-ink-3",
+    plain: onBrand ? "text-white/80" : "text-primary",
+  };
+  const shape = look === "plain" ? "" : "rounded-full px-2.5 py-0.5";
+  return (
+    <span className={`inline-block text-[11px] font-semibold uppercase tracking-wide ${shape} ${looks[look]}`.replace(/\s+/g, " ")}>
+      {children}
+    </span>
+  );
+}
+
 /** The vertical, fully described list of stops (desktop panel and mobile "See how it works"). */
-function RouteSteps({ route }: { route: RouteCopy }) {
+function RouteSteps({ route, onBrand = false }: { route: RouteCopy; onBrand?: boolean }) {
+  const titleColor = onBrand ? "text-white" : "text-ink";
+  const detailColor = onBrand ? "text-white/75" : "text-ink-2";
   return (
     <ol>
       <li className="flex gap-5">
         <div className="relative flex w-14 shrink-0 flex-col items-center">
-          <span
-            className="absolute right-full top-7 mr-3 hidden w-8 border-t-2 border-dashed border-primary/50 lg:block"
-            aria-hidden
-          />
-          <CurrentMarker size="lg" />
-          <Connector />
+          <CurrentMarker size="lg" onBrand={onBrand} />
+          <Connector onBrand={onBrand} />
         </div>
         <div className="pt-1">
-          <span className="inline-block rounded-full bg-primary px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white">
+          <StepLabel look="solid" onBrand={onBrand}>
             You are here
-          </span>
-          <p className="mt-1 text-lg font-semibold text-neutral-900">Register</p>
+          </StepLabel>
+          <p className={`mt-1 text-lg font-semibold ${titleColor}`}>Register</p>
         </div>
       </li>
 
       {route.stops.map((stop, stopIndex) => (
         <li key={stop.title} className="flex gap-5">
           <div className="flex w-14 shrink-0 flex-col items-center">
-            <StepMarker number={stopIndex + 1} />
-            <Connector />
+            <StepMarker number={stopIndex + 1} onBrand={onBrand} />
+            <Connector onBrand={onBrand} />
           </div>
           <div>
-            <p className="flex items-center gap-2 text-lg font-semibold text-neutral-900">
+            <p className={`flex items-center gap-2 text-lg font-semibold ${titleColor}`}>
               {stop.title}
               {stop.optional ? (
-                <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
+                <StepLabel look="muted" onBrand={onBrand}>
                   Optional
-                </span>
+                </StepLabel>
               ) : null}
             </p>
-            <p className="text-sm text-neutral-600">{stop.detail}</p>
+            <p className={`text-sm ${detailColor}`}>{stop.detail}</p>
           </div>
         </li>
       ))}
 
       <li className="flex gap-5">
         <div className="flex w-14 shrink-0 justify-center">
-          <DestinationMarker size="lg" />
+          <DestinationMarker size="lg" onBrand={onBrand} />
         </div>
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">Destination</p>
-          <p className="text-lg font-semibold text-neutral-900">{route.destination.title}</p>
-          <p className="text-sm text-neutral-600">{route.destination.detail}</p>
+          <StepLabel look="plain" onBrand={onBrand}>
+            Destination
+          </StepLabel>
+          <p className={`text-lg font-semibold ${titleColor}`}>{route.destination.title}</p>
+          <p className={`text-sm ${detailColor}`}>{route.destination.detail}</p>
         </div>
       </li>
     </ol>
@@ -140,16 +163,16 @@ type RegisterRouteProps = { accountType: RegisterAccountType; className?: string
 
 /**
  * Step-by-step "route" from registering to a confirmed booking, worded for the
- * chosen account type. Shown beside the form on desktop.
+ * chosen account type. Shown on the brand panel on desktop.
  */
 export function RegisterRoute({ accountType, className = "" }: RegisterRouteProps) {
   const route = ROUTES[accountType];
   return (
-    <section aria-label={route.eyebrow} className={`w-full max-w-md lg:max-w-lg ${className}`.trim()}>
-      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">{route.eyebrow}</p>
-      <h2 className="mt-2 font-heading text-2xl font-semibold text-neutral-900 sm:text-3xl">{route.heading}</h2>
-      <div className="mt-8">
-        <RouteSteps route={route} />
+    <section aria-label={route.eyebrow} className={`w-full max-w-md text-white ${className}`.trim()}>
+      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-white/80">{route.eyebrow}</p>
+      <h2 className="mt-2 font-heading text-2xl font-semibold text-white">{route.heading}</h2>
+      <div className="mt-6">
+        <RouteSteps route={route} onBrand />
       </div>
     </section>
   );
@@ -183,7 +206,7 @@ export function RegisterRouteCompact({ accountType, className = "" }: RegisterRo
             <span className="flex h-11 items-center">
               <StepMarker number={stopIndex + 1} />
             </span>
-            <span className="mt-1.5 text-xs font-medium leading-tight text-neutral-700">
+            <span className="mt-1.5 text-xs font-medium leading-tight text-ink-2">
               {stop.shortTitle ?? stop.title}
             </span>
           </li>
@@ -211,7 +234,7 @@ export function RegisterRouteCompact({ accountType, className = "" }: RegisterRo
 
       {expanded ? (
         <div className="mt-3 border-t border-primary/10 px-1 pt-4">
-          <p className="mb-4 font-heading text-lg font-semibold text-neutral-900">{route.heading}</p>
+          <p className="mb-4 font-heading text-lg font-semibold text-ink">{route.heading}</p>
           <RouteSteps route={route} />
         </div>
       ) : null}

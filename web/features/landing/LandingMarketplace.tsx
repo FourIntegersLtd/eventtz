@@ -28,7 +28,7 @@ export default function LandingMarketplace() {
   }, []);
 
   return (
-    <div className="min-h-dvh bg-page-bg text-neutral-900">
+    <div className="min-h-dvh bg-page-bg text-ink">
       <LandingNav variant="solid" />
       <LandingHero />
       <LandingBrowseStrip />

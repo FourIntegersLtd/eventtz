@@ -27,7 +27,7 @@ export function SectionHeader({
   variant?: "section" | "panel";
 }) {
   const wrapClass =
-    variant === "panel" ? "mb-4 border-b-2 border-neutral-200 pb-3" : sectionHeaderWrap;
+    variant === "panel" ? "mb-4" : sectionHeaderWrap;
 
   return (
     <div className={`${wrapClass} ${className}`.trim()}>

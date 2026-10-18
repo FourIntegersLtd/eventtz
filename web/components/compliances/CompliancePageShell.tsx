@@ -1,20 +1,28 @@
 import type { ReactNode } from "react";
 import { BackLink } from "@/components/ui/BackLink";
+import { ComplianceReader } from "@/components/compliances/ComplianceReader";
 import { LandingFooter } from "@/features/landing/LandingFooter";
 import { LandingNav } from "@/features/landing/LandingNav";
+import { LandingSection } from "@/features/landing/LandingSection";
+import { LANDING_NAV_OFFSET_CLASS } from "@/features/landing/landingSectionStyles";
 
 type CompliancePageShellProps = {
   children: ReactNode;
 };
 
+/** Frame for the legal pages: landing nav and footer around a contents list and the policy text. */
 export function CompliancePageShell({ children }: CompliancePageShellProps) {
   return (
-    <div className="min-h-dvh bg-page-bg text-neutral-900">
+    <div className="min-h-dvh bg-page-bg text-ink">
       <LandingNav variant="solid" sectionLinkPrefix="/" />
-      <main className="mx-auto w-full max-w-4xl px-4 pb-10 pt-24 sm:px-6 sm:pb-14 sm:pt-28 lg:px-8">
-        <BackLink href="/" label="Back to home" className="mb-8" />
-        <div className="compliance-prose">{children}</div>
-      </main>
+      <div className={LANDING_NAV_OFFSET_CLASS}>
+        <div className="bg-page-bg py-10 sm:py-12">
+          <LandingSection>
+            <BackLink href="/" label="Back to home" className="mb-8" />
+            <ComplianceReader>{children}</ComplianceReader>
+          </LandingSection>
+        </div>
+      </div>
       <LandingFooter sectionLinkPrefix="/" />
     </div>
   );

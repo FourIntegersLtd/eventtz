@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import { ArrowRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -104,9 +104,9 @@ export function LandingFeaturedVendors() {
       )}
 
       <div className="mt-8 flex justify-center sm:mt-10">
-        <Link
+        <ButtonLink
           href="/client/browse"
-          className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary transition hover:gap-2.5 hover:opacity-90"
+          variant="secondary"
           onClick={() =>
             track(MixpanelEvents.landing_cta_clicked, {
               cta: "view_all",
@@ -116,7 +116,7 @@ export function LandingFeaturedVendors() {
         >
           View all vendors
           <ArrowRight className="h-4 w-4" aria-hidden />
-        </Link>
+        </ButtonLink>
       </div>
     </LandingSection>
   );

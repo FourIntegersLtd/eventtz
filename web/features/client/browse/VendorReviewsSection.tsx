@@ -43,18 +43,18 @@ function ReviewCard({
     <div className="px-5 py-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
-          <p className="font-medium text-neutral-900">{r.reviewer_display}</p>
-          <p className="text-xs text-neutral-500">
+          <p className="font-medium text-ink">{r.reviewer_display}</p>
+          <p className="text-xs text-ink-3">
             {r.event_name}
             {r.event_date ? ` · ${r.event_date}` : ""}
           </p>
         </div>
         <div className="flex items-center gap-1.5">
           <StarRating rating={r.rating} size="md" />
-          <span className="text-sm font-semibold text-neutral-800">{r.rating}</span>
+          <span className="text-sm font-semibold text-ink">{r.rating}</span>
         </div>
       </div>
-      <p className="mt-3 text-sm leading-relaxed text-neutral-700">{shown}</p>
+      <p className="mt-3 text-sm leading-relaxed text-ink-2">{shown}</p>
       {long ? (
         <button
           type="button"
@@ -65,7 +65,7 @@ function ReviewCard({
         </button>
       ) : null}
       <ReviewPhotoGallery urls={r.image_urls} />
-      <p className="mt-3 text-xs text-neutral-400">{formatRelative(r.created_at)}</p>
+      <p className="mt-3 text-xs text-ink-3">{formatRelative(r.created_at)}</p>
     </div>
   );
 }
@@ -136,19 +136,19 @@ export function VendorReviewsSection({ vendorUserId }: VendorReviewsSectionProps
   };
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+    <section className="overflow-hidden rounded-card border border-line bg-white">
       <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-4">
         <div>
-          <h4 className="text-sm font-semibold text-neutral-900">Reviews</h4>
+          <h4 className="text-sm font-semibold text-ink">Reviews</h4>
           {count > 0 && avg != null ? (
-            <p className="mt-0.5 flex items-center gap-2 text-xs text-neutral-600">
+            <p className="mt-0.5 flex items-center gap-2 text-xs text-ink-2">
               <StarRating rating={Math.round(avg)} size="md" />
               <span>
                 {avg.toFixed(1)} · {count} review{count === 1 ? "" : "s"}
               </span>
             </p>
           ) : (
-            <p className="mt-0.5 text-xs text-neutral-500">No reviews yet</p>
+            <p className="mt-0.5 text-xs text-ink-3">No reviews yet</p>
           )}
         </div>
         {count > 0 ? (
@@ -163,19 +163,19 @@ export function VendorReviewsSection({ vendorUserId }: VendorReviewsSectionProps
       </div>
 
       {loading ? (
-        <div className="border-t border-neutral-100 px-5 py-4">
+        <div className="border-t border-line px-5 py-4">
           <LoadingState label="Loading reviews…" variant="inline" />
         </div>
       ) : loadError ? (
-        <p className="border-t border-neutral-100 px-5 py-4 text-xs text-red-700">{loadError}</p>
+        <p className="border-t border-line px-5 py-4 text-xs text-danger">{loadError}</p>
       ) : count === 0 ? (
-        <p className="border-t border-neutral-100 px-5 py-4 text-sm text-neutral-500">
+        <p className="border-t border-line px-5 py-4 text-sm text-ink-3">
           Verified reviews appear here after clients complete bookings on Eventtz.
         </p>
       ) : current ? (
-        <div className="border-t border-neutral-100">
+        <div className="border-t border-line">
           {reviews.length > 1 ? (
-            <div className="flex items-center justify-between gap-3 border-b border-neutral-100 px-5 py-2.5">
+            <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-2.5">
               <div className="flex flex-wrap items-center gap-1.5">
                 {reviews.map((r, i) => (
                   <button
@@ -186,8 +186,8 @@ export function VendorReviewsSection({ vendorUserId }: VendorReviewsSectionProps
                     aria-current={i === index ? "true" : undefined}
                     className={`h-2 rounded-full transition-all duration-300 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 ${
                       i === index
-                        ? "w-7 bg-neutral-700"
-                        : "w-2 bg-neutral-300 hover:bg-neutral-400"
+                        ? "w-7 bg-ink-2"
+                        : "w-2 bg-line-strong hover:bg-ink-3"
                     }`}
                   />
                 ))}
@@ -197,7 +197,7 @@ export function VendorReviewsSection({ vendorUserId }: VendorReviewsSectionProps
                   type="button"
                   onClick={goPrev}
                   disabled={!canPrev}
-                  className="rounded-lg border border-neutral-100 bg-white p-1.5 text-neutral-700 transition hover:bg-neutral-50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="rounded-lg border border-line bg-white p-1.5 text-ink-2 transition hover:bg-surface-3 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
                   aria-label="Previous review"
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -206,7 +206,7 @@ export function VendorReviewsSection({ vendorUserId }: VendorReviewsSectionProps
                   type="button"
                   onClick={goNext}
                   disabled={!canNext}
-                  className="rounded-lg border border-neutral-100 bg-white p-1.5 text-neutral-700 transition hover:bg-neutral-50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="rounded-lg border border-line bg-white p-1.5 text-ink-2 transition hover:bg-surface-3 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
                   aria-label="Next review"
                 >
                   <ChevronRight className="h-4 w-4" />
@@ -235,7 +235,7 @@ export function VendorReviewsSection({ vendorUserId }: VendorReviewsSectionProps
             </div>
           </div>
           {reviews.length > 1 ? (
-            <p className="border-t border-neutral-100 px-5 py-2 text-center text-[11px] text-neutral-400">
+            <p className="border-t border-line px-5 py-2 text-center text-[11px] text-ink-3">
               {index + 1} / {reviews.length}
             </p>
           ) : null}
@@ -248,7 +248,7 @@ export function VendorReviewsSection({ vendorUserId }: VendorReviewsSectionProps
         title="All reviews"
         maxWidthClassName="max-w-lg"
       >
-        <ul className="max-h-[min(60vh,480px)] divide-y divide-neutral-100 overflow-y-auto overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+        <ul className="max-h-[min(60vh,480px)] divide-y divide-line overflow-y-auto overflow-hidden rounded-card border border-line bg-white">
           {reviews.map((r) => (
             <li key={r.id}>
               <ReviewCard

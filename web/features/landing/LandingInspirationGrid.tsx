@@ -10,7 +10,7 @@ export function LandingInspirationGrid() {
   return (
     <LandingSection
       id="inspiration"
-      className={`overflow-x-clip ${landingSectionClass("soft", {
+      className={`overflow-x-clip ${landingSectionClass("muted", {
         shell: "content",
         extra: "py-14 sm:py-20 md:py-28",
       })}`}

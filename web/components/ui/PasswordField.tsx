@@ -19,12 +19,12 @@ export const PasswordField = forwardRef<HTMLInputElement, PasswordFieldProps>(fu
   const inputId = id ?? generatedId;
   const [visible, setVisible] = useState(false);
   const inputClassName = `${FORM_CONTROL} ${FORM_CONTROL_FOCUS} pl-3 pr-11 ${FOCUS_RING} ${
-    error ? "border-red-300" : ""
+    error ? "border-danger-line" : ""
   } ${className}`.trim();
 
   return (
     <div className="min-w-0 space-y-1.5">
-      <label htmlFor={inputId} className="block text-sm font-medium text-neutral-800">
+      <label htmlFor={inputId} className="block text-sm font-medium text-ink">
         {label}
       </label>
       <div className="relative">
@@ -40,7 +40,7 @@ export const PasswordField = forwardRef<HTMLInputElement, PasswordFieldProps>(fu
         <button
           type="button"
           onClick={() => setVisible((v) => !v)}
-          className={`absolute inset-y-0 right-0 flex ${TOUCH_TARGET} items-center justify-center text-neutral-500 hover:text-neutral-800`}
+          className={`absolute inset-y-0 right-0 flex ${TOUCH_TARGET} items-center justify-center text-ink-3 hover:text-ink`}
           aria-label={visible ? "Hide password" : "Show password"}
           aria-pressed={visible}
         >
@@ -48,11 +48,11 @@ export const PasswordField = forwardRef<HTMLInputElement, PasswordFieldProps>(fu
         </button>
       </div>
       {error ? (
-        <p id={`${inputId}-error`} className="text-xs font-medium text-red-600">
+        <p id={`${inputId}-error`} className="text-xs font-medium text-danger">
           {error}
         </p>
       ) : hint ? (
-        <p id={`${inputId}-hint`} className="text-xs text-neutral-500">
+        <p id={`${inputId}-hint`} className="text-xs text-ink-3">
           {hint}
         </p>
       ) : null}

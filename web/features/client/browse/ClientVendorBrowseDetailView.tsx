@@ -4,6 +4,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
+import { TONE } from "@/components/ui/tokens";
 import { BackLink } from "@/components/ui/BackLink";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
@@ -169,7 +170,7 @@ export function ClientVendorBrowseDetailView() {
   );
 
   if (!userId) {
-    const invalid = <p className="text-center text-sm text-neutral-600">Invalid link.</p>;
+    const invalid = <p className="text-center text-sm text-ink-2">Invalid link.</p>;
     return isClient ? invalid : <MarketplaceBrowseShell width="detail">{invalid}</MarketplaceBrowseShell>;
   }
 
@@ -184,7 +185,7 @@ export function ClientVendorBrowseDetailView() {
       return (
         <div className="flex flex-col items-center space-y-4 text-center">
           <LottieIllustration asset="notFound" className="h-32 w-32" />
-          <p className="text-sm text-neutral-700">
+          <p className="text-sm text-ink-2">
             This vendor could not be found or is no longer listed.
           </p>
           <BackLink href={browseListHref} label="Back to browse" />
@@ -195,14 +196,14 @@ export function ClientVendorBrowseDetailView() {
     return (
       <>
         {marketplaceSearchMismatchReasons ? (
-          <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          <div className={`mb-4 rounded-control border px-4 py-3 text-sm ${TONE.warning.background} ${TONE.warning.line} ${TONE.warning.text}`}>
             <p className="font-semibold">This vendor doesn't match your search filters</p>
-            <ul className="mt-2 list-inside list-disc space-y-1 text-amber-900">
+            <ul className="mt-2 list-inside list-disc space-y-1">
               {marketplaceSearchMismatchReasons.map((r, i) => (
                 <li key={`${i}-${r.slice(0, 40)}`}>{r}</li>
               ))}
             </ul>
-            <p className="mt-2 text-xs text-amber-800/90">
+            <p className="mt-2 text-xs opacity-90">
               You can still book or message them. Check dates and services first.
             </p>
           </div>

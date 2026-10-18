@@ -1,7 +1,9 @@
 "use client";
 
+import { Banner } from "@/components/ui/Banner";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
 
+/** "amara-loves" becomes "Amara Loves" when the creator has no display name. */
 function titleCaseSlug(slug: string): string {
   return slug
     .split("-")
@@ -21,16 +23,13 @@ export function ReferralRegisterBanner({ displayName, slug, className = "" }: Re
   const creatorName = displayName?.trim() || titleCaseSlug(slug);
 
   return (
-    <div
-      className={`rounded-2xl bg-gradient-to-br from-primary/12 via-primary/[0.07] to-amber-50/90 px-4 py-4 text-center ring-2 ring-primary/25 sm:px-5 sm:py-5 ${className}`.trim()}
-      role="status"
-      aria-live="polite"
+    <Banner
+      tone="brand"
+      title="Creator referral"
+      className={className}
+      icon={<LottieIllustration asset="welcome" className="h-10 w-10" ariaLabel="" />}
     >
-      <LottieIllustration asset="welcome" className="mx-auto h-20 w-20 sm:h-24 sm:w-24" ariaLabel="" />
-      <p className="mt-3 text-[11px] font-semibold uppercase tracking-wide text-primary">Creator referral</p>
-      <p className="mt-1 font-heading text-lg font-semibold leading-snug text-neutral-900 sm:text-xl">
-        You&apos;re joining via <span className="text-primary">{creatorName}</span>
-      </p>
-    </div>
+      You&apos;re joining via <span className="font-semibold text-primary">{creatorName}</span>
+    </Banner>
   );
 }

@@ -29,15 +29,15 @@ export function Tooltip({
     placement === "top" ? "bottom-[calc(100%+6px)]" : "top-[calc(100%+6px)]";
   const arrowPosition =
     placement === "top"
-      ? "top-full border-t-neutral-900"
-      : "bottom-full border-b-neutral-900";
+      ? "top-full border-t-ink"
+      : "bottom-full border-b-ink";
 
   return (
     <div className={`group relative ${className}`.trim()}>
       {children}
       <div
         role="tooltip"
-        className={`pointer-events-none absolute left-1/2 z-30 hidden -translate-x-1/2 rounded-lg bg-neutral-900 px-2.5 py-2 text-[11px] leading-snug text-white shadow-lg group-hover:block group-focus-within:block ${bubblePosition} ${widthClassName}`}
+        className={`pointer-events-none absolute left-1/2 z-30 hidden -translate-x-1/2 rounded-lg bg-ink px-2.5 py-2 text-[11px] leading-snug text-white shadow-overlay group-hover:block group-focus-within:block ${bubblePosition} ${widthClassName}`}
       >
         {hint}
         <span

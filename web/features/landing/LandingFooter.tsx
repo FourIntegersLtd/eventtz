@@ -18,10 +18,10 @@ import {
 import { LANDING_PAGE_CONTAINER_CLASS } from "@/features/landing/landingSectionStyles";
 
 const SOCIAL_ICON_CLASS =
-  "flex h-10 w-10 items-center justify-center rounded-lg border border-primary-border bg-white text-neutral-700 transition-all hover:scale-105 hover:border-primary/30 hover:bg-primary-muted hover:text-primary";
+  "flex h-10 w-10 items-center justify-center rounded-control border border-line-strong bg-white text-ink-2 transition-all hover:scale-105 hover:bg-primary-soft hover:text-primary";
 
 const FOOTER_LINK_CLASS =
-  "break-words text-neutral-600 transition-colors hover:text-primary";
+  "break-words text-ink-2 transition-colors hover:text-primary";
 
 type LandingFooterProps = {
   className?: string;
@@ -42,13 +42,13 @@ export function LandingFooter({
 
   return (
     <footer
-      className={`border-t border-primary-border/60 bg-primary-soft/40 ${className}`.trim()}
+      className={`border-t border-line bg-surface-3 ${className}`.trim()}
     >
       <div className={`py-12 sm:py-16 lg:py-16 ${LANDING_PAGE_CONTAINER_CLASS}`}>
         <div className="grid grid-cols-1 gap-12 sm:gap-16 lg:grid-cols-12 lg:gap-8">
           <div className="flex flex-col gap-6 lg:col-span-3">
             <div className="flex flex-col gap-3">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-primary">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-ink">
                 Follow us
               </h4>
               <div className="flex flex-wrap gap-3">
@@ -67,10 +67,10 @@ export function LandingFooter({
               </div>
             </div>
             <div className="flex flex-col gap-3">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-primary">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-ink">
                 Address
               </h4>
-              <p className="text-sm leading-relaxed text-neutral-600">
+              <p className="text-sm leading-relaxed text-ink-2">
                 {FOOTER_ADDRESS_LINES.map((line, index) => (
                   <span key={line}>
                     {line}
@@ -83,7 +83,7 @@ export function LandingFooter({
 
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-2 lg:col-span-9 lg:grid-cols-4">
             <div>
-              <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-primary">
+              <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-ink">
                 Marketplace
               </h4>
               <ul className="space-y-3 text-sm">
@@ -116,7 +116,7 @@ export function LandingFooter({
             </div>
 
             <div>
-              <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-primary">
+              <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-ink">
                 Account
               </h4>
               <ul className="space-y-3 text-sm">
@@ -139,7 +139,7 @@ export function LandingFooter({
             </div>
 
             <div>
-              <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-primary">
+              <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-ink">
                 Resources
               </h4>
               <ul className="space-y-3 text-sm">
@@ -185,7 +185,7 @@ export function LandingFooter({
             </div>
 
             <div>
-              <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-primary">
+              <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-ink">
                 Legal
               </h4>
               <ul className="space-y-3 text-sm">
@@ -202,7 +202,7 @@ export function LandingFooter({
         </div>
 
         <div className="mt-12 pt-4 sm:mt-16">
-          <p className="text-center text-sm text-neutral-600">
+          <p className="text-center text-sm text-ink-3">
             © {new Date().getFullYear()} {FOOTER_COMPANY_NAME}. All rights reserved.
           </p>
         </div>

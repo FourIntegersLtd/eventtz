@@ -20,7 +20,7 @@ export function MarketplaceBrowseShell({
         : "max-w-6xl";
 
   return (
-    <div className="min-h-dvh bg-page-bg text-neutral-900">
+    <div className="min-h-dvh bg-page-bg text-ink">
       <LandingNav variant="solid" />
       <main
         className={`mx-auto w-full ${maxWidth} px-4 pb-8 pt-24 sm:px-6 sm:pb-10 sm:pt-28 lg:px-8`}

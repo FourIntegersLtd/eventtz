@@ -1,3 +1,5 @@
+import type { Tone } from "@/lib/tone";
+
 /**
  * Dispute rules mirror `backend/app/services/dispute_service.py`
  * (`_ALLOWED_BOOKING_STATUSES_FOR_NEW_DISPUTE`). Keep in sync when backend changes.
@@ -28,18 +30,17 @@ export function participantDisputeStatusLabel(status: string): string {
   }
 }
 
-export function participantDisputeStatusBadgeClass(status: string): string {
+/** Badge tone for a dispute case status. */
+export function participantDisputeStatusTone(status: string): Tone {
   switch (status) {
     case "open":
-      return "bg-amber-100 text-amber-900";
+      return "warning";
     case "under_review":
-      return "bg-sky-100 text-sky-900";
+      return "info";
     case "resolved":
-      return "bg-emerald-100 text-emerald-900";
-    case "closed":
-      return "bg-neutral-200 text-neutral-700";
+      return "success";
     default:
-      return "bg-neutral-100 text-neutral-700";
+      return "neutral";
   }
 }
 

@@ -99,7 +99,7 @@ export function MarketplaceDateFilterFields({
       ) : null}
 
       {datePickerError ? (
-        <p className="mt-2 text-xs font-medium text-red-600">{datePickerError}</p>
+        <p className="mt-2 text-xs font-medium text-danger">{datePickerError}</p>
       ) : null}
 
       <button
@@ -108,7 +108,7 @@ export function MarketplaceDateFilterFields({
         className={`mt-3 w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
           dateFlexible
             ? "border-primary/30 bg-primary/10 font-medium text-primary"
-            : "border-neutral-200 bg-neutral-50 text-neutral-800 hover:bg-neutral-100"
+            : "border-line bg-surface-3 text-ink hover:bg-surface-3"
         }`}
       >
         I&apos;m flexible on dates

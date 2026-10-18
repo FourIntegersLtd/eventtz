@@ -1,5 +1,9 @@
 import type { ReactNode } from "react";
-import { LANDING_HORIZONTAL_PADDING, LANDING_PAGE_MAX_WIDTH } from "@/features/landing/landingSectionStyles";
+import {
+  LANDING_HORIZONTAL_PADDING,
+  LANDING_PAGE_MAX_WIDTH,
+  LANDING_SCROLL_MT_CLASS,
+} from "@/features/landing/landingSectionStyles";
 
 type LandingSectionProps = {
   id?: string;
@@ -25,7 +29,7 @@ export function LandingSection({
   return (
     <section
       id={id}
-      className={`${id ? "scroll-mt-24 sm:scroll-mt-28" : ""} ${className}`.trim()}
+      className={`${id ? LANDING_SCROLL_MT_CLASS : ""} ${className}`.trim()}
     >
       <div className={`mx-auto w-full ${WIDTH_CLASS[width]} ${LANDING_HORIZONTAL_PADDING}`}>
         {children}

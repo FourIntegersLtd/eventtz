@@ -72,7 +72,7 @@ export function Modal({
             animate={{ opacity: 1 }}
             exit={reduceMotion ? undefined : { opacity: 0 }}
             transition={transition}
-            className="absolute inset-0 bg-black/45"
+            className="absolute inset-0 bg-scrim"
             onClick={onClose}
           />
           <div className="absolute inset-0 flex items-center justify-center overflow-y-auto p-4 sm:p-6">
@@ -84,12 +84,12 @@ export function Modal({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={reduceMotion ? undefined : { opacity: 0, scale: 0.98, y: 4 }}
               transition={transition}
-              className={`my-auto flex w-full max-h-[min(90dvh,720px)] flex-col overflow-hidden rounded-2xl bg-white shadow-xl ${MODAL_PANEL} ${maxWidthClassName}`}
+              className={`my-auto flex w-full max-h-[min(90dvh,720px)] flex-col overflow-hidden rounded-card bg-white shadow-overlay ${MODAL_PANEL} ${maxWidthClassName}`}
             >
-              <div className="flex shrink-0 items-center justify-between gap-3 border-b border-neutral-100 bg-white px-4 py-3 sm:px-5 sm:py-4">
+              <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line bg-white px-4 py-3 sm:px-5 sm:py-4">
                 <h2
                   id="modal-title"
-                  className="font-heading min-w-0 flex-1 pr-2 text-base font-semibold text-neutral-900 sm:text-lg"
+                  className="font-heading min-w-0 flex-1 pr-2 text-base font-semibold text-ink sm:text-lg"
                 >
                   {title}
                 </h2>
@@ -103,13 +103,13 @@ export function Modal({
               </div>
               {children ? (
                 <div
-                  className={`min-h-0 flex-1 overflow-y-auto bg-neutral-50 px-4 py-4 sm:px-5 sm:py-5 ${bodyMaxHeightClassName} ${bodyClassName ?? ""}`.trim()}
+                  className={`min-h-0 flex-1 overflow-y-auto bg-page-bg px-4 py-4 sm:px-5 sm:py-5 ${bodyMaxHeightClassName} ${bodyClassName ?? ""}`.trim()}
                 >
                   {children}
                 </div>
               ) : null}
               {footer ? (
-                <div className="shrink-0 border-t border-neutral-100 bg-white px-4 py-3 sm:px-5 sm:py-4">
+                <div className="shrink-0 border-t border-line bg-white px-4 py-3 sm:px-5 sm:py-4">
                   {footer}
                 </div>
               ) : null}

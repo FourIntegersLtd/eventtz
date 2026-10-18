@@ -8,7 +8,7 @@ export function LandingVendorSection() {
   return (
     <LandingSection
       id="for-vendors"
-      className={landingSectionClass("muted", {
+      className={landingSectionClass("brand", {
         shell: "content",
         extra: "!py-14 sm:!py-16 md:!py-20",
       })}

@@ -44,7 +44,7 @@ function resolveEmptyVisual(
     return <LottieIllustration asset={lottie} ariaLabel="" />;
   }
   if (icon) {
-    return <div className="text-neutral-400">{icon}</div>;
+    return <div className="text-ink-3">{icon}</div>;
   }
   return null;
 }
@@ -67,12 +67,12 @@ export function EmptyState({
 
   return (
     <div
-      className={`flex flex-col items-center gap-3 border border-dashed border-neutral-200 px-6 py-10 text-center ${RADIUS.lg} ${className}`.trim()}
+      className={`flex flex-col items-center gap-3 border border-dashed border-line-strong px-6 py-10 text-center ${RADIUS.lg} ${className}`.trim()}
     >
       {visual}
-      <p className="font-heading text-base font-semibold text-neutral-900">{title}</p>
+      <p className="font-heading text-base font-semibold text-ink">{title}</p>
       {description ? (
-        <p className="max-w-sm text-sm leading-relaxed text-neutral-500">{description}</p>
+        <p className="max-w-sm text-sm leading-relaxed text-ink-3">{description}</p>
       ) : null}
       {action ? <div className="mt-1">{action}</div> : null}
     </div>

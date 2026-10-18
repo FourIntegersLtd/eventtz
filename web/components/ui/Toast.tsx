@@ -31,8 +31,8 @@ type ToastContextValue = {
 const ToastContext = createContext<ToastContextValue | null>(null);
 
 const TONE_ICON: Record<ToastTone, ReactNode> = {
-  success: <CheckCircle2 className="h-5 w-5 text-emerald-600" aria-hidden />,
-  error: <XCircle className="h-5 w-5 text-red-600" aria-hidden />,
+  success: <CheckCircle2 className="h-5 w-5 text-success" aria-hidden />,
+  error: <XCircle className="h-5 w-5 text-danger" aria-hidden />,
   neutral: null,
 };
 
@@ -73,13 +73,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div
             key={toast.id}
             role="status"
-            className={`pointer-events-auto flex w-full max-w-sm items-start gap-3 border border-neutral-200 bg-white p-4 animate-ui-slide-up ${RADIUS.md} ${SHADOW.overlay}`}
+            className={`pointer-events-auto flex w-full max-w-sm items-start gap-3 border border-line bg-white p-4 animate-ui-slide-up ${RADIUS.md} ${SHADOW.overlay}`}
           >
             {TONE_ICON[toast.tone ?? "neutral"]}
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-neutral-900">{toast.title}</p>
+              <p className="text-sm font-semibold text-ink">{toast.title}</p>
               {toast.description ? (
-                <p className="mt-0.5 text-sm text-neutral-600">{toast.description}</p>
+                <p className="mt-0.5 text-sm text-ink-2">{toast.description}</p>
               ) : null}
             </div>
             <button

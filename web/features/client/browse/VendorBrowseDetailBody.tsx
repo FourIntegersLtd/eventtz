@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowRight, CalendarCheck, MessageCircle } from "lucide-react";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { VendorMetricsStrip } from "@/features/vendors/display/VendorMetricsStrip";
 import type { ExploreVendor } from "@/lib/clientExploreApi";
@@ -148,8 +150,8 @@ export function VendorBrowseDetailBody({
   const buildLoginLink = () => appendAuthParams(loginHref);
 
   const bookingCard = (
-    <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
-      <p className="px-5 pt-4 text-xs font-medium text-neutral-500">
+    <Card className="overflow-hidden">
+      <p className="px-5 pt-4 text-xs font-medium text-ink-3">
         Prices shown are the vendor&apos;s own. {serviceFeeBadgeLabel()} is added at checkout.
       </p>
       <BrowsePricingSharedInfo
@@ -196,36 +198,36 @@ export function VendorBrowseDetailBody({
       </BrowsePricingPackagesSection>
 
       {onRequestBooking && selectedPackageIds.size > 0 ? (
-        <div className="border-t border-neutral-100 px-5 py-4">
+        <div className="border-t border-line px-5 py-4">
           {selectedFeeBreakdown ? (
             <ClientFeeBreakdownSummary breakdown={selectedFeeBreakdown} compact />
           ) : (
             <div className="flex items-baseline justify-between gap-3">
-              <p className="text-[13px] text-neutral-500">Estimated total</p>
-              <p className="text-base font-semibold tabular-nums text-neutral-900">
+              <p className="text-[13px] text-ink-3">Estimated total</p>
+              <p className="text-base font-semibold tabular-nums text-ink">
                 {selectedTotal.label.replace(/^GBP\s/, "£")}
               </p>
             </div>
           )}
           {selectedTotal.hasTbc ? (
-            <p className="mt-1 text-[12px] text-neutral-400">
+            <p className="mt-1 text-[12px] text-ink-3">
               Includes items that need a custom quote.
             </p>
           ) : null}
         </div>
       ) : null}
 
-      <div className="space-y-3 border-t border-neutral-100 px-5 py-4">
+      <div className="space-y-3 border-t border-line px-5 py-4">
         {requireLoginForActions ? (
           <>
-            <p className="text-[13px] leading-snug text-neutral-500">
+            <p className="text-[13px] leading-snug text-ink-3">
               Create a free client account to continue.
             </p>
             <ButtonLink href={buildRegisterLink()} className="w-full">
               Create account
               <ArrowRight className="h-4 w-4" strokeWidth={2.5} aria-hidden />
             </ButtonLink>
-            <p className="text-center text-xs text-neutral-500">
+            <p className="text-center text-xs text-ink-3">
               Already have an account?{" "}
               <Link
                 href={buildLoginLink()}
@@ -238,7 +240,7 @@ export function VendorBrowseDetailBody({
         ) : onRequestBooking ? (
           <div className="space-y-2.5">
             {bookingSelectError ? (
-              <p className="text-[13px] text-amber-800">
+              <p className="text-[13px] text-warning">
                 Select at least one package or rate to continue.
               </p>
             ) : null}
@@ -285,18 +287,18 @@ export function VendorBrowseDetailBody({
           </Button>
         )}
       </div>
-    </div>
+    </Card>
   );
 
   return (
     <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,440px)] lg:items-start lg:gap-10 xl:grid-cols-[minmax(0,1.15fr)_minmax(280px,440px)]">
       <div className="contents lg:flex lg:flex-col lg:gap-6 lg:min-w-0 lg:col-start-1 lg:row-start-1">
         <header className="order-1 hidden min-w-0 space-y-1.5 md:block">
-          <h1 className="font-heading text-3xl font-semibold tracking-tight text-neutral-900 sm:text-4xl">
+          <h1 className="font-heading text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
             {businessName}
           </h1>
           {city ? (
-            <p className="text-base text-neutral-600">{city}</p>
+            <p className="text-base text-ink-2">{city}</p>
           ) : null}
         </header>
 
@@ -318,9 +320,9 @@ export function VendorBrowseDetailBody({
           ) : null}
         </div>
 
-        <section className="order-4 min-w-0 overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+        <Card as="section" className="order-4 min-w-0 overflow-hidden">
           <div className="space-y-3 px-5 py-5">
-            <h3 className="font-heading text-base font-semibold text-neutral-900">
+            <h3 className="font-heading text-base font-semibold text-ink">
               About
             </h3>
             <VendorMetricsStrip
@@ -331,53 +333,47 @@ export function VendorBrowseDetailBody({
                 avg_response_seconds: vendor.avg_response_seconds,
               }}
             />
-            <p className="text-sm leading-relaxed text-neutral-700">{bio}</p>
+            <p className="text-sm leading-relaxed text-ink-2">{bio}</p>
           </div>
 
-          <div className="border-t border-neutral-100 px-5 py-5">
-            <h4 className="text-sm font-semibold text-neutral-900">Services &amp; events</h4>
+          <div className="border-t border-line px-5 py-5">
+            <h4 className="text-sm font-semibold text-ink">Services &amp; events</h4>
             <div className="mt-4 space-y-4">
               <div>
-                <p className="text-[13px] text-neutral-500">Services</p>
+                <p className="text-[13px] text-ink-3">Services</p>
                 {serviceLabels.length > 0 ? (
                   <ul className="mt-2 flex flex-wrap gap-2">
                     {serviceLabels.map((label, i) => (
-                      <li
-                        key={`svc-${i}-${label}`}
-                        className="inline-flex rounded-full border border-neutral-100 bg-neutral-50 px-3 py-1 text-xs font-medium text-neutral-800"
-                      >
-                        {label}
+                      <li key={`svc-${i}-${label}`}>
+                        <Badge>{label}</Badge>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="mt-1.5 text-sm italic text-neutral-400">Not specified yet</p>
+                  <p className="mt-1.5 text-sm italic text-ink-3">Not specified yet</p>
                 )}
               </div>
               <div>
-                <p className="text-[13px] text-neutral-500">Event types</p>
+                <p className="text-[13px] text-ink-3">Event types</p>
                 {eventLabels.length > 0 ? (
                   <ul className="mt-2 flex flex-wrap gap-2">
                     {eventLabels.map((label, i) => (
-                      <li
-                        key={`evt-${i}-${label}`}
-                        className="inline-flex rounded-full border border-neutral-100 bg-neutral-50 px-3 py-1 text-xs font-medium text-neutral-800"
-                      >
-                        {label}
+                      <li key={`evt-${i}-${label}`}>
+                        <Badge>{label}</Badge>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="mt-1.5 text-sm italic text-neutral-400">Not specified yet</p>
+                  <p className="mt-1.5 text-sm italic text-ink-3">Not specified yet</p>
                 )}
               </div>
             </div>
           </div>
 
           {hasCoverage ? (
-            <div className="border-t border-neutral-100">
+            <div className="border-t border-line">
               <div className="px-5 pt-4 pb-1">
-                <h4 className="text-sm font-semibold text-neutral-900">Coverage</h4>
+                <h4 className="text-sm font-semibold text-ink">Coverage</h4>
               </div>
               <dl className="space-y-1 px-5 pb-4">
                 {facts.howTheyWork.length > 0 ? (
@@ -409,7 +405,7 @@ export function VendorBrowseDetailBody({
               </dl>
             </div>
           ) : null}
-        </section>
+        </Card>
 
         <div className="order-5 min-w-0">
           <VendorReviewsSection vendorUserId={vendor.user_id} />

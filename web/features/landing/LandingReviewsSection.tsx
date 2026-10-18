@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { fetchExploreVendorsSearch } from "@/lib/clientExploreApi";
 import { fetchVendorPublicReviews, type PublicReviewItem } from "@/lib/reviewsApi";
+import { Card } from "@/components/ui/Card";
 import { StarRating } from "@/components/ui/StarRating";
 import { REVIEWS_SECTION } from "@/features/landing/landingData";
 import { LandingSectionHeading } from "@/features/landing/LandingSectionHeading";
@@ -83,7 +84,7 @@ export function LandingReviewsSection() {
   return (
     <LandingSection
       id="reviews"
-      className={landingSectionClass("white", { shell: "content" })}
+      className={landingSectionClass("soft", { shell: "content" })}
     >
       <LandingSectionHeading
         eyebrow={REVIEWS_SECTION.eyebrow}
@@ -95,15 +96,12 @@ export function LandingReviewsSection() {
       ) : (
         <div className={`${LANDING_SECTION_CONTENT_MT} grid gap-5 sm:grid-cols-2 lg:grid-cols-3`}>
           {reviews.map((review) => (
-            <article
-              key={review.id}
-              className="flex flex-col rounded-2xl border border-primary-border bg-primary-soft/20 p-6"
-            >
+            <Card as="article" key={review.id} className="flex flex-col p-6">
               <div className="flex items-center gap-2">
                 <StarRating rating={review.rating} size="md" />
-                <span className="text-sm font-semibold text-neutral-800">{review.rating}/5</span>
+                <span className="text-sm font-semibold text-ink">{review.rating}/5</span>
               </div>
-              <p className="mt-4 flex-1 text-sm leading-relaxed text-neutral-700 sm:text-[15px] sm:leading-7">
+              <p className="mt-4 flex-1 text-sm leading-relaxed text-ink-2 sm:text-[15px] sm:leading-7">
                 &ldquo;{trimBody(review.body)}&rdquo;
               </p>
               {review.image_urls?.length ? (
@@ -114,7 +112,7 @@ export function LandingReviewsSection() {
                       <img
                         src={url}
                         alt=""
-                        className="h-14 w-14 rounded-md object-cover ring-1 ring-primary-border/60"
+                        className="h-14 w-14 rounded-md object-cover ring-1 ring-line"
                         loading="lazy"
                         decoding="async"
                       />
@@ -122,14 +120,14 @@ export function LandingReviewsSection() {
                   ))}
                 </ul>
               ) : null}
-              <div className="mt-5 border-t border-primary-border/60 pt-4">
-                <p className="text-sm font-medium text-neutral-900">{review.reviewer_display}</p>
-                <p className="mt-0.5 text-xs text-neutral-500">
+              <div className="mt-5 border-t border-line pt-4">
+                <p className="text-sm font-medium text-ink">{review.reviewer_display}</p>
+                <p className="mt-0.5 text-xs text-ink-3">
                   {review.event_name}
                   {review.vendorName ? ` · ${review.vendorName}` : ""}
                 </p>
               </div>
-            </article>
+            </Card>
           ))}
         </div>
       )}

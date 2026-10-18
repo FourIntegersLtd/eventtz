@@ -103,15 +103,15 @@ export function HeroMarketplaceSearch({
 
   const responsiveGridCols = gridColsForFieldCount(visibleFieldCount);
 
-  const shellClassName = `grid w-full min-w-0 max-w-full grid-cols-1 gap-2 overflow-visible rounded-2xl border border-primary-border bg-white p-2 shadow-primary-soft ${responsiveGridCols} lg:items-center lg:gap-0 lg:rounded-full lg:py-1.5 lg:pl-1.5 lg:pr-3`;
+  const shellClassName = `grid w-full min-w-0 max-w-full grid-cols-1 gap-2 overflow-visible rounded-card border border-primary-border bg-white p-2 shadow-primary-soft ${responsiveGridCols} lg:items-center lg:gap-0 lg:rounded-full lg:py-1.5 lg:pl-1.5 lg:pr-3`;
 
   const submitSpanClass = "lg:col-span-1";
   const fieldClassName = "relative z-20 min-w-0";
   const fieldDivider = "lg:border-l lg:border-primary-border";
   const submitClassName = `flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-white transition hover:opacity-95 sm:px-6 ${submitSpanClass} lg:w-auto lg:justify-self-end lg:px-6`;
-  const dropdownTriggerClassName = `flex h-12 w-full items-center justify-between gap-2 rounded-xl px-4 text-left text-sm font-medium text-neutral-900 lg:rounded-none lg:bg-transparent ${fieldDivider}`;
+  const dropdownTriggerClassName = `flex h-12 w-full items-center justify-between gap-2 rounded-control px-4 text-left text-sm font-medium text-ink lg:rounded-none lg:bg-transparent ${fieldDivider}`;
   const queryInputClassName =
-    "relative z-[1] h-12 w-full rounded-xl border-0 bg-transparent py-3 pl-11 pr-4 text-base text-neutral-900 caret-neutral-900 focus:border-0 focus:outline-none focus:ring-0 lg:rounded-none";
+    "relative z-[1] h-12 w-full rounded-control border-0 bg-transparent py-3 pl-11 pr-4 text-base text-ink caret-ink focus:border-0 focus:outline-none focus:ring-0 lg:rounded-none";
 
   const toggleType = useCallback((value: string) => {
     setState((s) => {
@@ -180,15 +180,15 @@ export function HeroMarketplaceSearch({
               <Tags className="h-4 w-4 shrink-0 text-primary" />
               <span className="truncate">{typesSummary}</span>
             </span>
-            <ChevronDown className="h-4 w-4 shrink-0 text-neutral-600 opacity-70" />
+            <ChevronDown className="h-4 w-4 shrink-0 text-ink-2 opacity-70" />
           </button>
           {typesOpen && (
             <div
               id={panelId}
               className={
                 landing
-                  ? "absolute bottom-full left-0 right-0 z-[70] mb-1 box-border min-w-0 max-w-full max-h-72 overflow-y-auto rounded-xl border border-neutral-200 bg-white p-2 shadow-lg"
-                  : "absolute left-0 right-0 top-full z-[70] mt-1 box-border min-w-0 max-w-full max-h-72 overflow-y-auto rounded-xl border border-neutral-200 bg-white p-2 shadow-lg"
+                  ? "absolute bottom-full left-0 right-0 z-[70] mb-1 box-border min-w-0 max-w-full max-h-72 overflow-y-auto rounded-control border border-line bg-white p-2 shadow-card"
+                  : "absolute left-0 right-0 top-full z-[70] mt-1 box-border min-w-0 max-w-full max-h-72 overflow-y-auto rounded-control border border-line bg-white p-2 shadow-card"
               }
             >
               <MarketplaceCategoryFilterFields
@@ -248,19 +248,19 @@ export function HeroMarketplaceSearch({
               id={datePanelId}
               className={
                 landing
-                  ? "absolute bottom-full left-0 right-0 z-[70] mb-1 box-border min-w-0 max-w-full rounded-xl border border-neutral-200 bg-white p-3 shadow-lg"
-                  : "absolute left-0 right-0 top-full z-[70] mt-1 box-border min-w-0 max-w-full rounded-xl border border-neutral-200 bg-white p-3 shadow-lg"
+                  ? "absolute bottom-full left-0 right-0 z-[70] mb-1 box-border min-w-0 max-w-full rounded-control border border-line bg-white p-3 shadow-card"
+                  : "absolute left-0 right-0 top-full z-[70] mt-1 box-border min-w-0 max-w-full rounded-control border border-line bg-white p-3 shadow-card"
               }
             >
               <div className="mb-2 flex items-center justify-between gap-2">
-                <p className="text-xs font-medium text-neutral-500">Pick a date</p>
+                <p className="text-xs font-medium text-ink-3">Pick a date</p>
                 <button
                   type="button"
                   aria-label="Close date picker"
                   onClick={() => {
                     setDatesOpen(false);
                   }}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-800"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-ink-3 transition hover:bg-surface-3 hover:text-ink"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -287,7 +287,7 @@ export function HeroMarketplaceSearch({
       </div>
 
       {landing && (
-        <p className="mt-3 text-center text-xs text-neutral-500 sm:text-sm">
+        <p className="mt-3 text-center text-xs text-ink-3 sm:text-sm">
           Plan an event or search vendors in plain English
         </p>
       )}

@@ -19,12 +19,12 @@ export function LandingSectionHeading({
   const isCenter = align === "center";
   return (
     <div className={`${isCenter ? "mx-auto text-center" : "text-left"} max-w-2xl ${className}`}>
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{eyebrow}</p>
-      <h2 className="font-heading mt-2.5 text-xl font-semibold tracking-tight text-primary sm:text-3xl md:text-4xl">
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-3">{eyebrow}</p>
+      <h2 className="font-heading mt-2.5 text-xl font-semibold tracking-tight text-ink sm:text-3xl md:text-4xl">
         {title}
       </h2>
       {description ? (
-        <p className="mt-3 text-sm leading-relaxed text-accent-violet/90 sm:text-base">{description}</p>
+        <p className="mt-3 text-sm leading-relaxed text-ink-2 sm:text-base">{description}</p>
       ) : null}
     </div>
   );

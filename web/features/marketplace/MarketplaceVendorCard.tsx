@@ -2,6 +2,9 @@
 
 import { BadgeCheck, Check, Heart, Star } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Avatar } from "@/components/ui/Avatar";
+import { Badge } from "@/components/ui/Badge";
+import { getButtonClassName } from "@/components/ui/buttonStyles";
 import { VendorPortfolioCover } from "@/features/vendors/display/VendorPortfolioCover";
 import { buildBrowsePricingOptions } from "@/features/client/browse/vendorBrowseDetailModel";
 import type { ExpandedSearchCard } from "@/features/marketplace/marketplaceSearchModel";
@@ -154,7 +157,7 @@ export function MarketplaceVendorCard({
           openDetail();
         }
       }}
-      className={`group relative isolate flex h-full w-full min-w-0 cursor-pointer flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white text-left transition hover:-translate-y-0.5 hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${selected ? "border-primary ring-2 ring-primary/35" : ""}`}
+      className={`group relative isolate flex h-full w-full min-w-0 cursor-pointer flex-col overflow-hidden rounded-card border border-line bg-white text-left shadow-xs transition hover:-translate-y-0.5 hover:border-primary-border hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${selected ? "border-primary ring-2 ring-primary/35" : ""}`}
     >
       {showBookmark ? (
         <button
@@ -164,7 +167,7 @@ export function MarketplaceVendorCard({
             e.stopPropagation();
             onToggleBookmark?.();
           }}
-          className="absolute right-3 top-3 z-20 flex h-11 w-11 touch-manipulation items-center justify-center rounded-full border border-neutral-200 bg-white/95 text-neutral-600 shadow-sm transition hover:border-primary hover:text-primary"
+          className="absolute right-3 top-3 z-20 flex h-11 w-11 touch-manipulation items-center justify-center rounded-full border border-line bg-white/95 text-ink-2 shadow-xs transition hover:border-primary hover:text-primary"
           aria-label={bookmarked ? "Remove saved vendor" : "Save vendor"}
         >
           <Heart
@@ -185,31 +188,18 @@ export function MarketplaceVendorCard({
         className="shrink-0 rounded-none"
         overlay={
           <div className="flex flex-wrap items-start gap-2">
-            <p className="inline-flex rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-neutral-900 shadow-sm ring-1 ring-black/5">
+            <Badge tone="neutral" className="bg-white/95 font-semibold text-ink shadow-xs">
               {categoryLabel}
-            </p>
+            </Badge>
           </div>
         }
       />
 
-      <div className="flex min-h-[9.5rem] flex-1 flex-col bg-[#faf8fc] px-3.5 pb-0 pt-3.5">
+      <div className="flex min-h-[9.5rem] flex-1 flex-col bg-page-bg px-3.5 pb-0 pt-3.5">
         <div className="flex items-center gap-3">
-          <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-primary/10 ring-2 ring-white shadow-sm">
-            {avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={avatarUrl}
-                alt=""
-                className="h-full w-full object-cover object-center"
-              />
-            ) : (
-              <span className="flex h-full w-full items-center justify-center text-sm font-semibold text-primary">
-                {biz.slice(0, 1).toUpperCase()}
-              </span>
-            )}
-          </div>
+          <Avatar name={biz} src={avatarUrl} size="md" className="h-11 w-11 ring-2 ring-white shadow-xs" />
           <div className="min-w-0 flex-1">
-            <p className="flex min-w-0 items-center gap-1 text-sm font-semibold text-neutral-900">
+            <p className="flex min-w-0 items-center gap-1 text-sm font-semibold text-ink">
               <span className="truncate">{biz}</span>
               <BadgeCheck
                 className="h-4 w-4 shrink-0 text-primary"
@@ -217,31 +207,31 @@ export function MarketplaceVendorCard({
                 aria-label="Verified vendor"
               />
             </p>
-            <p className="truncate text-xs text-neutral-500">
+            <p className="truncate text-xs text-ink-3">
               {[city, travelMeta].filter(Boolean).join(" · ")}
             </p>
           </div>
           {showRating ? (
-            <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/15 bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary">
+            <Badge tone="brand" className="gap-1 font-semibold">
               <Star className="h-3 w-3 fill-current" aria-hidden />
               {ra.toFixed(1)}
               <span className="font-medium text-primary/70">({rc})</span>
-            </span>
+            </Badge>
           ) : null}
         </div>
 
-        <h4 className="font-heading mt-3 line-clamp-2 text-lg font-semibold leading-snug text-neutral-900 group-hover:text-primary">
+        <h4 className="font-heading mt-3 line-clamp-2 text-lg font-semibold leading-snug text-ink group-hover:text-primary">
           {packageTitle}
         </h4>
 
         {!showPlanEvidence && (completedLabel || replyLabel) ? (
-          <p className="mt-1.5 truncate text-xs text-neutral-500">
+          <p className="mt-1.5 truncate text-xs text-ink-3">
             {[completedLabel, replyLabel].filter(Boolean).join(" · ")}
           </p>
         ) : null}
 
         {showPlanEvidence && trustLine ? (
-          <p className="mt-1.5 text-xs font-medium text-neutral-600">{trustLine}</p>
+          <p className="mt-1.5 text-xs font-medium text-ink-2">{trustLine}</p>
         ) : null}
 
         {showPlanEvidence && featured?.body_excerpt ? (
@@ -254,17 +244,17 @@ export function MarketplaceVendorCard({
                 {Array.from({ length: 5 }, (_, i) => (
                   <Star
                     key={i}
-                    className={`h-3 w-3 ${i < featuredRating ? "fill-current" : "text-neutral-200"}`}
+                    className={`h-3 w-3 ${i < featuredRating ? "fill-current" : "text-line-strong"}`}
                     aria-hidden
                   />
                 ))}
               </div>
             ) : null}
-            <blockquote className="text-sm leading-snug text-neutral-700">
+            <blockquote className="text-sm leading-snug text-ink-2">
               <span className="line-clamp-3">“{featured.body_excerpt}”</span>
             </blockquote>
             {featured.reviewer_display ? (
-              <figcaption className="mt-1 text-xs font-medium text-neutral-500">
+              <figcaption className="mt-1 text-xs font-medium text-ink-3">
                 - {featured.reviewer_display}
               </figcaption>
             ) : null}
@@ -272,7 +262,7 @@ export function MarketplaceVendorCard({
         ) : null}
       </div>
 
-      <div className="mt-auto space-y-2 border-t border-primary/10 bg-primary-soft px-3.5 py-3">
+      <div className="mt-auto space-y-2 border-t border-primary-border bg-primary-soft px-3.5 py-3">
         <div className="flex items-center justify-between gap-3">
           <p className="font-heading text-lg font-semibold text-primary">
             {minGbp != null ? (
@@ -304,11 +294,10 @@ export function MarketplaceVendorCard({
               e.stopPropagation();
               guardBooking(() => onToggleSelect?.());
             }}
-            className={`flex w-full touch-manipulation items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
-              selected
-                ? "bg-primary text-white shadow-sm"
-                : "border border-primary/30 bg-white text-primary hover:border-primary hover:bg-white"
-            }`}
+            className={getButtonClassName({
+              variant: selected ? "primary" : "outline",
+              className: `w-full touch-manipulation font-semibold ${selected ? "" : "text-primary"}`,
+            })}
             aria-pressed={selected}
           >
             {selected ? (

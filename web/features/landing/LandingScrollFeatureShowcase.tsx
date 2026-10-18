@@ -17,7 +17,11 @@ import {
   LANDING_FEATURE_BODY_CLASS,
   LANDING_FEATURE_HEADLINE_CLASS,
   landingFeatureSectionClass,
+  LANDING_NAV_STICKY_TOP_CLASS,
   LANDING_SECTION_BG,
+  LANDING_SHOWCASE_MIN_H_CLASS,
+  LANDING_SHOWCASE_MIN_H_LG_CLASS,
+  LANDING_SHOWCASE_STICKY_TOP_CLASS,
   type LandingSectionTone,
 } from "@/features/landing/landingSectionStyles";
 import type { LandingScrollFeatureStep } from "@/features/landing/landingData";
@@ -38,7 +42,7 @@ type LandingScrollFeatureShowcaseProps = {
 /** Preply-style numbered badge colors for the mobile horizontal carousel. */
 const MOBILE_STEP_BADGE_STYLES = [
   "bg-primary-soft text-primary",
-  "bg-accent-gold text-neutral-900",
+  "bg-accent-gold text-ink",
   "bg-accent-violet text-white",
   "bg-primary text-white",
 ] as const;
@@ -124,22 +128,22 @@ function MobileJourneyStepCard({
     <article
       id={step.id}
       ref={stepRef}
-      className="flex w-[min(94vw,30rem)] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-primary-border/50 bg-white sm:w-[min(92vw,32rem)]"
+      className="flex w-[min(94vw,30rem)] shrink-0 snap-start flex-col overflow-hidden rounded-card border border-line bg-white shadow-xs sm:w-[min(92vw,32rem)]"
     >
       <div className="p-4 sm:p-5">
         <span
-          className={`inline-flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold tabular-nums ${badgeClass}`}
+          className={`inline-flex h-8 w-8 items-center justify-center rounded-lg text-sm font-semibold tabular-nums ${badgeClass}`}
         >
           {index + 1}
         </span>
-        <h3 className="mt-2.5 text-base font-bold leading-snug text-neutral-900 sm:mt-3 sm:text-lg">
+        <h3 className="mt-2.5 text-base font-semibold leading-snug text-ink sm:mt-3 sm:text-lg">
           {step.title}
         </h3>
-        <p className="mt-1.5 text-sm leading-relaxed text-neutral-700 sm:mt-2">
+        <p className="mt-1.5 text-sm leading-relaxed text-ink-2 sm:mt-2">
           {step.description}
         </p>
       </div>
-      <div className="w-full border-t border-primary-border/30 bg-primary-soft/30">
+      <div className="w-full border-t border-line bg-surface-3">
         <div className="relative aspect-[5/3] w-full overflow-hidden">
           {step.imageSrc ? (
             <Image
@@ -204,10 +208,11 @@ export function LandingScrollFeatureShowcase({
       </div>
 
       <div
-        className={`z-30 -mx-4 mt-6 flex justify-center py-2 sm:-mx-6 sm:mt-8 lg:mx-0 lg:sticky lg:top-[4.25rem] lg:py-3 lg:backdrop-blur-md ${stickyBarBg}`}
+        className={`z-30 -mx-4 mt-6 flex justify-center py-2 sm:-mx-6 sm:mt-8 lg:mx-0 lg:sticky ${LANDING_NAV_STICKY_TOP_CLASS} lg:py-3 lg:backdrop-blur-md ${stickyBarBg}`}
       >
+        {/* Not SegmentedControl: it needs sticky positioning and a mobile underline mode. */}
         <div
-          className="flex w-full items-stretch border-b border-neutral-200/80 lg:mx-auto lg:max-w-lg lg:gap-0.5 lg:rounded-full lg:border-b-0 lg:bg-neutral-100 lg:p-1 lg:ring-1 lg:ring-neutral-200/90"
+          className="flex w-full items-stretch border-b border-line-strong lg:mx-auto lg:max-w-lg lg:gap-0.5 lg:rounded-control lg:border lg:border-line lg:bg-white lg:p-1"
           role="tablist"
           aria-label={tablistAriaLabel}
         >
@@ -222,10 +227,10 @@ export function LandingScrollFeatureShowcase({
                 aria-selected={active}
                 aria-controls={step.id}
                 onClick={() => scrollToStep(index)}
-                className={`flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 border-b-2 px-0 py-2.5 text-center text-sm font-semibold leading-tight transition-colors duration-300 motion-reduce:transition-none lg:flex-row lg:gap-1.5 lg:rounded-full lg:border-b-0 lg:px-2 lg:py-2 ${
+                className={`flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 border-b-2 px-0 py-2.5 text-center text-sm font-semibold leading-tight transition-colors duration-300 motion-reduce:transition-none lg:flex-row lg:gap-1.5 lg:rounded-control lg:border-b-0 lg:px-2 lg:py-2 ${
                   active
                     ? "border-primary text-primary lg:bg-primary lg:text-white lg:shadow-sm"
-                    : "border-transparent text-neutral-600 hover:text-primary"
+                    : "border-transparent text-ink-3 hover:text-ink"
                 }`}
               >
                 <StepIcon
@@ -260,8 +265,8 @@ export function LandingScrollFeatureShowcase({
 
       <div className="mt-4 hidden lg:mt-5 lg:grid lg:grid-cols-[minmax(0,1.55fr)_minmax(0,0.45fr)] lg:gap-6 xl:gap-8">
         <div className="relative hidden lg:block">
-          <div className="sticky top-[7.5rem] flex min-h-[calc(100dvh-7.5rem)] w-full items-center">
-            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-primary-soft/30">
+          <div className={`sticky ${LANDING_SHOWCASE_STICKY_TOP_CLASS} flex ${LANDING_SHOWCASE_MIN_H_CLASS} w-full items-center`}>
+            <div className="relative aspect-[4/3] w-full overflow-hidden">
               {steps.map((step, index) => (
                 <StepScreenshot
                   key={step.id}
@@ -283,12 +288,12 @@ export function LandingScrollFeatureShowcase({
               <article
                 key={step.id}
                 ref={setDesktopStepRef(index)}
-                className="flex flex-col justify-center border-t border-neutral-200/80 py-6 first:border-t-0 first:pt-4 sm:py-10 lg:min-h-[calc(100dvh-7.5rem)] lg:py-0"
+                className={`flex flex-col justify-center border-t border-line py-6 first:border-t-0 first:pt-4 sm:py-10 ${LANDING_SHOWCASE_MIN_H_LG_CLASS} lg:py-0`}
                 aria-current={active ? "step" : undefined}
               >
                 <p
                   className={`inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] transition-colors duration-500 ${
-                    active ? "text-primary" : "text-neutral-400"
+                    active ? "text-primary" : "text-ink-3"
                   }`}
                 >
                   <StepIcon className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
@@ -296,12 +301,12 @@ export function LandingScrollFeatureShowcase({
                 </p>
                 <h3
                   className={`font-heading mt-3 text-2xl font-semibold leading-tight tracking-tight transition-colors duration-500 sm:text-3xl ${
-                    active ? "text-primary" : "text-neutral-800"
+                    active ? "text-ink" : "text-ink-3"
                   }`}
                 >
                   {step.title}
                 </h3>
-                <p className="mt-4 text-base leading-relaxed text-neutral-600 sm:text-lg sm:leading-8">
+                <p className="mt-4 text-base leading-relaxed text-ink-2 sm:text-lg sm:leading-8">
                   {step.description}
                 </p>
 
@@ -321,13 +326,13 @@ export function LandingScrollFeatureShowcase({
       </div>
 
       {summary ? (
-        <p className="mx-auto mt-10 max-w-2xl border-t border-neutral-200/80 pt-8 text-center text-sm leading-relaxed text-neutral-500 sm:text-base">
+        <p className="mx-auto mt-10 max-w-2xl border-t border-line pt-8 text-center text-sm leading-relaxed text-ink-3 sm:text-base">
           {summary}
         </p>
       ) : null}
 
       {sectionCta ? (
-        <div className={`flex justify-center lg:hidden ${summary ? "mt-6" : "mt-10 border-t border-neutral-200/80 pt-8"}`}>
+        <div className={`flex justify-center lg:hidden ${summary ? "mt-6" : "mt-10 border-t border-line pt-8"}`}>
           <Link
             href={sectionCta.ctaHref!}
             className="inline-flex w-fit items-center gap-2 text-base font-semibold text-primary transition hover:opacity-80"

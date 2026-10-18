@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { AuthPageShell } from "@/components/auth/AuthPageShell";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { Banner } from "@/components/ui/Banner";
 import { TextField } from "@/components/ui/TextField";
 import { PasswordField } from "@/components/ui/PasswordField";
 import { dashboardPathForUserType } from "@/features/auth/authRouting";
@@ -13,6 +13,7 @@ import { GENERIC_AUTH_ERROR } from "@/lib/auth-messages";
 import { resendVerification } from "@/lib/auth-api";
 import { getApiErrorDetail } from "@/lib/api-errors";
 
+/** Sign-in screen: email and password form on the split auth shell. */
 export function UnifiedLoginView() {
   const {
     email,
@@ -42,8 +43,8 @@ export function UnifiedLoginView() {
     try {
       const res = await resendVerification(email.trim());
       setResendNote(res.message);
-    } catch (e: unknown) {
-      setResendNote(getApiErrorDetail(e) ?? GENERIC_AUTH_ERROR);
+    } catch (resendError: unknown) {
+      setResendNote(getApiErrorDetail(resendError) ?? GENERIC_AUTH_ERROR);
     } finally {
       setResendBusy(false);
     }
@@ -51,75 +52,67 @@ export function UnifiedLoginView() {
 
   return (
     <AuthPageShell logoHref={isAuthenticated ? dashboardPathForUserType(userType) : "/"}>
-      <Card padding="lg" className="w-full max-w-md">
-        <h1 className="font-heading text-2xl font-semibold text-neutral-900">Sign in</h1>
-        <p className="mt-1 text-sm text-neutral-500">Sign in to your account.</p>
+      <div>
+        <h1 className="font-heading text-3xl font-semibold text-ink">Sign in</h1>
+        <p className="mt-1 text-sm text-ink-2">Sign in to your account.</p>
+      </div>
 
-        <form onSubmit={onSubmit} className="mt-6 space-y-4">
-          <TextField
-            label="Email"
-            type="email"
-            required
-            autoComplete="email"
-            value={email}
-            error={fieldErrors.email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <PasswordField
-            label="Password"
-            required
-            minLength={6}
-            autoComplete="current-password"
-            value={password}
-            error={fieldErrors.password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <p className="-mt-2 text-right text-sm">
-            <Link href="/forgot-password" className="font-medium text-primary hover:underline">
-              Forgot password?
-            </Link>
-          </p>
+      <form onSubmit={onSubmit} className="flex flex-col gap-5">
+        {error ? <Banner tone="danger">{error}</Banner> : null}
 
-          {error ? (
-            <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-red-200/60">
-              {error}
-            </p>
-          ) : null}
-
-          {needsVerification ? (
-            <div className="space-y-2">
-              <Button
-                type="button"
-                variant="secondary"
-                loading={resendBusy}
-                className="w-full"
-                onClick={() => void onResend()}
-              >
-                Resend verification email
-              </Button>
-              {resendNote ? (
-                <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-800 ring-1 ring-amber-200/60">
-                  {resendNote}
-                </p>
-              ) : null}
-            </div>
-          ) : null}
-
-          <Button type="submit" loading={submitting} className="w-full">
-            {submitting ? "Signing in…" : "Sign in"}
-          </Button>
-        </form>
-
-        <p className="mt-5 text-sm text-neutral-600">
-          New to Eventtz?{" "}
-          <Link
-            href={postAuthQuery ? `/register?${postAuthQuery}` : "/register"}
-            className="font-medium text-primary hover:underline"
-          >
-            Create account
+        <TextField
+          label="Email"
+          type="email"
+          required
+          autoComplete="email"
+          value={email}
+          error={fieldErrors.email}
+          onChange={(event) => setEmail(event.target.value)}
+        />
+        <PasswordField
+          label="Password"
+          required
+          minLength={6}
+          autoComplete="current-password"
+          value={password}
+          error={fieldErrors.password}
+          onChange={(event) => setPassword(event.target.value)}
+        />
+        <p className="-mt-3 text-right text-sm">
+          <Link href="/forgot-password" className="font-medium text-primary hover:underline">
+            Forgot password?
           </Link>
         </p>
-      </Card>
+
+        {needsVerification ? (
+          <div className="space-y-2">
+            <Button
+              type="button"
+              variant="secondary"
+              loading={resendBusy}
+              className="w-full"
+              onClick={() => void onResend()}
+            >
+              Resend verification email
+            </Button>
+            {resendNote ? <Banner tone="warning">{resendNote}</Banner> : null}
+          </div>
+        ) : null}
+
+        <Button type="submit" size="lg" loading={submitting} className="w-full">
+          {submitting ? "Signing in…" : "Sign in"}
+        </Button>
+      </form>
+
+      <p className="text-sm text-ink-2">
+        New to Eventtz?{" "}
+        <Link
+          href={postAuthQuery ? `/register?${postAuthQuery}` : "/register"}
+          className="font-medium text-primary hover:underline"
+        >
+          Create account
+        </Link>
+      </p>
     </AuthPageShell>
   );
 }

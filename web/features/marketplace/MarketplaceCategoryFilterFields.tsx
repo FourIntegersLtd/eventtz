@@ -38,7 +38,7 @@ export function MarketplaceCategoryFilterFields({
             key={opt.value}
             className="flex items-center justify-between gap-2 rounded-lg px-2 py-2"
           >
-            <span className="text-sm text-neutral-700" title={OTHER_TOOLTIP}>
+            <span className="text-sm text-ink-2" title={OTHER_TOOLTIP}>
               Other
             </span>
             <Link
@@ -53,18 +53,18 @@ export function MarketplaceCategoryFilterFields({
         ) : (
           <label
             key={opt.value}
-            className="flex cursor-pointer items-start gap-2 rounded-lg px-2 py-2 hover:bg-neutral-50"
+            className="flex cursor-pointer items-start gap-2 rounded-lg px-2 py-2 hover:bg-surface-3"
           >
             <input
               type="checkbox"
               checked={types.includes(opt.value)}
               onChange={() => onToggleType(opt.value)}
-              className="mt-0.5 rounded border-neutral-300 text-primary focus:ring-primary"
+              className="mt-0.5 rounded border-line-strong text-primary focus:ring-primary"
             />
             <span className="flex flex-col">
-              <span className="text-sm text-neutral-800">{opt.label}</span>
+              <span className="text-sm text-ink">{opt.label}</span>
               {opt.examples ? (
-                <span className="text-xs text-neutral-500">e.g. {opt.examples}</span>
+                <span className="text-xs text-ink-3">e.g. {opt.examples}</span>
               ) : null}
             </span>
           </label>

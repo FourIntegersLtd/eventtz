@@ -1,5 +1,5 @@
 import type { AdminDisputeCase } from "@/lib/adminPlatformApi";
-import { participantDisputeBookingLabel, participantDisputeStatusBadgeClass } from "@/lib/bookingDisputeHelpers";
+import { participantDisputeBookingLabel } from "@/lib/bookingDisputeHelpers";
 
 export function formatWhen(iso: string | null | undefined): string {
   if (!iso) return "-";
@@ -10,10 +10,6 @@ export function formatWhen(iso: string | null | undefined): string {
 
 export function statusLabel(s: AdminDisputeCase["status"]): string {
   return s.replace(/_/g, " ");
-}
-
-export function disputeStatusBadgeClass(status: AdminDisputeCase["status"]): string {
-  return participantDisputeStatusBadgeClass(status);
 }
 
 export function resolutionActionLabel(a: AdminDisputeCase["resolution_action"]): string {

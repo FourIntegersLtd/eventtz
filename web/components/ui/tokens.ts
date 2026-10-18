@@ -1,3 +1,5 @@
+import type { Tone } from "@/lib/tone";
+
 /**
  * Shared design tokens for `components/ui/*`. This is the single place the
  * "Apple-level craft bar" from the UX overhaul plan is encoded as values -
@@ -21,19 +23,32 @@ export const MOTION = {
   },
 } as const;
 
-/** Elevation: resting (cards), raised (hover/popover), overlay (drawer/modal). */
+/** Elevation: resting (cards), raised (hover/popover), overlay (drawer/modal). Values live in globals.css. */
 export const SHADOW = {
-  resting: "shadow-sm",
-  raised: "shadow-md",
-  overlay: "shadow-xl",
+  resting: "shadow-xs",
+  raised: "shadow-card",
+  overlay: "shadow-overlay",
 } as const;
 
-/** Corner radius: sm (chips/inputs), md (cards/buttons), lg (panels/modals/drawers). */
+/** Corner radius: sm/md (controls, buttons: 10px), lg (cards, modals, drawers: 16px). Pills use rounded-full. */
 export const RADIUS = {
-  sm: "rounded-lg",
-  md: "rounded-xl",
-  lg: "rounded-2xl",
+  sm: "rounded-control",
+  md: "rounded-control",
+  lg: "rounded-card",
 } as const;
+
+/** Modal and drawer backdrop. */
+export const SCRIM = "bg-scrim";
+
+/** Semantic tone classes shared by Badge, Banner, StatTile deltas and anything else that signals meaning. */
+export const TONE: Record<Tone, { text: string; background: string; line: string }> = {
+  neutral: { text: "text-ink-2", background: "bg-surface-3", line: "border-line" },
+  brand: { text: "text-primary", background: "bg-primary-soft", line: "border-primary-border" },
+  success: { text: "text-success", background: "bg-success-soft", line: "border-success-line" },
+  warning: { text: "text-warning", background: "bg-warning-soft", line: "border-warning-line" },
+  danger: { text: "text-danger", background: "bg-danger-soft", line: "border-danger-line" },
+  info: { text: "text-info", background: "bg-info-soft", line: "border-info-line" },
+};
 
 /** One focus ring, reused by every interactive primitive instead of the browser default. */
 export const FOCUS_RING =
@@ -50,7 +65,7 @@ export const MODAL_PANEL = "w-full";
 
 /** Shared single-line / multi-line form control sizing (mobile-first 16px, 44px min height). */
 export const FORM_CONTROL =
-  "box-border w-full min-w-0 max-w-full min-h-11 rounded-lg border border-neutral-200 bg-white px-3 py-2.5 text-base text-neutral-900 outline-none transition md:text-sm";
+  "box-border w-full min-w-0 max-w-full min-h-11 rounded-control border border-line-strong bg-white px-3 py-2.5 text-base font-normal text-ink outline-none transition placeholder:text-ink-3 md:text-sm";
 
 export const FORM_CONTROL_FOCUS = "focus:border-primary focus:ring-2 focus:ring-primary/20";
 
