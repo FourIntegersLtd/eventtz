@@ -8,11 +8,7 @@ import type {
   VendorOnboardingData,
   VendorOnboardingUpdate,
 } from "../types";
-import {
-  OnboardingSubQuestion,
-} from "../ui/OnboardingQuestionLayout";
-import { OnboardingOptionPill } from "../ui/OnboardingOptionPill";
-import { ClearableTextField, ClearableTextarea, labelClass, ToggleChip } from "./form-primitives";
+import { EzChip, EzOption, EzTextField } from "./ez-form";
 
 export type StepLocationProps = {
   data: VendorOnboardingData;
@@ -108,24 +104,26 @@ export function StepLocation({ data, update }: StepLocationProps) {
   const distanceUnit = market.distanceUnit === "km" ? "km" : "miles";
 
   return (
-    <div className="space-y-8">
+    <div className="ez-stack">
       {showCountryPicker ? (
-        <OnboardingSubQuestion headline="Which country do you operate in?" indexOffset={0}>
-          <div className="flex flex-wrap gap-2">
-            {markets.map((m) => (
-              <ToggleChip
-                key={m.countryCode}
-                active={data.countryCode === m.countryCode}
-                onClick={() => update({ countryCode: m.countryCode })}
+        <div className="ez-stack ez-stack--sm">
+          <span className="ez-label">Which country do you operate in?</span>
+          <div className="ez-chip-row">
+            {markets.map((candidate) => (
+              <EzChip
+                key={candidate.countryCode}
+                active={data.countryCode === candidate.countryCode}
+                onClick={() => update({ countryCode: candidate.countryCode })}
               >
-                {m.label}
-              </ToggleChip>
+                {candidate.label}
+              </EzChip>
             ))}
           </div>
-        </OnboardingSubQuestion>
+        </div>
       ) : null}
-      <OnboardingSubQuestion headline="Where is your base city?" indexOffset={showCountryPicker ? 1 : 0}>
+      <div className="ez-form-grid">
         <LocationAutocompleteInput
+          variant="ez"
           label="Base city"
           inputId="onboarding-base-city"
           value={data.baseCity}
@@ -137,102 +135,79 @@ export function StepLocation({ data, update }: StepLocationProps) {
               : `e.g. a city in ${market.label}`
           }
         />
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className={labelClass()} htmlFor="onboarding-region">
-              Region / county <span className="font-normal text-neutral-400">(optional)</span>
-            </label>
-            <ClearableTextField
-              id="onboarding-region"
-              type="text"
-              className="mt-1.5"
-              value={data.region}
-              onChange={(v) => update({ region: v })}
-              placeholder="e.g. Greater London"
-            />
-          </div>
-          <div>
-            <label className={labelClass()} htmlFor="onboarding-postal">
-              Postcode / ZIP <span className="font-normal text-neutral-400">(optional)</span>
-            </label>
-            <ClearableTextField
-              id="onboarding-postal"
-              type="text"
-              className="mt-1.5"
-              value={data.postalCode}
-              onChange={(v) => update({ postalCode: v })}
-              placeholder={market.countryCode === "GB" ? "e.g. SW1A 1AA" : "Postal code"}
-            />
-          </div>
-        </div>
-      </OnboardingSubQuestion>
-      <OnboardingSubQuestion
-        headline={copy.deliveryHeadline}
-        subtext={copy.deliverySubtext}
-        indexOffset={showCountryPicker ? 7 : 6}
-      >
-        <div className="flex flex-wrap gap-2">
-          {DELIVERY_OPTIONS.map(({ value, label }) => (
-            <ToggleChip
-              key={value}
-              active={isDeliveryModeActive(data.deliveryModes, value)}
-              onClick={() =>
+        <EzTextField
+          label="Region"
+          value={data.region}
+          onChange={(value) => update({ region: value })}
+          placeholder="e.g. Greater London"
+        />
+        <EzTextField
+          label="Postcode"
+          value={data.postalCode}
+          onChange={(value) => update({ postalCode: value })}
+          placeholder={market.countryCode === "GB" ? "e.g. SW1A 1AA" : "Postal code"}
+        />
+      </div>
+      <div className="ez-stack ez-stack--sm">
+        <span className="ez-label">{copy.deliveryHeadline}</span>
+        <span className="ez-help">{copy.deliverySubtext}</span>
+        {DELIVERY_OPTIONS.map(({ value, label }) => (
+          <EzOption
+            key={value}
+            type="checkbox"
+            name="deliv"
+            checked={isDeliveryModeActive(data.deliveryModes, value)}
+            onChange={() =>
+              update({
+                deliveryModes: toggleDeliveryMode(data.deliveryModes, value),
+              })
+            }
+            title={label}
+          />
+        ))}
+      </div>
+      <div className="ez-stack ez-stack--sm">
+        <span className="ez-label">{copy.radiusHeadline}</span>
+        <div className="ez-form-grid">
+          {radiusOptions.map((option) => (
+            <EzOption
+              key={option.value}
+              type="radio"
+              name="rad"
+              checked={data.travelRadius === option.value}
+              onChange={() =>
                 update({
-                  deliveryModes: toggleDeliveryMode(data.deliveryModes, value),
+                  travelRadius: option.value as VendorOnboardingData["travelRadius"],
                 })
               }
-            >
-              {label}
-            </ToggleChip>
+              title={option.label}
+              description={option.context}
+            />
           ))}
         </div>
-      </OnboardingSubQuestion>
-      <OnboardingSubQuestion headline={copy.radiusHeadline} indexOffset={showCountryPicker ? 10 : 9}>
-        <div className="space-y-2">
-          {radiusOptions.map((o) => (
-            <OnboardingOptionPill
-              key={o.value}
-              active={data.travelRadius === o.value}
-              onClick={() =>
-                update({
-                  travelRadius: o.value as VendorOnboardingData["travelRadius"],
-                })
-              }
-              description={o.context}
-            >
-              {o.label}
-            </OnboardingOptionPill>
-          ))}
-        </div>
-      </OnboardingSubQuestion>
-      <OnboardingSubQuestion
-        headline={copy.policyHeadline}
-        subtext={copy.policySubtext}
-        indexOffset={showCountryPicker ? 13 : 12}
-      >
-        <div className="space-y-2">
-          {TRAVEL_DELIVERY_POLICY_OPTIONS.map(({ value, label }) => (
-            <OnboardingOptionPill
-              key={value}
-              active={data.travelDeliveryPolicy === value}
-              onClick={() => update({ travelDeliveryPolicy: value })}
-            >
-              {label}
-            </OnboardingOptionPill>
-          ))}
-        </div>
+      </div>
+      <div className="ez-stack ez-stack--sm">
+        <span className="ez-label">{copy.policyHeadline}</span>
+        <span className="ez-help">{copy.policySubtext}</span>
+        {TRAVEL_DELIVERY_POLICY_OPTIONS.map(({ value, label }) => (
+          <EzOption
+            key={value}
+            type="radio"
+            name="fee"
+            checked={data.travelDeliveryPolicy === value}
+            onChange={() => update({ travelDeliveryPolicy: value })}
+            title={label}
+          />
+        ))}
         {data.travelDeliveryPolicy === "custom" ? (
-          <div className="mt-4">
-            <label className={labelClass()}>Describe your travel / delivery rule</label>
-            <ClearableTextarea
-              className="mt-1.5 min-h-[80px]"
-              value={data.travelDeliveryPolicyCustomText}
-              onChange={(v) => update({ travelDeliveryPolicyCustomText: v })}
-              placeholder={`e.g. £1.50 per ${distanceUnit === "km" ? "kilometre" : "mile"} beyond 10 ${distanceUnit} from base city`}
-            />
-          </div>
+          <EzTextField
+            label="Describe your travel / delivery rule"
+            value={data.travelDeliveryPolicyCustomText}
+            onChange={(value) => update({ travelDeliveryPolicyCustomText: value })}
+            placeholder={`e.g. £1.50 per ${distanceUnit === "km" ? "kilometre" : "mile"} beyond 10 ${distanceUnit} from base city`}
+          />
         ) : null}
-      </OnboardingSubQuestion>
+      </div>
     </div>
   );
 }

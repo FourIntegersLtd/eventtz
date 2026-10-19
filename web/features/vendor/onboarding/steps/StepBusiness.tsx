@@ -9,20 +9,25 @@ import {
 } from "../constants";
 import { STEP_COPY } from "../onboardingCopy";
 import type { VendorOnboardingData, VendorOnboardingUpdate } from "../types";
-import {
-  OnboardingSubQuestion,
-} from "../ui/OnboardingQuestionLayout";
 import { checkBusinessNameAvailable } from "@/lib/vendorProfileApi";
 import { Modal } from "@/components/ui/Modal";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
-import { ClearableTextField, labelClass, ToggleChip } from "./form-primitives";
+import { EzChip, EzTextField } from "./ez-form";
 
 export type StepBusinessProps = {
   data: VendorOnboardingData;
   update: VendorOnboardingUpdate;
   businessNameError: string | null;
   setBusinessNameError: (v: string | null) => void;
+  /** Opens the "What we need here" guide; omitted where the page title already offers it. */
+  onOpenStepInfo?: () => void;
+  /** Drafts the public bio with the AI helper (needs the earlier steps filled in). */
+  onGenerateBioWithAI?: () => void | Promise<void>;
+  generatingBio?: boolean;
 };
+
+/** Soft cap shown beside the public bio; the 100-word rule in validation still applies. */
+const BIO_MAX_CHARACTERS = 600;
 
 /** Single service selection - tap again to clear. Other opens the waitlist modal instead. */
 function selectService(current: string[], value: string): string[] {
@@ -58,6 +63,9 @@ export function StepBusiness({
   update,
   businessNameError,
   setBusinessNameError,
+  onOpenStepInfo,
+  onGenerateBioWithAI,
+  generatingBio,
 }: StepBusinessProps) {
   const copy = STEP_COPY[2];
   const [checkingName, setCheckingName] = useState(false);
@@ -93,84 +101,107 @@ export function StepBusiness({
     }
   };
 
+  const bioLength = data.aiBioDraft.length;
+
   return (
-    <div className="space-y-8">
-      <OnboardingSubQuestion headline="Your business name" indexOffset={0}>
-        <div>
-          <label className={labelClass()}>Business name</label>
-          <ClearableTextField
-            value={data.businessName}
-            onChange={(v) => {
-              update({ businessName: v });
-              setBusinessNameError(null);
-              setNameAvailable(null);
-            }}
-            onBlur={() => void verifyBusinessName(data.businessName)}
-          />
-          {checkingName && (
-            <p className="mt-1 text-xs text-neutral-500">Checking availability…</p>
-          )}
-          {!checkingName && businessNameError && (
-            <p className="mt-1 text-sm text-red-600">{businessNameError}</p>
-          )}
-          {!checkingName && !businessNameError && nameAvailable && (
-            <p className="mt-1 text-sm text-green-600">This business name is available.</p>
-          )}
-          {!checkingName && !businessNameError && !nameAvailable && (
-            <p className="mt-1 text-xs text-neutral-400">{copy.businessNameSupporting}</p>
-          )}
-        </div>
-      </OnboardingSubQuestion>
-      <OnboardingSubQuestion
-        headline={copy.servicesHeadline}
-        subtext={copy.servicesSubtext}
-        indexOffset={3}
-      >
-        <div className="flex flex-wrap gap-2">
-          {SERVICE_OPTIONS.map((o) => (
-            <ToggleChip
-              key={o.value}
-              active={data.servicesOffered.includes(o.value)}
+    <div className="ez-stack">
+      <EzTextField
+        label="Business name"
+        value={data.businessName}
+        onChange={(value) => {
+          update({ businessName: value });
+          setBusinessNameError(null);
+          setNameAvailable(null);
+        }}
+        onBlur={() => void verifyBusinessName(data.businessName)}
+        error={checkingName ? null : businessNameError}
+        help={
+          checkingName
+            ? "Checking availability…"
+            : nameAvailable
+              ? "This business name is available."
+              : copy.businessNameSupporting
+        }
+      />
+      <div className="ez-stack ez-stack--sm">
+        <span className="ez-label">{copy.servicesHeadline}</span>
+        <span className="ez-help">{copy.servicesSubtext}</span>
+        <div className="ez-chip-row">
+          {SERVICE_OPTIONS.map((option) => (
+            <EzChip
+              key={option.value}
+              active={data.servicesOffered.includes(option.value)}
               onClick={() => {
-                if (o.value === "other") {
+                if (option.value === "other") {
                   setWaitlistModalOpen(true);
                   return;
                 }
                 update({
-                  servicesOffered: selectService(data.servicesOffered, o.value),
+                  servicesOffered: selectService(data.servicesOffered, option.value),
                 });
               }}
             >
-              {o.label}
-            </ToggleChip>
+              {option.label}
+            </EzChip>
           ))}
         </div>
         {/* Examples for the picked category only, so a vendor whose product has no obvious home (gele, hijab, barbering…) can check it fits. */}
-        {selectedServiceOption?.examples && (
-          <p className="mt-3 text-xs text-neutral-500">
-            <span className="font-medium text-neutral-700">{selectedServiceOption.label}:</span>
-            {" e.g. "}
-            {selectedServiceOption.examples}
-          </p>
-        )}
-      </OnboardingSubQuestion>
-      <OnboardingSubQuestion headline={copy.eventTypesHeadline} indexOffset={6}>
-        <div className="flex flex-wrap gap-2">
-          {EVENT_TYPE_OPTIONS.map((o) => (
-            <ToggleChip
-              key={o.value}
-              active={isEventTypeActive(data.eventTypes, o.value)}
+        {selectedServiceOption?.examples ? (
+          <span className="ez-help">
+            {selectedServiceOption.label}: e.g. {selectedServiceOption.examples}
+          </span>
+        ) : null}
+        {onOpenStepInfo ? (
+          <a
+            className="ez-link"
+            href="#"
+            style={{ fontSize: 14 }}
+            onClick={(event) => {
+              event.preventDefault();
+              onOpenStepInfo();
+            }}
+          >
+            What we need here
+          </a>
+        ) : null}
+      </div>
+      <div className="ez-stack ez-stack--sm">
+        <span className="ez-label">{copy.eventTypesHeadline}</span>
+        <div className="ez-chip-row">
+          {EVENT_TYPE_OPTIONS.map((option) => (
+            <EzChip
+              key={option.value}
+              active={isEventTypeActive(data.eventTypes, option.value)}
               onClick={() =>
                 update({
-                  eventTypes: toggleEventType(data.eventTypes, o.value),
+                  eventTypes: toggleEventType(data.eventTypes, option.value),
                 })
               }
             >
-              {o.label}
-            </ToggleChip>
+              {option.label}
+            </EzChip>
           ))}
         </div>
-      </OnboardingSubQuestion>
+      </div>
+      <EzTextField
+        label="About your business"
+        multiline
+        value={data.aiBioDraft}
+        maxLength={BIO_MAX_CHARACTERS}
+        onChange={(value) => update({ aiBioDraft: value })}
+        help={`${bioLength} of ${BIO_MAX_CHARACTERS} characters. Clients read this first.`}
+      />
+      {onGenerateBioWithAI ? (
+        <button
+          type="button"
+          className="ez-link"
+          style={{ fontSize: 14, alignSelf: "flex-start", background: "none", border: 0, padding: 0, cursor: "pointer" }}
+          disabled={generatingBio}
+          onClick={() => void onGenerateBioWithAI()}
+        >
+          {generatingBio ? "Generating…" : "Write it with AI"}
+        </button>
+      ) : null}
 
       <Modal
         isOpen={waitlistModalOpen}

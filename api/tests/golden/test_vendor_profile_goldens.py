@@ -62,14 +62,23 @@ def test_saves_tidy_the_form_like_baseline(case: dict[str, Any]) -> None:
     assert normalized == case["normalized"]
 
 
+# The goldens were captured from the eight-step wizard; cancellation policy is now step 5, so
+# baseline steps 5 to 8 are steps 6 to 9 today.
+BASELINE_TO_CURRENT_STEP = {1: 1, 2: 2, 3: 3, 4: 4, 5: 6, 6: 7, 7: 8, 8: 9}
+
+
 @pytest.mark.parametrize("case", load_golden("profile_steps"), ids=lambda case: case["name"])
 def test_each_step_check_matches_baseline(case: dict[str, Any]) -> None:
     """Every step passes or fails with the same message."""
     results = {
-        str(step): outcome(lambda step=step: validate_step_fields(step, copy.deepcopy(case["payload"])))  # type: ignore[misc]
-        for step in range(1, 9)
+        str(baseline_step): outcome(
+            lambda step=step: validate_step_fields(step, copy.deepcopy(case["payload"]))  # type: ignore[misc]
+        )
+        for baseline_step, step in BASELINE_TO_CURRENT_STEP.items()
     }
     assert results == case["steps"]
+    # Step 5 (cancellation policy) is checked by the web app, so the api never rejects it.
+    assert outcome(lambda: validate_step_fields(5, copy.deepcopy(case["payload"]))) == "ok"
 
 
 @pytest.mark.parametrize("case", load_golden("profile_progress"), ids=lambda case: case["name"])
@@ -78,8 +87,8 @@ def test_moving_on_and_submitting_match_baseline(case: dict[str, Any]) -> None:
     payload = copy.deepcopy(case["payload"])
     result = outcome(
         lambda: validate_payload_for_progress(
-            current_step=case["current"],
-            previous_step=case["previous"],
+            current_step=BASELINE_TO_CURRENT_STEP.get(case["current"], case["current"]),
+            previous_step=BASELINE_TO_CURRENT_STEP.get(case["previous"], case["previous"]),
             payload=payload,
             status=case["status"],
         )

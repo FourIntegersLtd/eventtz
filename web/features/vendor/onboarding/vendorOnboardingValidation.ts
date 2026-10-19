@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ONBOARDING_STEP } from "./onboardingProgress";
 import {
   MAX_DISCOUNT_PCT,
   MAX_MONEY_GBP,
@@ -110,9 +111,6 @@ const step3Schema = vendorDataSchema.superRefine((d, ctx) => {
 });
 
 const step4Schema = vendorDataSchema.superRefine((d, ctx) => {
-  if (!(CANCELLATION_POLICY_KEYS as readonly string[]).includes(d.cancellationPolicy)) {
-    addIssue(ctx, "Cancellation policy");
-  }
   addSingleGbpAmountIssue(ctx, d.hourlyRate, "Hourly rate", { required: false, max: MAX_MONEY_GBP });
   addSingleGbpAmountIssue(ctx, d.dailyRate, "Daily rate", { required: false, max: MAX_MONEY_GBP });
 
@@ -177,7 +175,7 @@ const step4Schema = vendorDataSchema.superRefine((d, ctx) => {
   }
 });
 
-const step5Schema = vendorDataSchema.superRefine((d, ctx) => {
+const availabilityStepSchema = vendorDataSchema.superRefine((d, ctx) => {
   if (d.availableWeekdays.length === 0) addIssue(ctx, "At least one weekday");
   if (!d.maxBookingsPerDay) {
     addIssue(ctx, "Max bookings per day");
@@ -197,11 +195,23 @@ const step5Schema = vendorDataSchema.superRefine((d, ctx) => {
   }
 });
 
-const step6Schema = vendorDataSchema.superRefine((d, ctx) => {
+const portfolioStepSchema = vendorDataSchema.superRefine((d, ctx) => {
   addPortfolioImageCountIssues(d, ctx);
 });
 
-const step8Schema = vendorDataSchema.superRefine((d, ctx) => {
+/** Step 5 holds the cancellation policy; the review step re-checks it before submit. */
+function addCancellationPolicyIssue(d: VendorOnboardingData, ctx: z.RefinementCtx): void {
+  if (!(CANCELLATION_POLICY_KEYS as readonly string[]).includes(d.cancellationPolicy)) {
+    addIssue(ctx, "Cancellation policy");
+  }
+}
+
+const cancellationStepSchema = vendorDataSchema.superRefine((d, ctx) => {
+  addCancellationPolicyIssue(d, ctx);
+});
+
+const reviewStepSchema = vendorDataSchema.superRefine((d, ctx) => {
+  addCancellationPolicyIssue(d, ctx);
   addPortfolioImageCountIssues(d, ctx);
   if (!d.profileImageUrl.trim()) {
     addIssue(ctx, "Add a profile photo before submitting");
@@ -228,16 +238,17 @@ const step8Schema = vendorDataSchema.superRefine((d, ctx) => {
 });
 
 const STEP_SCHEMAS: Partial<Record<number, z.ZodType<VendorOnboardingData>>> = {
-  1: step1Schema,
-  2: step2Schema,
-  3: step3Schema,
-  4: step4Schema,
-  5: step5Schema,
-  6: step6Schema,
-  8: step8Schema,
+  [ONBOARDING_STEP.account]: step1Schema,
+  [ONBOARDING_STEP.business]: step2Schema,
+  [ONBOARDING_STEP.location]: step3Schema,
+  [ONBOARDING_STEP.pricing]: step4Schema,
+  [ONBOARDING_STEP.cancellation]: cancellationStepSchema,
+  [ONBOARDING_STEP.availability]: availabilityStepSchema,
+  [ONBOARDING_STEP.portfolio]: portfolioStepSchema,
+  [ONBOARDING_STEP.review]: reviewStepSchema,
 };
 
-/** Step-banner error labels/messages for vendor onboarding (steps 1-8). */
+/** Step-banner error labels/messages for vendor onboarding (steps 1-9). */
 export function vendorOnboardingStepErrors(step: number, d: VendorOnboardingData): string[] {
   const schema = STEP_SCHEMAS[step];
   if (!schema) return [];

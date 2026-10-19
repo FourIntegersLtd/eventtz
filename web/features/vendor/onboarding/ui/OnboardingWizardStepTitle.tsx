@@ -1,4 +1,5 @@
 import { STEP_COPY } from "../onboardingCopy";
+import { ONBOARDING_FORM_STEP_COUNT } from "../onboardingProgress";
 import { OnboardingStepInfoTrigger } from "./OnboardingStepInfoModal";
 
 type OnboardingWizardStepTitleProps = {
@@ -13,7 +14,7 @@ export function OnboardingWizardStepTitle({
   servicesOffered = [],
   onOpenStepInfo,
 }: OnboardingWizardStepTitleProps) {
-  if (step < 1 || step > 8) return null;
+  if (step < 1 || step > ONBOARDING_FORM_STEP_COUNT) return null;
 
   const copy = STEP_COPY[step as keyof typeof STEP_COPY];
   const lead = "lead" in copy ? copy.lead : undefined;

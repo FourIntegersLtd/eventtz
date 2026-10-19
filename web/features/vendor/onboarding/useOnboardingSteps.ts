@@ -9,6 +9,7 @@ import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { vendorIsLiveApproved } from "@/lib/vendorAccess";
 import type { useToast } from "@/components/ui/Toast";
 import { buildDraftBio, validateStep } from "./onboardingLogic";
+import { ONBOARDING_STEP } from "./onboardingProgress";
 import { vendorDataToPayload } from "./serializeVendorPayload";
 import type { VendorOnboardingData } from "./types";
 import type { useOnboardingPersistence } from "./useOnboardingPersistence";
@@ -83,12 +84,12 @@ export function useOnboardingSteps({
     if (loadStatus !== "ready") return;
     // Pending review owns step 9. Check this first so a leftover returned-for-edits
     // flag cannot bounce the wizard 8 ↔ 9 after submit.
-    if (lockedPendingReview && step !== 9 && !(step === 6 && canAddPortfolioWhilePending)) {
-      setStep(9);
+    if (lockedPendingReview && step !== ONBOARDING_STEP.submitted && !(step === ONBOARDING_STEP.portfolio && canAddPortfolioWhilePending)) {
+      setStep(ONBOARDING_STEP.submitted);
       return;
     }
-    if (!isWalkthrough && step === 9 && profileStatus === "draft") {
-      setStep(8);
+    if (!isWalkthrough && step === ONBOARDING_STEP.submitted && profileStatus === "draft") {
+      setStep(ONBOARDING_STEP.review);
       setReturnToReview(false);
     }
   }, [
@@ -102,30 +103,30 @@ export function useOnboardingSteps({
   ]);
 
   const primaryLabel = useMemo(() => {
-    if (canAddPortfolioWhilePending && step === 6) return "Save photos";
-    if (isWalkthrough && step === 8) return "Finish walkthrough";
+    if (canAddPortfolioWhilePending && step === ONBOARDING_STEP.portfolio) return "Save photos";
+    if (isWalkthrough && step === ONBOARDING_STEP.review) return "Finish walkthrough";
     if (vendorIsLiveApproved({ onboarding_status: profileStatus, approval_status: approvalStatus })) {
       return "Save changes";
     }
-    if (step === 8) return "Submit for review";
-    if (step === 9) return "OK";
-    return "Next";
+    if (step === ONBOARDING_STEP.review) return "Submit for review";
+    if (step === ONBOARDING_STEP.submitted) return "OK";
+    return "Save and continue";
   }, [step, profileStatus, approvalStatus, isWalkthrough, canAddPortfolioWhilePending]);
 
   const onAddPortfolioPhotos = useCallback(() => {
     if (!canAddPortfolioWhilePending) return;
     setFormError(null);
-    setStep(6);
+    setStep(ONBOARDING_STEP.portfolio);
   }, [canAddPortfolioWhilePending, setFormError, setStep]);
 
   const onViewProfileReview = useCallback(() => {
     setFormError(null);
-    setStep(8);
+    setStep(ONBOARDING_STEP.review);
   }, [setFormError, setStep]);
 
   const goNext = useCallback(async () => {
-    if (step === 9 || saving || loadStatus !== "ready" || authLoading) return;
-    if (lockedPendingReview && !(step === 6 && canAddPortfolioWhilePending)) return;
+    if (step === ONBOARDING_STEP.submitted || saving || loadStatus !== "ready" || authLoading) return;
+    if (lockedPendingReview && !(step === ONBOARDING_STEP.portfolio && canAddPortfolioWhilePending)) return;
     if (phoneError && step === 1) {
       setFormError("Fix your phone number before continuing.");
       return;
@@ -150,7 +151,7 @@ export function useOnboardingSteps({
       setData(workingData);
     }
 
-    if (step === 6) {
+    if (step === ONBOARDING_STEP.portfolio) {
       const qualityErr = validatePortfolioQualityForNext(workingData);
       if (qualityErr) {
         setFormError(qualityErr);
@@ -162,20 +163,20 @@ export function useOnboardingSteps({
       onboarding_status: profileStatus,
       approval_status: approvalStatus,
     });
-    const walkthroughFinish = isWalkthrough && step === 8 && isLive;
-    const portfolioFixSave = canAddPortfolioWhilePending && step === 6;
+    const walkthroughFinish = isWalkthrough && step === ONBOARDING_STEP.review && isLive;
+    const portfolioFixSave = canAddPortfolioWhilePending && step === ONBOARDING_STEP.portfolio;
     const nextStep = portfolioFixSave
-      ? 9
-      : step === 8
+      ? ONBOARDING_STEP.submitted
+      : step === ONBOARDING_STEP.review
         ? isLive && !isWalkthrough
-          ? 8
-          : 9
+          ? ONBOARDING_STEP.review
+          : ONBOARDING_STEP.submitted
         : step + 1;
     setSaving(true);
     setFormError(null);
     try {
       let dataToSave: VendorOnboardingData = workingData;
-      if (step === 6) {
+      if (step === ONBOARDING_STEP.portfolio) {
         try {
           dataToSave = await preparePortfolioFilesForSave(workingData);
           setData(dataToSave);
@@ -188,7 +189,7 @@ export function useOnboardingSteps({
           return;
         }
       }
-      if (step === 7) {
+      if (step === ONBOARDING_STEP.additionalInfo) {
         try {
           dataToSave = await persistAdditionalInfoFiles(dataToSave);
           setData(dataToSave);
@@ -198,14 +199,14 @@ export function useOnboardingSteps({
         }
       }
       const res = await saveVendorProfile({
-        current_step: walkthroughFinish ? 8 : nextStep,
+        current_step: walkthroughFinish ? ONBOARDING_STEP.review : nextStep,
         profile_form_data: vendorDataToPayload(dataToSave),
-        onboarding_status: step === 8 && !walkthroughFinish ? "submitted" : undefined,
+        onboarding_status: step === ONBOARDING_STEP.review && !walkthroughFinish ? "submitted" : undefined,
       });
       applyVendorProfileResponse(res);
       if (portfolioFixSave) {
         showToast({ title: "Portfolio photos saved", tone: "success" });
-        setStep(9);
+        setStep(ONBOARDING_STEP.submitted);
         return;
       }
       if (walkthroughFinish) {
@@ -217,12 +218,12 @@ export function useOnboardingSteps({
         track(MixpanelEvents.vendor_profile_saved, { step });
         showToast({ title: "Changes saved", tone: "success" });
       } else {
-        if (step === 8 && !walkthroughFinish) {
+        if (step === ONBOARDING_STEP.review && !walkthroughFinish) {
           track(MixpanelEvents.vendor_onboarding_submitted);
           showToast({ title: "Submitted for review", tone: "success" });
         }
         setStep(nextStep);
-        if (nextStep === 8) {
+        if (nextStep === ONBOARDING_STEP.review) {
           setReturnToReview(false);
         }
       }
@@ -272,45 +273,45 @@ export function useOnboardingSteps({
   const goBack = useCallback(() => {
     setFormError(null);
     if (lockedPendingReview) {
-      if (canAddPortfolioWhilePending && step === 6) {
-        setStep(9);
+      if (canAddPortfolioWhilePending && step === ONBOARDING_STEP.portfolio) {
+        setStep(ONBOARDING_STEP.submitted);
         return;
       }
-      if (step === 8) {
-        setStep(9);
+      if (step === ONBOARDING_STEP.review) {
+        setStep(ONBOARDING_STEP.submitted);
         return;
       }
       return;
     }
-    if (step <= 1 || step === 9) return;
+    if (step <= 1 || step === ONBOARDING_STEP.submitted) return;
     setStep((s) => s - 1);
   }, [lockedPendingReview, canAddPortfolioWhilePending, step, setFormError, setStep]);
 
   const goBackToReview = useCallback(() => {
     setFormError(null);
     setReturnToReview(false);
-    setStep(8);
+    setStep(ONBOARDING_STEP.review);
   }, [setFormError, setStep]);
 
   const navigateToStep = useCallback(
     (target: number) => {
     if (lockedPendingReview) {
-      if (target === 8) {
+      if (target === ONBOARDING_STEP.review) {
         setFormError(null);
-        setStep(8);
+        setStep(ONBOARDING_STEP.review);
         return;
       }
-      if (target !== 6 || !canAddPortfolioWhilePending) return;
+      if (target !== ONBOARDING_STEP.portfolio || !canAddPortfolioWhilePending) return;
         setFormError(null);
-        setStep(6);
+        setStep(ONBOARDING_STEP.portfolio);
         return;
       }
-      if (target < 1 || target > 8) return;
+      if (target < 1 || target > ONBOARDING_STEP.review) return;
       setFormError(null);
-      if (target >= 1 && target <= 7) {
+      if (target >= 1 && target < ONBOARDING_STEP.review) {
         setReturnToReview(true);
       }
-      if (target === 8) {
+      if (target === ONBOARDING_STEP.review) {
         setReturnToReview(false);
       }
       setStep(target);

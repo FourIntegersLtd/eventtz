@@ -1,7 +1,7 @@
 # vendors
 
 ## Purpose
-Vendor profiles: the onboarding form (8 steps), business-name ownership, admin moderation (approval,
+Vendor profiles: the onboarding form (9 steps), business-name ownership, admin moderation (approval,
 returning a profile for edits, nudges, listing overrides and listing photos) and the rule for when a vendor
 is publicly listed.
 
@@ -19,7 +19,7 @@ is publicly listed.
 
 ## Invariants
 - A business name (normalised: case and spaces) belongs to at most one vendor.
-- Moving forward a step checks every finished step; submitting checks all eight.
+- Moving forward a step checks every finished step; submitting checks all nine.
 - Uploaded image URLs are kept only when they are ours and under the vendor's own `users/{id}/` prefix.
 - A vendor is listed when approved and payouts are verified, unless a super admin overrides it.
 - Listing photo overrides may only use the vendor's own profile photo or portfolio images.

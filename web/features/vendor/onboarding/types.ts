@@ -1,4 +1,5 @@
 import type { PackagePricingMode } from "@/lib/packagePricing";
+import { ONBOARDING_FLOW_VERSION } from "./onboardingProgress";
 import { PACKAGE_PRICING_MODE_FIXED } from "@/lib/packagePricing";
 
 export type { PackagePricingMode };
@@ -240,7 +241,7 @@ export const initialVendorOnboardingData: VendorOnboardingData = {
   socialLinks: [],
   portfolioWarnings: [],
   stripeConnectStarted: false,
-  onboardingFlowVersion: 2,
+  onboardingFlowVersion: ONBOARDING_FLOW_VERSION,
   returnedForEditsAt: "",
   foodHygieneCertFile: null,
   foodHygieneCertNamePersisted: "",

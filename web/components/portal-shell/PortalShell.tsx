@@ -1,12 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  LogOut,
-  Menu,
-  X,
-  type LucideIcon,
-} from "lucide-react";
+import { CircleHelp, LogOut, Menu, X, type LucideIcon } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -36,6 +31,13 @@ import {
   type PortalRole,
 } from "@/components/portal-shell/portalNav";
 
+/**
+ * The signed-in client and vendor shell, transcribed from the canvas `Shells` artboard:
+ * an `ez-side` sidebar (logo, role chip, nav, user chip) beside an `ez-main` column with an
+ * `ez-topbar` (page title, bell, help) over `ez-content`. The `app-viewport-shell` classes keep
+ * the shell locked to the viewport so master-detail pages scroll inside their panes; the
+ * `ez-` classes from `design/canvas/project/eventtz.css` give it the drawn look.
+ */
 export type PortalShellProps = {
   title: string;
   children: ReactNode;
@@ -49,6 +51,7 @@ type NavItem = {
   icon: LucideIcon;
 };
 
+/** Sidebar and drawer nav links with the unread and pending badges each portal shows. */
 function ShellNavLinks({
   navItems,
   pathname,
@@ -105,25 +108,13 @@ function ShellNavLinks({
             href={item.href}
             onClick={() => onNavigate?.()}
             aria-current={active ? "page" : undefined}
-            className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition duration-150 ease-out ${
-              active
-                ? "bg-primary/10 text-primary"
-                : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
-            }`}
+            className={active ? "ez-nav-item ez-nav-item--active" : "ez-nav-item"}
           >
-            <Icon
-              className={`h-[18px] w-[18px] shrink-0 transition ${
-                active ? "text-primary" : "text-neutral-400 group-hover:text-neutral-600"
-              }`}
-              strokeWidth={active ? 2.25 : 1.75}
-              aria-hidden
-            />
+            <Icon size={19} strokeWidth={1.75} aria-hidden />
             <span className="min-w-0 flex-1 truncate">{item.label}</span>
             {showBadge ? (
               <span
-                className={`min-w-[1.25rem] shrink-0 rounded-full px-1.5 py-0.5 text-center text-[11px] font-semibold tabular-nums ${
-                  active ? "bg-primary text-white" : "bg-primary/90 text-white"
-                }`}
+                className="ez-nav-item__count"
                 aria-label={
                   showBookingBadge
                     ? `${badgeCount} unread booking updates`
@@ -142,38 +133,56 @@ function ShellNavLinks({
   );
 }
 
-function UserFooter({
-  email,
-  roleFallback,
-  onSignOut,
-}: {
-  email: string | null | undefined;
-  roleFallback: string;
-  onSignOut: () => void;
-}) {
-  const initial = (email?.trim()?.[0] ?? roleFallback[0] ?? "?").toUpperCase();
+/** Two-letter initials for the user chip: from the preferred name, else the email's first letter. */
+function userInitials(user: AuthUser | null, roleFallback: string): string {
+  const name = user?.preferred_name?.trim();
+  if (name) {
+    const parts = name.split(/\s+/);
+    return parts.length > 1 ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase() : name[0].toUpperCase();
+  }
+  return (user?.email?.trim()?.[0] ?? roleFallback[0] ?? "?").toUpperCase();
+}
 
+/**
+ * The user chip at the foot of the sidebar or drawer: avatar initials, name, status line and
+ * sign out. The desktop sidebar passes `ez-side__foot`; the drawer must not, because eventtz.css
+ * hides `.ez-side__foot` below 720px and the drawer only exists there.
+ */
+function UserFooter({
+  user,
+  roleFallback,
+  statusLine,
+  onSignOut,
+  className,
+}: {
+  user: AuthUser | null;
+  roleFallback: string;
+  statusLine: string;
+  onSignOut: () => void;
+  className: string;
+}) {
+  const displayName = user?.preferred_name?.trim() || user?.email || roleFallback;
   return (
-    <div className="shrink-0 border-t border-neutral-200/70 pt-4 pb-[env(safe-area-inset-bottom,0px)]">
-      <div className="flex items-center gap-3 px-1">
-        <div
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary"
-          aria-hidden
-        >
-          {initial}
-        </div>
+    <div className={`${className} shrink-0 pb-[env(safe-area-inset-bottom,0px)]`}>
+      <div className="ez-side__user">
+        <span className="ez-avatar ez-avatar--sm" aria-hidden>
+          {userInitials(user, roleFallback)}
+        </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-neutral-900">{email ?? roleFallback}</p>
-          <p className="truncate text-xs text-neutral-500">{roleFallback}</p>
+          <div className="ez-strong truncate" style={{ fontSize: 14 }}>
+            {displayName}
+          </div>
+          <div className="ez-caption truncate">{statusLine}</div>
         </div>
         <button
           type="button"
           onClick={onSignOut}
-          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900"
+          className="ez-icon-btn shrink-0"
+          style={{ width: 36, height: 36 }}
           aria-label="Sign out"
           title="Sign out"
         >
-          <LogOut className="h-4 w-4" aria-hidden />
+          <LogOut size={18} aria-hidden />
         </button>
       </div>
     </div>
@@ -224,7 +233,9 @@ export function PortalShell({
           return;
         }
         const activeBookings = await fetchVendorBookings("active");
-        setVendorBookingsPending(activeBookings.filter((b) => b.booking_status === "pending").length);
+        setVendorBookingsPending(
+          activeBookings.filter((booking) => booking.booking_status === "pending").length,
+        );
       }
     } catch {
       setBookingUnread(portal === "client" ? 0 : null);
@@ -285,6 +296,9 @@ export function PortalShell({
     vendorPreApproval: portal === "vendor" && vendorPreApproval,
   });
   const roleFallback = portal === "client" ? "Client" : "Vendor";
+  // The chip's second line is the account's state: a vendor still in review sees that, not their role.
+  const statusLine = portal === "vendor" && vendorPreApproval ? "Pending review" : roleFallback;
+  const helpHref = portal === "client" ? "/client/help" : "/vendor/help";
 
   const closeMobile = () => setMobileNavOpen(false);
 
@@ -331,7 +345,7 @@ export function PortalShell({
   const hideTitleOnMobile = portalHidePageTitleOnMobile(pathname, portal);
 
   const shell = (
-    <div className="app-viewport-shell w-full min-w-0 overflow-x-hidden bg-page-bg text-neutral-900">
+    <div className="app-viewport-shell ez-shell ez-page w-full min-w-0 overflow-x-hidden">
       <ConfirmDialog
         isOpen={signOutOpen}
         title="Sign out?"
@@ -344,56 +358,63 @@ export function PortalShell({
         onConfirm={() => void handleSignOut()}
       />
 
-      {/* Mobile top bar - fixed height; page scroll is in main only */}
-      <header className="app-viewport-shell__mobile-nav z-30 flex items-center justify-between gap-3 border-b border-neutral-200/60 bg-white/80 px-4 backdrop-blur-xl md:hidden">
-        <EventtzLogo variant="sidebar" priority href={logoHref} className="min-w-0 shrink" />
-        <div className="flex shrink-0 items-center gap-1.5">
-          {notificationBell}
-          <button
-            type="button"
-            aria-expanded={mobileNavOpen}
-            aria-label={mobileNavOpen ? "Close menu" : "Open menu"}
-            onClick={() => setMobileNavOpen((o) => !o)}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-neutral-100 text-neutral-800 transition hover:bg-neutral-200/80"
-          >
-            {mobileNavOpen ? <X className="h-5 w-5" aria-hidden /> : <Menu className="h-5 w-5" aria-hidden />}
-          </button>
-        </div>
-      </header>
+      {/* Mobile top bar - fixed height; page scroll is in main only. The wrapper carries
+          md:hidden because eventtz.css is unlayered, so `hidden` cannot beat `.ez-topbar`. */}
+      <div className="z-30 shrink-0 md:hidden">
+        <header className="app-viewport-shell__mobile-nav ez-topbar">
+          <EventtzLogo priority href={logoHref} imageClassName="ez-logo ez-logo--sm" className="min-w-0 shrink" />
+          <div className="ez-topbar__actions shrink-0">
+            {notificationBell}
+            <button
+              type="button"
+              aria-expanded={mobileNavOpen}
+              aria-label={mobileNavOpen ? "Close menu" : "Open menu"}
+              onClick={() => setMobileNavOpen((open) => !open)}
+              className="ez-icon-btn ez-icon-btn--outline"
+            >
+              {mobileNavOpen ? <X size={20} aria-hidden /> : <Menu size={20} aria-hidden />}
+            </button>
+          </div>
+        </header>
+      </div>
 
       {/* Mobile drawer */}
       {mobileNavOpen ? (
         <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Menu">
           <button
             type="button"
-            className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
+            className="absolute inset-0 bg-scrim"
             aria-label="Close menu"
             onClick={closeMobile}
           />
-          <aside className="absolute right-0 top-0 flex h-dvh max-h-dvh w-[min(20rem,calc(100vw-2.5rem))] max-w-full flex-col bg-white p-5 pt-[max(1.25rem,env(safe-area-inset-top))] pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl">
-            <div className="flex shrink-0 items-center justify-between gap-2">
+          {/* Plain Tailwind here: eventtz.css turns `.ez-side` into a row and hides its brand
+              and foot below 720px, which is exactly where the drawer lives. */}
+          <aside className="absolute right-0 top-0 flex h-dvh max-h-dvh w-[min(20rem,calc(100vw-2.5rem))] max-w-full flex-col gap-1 bg-white px-[14px] pt-[max(1.25rem,env(safe-area-inset-top))] pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-overlay">
+            <div className="mb-3 flex items-center justify-between">
               <div onClick={closeMobile}>
-                <EventtzLogo variant="sidebar" href={logoHref} />
+                <EventtzLogo href={logoHref} imageClassName="ez-logo ez-logo--sm" />
               </div>
               <button
                 type="button"
-                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-neutral-500 transition hover:bg-neutral-100"
+                className="ez-icon-btn"
                 aria-label="Close menu"
                 onClick={closeMobile}
               >
-                <X className="h-5 w-5" />
+                <X size={20} aria-hidden />
               </button>
             </div>
-            <nav className="scroll-pane mt-8 flex min-h-0 flex-1 flex-col gap-1">
+            <nav className="scroll-pane flex min-h-0 flex-1 flex-col gap-1">
               <ShellNavLinks {...navProps} onNavigate={closeMobile} />
             </nav>
             <UserFooter
-              email={user?.email}
+              user={user}
               roleFallback={roleFallback}
+              statusLine={statusLine}
               onSignOut={() => {
                 closeMobile();
                 setSignOutOpen(true);
               }}
+              className="mt-auto border-t border-line pt-3"
             />
           </aside>
         </div>
@@ -401,50 +422,42 @@ export function PortalShell({
 
       <div className="app-viewport-shell__body w-full min-w-0 md:grid-cols-[248px_minmax(0,1fr)]">
         {/* Desktop sidebar - fixed column height; nav scrolls inside */}
-        <aside className="app-viewport-shell__sidebar border-r border-neutral-200/60 bg-white/70 px-4 py-5 backdrop-blur-xl md:px-5">
-          <div className="shrink-0 px-1">
-            <EventtzLogo variant="sidebar" priority href={logoHref} />
+        <nav className="app-viewport-shell__sidebar ez-side" aria-label={`${roleFallback} navigation`}>
+          <div className="ez-side__brand shrink-0">
+            <EventtzLogo priority href={logoHref} imageClassName="ez-logo ez-logo--sm" />
+            <span className={`ez-role ez-role--${portal}`}>{roleFallback}</span>
           </div>
 
-          <nav className="scroll-pane mt-8 flex min-h-0 flex-1 flex-col gap-1">
+          <div className="scroll-pane flex min-h-0 flex-1 flex-col gap-1">
             <ShellNavLinks {...navProps} />
-          </nav>
+          </div>
 
           <UserFooter
-            email={user?.email}
+            user={user}
             roleFallback={roleFallback}
+            statusLine={statusLine}
             onSignOut={() => setSignOutOpen(true)}
+            className="ez-side__foot"
           />
-        </aside>
+        </nav>
 
-        <main className="app-viewport-shell__main overflow-x-hidden px-4 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
-          <div className="flex h-full min-h-0 w-full min-w-0 flex-col">
-            <div className="flex shrink-0 items-center justify-between gap-3">
-              {title ? (
-                <h1
-                  className={`min-w-0 break-words font-heading text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl ${
-                    hideTitleOnMobile ? "hidden md:block" : ""
-                  }`}
-                >
-                  {title}
-                </h1>
-              ) : (
-                <span className="min-w-0" />
-              )}
-              <div className="hidden shrink-0 md:block">{notificationBell}</div>
-            </div>
-            <div
-              className={`portal-content app-viewport-shell__main-scroll scroll-pane min-w-0 ${
-                title
-                  ? hideTitleOnMobile
-                    ? "mt-0 md:mt-6"
-                    : "mt-5 sm:mt-6"
-                  : "mt-3"
-              }`}
-            >
-              <TermsUpdateBanner />
-              {children}
-            </div>
+        <main className="app-viewport-shell__main ez-main overflow-x-hidden">
+          <div className={hideTitleOnMobile ? "hidden shrink-0 md:block" : "shrink-0"}>
+            <header className="ez-topbar">
+              <div className="ez-hrow">
+                {title ? <span className="ez-h3">{title}</span> : null}
+              </div>
+              <div className="ez-topbar__actions hidden md:flex">
+                {notificationBell}
+                <Link href={helpHref} className="ez-icon-btn" aria-label="Help">
+                  <CircleHelp size={20} aria-hidden />
+                </Link>
+              </div>
+            </header>
+          </div>
+          <div className="portal-content app-viewport-shell__main-scroll ez-content min-w-0">
+            <TermsUpdateBanner />
+            {children}
           </div>
         </main>
       </div>

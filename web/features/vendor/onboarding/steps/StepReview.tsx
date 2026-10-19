@@ -11,6 +11,7 @@ import { isConfiguredPackage } from "../packageQuality";
 import {
   formatDiscountSummary,
   formatReviewBlockedDates,
+  formatReviewDeliveryModes,
   formatReviewEventTypes,
   formatReviewPackagePrice,
   formatReviewPackageQuantityBounds,
@@ -30,7 +31,7 @@ import type {
 } from "../types";
 import { ClearableTextarea, labelClass } from "./form-primitives";
 import { uploadedFileDisplayName } from "../uploadedFileDisplayName";
-import { AnimatedStepItem } from "../ui/AnimatedStepItem";
+import { ReviewCards } from "./ReviewCards";
 import { vendorCancellationPolicyLabel } from "@/features/bookings/cancellationPolicyCopy";
 import { VendorProfilePhotoField } from "../VendorProfilePhotoField";
 
@@ -39,13 +40,6 @@ const BIO_MAX_WORDS = 100;
 function yesNo(value: boolean): string {
   return value ? "Yes" : "No";
 }
-
-const DELIVERY_LABELS: Record<string, string> = {
-  travel_to_client: "I travel to the client",
-  client_comes: "Clients come to me",
-  travel_both: "I travel to clients and clients also travel to me",
-  ship_to_client: "I deliver to clients (e.g. courier)",
-};
 
 const TRAVEL_DELIVERY_POLICY_LABELS: Record<TravelDeliveryPolicy, string> = {
   fee_included: "Travel/delivery fee included",
@@ -192,28 +186,7 @@ export function StepReview({
     radiusOptionsForMarket(getMarket(data.countryCode)).find(
       (o) => o.value === data.travelRadius,
     )?.label ?? "-";
-  const deliveryLabel = (() => {
-    if (data.deliveryModes.length === 0) return "-";
-    const hasBoth =
-      data.deliveryModes.includes("travel_both") ||
-      (data.deliveryModes.includes("travel_to_client") &&
-        data.deliveryModes.includes("client_comes"));
-    const labels: string[] = [];
-    if (hasBoth) {
-      labels.push(DELIVERY_LABELS.travel_both);
-    } else {
-      if (data.deliveryModes.includes("travel_to_client")) {
-        labels.push(DELIVERY_LABELS.travel_to_client);
-      }
-      if (data.deliveryModes.includes("client_comes")) {
-        labels.push(DELIVERY_LABELS.client_comes);
-      }
-    }
-    if (data.deliveryModes.includes("ship_to_client")) {
-      labels.push(DELIVERY_LABELS.ship_to_client);
-    }
-    return labels.join(" · ");
-  })();
+  const deliveryLabel = formatReviewDeliveryModes(data.deliveryModes);
   const wordCount = bioWordCount(data.aiBioDraft);
   const overLimit = wordCount > BIO_MAX_WORDS;
   const blockedDatesLabel = formatReviewBlockedDates(data.blockedDates);
@@ -429,7 +402,7 @@ export function StepReview({
 
       <ReviewSection
         title="Availability"
-        step={5}
+        step={6}
         onNavigateToStep={onNavigateToStep}
         isLiveEdit={isLiveEdit}
         readOnly={readOnly}
@@ -456,7 +429,7 @@ export function StepReview({
       {(readOnly || hasPortfolioContent(data)) ? (
         <ReviewSection
           title="Portfolio & links"
-          step={6}
+          step={7}
           onNavigateToStep={onNavigateToStep}
           isLiveEdit={isLiveEdit}
           readOnly={readOnly}
@@ -515,7 +488,7 @@ export function StepReview({
       {(readOnly || hasAdditionalInfoContent(data)) ? (
         <ReviewSection
           title="Additional info"
-          step={7}
+          step={8}
           onNavigateToStep={onNavigateToStep}
           isLiveEdit={isLiveEdit}
           readOnly={readOnly}
@@ -714,19 +687,17 @@ export function StepReview({
   }
 
   return (
-    <div className="space-y-7">
-      <AnimatedStepItem index={0}>{profilePhotoBlock}</AnimatedStepItem>
-      <AnimatedStepItem index={1}>
-        <label className={labelClass()}>Public bio</label>
-        <p className="mb-2 text-xs text-neutral-500">
-          Short bio for your public profile.
-        </p>
-        {bioBlock}
-      </AnimatedStepItem>
-      <AnimatedStepItem index={2}>
-        <div className="space-y-3">{reviewSections}</div>
-      </AnimatedStepItem>
-      <AnimatedStepItem index={3}>{confirmations}</AnimatedStepItem>
+    <div className="ez-stack">
+      <ReviewCards data={data} update={update} onNavigateToStep={onNavigateToStep} />
+      {/* Not in design V08, which has no bio or photo here; kept so the bio can still be written. */}
+      <div data-design-extra="bio-photo" className="ez-stack">
+        {profilePhotoBlock}
+        <div>
+          <label className={labelClass()}>Public bio</label>
+          <p className="mb-2 text-xs text-neutral-500">Short bio for your public profile.</p>
+          {bioBlock}
+        </div>
+      </div>
     </div>
   );
 }

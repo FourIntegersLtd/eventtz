@@ -1,7 +1,27 @@
 import { STEP_LABELS } from "./constants";
 
-/** Form steps 1-8; step 9 is the submitted screen. */
-export const ONBOARDING_FORM_STEP_COUNT = 8;
+/**
+ * Wizard step numbers, persisted as `current_step`. Form steps are 1-9; the submitted screen is 10.
+ * Flow version 3 inserted the cancellation policy as step 5.
+ */
+export const ONBOARDING_STEP = {
+  account: 1,
+  business: 2,
+  location: 3,
+  pricing: 4,
+  cancellation: 5,
+  availability: 6,
+  portfolio: 7,
+  additionalInfo: 8,
+  review: 9,
+  submitted: 10,
+} as const;
+
+/** Form steps 1-9; step 10 is the submitted screen. */
+export const ONBOARDING_FORM_STEP_COUNT = ONBOARDING_STEP.review;
+
+/** Saved forms carry this `onboardingFlowVersion`; older versions are remapped on load. */
+export const ONBOARDING_FLOW_VERSION = 3;
 
 /** Rough minutes per step (helps set expectations, not a SLA). */
 export const STEP_ESTIMATED_MINUTES: readonly number[] = [
@@ -9,6 +29,7 @@ export const STEP_ESTIMATED_MINUTES: readonly number[] = [
   1, // Business
   1, // Location
   2, // Pricing
+  1, // Cancellation policy
   1, // Availability
   3, // Portfolio
   1, // Additional info
@@ -50,29 +71,34 @@ export function onboardingEncouragement(step: number): string {
   if (step === 1) {
     return `Takes about ${onboardingDurationRangeLabel()}. Your progress is saved.`;
   }
-  if (step <= 3) return "Short steps. Come back anytime.";
-  if (step <= 5) return "Good progress.";
-  if (step <= 6) return "Nearly there.";
-  if (step === 7) return "Last few optional details.";
+  if (step <= ONBOARDING_STEP.location) return "Short steps. Come back anytime.";
+  if (step <= ONBOARDING_STEP.availability) return "Good progress.";
+  if (step <= ONBOARDING_STEP.portfolio) return "Nearly there.";
+  if (step === ONBOARDING_STEP.additionalInfo) return "Last few optional details.";
   return "Final check, then submit.";
 }
 
 /**
- * Map saved `current_step` from the pre-Stripe-removal wizard
- * (9 form steps + submitted=10, with Verification at 7) onto the current
- * numbering (8 form steps + submitted=9). No-op when `onboardingFlowVersion >= 2`.
+ * Map a saved `current_step` onto the current numbering (see `ONBOARDING_STEP`).
+ * Version 1 had 9 form steps (Verification at 7, submitted at 10); version 2 had 8 form
+ * steps without the cancellation step (submitted at 9). No-op when `flowVersion >= 3`.
  */
 export function mapLegacyOnboardingStep(currentStep: number, flowVersion: number): number {
-  if (flowVersion >= 2) {
-    return Math.min(Math.max(currentStep, 1), 9);
+  const maxStep = ONBOARDING_STEP.submitted;
+  if (flowVersion >= ONBOARDING_FLOW_VERSION) {
+    return Math.min(Math.max(currentStep, 1), maxStep);
   }
-  // Old: 1-6 same, 7=Verification, 8=Additional, 9=Review, 10=Submitted
-  // New: 1-6 same, 7=Additional, 8=Review, 9=Submitted
-  if (currentStep <= 6) return currentStep;
-  if (currentStep === 7 || currentStep === 8) return 7;
-  if (currentStep === 9) return 8;
-  if (currentStep >= 10) return 9;
-  return Math.min(Math.max(currentStep, 1), 8);
+  let version2Step = currentStep;
+  if (flowVersion < 2) {
+    // v1: 1-6 same, 7=Verification, 8=Additional, 9=Review, 10=Submitted
+    // v2: 1-6 same, 7=Additional, 8=Review, 9=Submitted
+    if (currentStep === 7 || currentStep === 8) version2Step = 7;
+    else if (currentStep === 9) version2Step = 8;
+    else if (currentStep >= 10) version2Step = 9;
+  }
+  // v2 to v3: Cancellation policy became step 5, so steps 5-9 each move up by one.
+  const mapped = version2Step >= 5 ? version2Step + 1 : version2Step;
+  return Math.min(Math.max(mapped, 1), maxStep);
 }
 
 export type OnboardingStepProfile = {
@@ -94,7 +120,7 @@ export function isReturnedForEdits(profile: OnboardingStepProfile): boolean {
   }
   if (profile.returnedForEditsAt?.trim()) return true;
   // Stale submitted-screen step after an unsubmit that predates the timestamp.
-  return profile.onboarding_status === "draft" && (profile.current_step ?? 0) >= 9;
+  return profile.onboarding_status === "draft" && (profile.current_step ?? 0) >= ONBOARDING_STEP.submitted;
 }
 
 /**
@@ -116,10 +142,10 @@ export function resolveOnboardingStepFromProfile(
   isWalkthrough: boolean,
 ): number {
   if (profile.onboarding_status === "submitted") {
-    return isWalkthrough ? 1 : profile.approval_status === "approved" ? 1 : 9;
+    return isWalkthrough ? 1 : profile.approval_status === "approved" ? 1 : ONBOARDING_STEP.submitted;
   }
   const mapped = mapLegacyOnboardingStep(profile.current_step ?? 1, flowVersion);
   // Admin returned profile to draft; saved step may still point at submitted/review.
-  if (mapped >= 9) return 8;
+  if (mapped >= ONBOARDING_STEP.submitted) return ONBOARDING_STEP.review;
   return mapped;
 }

@@ -5,6 +5,7 @@ export const STEP_LABELS = [
   "Business",
   "Location",
   "Pricing",
+  "Cancellation",
   "Availability",
   "Portfolio",
   "Additional info",
@@ -29,8 +30,8 @@ export const EVENT_TYPE_OPTIONS: { value: string; label: string }[] = [
   { value: "weddings", label: "Weddings" },
   { value: "birthdays", label: "Birthdays" },
   { value: "showers", label: "Showers" },
-  { value: "naming_ceremonies", label: "Naming Ceremonies" },
-  { value: "all", label: "All of the Above" },
+  { value: "naming_ceremonies", label: "Naming ceremonies" },
+  { value: "all", label: "All of the above" },
 ];
 
 /** Google Form for vendors who don’t fit listed categories (Other). */
@@ -79,19 +80,18 @@ export const SOCIAL_PLATFORM_OPTIONS: {
 /**
  * Sections of the live profile editor, each addressable as `/vendor/profile?section=<slug>`
  * so other screens (e.g. the dashboard's refund-policy prompt) can link straight to one.
- * Cancellation policy is its own section but saves with the Pricing step (4), so the
- * wizard's step numbers, which are persisted as `current_step`, stay unchanged.
+ * Each section is one wizard step (see `ONBOARDING_STEP`), so a section link and the wizard agree.
  */
 export const PROFILE_SECTIONS = [
   { slug: "account", label: "Account", step: 1 },
   { slug: "business", label: "Business", step: 2 },
   { slug: "location", label: "Location", step: 3 },
   { slug: "pricing", label: "Pricing", step: 4 },
-  { slug: "cancellation-policy", label: "Cancellation policy", step: 4 },
-  { slug: "availability", label: "Availability", step: 5 },
-  { slug: "portfolio", label: "Portfolio", step: 6 },
-  { slug: "additional-info", label: "Additional info", step: 7 },
-  { slug: "review", label: "Review", step: 8 },
+  { slug: "cancellation-policy", label: "Cancellation policy", step: 5 },
+  { slug: "availability", label: "Availability", step: 6 },
+  { slug: "portfolio", label: "Portfolio", step: 7 },
+  { slug: "additional-info", label: "Additional info", step: 8 },
+  { slug: "review", label: "Review", step: 9 },
 ] as const;
 
 export type ProfileSection = (typeof PROFILE_SECTIONS)[number];

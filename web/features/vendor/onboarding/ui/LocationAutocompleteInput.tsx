@@ -54,6 +54,8 @@ export type LocationAutocompleteInputProps = {
   enableSuggestions?: boolean | "lg";
   /** ISO country code for place suggestions (default GB). */
   countryCode?: string;
+  /** "ez" renders the Eventtz design-system field (`ez-field`, `ez-label`, `ez-input`) with no icon or clear button. */
+  variant?: "default" | "ez";
 };
 
 /**
@@ -77,7 +79,9 @@ export function LocationAutocompleteInput({
   showClear = true,
   enableSuggestions = true,
   countryCode = DEFAULT_COUNTRY_CODE,
+  variant = "default",
 }: LocationAutocompleteInputProps) {
+  const isEz = variant === "ez";
   const reactId = useId();
   const id = inputId ?? `location-ac-${reactId}`;
   const [open, setOpen] = useState(false);
@@ -177,8 +181,8 @@ export function LocationAutocompleteInput({
   }, []);
 
   const showClearButton = useMemo(
-    () => showClear && value.trim().length > 0,
-    [showClear, value],
+    () => showClear && !isEz && value.trim().length > 0,
+    [showClear, isEz, value],
   );
 
   const suggestionsMenu =
@@ -224,20 +228,22 @@ export function LocationAutocompleteInput({
       : null;
 
   return (
-    <div ref={rootRef} className={className ?? "relative"}>
+    <div ref={rootRef} className={className ?? (isEz ? "ez-field" : "relative")}>
       {label ? (
         <label
           htmlFor={id}
-          className="block text-xs font-semibold uppercase tracking-wide text-neutral-500"
+          className={isEz ? "ez-label" : "block text-xs font-semibold uppercase tracking-wide text-neutral-500"}
         >
           {label}
         </label>
       ) : null}
-      <div ref={anchorRef} className={`relative ${label ? "mt-1.5" : ""}`}>
-        <Icon
-          className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${iconClassName}`}
-          aria-hidden
-        />
+      <div ref={anchorRef} className={`relative ${label && !isEz ? "mt-1.5" : ""}`}>
+        {isEz ? null : (
+          <Icon
+            className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${iconClassName}`}
+            aria-hidden
+          />
+        )}
         <input
           id={id}
           type="text"
@@ -255,7 +261,7 @@ export function LocationAutocompleteInput({
             if (suggestionsAllowed) setOpen(true);
           }}
           placeholder={placeholder ?? "Start typing a city or town…"}
-          className={inputClassName ?? DEFAULT_INPUT_CLASS}
+          className={inputClassName ?? (isEz ? "ez-input" : DEFAULT_INPUT_CLASS)}
         />
         {suggestionsAllowed && busy ? (
           <LoadingSpinner

@@ -1,163 +1,235 @@
+"use client";
+
+import { ChevronLeft, ChevronRight, Minus, Plus } from "lucide-react";
 import { useState } from "react";
-import { STEP_COPY } from "../onboardingCopy";
+import { isPastIsoDate } from "@/lib/eventDateValidation";
 import type { VendorOnboardingData, VendorOnboardingUpdate } from "../types";
-import {
-  OnboardingSubQuestion,
-} from "../ui/OnboardingQuestionLayout";
-import { ClearableTextField, ToggleChip } from "./form-primitives";
-import { DateInput } from "@/components/ui/DateInput";
-import { EVENT_DATE_PAST_ERROR, isPastIsoDate, todayIsoDate } from "@/lib/eventDateValidation";
+import { EzChip } from "./ez-form";
 
 export type StepAvailabilityProps = {
   data: VendorOnboardingData;
   update: VendorOnboardingUpdate;
 };
 
-const WEEKDAY_FULL_LABELS = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
+/** Weekday chips, Monday first; the index is what `availableWeekdays` stores. */
+const WEEKDAY_SHORT_LABELS = [
+  "Mon",
+  "Tue",
+  "Wed",
+  "Thu",
+  "Fri",
+  "Sat",
+  "Sun",
 ] as const;
+const MIN_BOOKINGS_PER_DAY = 1;
+const MAX_BOOKINGS_PER_DAY = 20;
 
-function toUkDate(iso: string): string {
-  const [year, month, day] = iso.split("-");
-  if (!year || !month || !day) return iso;
-  return `${day}/${month}/${year}`;
+/** One cell of the month grid: an ISO date, its day number, and whether it is outside the month. */
+type CalendarCell = { iso: string; day: number; outsideMonth: boolean };
+
+/** Formats a local date as `YYYY-MM-DD`. */
+function toIsoDate(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
 }
 
-function BlockedDatePicker({
-  blockedDates,
-  onAdd,
-}: {
-  blockedDates: string[];
-  onAdd: (iso: string) => void;
-}) {
-  const [draftDate, setDraftDate] = useState(() => todayIsoDate());
-  const [error, setError] = useState<string | null>(null);
-
-  const handleAdd = () => {
-    if (isPastIsoDate(draftDate)) {
-      setError(EVENT_DATE_PAST_ERROR);
-      return;
-    }
-    if (blockedDates.includes(draftDate)) {
-      setError("That date is already blocked.");
-      return;
-    }
-    setError(null);
-    onAdd(draftDate);
-    setDraftDate(todayIsoDate());
-  };
-
-  return (
-    <div className="min-w-0 space-y-2">
-      <DateInput value={draftDate} min={todayIsoDate()} onChange={(e) => setDraftDate(e.target.value)} />
-      <div className="flex justify-end">
-        <button
-          type="button"
-          onClick={handleAdd}
-          className="inline-flex h-10 items-center justify-center rounded-lg border border-neutral-200 bg-white px-4 text-sm font-semibold text-primary transition hover:bg-neutral-50"
-        >
-          Add blocked date
-        </button>
-      </div>
-      {error ? <p className="text-xs font-medium text-red-600">{error}</p> : null}
-    </div>
-  );
+/** The weeks of a month as full Monday-first rows, padded with days from the neighbouring months. */
+export function monthCells(year: number, monthIndex: number): CalendarCell[] {
+  const firstOfMonth = new Date(year, monthIndex, 1);
+  const leadingDays = (firstOfMonth.getDay() + 6) % 7;
+  const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+  const totalCells = Math.ceil((leadingDays + daysInMonth) / 7) * 7;
+  return Array.from({ length: totalCells }, (_, offset) => {
+    const date = new Date(year, monthIndex, 1 - leadingDays + offset);
+    return {
+      iso: toIsoDate(date),
+      day: date.getDate(),
+      outsideMonth: date.getMonth() !== monthIndex,
+    };
+  });
 }
 
+/** Availability step (design V05): working days, bookings per day, and a calendar of blocked dates. */
 export function StepAvailability({ data, update }: StepAvailabilityProps) {
-  const copy = STEP_COPY[5];
+  // Open on the month of the first blocked date, so saved dates are visible straight away.
+  const [visibleMonth, setVisibleMonth] = useState(() => {
+    const [firstBlockedDate] = [...data.blockedDates].sort();
+    const anchor = firstBlockedDate
+      ? new Date(`${firstBlockedDate}T00:00:00`)
+      : new Date();
+    return { year: anchor.getFullYear(), monthIndex: anchor.getMonth() };
+  });
+  const monthLabel = new Date(
+    visibleMonth.year,
+    visibleMonth.monthIndex,
+    1,
+  ).toLocaleDateString("en-GB", {
+    month: "long",
+    year: "numeric",
+  });
 
-  const toggleDay = (d: number) => {
-    const s = new Set(data.availableWeekdays);
-    if (s.has(d)) s.delete(d);
-    else s.add(d);
-    update({ availableWeekdays: [...s].sort() });
+  const toggleDay = (weekday: number) => {
+    const selected = new Set(data.availableWeekdays);
+    if (selected.has(weekday)) selected.delete(weekday);
+    else selected.add(weekday);
+    update({ availableWeekdays: [...selected].sort() });
   };
 
-  const allDays = [0, 1, 2, 3, 4, 5, 6] as const;
-  const everyDaySelected =
-    data.availableWeekdays.length === allDays.length &&
-    allDays.every((d) => data.availableWeekdays.includes(d));
-
-  const toggleEveryDay = () => {
+  const toggleBlockedDate = (iso: string) => {
+    if (isPastIsoDate(iso)) return;
     update({
-      availableWeekdays: everyDaySelected ? [] : [...allDays],
+      blockedDates: data.blockedDates.includes(iso)
+        ? data.blockedDates.filter((blocked) => blocked !== iso)
+        : [...data.blockedDates, iso],
     });
   };
 
+  const shiftMonth = (months: number) => {
+    const next = new Date(
+      visibleMonth.year,
+      visibleMonth.monthIndex + months,
+      1,
+    );
+    setVisibleMonth({ year: next.getFullYear(), monthIndex: next.getMonth() });
+  };
+
+  const bookingsPerDay = Number.parseInt(data.maxBookingsPerDay, 10);
+  const stepBookingsPerDay = (change: number) => {
+    const base = Number.isNaN(bookingsPerDay)
+      ? MIN_BOOKINGS_PER_DAY
+      : bookingsPerDay;
+    const next = Math.min(
+      MAX_BOOKINGS_PER_DAY,
+      Math.max(MIN_BOOKINGS_PER_DAY, base + change),
+    );
+    update({ maxBookingsPerDay: String(next) });
+  };
+
   return (
-    <div className="space-y-8">
-      <OnboardingSubQuestion headline={copy.daysHeadline} indexOffset={0}>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={toggleEveryDay}
-            className={`rounded-full border px-3 py-1.5 text-sm transition ${
-              everyDaySelected
-                ? "border-primary bg-primary/10 font-medium text-primary"
-                : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300"
-            }`}
-          >
-            Every day
-          </button>
-          {WEEKDAY_FULL_LABELS.map((label, i) => (
-            <ToggleChip
-              key={i}
-              active={data.availableWeekdays.includes(i)}
-              onClick={() => toggleDay(i)}
+    <div className="ez-stack">
+      <div className="ez-stack ez-stack--sm">
+        <span className="ez-label">Which days do you take bookings?</span>
+        <div className="ez-chip-row">
+          {WEEKDAY_SHORT_LABELS.map((label, weekday) => (
+            <EzChip
+              key={label}
+              active={data.availableWeekdays.includes(weekday)}
+              onClick={() => toggleDay(weekday)}
             >
               {label}
-            </ToggleChip>
+            </EzChip>
           ))}
         </div>
-      </OnboardingSubQuestion>
-      <OnboardingSubQuestion
-        headline={copy.blockedHeadline}
-        subtext={copy.blockedSubtext}
-        indexOffset={6}
-      >
-        <BlockedDatePicker
-          blockedDates={data.blockedDates}
-          onAdd={(iso) => update({ blockedDates: [...data.blockedDates, iso] })}
-        />
-        {data.blockedDates.length > 0 && (
-          <ul className="mt-2 flex flex-wrap gap-2">
-            {data.blockedDates.map((d) => (
-              <li
-                key={d}
-                className="flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5 text-xs"
-              >
-                {toUkDate(d)}
+      </div>
+      <div className="ez-stack ez-stack--sm">
+        <span className="ez-label">Bookings per day</span>
+        <span className="ez-help">
+          How many events you can do on the same day ({MIN_BOOKINGS_PER_DAY} to{" "}
+          {MAX_BOOKINGS_PER_DAY}).
+        </span>
+        <div className="ez-hrow">
+          <button
+            className="ez-icon-btn ez-icon-btn--outline"
+            type="button"
+            aria-label="Fewer"
+            onClick={() => stepBookingsPerDay(-1)}
+          >
+            <Minus strokeWidth={1.75} aria-hidden />
+          </button>
+          <input
+            className="ez-input"
+            style={{ width: 84, textAlign: "center" }}
+            type="number"
+            min={MIN_BOOKINGS_PER_DAY}
+            max={MAX_BOOKINGS_PER_DAY}
+            value={data.maxBookingsPerDay}
+            aria-label="Bookings per day"
+            onChange={(event) =>
+              update({ maxBookingsPerDay: event.target.value })
+            }
+          />
+          <button
+            className="ez-icon-btn ez-icon-btn--outline"
+            type="button"
+            aria-label="More"
+            onClick={() => stepBookingsPerDay(1)}
+          >
+            <Plus strokeWidth={1.75} aria-hidden />
+          </button>
+        </div>
+      </div>
+      <div className="ez-stack ez-stack--sm">
+        <div className="ez-between">
+          <span className="ez-label">
+            Dates you are not available{" "}
+            <span className="ez-label__opt">(optional)</span>
+          </span>
+          <div className="ez-hrow">
+            <button
+              className="ez-icon-btn"
+              type="button"
+              aria-label="Previous month"
+              onClick={() => shiftMonth(-1)}
+            >
+              <ChevronLeft strokeWidth={1.75} aria-hidden />
+            </button>
+            <span className="ez-strong">{monthLabel}</span>
+            <button
+              className="ez-icon-btn"
+              type="button"
+              aria-label="Next month"
+              onClick={() => shiftMonth(1)}
+            >
+              <ChevronRight strokeWidth={1.75} aria-hidden />
+            </button>
+          </div>
+        </div>
+        <div className="ez-cal">
+          {WEEKDAY_SHORT_LABELS.map((label) => (
+            <div key={label} className="ez-cal__dow">
+              {label}
+            </div>
+          ))}
+          {monthCells(visibleMonth.year, visibleMonth.monthIndex).map(
+            (cell) => {
+              const blocked = data.blockedDates.includes(cell.iso);
+              const classes = ["ez-cal__day"];
+              if (cell.outsideMonth) classes.push("ez-cal__day--muted");
+              if (blocked) classes.push("ez-cal__day--blocked");
+              return (
                 <button
+                  key={cell.iso}
                   type="button"
-                  className="text-neutral-500 hover:text-red-600"
-                  onClick={() =>
-                    update({
-                      blockedDates: data.blockedDates.filter((x) => x !== d),
-                    })
-                  }
+                  className={classes.join(" ")}
+                  style={{
+                    border: 0,
+                    font: "inherit",
+                    cursor: "pointer",
+                    background: blocked ? undefined : "none",
+                  }}
+                  aria-pressed={blocked}
+                  aria-label={cell.iso}
+                  disabled={isPastIsoDate(cell.iso)}
+                  onClick={() => toggleBlockedDate(cell.iso)}
                 >
-                  ×
+                  {cell.day}
                 </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </OnboardingSubQuestion>
-      <OnboardingSubQuestion headline={copy.maxBookingsHeadline} indexOffset={9}>
-        <ClearableTextField
-          type="number"
-          min={1}
-          value={data.maxBookingsPerDay}
-          onChange={(v) => update({ maxBookingsPerDay: v })}
-        />
-      </OnboardingSubQuestion>
+              );
+            },
+          )}
+        </div>
+        <div className="ez-legend">
+          <span>
+            <i style={{ background: "var(--ez-surface-3)" }} />
+            Blocked
+          </span>
+          <span>
+            <i style={{ background: "var(--ez-brand-100)" }} />
+            Booked
+          </span>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,13 +1,16 @@
 "use client";
 
-import { FileText, Trash2, Upload } from "lucide-react";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import type { VendorOnboardingData, VendorOnboardingUpdate } from "../types";
+import { FileText, Upload } from "lucide-react";
+import { useRef } from "react";
+import { SOCIAL_PLATFORM_OPTIONS } from "../constants";
 import {
-  OnboardingSubQuestion,
-} from "../ui/OnboardingQuestionLayout";
-import { ClearableTextarea, labelClass } from "./form-primitives";
+  createVendorSocialLink,
+  type SocialPlatform,
+  type VendorOnboardingData,
+  type VendorOnboardingUpdate,
+} from "../types";
 import { uploadedFileDisplayName } from "../uploadedFileDisplayName";
+import { EzCheck, EzTextField } from "./ez-form";
 
 export type StepAdditionalInfoProps = {
   data: VendorOnboardingData;
@@ -21,101 +24,82 @@ export type StepAdditionalInfoProps = {
   onRemoveOtherDoc: (url: string) => void;
 };
 
-function DocUploadRow({
-  label,
-  helpText,
-  persistedUrl,
-  displayName,
+/** Platforms the design shows as fixed fields; any other platform is an extra row. */
+const PRIMARY_PLATFORMS: SocialPlatform[] = ["instagram", "website"];
+
+/** Platforms a vendor can add beyond the two fixed fields, in the order they are offered. */
+const EXTRA_PLATFORMS: SocialPlatform[] = ["tiktok", "facebook", "twitter"];
+
+/** Row style from design V07: a hairline under each document. */
+const DOCUMENT_ROW_STYLE = {
+  padding: "14px 0",
+  borderBottom: "1px solid var(--ez-line)",
+} as const;
+
+/**
+ * One document row (design V07): icon tile, title and hint, then either an Upload button
+ * or an Uploaded badge with Replace (and Remove where the document can be cleared).
+ */
+function DocumentRow({
+  title,
+  hint,
+  uploadedLabels,
   uploading,
-  inputId,
   onUpload,
   onRemove,
 }: {
-  label: string;
-  helpText: string;
-  persistedUrl: string;
-  displayName: string;
-  uploading?: boolean;
-  inputId: string;
+  title: string;
+  hint: string;
+  /** Display names of the files already stored for this row; empty when none. */
+  uploadedLabels: string[];
+  uploading: boolean;
   onUpload: (file: File) => void;
-  onRemove: () => void;
+  onRemove?: () => void;
 }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const hasUpload = uploadedLabels.length > 0;
   return (
-    <div>
-      {label ? <label className={labelClass()}>{label}</label> : null}
-      <p className="mb-2 text-xs text-neutral-500">{helpText}</p>
-      {persistedUrl ? (
-        <div className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3">
-          <FileText className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.5} />
-          <span className="min-w-0 flex-1 truncate text-sm text-neutral-700">{displayName}</span>
-          <button
-            type="button"
-            onClick={onRemove}
-            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
-          >
-            <Trash2 className="h-3.5 w-3.5" /> Remove
-          </button>
-        </div>
-      ) : (
-        <div className="rounded-xl border-2 border-dashed border-neutral-200 bg-neutral-50/80 p-5 text-center">
-          <input
-            type="file"
-            accept="image/*,application/pdf"
-            className="hidden"
-            id={inputId}
-            disabled={uploading}
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) onUpload(f);
-              e.target.value = "";
-            }}
-          />
-          <label
-            htmlFor={inputId}
-            className={`inline-flex cursor-pointer flex-col items-center gap-1.5 text-primary ${
-              uploading ? "pointer-events-none opacity-60" : ""
-            }`}
-          >
-            <Upload className="h-5 w-5" strokeWidth={1.5} />
-            <span className="inline-flex items-center gap-2 text-sm font-medium hover:underline">
-              {uploading ? (
-                <>
-                  <LoadingSpinner size="sm" />
-                  Uploading…
-                </>
-              ) : (
-                "Upload document"
-              )}
-            </span>
-          </label>
-        </div>
-      )}
+    <div className="ez-list-row" style={DOCUMENT_ROW_STYLE}>
+      <span className="ez-icon-tile">
+        <FileText strokeWidth={1.75} aria-hidden />
+      </span>
+      <div className="ez-list-row__main">
+        <span className="ez-strong">{title}</span>
+        <span className="ez-small">{hint}</span>
+      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*,application/pdf"
+        hidden
+        aria-label={title}
+        disabled={uploading}
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) onUpload(file);
+          event.target.value = "";
+        }}
+      />
+      {hasUpload ? <span className="ez-badge ez-badge--success">Uploaded</span> : null}
+      <button
+        className={`ez-btn ${hasUpload ? "ez-btn--ghost" : "ez-btn--secondary"} ez-btn--sm`}
+        type="button"
+        disabled={uploading}
+        onClick={() => inputRef.current?.click()}
+      >
+        {hasUpload ? null : <Upload size={18} strokeWidth={1.75} aria-hidden />}
+        {uploading ? "Uploading…" : hasUpload ? "Replace" : "Upload document"}
+      </button>
+      {hasUpload && onRemove ? (
+        <button className="ez-btn ez-btn--ghost ez-btn--sm" type="button" onClick={onRemove}>
+          Remove
+        </button>
+      ) : null}
     </div>
   );
 }
 
-function DietaryCheckbox({
-  checked,
-  onChange,
-  label,
-}: {
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-  label: string;
-}) {
-  return (
-    <label className="flex items-start gap-3 text-sm">
-      <input
-        type="checkbox"
-        className="mt-0.5"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-      />
-      <span>{label}</span>
-    </label>
-  );
-}
-
+/** Step 8 (design V07): online links, dietary details and supporting documents, all optional. */
 export function StepAdditionalInfo({
   data,
   update,
@@ -124,135 +108,184 @@ export function StepAdditionalInfo({
   onRemoveAdditionalDoc,
   onRemoveOtherDoc,
 }: StepAdditionalInfoProps) {
+  const handleFor = (platform: SocialPlatform) =>
+    data.socialLinks.find((link) => link.platform === platform)?.handle ?? "";
+
+  /** Sets the first link of a platform, creating it on first input. */
+  const setHandle = (platform: SocialPlatform, handle: string) => {
+    const exists = data.socialLinks.some((link) => link.platform === platform);
+    if (exists) {
+      let patched = false;
+      update({
+        socialLinks: data.socialLinks.map((link) => {
+          if (link.platform !== platform || patched) return link;
+          patched = true;
+          return { ...link, handle };
+        }),
+      });
+      return;
+    }
+    update({ socialLinks: [...data.socialLinks, { ...createVendorSocialLink(platform), handle }] });
+  };
+
+  const extraLinks = data.socialLinks.filter((link) => !PRIMARY_PLATFORMS.includes(link.platform));
+  const nextExtraPlatform = EXTRA_PLATFORMS.find(
+    (platform) => !data.socialLinks.some((link) => link.platform === platform),
+  );
+  const placeholderFor = (platform: SocialPlatform) =>
+    SOCIAL_PLATFORM_OPTIONS.find((option) => option.value === platform)?.placeholder ?? "";
+  const labelFor = (platform: SocialPlatform) =>
+    SOCIAL_PLATFORM_OPTIONS.find((option) => option.value === platform)?.label ?? platform;
+
   return (
-    <div className="space-y-8">
-      <OnboardingSubQuestion headline="Food hygiene certificate" indexOffset={0}>
-        <DocUploadRow
-          label=""
-          helpText="If you handle or serve food, clients feel safer booking a certified vendor."
-          persistedUrl={data.foodHygieneCertNamePersisted}
-          displayName={uploadedFileDisplayName(
-            data.foodHygieneCertNamePersisted,
-            data.uploadedFileLabels,
-            "Food hygiene certificate",
-          )}
+    <div className="ez-stack">
+      <div className="ez-stack">
+        <h3 className="ez-h3">
+          Find you online <span className="ez-label__opt">(optional)</span>
+        </h3>
+        <div className="ez-form-grid">
+          <EzTextField
+            label="Instagram"
+            value={handleFor("instagram")}
+            placeholder={placeholderFor("instagram")}
+            onChange={(value) => setHandle("instagram", value)}
+          />
+          <EzTextField
+            label="Website"
+            value={handleFor("website")}
+            placeholder={placeholderFor("website")}
+            onChange={(value) => setHandle("website", value)}
+          />
+          {extraLinks.map((link) => (
+            <EzTextField
+              key={link.id}
+              label={labelFor(link.platform)}
+              value={link.handle}
+              placeholder={placeholderFor(link.platform)}
+              onChange={(value) =>
+                update({
+                  socialLinks: data.socialLinks.map((item) =>
+                    item.id === link.id ? { ...item, handle: value } : item,
+                  ),
+                })
+              }
+            />
+          ))}
+        </div>
+        {nextExtraPlatform ? (
+          <div>
+            <button
+              className="ez-btn ez-btn--ghost ez-btn--sm"
+              type="button"
+              onClick={() =>
+                update({
+                  socialLinks: [...data.socialLinks, createVendorSocialLink(nextExtraPlatform)],
+                })
+              }
+            >
+              Add {labelFor(nextExtraPlatform)}
+            </button>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="ez-stack ez-stack--sm">
+        <h3 className="ez-h3">
+          Dietary details <span className="ez-label__opt">(optional)</span>
+        </h3>
+        <EzCheck checked={data.isHalal} onChange={(checked) => update({ isHalal: checked })}>
+          Halal
+        </EzCheck>
+        <EzCheck checked={data.isVegan} onChange={(checked) => update({ isVegan: checked })}>
+          Vegan options available
+        </EzCheck>
+        <EzCheck checked={data.isVegetarian} onChange={(checked) => update({ isVegetarian: checked })}>
+          Vegetarian options available
+        </EzCheck>
+        <EzCheck checked={data.isGlutenFree} onChange={(checked) => update({ isGlutenFree: checked })}>
+          Gluten-free options available
+        </EzCheck>
+        <EzTextField
+          label={
+            <>
+              Allergen information <span className="ez-label__opt">(optional)</span>
+            </>
+          }
+          value={data.allergenInfo}
+          placeholder="e.g. Contains nuts and dairy; gluten-free options available on request"
+          onChange={(value) => update({ allergenInfo: value })}
+        />
+      </div>
+
+      <div className="ez-stack ez-stack--sm">
+        <h3 className="ez-h3">Documents</h3>
+        <p className="ez-small">
+          If you handle or serve food, clients feel safer booking a certified vendor.
+        </p>
+        <DocumentRow
+          title="Food hygiene certificate"
+          hint="Level 2 or above."
+          uploadedLabels={
+            data.foodHygieneCertNamePersisted
+              ? [
+                  uploadedFileDisplayName(
+                    data.foodHygieneCertNamePersisted,
+                    data.uploadedFileLabels,
+                    "Food hygiene certificate",
+                  ),
+                ]
+              : []
+          }
           uploading={uploadingDoc.foodHygiene}
-          inputId="doc-food-hygiene"
-          onUpload={(f) => void onUploadAdditionalDoc("foodHygiene", f)}
+          onUpload={(file) => void onUploadAdditionalDoc("foodHygiene", file)}
           onRemove={() => onRemoveAdditionalDoc("foodHygiene")}
         />
-      </OnboardingSubQuestion>
-
-      <OnboardingSubQuestion headline="Indemnity / insurance certificate" indexOffset={3}>
-        <DocUploadRow
-          label=""
-          helpText="Public liability or indemnity insurance, if you have it."
-          persistedUrl={data.indemnityCertNamePersisted}
-          displayName={uploadedFileDisplayName(
-            data.indemnityCertNamePersisted,
-            data.uploadedFileLabels,
-            "Indemnity / insurance certificate",
-          )}
+        <DocumentRow
+          title="Indemnity / insurance certificate"
+          hint="Public liability or indemnity insurance, if you have it."
+          uploadedLabels={
+            data.indemnityCertNamePersisted
+              ? [
+                  uploadedFileDisplayName(
+                    data.indemnityCertNamePersisted,
+                    data.uploadedFileLabels,
+                    "Indemnity / insurance certificate",
+                  ),
+                ]
+              : []
+          }
           uploading={uploadingDoc.indemnity}
-          inputId="doc-indemnity"
-          onUpload={(f) => void onUploadAdditionalDoc("indemnity", f)}
+          onUpload={(file) => void onUploadAdditionalDoc("indemnity", file)}
           onRemove={() => onRemoveAdditionalDoc("indemnity")}
         />
-      </OnboardingSubQuestion>
-
-      <OnboardingSubQuestion headline="Other supporting documents" indexOffset={9}>
-        <div className="rounded-xl border-2 border-dashed border-neutral-200 bg-neutral-50/80 p-5 text-center">
-          <input
-            type="file"
-            accept="image/*,application/pdf"
-            className="hidden"
-            id="doc-other"
-            disabled={uploadingDoc.other}
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) void onUploadAdditionalDoc("other", f);
-              e.target.value = "";
-            }}
-          />
-          <label
-            htmlFor="doc-other"
-            className={`inline-flex cursor-pointer flex-col items-center gap-1.5 text-primary ${
-              uploadingDoc.other ? "pointer-events-none opacity-60" : ""
-            }`}
-          >
-            <Upload className="h-5 w-5" strokeWidth={1.5} />
-            <span className="inline-flex items-center gap-2 text-sm font-medium hover:underline">
-              {uploadingDoc.other ? (
-                <>
-                  <LoadingSpinner size="sm" />
-                  Uploading…
-                </>
-              ) : (
-                "Upload another document"
-              )}
+        <DocumentRow
+          title="Other supporting documents"
+          hint="Licences, awards or references."
+          uploadedLabels={[]}
+          uploading={uploadingDoc.other}
+          onUpload={(file) => void onUploadAdditionalDoc("other", file)}
+        />
+        {data.otherDocsNamesPersisted.map((url) => (
+          <div className="ez-list-row" style={DOCUMENT_ROW_STYLE} key={url}>
+            <span className="ez-icon-tile">
+              <FileText strokeWidth={1.75} aria-hidden />
             </span>
-          </label>
-        </div>
-        {data.otherDocsNamesPersisted.length > 0 && (
-          <ul className="mt-2 space-y-1.5">
-            {data.otherDocsNamesPersisted.map((url) => (
-              <li
-                key={url}
-                className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white px-3 py-2"
-              >
-                <FileText className="h-4 w-4 shrink-0 text-neutral-500" />
-                <span className="min-w-0 flex-1 truncate text-sm text-neutral-700">
-                  {uploadedFileDisplayName(url, data.uploadedFileLabels, "Document")}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => onRemoveOtherDoc(url)}
-                  className="text-xs font-medium text-red-700 hover:underline"
-                >
-                  Remove
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </OnboardingSubQuestion>
-
-      <OnboardingSubQuestion headline="Dietary details (optional)" indexOffset={12}>
-        <p className="mb-3 text-xs text-neutral-500">
-          Only relevant if you offer food or catering services.
-        </p>
-        <div className="space-y-3">
-          <DietaryCheckbox
-            checked={data.isHalal}
-            onChange={(checked) => update({ isHalal: checked })}
-            label="Halal"
-          />
-          <DietaryCheckbox
-            checked={data.isVegan}
-            onChange={(checked) => update({ isVegan: checked })}
-            label="Vegan options available"
-          />
-          <DietaryCheckbox
-            checked={data.isVegetarian}
-            onChange={(checked) => update({ isVegetarian: checked })}
-            label="Vegetarian options available"
-          />
-          <DietaryCheckbox
-            checked={data.isGlutenFree}
-            onChange={(checked) => update({ isGlutenFree: checked })}
-            label="Gluten-free options available"
-          />
-        </div>
-        <div className="mt-4">
-          <label className={labelClass()}>Allergen information (optional)</label>
-          <ClearableTextarea
-            className="min-h-[80px]"
-            value={data.allergenInfo}
-            onChange={(v) => update({ allergenInfo: v })}
-            placeholder="e.g. Contains nuts and dairy; gluten-free options available on request"
-          />
-        </div>
-      </OnboardingSubQuestion>
+            <div className="ez-list-row__main">
+              <span className="ez-strong">
+                {uploadedFileDisplayName(url, data.uploadedFileLabels, "Document")}
+              </span>
+            </div>
+            <span className="ez-badge ez-badge--success">Uploaded</span>
+            <button
+              className="ez-btn ez-btn--ghost ez-btn--sm"
+              type="button"
+              onClick={() => onRemoveOtherDoc(url)}
+            >
+              Remove
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

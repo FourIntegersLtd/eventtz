@@ -37,6 +37,11 @@ export const STEP_COPY = {
     bookingHeadline: "Any discounts?",
   },
   5: {
+    headline: "If a client cancels",
+    subtext:
+      "If a client cancels a paid booking, this decides how much of your price they get back. Until you pick, clients see Flexible.",
+  },
+  6: {
     headline: "When are you available?",
     subtext: "Choose your working days and how many bookings you can take each day.",
     daysHeadline: "Which days do you take bookings?",
@@ -44,15 +49,15 @@ export const STEP_COPY = {
     blockedSubtext: "Optional.",
     maxBookingsHeadline: "Bookings per day",
   },
-  6: {
+  7: {
     headline: "Show your best work",
     subtext: `Upload at least ${MIN_PORTFOLIO_IMAGES} photos so clients can see your work.`,
   },
-  7: {
+  8: {
     headline: "Anything else?",
     subtext: "",
   },
-  8: {
+  9: {
     headline: "Look good?",
     subtext: "Check everything before you submit.",
   },
@@ -74,3 +79,16 @@ export function portfolioApprovalBlockedCopy(photoCount: number) {
     checkStatusHint: "Once your photos are uploaded, we'll be able to continue with your review.",
   };
 }
+
+/** Wizard page heading plus the form card's own title and subtitle, per step (1-8). */
+export const WIZARD_HEAD: Record<number, { pageTitle: string; cardTitle: string; cardSubtext: string }> = {
+  1: { pageTitle: "Let's get started", cardTitle: "What should we call you?", cardSubtext: "Clients see these after booking." },
+  2: { pageTitle: "What's your business called?", cardTitle: "Business details", cardSubtext: "Who you are and what events you serve." },
+  3: { pageTitle: "Where are you based?", cardTitle: "Location and reach", cardSubtext: "So clients can find you nearby." },
+  4: { pageTitle: "How do you price your work?", cardTitle: "Packages and prices", cardSubtext: "Each package is one bookable option with a name, a price and what is included." },
+  5: { pageTitle: "If a client cancels", cardTitle: "Your cancellation policy", cardSubtext: "If a client cancels a paid booking, this decides how much of your price they get back. Until you pick, clients see Flexible." },
+  6: { pageTitle: "When are you available?", cardTitle: "Availability", cardSubtext: "Choose your working days and how many bookings you can take each day." },
+  7: { pageTitle: "Show your best work", cardTitle: "Portfolio", cardSubtext: `Upload at least ${MIN_PORTFOLIO_IMAGES} photos so clients can see your work.` },
+  8: { pageTitle: "Anything else?", cardTitle: "Additional information", cardSubtext: "Optional extras that build trust. You can skip any of them." },
+  9: { pageTitle: "Look good?", cardTitle: "Review and submit", cardSubtext: "Check everything before you submit." },
+};

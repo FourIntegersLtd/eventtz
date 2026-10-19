@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "design:diff": "node scripts/design-diff/run.mjs",
     "optimize-videos": "bash scripts/optimize-landing-videos.sh"
   },
   "dependencies": {
@@ -45,6 +46,9 @@
     "@vitejs/plugin-react": "^6.1.2",
     "eslint": "^10",
     "eslint-config-next": "^16.4.2",
+    "pixelmatch": "^8.0.0",
+    "playwright": "^1.64.1",
+    "pngjs": "^7.0.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vite-tsconfig-paths": "^6.1.1",

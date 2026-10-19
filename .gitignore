@@ -7,3 +7,6 @@
 
 # Claude Code agent worktrees (nested git checkouts).
 .claude/worktrees/
+
+# design diff output (screenshots, reports)
+web/design/diff-output/

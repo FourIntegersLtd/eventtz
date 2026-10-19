@@ -23,7 +23,7 @@ from app.features.staff import service as staff
 from app.features.vendors import repository
 from app.features.vendors.domain_insurance import MIN_COVER_GBP
 from app.features.vendors.domain_listing_media import listing_cover_image_url, url_list, with_listing_media
-from app.features.vendors.domain_profile_form import normalize_payload_fields
+from app.features.vendors.domain_profile_form import ONBOARDING_FLOW_VERSION, normalize_payload_fields
 from app.features.vendors.domain_visibility import is_paused, listing_override_of
 from app.features.vendors.errors import (
     InsuranceAlreadyExpired,
@@ -63,7 +63,7 @@ VENDOR_PROFILE_NOT_FOUND_ROUTE = "Vendor profile not found"
 EMAIL_COULD_NOT_BE_SENT = "Email could not be sent."
 NO_EMAIL_ON_FILE = "No email address on file."
 # A vendor returned for edits lands on the last onboarding step, ready to resubmit.
-RETURNED_FOR_EDITS_STEP = 8
+RETURNED_FOR_EDITS_STEP = 9
 # How many vendor ids a nudge's audit entry lists (the rest are only counted).
 AUDITED_NUDGE_IDS = 20
 # How much of the "returned for edits" note the audit entry keeps.
@@ -250,7 +250,13 @@ async def return_for_edits(
         raise OnlySubmittedToDraft()
     if (vendor.approval_status or "pending") != "pending":
         raise OnlyPendingToDraft()
-    form = {**vendor.payload, "returnedForEditsAt": _now_iso()}
+    # Step 9 is the review step only in flow version 3, so a form saved before the cancellation
+    # step existed is stamped with the current version.
+    form = {
+        **vendor.payload,
+        "returnedForEditsAt": _now_iso(),
+        "onboardingFlowVersion": ONBOARDING_FLOW_VERSION,
+    }
     await repository.update_vendor(
         session, user_id, {"status": "draft", "current_step": RETURNED_FOR_EDITS_STEP, "payload": form}
     )

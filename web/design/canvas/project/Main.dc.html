@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>Eventtz design language</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./eventtz.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+.sw{border-radius:12px;height:88px;display:flex;align-items:flex-end;padding:10px;font:600 12px/1.3 'Plus Jakarta Sans',sans-serif}
+.swl{display:flex;flex-direction:column;gap:6px;min-width:0}
+.swl b{font-size:13px;color:#18151d}
+.swl span{font-size:12px;color:#6e6a76;font-variant-numeric:tabular-nums}
+.blk{display:flex;flex-direction:column;gap:20px}
+.typerow{display:grid;grid-template-columns:200px 1fr;gap:24px;align-items:baseline;padding:16px 0;border-bottom:1px solid #ece8f1}
+.princ{padding:24px;border-radius:16px;background:#fff;border:1px solid #ece8f1;display:flex;flex-direction:column;gap:10px}
+.princ b{font-family:'Fraunces',serif;font-size:20px;font-weight:600;color:#18151d}
+</style>
+</helmet>
+<div class="ez-page" style="width: 1440px; min-height: 3000px; padding: 80px 96px; display: flex; flex-direction: column; gap: 72px; background: #f8f6fb">
+
+<header style="display: flex; justify-content: space-between; align-items: flex-end; gap: 32px; flex-wrap: wrap">
+<div style="display: flex; flex-direction: column; gap: 16px; max-width: 760px">
+<img class="ez-logo" src="/_blob/2a31e70a4e32e837342407c6ca9a2d62" alt="Eventtz" style="height: 56px">
+<span class="ez-eyebrow">Design language v1 · October 2026</span>
+<h1 class="ez-display" style="font-size: 64px">Celebration, made calm.</h1>
+<p class="ez-lead">The event is the exciting part. Everything around it, finding a vendor, agreeing a price, paying and getting paid, should feel quiet, clear and trustworthy. Purple carries the brand, gold marks the moments worth celebrating, and everything else steps back.</p>
+</div>
+<div style="display: flex; gap: 8px; flex-wrap: wrap">
+<span class="ez-role ez-role--client">Client</span>
+<span class="ez-role ez-role--vendor">Vendor</span>
+<span class="ez-role" style="background: #18151d; color: #fff">Admin</span>
+</div>
+</header>
+
+<section class="blk">
+<span class="ez-eyebrow">Principles</span>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px">
+<div class="princ"><b>Soft by default</b><p class="ez-small">As on the live browse page: pale lavender page, white cards on a hairline, near-black text at 400 to 500 weight, pale pills. Purple is for the one main action and small accents, never large blocks.</p></div>
+<div class="princ"><b>One way to do each thing</b><p class="ez-small">One button, one card, one field, one badge. A screen is assembled from shared parts, never restyled by hand.</p></div>
+<div class="princ"><b>Status is always visible</b><p class="ez-small">Every booking shows where it is in its journey and what happens next, with a word and a colour, never colour alone.</p></div>
+<div class="princ"><b>Money reads like a receipt</b><p class="ez-small">Prices in pounds, tabular figures, the total last and largest. No surprises between quote, checkout and payout.</p></div>
+<div class="princ"><b>Same kit, three rooms</b><p class="ez-small">Clients, vendors and admins share tokens and components. Only the shell changes: browse-first, work-focused, dense. All three are light.</p></div>
+</div>
+</section>
+
+<section class="blk">
+<div class="ez-between"><span class="ez-eyebrow">Colour</span><span class="ez-caption">Purple 700 is the live primary #3e1964. Ramps are built around it.</span></div>
+<div style="display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 10px">
+<div class="swl"><div class="sw" style="background: #f8f6fb; border: 1px solid #ece8f1"></div><b>Brand 50</b><span>#f8f6fb page</span></div>
+<div class="swl"><div class="sw" style="background: #f3eef9"></div><b>Brand 100</b><span>#f3eef9 soft</span></div>
+<div class="swl"><div class="sw" style="background: #ebe4f4"></div><b>Brand 200</b><span>#ebe4f4 muted</span></div>
+<div class="swl"><div class="sw" style="background: #d6c8e8"></div><b>Brand 300</b><span>#d6c8e8</span></div>
+<div class="swl"><div class="sw" style="background: #b49bd3"></div><b>Brand 400</b><span>#b49bd3 focus</span></div>
+<div class="swl"><div class="sw" style="background: #8b6bb8"></div><b>Brand 500</b><span>#8b6bb8 violet</span></div>
+<div class="swl"><div class="sw" style="background: #5f3a8c"></div><b>Brand 600</b><span>#5f3a8c</span></div>
+<div class="swl"><div class="sw" style="background: #3e1964; color: #fff">Primary</div><b>Brand 700</b><span>#3e1964</span></div>
+<div class="swl"><div class="sw" style="background: #2f124d"></div><b>Brand 800</b><span>#2f124d hover</span></div>
+<div class="swl"><div class="sw" style="background: #200b35"></div><b>Brand 900</b><span>#200b35 footer</span></div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) 40px repeat(5, minmax(0, 1fr)); gap: 10px">
+<div class="swl"><div class="sw" style="background: #f8f1e2"></div><b>Gold 100</b><span>#f8f1e2</span></div>
+<div class="swl"><div class="sw" style="background: #e2cc9c"></div><b>Gold 300</b><span>#e2cc9c</span></div>
+<div class="swl"><div class="sw" style="background: #c4a05a"></div><b>Gold 500</b><span>#c4a05a stars</span></div>
+<div class="swl"><div class="sw" style="background: #7d5f22"></div><b>Gold 700</b><span>#7d5f22 text</span></div>
+<div></div>
+<div class="swl"><div class="sw" style="background: #18151d"></div><b>Ink</b><span>#18151d text</span></div>
+<div class="swl"><div class="sw" style="background: #4d4955"></div><b>Ink 2</b><span>#4d4955 body</span></div>
+<div class="swl"><div class="sw" style="background: #6e6a76"></div><b>Ink 3</b><span>#6e6a76 caption</span></div>
+<div class="swl"><div class="sw" style="background: #e2dce9"></div><b>Line strong</b><span>#e2dce9 inputs</span></div>
+<div class="swl"><div class="sw" style="background: #ece8f1"></div><b>Line</b><span>#ece8f1 dividers</span></div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px">
+<div class="princ"><b>Soft by default</b><p class="ez-small">As on the live browse page: pale lavender page, white cards on a hairline, near-black text at 400 to 500 weight, pale pills. Purple is for the one main action and small accents, never large blocks.</p></div>
+<div class="ez-card ez-card__body ez-stack ez-stack--sm"><span class="ez-badge ez-badge--success">Success</span><span class="ez-caption">Text #1f7a4d · surface #ecf8f1 · line #c9ead7</span><span class="ez-small">Paid, confirmed, complete, payouts sent.</span></div>
+<div class="ez-card ez-card__body ez-stack ez-stack--sm"><span class="ez-badge ez-badge--warning">Warning</span><span class="ez-caption">Text #7a5a00 · surface #fdf9e8 · line #f2e3a5</span><span class="ez-small">Waiting on you, payout held, action needed.</span></div>
+<div class="ez-card ez-card__body ez-stack ez-stack--sm"><span class="ez-badge ez-badge--danger">Danger</span><span class="ez-caption">Text #b42318 · surface #fdf0ef · line #f5cdc8</span><span class="ez-small">Declined, failed, disputed, delete.</span></div>
+<div class="ez-card ez-card__body ez-stack ez-stack--sm"><span class="ez-badge ez-badge--info">Info</span><span class="ez-caption">Text #1f5f9e · surface #eef5fd · line #cfe2f7</span><span class="ez-small">Neutral facts, tips, processing.</span></div>
+</div>
+<div class="ez-card ez-card__body" style="display: flex; gap: 32px; align-items: center; flex-wrap: wrap">
+<div class="ez-stack ez-stack--sm" style="min-width: 240px"><span class="ez-h3">Chart palette</span><span class="ez-caption">Replaces indigo, emerald and sky in the admin and vendor charts. Ordered by lightness so series survive greyscale.</span></div>
+<div style="display: flex; gap: 10px">
+<div class="sw" style="width: 96px; background: #3e1964; color: #fff">1</div>
+<div class="sw" style="width: 96px; background: #8b6bb8; color: #fff">2</div>
+<div class="sw" style="width: 96px; background: #c4a05a">3</div>
+<div class="sw" style="width: 96px; background: #b49bd3">4</div>
+<div class="sw" style="width: 96px; background: #9a93a6">5</div>
+</div>
+</div>
+</section>
+
+<section class="blk">
+<div class="ez-between"><span class="ez-eyebrow">Typography</span><span class="ez-caption">Fraunces for headings and money. Plus Jakarta Sans for everything you read or tap.</span></div>
+<div class="ez-card" style="padding: 8px 32px">
+<div class="typerow"><span class="ez-caption">Display · Fraunces 600 · 44/48</span><span class="ez-display">Find the vendors for your day</span></div>
+<div class="typerow"><span class="ez-caption">H1 page title · Fraunces 600 · 30/36</span><span class="ez-h1">My bookings</span></div>
+<div class="typerow"><span class="ez-caption">H2 section · Fraunces 600 · 22/28</span><span class="ez-h2">What happens next</span></div>
+<div class="typerow"><span class="ez-caption">H3 card title · Jakarta 700 · 17/23</span><span class="ez-h3">Mama Ade's Kitchen · Catering</span></div>
+<div class="typerow"><span class="ez-caption">Lead · Jakarta 400 · 17/27</span><span class="ez-lead">Tell us about your event and we will send it to the vendor.</span></div>
+<div class="typerow"><span class="ez-caption">Body · Jakarta 400 · 15/23</span><span class="ez-body">Your vendor has 48 hours to accept or send a quote. We will email you either way.</span></div>
+<div class="typerow"><span class="ez-caption">Small · Jakarta 400 · 14/21</span><span class="ez-small">Free cancellation until 30 days before the event.</span></div>
+<div class="typerow"><span class="ez-caption">Caption · Jakarta 400 · 13/19</span><span class="ez-caption">Requested 14 Oct 2026, 09:12</span></div>
+<div class="typerow"><span class="ez-caption">Eyebrow · Jakarta 700 caps · 12</span><span class="ez-eyebrow">Step 4 of 8</span></div>
+<div class="typerow" style="border-bottom: 0"><span class="ez-caption">Money · Fraunces 600 tabular</span><span class="ez-money" style="font-size: 30px">£1,250.00</span></div>
+</div>
+</section>
+
+<section style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px">
+<div class="ez-card ez-card__body ez-stack">
+<span class="ez-eyebrow">Shape · three radii</span>
+<div style="display: flex; gap: 16px; align-items: flex-end">
+<div style="display: flex; flex-direction: column; gap: 8px; align-items: center"><div style="width: 80px; height: 48px; border-radius: 10px; background: #ebe4f4; border: 1px solid #b49bd3"></div><span class="ez-caption">10 control</span></div>
+<div style="display: flex; flex-direction: column; gap: 8px; align-items: center"><div style="width: 96px; height: 72px; border-radius: 16px; background: #ebe4f4; border: 1px solid #b49bd3"></div><span class="ez-caption">16 card</span></div>
+<div style="display: flex; flex-direction: column; gap: 8px; align-items: center"><div style="width: 96px; height: 36px; border-radius: 999px; background: #ebe4f4; border: 1px solid #b49bd3"></div><span class="ez-caption">pill</span></div>
+</div>
+<p class="ez-small">Buttons, inputs, nav items: 10. Cards, modals, drawers, banners: 16. Badges, chips, avatars: pill. Nothing else. Today the app uses eight.</p>
+</div>
+<div class="ez-card ez-card__body ez-stack">
+<span class="ez-eyebrow">Elevation · barely there</span>
+<div style="display: flex; gap: 20px; padding: 8px 4px 12px">
+<div style="flex: 1; height: 72px; border-radius: 16px; background: #fff; box-shadow: 0 1px 2px rgba(24,21,29,.04); border: 1px solid #ece8f1; display: flex; align-items: center; justify-content: center" class="ez-caption">1 resting</div>
+<div style="flex: 1; height: 72px; border-radius: 16px; background: #fff; box-shadow: 0 6px 20px rgba(62,25,100,.06); display: flex; align-items: center; justify-content: center" class="ez-caption">2 raised</div>
+<div style="flex: 1; height: 72px; border-radius: 16px; background: #fff; box-shadow: 0 24px 56px rgba(32,11,53,.16); display: flex; align-items: center; justify-content: center" class="ez-caption">3 overlay</div>
+</div>
+<p class="ez-small">Cards rest on a 1px line, not a shadow. Raised is for hover and featured cards. Overlay is only for modals, drawers and toasts.</p>
+</div>
+<div class="ez-card ez-card__body ez-stack">
+<span class="ez-eyebrow">Spacing · 4-point</span>
+<div style="display: flex; gap: 10px; align-items: flex-end; height: 72px">
+<div style="width: 4px; height: 4px; background: #8b6bb8"></div><div style="width: 8px; height: 8px; background: #8b6bb8"></div><div style="width: 12px; height: 12px; background: #8b6bb8"></div><div style="width: 16px; height: 16px; background: #8b6bb8"></div><div style="width: 24px; height: 24px; background: #8b6bb8"></div><div style="width: 32px; height: 32px; background: #8b6bb8"></div><div style="width: 48px; height: 48px; background: #8b6bb8"></div><div style="width: 64px; height: 64px; background: #8b6bb8"></div>
+</div>
+<p class="ez-small">4 8 12 16 24 32 48 64. Card padding 24, page padding 32, section gap 40, form field gap 16.</p>
+</div>
+</section>
+
+<section style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px">
+<div class="ez-card ez-card__body ez-stack">
+<span class="ez-eyebrow">Motion</span>
+<p class="ez-small"><b class="ez-strong">One easing:</b> cubic-bezier(0.22, 1, 0.36, 1). <b class="ez-strong">Two speeds:</b> 150ms for hovers and presses, 220ms for modals, drawers and toasts entering.</p>
+<p class="ez-small">Lists stagger in once. Lottie appears only at a start or an ending: welcome, success, empty, failure. Everything respects reduced motion.</p>
+</div>
+<div class="ez-card ez-card__body ez-stack">
+<span class="ez-eyebrow">Icons</span>
+<div style="display: flex; gap: 14px; color: #3e1964">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"></path><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path></svg>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path></svg>
+</div>
+<p class="ez-small">Lucide only, stroke 1.75, 18px in buttons, 20px in nav, 22px in icon tiles. Drop react-icons. Never emoji.</p>
+</div>
+<div class="ez-card ez-card__body ez-stack">
+<span class="ez-eyebrow">Accessibility</span>
+<p class="ez-small">44px minimum tap target, including small buttons in dense tables. 3px Brand 400 focus ring. Every text pair passes AA. Status always pairs a word with its colour.</p>
+</div>
+</section>
+
+<section style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px">
+<div class="ez-card ez-card__body ez-stack">
+<span class="ez-eyebrow">Voice</span>
+<div class="ez-grid-2" style="gap: 16px">
+<div class="ez-stack ez-stack--sm"><span class="ez-badge ez-badge--success ez-badge--plain">Say</span><p class="ez-small">"Waiting for Mama Ade's Kitchen to reply. Most vendors answer within a day."</p><p class="ez-small">"You have been paid £1,125.00 for the Okafor wedding."</p></div>
+<div class="ez-stack ez-stack--sm"><span class="ez-badge ez-badge--danger ez-badge--plain">Avoid</span><p class="ez-small">"Status: PENDING_VENDOR_RESPONSE"</p><p class="ez-small">"Oops! Something went wrong :(" or any em dash in product copy.</p></div>
+</div>
+<p class="ez-small">Plain UK English. Sentence case for every title and button. Name the person and the event. Buttons say what happens: "Pay £450 deposit", not "Continue".</p>
+</div>
+<div class="ez-card ez-card__body ez-stack">
+<span class="ez-eyebrow">Three rooms, one kit</span>
+<div class="ez-stack ez-stack--sm">
+<div class="ez-hrow"><span class="ez-role ez-role--client">Client</span><span class="ez-small">Warm and browse-first. White sidebar, "Plan my event" in gold, big photography.</span></div>
+<div class="ez-hrow"><span class="ez-role ez-role--vendor">Vendor</span><span class="ez-small">A business tool. White sidebar with profile status, the attention feed first, money always one click away.</span></div>
+<div class="ez-hrow"><span class="ez-role" style="background: #18151d; color: #fff">Admin</span><span class="ez-small">A console. Ink sidebar, denser tables, the same badges and buttons, so a status means the same thing everywhere.</span></div>
+</div>
+</div>
+</section>
+
+<section class="blk">
+<div class="ez-between"><span class="ez-eyebrow">Rollout map · what each part replaces in web/</span><span class="ez-caption">Feeds the follow-up code prompt</span></div>
+<div class="ez-table-wrap">
+<table class="ez-table">
+<thead><tr><th>Part</th><th>Becomes the one source in</th><th>Retires</th></tr></thead>
+<tbody>
+<tr><td class="ez-td-strong">Tokens</td><td>app/globals.css @theme (brand ramp, gold, ink, semantic, chart, radii, shadows)</td><td>Duplicate .bg-primary rules; hex #3e1964 in ReceiptPageShell.tsx:109, ReceiptActions.tsx:28, VendorPayoutCard.tsx:62; bg-[#f8f6fb] in marketplace and planner</td></tr>
+<tr><td class="ez-td-strong">Button</td><td>components/ui/buttonStyles.ts (primary, secondary, ghost, danger, danger-quiet, inverse; sm, md, lg; pill)</td><td>53 raw bg-primary buttons and 5 radius flavours outside components/ui</td></tr>
+<tr><td class="ez-td-strong">Card, Callout</td><td>components/ui/Card.tsx with head, body, foot</td><td>About 25 inline rounded-2xl border-neutral-100 shells; sectionBlockTokens.ts surfaces</td></tr>
+<tr><td class="ez-td-strong">Field</td><td>components/ui/TextField, Select, TextArea, DateInput</td><td>64 raw input tags outside components/ui</td></tr>
+<tr><td class="ez-td-strong">StatusBadge</td><td>New components/ui/Badge.tsx with tones; components/badges/* map states to tones</td><td>8 hand-coloured badge components</td></tr>
+<tr><td class="ez-td-strong">Banner</td><td>New components/ui/Banner.tsx</td><td>Hand-built amber, red and emerald alert cards</td></tr>
+<tr><td class="ez-td-strong">PageHeader, Stepper</td><td>New components/ui/PageHeader.tsx, Stepper.tsx</td><td>Per-page h1 sizes (text-xl to text-5xl); OnboardingProgressHeader</td></tr>
+<tr><td class="ez-td-strong">Modal, Drawer</td><td>components/ui/Modal, Drawer, ConfirmDialog</td><td>Hand-built overlays in VendorBookingModal, ClientWelcomeOnboardingModal, MarketplaceFiltersBar, HelpWidget, PortfolioLightbox, LandingNav</td></tr>
+<tr><td class="ez-td-strong">Charts</td><td>One chartPalette in components/ui</td><td>#6366f1, #a78bfa, #10b981 and the donut palette in Admin*Chart.tsx</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":3000}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

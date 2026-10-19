@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import { portalCard, portalCardPaddingLg } from "@/components/portal-shell/portalTheme";
+import { ONBOARDING_STEP } from "./onboardingProgress";
+import { useEffect, useState } from "react";
+import { portalCard } from "@/components/portal-shell/portalTheme";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import {
   defaultProfileSectionForStep,
@@ -14,8 +14,9 @@ import {
 } from "./constants";
 import { portfolioApprovalBlockedCopy } from "./onboardingCopy";
 import { OnboardingStepContent } from "./OnboardingStepContent";
-import { OnboardingProgressHeader } from "./OnboardingProgressHeader";
-import { OnboardingWizardStepTitle } from "./ui/OnboardingWizardStepTitle";
+import { draftSavedLabel } from "./draftSavedLabel";
+import { WizardAside } from "./ui/WizardAside";
+import { WizardFrame } from "./ui/WizardFrame";
 import { OnboardingStepInfoModal } from "./ui/OnboardingStepInfoModal";
 import { RETURNED_FOR_EDITS_BODY, RETURNED_FOR_EDITS_TITLE } from "./returnedForEditsCopy";
 import { VendorProfilePhotoField } from "./VendorProfilePhotoField";
@@ -56,6 +57,7 @@ export function VendorOnboarding() {
     returnedForEdits,
     primaryLabel,
     profileStatus,
+    lastSavedAt,
     setBusinessNameError,
     setPhoneError,
     onGenerateBioWithAI,
@@ -96,12 +98,11 @@ export function VendorOnboarding() {
 
   const isLiveEdit = !useWizardLayout;
   /** Jumped from review to fix one section — "Back to review" replaces linear Back. */
-  const editingFromReview = returnToReview && step < 8;
+  const editingFromReview = returnToReview && step < ONBOARDING_STEP.review;
   const showWizardBack =
     !editingFromReview &&
-    (step > 1 || (lockedPendingReview && (step === 6 || step === 8)));
+    (step > 1 || (lockedPendingReview && (step === ONBOARDING_STEP.portfolio || step === ONBOARDING_STEP.review)));
   const returnedForEditsPending = !isWalkthrough && returnedForEdits;
-  const questionnaireTopRef = useRef<HTMLDivElement>(null);
   const [stepInfoOpen, setStepInfoOpen] = useState(false);
 
   // Live editor: the URL (`?section=<slug>`) is the source of truth for the open section,
@@ -120,9 +121,8 @@ export function VendorOnboarding() {
     : navigateToStep;
 
   useEffect(() => {
-    if (isLiveEdit || step > 8) return;
+    if (isLiveEdit || step > ONBOARDING_STEP.review) return;
     window.scrollTo({ top: 0, behavior: "smooth" });
-    questionnaireTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [step, isLiveEdit]);
 
   const portfolioBlockedCopy =
@@ -171,7 +171,6 @@ export function VendorOnboarding() {
     isLiveEdit,
     lockedPendingReview,
     onOpenStepInfo: () => setStepInfoOpen(true),
-    section: activeSection,
   };
 
   if (authLoading || loadStatus === "loading") {
@@ -240,7 +239,7 @@ export function VendorOnboarding() {
 
   return (
     <div
-      className={`w-full text-neutral-900 ${isLiveEdit ? "max-w-6xl" : "max-w-5xl"}`}
+      className={`w-full ${isLiveEdit ? "text-neutral-900 max-w-6xl" : ""}`}
     >
       {isWalkthrough && (
         <div className="mb-6 rounded-2xl bg-primary/5 p-4 text-sm text-neutral-800 shadow-sm ring-1 ring-primary/15">
@@ -255,7 +254,7 @@ export function VendorOnboarding() {
           </Link>
         </div>
       )}
-      {returnedForEditsPending && step === 8 ? (
+      {returnedForEditsPending && step === ONBOARDING_STEP.review ? (
         <div className="mb-8 rounded-2xl bg-sky-50 p-5 text-sm text-sky-950 shadow-sm ring-1 ring-sky-200/70">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
@@ -271,7 +270,7 @@ export function VendorOnboarding() {
           </div>
         </div>
       ) : null}
-      {lockedPendingReview && step !== 9 && (
+      {lockedPendingReview && step !== ONBOARDING_STEP.submitted && (
         <div className="mb-8 rounded-2xl bg-amber-50 p-5 text-sm text-amber-950 shadow-sm ring-1 ring-amber-200/50">
           <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:text-left">
             <LottieIllustration asset="pendingReview" size="status" className="shrink-0" />
@@ -369,72 +368,37 @@ export function VendorOnboarding() {
           </div>
         </div>
       ) : (
-        <div className="mx-auto max-w-3xl">
-          <div ref={questionnaireTopRef} className="scroll-mt-4" aria-hidden />
-          {step <= 8 && (
-            <div className="mb-6">
-              <OnboardingProgressHeader step={step} />
-            </div>
-          )}
-          <div className={`${portalCard} ${portalCardPaddingLg}`}>
-            {step <= 8 ? (
-              <OnboardingWizardStepTitle
-                step={step}
-                servicesOffered={data.servicesOffered}
-                onOpenStepInfo={() => setStepInfoOpen(true)}
-              />
-            ) : null}
-            <div key={step} className="animate-onboarding-panel">
-              <OnboardingStepContent {...stepContentProps} />
-            </div>
-
-            {step <= 8 && (
-              <div className="mt-10 border-t border-neutral-100 pt-8">
-                <div className="flex flex-col items-end gap-3">
-                  <p className="text-right text-xs text-neutral-500">
-                    {lockedPendingReview && step === 6 && canAddPortfolioWhilePending
-                      ? `Please save once you've added at least ${MIN_PORTFOLIO_IMAGES} portfolio photos.`
-                      : lockedPendingReview && step === 8
-                        ? "You can update your profile photo here. Other details stay locked until review finishes."
-                        : "Close anytime. Your progress is saved."}
-                  </p>
-                  <div className="flex flex-wrap items-center justify-end gap-3">
-                    {editingFromReview && !(lockedPendingReview && step === 6) ? (
-                      <button
-                        type="button"
-                        onClick={goBackToReview}
-                        className="min-h-11 rounded-xl border border-primary/20 bg-primary/5 px-5 py-3 text-sm font-semibold text-primary transition hover:bg-primary/10 sm:min-w-[9rem]"
-                      >
-                        Back to review
-                      </button>
-                    ) : null}
-                    {showWizardBack ? (
-                      <button
-                        type="button"
-                        onClick={goBack}
-                        className="flex min-h-11 items-center justify-center gap-1 rounded-xl bg-neutral-50 px-5 py-3 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 sm:min-w-[7.5rem]"
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                        {lockedPendingReview && (step === 6 || step === 8)
-                          ? "Back to status"
-                          : "Back"}
-                      </button>
-                    ) : null}
-                    {!(lockedPendingReview && step === 8) ? (
-                      <button
-                        type="button"
-                        onClick={() => void goNext()}
-                        disabled={saving}
-                        className="min-h-11 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:opacity-90 disabled:opacity-60 sm:min-w-[7.5rem]"
-                      >
-                        {saving ? "Saving…" : primaryLabel}
-                      </button>
-                    ) : null}
-                  </div>
-                </div>
+        <div>
+          {step <= ONBOARDING_STEP.review ? (
+            <WizardFrame
+              step={step}
+              draftSavedLabel={draftSavedLabel(lastSavedAt)}
+              aside={<WizardAside step={step} data={data} />}
+              footer={{
+                showBack: showWizardBack,
+                backLabel: lockedPendingReview && (step === ONBOARDING_STEP.portfolio || step === ONBOARDING_STEP.review) ? "Back to status" : "Back",
+                onBack: goBack,
+                showBackToReview: editingFromReview && !(lockedPendingReview && step === ONBOARDING_STEP.portfolio),
+                onBackToReview: goBackToReview,
+                hidePrimary: lockedPendingReview && step === ONBOARDING_STEP.review,
+                saving,
+                primaryLabel,
+                onPrimary: () => void goNext(),
+                note:
+                  lockedPendingReview && step === ONBOARDING_STEP.portfolio && canAddPortfolioWhilePending
+                    ? `Please save once you've added at least ${MIN_PORTFOLIO_IMAGES} portfolio photos.`
+                    : lockedPendingReview && step === ONBOARDING_STEP.review
+                      ? "You can update your profile photo here. Other details stay locked until review finishes."
+                      : null,
+              }}
+            >
+              <div key={step} className="animate-onboarding-panel">
+                <OnboardingStepContent {...stepContentProps} />
               </div>
-            )}
-          </div>
+            </WizardFrame>
+          ) : (
+            <OnboardingStepContent {...stepContentProps} />
+          )}
         </div>
       )}
     </div>

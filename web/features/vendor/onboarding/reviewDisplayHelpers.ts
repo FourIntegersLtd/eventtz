@@ -180,3 +180,27 @@ export function normalizePublicBioText(text: string): string {
     .filter(Boolean);
   return sentences.join(" ");
 }
+
+const DELIVERY_LABELS: Record<string, string> = {
+  travel_to_client: "I travel to the client",
+  client_comes: "Clients come to me",
+  travel_both: "I travel to clients and clients also travel to me",
+  ship_to_client: "I deliver to clients (e.g. courier)",
+};
+
+/** Review copy for the delivery modes, joined with " · "; "-" when none is chosen. */
+export function formatReviewDeliveryModes(deliveryModes: string[]): string {
+  if (deliveryModes.length === 0) return "-";
+  const hasBoth =
+    deliveryModes.includes("travel_both") ||
+    (deliveryModes.includes("travel_to_client") && deliveryModes.includes("client_comes"));
+  const labels: string[] = [];
+  if (hasBoth) {
+    labels.push(DELIVERY_LABELS.travel_both);
+  } else {
+    if (deliveryModes.includes("travel_to_client")) labels.push(DELIVERY_LABELS.travel_to_client);
+    if (deliveryModes.includes("client_comes")) labels.push(DELIVERY_LABELS.client_comes);
+  }
+  if (deliveryModes.includes("ship_to_client")) labels.push(DELIVERY_LABELS.ship_to_client);
+  return labels.join(" · ");
+}

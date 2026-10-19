@@ -48,8 +48,11 @@ _MAX_URLS_PER_LIST = 25
 _MAX_FILE_LABEL_CHARS = 200
 _MAX_REGION_CHARS = 120
 _MAX_POSTAL_CODE_CHARS = 32
-# The onboarding wizard has eight steps; submitting re-checks all of them.
-ONBOARDING_STEPS = range(1, 9)
+# The onboarding wizard has nine steps (cancellation policy is step 5); submitting re-checks all of them.
+ONBOARDING_STEPS = range(1, 10)
+# Saved forms carry this `onboardingFlowVersion`; version 2 had eight steps, so the web app
+# shifts a version-2 form's steps 5 to 8 up by one and its submitted screen from 9 to 10.
+ONBOARDING_FLOW_VERSION = 3
 
 _ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 _WHITESPACE_RUN = re.compile(r"\s+")
@@ -492,10 +495,10 @@ def _check_portfolio(payload: dict[str, Any]) -> None:
 
 
 def validate_step_fields(step: int, payload: dict[str, Any]) -> None:
-    """Check one onboarding step (1-8); raises `ProfileInvalid`.
+    """Check one onboarding step (1-9); raises `ProfileInvalid`.
 
-    Steps 2 and 8 are checked by the web app (and again on submit); step 7's documents
-    are optional, and their URLs are already cleaned on save.
+    Steps 2, 5 (cancellation policy) and 9 are checked by the web app (and again on submit);
+    step 8's documents are optional, and their URLs are already cleaned on save.
     """
     if step == 1:
         _check_account(payload)
@@ -503,9 +506,9 @@ def validate_step_fields(step: int, payload: dict[str, Any]) -> None:
         _check_location(payload)
     elif step == 4:
         _check_pricing(payload)
-    elif step == 5:
-        _check_availability(payload)
     elif step == 6:
+        _check_availability(payload)
+    elif step == 7:
         _check_portfolio(payload)
 
 

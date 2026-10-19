@@ -242,7 +242,7 @@ def test_admin_unsubmit_happy_path_returns_to_draft(admin_db: LocalDatabase, as_
 
     row = admin_db.table("vendors").select("status,current_step").eq("user_id", user_id).execute().data[0]
     assert row["status"] == "draft"
-    assert row["current_step"] == 8
+    assert row["current_step"] == 9
 
     audit_row = _latest_audit_row(admin_db, action="vendor.unsubmit", entity_id=user_id)
     assert audit_row["payload"]["status"] == "draft"

@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* Canvas design language (web/design/canvas): every class is ez- prefixed and every token --ez-, so it never collides with Tailwind. Screens are transcribed from the artboards with these classes. */
+@import "../design/canvas/project/eventtz.css";
 
 :root {
   --background: #ffffff;

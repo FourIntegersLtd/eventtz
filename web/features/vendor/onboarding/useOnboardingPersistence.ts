@@ -62,6 +62,8 @@ export function useOnboardingPersistence({
   const [saving, setSaving] = useState(false);
   const [generatingBio, setGeneratingBio] = useState(false);
   const [profileStatus, setProfileStatus] = useState<string>("draft");
+  /** Server timestamp of the last saved draft; null until a saved row has been loaded. */
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const [approvalStatus, setApprovalStatus] = useState<VendorApprovalStatus>("pending");
   const [listingVisible, setListingVisible] = useState(false);
   const [payoutsVerified, setPayoutsVerified] = useState(false);
@@ -111,6 +113,7 @@ export function useOnboardingPersistence({
   const applyVendorProfileResponse = useCallback(
     (res: Awaited<ReturnType<typeof fetchVendorProfile>>) => {
       setProfileStatus(res.onboarding_status ?? "draft");
+      setLastSavedAt(res.updated_at ?? null);
       if (res.approval_status === "approved") {
         setApprovalStatus("approved");
       } else if (res.approval_status === "banned") {
@@ -399,6 +402,7 @@ export function useOnboardingPersistence({
     setSaving,
     generatingBio,
     profileStatus,
+    lastSavedAt,
     approvalStatus,
     listingVisible,
     payoutsVerified,

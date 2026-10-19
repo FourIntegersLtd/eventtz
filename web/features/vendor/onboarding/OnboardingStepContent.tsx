@@ -5,7 +5,7 @@ import type { VendorOnboardingData, VendorOnboardingUpdate, VendorStatusCheckFee
 import type { VendorApprovalStatus } from "@/lib/domain-types";
 import type { PortfolioImageQualityRow } from "./useVendorOnboardingController";
 import { OnboardingWizardStepTitle } from "./ui/OnboardingWizardStepTitle";
-import { CANCELLATION_POLICY_SECTION, type ProfileSectionSlug } from "./constants";
+import { ONBOARDING_FORM_STEP_COUNT, ONBOARDING_STEP } from "./onboardingProgress";
 import {
   CancellationPolicyPicker,
   StepAccount,
@@ -66,8 +66,6 @@ type Props = {
   isLiveEdit?: boolean;
   lockedPendingReview?: boolean;
   onOpenStepInfo?: () => void;
-  /** Live editor only: the open section, which splits step 4 into Pricing and Cancellation policy. */
-  section?: ProfileSectionSlug | null;
 };
 
 function LiveEditStepShell({ children }: { children: ReactNode }) {
@@ -121,12 +119,11 @@ export function OnboardingStepContent({
   isLiveEdit = false,
   lockedPendingReview = false,
   onOpenStepInfo,
-  section = null,
 }: Props) {
   const wrapLive = (node: ReactNode) =>
     isLiveEdit ? (
       <LiveEditStepShell>
-        {step >= 1 && step <= 8 ? (
+        {step >= 1 && step <= ONBOARDING_FORM_STEP_COUNT ? (
           <OnboardingWizardStepTitle
             step={step}
             servicesOffered={data.servicesOffered}
@@ -147,7 +144,6 @@ export function OnboardingStepContent({
           update={update}
           phoneError={phoneError}
           setPhoneError={setPhoneError}
-          showWelcomeHero={!isLiveEdit}
         />,
       );
     case 2:
@@ -157,29 +153,26 @@ export function OnboardingStepContent({
           update={update}
           businessNameError={businessNameError}
           setBusinessNameError={setBusinessNameError}
+          onOpenStepInfo={isLiveEdit ? undefined : onOpenStepInfo}
+          onGenerateBioWithAI={onGenerateBioWithAI}
+          generatingBio={generatingBio}
         />,
       );
     case 3:
       return wrapLive(<StepLocation data={data} update={update} />);
     case 4:
-      if (isLiveEdit && section === CANCELLATION_POLICY_SECTION) {
-        return (
-          <LiveEditStepShell>
-            <CancellationPolicyPicker data={data} update={update} />
-          </LiveEditStepShell>
-        );
-      }
       return wrapLive(
         <StepPricing
           data={data}
           update={update}
           usePostLaunchOptimizer={isLiveEdit && approvalStatus === "approved"}
-          showCancellationPolicy={!isLiveEdit}
         />,
       );
     case 5:
-      return wrapLive(<StepAvailability data={data} update={update} />);
+      return wrapLive(<CancellationPolicyPicker data={data} update={update} />);
     case 6:
+      return wrapLive(<StepAvailability data={data} update={update} />);
+    case 7:
       return wrapLive(
         <StepPortfolio
           data={data}
@@ -193,9 +186,12 @@ export function OnboardingStepContent({
           videoUploadError={videoUploadError}
           onUploadPortfolioVideo={onUploadPortfolioVideo}
           onRemovePortfolioVideo={onRemovePortfolioVideo}
+          uploadingProfileImage={uploadingProfileImage}
+          profileImageError={profileImageError}
+          onUploadProfileImage={onUploadProfileImage}
         />,
       );
-    case 7:
+    case 8:
       return wrapLive(
         <StepAdditionalInfo
           data={data}
@@ -206,7 +202,7 @@ export function OnboardingStepContent({
           onRemoveOtherDoc={onRemoveOtherDoc}
         />,
       );
-    case 8:
+    case 9:
       return (
         <StepReview
           data={data}
@@ -222,7 +218,7 @@ export function OnboardingStepContent({
           profilePhotoEditable={approvalStatus !== "banned"}
         />
       );
-    case 9:
+    case 10:
       return (
         <StepSubmitted
           approvalStatus={approvalStatus}
@@ -230,7 +226,7 @@ export function OnboardingStepContent({
           listingVisible={listingVisible}
           payoutsVerified={payoutsVerified}
           onViewProfileReview={onViewProfileReview}
-          onEditProfile={() => onNavigateToStep(8)}
+          onEditProfile={() => onNavigateToStep(ONBOARDING_STEP.review)}
           onRefreshStatus={onRefreshStatus}
           refreshing={refreshingStatus}
           statusCheckFeedback={statusCheckFeedback}

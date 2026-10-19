@@ -1,4 +1,5 @@
 import { MIN_PORTFOLIO_IMAGES } from "./constants";
+import { ONBOARDING_FORM_STEP_COUNT } from "./onboardingProgress";
 import { packageExamplesForServices } from "./packageExamples";
 import { vendorServiceOnboardingGuideSections } from "@/lib/vendorServiceCatalog";
 
@@ -11,7 +12,7 @@ export function getOnboardingStepGuide(
   step: number,
   servicesOffered: string[] = [],
 ): OnboardingStepGuide | null {
-  if (step < 1 || step > 8) return null;
+  if (step < 1 || step > ONBOARDING_FORM_STEP_COUNT) return null;
 
   switch (step) {
     case 1:
@@ -74,6 +75,15 @@ export function getOnboardingStepGuide(
     }
     case 5:
       return {
+        title: "Cancellation policy",
+        sections: [
+          {
+            body: "Pick how much of your price a client gets back if they cancel after paying. The Eventtz service fee is always refunded. Until you choose, clients see Flexible.",
+          },
+        ],
+      };
+    case 6:
+      return {
         title: "Availability",
         sections: [
           {
@@ -81,7 +91,7 @@ export function getOnboardingStepGuide(
           },
         ],
       };
-    case 6:
+    case 7:
       return {
         title: "Portfolio photos",
         sections: [
@@ -90,7 +100,7 @@ export function getOnboardingStepGuide(
           },
         ],
       };
-    case 7:
+    case 8:
       return {
         title: "Additional information",
         sections: [
@@ -99,7 +109,7 @@ export function getOnboardingStepGuide(
           },
         ],
       };
-    case 8:
+    case 9:
       return {
         title: "Before you submit",
         sections: [

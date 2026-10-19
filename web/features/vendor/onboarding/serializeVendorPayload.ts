@@ -1,4 +1,5 @@
 import { DEFAULT_COUNTRY_CODE, normalizeCountryCode } from "@/lib/markets";
+import { ONBOARDING_FLOW_VERSION } from "./onboardingProgress";
 import { clampBioWords } from "./onboardingLogic";
 import type {
   DeliveryMode,
@@ -192,7 +193,7 @@ export function vendorDataToPayload(
     portfolioWarnings: data.portfolioWarnings,
     // Legacy-only: round-tripped for backward-compatible payloads; not collected in onboarding.
     stripeConnectStarted: data.stripeConnectStarted,
-    onboardingFlowVersion: 2,
+    onboardingFlowVersion: ONBOARDING_FLOW_VERSION,
     foodHygieneCertNamePersisted: data.foodHygieneCertNamePersisted,
     indemnityCertNamePersisted: data.indemnityCertNamePersisted,
     otherDocsNamesPersisted: data.otherDocsNamesPersisted,

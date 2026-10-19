@@ -280,7 +280,7 @@ def test_put_profile_submit_with_a_complete_payload_marks_it_submitted(admin_db:
     response = browser.put(
         PROFILE_URL,
         json={
-            "current_step": 8,
+            "current_step": 9,
             "profile_form_data": _full_submit_payload(user_id, business_name),
             "status": "submitted",
         },

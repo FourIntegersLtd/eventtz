@@ -1,23 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { ImagePlus, Trash2, Video, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Trash2, Upload, Video, X } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { portfolioFileKey } from "@/lib/portfolioFileKey";
 import { filterLikelyImageUploadFiles } from "@/lib/imageUploadFile";
-import { MAX_PORTFOLIO_IMAGES, MIN_PORTFOLIO_IMAGES, SOCIAL_PLATFORM_OPTIONS } from "../constants";
+import { MAX_PORTFOLIO_IMAGES, MIN_PORTFOLIO_IMAGES } from "../constants";
 import type { PortfolioImageQualityRow } from "../useVendorOnboardingController";
-import {
-  createVendorSocialLink,
-  type SocialPlatform,
-  type VendorOnboardingData,
-  type VendorOnboardingUpdate,
-} from "../types";
-import {
-  OnboardingSubQuestion,
-} from "../ui/OnboardingQuestionLayout";
+import type { VendorOnboardingData, VendorOnboardingUpdate } from "../types";
 import { uploadedFileDisplayName } from "../uploadedFileDisplayName";
-import { ClearableTextField, inputClass } from "./form-primitives";
 
 export type StepPortfolioProps = {
   data: VendorOnboardingData;
@@ -31,33 +22,76 @@ export type StepPortfolioProps = {
   videoUploadError?: string | null;
   onUploadPortfolioVideo: (file: File) => void | Promise<void>;
   onRemovePortfolioVideo: (url: string) => void;
+  uploadingProfileImage?: boolean;
+  profileImageError?: string | null;
+  onUploadProfileImage: (file: File) => void | Promise<void>;
 };
 
-function ImageChip({
+/** One photo tile (design V06): the image, an optional Cover badge, a remove button and an optional status strip. */
+function PhotoTile({
   src,
   label,
+  isCover,
   onRemove,
   statusNode,
 }: {
   src: string;
   label: string;
+  isCover: boolean;
   onRemove: () => void;
   statusNode?: React.ReactNode;
 }) {
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt={label} className="h-28 w-full bg-neutral-50 object-contain object-center" />
-      <button
-        type="button"
-        onClick={onRemove}
-        aria-label={`Remove ${label}`}
-        className="absolute right-1.5 top-1.5 inline-flex h-11 w-11 items-center justify-center rounded-full bg-neutral-900/70 text-white shadow-sm transition hover:bg-neutral-900"
+    <div style={{ position: "relative" }}>
+      <div
+        className="ez-media-ph"
+        style={{ aspectRatio: "4/3", overflow: "hidden" }}
       >
-        <X className="h-3.5 w-3.5" strokeWidth={2.5} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={label}
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        />
+      </div>
+      {isCover ? (
+        <span
+          className="ez-badge ez-badge--brand ez-badge--plain"
+          style={{ position: "absolute", top: 8, left: 8 }}
+        >
+          Cover
+        </span>
+      ) : null}
+      <button
+        className="ez-icon-btn"
+        type="button"
+        aria-label={`Remove ${label}`}
+        onClick={onRemove}
+        style={{
+          position: "absolute",
+          top: 4,
+          right: 4,
+          background: "rgba(255,255,255,.92)",
+          width: 36,
+          height: 36,
+        }}
+      >
+        <X strokeWidth={1.75} aria-hidden />
       </button>
       {statusNode ? (
-        <div className="absolute inset-x-0 bottom-0 truncate bg-black/55 px-2 py-1 text-[11px] text-white">
+        <div
+          className="ez-small"
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            padding: "4px 8px",
+            background: "rgba(0,0,0,.55)",
+            color: "#fff",
+            borderRadius: "0 0 var(--ez-r-card) var(--ez-r-card)",
+          }}
+        >
           {statusNode}
         </div>
       ) : null}
@@ -65,6 +99,73 @@ function ImageChip({
   );
 }
 
+/** The profile photo row: the current photo (or initials), a hint and a Change button. */
+function ProfilePhotoRow({
+  data,
+  uploading,
+  error,
+  onUpload,
+}: {
+  data: VendorOnboardingData;
+  uploading: boolean;
+  error: string | null;
+  onUpload: (file: File) => void | Promise<void>;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const initials =
+    `${data.firstName[0] ?? "?"}${data.lastName[0] ?? ""}`.toUpperCase();
+  return (
+    <div className="ez-stack ez-stack--sm">
+      <div className="ez-hrow">
+        <div className="ez-stack ez-stack--sm" style={{ flex: 1 }}>
+          <span className="ez-label">Profile photo</span>
+          <span className="ez-help">A friendly face or your logo.</span>
+        </div>
+        {data.profileImageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={data.profileImageUrl}
+            alt="Profile"
+            className="ez-avatar ez-avatar--lg"
+            style={{ objectFit: "cover" }}
+          />
+        ) : (
+          <span className="ez-avatar ez-avatar--lg">{initials}</span>
+        )}
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          disabled={uploading}
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file) void onUpload(file);
+            event.target.value = "";
+          }}
+        />
+        <button
+          className="ez-btn ez-btn--secondary ez-btn--sm"
+          type="button"
+          disabled={uploading}
+          onClick={() => inputRef.current?.click()}
+        >
+          {uploading ? "Uploading..." : "Change"}
+        </button>
+      </div>
+      {error ? (
+        <span
+          className="ez-help"
+          style={{ color: "var(--ez-danger, #b42318)" }}
+        >
+          {error}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+/** Portfolio step (design V06): photo upload, photo tiles, profile photo, and optional videos. */
 export function StepPortfolio({
   data,
   update,
@@ -77,6 +178,9 @@ export function StepPortfolio({
   videoUploadError,
   onUploadPortfolioVideo,
   onRemovePortfolioVideo,
+  uploadingProfileImage,
+  profileImageError,
+  onUploadProfileImage,
 }: StepPortfolioProps) {
   const [objectUrls, setObjectUrls] = useState<Record<string, string>>({});
   const [duplicateNotice, setDuplicateNotice] = useState<string | null>(null);
@@ -110,24 +214,6 @@ export function StepPortfolio({
     [data.portfolioFileNamesPersisted, data.portfolioFiles],
   );
 
-  const addSocialLink = () => {
-    const usedPlatforms = new Set(data.socialLinks.map((s) => s.platform));
-    const nextPlatform =
-      (SOCIAL_PLATFORM_OPTIONS.find((o) => !usedPlatforms.has(o.value))
-        ?.value as SocialPlatform | undefined) ?? "instagram";
-    update({ socialLinks: [...data.socialLinks, createVendorSocialLink(nextPlatform)] });
-  };
-
-  const updateSocialLink = (id: string, patch: Partial<{ platform: SocialPlatform; handle: string }>) => {
-    update({
-      socialLinks: data.socialLinks.map((s) => (s.id === id ? { ...s, ...patch } : s)),
-    });
-  };
-
-  const removeSocialLink = (id: string) => {
-    update({ socialLinks: data.socialLinks.filter((s) => s.id !== id) });
-  };
-
   const addPortfolioFiles = (files: File[]) => {
     const images = filterLikelyImageUploadFiles(files);
     if (images.length === 0) {
@@ -138,13 +224,19 @@ export function StepPortfolio({
       }
       return;
     }
-    const existingKeys = new Set(data.portfolioFiles.map((f) => portfolioFileKey(f)));
+    const existingKeys = new Set(
+      data.portfolioFiles.map((f) => portfolioFileKey(f)),
+    );
     const existingPersistedUrls = new Set(data.portfolioFileNamesPersisted);
     const next: File[] = [...data.portfolioFiles];
     const skippedDuplicates: string[] = [];
     for (const f of images) {
       const key = portfolioFileKey(f);
-      if (existingKeys.size + existingPersistedUrls.size >= MAX_PORTFOLIO_IMAGES) break;
+      if (
+        existingKeys.size + existingPersistedUrls.size >=
+        MAX_PORTFOLIO_IMAGES
+      )
+        break;
       if (existingKeys.has(key)) {
         skippedDuplicates.push(f.name);
         continue;
@@ -166,247 +258,227 @@ export function StepPortfolio({
     update({ portfolioFiles: next });
   };
 
-  return (
-    <div className="space-y-8">
-      <OnboardingSubQuestion headline="Upload your portfolio photos" indexOffset={0}>
-        <div
-          className={`rounded-xl border-2 border-dashed p-8 text-center transition ${
-            dragOver
-              ? "border-primary bg-primary/[0.06]"
-              : "border-neutral-200 bg-neutral-50/80"
-          }`}
-          onDragEnter={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setDragOver(true);
-          }}
-          onDragOver={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setDragOver(true);
-          }}
-          onDragLeave={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (e.currentTarget.contains(e.relatedTarget as Node)) return;
-            setDragOver(false);
-          }}
-          onDrop={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setDragOver(false);
-            addPortfolioFiles(Array.from(e.dataTransfer.files ?? []));
-          }}
-        >
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
-            id="portfolio-imgs"
-            onChange={(e) => {
-              addPortfolioFiles(Array.from(e.target.files ?? []));
-              e.target.value = "";
-            }}
-          />
-          <label
-            htmlFor="portfolio-imgs"
-            className="inline-flex cursor-pointer flex-col items-center gap-2 text-primary"
-          >
-            <ImagePlus className="h-8 w-8" strokeWidth={1.5} />
-            <span className="text-sm font-medium hover:underline">
-              Drag &amp; drop or click to upload photos
-            </span>
-          </label>
-          <p className="mt-1 text-xs text-neutral-500">
-            At least {MIN_PORTFOLIO_IMAGES} · up to {MAX_PORTFOLIO_IMAGES}
-            {totalCount > 0 ? ` · ${totalCount} selected` : ""}
-          </p>
-          {totalCount > 0 && totalCount < MIN_PORTFOLIO_IMAGES ? (
-            <p className="mt-2 text-xs font-medium text-amber-800">
-              Add {MIN_PORTFOLIO_IMAGES - totalCount} more photo
-              {MIN_PORTFOLIO_IMAGES - totalCount === 1 ? "" : "s"} to continue.
-            </p>
-          ) : null}
-          {duplicateNotice ? (
-            <p className="mt-2 text-xs font-medium text-amber-800">{duplicateNotice}</p>
-          ) : null}
-        </div>
+  const minimumMet = totalCount >= MIN_PORTFOLIO_IMAGES;
+  const progressPercent = Math.min(
+    100,
+    Math.round((totalCount / MIN_PORTFOLIO_IMAGES) * 100),
+  );
+  const persistedCount = data.portfolioFileNamesPersisted.length;
 
-        {(data.portfolioFileNamesPersisted.length > 0 || data.portfolioFiles.length > 0) && (
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-            {data.portfolioFileNamesPersisted.map((url) => (
-              <ImageChip
-                key={url}
-                src={url}
-                label="Saved photo"
-                onRemove={() => onRemovePersistedPortfolioImage(url)}
-              />
-            ))}
-            {data.portfolioFiles.map((file, i) => {
-              const key = portfolioFileKey(file);
-              const q = portfolioQuality[key];
-              const accepted = portfolioQualityAccepted[key];
-              const src = objectUrls[key];
-              const status = q?.loading ? (
-                <span className="inline-flex items-center gap-1.5">
-                  <LoadingSpinner size="sm" className="text-neutral-500" />
-                  Checking quality…
-                </span>
-              ) : q && !q.loading ? (
-                q.skipped ? (
-                  "Check skipped"
-                ) : q.ok ? (
-                  `OK · ${q.score ?? "-"}/5`
-                ) : accepted ? (
-                  `Kept anyway · ${q.score ?? "-"}/5`
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => onAcceptPortfolioQualityAnyway(key)}
-                    className="underline"
-                  >
-                    Low quality · use anyway?
-                  </button>
-                )
-              ) : null;
-              return src ? (
-                <ImageChip
-                  key={`${key}-${i}`}
-                  src={src}
-                  label={file.name}
-                  onRemove={() => onRemovePortfolioFile(i)}
-                  statusNode={status}
-                />
-              ) : null;
-            })}
-          </div>
-        )}
-      </OnboardingSubQuestion>
-      {data.portfolioWarnings.length > 0 && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-          {data.portfolioWarnings.map((w, i) => (
-            <p key={i}>{w}</p>
-          ))}
+  return (
+    <div className="ez-stack">
+      <div
+        className="ez-upload"
+        style={dragOver ? { borderColor: "var(--ez-brand-700)" } : undefined}
+        onDragEnter={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          setDragOver(true);
+        }}
+        onDragOver={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          setDragOver(true);
+        }}
+        onDragLeave={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (event.currentTarget.contains(event.relatedTarget as Node)) return;
+          setDragOver(false);
+        }}
+        onDrop={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          setDragOver(false);
+          addPortfolioFiles(Array.from(event.dataTransfer.files ?? []));
+        }}
+      >
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          id="portfolio-imgs"
+          onChange={(event) => {
+            addPortfolioFiles(Array.from(event.target.files ?? []));
+            event.target.value = "";
+          }}
+        />
+        <Upload size={32} strokeWidth={1.75} aria-hidden style={{ display: "inline", verticalAlign: "baseline" }} />
+        <div className="ez-strong" style={{ marginTop: 8 }}>
+          Drag photos here or choose files
         </div>
-      )}
-      <OnboardingSubQuestion headline="Add videos (optional)" indexOffset={6}>
-        <div className="rounded-xl border-2 border-dashed border-neutral-200 bg-neutral-50/80 p-6 text-center">
-          <input
-            type="file"
-            accept="video/*"
-            className="hidden"
-            id="portfolio-video"
-            disabled={uploadingVideo}
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) void onUploadPortfolioVideo(f);
-              e.target.value = "";
-            }}
-          />
-          <label
-            htmlFor="portfolio-video"
-            className={`inline-flex cursor-pointer flex-col items-center gap-2 text-primary ${
-              uploadingVideo ? "pointer-events-none opacity-60" : ""
-            }`}
-          >
-            <Video className="h-7 w-7" strokeWidth={1.5} />
-            <span className="inline-flex items-center gap-2 text-sm font-medium hover:underline">
-              {uploadingVideo ? (
-                <>
-                  <LoadingSpinner size="sm" />
-                  Uploading…
-                </>
-              ) : (
-                "Click to upload a video"
-              )}
-            </span>
+        <p className="ez-small">
+          JPG or PNG, up to 10 MB each. Add {MIN_PORTFOLIO_IMAGES} to{" "}
+          {MAX_PORTFOLIO_IMAGES} photos.
+        </p>
+        <div style={{ marginTop: 14 }}>
+          <label className="ez-btn ez-btn--secondary" htmlFor="portfolio-imgs">
+            <Upload size={18} strokeWidth={1.75} aria-hidden />
+            Choose photos
           </label>
-          <p className="mt-1 text-xs text-neutral-500">You can add more than one.</p>
         </div>
-        {data.portfolioVideoNamesPersisted.length > 0 ? (
-          <ul className="mt-3 space-y-2">
-            {data.portfolioVideoNamesPersisted.map((url) => (
-              <li
-                key={url}
-                className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3"
+        {duplicateNotice ? (
+          <p className="ez-small" style={{ marginTop: 8 }}>
+            {duplicateNotice}
+          </p>
+        ) : null}
+      </div>
+
+      <div className="ez-stack ez-stack--sm">
+        <div className="ez-between">
+          <span className="ez-label">Your photos</span>
+          <span
+            className={`ez-badge ${minimumMet ? "ez-badge--success" : "ez-badge--warning"}`}
+          >
+            {totalCount} of {MIN_PORTFOLIO_IMAGES} minimum added
+          </span>
+        </div>
+        <div className="ez-progress">
+          <div
+            className="ez-progress__bar"
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
+      </div>
+
+      {data.portfolioWarnings.length > 0 ? (
+        <div className="ez-banner ez-banner--warning">
+          <div className="ez-banner__body">
+            {data.portfolioWarnings.map((warning) => (
+              <p
+                key={warning}
+                className="ez-small"
+                style={{ color: "inherit" }}
               >
-                <Video className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.5} />
-                <span className="min-w-0 flex-1 truncate text-sm text-neutral-700">
-                  {uploadedFileDisplayName(url, data.uploadedFileLabels, "Video")}
-                </span>
+                {warning}
+              </p>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {persistedCount > 0 || data.portfolioFiles.length > 0 ? (
+        <div
+          className="ez-grid-4"
+          style={{ gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))" }}
+        >
+          {data.portfolioFileNamesPersisted.map((url, index) => (
+            <PhotoTile
+              key={url}
+              src={url}
+              label={`photo ${index + 1}`}
+              isCover={index === 0}
+              onRemove={() => onRemovePersistedPortfolioImage(url)}
+            />
+          ))}
+          {data.portfolioFiles.map((file, index) => {
+            const key = portfolioFileKey(file);
+            const quality = portfolioQuality[key];
+            const accepted = portfolioQualityAccepted[key];
+            const src = objectUrls[key];
+            const status = quality?.loading ? (
+              <span
+                style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+              >
+                <LoadingSpinner size="sm" className="text-white" />
+                Checking quality...
+              </span>
+            ) : quality ? (
+              quality.skipped ? (
+                "Check skipped"
+              ) : quality.ok ? (
+                `OK · ${quality.score ?? "-"}/5`
+              ) : accepted ? (
+                `Kept anyway · ${quality.score ?? "-"}/5`
+              ) : (
                 <button
                   type="button"
-                  onClick={() => onRemovePortfolioVideo(url)}
-                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
+                  onClick={() => onAcceptPortfolioQualityAnyway(key)}
+                  className="underline"
                 >
-                  <Trash2 className="h-3.5 w-3.5" /> Remove
+                  Low quality · use anyway?
                 </button>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-        {videoUploadError ? (
-          <p className="mt-1 text-xs text-red-700">{videoUploadError}</p>
-        ) : null}
-      </OnboardingSubQuestion>
-      <OnboardingSubQuestion headline="Social media links (optional)" indexOffset={9}>
-        <div className="flex items-center justify-end">
-          <button
-            type="button"
-            onClick={addSocialLink}
-            className="text-xs font-semibold text-primary hover:underline"
-          >
-            + Add link
-          </button>
+              )
+            ) : null;
+            return src ? (
+              <PhotoTile
+                key={`${key}-${index}`}
+                src={src}
+                label={file.name}
+                isCover={persistedCount === 0 && index === 0}
+                onRemove={() => onRemovePortfolioFile(index)}
+                statusNode={status}
+              />
+            ) : null;
+          })}
         </div>
-        {data.socialLinks.length === 0 ? (
-          <p className="text-xs text-neutral-500">
-            Add Instagram, TikTok, Twitter, or your website.
-          </p>
-        ) : (
-          <div className="space-y-2">
-            {data.socialLinks.map((link) => {
-              const platformOpt =
-                SOCIAL_PLATFORM_OPTIONS.find((o) => o.value === link.platform) ??
-                SOCIAL_PLATFORM_OPTIONS[0];
-              return (
-                <div key={link.id} className="flex gap-2">
-                  <select
-                    className={`${inputClass()} w-full shrink-0 sm:w-36`}
-                    value={link.platform}
-                    onChange={(e) =>
-                      updateSocialLink(link.id, {
-                        platform: e.target.value as SocialPlatform,
-                      })
-                    }
-                  >
-                    {SOCIAL_PLATFORM_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>
-                        {o.label}
-                      </option>
-                    ))}
-                  </select>
-                  <ClearableTextField
-                    className="min-w-0 flex-1"
-                    value={link.handle}
-                    onChange={(v) => updateSocialLink(link.id, { handle: v })}
-                    placeholder={platformOpt.placeholder}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeSocialLink(link.id)}
-                    aria-label="Remove social link"
-                    className="shrink-0 rounded-lg p-2.5 text-neutral-500 hover:bg-red-50 hover:text-red-600"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              );
-            })}
+      ) : null}
+
+      <ProfilePhotoRow
+        data={data}
+        uploading={Boolean(uploadingProfileImage)}
+        error={profileImageError ?? null}
+        onUpload={onUploadProfileImage}
+      />
+
+      {/* Not in design V06; kept so vendors can still add videos. The design diff strips it. */}
+      <div className="ez-stack ez-stack--sm" data-design-extra="videos">
+        <span className="ez-label">
+          Videos <span className="ez-label__opt">(optional)</span>
+        </span>
+        <input
+          type="file"
+          accept="video/*"
+          className="hidden"
+          id="portfolio-video"
+          disabled={uploadingVideo}
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file) void onUploadPortfolioVideo(file);
+            event.target.value = "";
+          }}
+        />
+        <div>
+          <label
+            className="ez-btn ez-btn--secondary ez-btn--sm"
+            htmlFor="portfolio-video"
+          >
+            <Video strokeWidth={1.75} aria-hidden />
+            {uploadingVideo ? "Uploading..." : "Upload a video"}
+          </label>
+        </div>
+        {data.portfolioVideoNamesPersisted.map((url) => (
+          <div
+            key={url}
+            className="ez-list-row"
+            style={{
+              padding: "10px 0",
+              borderBottom: "1px solid var(--ez-line)",
+            }}
+          >
+            <span className="ez-icon-tile">
+              <Video size={20} strokeWidth={1.75} aria-hidden />
+            </span>
+            <div className="ez-list-row__main">
+              <span className="ez-strong">
+                {uploadedFileDisplayName(url, data.uploadedFileLabels, "Video")}
+              </span>
+            </div>
+            <button
+              className="ez-btn ez-btn--ghost ez-btn--sm"
+              type="button"
+              onClick={() => onRemovePortfolioVideo(url)}
+            >
+              <Trash2 strokeWidth={1.75} aria-hidden />
+              Remove
+            </button>
           </div>
-        )}
-      </OnboardingSubQuestion>
+        ))}
+        {videoUploadError ? (
+          <span className="ez-help">{videoUploadError}</span>
+        ) : null}
+      </div>
     </div>
   );
 }

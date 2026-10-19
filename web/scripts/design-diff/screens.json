@@ -1,0 +1,954 @@
+{
+  "base": "http://localhost:3001",
+  "assets": {
+    "2b9d2561a4bb34c75cbf1affbbbfe01b": "/images/eventtz-logo-dark.svg",
+    "2a31e70a4e32e837342407c6ca9a2d62": "/images/eventtz-logo-light.svg"
+  },
+  "screens": [
+    {
+      "id": "P01-Login",
+      "artboard": "P01-Login.dc.html",
+      "path": "/login",
+      "width": 1440,
+      "height": 940,
+      "artboardRemove": [
+        ".ez-banner"
+      ],
+      "pageRemove": [],
+      "setup": [
+        {
+          "fill": "input[type=email]",
+          "value": "amara@example.com"
+        },
+        {
+          "fill": "input[type=password]",
+          "value": "password123"
+        }
+      ],
+      "probes": [
+        {
+          "name": "brand panel",
+          "artboard": ".ez-auth__brand",
+          "page": "aside"
+        },
+        {
+          "name": "logo",
+          "artboard": ".ez-auth__brand .ez-logo",
+          "page": "aside img"
+        },
+        {
+          "name": "headline",
+          "artboard": ".ez-auth__brand .ez-display",
+          "page": "aside p"
+        },
+        {
+          "name": "panel caption",
+          "artboard": ".ez-auth__brand .ez-caption",
+          "page": "aside > p:last-child"
+        },
+        {
+          "name": "form heading",
+          "artboard": "h1.ez-h1",
+          "page": "h1"
+        },
+        {
+          "name": "form intro",
+          "artboard": "h1.ez-h1 + p",
+          "page": "h1 + p"
+        },
+        {
+          "name": "email label",
+          "artboard": "label[for=email]",
+          "page": "label[for]"
+        },
+        {
+          "name": "email input",
+          "artboard": "#email",
+          "page": "input[type=email]"
+        },
+        {
+          "name": "password input",
+          "artboard": "#pw",
+          "page": "input[type=password]"
+        },
+        {
+          "name": "forgot link",
+          "artboard": "a.ez-link.ez-small",
+          "page": "a[href='/forgot-password']"
+        },
+        {
+          "name": "sign in button",
+          "artboard": ".ez-btn--primary",
+          "page": "button[type=submit]"
+        },
+        {
+          "name": "register prompt",
+          "artboard": ".ez-auth__form > p:last-child",
+          "page": "button[type=submit] ~ p, form + p"
+        }
+      ]
+    },
+    {
+      "id": "V01-StepAccount",
+      "artboard": "V01-StepAccount.dc.html",
+      "path": "/vendor/profile",
+      "auth": "vendor",
+      "width": 1440,
+      "height": 1400,
+      "artboardRemove": [],
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']"
+      ],
+      "setup": [
+        {
+          "waitFor": ".ez-stepper"
+        }
+      ],
+      "probes": [
+        {
+          "name": "page heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1"
+        },
+        {
+          "name": "stepper card",
+          "artboard": ".ez-stepper",
+          "page": "main .ez-stepper"
+        },
+        {
+          "name": "current step dot",
+          "artboard": ".ez-step--current .ez-step__dot",
+          "page": ".ez-step--current .ez-step__dot"
+        },
+        {
+          "name": "form card",
+          "artboard": ".ez-split__main .ez-card",
+          "page": ".ez-split__main .ez-card"
+        },
+        {
+          "name": "card head",
+          "artboard": ".ez-split__main .ez-card__head",
+          "page": ".ez-split__main .ez-card__head"
+        },
+        {
+          "name": "first name input",
+          "artboard": ".ez-form-grid .ez-field:first-child .ez-input",
+          "page": ".ez-form-grid .ez-field:first-child .ez-input"
+        },
+        {
+          "name": "phone input",
+          "artboard": "input[type=tel]",
+          "page": "input[type=tel]"
+        },
+        {
+          "name": "email input",
+          "artboard": "input[type=email]",
+          "page": "input[type=email]"
+        },
+        {
+          "name": "card foot",
+          "artboard": ".ez-card__foot",
+          "page": ".ez-card__foot"
+        },
+        {
+          "name": "primary button",
+          "artboard": ".ez-btn--primary",
+          "page": ".ez-btn--primary"
+        },
+        {
+          "name": "why we ask card",
+          "artboard": ".ez-split__aside .ez-card:first-child",
+          "page": ".ez-split__aside .ez-card:first-child"
+        },
+        {
+          "name": "progress bar",
+          "artboard": ".ez-progress__bar",
+          "page": ".ez-progress__bar"
+        }
+      ]
+    },
+    {
+      "id": "V02-StepBusiness",
+      "artboard": "V02-StepBusiness.dc.html",
+      "path": "/vendor/profile",
+      "auth": "vendor",
+      "width": 1440,
+      "height": 1600,
+      "artboardRemove": [],
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']"
+      ],
+      "setup": [
+        {
+          "waitFor": ".ez-stepper"
+        }
+      ],
+      "probes": [
+        {
+          "name": "page heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1"
+        },
+        {
+          "name": "stepper card",
+          "artboard": ".ez-stepper",
+          "page": ".ez-stepper"
+        },
+        {
+          "name": "done step dot",
+          "artboard": ".ez-step--done .ez-step__dot",
+          "page": ".ez-step--done .ez-step__dot"
+        },
+        {
+          "name": "current step dot",
+          "artboard": ".ez-step--current .ez-step__dot",
+          "page": ".ez-step--current .ez-step__dot"
+        },
+        {
+          "name": "form card",
+          "artboard": ".ez-split__main .ez-card",
+          "page": ".ez-split__main .ez-card"
+        },
+        {
+          "name": "card head",
+          "artboard": ".ez-split__main .ez-card__head",
+          "page": ".ez-split__main .ez-card__head"
+        },
+        {
+          "name": "business name input",
+          "artboard": ".ez-field:first-child .ez-input",
+          "page": ".ez-field:first-child .ez-input"
+        },
+        {
+          "name": "service chip row",
+          "artboard": ".ez-chip-row",
+          "page": ".ez-chip-row"
+        },
+        {
+          "name": "first chip",
+          "artboard": ".ez-chip",
+          "page": ".ez-chip"
+        },
+        {
+          "name": "active chip",
+          "artboard": ".ez-chip--active",
+          "page": ".ez-chip--active"
+        },
+        {
+          "name": "bio textarea",
+          "artboard": "textarea.ez-input--area",
+          "page": "textarea.ez-input--area"
+        },
+        {
+          "name": "card foot",
+          "artboard": ".ez-card__foot",
+          "page": ".ez-card__foot"
+        },
+        {
+          "name": "live preview card",
+          "artboard": ".ez-split__aside .ez-card",
+          "page": ".ez-split__aside .ez-card"
+        },
+        {
+          "name": "vendor card",
+          "artboard": ".ez-vcard",
+          "page": ".ez-vcard"
+        },
+        {
+          "name": "vendor card name",
+          "artboard": ".ez-vcard__name",
+          "page": ".ez-vcard__name"
+        }
+      ]
+    },
+    {
+      "id": "V03-StepLocation",
+      "artboard": "V03-StepLocation.dc.html",
+      "path": "/vendor/profile",
+      "auth": "vendor",
+      "width": 1440,
+      "height": 1400,
+      "artboardRemove": [],
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']"
+      ],
+      "setup": [
+        {
+          "waitFor": ".ez-stepper"
+        }
+      ],
+      "probes": [
+        {
+          "name": "page heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1"
+        },
+        {
+          "name": "stepper card",
+          "artboard": ".ez-stepper",
+          "page": ".ez-stepper"
+        },
+        {
+          "name": "current step dot",
+          "artboard": ".ez-step--current .ez-step__dot",
+          "page": ".ez-step--current .ez-step__dot"
+        },
+        {
+          "name": "form card",
+          "artboard": ".ez-split__main .ez-card",
+          "page": ".ez-split__main .ez-card"
+        },
+        {
+          "name": "card head",
+          "artboard": ".ez-split__main .ez-card__head",
+          "page": ".ez-split__main .ez-card__head"
+        },
+        {
+          "name": "location grid",
+          "artboard": ".ez-form-grid",
+          "page": ".ez-form-grid"
+        },
+        {
+          "name": "base city input",
+          "artboard": ".ez-form-grid .ez-field:first-child .ez-input",
+          "page": ".ez-form-grid .ez-field:first-child .ez-input"
+        },
+        {
+          "name": "postcode input",
+          "artboard": ".ez-form-grid .ez-field:nth-child(3) .ez-input",
+          "page": ".ez-form-grid .ez-field:nth-child(3) .ez-input"
+        },
+        {
+          "name": "first option",
+          "artboard": ".ez-option",
+          "page": ".ez-option"
+        },
+        {
+          "name": "active option",
+          "artboard": ".ez-option--active",
+          "page": ".ez-option--active"
+        },
+        {
+          "name": "radius grid",
+          "artboard": ".ez-stack--sm .ez-form-grid",
+          "page": ".ez-stack--sm .ez-form-grid"
+        },
+        {
+          "name": "card foot",
+          "artboard": ".ez-card__foot",
+          "page": ".ez-card__foot"
+        },
+        {
+          "name": "map card",
+          "artboard": ".ez-split__aside .ez-card:first-child",
+          "page": ".ez-split__aside .ez-card:first-child"
+        },
+        {
+          "name": "map placeholder",
+          "artboard": ".ez-media-ph",
+          "page": ".ez-media-ph"
+        },
+        {
+          "name": "good to know card",
+          "artboard": ".ez-split__aside .ez-card:nth-child(2)",
+          "page": ".ez-split__aside .ez-card:nth-child(2)"
+        }
+      ]
+    },
+    {
+      "id": "V04-StepPricing",
+      "artboard": "V04-StepPricing.dc.html",
+      "path": "/vendor/profile",
+      "auth": "vendor",
+      "width": 1440,
+      "height": 1600,
+      "artboardRemove": [],
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']"
+      ],
+      "setup": [
+        {
+          "waitFor": ".ez-stepper"
+        }
+      ],
+      "probes": [
+        {
+          "name": "page heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1"
+        },
+        {
+          "name": "stepper card",
+          "artboard": ".ez-stepper",
+          "page": ".ez-stepper"
+        },
+        {
+          "name": "done step dot",
+          "artboard": ".ez-step--done .ez-step__dot",
+          "page": ".ez-step--done .ez-step__dot"
+        },
+        {
+          "name": "current step dot",
+          "artboard": ".ez-step--current .ez-step__dot",
+          "page": ".ez-step--current .ez-step__dot"
+        },
+        {
+          "name": "form card",
+          "artboard": ".ez-split__main .ez-card",
+          "page": ".ez-split__main .ez-card"
+        },
+        {
+          "name": "card head",
+          "artboard": ".ez-split__main .ez-card__head",
+          "page": ".ez-split__main .ez-card__head"
+        },
+        {
+          "name": "card foot",
+          "artboard": ".ez-card__foot",
+          "page": ".ez-card__foot"
+        },
+        {
+          "name": "aside first card",
+          "artboard": ".ez-split__aside .ez-card",
+          "page": ".ez-split__aside .ez-card"
+        },
+        {
+          "name": "aside icon tile",
+          "artboard": ".ez-icon-tile--gold",
+          "page": ".ez-icon-tile--gold"
+        },
+        {
+          "name": "first package card",
+          "artboard": ".ez-card--flat",
+          "page": ".ez-card--flat"
+        },
+        {
+          "name": "package name input",
+          "artboard": ".ez-card--flat .ez-field:first-child .ez-input",
+          "page": ".ez-card--flat .ez-field:first-child .ez-input"
+        },
+        {
+          "name": "pricing select",
+          "artboard": ".ez-select-wrap",
+          "page": ".ez-select-wrap"
+        },
+        {
+          "name": "discount heading",
+          "artboard": ".ez-divider + .ez-stack .ez-h3",
+          "page": ".ez-divider + .ez-stack .ez-h3"
+        },
+        {
+          "name": "lines card",
+          "artboard": ".ez-lines",
+          "page": ".ez-lines"
+        },
+        {
+          "name": "lines total",
+          "artboard": ".ez-lines__total",
+          "page": ".ez-lines__total"
+        }
+      ]
+    },
+    {
+      "id": "V04b-StepCancellation",
+      "artboard": "V04b-StepCancellation.dc.html",
+      "path": "/vendor/profile",
+      "auth": "vendor",
+      "width": 1440,
+      "height": 1500,
+      "artboardRemove": [],
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']"
+      ],
+      "setup": [
+        {
+          "waitFor": ".ez-stepper"
+        }
+      ],
+      "probes": [
+        {
+          "name": "page heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1"
+        },
+        {
+          "name": "stepper card",
+          "artboard": ".ez-stepper",
+          "page": ".ez-stepper"
+        },
+        {
+          "name": "done step dot",
+          "artboard": ".ez-step--done .ez-step__dot",
+          "page": ".ez-step--done .ez-step__dot"
+        },
+        {
+          "name": "current step dot",
+          "artboard": ".ez-step--current .ez-step__dot",
+          "page": ".ez-step--current .ez-step__dot"
+        },
+        {
+          "name": "form card",
+          "artboard": ".ez-split__main .ez-card",
+          "page": ".ez-split__main .ez-card"
+        },
+        {
+          "name": "card head",
+          "artboard": ".ez-split__main .ez-card__head",
+          "page": ".ez-split__main .ez-card__head"
+        },
+        {
+          "name": "card foot",
+          "artboard": ".ez-card__foot",
+          "page": ".ez-card__foot"
+        },
+        {
+          "name": "aside first card",
+          "artboard": ".ez-split__aside .ez-card",
+          "page": ".ez-split__aside .ez-card"
+        },
+        {
+          "name": "aside icon tile",
+          "artboard": ".ez-icon-tile--gold",
+          "page": ".ez-icon-tile--gold"
+        },
+        {
+          "name": "option row",
+          "artboard": ".ez-hrow",
+          "page": ".ez-hrow"
+        },
+        {
+          "name": "first option",
+          "artboard": ".ez-option",
+          "page": ".ez-option"
+        },
+        {
+          "name": "active option",
+          "artboard": ".ez-option--active",
+          "page": ".ez-option--active"
+        },
+        {
+          "name": "option table",
+          "artboard": ".ez-table",
+          "page": ".ez-table"
+        },
+        {
+          "name": "table wrap",
+          "artboard": ".ez-table-wrap",
+          "page": ".ez-table-wrap"
+        },
+        {
+          "name": "page title",
+          "artboard": ".ez-split__main .ez-h2",
+          "page": ".ez-split__main .ez-h2"
+        }
+      ]
+    },
+    {
+      "id": "V05-StepAvailability",
+      "artboard": "V05-StepAvailability.dc.html",
+      "path": "/vendor/profile",
+      "auth": "vendor",
+      "width": 1440,
+      "height": 1500,
+      "artboardRemove": [],
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']"
+      ],
+      "setup": [
+        {
+          "waitFor": ".ez-stepper"
+        }
+      ],
+      "probes": [
+        {
+          "name": "page heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1"
+        },
+        {
+          "name": "stepper card",
+          "artboard": ".ez-stepper",
+          "page": ".ez-stepper"
+        },
+        {
+          "name": "done step dot",
+          "artboard": ".ez-step--done .ez-step__dot",
+          "page": ".ez-step--done .ez-step__dot"
+        },
+        {
+          "name": "current step dot",
+          "artboard": ".ez-step--current .ez-step__dot",
+          "page": ".ez-step--current .ez-step__dot"
+        },
+        {
+          "name": "form card",
+          "artboard": ".ez-split__main .ez-card",
+          "page": ".ez-split__main .ez-card"
+        },
+        {
+          "name": "card head",
+          "artboard": ".ez-split__main .ez-card__head",
+          "page": ".ez-split__main .ez-card__head"
+        },
+        {
+          "name": "card foot",
+          "artboard": ".ez-card__foot",
+          "page": ".ez-card__foot"
+        },
+        {
+          "name": "aside first card",
+          "artboard": ".ez-split__aside .ez-card",
+          "page": ".ez-split__aside .ez-card"
+        },
+        {
+          "name": "aside icon tile",
+          "artboard": ".ez-icon-tile--gold",
+          "page": ".ez-icon-tile--gold"
+        },
+        {
+          "name": "chip row",
+          "artboard": ".ez-chip-row",
+          "page": ".ez-chip-row"
+        },
+        {
+          "name": "active chip",
+          "artboard": ".ez-chip--active",
+          "page": ".ez-chip--active"
+        },
+        {
+          "name": "bookings input",
+          "artboard": "input.ez-input[type=number]",
+          "page": "input.ez-input[type=number]"
+        },
+        {
+          "name": "stepper button",
+          "artboard": "button[aria-label=Fewer]",
+          "page": "button[aria-label=Fewer]"
+        },
+        {
+          "name": "calendar",
+          "artboard": ".ez-cal",
+          "page": ".ez-cal"
+        },
+        {
+          "name": "blocked day",
+          "artboard": ".ez-cal__day--blocked",
+          "page": ".ez-cal__day--blocked"
+        },
+        {
+          "name": "legend",
+          "artboard": ".ez-legend",
+          "page": ".ez-legend"
+        },
+        {
+          "name": "lines card",
+          "artboard": ".ez-lines",
+          "page": ".ez-lines"
+        },
+        {
+          "name": "week card",
+          "artboard": ".ez-split__aside .ez-card:first-child",
+          "page": ".ez-split__aside .ez-card:first-child"
+        }
+      ]
+    },
+    {
+      "id": "V06-StepPortfolio",
+      "artboard": "V06-StepPortfolio.dc.html",
+      "path": "/vendor/profile",
+      "auth": "vendor",
+      "width": 1440,
+      "height": 1500,
+      "artboardRemove": [
+        ".ez-grid-4 .ez-media-ph > *"
+      ],
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']",
+        "[data-design-extra]",
+        ".ez-grid-4 .ez-media-ph > *"
+      ],
+      "setup": [
+        {
+          "waitFor": ".ez-stepper"
+        }
+      ],
+      "probes": [
+        {
+          "name": "page heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1"
+        },
+        {
+          "name": "stepper card",
+          "artboard": ".ez-stepper",
+          "page": ".ez-stepper"
+        },
+        {
+          "name": "done step dot",
+          "artboard": ".ez-step--done .ez-step__dot",
+          "page": ".ez-step--done .ez-step__dot"
+        },
+        {
+          "name": "current step dot",
+          "artboard": ".ez-step--current .ez-step__dot",
+          "page": ".ez-step--current .ez-step__dot"
+        },
+        {
+          "name": "form card",
+          "artboard": ".ez-split__main .ez-card",
+          "page": ".ez-split__main .ez-card"
+        },
+        {
+          "name": "card head",
+          "artboard": ".ez-split__main .ez-card__head",
+          "page": ".ez-split__main .ez-card__head"
+        },
+        {
+          "name": "card foot",
+          "artboard": ".ez-card__foot",
+          "page": ".ez-card__foot"
+        },
+        {
+          "name": "aside first card",
+          "artboard": ".ez-split__aside .ez-card",
+          "page": ".ez-split__aside .ez-card"
+        },
+        {
+          "name": "aside icon tile",
+          "artboard": ".ez-icon-tile--gold",
+          "page": ".ez-icon-tile--gold"
+        },
+        {
+          "name": "upload zone",
+          "artboard": ".ez-upload",
+          "page": ".ez-upload"
+        },
+        {
+          "name": "upload title",
+          "artboard": ".ez-upload .ez-strong",
+          "page": ".ez-upload .ez-strong"
+        },
+        {
+          "name": "photos progress",
+          "artboard": ".ez-progress",
+          "page": ".ez-progress"
+        },
+        {
+          "name": "photo grid",
+          "artboard": ".ez-grid-4",
+          "page": ".ez-grid-4"
+        },
+        {
+          "name": "first tile",
+          "artboard": ".ez-grid-4 > div:first-child",
+          "page": ".ez-grid-4 > div:first-child"
+        },
+        {
+          "name": "cover badge",
+          "artboard": ".ez-badge--plain",
+          "page": ".ez-badge--plain"
+        },
+        {
+          "name": "profile avatar",
+          "artboard": ".ez-avatar--lg",
+          "page": ".ez-avatar--lg"
+        },
+        {
+          "name": "aside warning card",
+          "artboard": ".ez-split__aside .ez-card:nth-child(2)",
+          "page": ".ez-split__aside .ez-card:nth-child(2)"
+        }
+      ]
+    },
+    {
+      "id": "V07-StepAdditional",
+      "artboard": "V07-StepAdditional.dc.html",
+      "path": "/vendor/profile",
+      "auth": "vendor",
+      "width": 1440,
+      "height": 1500,
+      "artboardRemove": [],
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']",
+        "[data-design-extra]"
+      ],
+      "setup": [
+        {
+          "waitFor": ".ez-stepper"
+        }
+      ],
+      "probes": [
+        {
+          "name": "page heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1"
+        },
+        {
+          "name": "stepper card",
+          "artboard": ".ez-stepper",
+          "page": ".ez-stepper"
+        },
+        {
+          "name": "done step dot",
+          "artboard": ".ez-step--done .ez-step__dot",
+          "page": ".ez-step--done .ez-step__dot"
+        },
+        {
+          "name": "current step dot",
+          "artboard": ".ez-step--current .ez-step__dot",
+          "page": ".ez-step--current .ez-step__dot"
+        },
+        {
+          "name": "form card",
+          "artboard": ".ez-split__main .ez-card",
+          "page": ".ez-split__main .ez-card"
+        },
+        {
+          "name": "card head",
+          "artboard": ".ez-split__main .ez-card__head",
+          "page": ".ez-split__main .ez-card__head"
+        },
+        {
+          "name": "card foot",
+          "artboard": ".ez-card__foot",
+          "page": ".ez-card__foot"
+        },
+        {
+          "name": "aside first card",
+          "artboard": ".ez-split__aside .ez-card",
+          "page": ".ez-split__aside .ez-card"
+        },
+        {
+          "name": "form grid",
+          "artboard": ".ez-form-grid",
+          "page": ".ez-form-grid"
+        },
+        {
+          "name": "check",
+          "artboard": ".ez-check",
+          "page": ".ez-check"
+        },
+        {
+          "name": "list row",
+          "artboard": ".ez-list-row",
+          "page": ".ez-list-row"
+        },
+        {
+          "name": "aside second card",
+          "artboard": ".ez-split__aside > .ez-stack > :nth-child(2)",
+          "page": ".ez-split__aside > .ez-stack > :nth-child(2)"
+        }
+      ]
+    },
+    {
+      "id": "V08-StepReview",
+      "artboard": "V08-StepReview.dc.html",
+      "path": "/vendor/profile",
+      "auth": "vendor",
+      "width": 1440,
+      "height": 1500,
+      "artboardRemove": [],
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']",
+        "[data-design-extra]"
+      ],
+      "setup": [
+        {
+          "waitFor": ".ez-stepper"
+        }
+      ],
+      "probes": [
+        {
+          "name": "page heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1"
+        },
+        {
+          "name": "stepper card",
+          "artboard": ".ez-stepper",
+          "page": ".ez-stepper"
+        },
+        {
+          "name": "done step dot",
+          "artboard": ".ez-step--done .ez-step__dot",
+          "page": ".ez-step--done .ez-step__dot"
+        },
+        {
+          "name": "current step dot",
+          "artboard": ".ez-step--current .ez-step__dot",
+          "page": ".ez-step--current .ez-step__dot"
+        },
+        {
+          "name": "form card",
+          "artboard": ".ez-split__main .ez-card",
+          "page": ".ez-split__main .ez-card"
+        },
+        {
+          "name": "card head",
+          "artboard": ".ez-split__main .ez-card__head",
+          "page": ".ez-split__main .ez-card__head"
+        },
+        {
+          "name": "card foot",
+          "artboard": ".ez-card__foot",
+          "page": ".ez-card__foot"
+        },
+        {
+          "name": "aside first card",
+          "artboard": ".ez-split__aside .ez-card",
+          "page": ".ez-split__aside .ez-card"
+        },
+        {
+          "name": "first review card",
+          "artboard": ".ez-split__main .ez-card .ez-card .ez-card__head",
+          "page": ".ez-split__main .ez-card .ez-card .ez-card__head"
+        },
+        {
+          "name": "dl",
+          "artboard": ".ez-dl",
+          "page": ".ez-dl"
+        },
+        {
+          "name": "icon tile",
+          "artboard": ".ez-icon-tile--success",
+          "page": ".ez-icon-tile--success"
+        },
+        {
+          "name": "edit button",
+          "artboard": ".ez-btn--ghost.ez-btn--sm",
+          "page": ".ez-btn--ghost.ez-btn--sm"
+        },
+        {
+          "name": "confirm check",
+          "artboard": ".ez-check",
+          "page": ".ez-check"
+        },
+        {
+          "name": "ready card",
+          "artboard": ".ez-split__aside .ez-card",
+          "page": ".ez-split__aside .ez-card"
+        },
+        {
+          "name": "next card",
+          "artboard": ".ez-split__aside .ez-card:nth-child(2)",
+          "page": ".ez-split__aside .ez-card:nth-child(2)"
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "vendor": {
+      "email": "design-diff-vendor@example.com",
+      "password": "Design-Diff-Passw0rd!"
+    }
+  }
+}
