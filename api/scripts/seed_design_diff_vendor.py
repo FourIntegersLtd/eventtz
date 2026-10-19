@@ -29,9 +29,7 @@ LOCAL_HOSTS = frozenset({"127.0.0.1", "localhost"})
 EMAIL = "design-diff-vendor@example.com"
 PASSWORD = "Design-Diff-Passw0rd!"  # noqa: S105 — local design-diff account only
 
-FIXTURE_PATH = (
-    Path(__file__).resolve().parents[2] / "web" / "scripts" / "design-diff" / "vendor-fixture.json"
-)
+FIXTURE_PATH = Path(__file__).resolve().parents[2] / "web" / "scripts" / "design-diff" / "vendor-fixture.json"
 
 
 def _assert_local_database() -> None:
@@ -39,7 +37,7 @@ def _assert_local_database() -> None:
     database_url = get_settings().database_url
     parsed = urlparse(database_url)
     if parsed.hostname not in LOCAL_HOSTS:
-        print(f"Refusing to seed design-diff vendor against non-local host: {parsed.hostname}", file=sys.stderr)
+        sys.stderr.write(f"Refusing to seed design-diff vendor against non-local host: {parsed.hostname}\n")
         raise SystemExit(1)
 
 
@@ -129,10 +127,10 @@ async def _seed(scenario: str) -> None:
             exists=vendor_exists,
         )
         if not saved:
-            print("Could not save vendor profile (business name clash).", file=sys.stderr)
+            sys.stderr.write("Could not save vendor profile (business name clash).\n")
             raise SystemExit(1)
         await session.commit()
-        print(f"Seeded {EMAIL} scenario={scenario} user_id={user_id}")
+        sys.stdout.write(f"Seeded {EMAIL} scenario={scenario} user_id={user_id}\n")
 
 
 def main() -> None:
