@@ -1,0 +1,74 @@
+{
+  "firstName": "Adeola",
+  "lastName": "Bakare",
+  "phone": "07700 900123",
+  "businessName": "Mama Ade's Kitchen",
+  "servicesOffered": ["catering"],
+  "eventTypes": ["weddings", "birthdays", "naming_ceremonies"],
+  "baseCity": "Manchester",
+  "region": "Greater Manchester",
+  "postalCode": "M14 5AB",
+  "countryCode": "GB",
+  "travelRadius": "from_50_to_100",
+  "deliveryModes": ["travel_to_client"],
+  "travelFeeNote": "£1.50 per mile beyond 10 miles from base city",
+  "packages": [
+    {
+      "id": "pkg-classic-jollof",
+      "title": "Classic jollof buffet",
+      "details": "A generous jollof rice buffet with sides, served at your venue.",
+      "price": "18.00",
+      "pricingMode": "per_unit",
+      "unitLabel": "person",
+      "minQuantity": "20",
+      "maxQuantity": "200"
+    },
+    {
+      "id": "pkg-naming-platter",
+      "title": "Naming ceremony platter",
+      "details": "A celebratory platter spread for naming ceremonies and family gatherings.",
+      "price": "450.00",
+      "pricingMode": "fixed",
+      "unitLabel": "",
+      "minQuantity": "",
+      "maxQuantity": ""
+    }
+  ],
+  "offerDiscounts": true,
+  "discountLabel": "Winter sale",
+  "discountPercentage": "10",
+  "cancellationPolicy": "moderate",
+  "availableWeekdays": [3, 4, 5, 6],
+  "maxBookingsPerDay": "2",
+  "blockedDates": [
+    "2026-12-24",
+    "2026-12-25",
+    "2026-12-26",
+    "2026-12-31",
+    "2027-01-01"
+  ],
+  "portfolioFileNames": [
+    "https://example.com/design-diff/portfolio-1.jpg",
+    "https://example.com/design-diff/portfolio-2.jpg",
+    "https://example.com/design-diff/portfolio-3.jpg",
+    "https://example.com/design-diff/portfolio-4.jpg",
+    "https://example.com/design-diff/portfolio-5.jpg",
+    "https://example.com/design-diff/portfolio-6.jpg",
+    "https://example.com/design-diff/portfolio-7.jpg",
+    "https://example.com/design-diff/portfolio-8.jpg"
+  ],
+  "profileImageUrl": "https://example.com/design-diff/profile.jpg",
+  "socialLinks": [
+    { "id": "social-ig", "platform": "instagram", "handle": "@mamaadeskitchen" },
+    { "id": "social-web", "platform": "website", "handle": "www.example.com" }
+  ],
+  "isHalal": true,
+  "isVegan": true,
+  "isVegetarian": true,
+  "isGlutenFree": false,
+  "allergenInfo": "Contains nuts and dairy; gluten-free options available on request",
+  "foodHygieneCertNamePersisted": "food-hygiene-cert.pdf",
+  "onboardingFlowVersion": 3,
+  "confirmTruthful": true,
+  "confirmTerms": true
+}

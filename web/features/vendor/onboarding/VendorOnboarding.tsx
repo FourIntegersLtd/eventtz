@@ -17,6 +17,7 @@ import { OnboardingStepContent } from "./OnboardingStepContent";
 import { draftSavedLabel } from "./draftSavedLabel";
 import { WizardAside } from "./ui/WizardAside";
 import { WizardFrame } from "./ui/WizardFrame";
+import { ApprovedWelcomeScreen } from "./steps/submittedScreens";
 import { OnboardingStepInfoModal } from "./ui/OnboardingStepInfoModal";
 import { RETURNED_FOR_EDITS_BODY, RETURNED_FOR_EDITS_TITLE } from "./returnedForEditsCopy";
 import { VendorProfilePhotoField } from "./VendorProfilePhotoField";
@@ -94,7 +95,8 @@ export function VendorOnboarding() {
     onboarding_status: profileStatus,
     approval_status: approvalStatus,
   });
-  const useWizardLayout = isWalkthrough || !isApprovedLive;
+  const showApprovedWelcome = isApprovedLive && !payoutsVerified && !isWalkthrough;
+  const useWizardLayout = isWalkthrough || !isApprovedLive || showApprovedWelcome;
 
   const isLiveEdit = !useWizardLayout;
   /** Jumped from review to fix one section — "Back to review" replaces linear Back. */
@@ -367,9 +369,18 @@ export function VendorOnboarding() {
             </div>
           </div>
         </div>
+      ) : showApprovedWelcome ? (
+        <ApprovedWelcomeScreen
+          firstName={data.firstName}
+          businessName={data.businessName}
+          profileViews={0}
+          enquiryCount={0}
+          payoutsLinked={payoutsVerified}
+        />
       ) : (
         <div>
-          {step <= ONBOARDING_STEP.review ? (
+          {step <= ONBOARDING_STEP.review &&
+          !(returnedForEditsPending && step === ONBOARDING_STEP.review) ? (
             <WizardFrame
               step={step}
               draftSavedLabel={draftSavedLabel(lastSavedAt)}

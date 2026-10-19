@@ -12,6 +12,26 @@ import { adminTrustReviewsHref } from "@/features/admin/reviews/reviewFormatters
 import type { AdminVendorInsights, AdminVendorRow } from "@/lib/adminVendorsApi";
 import { VendorPanelCard, VendorPanelSection } from "./vendorDetailsPanel";
 import { BookingStatusBreakdown, QuickLinkRow } from "./vendorDetailsShared";
+import {
+  onboardingStepLabel,
+  ONBOARDING_STEP,
+} from "@/features/vendor/onboarding/onboardingProgress";
+
+/** Human-readable onboarding step for staff (name, not only the stored number). */
+function formatAdminOnboardingStep(
+  currentStep: number | null | undefined,
+  onboardingStatus: string | null | undefined,
+): string {
+  if (currentStep == null) return "-";
+  if (
+    onboardingStatus === "submitted" &&
+    currentStep >= ONBOARDING_STEP.submitted
+  ) {
+    return onboardingStepLabel(ONBOARDING_STEP.submitted) || "Submitted";
+  }
+  const label = onboardingStepLabel(currentStep);
+  return label ? `${label} (step ${currentStep})` : `Step ${currentStep}`;
+}
 
 type Props = {
   vendor: AdminVendorRow;
@@ -142,7 +162,7 @@ export function VendorDetailsInsightsSection({
               />
               <MetricRow
                 label="Onboarding"
-                value={`Step ${vendor.current_step ?? "-"}`}
+                value={formatAdminOnboardingStep(vendor.current_step, vendor.onboarding_status)}
                 sub={<VendorProfileStatusBadge status={vendor.onboarding_status} />}
               />
             </div>

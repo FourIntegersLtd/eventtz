@@ -11,6 +11,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import type { VendorStatusCheckFeedback } from "../types";
 import { AnimatedStepItem } from "../ui/AnimatedStepItem";
 import { VendorProfilePhotoField } from "../VendorProfilePhotoField";
+import { SubmittedPendingScreen } from "./submittedScreens";
 
 type StepSubmittedProps = {
   approvalStatus: VendorApprovalStatus;
@@ -27,6 +28,7 @@ type StepSubmittedProps = {
   statusCheckFeedback?: VendorStatusCheckFeedback | null;
   /** Shown under the heading so vendors see their saved business name while locked. */
   businessName?: string;
+  email?: string;
   firstName?: string;
   lastName?: string;
   profileImageUrl?: string;
@@ -95,6 +97,7 @@ export function StepSubmitted({
   refreshing = false,
   statusCheckFeedback = null,
   businessName,
+  email = "",
   firstName = "",
   lastName = "",
   profileImageUrl = "",
@@ -137,6 +140,25 @@ export function StepSubmitted({
           : portfolioBlocked
             ? blockedCopy!.submittedHeading
             : "Profile submitted";
+
+  const showSubmittedPendingDesign =
+    !approved &&
+    !banned &&
+    !portfolioBlocked &&
+    !showReturnedForEdits &&
+    !awaitingPayouts &&
+    !listingPaused;
+
+  if (showSubmittedPendingDesign) {
+    return (
+      <SubmittedPendingScreen
+        firstName={firstName}
+        email={email}
+        onViewProfileReview={onViewProfileReview}
+        onEditAnswers={() => onEditProfile?.()}
+      />
+    );
+  }
 
   const statusCopy = showReturnedForEdits
     ? RETURNED_FOR_EDITS_BODY

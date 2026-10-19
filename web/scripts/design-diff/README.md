@@ -28,8 +28,17 @@ A screen is therefore a transcription, not an interpretation.
 
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.22.3/bin:$PATH"
-npm run dev                              # leave running on :3001
+cd api && make db-up && make migrate && make dev   # :8001
+cd web && npm run dev                              # leave running on :3001
+```
+
+Vendor onboarding screens re-seed the compose DB before each run (see
+``api/scripts/seed_design_diff_vendor.py`` and ``vendor-fixture.json``). Sign-in uses
+``design-diff-vendor@example.com`` / ``Design-Diff-Passw0rd!`` from ``screens.json``.
+
+```bash
 npm run design:diff -- P01-Login         # one screen
+npm run design:diff -- V06-StepPortfolio
 npm run design:diff -- --all             # every screen in screens.json
 ```
 

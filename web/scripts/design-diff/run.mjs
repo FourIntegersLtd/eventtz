@@ -18,6 +18,7 @@
  *   node scripts/design-diff/run.mjs --all                 every screen in screens.json
  *   node scripts/design-diff/run.mjs P01-Login --base http://localhost:3001
  */
+import { execSync } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -29,6 +30,23 @@ const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const webRoot = path.resolve(scriptDir, "../..");
 const canvasDir = path.join(webRoot, "design/canvas/project");
 const outDir = path.join(webRoot, "design/diff-output");
+const apiRoot = path.join(webRoot, "..", "api");
+
+/** Maps vendor onboarding screen ids to ``seed_design_diff_vendor`` scenarios. */
+const VENDOR_SEED_BY_SCREEN_ID = {
+  "V01-StepAccount": "step-1",
+  "V02-StepBusiness": "step-2",
+  "V03-StepLocation": "step-3",
+  "V04-StepPricing": "step-4",
+  "V04b-StepCancellation": "step-5",
+  "V05-StepAvailability": "step-6",
+  "V06-StepPortfolio": "step-7",
+  "V07-StepAdditional": "step-8",
+  "V08-StepReview": "step-9",
+  "V09-Submitted": "submitted",
+  "V10-ReturnedForEdits": "returned",
+  "V11-Approved": "approved",
+};
 
 /** Per-pixel colour tolerance for pixelmatch (YIQ distance, 0 strict to 1 lax). */
 const PIXEL_THRESHOLD = 0.2;
@@ -89,6 +107,14 @@ async function stripElements(page, selectors) {
       for (const element of document.querySelectorAll(selector)) element.remove();
     }
   }, selectors);
+}
+
+/** Refreshes the design-diff vendor row in compose Postgres for the scenario this screen needs. */
+function seedVendorScenario(scenario) {
+  execSync(
+    `env -u VIRTUAL_ENV poetry run python -m scripts.seed_design_diff_vendor --scenario ${scenario}`,
+    { cwd: apiRoot, stdio: "inherit", env: process.env },
+  );
 }
 
 /** Runs the screen's setup steps on the live page (fill a field, click a control, wait for a selector). */
@@ -234,6 +260,8 @@ async function diffScreen(browser, screen, config, baseUrl) {
   const artboardShot = await screenshotFitted(artboardPage, width, height);
   const artboardProbes = await measureProbes(artboardPage, screen.probes ?? [], "artboard");
 
+  const vendorSeed = screen.vendorSeed ?? VENDOR_SEED_BY_SCREEN_ID[screen.id];
+  if (vendorSeed) seedVendorScenario(vendorSeed);
   if (screen.auth) await signIn(context, baseUrl, config.auth[screen.auth]);
   const livePage = await context.newPage();
   await livePage.goto(baseUrl + screen.path, { waitUntil: "load" });

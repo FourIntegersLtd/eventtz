@@ -18,6 +18,7 @@ import {
   StepReview,
   StepSubmitted,
 } from "./steps";
+import { ReturnedForEditsScreen, openReviewForResubmit } from "./steps/submittedScreens";
 
 type Props = {
   step: number;
@@ -203,6 +204,22 @@ export function OnboardingStepContent({
         />,
       );
     case 9:
+      if (returnedForEdits && !isLiveEdit) {
+        const reviewedLabel = data.returnedForEditsAt.trim()
+          ? new Intl.DateTimeFormat("en-GB", {
+              weekday: "short",
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            }).format(new Date(data.returnedForEditsAt))
+          : "recently";
+        return (
+          <ReturnedForEditsScreen
+            reviewedAtLabel={reviewedLabel}
+            onResubmit={() => openReviewForResubmit(onNavigateToStep)}
+          />
+        );
+      }
       return (
         <StepReview
           data={data}
@@ -231,6 +248,7 @@ export function OnboardingStepContent({
           refreshing={refreshingStatus}
           statusCheckFeedback={statusCheckFeedback}
           businessName={submittedSummaryBusinessName}
+          email={data.email}
           firstName={data.firstName}
           lastName={data.lastName}
           profileImageUrl={data.profileImageUrl}

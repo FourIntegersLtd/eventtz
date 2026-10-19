@@ -943,6 +943,129 @@
           "page": ".ez-split__aside .ez-card:nth-child(2)"
         }
       ]
+    },
+    {
+      "id": "V09-Submitted",
+      "artboard": "V09-Submitted.dc.html",
+      "path": "/vendor/profile",
+      "auth": "vendor",
+      "width": 1440,
+      "height": 1100,
+      "artboardRemove": [],
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']",
+        "[data-design-dynamic]"
+      ],
+      "setup": [
+        {
+          "waitFor": ".ez-pagehead h1"
+        }
+      ],
+      "probes": [
+        {
+          "name": "page heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1"
+        },
+        {
+          "name": "in review banner",
+          "artboard": ".ez-banner--warning",
+          "page": ".ez-banner--warning"
+        },
+        {
+          "name": "timeline card",
+          "artboard": ".ez-timeline",
+          "page": ".ez-timeline"
+        },
+        {
+          "name": "while you wait card",
+          "artboard": ".ez-split__aside .ez-card",
+          "page": ".ez-split__aside .ez-card"
+        }
+      ]
+    },
+    {
+      "id": "V10-ReturnedForEdits",
+      "artboard": "V10-ReturnedForEdits.dc.html",
+      "path": "/vendor/profile",
+      "auth": "vendor",
+      "width": 1440,
+      "height": 1300,
+      "artboardRemove": [],
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']",
+        "[data-design-dynamic]"
+      ],
+      "setup": [
+        {
+          "waitFor": ".ez-pagehead h1"
+        }
+      ],
+      "probes": [
+        {
+          "name": "page heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1"
+        },
+        {
+          "name": "returned banner",
+          "artboard": ".ez-banner--warning",
+          "page": ".ez-banner--warning"
+        },
+        {
+          "name": "first issue card",
+          "artboard": ".ez-split__main .ez-card",
+          "page": ".ez-split__main .ez-card"
+        },
+        {
+          "name": "help card",
+          "artboard": ".ez-split__aside .ez-card",
+          "page": ".ez-split__aside .ez-card"
+        }
+      ]
+    },
+    {
+      "id": "V11-Approved",
+      "artboard": "V11-Approved.dc.html",
+      "path": "/vendor/profile",
+      "auth": "vendor",
+      "width": 1440,
+      "height": 1100,
+      "artboardRemove": [],
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']",
+        "[data-design-dynamic]"
+      ],
+      "setup": [
+        {
+          "waitFor": ".ez-banner--success"
+        }
+      ],
+      "probes": [
+        {
+          "name": "approved banner",
+          "artboard": ".ez-banner--success",
+          "page": ".ez-banner--success"
+        },
+        {
+          "name": "welcome heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1"
+        },
+        {
+          "name": "checklist card",
+          "artboard": ".ez-split__main .ez-card",
+          "page": ".ez-split__main .ez-card"
+        },
+        {
+          "name": "kpi grid",
+          "artboard": ".ez-kpi",
+          "page": ".ez-kpi"
+        }
+      ]
     }
   ],
   "auth": {
