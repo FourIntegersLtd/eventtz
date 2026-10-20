@@ -1,4 +1,5 @@
 import api from "./axios";
+import { multipartUploadConfig } from "./mediaApi";
 import { getApiErrorDetail } from "./api-errors";
 
 /** When true, onboarding skips POST /analyze-portfolio-image (no OpenAI vision call). */
@@ -65,7 +66,7 @@ export async function postAnalyzePortfolioImage(
   const res = await api.post<AnalyzePortfolioImageResult>(
     "/api/v1/vendor/onboarding/ai/analyze-portfolio-image",
     fd,
-    { headers: { "Content-Type": "multipart/form-data" } },
+    multipartUploadConfig(60_000),
   );
   return res.data;
 }

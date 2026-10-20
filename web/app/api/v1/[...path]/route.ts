@@ -21,6 +21,8 @@ import {
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+/** Large portfolio photos and videos can take longer than the default on Vercel. */
+export const maxDuration = 120;
 
 /** Request headers worth passing upstream. Cookies stay here; the session goes as Bearer. */
 const FORWARDED_REQUEST_HEADERS = [
@@ -124,13 +126,22 @@ async function proxy(request: NextRequest, context: RouteContext): Promise<Respo
   if (accessToken) headers.set("authorization", `Bearer ${accessToken}`);
 
   const hasBody = request.method !== "GET" && request.method !== "HEAD";
-  const upstream = await fetch(`${getBackendBaseUrl()}/api/v1/${joinedPath}${request.nextUrl.search}`, {
+  // Stream the body through to api/ instead of buffering on Vercel first (uploads
+  // otherwise show "Uploading…" for ages and never hit Railway until the full file arrives).
+  const upstreamInit: RequestInit & { duplex?: "half" } = {
     method: request.method,
     headers,
-    body: hasBody ? await request.arrayBuffer() : undefined,
     redirect: "manual",
     cache: "no-store",
-  });
+  };
+  if (hasBody && request.body) {
+    upstreamInit.body = request.body;
+    upstreamInit.duplex = "half";
+  }
+  const upstream = await fetch(
+    `${getBackendBaseUrl()}/api/v1/${joinedPath}${request.nextUrl.search}`,
+    upstreamInit,
+  );
 
   // Sign-in, email verification and password reset answer with a fresh pair.
   const isAuthCall = joinedPath.startsWith("auth/");
