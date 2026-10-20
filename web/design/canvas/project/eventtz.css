@@ -78,7 +78,7 @@
 .ez-page p { margin: 0; }
 .ez-page a { color: var(--ez-brand-700); }
 
-.ez-container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.ez-container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 var(--ez-container-inline, 24px); }
 .ez-container--narrow { max-width: 760px; }
 .ez-stack { display: flex; flex-direction: column; gap: 16px; }
 .ez-stack--sm { gap: 8px; }
@@ -527,15 +527,15 @@ button.ez-cal__day { padding: 0; }
 .ez-side__foot { margin-top: auto; padding-top: 16px; display: flex; flex-direction: column; gap: 10px; }
 .ez-side__user { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: var(--ez-r-control); border: 1px solid var(--ez-line); }
 .ez-main { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; }
-.ez-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; min-height: 64px; padding: 8px 32px; background: var(--ez-surface); border-bottom: 1px solid var(--ez-line); }
+.ez-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; min-height: 64px; padding: 8px var(--ez-page-inline, 32px); background: var(--ez-surface); border-bottom: 1px solid var(--ez-line); }
 .ez-topbar__actions { display: flex; align-items: center; gap: 6px; }
-.ez-content { padding: 32px; width: 100%; max-width: 1180px; }
+.ez-content { padding: var(--ez-content-padding-block, 32px) var(--ez-page-inline, 32px); width: 100%; max-width: 1180px; }
 .ez-content--wide { max-width: none; }
 
 /* Admin console: same light chrome as the other portals, only denser */
 .ez-shell--admin .ez-side { max-width: 240px; }
 .ez-shell--admin .ez-nav-item, .ez-page .ez-shell--admin a.ez-nav-item { min-height: 40px; font-size: 14px; }
-.ez-shell--admin .ez-content { max-width: none; padding: 28px 32px; }
+.ez-shell--admin .ez-content { max-width: none; padding: var(--ez-content-padding-block-admin, 28px) var(--ez-page-inline, 32px); }
 .ez-shell--admin .ez-table td { padding: 11px 16px; }
 
 /* ---------- Landing ---------- */
@@ -554,7 +554,6 @@ button.ez-cal__day { padding: 0; }
 
 /* ---------- Phone width ---------- */
 @media (max-width: 720px) {
-  .ez-container { padding: 0 16px; }
   .ez-display { font-size: 34px; }
   .ez-hero .ez-display { font-size: 40px; }
   .ez-h1 { font-size: 26px; }
@@ -562,8 +561,6 @@ button.ez-cal__day { padding: 0; }
   .ez-side__brand, .ez-side__group, .ez-side__foot { display: none; }
   .ez-nav-item { flex: none; }
   .ez-shell--admin .ez-side { max-width: none; }
-  .ez-content { padding: 20px 16px; }
-  .ez-topbar { padding: 8px 16px; }
   .ez-auth__brand { padding: 32px 24px; }
   .ez-search__field + .ez-search__field { border-left: 0; border-top: 1px solid var(--ez-line); }
 }

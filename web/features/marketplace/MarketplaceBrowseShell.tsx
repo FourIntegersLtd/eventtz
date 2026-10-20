@@ -23,7 +23,7 @@ export function MarketplaceBrowseShell({
     <div className="min-h-dvh bg-page-bg text-ink">
       <LandingNav variant="solid" />
       <main
-        className={`mx-auto w-full ${maxWidth} px-4 pb-8 pt-24 sm:px-6 sm:pb-10 sm:pt-28 lg:px-8`}
+        className={`page-inline-gutter mx-auto w-full ${maxWidth} pb-8 pt-24 sm:pb-10 sm:pt-28`}
       >
         {children}
       </main>

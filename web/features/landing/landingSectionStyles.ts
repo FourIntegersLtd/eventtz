@@ -38,8 +38,8 @@ export const LANDING_SHOWCASE_MIN_H_CLASS = "min-h-[calc(100dvh-7.3125rem)]";
 /** Same minimum height, applied from `lg` up only. */
 export const LANDING_SHOWCASE_MIN_H_LG_CLASS = "lg:min-h-[calc(100dvh-7.3125rem)]";
 
-/** Horizontal gutters shared across landing nav, hero, and sections. */
-export const LANDING_HORIZONTAL_PADDING = "px-4 sm:px-6 lg:px-12";
+/** Horizontal gutters shared across landing nav, hero, and sections (see `landing-horizontal-gutter` in globals.css). */
+export const LANDING_HORIZONTAL_PADDING = "landing-horizontal-gutter";
 
 /** Primary landing content width - keep nav, hero, and sections on the same vertical grid. */
 export const LANDING_PAGE_MAX_WIDTH = "max-w-[90rem]";

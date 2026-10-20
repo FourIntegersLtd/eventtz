@@ -39,6 +39,43 @@
   --info-line: #cfe2f7;
   --scrim: rgba(24, 21, 29, 0.36);
   --auth-bg: #f5f2f8;
+
+  /* Horizontal inset shared by portal topbars, main content, and marketing shells (matches Eventtz logo). */
+  --ez-page-inline: 16px;
+  --ez-container-inline: 16px;
+  --ez-content-padding-block: 20px;
+  --ez-content-padding-block-admin: 20px;
+}
+
+@media (min-width: 721px) {
+  :root {
+    --ez-page-inline: 32px;
+    --ez-container-inline: 24px;
+    --ez-content-padding-block: 32px;
+    --ez-content-padding-block-admin: 28px;
+  }
+}
+
+/* Tailwind pages that sit outside ez-content still align to the same horizontal grid. */
+.page-inline-gutter {
+  padding-inline: var(--ez-page-inline);
+}
+
+/* Marketing pages: mobile matches the logo; wider steps at sm/lg stay on the old landing grid. */
+.landing-horizontal-gutter {
+  padding-inline: var(--ez-page-inline);
+}
+
+@media (min-width: 640px) {
+  .landing-horizontal-gutter {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .landing-horizontal-gutter {
+    padding-inline: 3rem;
+  }
 }
 
 @theme inline {
